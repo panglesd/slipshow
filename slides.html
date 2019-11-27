@@ -1,14 +1,23 @@
 <!doctype html>
 <html>
     <head>
-	<title>Paul-Elliot's Thesis slip</title>
+	<title>Slip slip presentation</title>
 	<meta charset="utf-8" />
 	<link rel="stylesheet" type="text/css" href="slides.css">
 	<link rel="stylesheet" type="text/css" href="theorem.css">
 	<script type="text/javascript" async
 		src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML">
 	</script>
+	<link rel="stylesheet"
+	      href="http://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/styles/default.min.css">
+	<script src="http://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
 	<link rel="stylesheet" href="highlight/styles/default.css">
+	<style>
+	 .inline {
+	     display: inline;
+	     padding: 1px;
+	 }
+	</style>
     </head>
     <body>
 	<div class="cpt-slip">0</div>
@@ -16,7 +25,7 @@
 			<!-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!! ! -->
 			<!-- Slides du titre               ! -->
 			<!-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!! ! -->
-	    <div class="slide permanent" id="as-beamer" pos-x="3.5" pos-y="0.5" scale="1" rotate="0" delay="0">
+	    <div class="slide" id="as-beamer">
 		<div class="titre">Slip.js</div>
 		<div class="slide-body-container">
 		    <ul>
@@ -27,43 +36,105 @@
 				<li mk-hidden-at="0" mk-visible-at="2"><span emphasize-at="2">Prezi</span>, qui se déplace/zoome sur un dessin, rendant le tout plus captivant/original/...</li>
 			    </ul>
 			</li>
-			<li mk-hidden-at="0" mk-visible-at="3">Ce croisement donne le concept entièrement nouveau et révolutionnaire de <span emphasize-at="3">slip</span> : un slip est en quelque sorte un slide sans bord inférieur, la caméra se déplaçant petit à petit pour tout montrer.</li>
+			<li mk-hidden-at="0" mk-visible-at="3">Ce croisement donne le concept entièrement nouveau et révolutionnaire de <span emphasize-at="3">slip</span>.</li>
 		    </ul>
-		    <div class="theorem" title="Théorème fondamental du slip" mk-hidden-at="0" mk-visible-at="4">
-Slip.js, c'est la fête du slip.
+		    
+		    <div class="definition" title="Slip" mk-hidden-at="0" mk-visible-at="4">
+			Un slip est un slide sans bord inférieur (la caméra se déplaçant petit à petit pour tout montrer).
+		    </div>
+		    <div class="theorem" title="Théorème fondamental du slip" mk-hidden-at="0" mk-visible-at="5">
+			Slip.js, c'est la fête du slip.
 		    </div>
 		</div>
 	    </div>
 
-	    <div class="slide" id="base" pos-x="0.5" pos-y="0.5" scale="1" rotate="0" delay="0">
+	    <div class="slide" id="base">
+		<div class="titre">La base</div>
 		<div class="slide-body-container">
-		    <div class="titre">La base</div>
-		    Le document html minimal ressemble à cela :
-		    ...
+		    Il faut écrire du html. Voilà à quoi ressemble un .html minimal pour une présentation slip :
+		    <pre><code class="html">
+&lt;!doctype html&gt;
+&lt;html&gt;
+    &lt;head&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+	&lt;div class="cpt-slip"&gt;0&lt;/div&gt;
+	&lt;div class="presentation"&gt;
+	    &lt;div class="slide" id="id-slide-1"&gt; ... &lt;/div&gt;
+	    &lt;div class="slide" id="id-slide-2"&gt; ... &lt;/div&gt;
+	&lt;/div&gt;
+    &lt;/body&gt;
+    &lt;script src="slip.js"&gt;&lt;/script&gt;
+    &lt;script&gt;hljs.initHighlightingOnLoad();&lt;/script&gt;
+&lt;/html&gt;
+		    </code></pre>
 		</div>
 	    </div>
 	    
-	    <div class="slide" id="beamer-part" pos-x="4.5" pos-y="0.5" scale="1" rotate="0" delay="0">
-		<div class="titre">Beamer part</div>
+	    <div class="slide" id="beamer-part">
+		<div class="titre">Le passé : les slides</div>
 		<div class="slide-body-container">
 		    Nous listons les fonctionnalités "beamer-like" de slip.js :
 		    <ul>
-			<li chg-visib-at="0 1">On peut faire apparaître les choses petit à petit, avec chg-visib-at. Par exemple, le code de ce bullet a chg-visib-at="0 1"</li>
-			<li chg-visib-at="0 2">Le code de ce bullet a chg-visib-at="0 2"</li>
-			<li chg-visib-at="0 3 -4">On enlève un élément en mettant un nombre inférieur ou égal à zéro. Le code de ce bullet a chg-visib-at="0 3 -4". Faîtes attention, il disparaîtra au prochain next.</li>
-			<li chg-visib-at="0 4">On a un mécanisme pareil avec l'attribut <span emphasize-at="5">emphasize-at="5"</span>, <span emphasize-at="6">emphasize-at="6"</span>, <span emphasize-at="6 7">emphasize-at="6 7"</span>... </li>
-			<li chg-visib-at="0 8">On verra plus tard que quand ça devient compliqué, cette méthode n'est pas la meilleure (rajouter une étape nécessite de modifier tous les suivantes. Quelque chose comme \pause n'est pas encore implémenté)</li>
+			<li chg-visib-at="0 1">On peut faire apparaître les choses petit à petit, avec <pre class="inline"><code class="html inline">chg-visib-at</code></pre>. Par exemple, le code de ce bullet est <pre class="inline"><code class="html inline">&lt;li chg-visib-at="0 1"&gt;...&lt;/li&gt;</code></pre></li>
+			<li chg-visib-at="0 2">Le code de ce bullet est <pre class="inline"><code class="html inline">&lt;li chg-visib-at="0 2"&gt;...&lt;/li&gt;</code></pre></li>
+			<li chg-visib-at="0 3 -4">On enlève un élément en mettant un nombre inférieur ou égal à zéro. Le code de ce bullet est <pre class="inline"><code class="html inline">&lt;li chg-visib-at="0 3 -4"&gt;...&lt;/li&gt;</code></pre>. Faîtes attention, il disparaîtra au prochain next.</li>
+			<li chg-visib-at="0 4">On a un mécanisme pareil avec <pre class="inline"><code class="inline html">&lt;span emphasize-at="..."&gt;...&lt;/span&gt;</code></pre> : <span emphasize-at="5">emphasize-at="5"</span>, <span emphasize-at="6">emphasize-at="6"</span>, <span emphasize-at="6 7">emphasize-at="6 7"</span>... </li>
+			<li chg-visib-at="0 8">On verra plus tard que quand ça devient compliqué, cette méthode n'est pas la meilleure (rajouter une étape nécessite de modifier tous les numéros suivants. Quelque chose comme \pause n'est pas encore implémenté).</li>
 		    </ul>
-		    <div class="theorem" chg-visib-at="0 9">
-			On a aussi des environnements pour les théorèmes/definitions/examples... Il suffit de créer un div avec class="theorem".
+		    <div class="theorem" title="Le théorème du slip" chg-visib-at="0 9">
+			On a aussi des environnements pour les théorèmes/definitions/examples :
+			<pre><code class="html">&lt;div class="theorem" title="Le théorème du slip" chg-visib-at="0 9"&gt;
+    On a aussi des environnements pour les théorèmes/definitions/examples :
+        ...
+&lt;/div&gt;
+</code></pre>
+			L'attribut <pre class="inline"><code class="inline">title</code></pre> permet de choisir un titre.
 		    </div>
-		    <div class="definition" title="La définition du siècle" chg-visib-at="0 10">
-			On peut mettre un titre à ses définitions/theorèmes avec l'attribut title.
-		    </div>
-		    <div chg-visib-at="0 11">On peut aussi mettre des maths grâce à \(mathjax\). Bref, la base de beamer se traduit facilement en slip.</div>
+		    <!-- <div class="definition" title="La définition du siècle" chg-visib-at="0 10">
+			 On peut mettre un titre à ses définitions/theorèmes avec l'attribut title.
+			 </div> -->
+		    <div chg-visib-at="0 10">On peut aussi mettre des maths grâce à \(mathjax\). Bref, la base de beamer est là.</div>
 		</div>
 	    </div>
-	    <div class="slide" id="pythagore" pos-x="0.5" pos-y="0.5" scale="1" rotate="0" delay="0">
+
+	    <div class="slide" id="futur">
+		<div class="titre">Le futur : les slips</div>
+		<div class="slide-body-container">
+		    <h1>Problème</h1>
+		    Les problèmes des slides sont les suivants :
+		    <ul>
+			<li chg-visib-at="0 1">Les éléments affichés dès le début restent beaucoup plus de temps affichés sur l'écran que ceux apparaissant à la fin.</li>
+			<li chg-visib-at="0 2">De temps en temps, ce qu'on voudrait afficher ne tiens pas sur un slide, mais cela ne fait pas grand sens de le mettre sur deux slides.</li>
+			<li chg-visib-at="0 3">Souvent, les slides sont un fichier pdf, un format très restrictif sur ce qu'on peut faire.</li>
+		    </ul>
+		    <div chg-visib-at="0 3" class="block" title="Un peu de latin">
+			Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla vestibulum neque eu lectus euismod, eget congue massa ultrices. Integer et bibendum sem. Donec neque erat, laoreet et felis vitae, malesuada varius purus. Aenean lacinia tortor id justo consectetur, non volutpat est rhoncus. Praesent eget risus elit. Nullam tempus mi id erat aliquet, sit amet consequat erat volutpat. Phasellus elementum gravida nisl ut auctor. Donec quis massa a mauris tristique interdum gravida ac sem. Aliquam ligula massa, hendrerit et diam sit amet, vulputate consectetur ligula. Phasellus dictum nisl est, quis commodo nunc pellentesque vel. Nulla facilisi. Donec pharetra tellus ut auctor dignissim. Proin convallis ante in pellentesque consectetur. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Morbi tempor sem a lectus ullamcorper fringilla. Maecenas tempor metus mauris, non tincidunt ligula placerat non.			Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla vestibulum neque eu lectus euismod, eget congue massa ultrices. Integer et bibendum sem. Donec neque erat, laoreet et felis vitae, malesuada varius purus. Aenean lacinia tortor id justo consectetur, non volutpat est rhoncus. Praesent eget risus elit. Nullam tempus mi id erat aliquet, sit amet consequat erat volutpat. Phasellus elementum gravida nisl ut auctor. Donec quis massa a mauris tristique interdum gravida ac sem. 
+		    </div>
+		    <h1 chg-visib-at="0 4" >Solution !</h1>
+		    <div chg-visib-at="0 4" down-at="4" class="theorem">
+			Les slips pallient à ça !
+		    </div>
+		    <ul>
+			<li up-at="7" down-at="5" chg-visib-at="0 5">On peut déplacer l'écran pour voir un élément en bas avec <pre class="inline"><code class="inline html">down-at</code></pre>. Ici, on a <pre class="inline"><code class="inline html">&lt;li down-at="5"&gt;...&lt;/li&gt;</code></pre>.</li>
+			<li center-at="6" chg-visib-at="0 6">De même, on peut center sur un élément avec <pre class="inline"><code class="inline html">center-at</code></pre>.</li>
+			<li chg-visib-at="0 7">Si vraiment on souhaite ne plus voir ce qu'il y avait avant, on peut aligner un élément avec le haut de l'écran avec <pre class="inline"><code class="inline html">up-at</code></pre>. Ici c'est le premier item qui a en réalité <pre class="inline"><code class="inline html">&lt;li down-at="5" up-at="7"&gt;...&lt;/li&gt;</code></pre>.</li>
+			<h3 chg-visib-at="0 8">Ça, c'est le concept de slip : un slide infini vers le bas. Mais slip.js permet bien plus !</h3>
+			<li chg-visib-at="0 9">Par défaut, les slides sont positionnés en haut de "l'univers", de droite à gauche. On peut spécifier leur position, leur taille, et le temps pour arriver à ce slide.
+			    <pre><code class="html">&lt;div class="slide" id="id" pos-x="2" pos-y="3" scale="0.5" delay="1"&gt; ... &lt;/div&gt;</code></pre>
+			</li>
+			<li chg-visib-at="0 10">
+			    On peut utiliser tout le pouvoir de JS et HTML pour faire des choses interactives.
+			    <div style="position: relative; height:60px;">
+				<input style="transition: left 1s; position:absolute; left:0px; font-size: 1.5em" type="button" id="mouse" value="Click me!"/>
+			    </div>
+			</li>
+			    <iframe chg-visib-at="0 11" width="336" height="189" src="https://www.youtube.com/embed/qk00gbDwGqM" frameborder="0" allowfullscreen></iframe>
+		    </ul>
+		</div>
+	    </div>
+	    
+	    <div class="slide" id="pythagore">
 		<div class="slide-body-container">
 		    <div class="definition" title="Racine Carré">
 			On appelle racine carré de \(n\) et on note\(\sqrt{n}\) la racine carré de \(n\).
@@ -73,7 +144,7 @@ Slip.js, c'est la fête du slip.
 		    </div>
 		</div>
 	    </div>
-	    <div class="slide" id="philo" pos-x="1.5" pos-y="0.5" scale="1" rotate="0" delay="0">
+	    <div class="slide" id="philo">
 		<!-- <div class="slide-body-container"> -->
 		<!-- <img id="titre" src="slides.svg"/> -->
 		<!-- </div> -->
@@ -90,11 +161,23 @@ Slip.js, c'est la fête du slip.
 			<!-- Slides d'intro sur le calcul  ! -->
 			<!-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!! ! -->
 	</div>
-	<script src="highlight/highlight.pack.js"></script>
+	<!-- <script src="highlight/highlight.pack.js"></script>
+	     <script src="turing-machine.js"></script>
+	     <script src="canvas.js"></script> -->
 	<script src="slip.js"></script>
-	<script src="turing-machine.js"></script>
-	<script src="canvas.js"></script>
 	<script src="slides.js"></script>
-	<!-- <script>hljs.initHighlightingOnLoad();</script> -->
+	<script>hljs.initHighlightingOnLoad();</script>
+	<script>
+	 let but = document.querySelector("#mouse");
+	 console.log(but);
+	 but.addEventListener("mouseenter", (ev) => {
+	     console.log("mouseover", but.style.left);
+	     but.style.left = (but.style.left == "0px" ? "80%" : "0px");
+	 });
+	 but.addEventListener("click", (ev) => {
+	     /* but.style.color = "red";*/
+	     alert("yo");
+	 });
+	</script>
     </body>
 </html>

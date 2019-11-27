@@ -1,6 +1,6 @@
 
-let engine = new Engine();
-let presentation = new Presentation(engine);
+// let engine = new Engine();
+// let presentation = new Presentation(engine);
 
 let asBeamer = new Slide("as-beamer", [], presentation, engine, {});
 let beamerPart = new Slide("beamer-part", [], presentation, engine, {});
@@ -21,27 +21,27 @@ title.setAction([
 
 let philo = new Slide("philo", [], presentation, engine, {});
 
-presentation.setSlides([
-    asBeamer,
-    beamerPart,
-    title,
-    philo,
-], engine);
+// presentation.setSlides([
+//     asBeamer,
+//     beamerPart,
+//     title,
+//     philo,
+// ], engine);
 
-let controller = new Controller(engine, presentation);
+// let controller = new Controller(engine, presentation);
 // engine.setPresentation(presentation);
 
-presentation.start();
+// presentation.start();
 
-function getAnchor() {
-    var currentUrl = document.URL,
-	urlParts   = currentUrl.split('#');
+// function getAnchor() {
+//     var currentUrl = document.URL,
+// 	urlParts   = currentUrl.split('#');
 		
-    return (urlParts.length > 1) ? urlParts[1] : null;
-}
-let anchor = parseInt(getAnchor());
-if(anchor) {
-    for(let i=0;i<anchor; i++) {
-	presentation.next();
-    }
-}
+//     return (urlParts.length > 1) ? urlParts[1] : null;
+// }
+// let anchor = parseInt(getAnchor());
+// if(anchor) {
+//     for(let i=0;i<anchor; i++) {
+// 	presentation.next();
+//     }
+// }

@@ -64,20 +64,27 @@ let Engine = function() {
 	this.moveWindow(winX+dx, winY+dy, currentScale+dscale, currentRotate+drotate, delay);
     };
     this.placeSlides = function () {
+	let posX = 0.5;
+	let posY = 0.5;
 	slides.forEach((slide) => {
-	    // slide.style.width = openWindowWidth+"px";
-	    // slide.style.height = openWindowHeight+"px";
 	    let x=parseFloat(slide.getAttribute("pos-x")), y=parseFloat(slide.getAttribute("pos-y"));
+	    let scale = parseFloat(slide.getAttribute("scale"));
+	    let rotate = 0;
+	    scale = isNaN(scale) ? 1 : scale ;
+	    x = (isNaN(x) ? posX : x);
+	    y = (isNaN(y) ? posY : y);
+	    slide.setAttribute("pos-x", x);
+	    slide.setAttribute("pos-y", y);
+	    slide.setAttribute("scale", scale);
+	    slide.setAttribute("rotate", rotate);
+	    posX = x + 1;
+	    posY = y;
 	    slide.style.top = (y*1080 - 1080/2)+"px";
 	    slide.style.left = (x*1440 - 1440/2)+"px";
-	    // slide.style.transformOrigin = (openWindowWidth/2)+"px "+(openWindowHeight/2)+"px";
-	    // slide.style.transform = "rotate("+slide.getAttribute("rotate")+"deg) scale("+slide.getAttribute("scale")+")";
 	    if(!slide.classList.contains("permanent"))
 		slide.style.zIndex = "-1";
-	    // slide.style.transformOrigin = "0px 0px";
 	    slide.style.transformOrigin = "50% 50%";
-	    // console.log("frame scale is", slide.scale);
-	    slide.style.transform = "scale("+parseFloat(slide.getAttribute("scale"))+")";
+	    slide.style.transform = "scale("+scale+")";
 
 	});	
     };
@@ -184,7 +191,7 @@ function Slide (name, actionL, present, ng, options) {
     this.y = parseFloat(this.element.getAttribute("pos-y"));
     this.scale = parseFloat(this.element.getAttribute("scale"));
     this.rotate = parseFloat(this.element.getAttribute("rotate"));
-    this.delay = parseFloat(this.element.getAttribute("delay"));
+    this.delay = isNaN(parseFloat(this.element.getAttribute("delay"))) ? 0 : (parseFloat(this.element.getAttribute("delay")));
 
     this.query = (quer) => this.element.querySelector(quer);
     this.queryAll = (quer) => this.element.querySelectorAll(quer);
@@ -220,7 +227,7 @@ function Slide (name, actionL, present, ng, options) {
 	});	
 	this.queryAll("*[chg-visib-at]").forEach((elem) => {
 	    let visibAt = elem.getAttribute("chg-visib-at").split(" ").map((str) => parseInt(str));
-	    console.log("vusubAt", elem.getAttribute("chg-visib-at").split(" "), visibAt);
+	    console.log("fromHideAndShow", actionIndex);
 	    if(visibAt.includes(actionIndex))
 		elem.style.opacity = "1";
 	    if(visibAt.includes(-actionIndex))
@@ -232,10 +239,22 @@ function Slide (name, actionL, present, ng, options) {
     this.next = function (presentation) {
 	if(actionIndex >= this.getMaxNext())
 	    return false;
-	if(actionIndex < actionList.length)
-	    actionList[actionIndex](this);
 	actionIndex = actionIndex+1;
 	this.hideAndShow();
+	this.queryAll("*[down-at]").forEach((elem) => {
+	    let goDownTo = elem.getAttribute("down-at").split(" ").map((str) => parseInt(str));
+	    if(goDownTo.includes(actionIndex))
+		this.moveDownTo(elem, 1);});
+	this.queryAll("*[up-at]").forEach((elem) => {
+	    let goTo = elem.getAttribute("up-at").split(" ").map((str) => parseInt(str));
+	    if(goTo.includes(actionIndex))
+		this.moveUpTo(elem, 1);});
+	this.queryAll("*[center-at]").forEach((elem) => {
+	    let goDownTo = elem.getAttribute("center-at").split(" ").map((str) => parseInt(str));
+	    if(goDownTo.includes(actionIndex))
+		this.moveCenterTo(elem, 1);});
+	if(actionIndex <= actionList.length)
+	    actionList[actionIndex-1](this);
 	return true;
     };
     this.firstVisit = () => {
@@ -257,30 +276,35 @@ function Slide (name, actionL, present, ng, options) {
 	console.log(this.element);
 	// this.element.outerHTML = initialHTML;
 	this.element.innerHTML = innerHTML;
-	if(MathJax)
-	    MathJax.typeset();
-	options.init();
+	// if(MathJax && typeof Mathjax.typeset == "function")
+	//     MathJax.typeset();
+	this.init();
 	this.firstVisit();
 	console.log("ai", actionIndex);
     };
     this.init(this, presentation, engine);
     this.moveUpTo = (selector, delay,  offset) => {
-	if (typeof offset == "undefined")
-	    offset = 0.0125;
-	let d = ((this.query(selector).offsetTop)/1080-offset)*this.scale;
-	console.log(engine);
+	let elem;
+	if(typeof selector == "string") elem = this.query(selector);
+	else elem = selector;
+	if (typeof offset == "undefined") offset = 0.0125;
+	let d = ((elem.offsetTop)/1080-offset)*this.scale;
 	engine.moveWindow(this.x, this.y+d, this.scale, this.rotate, delay);
     };
     this.moveDownTo = (selector, delay, offset) => {
-	if (typeof offset == "undefined")
-	    offset = 0.0125;
-	let d = ((this.query(selector).offsetTop+this.query(selector).offsetHeight)/1080-1+offset)*this.scale;
+	let elem;
+	if(typeof selector == "string") elem = this.query(selector);
+	else elem = selector;
+	if (typeof offset == "undefined") offset = 0.0125;
+	let d = ((elem.offsetTop+elem.offsetHeight)/1080 - 1 + offset)*this.scale;
 	engine.moveWindow(this.x, this.y+d, this.scale, this.rotate, delay);
     };
     this.moveCenterTo = (selector, delay, offset) => {
-	if (typeof offset == "undefined")
-	    offset = 0;
-	let d = ((this.query(selector).offsetTop+this.query(selector).offsetHeight/2)/1080-1/2+offset)*this.scale;
+	let elem;
+	if(typeof selector == "string") elem = this.query(selector);
+	else elem = selector;
+	if (typeof offset == "undefined") offset = 0;
+	let d = ((elem.offsetTop+elem.offsetHeight/2)/1080-1/2+offset)*this.scale;
 	engine.moveWindow(this.x, this.y+d, this.scale, this.rotate, delay);
     };
     this.reveal = (selector) => {
@@ -303,6 +327,9 @@ function Slide (name, actionL, present, ng, options) {
 	 "mk-unemphasize-at",
 	 "emphasize-at",
 	 "chg-visib-at",
+	 "up-at",
+	 "down-at",
+	 "center-at",
 	].forEach((attr) => {
 	     this.queryAll("*["+attr+"]").forEach((elem) => {
 		 elem.getAttribute(attr).split(" ").forEach((strMax) => {
@@ -316,7 +343,8 @@ function Slide (name, actionL, present, ng, options) {
 
 let Presentation = function (ng, ls) {
     if(!ls)
-	ls=[];
+	ls = Array.from(document.querySelectorAll(".slide")).map((elem) => { return new Slide(elem.id, [], this, ng, {});});
+    console.log(ls);
     let cpt = 0;
     this.getCpt = () => cpt;
     
@@ -388,32 +416,21 @@ let Presentation = function (ng, ls) {
     };
 };
 
+let engine = new Engine();
+let presentation = new Presentation(engine);
+let controller = new Controller(engine, presentation);
+presentation.start();
 
-let addPoint = (p) => {
-    let x=p.x;
-    let y=p.y;
-    let canvas = document.querySelector(".custom-canvas");
-    let point = document.createElement("div");
-    point.classList.add("point");
-    point.style.top = y+"px";
-    point.style.left = x+"px";
-    canvas.appendChild(point);
-    return point;
-};
-let addLine = (p0, p1) => {
-    let x0 = p0.x, y0 = p0.y, x1 = p1.x, y1 = p1.y;
-    let canvas = document.querySelector(".custom-canvas");
-    let line = document.createElement("div");
-    line.classList.add("line", "movable");
-    line.style.top = (y0+12)+"px";
-    line.style.left = (x0+15)+"px";
-    line.style.width = (Math.sqrt((y1-y0)*(y1-y0)+(x1-x0)*(x1-x0)))+"px";
-    let deg = Math.atan((y1-y0)/(x1-x0))/Math.PI*180;
-    if(x1-x0<0)
-	deg = deg+180;
-    line.style.transform="rotate("+deg+"deg)";
-    canvas.appendChild(line);
-    return line;
+function getAnchor() {
+    var currentUrl = document.URL,
+	urlParts   = currentUrl.split('#');
+		
+    return (urlParts.length > 1) ? urlParts[1] : null;
+}
+let anchor = parseInt(getAnchor());
+if(anchor) {
+    for(let i=0;i<anchor; i++) {
+	presentation.next();
+    }
+}
 
-    
-};
