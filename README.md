@@ -12,7 +12,9 @@ In order to make you own presentations, you only need to include the file `slip.
     <head>
 	<title>Title</title>
 	<meta charset="utf-8" />
-	<link rel="stylesheet" type="text/css" href="slides.css">
+	<!-- You can use https://choum.net/panglesd/slides/slip-js/slides.css as a CDN for now -->
+	<link rel="stylesheet" type="text/css" href="slides.css"> 
+	<!-- You can use https://choum.net/panglesd/slides/slip-js/theorem.css as a CDN for now -->
 	<link rel="stylesheet" type="text/css" href="theorem.css">
     </head>
     <body>
@@ -20,6 +22,7 @@ In order to make you own presentations, you only need to include the file `slip.
 	<div class="presentation">
 	    <div class="slide" id="slide-id"></div>
 	</div>
+    <!-- You can use https://choum.net/panglesd/slides/slip-js/slip.js as a CDN for now -->
 	<script src="slip.js"></script>	
     </body>
 </html>
