@@ -28,8 +28,8 @@ In order to make you own presentations, you only need to include the file `slip.
 ## Writing slips
    
    You can create a new slide by creating an element `<div class="slide"></div>`. Inside is any html. If you don't like writing HTML, there are two possibilities:
-   - Get a good editor so that it ease the pain,
-   - Use another syntax, and convert it to html after (and add necessited attributes).
+   - Get a good editor so that it eases the pain,
+   - Use another syntax, and convert it to html after (and add needed attributes).
 
    By default, slips behave just as slides. But you can specify the position of the slip in the big canvas that is the universe by adding some attributes. The attributes `pos-x` and `pos-y` specify the position, `scale` and `rotate` the scale and rotation, while `delay` specify how long it takes to move to the slip.
    ```html
