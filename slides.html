@@ -92,16 +92,16 @@
 			    We have a similar mechanism with <pre class="inline-code"><code class="inline-code html">&lt;span emphasize-at="..."&gt;...&lt;/span&gt;</code></pre> : <span emphasize-at="5">emphasize-at="5"</span>, <span emphasize-at="6">emphasize-at="6"</span>, <span emphasize-at="6 7">emphasize-at="6 7"</span>...
 			</li>
 		    </ul>
-		    <div class="theorem" title="Slip's recursion theorem" chg-visib-at="0 9">
+		    <div class="theorem" title="Slip's recursion theorem" chg-visib-at="0 8">
 			We also have environment for theorems/definitions/examples:
-			<pre><code class="html">&lt;div class="theorem" title="Slip's recursion theorem" chg-visib-at="0 9"&gt;
+			<pre><code class="html">&lt;div class="theorem" title="Slip's recursion theorem" chg-visib-at="0 8"&gt;
 We also have environment for theorems/definitions/examples:
         ...
 &lt;/div&gt;
 			</code></pre>
 			The <pre class="inline-code"><code class="inline-code">title</code></pre> attribute allows to choose the title.
 		    </div>
-		    <div chg-visib-at="0 10">We can also write math with \(mathjax\). This amounts to most of the things done with slides.</div>
+		    <div chg-visib-at="0 9">We can also write math with \(mathjax\). This amounts to most of the things done with slides.</div>
 		</div>
 	    </div>
 
@@ -126,7 +126,7 @@ We also have environment for theorems/definitions/examples:
 		    <ul>
 			<li up-at="7" down-at="5" chg-visib-at="0 5">We can move the screen to see an element below with <pre class="inline-code"><code class="inline-code html">down-at</code></pre>. Here, we have <pre class="inline-code"><code class="inline-code html">&lt;li down-at="5"&gt;...&lt;/li&gt;</code></pre>.</li>
 			<li center-at="6" chg-visib-at="0 6">Same, we can center on an element with <pre class="inline-code"><code class="inline-code html">center-at</code></pre>.</li>
-			<li chg-visib-at="0 7">If we really don't want to see what was before, we can align an element with the top of the screen with <pre class="inline-code"><code class="inline-code html">up-at</code></pre>. Here, the first bulet code has in reality <pre class="inline-code"><code class="inline-code html">&lt;li down-at="5" up-at="7"&gt;...&lt;/li&gt;</code></pre>.</li>
+			<li chg-visib-at="0 7">If we really don't want to see what was before, we can align an element with the top of the screen with <pre class="inline-code"><code class="inline-code html">up-at</code></pre>. Here, the first bullet code has in reality <pre class="inline-code"><code class="inline-code html">&lt;li down-at="5" up-at="7"&gt;...&lt;/li&gt;</code></pre>.</li>
 			<h3 chg-visib-at="0 8">This is the concept of slip.js: a downward infinite slide. But slip.js is much more!</h3>
 			<li chg-visib-at="0 9">By default, slips are positioned on top of the "universe", from left to right. <span chg-visib-at="0 11" emphasize-at="11">But we can specify their position, size, and the time taken to go to this slide.</span>
 			    <pre chg-visib-at="0 11"><code class="html">&lt;div class="slide" id="id" pos-x="3.5" pos-y="2.025" scale="0.25" delay="1"&gt; ... &lt;/div&gt;</code></pre>
@@ -176,7 +176,7 @@ We also have environment for theorems/definitions/examples:
 				     }
 				    </style>
 				    <div style="margin-top:50px; text-align: center">
-					<!-- Argh random copy-pasted html ... ->
+					<!-- Argh random copy-pasted html ... -->
 					<div id="container">
 					    <div class="square black"><div class="square"><div class="square black"><div class="square"><div class="square black"><div class="square"><div class="square black"><div class="square"><div class="square black"><div class="square"><div class="square black"><div class="square"><div class="square black"><div class="square"><div class="square black"><div class="square"><div class="square black"><div class="square"><div class="square black"><div class="square"><div class="square black"><div class="square"><div class="square black"><div class="square"><div class="square black"><div class="square"><div class="square black"><div class="square"><div class="square black"></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div>
 					</div>
@@ -242,12 +242,12 @@ presentation.setSlides([intro, devel, intro]);</code></pre>
 &lt;/div&gt;</code></pre>
 			    <!-- I used to have jsfiddle/codepen here instead, but they are sized for usual website and you have to pay for adding custom css... ->
 			    <!-- <iframe width="100%" height="300" src="http://jsfiddle.net/t35m7dsh/1/embedded/js,html/dark/?fontColor=blue" allowfullscreen="allowfullscreen" allowpaymentrequest frameborder="0"></iframe>-->
-
+			    
 			</li>
 		    </ul>
 		</div>
 	    </div>
-
+	    
 	    <!--    The two small slips used to show slip placement                        -->
 	    <div class="slide" id="red" style="background-color:red" pos-x="3.25" pos-y="2.025" scale="0.25" delay="1">
 		<div class="titre">Choose a color</div>
