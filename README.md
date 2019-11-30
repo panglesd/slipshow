@@ -2,7 +2,7 @@
 
 This is not another slide engine, but a slip engine with fine customization: not only on the cosmetic part, but also on the interactive part.
 
-You can find an example here for a presentation of slip.js, and an example here for the slips of my thesis.
+You can find two example at the bottom of this readme.
 
 In order to make you own presentations, you only need to include the file `slip.js`, and follow the slip structure for your html document. Here is a template:
 
