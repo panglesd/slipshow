@@ -71,7 +71,7 @@ Soon, you'll be able to have a list of your slides and go directly to the one yo
 ## Examples
 
 - [The slips of my thesis](http://choum.net/panglesd/slides/slides-js/slides.html) (old version of the engine)
-- [The slips to present slip](http://choum.net/panglesd/slides/slips-js/slides.html)
+- [The slips to present slip](http://choum.net/panglesd/slides/slip-js/slides.html)
 
 ## TODO
 
