@@ -6,7 +6,7 @@ You can find an example here for a presentation of slip.js, and an example here 
 
 In order to make you own presentations, you only need to include the file `slip.js`, and follow the slip structure for your html document. Here is a template:
 
-```
+```html
 <!doctype html>
 <html>
     <head>
@@ -28,11 +28,11 @@ In order to make you own presentations, you only need to include the file `slip.
 ## Writing slips
    
    You can create a new slide by creating an element `<div class="slide"></div>`. Inside is any html. If you don't like writing HTML, there are two possibilities:
-     -Get a good editor so that it ease the pain,
-     -Use another syntax, and convert it to html after (and add necessited attributes).
+   - Get a good editor so that it ease the pain,
+   - Use another syntax, and convert it to html after (and add necessited attributes).
 
    By default, slips behave just as slides. But you can specify the position of the slip in the big canvas that is the universe by adding some attributes. The attributes `pos-x` and `pos-y` specify the position, `scale` and `rotate` the scale and rotation, while `delay` specify how long it takes to move to the slip.
-   ```
+   ```html
    <div class="slide" id="links" pos-x="2" pos-y="2" scale="4.3" delay="3">
    ```
 
@@ -70,9 +70,9 @@ Soon, you'll be able to have a list of your slides and go directly to the one yo
 
 ## TODO
 
--Table of content of all slips when pressing a button,
--Better going back and slip counter,
--Be consistent and replace slides with slip in slip.js,
--...
+- Table of content of all slips when pressing a button,
+- Better going back and slip counter,
+- Be consistent and replace slides with slip in slip.js,
+- ...
 
    
