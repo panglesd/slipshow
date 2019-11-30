@@ -5,15 +5,18 @@
 	<meta charset="utf-8" />
 	<link rel="stylesheet" type="text/css" href="slides.css">
 	<link rel="stylesheet" type="text/css" href="theorem.css">
+	<!-- For the use of mathjax -->
 	<script type="text/javascript" async
 		      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML">
 	</script>
+	<!-- For the use of highlight.js -->
 	<link rel="stylesheet"
 	      href="http://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/styles/default.min.css">
 	<script src="http://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.16.2/build/highlight.min.js"></script>
 	<link rel="stylesheet" href="highlight/styles/default.css">
+	<!-- Highlight.js does not support inline coloring, this is a work-around -->
 	<style>
-	 .inline {
+	 .inline-code {
 	     display: inline;
 	     padding: 1px;
 	 }
@@ -22,36 +25,36 @@
     <body>
 	<div class="cpt-slip">0</div>
 	<div class="presentation">
-	    <!-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!! ! -->
-	    <!-- Slides du titre               ! -->
-	    <!-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!! ! -->
+
+	    <!--    First slip, an introduction                                  -->
 	    <div class="slide" id="intro">
-		<div class="titre">Slip.js</div>
-		<div class="slide-body-container">
+		<div class="titre">Slip.js</div>       <!-- Beamer style title   -->
+		<div class="slide-body-container">     <!-- Beamer style margin  -->
 		    <ul>
-			<li mk-hidden-at="0" mk-visible-at="0"><span emphasize-at="0">Slip.js</span> is a "slide" engine written in javascript.</li>
-			<li mk-hidden-at="0" mk-visible-at="1">Its goal is to keep the best from both worlds of:
+			<li><span emphasize-at="0">Slip.js</span> is a "slide" engine written in javascript.</li>
+			<li chg-visib-at="0 1">Its goal is to keep the best from both worlds of:
 			    <ul>
-				<li mk-hidden-at="0" mk-visible-at="1"><span emphasize-at="1">Beamer</span>, its simplicity to create slides without worrying too much on presentation.</li>
-				<li mk-hidden-at="0" mk-visible-at="2"><span emphasize-at="2">Prezi</span>, which moves/zoom on a canvas, making it nice/original/showing the structure...</li>
+				<li chg-visib-at="0 1"><span emphasize-at="1">Beamer</span>, its simplicity to create slides without worrying too much on presentation.</li>
+				<li chg-visib-at="0 2"><span emphasize-at="2">Prezi</span>, which moves/zoom on a canvas, making it nice/original/showing the structure...</li>
 			    </ul>
 			</li>
-			<li mk-hidden-at="0" mk-visible-at="3">This hybrid gives birth to the concept of <span emphasize-at="3">slip</span>.</li>
+			<li chg-visib-at="0 3">This hybrid gives birth to the concept of <span emphasize-at="3">slip</span>.</li>
 		    </ul>
-
-		    <div class="definition" title="Slip" mk-hidden-at="0" mk-visible-at="4">
+		    <div class="definition" title="Slip" chg-visib-at="0 4"> <!-- Beamer style definition -->
 			A slip is a slide without inferior boundary (the view moving step by step to show it entirely).
 		    </div>
-		    <div class="theorem" title="Fundamental Theorem of slip" mk-hidden-at="0" mk-visible-at="5">
+		    <div class="theorem" title="Fundamental Theorem of slip" chg-visib-at="0 5">  <!-- Beamer style theorem -->
 			Slip.js, it's slip party.
 		    </div>
 		</div>
 	    </div>
 
+	    <!--    Second slip, the basics                        -->
 	    <div class="slide" id="base">
 		<div class="titre">The basics</div>
 		<div class="slide-body-container">
 		    You need to write html. This is what a minimal slip presentation looks like:
+		    <!-- Sorry for the mess: including html into html is not very readable... -->
 		    <pre><code class="html">
 &lt;!doctype html&gt;
 &lt;html&gt;
@@ -70,54 +73,60 @@
 		</div>
 	    </div>
 
+	    <!--    Third slip, the beamer part                        -->
 	    <div class="slide" id="beamer-part">
 		<div class="titre">The past: slides</div>
 		<div class="slide-body-container">
 		    We list the "slides" behaviour that slip can also do:
 		    <ul>
-			<li chg-visib-at="0 1">We can make things appear step by step, with <pre class="inline"><code class="html inline">chg-visib-at</code></pre>. For instance, this bullet code is <pre class="inline"><code class="html inline">&lt;li chg-visib-at="0 1"&gt;...&lt;/li&gt;</code></pre>.</li>
-			<li chg-visib-at="0 2">This bullet code is <pre class="inline"><code class="html inline">&lt;li chg-visib-at="0 2"&gt;...&lt;/li&gt;</code></pre>.</li>
-			<li chg-visib-at="0 3 -4">We hide an element by putting a number below or equal zero. This bullet code is <pre class="inline"><code class="html inline">&lt;li chg-visib-at="0 3 -4"&gt;...&lt;/li&gt;</code></pre>. Be careful, it will soon disappear.</li>
-			<li chg-visib-at="0 4">We have a similar mechanism with <pre class="inline"><code class="inline html">&lt;span emphasize-at="..."&gt;...&lt;/span&gt;</code></pre> : <span emphasize-at="5">emphasize-at="5"</span>, <span emphasize-at="6">emphasize-at="6"</span>, <span emphasize-at="6 7">emphasize-at="6 7"</span>... </li>
-			<!-- <li chg-visib-at="0 8">On verra plus tard que quand ça devient compliqué, cette méthode n'est pas la meilleure (rajouter une étape nécessite de modifier tous les numéros suivants. Quelque chose comme \pause n'est pas encore implémenté).</li> -->
+			<!-- Highlight makes it unreadable, should be changed. -->
+			<li chg-visib-at="0 1">
+			    We can make things appear step by step, with <pre class="inline-code"><code class="html inline-code">chg-visib-at</code></pre>. For instance, this bullet code is <pre class="inline-code"><code class="html inline-code">&lt;li chg-visib-at="0 1"&gt;...&lt;/li&gt;</code></pre>.
+			</li>
+			<li chg-visib-at="0 2">
+			    This bullet code is <pre class="inline-code"><code class="html inline-code">&lt;li chg-visib-at="0 2"&gt;...&lt;/li&gt;</code></pre>.
+			</li>
+			<li chg-visib-at="0 3 -4">
+			    We hide an element by putting a number below or equal zero. This bullet code is <pre class="inline-code"><code class="html inline-code">&lt;li chg-visib-at="0 3 -4"&gt;...&lt;/li&gt;</code></pre>. Be careful, it will soon disappear.</li>
+			<li chg-visib-at="0 4">
+			    We have a similar mechanism with <pre class="inline-code"><code class="inline-code html">&lt;span emphasize-at="..."&gt;...&lt;/span&gt;</code></pre> : <span emphasize-at="5">emphasize-at="5"</span>, <span emphasize-at="6">emphasize-at="6"</span>, <span emphasize-at="6 7">emphasize-at="6 7"</span>...
+			</li>
 		    </ul>
-		    <div class="theorem" title="Le théorème du slip" chg-visib-at="0 9">
+		    <div class="theorem" title="Slip's recursion theorem" chg-visib-at="0 9">
 			We also have environment for theorems/definitions/examples:
 			<pre><code class="html">&lt;div class="theorem" title="Slip's recursion theorem" chg-visib-at="0 9"&gt;
 We also have environment for theorems/definitions/examples:
         ...
 &lt;/div&gt;
 			</code></pre>
-			The <pre class="inline"><code class="inline">title</code></pre> attribute allows to choose the title.
+			The <pre class="inline-code"><code class="inline-code">title</code></pre> attribute allows to choose the title.
 		    </div>
-		    <!-- <div class="definition" title="La définition du siècle" chg-visib-at="0 10">
-			 On peut mettre un titre à ses définitions/theorèmes avec l'attribut title.
-			 </div> -->
-		    <div chg-visib-at="0 10">We can also write math with \(mathjax\). This amounts to most of the things done with slides (tikz can be used by converting it to svg).</div>
+		    <div chg-visib-at="0 10">We can also write math with \(mathjax\). This amounts to most of the things done with slides.</div>
 		</div>
 	    </div>
 
+	    <!--    Fouth slip, the slip part                        -->
 	    <div class="slide" id="futur">
 		<div class="titre">The future: slips</div>
 		<div class="slide-body-container">
 		    <h1>Problem</h1>
 		    The problems with slides are the following:
 		    <ul>
-			<li chg-visib-at="0 1">The elements appearing at the beginning of a slide stay much longer on screen than those appearing at the end.<!-- Les éléments affichés dès le début restent beaucoup plus de temps affichés sur l'écran que ceux apparaissant à la fin. --></li>
+			<li chg-visib-at="0 1">The elements appearing at the beginning of a slide stay much longer on screen than those appearing at the end.</li>
 			<li chg-visib-at="0 2">From time to time, we would like to show something that is just slightly bigger than a slide, but does not fit, and separating it in two slides is not really possible.</li>
 			<li chg-visib-at="0 3">The pdf format is very restricted on "interactivity".</li>
 		    </ul>
 		    <div chg-visib-at="0 3" class="block" title="Un peu de latin">
-			Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla vestibulum neque eu lectus euismod, eget congue massa ultrices. Integer et bibendum sem. Donec neque erat, laoreet et felis vitae, malesuada varius purus. Aenean lacinia tortor id justo consectetur, non volutpat est rhoncus. Praesent eget risus elit. Nullam tempus mi id erat aliquet, sit amet consequat erat volutpat. Phasellus elementum gravida nisl ut auctor. Donec quis massa a mauris tristique interdum gravida ac sem. Aliquam ligula massa, hendrerit et diam sit amet, vulputate consectetur ligula. Phasellus dictum nisl est, quis commodo nunc pellentesque vel. Nulla facilisi. Donec pharetra tellus ut auctor dignissim. Proin convallis ante in pellentesque consectetur. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Morbi tempor sem a lectus ullamcorper fringilla. Maecenas tempor metus mauris, non tincidunt ligula placerat non.			Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla vestibulum neque eu lectus euismod, eget congue massa ultrices. Integer et bibendum sem. Donec neque erat, laoreet et felis vitae, malesuada varius purus. Aenean lacinia tortor id justo consectetur, non volutpat est rhoncus. Praesent eget risus elit. Nullam tempus mi id erat aliquet, sit amet consequat erat volutpat. Phasellus elementum gravida nisl ut auctor. Donec quis massa a mauris tristique interdum gravida ac sem.
+			Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla vestibulum neque eu lectus euismod, eget congue massa ultrices. Integer et bibendum sem. Donec neque erat, laoreet et felis vitae, malesuada varius purus. Aenean lacinia tortor id justo consectetur, non volutpat est rhoncus. Praesent eget risus elit. Nullam tempus mi id erat aliquet, sit amet consequat erat volutpat. Phasellus elementum gravida nisl ut auctor. Donec quis massa a mauris tristique interdum gravida ac sem. Aliquam ligula massa, hendrerit et diam sit amet, vulputate consectetur ligula. Phasellus dictum nisl est, quis commodo nunc pellentesque vel. Nulla facilisi. Donec pharetra tellus ut auctor dignissim. Proin convallis ante in pellentesque consectetur. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Morbi tempor sem a lectus ullamcorper fringilla. Maecenas tempor metus mauris, non tincidunt ligula placerat non. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla vestibulum neque eu lectus euismod, eget congue massa ultrices. Integer et bibendum sem. Donec neque erat, laoreet et felis vitae, malesuada varius purus. Aenean lacinia tortor id justo consectetur, non volutpat est rhoncus. Praesent eget risus elit. Nullam tempus mi id erat aliquet, sit amet consequat erat volutpat. Phasellus elementum gravida nisl ut auctor. Donec quis massa a mauris tristique interdum gravida ac sem.
 		    </div>
 		    <h1 chg-visib-at="0 4" >Solution!</h1>
 		    <div chg-visib-at="0 4" down-at="4" class="theorem">
 			Slips address this!
 		    </div>
 		    <ul>
-			<li up-at="7" down-at="5" chg-visib-at="0 5">We can move the screen to see an element below with <pre class="inline"><code class="inline html">down-at</code></pre>. Here, we have <pre class="inline"><code class="inline html">&lt;li down-at="5"&gt;...&lt;/li&gt;</code></pre>.</li>
-			<li center-at="6" chg-visib-at="0 6">Same, we can center on an element with <pre class="inline"><code class="inline html">center-at</code></pre>.</li>
-			<li chg-visib-at="0 7">If we really don't want to see what was before, we can align an element with the top of the screen with <pre class="inline"><code class="inline html">up-at</code></pre>. Here, the first bulet code has in reality <pre class="inline"><code class="inline html">&lt;li down-at="5" up-at="7"&gt;...&lt;/li&gt;</code></pre>.</li>
+			<li up-at="7" down-at="5" chg-visib-at="0 5">We can move the screen to see an element below with <pre class="inline-code"><code class="inline-code html">down-at</code></pre>. Here, we have <pre class="inline-code"><code class="inline-code html">&lt;li down-at="5"&gt;...&lt;/li&gt;</code></pre>.</li>
+			<li center-at="6" chg-visib-at="0 6">Same, we can center on an element with <pre class="inline-code"><code class="inline-code html">center-at</code></pre>.</li>
+			<li chg-visib-at="0 7">If we really don't want to see what was before, we can align an element with the top of the screen with <pre class="inline-code"><code class="inline-code html">up-at</code></pre>. Here, the first bulet code has in reality <pre class="inline-code"><code class="inline-code html">&lt;li down-at="5" up-at="7"&gt;...&lt;/li&gt;</code></pre>.</li>
 			<h3 chg-visib-at="0 8">This is the concept of slip.js: a downward infinite slide. But slip.js is much more!</h3>
 			<li chg-visib-at="0 9">By default, slips are positioned on top of the "universe", from left to right. <span chg-visib-at="0 11" emphasize-at="11">But we can specify their position, size, and the time taken to go to this slide.</span>
 			    <pre chg-visib-at="0 11"><code class="html">&lt;div class="slide" id="id" pos-x="3.5" pos-y="2.025" scale="0.25" delay="1"&gt; ... &lt;/div&gt;</code></pre>
@@ -137,6 +146,7 @@ We also have environment for theorems/definitions/examples:
 				</li>
 				<li down-at="15" chg-visib-at="0 15">
 				    Any random CSS trick copy-pasted from the internet:
+				    <!-- Should certainly be in a separate file, but as it is random copy-pasted css, it is allowed here -->
 				    <style>
 				     #container {
 					 height: 200px;
@@ -166,6 +176,7 @@ We also have environment for theorems/definitions/examples:
 				     }
 				    </style>
 				    <div style="margin-top:50px; text-align: center">
+					<!-- Argh random copy-pasted html ... ->
 					<div id="container">
 					    <div class="square black"><div class="square"><div class="square black"><div class="square"><div class="square black"><div class="square"><div class="square black"><div class="square"><div class="square black"><div class="square"><div class="square black"><div class="square"><div class="square black"><div class="square"><div class="square black"><div class="square"><div class="square black"><div class="square"><div class="square black"><div class="square"><div class="square black"><div class="square"><div class="square black"><div class="square"><div class="square black"><div class="square"><div class="square black"><div class="square"><div class="square black"></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div>
 					</div>
@@ -174,16 +185,26 @@ We also have environment for theorems/definitions/examples:
 			    </ul>
 			</li>
 		    </ul>
+		    
+		    <!-- Still in the same slip, but somehow next part. Use of a usual html title (h1). -->
 		    <h1 chg-visib-at="0 16" up-at="16">Slip.js advanced: fine control of events</h1>
 		    <ul>
-			<li chg-visib-at="0 17">When <pre class="inline"><code class="inline">slip.js</code></pre> is loaded, several objects are defined:
+			<li chg-visib-at="0 17">When <pre class="inline-code"><code class="inline-code">slip.js</code></pre> is loaded, several objects are defined:
 			    <ul>
-				<li>A variable <pre class="inline"><code class="inline">engine</code></pre> which allows to command the window showing the slides. It has the method <pre class="inline"><code class="inline">moveWindow(x, y, scale, rotate, delay)</code></pre>, <pre class="inline"><code class="inline">moveWindowRelative(dx, dy, dscale, drotate, delay)</code></pre>. </li>
-				<li  chg-visib-at="0 18">A variable <pre class="inline"><code class="inline">presentation</code></pre> which allows to command the presentation. It has the method <pre class="inline"><code class="inline">next()</code></pre>, <pre class="inline"><code class="inline">nextSlide()</code></pre>, <pre class="inline"><code class="inline">gotoSlideIndex()</code></pre>, <pre class="inline"><code class="inline">getCurrentSlide()</code></pre>, <pre class="inline"><code class="inline">get/setSlides()</code></pre>, <pre class="inline"><code class="inline">refresh()</code></pre>. </li>
-				<li chg-visib-at="0 19">An object <pre class="inline"><code class="inline">slide</code></pre> correspond to an HTML element of class <pre class="inline"><code class="inline">slide</code></pre>. It has the method <pre class="inline"><code class="inline">query(selector)</code></pre>, <pre class="inline"><code class="inline">queryAll(selector)</code></pre>, <pre class="inline"><code class="inline">next()</code></pre>, <pre class="inline"><code class="inline">move{Up;Down;Center}To(selector, delay, offset)</code></pre>, <pre class="inline"><code class="inline">{reveal;hide}{∅;All}(selector)</code></pre>, <pre class="inline"><code class="inline">setAction(actionList)</code></pre>, <pre class="inline"><code class="inline">setNthAction(n, action)</code></pre>. An action is a function which takes a slide as input.</li>
+				<!-- highlight.js again messing with readability -->
+				<li>
+				    A variable <pre class="inline-code"><code class="inline-code">engine</code></pre> which allows to command the window showing the slides. It has the method <pre class="inline-code"><code class="inline-code">moveWindow(x, y, scale, rotate, delay)</code></pre>, <pre class="inline-code"><code class="inline-code">moveWindowRelative(dx, dy, dscale, drotate, delay)</code></pre>.
+				</li>
+				<li chg-visib-at="0 18">
+				    A variable <pre class="inline-code"><code class="inline-code">presentation</code></pre> which allows to command the presentation. It has the method <pre class="inline-code"><code class="inline-code">next()</code></pre>, <pre class="inline-code"><code class="inline-code">nextSlide()</code></pre>, <pre class="inline-code"><code class="inline-code">gotoSlideIndex()</code></pre>, <pre class="inline-code"><code class="inline-code">getCurrentSlide()</code></pre>, <pre class="inline-code"><code class="inline-code">get/setSlides()</code></pre>, <pre class="inline-code"><code class="inline-code">refresh()</code></pre>.
+				</li>
+				<li chg-visib-at="0 19">
+				    An object <pre class="inline-code"><code class="inline-code">slide</code></pre> correspond to an HTML element of class <pre class="inline-code"><code class="inline-code">slide</code></pre>. It has the method <pre class="inline-code"><code class="inline-code">query(selector)</code></pre>, <pre class="inline-code"><code class="inline-code">queryAll(selector)</code></pre>, <pre class="inline-code"><code class="inline-code">next()</code></pre>, <pre class="inline-code"><code class="inline-code">move{Up;Down;Center}To(selector, delay, offset)</code></pre>, <pre class="inline-code"><code class="inline-code">{reveal;hide}{∅;All}(selector)</code></pre>, <pre class="inline-code"><code class="inline-code">setAction(actionList)</code></pre>, <pre class="inline-code"><code class="inline-code">setNthAction(n, action)</code></pre>. An action is a function which takes a slide as input.
+				</li>
 			    </ul>
 			</li>
 			<li chg-visib-at="0 20">The best is to see an example:<br/>
+			    <!-- The JS part of the example -->
 			    <pre down-at="20" style="display: inline-block width:45%"><code class="js">let options = { init: (slide) => {}, firstVisit: (slide) => {}, whenLeaving: (slide) => {}};
 // the "options" parameter allows to set function to call when document is ready, when entering slide for the first time and when leaving the slide
 
@@ -203,15 +224,8 @@ devel.setNthAction(5, (slide) => {
 });
 
 // We can specify an order on slides
-presentation.setSlides([intro, devel, intro]);
-</code></pre>
-
-			    <!-- <iframe width="100%" height="300" src="http://jsfiddle.net/t35m7dsh/1/embedded/js,html/dark/?fontColor=blue" allowfullscreen="allowfullscreen" allowpaymentrequest frameborder="0"></iframe>
-				 <script async src="http://jsfiddle.net/t35m7dsh/1/embed/js,html/dark/"></script>
-				 <iframe id="iframe" height="265" style="font-size:3em; width: 100%;" scrolling="no" title="zYxOKYM" src="https://codepen.io/panglesd/embed/zYxOKYM?height=265&theme-id=dark&default-tab=js" frameborder="no" allowtransparency="true" allowfullscreen="true">
-				 See the Pen <a href='https://codepen.io/panglesd/pen/zYxOKYM'>zYxOKYM</a> by Paul-Elliot Anglès d'Auriac
-				 (<a href='https://codepen.io/panglesd'>@panglesd</a>) on <a href='https://codepen.io'>CodePen</a>.
-				 </iframe> -->
+presentation.setSlides([intro, devel, intro]);</code></pre>
+			    <!-- The HTML part of the example -->
 			    <pre down-at="21" style="width:45%display: inline-block"><code class="html">&lt;div class="slide" id="intro"&gt;
   &lt;div class="title"&gt;Introduction to the subject&lt;/div&gt; &lt;!-- for Beamer style title --&gt;
   &lt;div class="slide-body-container"&gt; &lt;!-- for Beamer style margin (remove for full-width slips) --&gt;
@@ -226,10 +240,15 @@ presentation.setSlides([intro, devel, intro]);
       &lt;span class="random-number"&gt;Bliblibli&lt;/span&gt;
   &lt;/div&gt;
 &lt;/div&gt;</code></pre>
+			    <!-- I used to have jsfiddle/codepen here instead, but they are sized for usual website and you have to pay for adding custom css... ->
+			    <!-- <iframe width="100%" height="300" src="http://jsfiddle.net/t35m7dsh/1/embedded/js,html/dark/?fontColor=blue" allowfullscreen="allowfullscreen" allowpaymentrequest frameborder="0"></iframe>-->
+
 			</li>
 		    </ul>
 		</div>
 	    </div>
+
+	    <!--    The two small slips used to show slip placement                        -->
 	    <div class="slide" id="red" style="background-color:red" pos-x="3.25" pos-y="2.025" scale="0.25" delay="1">
 		<div class="titre">Choose a color</div>
 		<div class="slide-body-container">
@@ -242,18 +261,15 @@ presentation.setSlides([intro, devel, intro]);
 		    <div style="color:red; font-size:5em;text-align:center">Red Slide</div>
 		</div>
 	    </div>
+
+	    <!--    The last slip taking a step back and with links                        -->
 	    <div class="slide" id="links" pos-x="2" pos-y="2" scale="4.3" delay="3">
 		<div chg-visib-at="0" class="c1" style="position:absolute; top: 30%; left: 10%;">Github: <a href="https://github.com/panglesd/slip-js">https://github.com/panglesd/slip-js</a>.</div>
 		<div chg-visib-at="0" class="c1" style="position:absolute; top: 40%; left: 10%;">An example (old version of the engine): <a href="https://choum.net/panglesd/slides/slides-js/slides.html">Slides</a>.</div>
 	    </div>
 	</div>
-	<!-- <script src="highlight/highlight.pack.js"></script>
-	     <script src="turing-machine.js"></script>
-	     <script src="canvas.js"></script> -->
 	<script src="slip.js"></script>
 	<script src="slides.js"></script>
 	<script>hljs.initHighlightingOnLoad();</script>
-	<script>
-	</script>
     </body>
 </html>
