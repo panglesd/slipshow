@@ -189,6 +189,8 @@ function Slide (name, actionL, present, ng, options) {
 
     this.x = parseFloat(this.element.getAttribute("pos-x"));
     this.y = parseFloat(this.element.getAttribute("pos-y"));
+    this.currentX = this.x;
+    this.currentY = this.y;
     this.scale = parseFloat(this.element.getAttribute("scale"));
     this.rotate = parseFloat(this.element.getAttribute("rotate"));
     this.delay = isNaN(parseFloat(this.element.getAttribute("delay"))) ? 0 : (parseFloat(this.element.getAttribute("delay")));
@@ -200,6 +202,7 @@ function Slide (name, actionL, present, ng, options) {
     this.setActionIndex = (actionI) => actionIndex = actionI;
     this.getActionIndex = () => actionIndex;
     this.setAction = (actionL) => {actionList = actionL;};
+    this.setNthAction = (n,action) => {actionList[n] = action;};
 
     this.hideAndShow = () => {
 	this.queryAll("*[mk-hidden-at]").forEach((elem) => {
@@ -253,7 +256,7 @@ function Slide (name, actionL, present, ng, options) {
 	    let goDownTo = elem.getAttribute("center-at").split(" ").map((str) => parseInt(str));
 	    if(goDownTo.includes(actionIndex))
 		this.moveCenterTo(elem, 1);});
-	if(actionIndex <= actionList.length)
+	if(typeof actionList[actionIndex-1] == "function")
 	    actionList[actionIndex-1](this);
 	return true;
     };
@@ -289,6 +292,8 @@ function Slide (name, actionL, present, ng, options) {
 	else elem = selector;
 	if (typeof offset == "undefined") offset = 0.0125;
 	let d = ((elem.offsetTop)/1080-offset)*this.scale;
+	this.currentX = this.x;
+	this.currentY = this.y+d;
 	engine.moveWindow(this.x, this.y+d, this.scale, this.rotate, delay);
     };
     this.moveDownTo = (selector, delay, offset) => {
@@ -297,6 +302,8 @@ function Slide (name, actionL, present, ng, options) {
 	else elem = selector;
 	if (typeof offset == "undefined") offset = 0.0125;
 	let d = ((elem.offsetTop+elem.offsetHeight)/1080 - 1 + offset)*this.scale;
+	this.currentX = this.x;
+	this.currentY = this.y+d;
 	engine.moveWindow(this.x, this.y+d, this.scale, this.rotate, delay);
     };
     this.moveCenterTo = (selector, delay, offset) => {
@@ -305,6 +312,8 @@ function Slide (name, actionL, present, ng, options) {
 	else elem = selector;
 	if (typeof offset == "undefined") offset = 0;
 	let d = ((elem.offsetTop+elem.offsetHeight/2)/1080-1/2+offset)*this.scale;
+	this.currentX = this.x;
+	this.currentY = this.y+d;
 	engine.moveWindow(this.x, this.y+d, this.scale, this.rotate, delay);
     };
     this.reveal = (selector) => {
@@ -356,26 +365,30 @@ let Presentation = function (ng, ls) {
     this.getSlides = () => listSlides;
     this.setSlides = (ls) => listSlides = ls;
     this.getCurrentSlide = () => listSlides[slideIndex];
-    this.gotoSlide = function(slide) {
+    this.gotoSlide = function(slide, options) {
+	options = options ? options : {};
+	console.log("options is ", options);
 	// let x = slide.x, y = slide.y;
 	// let scale = slide.scale, rotate = slide.rotate, delay = slide.delay;
 	// console.log(x,y, scale, rotate);
-	engine.moveWindow(slide.x, slide.y, slide.scale, slide.rotate, slide.delay);
+	engine.moveWindow(slide.currentX, slide.currentY, slide.scale, slide.rotate, options.delay ? options.delay : slide.delay);
+    };
+    this.gotoSlideIndex = (index, options) => {
+	if(!listSlides[slideIndex].element.classList.contains("permanent"))
+	    listSlides[slideIndex].element.style.zIndex = "-1";
+	slideIndex = index;
+	listSlides[slideIndex].element.style.zIndex = "1";
+	this.gotoSlide(listSlides[slideIndex], options);
+	if(!listSlides[slideIndex].visited) {
+	    listSlides[slideIndex].visited = true;
+	    listSlides[slideIndex].firstVisit(this);
+	}
     };
     this.next = () => {
 	listSlides[slideIndex].currentCpt = cpt;
 	let flag;
 	if((flag = !listSlides[slideIndex].next(this))) {
-	    if(!listSlides[slideIndex].element.classList.contains("permanent"))
-		listSlides[slideIndex].element.style.zIndex = "-1";
-	    slideIndex = Math.min((slideIndex+1),listSlides.length-1);
-	    listSlides[slideIndex].element.style.zIndex = "1";
-	    if (typeof listSlides[slideIndex].initCpt == "undefined") {
-		listSlides[slideIndex].initCpt = cpt;
-		listSlides[slideIndex].currentCpt = cpt;
-	    }
-	    this.gotoSlide(listSlides[slideIndex]);
-	    listSlides[slideIndex].firstVisit(this);
+	    this.gotoSlideIndex(Math.min((slideIndex+1),listSlides.length-1));
 	}
 	cpt++;
 	document.querySelector(".cpt-slip").innerText = (cpt);
@@ -384,6 +397,9 @@ let Presentation = function (ng, ls) {
     this.nextSlide = () => {
 	if(!this.next())
 	    this.nextSlide();
+    };
+    this.skipSlide = (options) => {
+	this.gotoSlideIndex(slideIndex+1, options);
     };
     this.previousSlide = () => {
 	slideIndex = Math.max(0, slideIndex -1);
