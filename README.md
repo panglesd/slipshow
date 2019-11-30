@@ -77,7 +77,10 @@ Soon, you'll be able to have a list of your slides and go directly to the one yo
 
 - Table of content of all slips when pressing a button,
 - Better going back and slip counter,
+- Wait for slips being placed before showing something, 
+- More fluid transition,
 - Be consistent and replace slides with slip in slip.js,
+- Support for "subslips"?
 - ...
 
    
