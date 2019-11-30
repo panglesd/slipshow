@@ -52,7 +52,7 @@ You can also navigate the universe with "o,k,l,m" to move ("f" makes it faster),
 
 Soon, you'll be able to have a list of your slides and go directly to the one you want by clicking on it.
 
-## Finer control on your presentation
+## Finer control of your presentation
 
    You might need a better control of the flow of events. There are severals objects defined to help you do this:
      -an engine for the control of the window to the universe,
@@ -67,6 +67,11 @@ Soon, you'll be able to have a list of your slides and go directly to the one yo
    
    The object `presentation` allows to skip to a certain slip, without going through all the steps, with `presentation.skipSlide()`. It can also go to an arbitrary slide with `presentation.gotoSlideIndex(index)`.
    The object `engine` allows to move the window, with `engine.moveWindow(x, y, scale, rotate, delay)` and `engine.moveWindowRelative(dx, dy, dscale, drotate, delay)`. Both can be used inside slip actions.
+
+## Examples
+
+- [The slips of my thesis](http://choum.net/panglesd/slides/slides-js/slides.html) (old version of the engine)
+- [The slips to present slip](http://choum.net/panglesd/slides/slips-js/slides.html)
 
 ## TODO
 
