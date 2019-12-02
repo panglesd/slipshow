@@ -1,10 +1,23 @@
 # Slip.js
 
+## Principle
+
 This is not another slide engine, but a slip engine with fine customization: not only on the cosmetic part, but also on the interactive part.
 
-You can find two examples at the bottom of this readme.
+The engine is written in javascript and html. Once your presentation is written, open it with a (modern, i.e. not I.E.) browser, it is supposed to look the same on all browser.
 
-In order to make you own presentations, you only need to include the file `slip.js`, and follow the slip structure for your html document. Here is a template:
+The presentation consists of an infinite canvas, on which are placed a variant of slides (the *slips*). During the presentation, a 4/3 window shows the slips bits by bits. The window can move instantly, simulating presentation with slides, or in a fluid manner, as in Prezi.
+
+In the canvas are placed not slides, but slips. A slip is a slide with no bottom limit. A slide has a bottom limit as nothing below the end of the page can be seen. However, with the sliding window effect, one can show the overflowed part of the slip by sliding it downward.
+
+You can find two examples here:
+- [The slips of my thesis](http://choum.net/panglesd/slides/slides-js/slides.html) (old version of the engine)
+- [The slips to present slip](http://choum.net/panglesd/slides/slip-js/slides.html)
+
+Do not hesitate to look at the code of the second example ([the .html](http://choum.net/panglesd/slides/slip-js/slides.html) and [the .js](http://choum.net/panglesd/slides/slip-js/slides.js)).
+## Minimal example
+
+In order to make you own presentations, you only need to include the files `slip.js`, `slip.css`, and `theorem.css`, and follow the slip structure for your html document. Here is a template:
 
 ```html
 <!doctype html>
@@ -18,13 +31,14 @@ In order to make you own presentations, you only need to include the file `slip.
     <body>
 	<div class="cpt-slip">0</div>
 	<div class="presentation">
-	    <div class="slide" id="slide-id"></div>
+	    <div class="slide" id="slide-id">Hello World!</div>
 	</div>
 	<script src="slip.js"></script>	
     </body>
 </html>
 ```
 You can use https://choum.net/panglesd/slides/slip-js/{slip.js;theorem.css;slides.css} as a CDN so you don't have to download anything.
+
 ## Writing slips
    
    You can create a new slide by creating an element `<div class="slide"></div>`. Inside is any html. If you don't like writing HTML, there are two possibilities:
