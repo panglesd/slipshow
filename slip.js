@@ -13,7 +13,8 @@ function parseAndFormat () {
 		</div>\
 		</div>\
 	    </div>\
-	</div>';
+	</div>\
+	<div class="cpt-slip">0</div>';
     presentationElement.querySelectorAll(".slide").forEach((slideElem) => {
 	slideElem.innerHTML = '\
     <div class="slide-rotate-container"><canvas style="position:absolute;top:0;left:0;z-index:-2" width="1440" height="1080" class="background-canvas" id="canvas-'+slideElem.id+'"></canvas><div class="slide-container">'+ slideElem.innerHTML + '\
