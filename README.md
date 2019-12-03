@@ -14,7 +14,7 @@ You can find two examples here:
 - [The slips of my thesis](http://choum.net/panglesd/slides/slides-js/slides.html) (old version of the engine)
 - [The slips to present slip](http://choum.net/panglesd/slides/slip-js/slides.html)
 
-Do not hesitate to look at the code of the second example ([the .html](http://choum.net/panglesd/slides/slip-js/slides.html) and [the .js](http://choum.net/panglesd/slides/slip-js/slides.js)).
+Do not hesitate to look at the code of the example in the folder example, both .html and .js files are commented. (This example corresponds to the slip slip presentation of the link above).
 ## Minimal example
 
 In order to make you own presentations, you only need to include the files `slip.js`, `slip.css`, and `theorem.css`, and follow the slip structure for your html document. Here is a template:
