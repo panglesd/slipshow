@@ -284,8 +284,10 @@ function Slip (name, actionL, present, ng, options) {
 	    document.querySelectorAll('pre code').forEach((block) => {
 		hljs.highlightBlock(block);
 	    });
-	// if(MathJax && typeof Mathjax.typeset == "function")
-	//     MathJax.typeset();
+	if(MathJax && typeof MathJax.typeset == "function")
+	    MathJax.typeset();
+	else if (MathJax && MathJax.Hub && typeof MathJax.Hub.Typeset == "function")
+	    MathJax.Hub.Typeset();
 	this.init();
 	this.firstVisit();
 	console.log("ai", actionIndex);
