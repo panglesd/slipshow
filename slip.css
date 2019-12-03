@@ -29,14 +29,14 @@ html, body {
     transition-timing-function: ease;
     /* will-change: transform; */
 }
-.slide-scale-container {
+.slip-scale-container {
     transform-origin: 0 0;
     transition-property: transform;
     transition-duration: 1s;
     transition-timing-function: ease;    
     /* will-change: transform; */
 }
-.slide-rotate-container {
+.slip-rotate-container {
     transform-origin: 0 0;
     transition-property: transform;
     transition-duration: 1s;
@@ -45,7 +45,7 @@ html, body {
     /* display: flex; */
     /* flex-flow: column; */
 }
-.slide-container {
+.slip-container {
     position:absolute;
     top:0;bottom:0;left:0;right:0;
     display: flex;
@@ -73,7 +73,7 @@ html, body {
     overflow: hidden;
 }
 
-.slide {
+.slip {
     pointer-event:none;
     font: 1.8em "Fira Sans", sans-serif;
     box-sizing: border-box;
@@ -84,7 +84,7 @@ html, body {
     width: 1440px;
     height: 1080px;
 }
-.slide .titre {
+.slip .titre {
     flex: 0 1 auto;
     -webkit-box-shadow: 0px 5px 18px 5px rgba(0,0,0,0.42); 
     box-shadow: 0px 5px 18px 5px rgba(0,0,0,0.42);
@@ -95,7 +95,7 @@ html, body {
     padding: 10px;
     padding-left:60px;
 }
-.slide .slide-body-container {
+.slip .slip-body-container {
     margin-top: auto;
     margin-bottom: auto;
     margin-left: 110px;
@@ -105,7 +105,7 @@ html, body {
     transform-origin: 0 0;
     
 }
-.slide .emphasize {
+.slip .emphasize {
     background-color: yellow;
 }
 
@@ -115,7 +115,7 @@ html, body {
     line-height: 72px;
 }
 
-.slide.no-flex .slide-container {
+.slip.no-flex .slip-container {
     display: block;
 }
 h1 {

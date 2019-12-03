@@ -15,9 +15,9 @@ function parseAndFormat () {
 	    </div>\
 	</div>\
 	<div class="cpt-slip">0</div>';
-    presentationElement.querySelectorAll(".slide").forEach((slideElem) => {
-	slideElem.innerHTML = '\
-    <div class="slide-rotate-container"><canvas style="position:absolute;top:0;left:0;z-index:-2" width="1440" height="1080" class="background-canvas" id="canvas-'+slideElem.id+'"></canvas><div class="slide-container">'+ slideElem.innerHTML + '\
+    presentationElement.querySelectorAll(".slip").forEach((slipElem) => {
+	slipElem.innerHTML = '\
+    <div class="slip-rotate-container"><canvas style="position:absolute;top:0;left:0;z-index:-2" width="1440" height="1080" class="background-canvas" id="canvas-'+slipElem.id+'"></canvas><div class="slip-container">'+ slipElem.innerHTML + '\
 </div>';
     });
     // document.querySelector(".globalCanvas").addEventListener("click", (ev) => { console.log("vous avez cliquez aux coordonées : ", ev.layerX, ev.layerY); });
@@ -37,7 +37,7 @@ let Engine = function() {
     });
     let openWindow = document.querySelector("#open-window");
     let universe = document.querySelector("#universe");
-    let slides = universe.querySelectorAll(".slide");
+    let slips = universe.querySelectorAll(".slip");
     let browserHeight, openWindowWidth;
     let browserWidth, openWindowHeight;
     this.getOpenWindowHeight = () => openWindowHeight;
@@ -64,32 +64,32 @@ let Engine = function() {
     this.moveWindowRelative = function(dx, dy, dscale, drotate, delay) {
 	this.moveWindow(winX+dx, winY+dy, currentScale+dscale, currentRotate+drotate, delay);
     };
-    this.placeSlides = function () {
+    this.placeSlips = function () {
 	let posX = 0.5;
 	let posY = 0.5;
-	slides.forEach((slide) => {
-	    let x=parseFloat(slide.getAttribute("pos-x")), y=parseFloat(slide.getAttribute("pos-y"));
-	    let scale = parseFloat(slide.getAttribute("scale"));
+	slips.forEach((slip) => {
+	    let x=parseFloat(slip.getAttribute("pos-x")), y=parseFloat(slip.getAttribute("pos-y"));
+	    let scale = parseFloat(slip.getAttribute("scale"));
 	    let rotate = 0;
 	    scale = isNaN(scale) ? 1 : scale ;
 	    x = (isNaN(x) ? posX : x);
 	    y = (isNaN(y) ? posY : y);
-	    slide.setAttribute("pos-x", x);
-	    slide.setAttribute("pos-y", y);
-	    slide.setAttribute("scale", scale);
-	    slide.setAttribute("rotate", rotate);
+	    slip.setAttribute("pos-x", x);
+	    slip.setAttribute("pos-y", y);
+	    slip.setAttribute("scale", scale);
+	    slip.setAttribute("rotate", rotate);
 	    posX = x + 1;
 	    posY = y;
-	    slide.style.top = (y*1080 - 1080/2)+"px";
-	    slide.style.left = (x*1440 - 1440/2)+"px";
-	    if(!slide.classList.contains("permanent"))
-		slide.style.zIndex = "-1";
-	    slide.style.transformOrigin = "50% 50%";
-	    slide.style.transform = "scale("+scale+")";
+	    slip.style.top = (y*1080 - 1080/2)+"px";
+	    slip.style.left = (x*1440 - 1440/2)+"px";
+	    if(!slip.classList.contains("permanent"))
+		slip.style.zIndex = "-1";
+	    slip.style.transformOrigin = "50% 50%";
+	    slip.style.transform = "scale("+scale+")";
 
 	});	
     };
-    this.placeSlides();
+    this.placeSlips();
     this.placeOpenWindow = function () {
 	browserHeight = window.innerHeight;
 	browserWidth = window.innerWidth;
@@ -142,7 +142,7 @@ let Controller = function (ng, pres) {
 	if(ev.key == "f") { speedMove = (speedMove + 4)%30+1; }    
 	if(ev.key == "r") { presentation.refresh(); }    
 	if(ev.key == "#") {
-	    document.querySelectorAll(".slide").forEach((slide) => {slide.style.zIndex = "-1";});
+	    document.querySelectorAll(".slip").forEach((slip) => {slip.style.zIndex = "-1";});
 	    document.querySelectorAll(".background-canvas").forEach((canvas) => {canvas.style.zIndex = "1";});
 	}    
     });
@@ -160,13 +160,13 @@ let Controller = function (ng, pres) {
 	if(ev.key == "ArrowRight") {
 	    console.log(ev);
 	    if(ev.shiftKey)
-		presentation.nextSlide();
+		presentation.nextSlip();
 	    else    
 		presentation.next();
 	}
 	else if (ev.key == "ArrowLeft") {
 	    if(ev.shiftKey)
-		presentation.previousSlide();
+		presentation.previousSlip();
 	    else    
 		presentation.previous();
 	}
@@ -175,7 +175,7 @@ let Controller = function (ng, pres) {
 };
 
 
-function Slide (name, actionL, present, ng, options) {
+function Slip (name, actionL, present, ng, options) {
     let engine = ng;
     this.getEngine = () => engine;
     this.setEngine = (ng) => engine = ng;
@@ -184,7 +184,7 @@ function Slide (name, actionL, present, ng, options) {
     this.getPresentation = () => presentation;
     this.setPresentation = (present) => presentation = present;
     
-    this.element = document.querySelector(".slide#"+name);
+    this.element = document.querySelector(".slip#"+name);
     let initialHTML = this.element.outerHTML;
     let innerHTML = this.element.innerHTML;
 
@@ -359,11 +359,11 @@ function Slide (name, actionL, present, ng, options) {
 
 let Presentation = function (ng, ls) {
     if(!ls)
-	ls = Array.from(document.querySelectorAll(".slide")).map((elem) => { return new Slide(elem.id, [], this, ng, {});});
+	ls = Array.from(document.querySelectorAll(".slip")).map((elem) => { return new Slip(elem.id, [], this, ng, {});});
     console.log(ls);
     // let cpt = 0;
     // Taken from https://selftaughtjs.com/algorithm-sundays-converting-roman-numerals
-    // Use in showing roman numbers for slide number
+    // Use in showing roman numbers for slip number
     function toRoman(num) {
 	var result = '';
 	var decimal = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
@@ -378,8 +378,8 @@ let Presentation = function (ng, ls) {
     }
     this.getCpt = () => {
 	return [
-	    this.getSlides().findIndex((slide) => {return slide == this.getCurrentSlide();}),
-	    this.getCurrentSlide().getActionIndex()
+	    this.getSlips().findIndex((slip) => {return slip == this.getCurrentSlip();}),
+	    this.getCurrentSlip().getActionIndex()
 	];
     };
     this.setCpt = () => {
@@ -389,35 +389,35 @@ let Presentation = function (ng, ls) {
     let engine = ng;
     this.getEngine = () => this.engine;
     this.setEngine = (ng) => this.engine = ng;
-    let listSlides = ls || [];
-    let slideIndex = 0;
-    this.getSlides = () => listSlides;
-    this.setSlides = (ls) => listSlides = ls;
-    this.getCurrentSlide = () => listSlides[slideIndex];
-    this.gotoSlide = function(slide, options) {
+    let listSlips = ls || [];
+    let slipIndex = 0;
+    this.getSlips = () => listSlips;
+    this.setSlips = (ls) => listSlips = ls;
+    this.getCurrentSlip = () => listSlips[slipIndex];
+    this.gotoSlip = function(slip, options) {
 	options = options ? options : {};
 	console.log("options is ", options);
-	// let x = slide.x, y = slide.y;
-	// let scale = slide.scale, rotate = slide.rotate, delay = slide.delay;
+	// let x = slip.x, y = slip.y;
+	// let scale = slip.scale, rotate = slip.rotate, delay = slip.delay;
 	// console.log(x,y, scale, rotate);
-	engine.moveWindow(slide.currentX, slide.currentY, slide.scale, slide.rotate, options.delay ? options.delay : slide.delay);
+	engine.moveWindow(slip.currentX, slip.currentY, slip.scale, slip.rotate, options.delay ? options.delay : slip.delay);
     };
-    this.gotoSlideIndex = (index, options) => {
-	if(!listSlides[slideIndex].element.classList.contains("permanent"))
-	    listSlides[slideIndex].element.style.zIndex = "-1";
-	slideIndex = index;
-	listSlides[slideIndex].element.style.zIndex = "1";
-	this.gotoSlide(listSlides[slideIndex], options);
-	if(!listSlides[slideIndex].visited) {
-	    listSlides[slideIndex].visited = true;
-	    listSlides[slideIndex].firstVisit(this);
+    this.gotoSlipIndex = (index, options) => {
+	if(!listSlips[slipIndex].element.classList.contains("permanent"))
+	    listSlips[slipIndex].element.style.zIndex = "-1";
+	slipIndex = index;
+	listSlips[slipIndex].element.style.zIndex = "1";
+	this.gotoSlip(listSlips[slipIndex], options);
+	if(!listSlips[slipIndex].visited) {
+	    listSlips[slipIndex].visited = true;
+	    listSlips[slipIndex].firstVisit(this);
 	}
     };
     this.next = () => {
-	// listSlides[slideIndex].currentCpt = cpt;
+	// listSlips[slipIndex].currentCpt = cpt;
 	let flag;
-	if((flag = !listSlides[slideIndex].next(this))) {
-	    this.gotoSlideIndex(Math.min((slideIndex+1),listSlides.length-1));
+	if((flag = !listSlips[slipIndex].next(this))) {
+	    this.gotoSlipIndex(Math.min((slipIndex+1),listSlips.length-1));
 	}
 	this.setCpt();
 	//	cpt++;
@@ -425,45 +425,45 @@ let Presentation = function (ng, ls) {
 	// document.querySelector(".cpt-slip").innerText = (toRoman(cpt[0])+"."+(cpt[1]));
 	return flag;
     };
-    this.nextSlide = () => {
+    this.nextSlip = () => {
 	if(!this.next())
-	    this.nextSlide();
+	    this.nextSlip();
     };
-    this.skipSlide = (options) => {
-	this.gotoSlideIndex(slideIndex+1, options);
+    this.skipSlip = (options) => {
+	this.gotoSlipIndex(slipIndex+1, options);
 	this.setCpt();
     };
-    this.previousSlide = () => {
-	slideIndex = Math.max(0, slideIndex -1);
-	this.gotoSlide(listSlides[slideIndex]);
+    this.previousSlip = () => {
+	slipIndex = Math.max(0, slipIndex -1);
+	this.gotoSlip(listSlips[slipIndex]);
 	this.setCpt();
-	// cpt = listSlides[slideIndex].currentCpt;
+	// cpt = listSlips[slipIndex].currentCpt;
 	// document.querySelector(".cpt-slip").innerText = (cpt);
     };
     this.previous = () => {
-	let saveCpt = this.getCurrentSlide().getActionIndex();
+	let saveCpt = this.getCurrentSlip().getActionIndex();
 	this.refresh();
 	if(saveCpt == 0)
-	    this.previousSlide();
+	    this.previousSlip();
 	else
-	    while(this.getCurrentSlide().getActionIndex()<saveCpt-1)
+	    while(this.getCurrentSlip().getActionIndex()<saveCpt-1)
 		this.next();
 	this.setCpt();
     };
     this.refresh = () => {
-	listSlides[slideIndex].refresh();
-	this.gotoSlide(listSlides[slideIndex]);
-	// cpt = listSlides[slideIndex].initCpt;
+	listSlips[slipIndex].refresh();
+	this.gotoSlip(listSlips[slipIndex]);
+	// cpt = listSlips[slipIndex].initCpt;
 	// document.querySelector(".cpt-slip").innerText = (cpt);
 	this.setCpt();
     };
     this.start = () => {
-	slideIndex = 0;
-	this.gotoSlide(listSlides[slideIndex]);
-	listSlides[slideIndex].element.style.zIndex = "1";
-	listSlides[slideIndex].firstVisit(this);
-	// listSlides[slideIndex].initCpt = cpt;
-	// listSlides[slideIndex].currentCpt = cpt;
+	slipIndex = 0;
+	this.gotoSlip(listSlips[slipIndex]);
+	listSlips[slipIndex].element.style.zIndex = "1";
+	listSlips[slipIndex].firstVisit(this);
+	// listSlips[slipIndex].initCpt = cpt;
+	// listSlips[slipIndex].currentCpt = cpt;
 	this.setCpt();
     };
 };
