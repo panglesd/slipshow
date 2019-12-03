@@ -351,13 +351,37 @@ function Slide (name, actionL, present, ng, options) {
     };
 }
 
+
+
 let Presentation = function (ng, ls) {
     if(!ls)
 	ls = Array.from(document.querySelectorAll(".slide")).map((elem) => { return new Slide(elem.id, [], this, ng, {});});
     console.log(ls);
-    let cpt = 0;
-    this.getCpt = () => cpt;
-    
+    // let cpt = 0;
+    // Taken from https://selftaughtjs.com/algorithm-sundays-converting-roman-numerals
+    // Use in showing roman numbers for slide number
+    function toRoman(num) {
+	var result = '';
+	var decimal = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
+	var roman = ["M", "CM","D","CD","C", "XC", "L", "XL", "X","IX","V","IV","I"];
+	for (var i = 0;i<=decimal.length;i++) {
+	    while (num%decimal[i] < num) {     
+		result += roman[i];
+		num -= decimal[i];
+	    }
+	}
+	return result;
+    }
+    this.getCpt = () => {
+	return [
+	    this.getSlides().findIndex((slide) => {return slide == this.getCurrentSlide();}),
+	    this.getCurrentSlide().getActionIndex()
+	];
+    };
+    this.setCpt = () => {
+	let cpt = this.getCpt();
+	document.querySelector(".cpt-slip").innerText = (toRoman(cpt[0]+1)+"."+(cpt[1]+1));
+    };
     let engine = ng;
     this.getEngine = () => this.engine;
     this.setEngine = (ng) => this.engine = ng;
@@ -386,13 +410,15 @@ let Presentation = function (ng, ls) {
 	}
     };
     this.next = () => {
-	listSlides[slideIndex].currentCpt = cpt;
+	// listSlides[slideIndex].currentCpt = cpt;
 	let flag;
 	if((flag = !listSlides[slideIndex].next(this))) {
 	    this.gotoSlideIndex(Math.min((slideIndex+1),listSlides.length-1));
 	}
-	cpt++;
-	document.querySelector(".cpt-slip").innerText = (cpt);
+	this.setCpt();
+	//	cpt++;
+	// let cpt = this.getCpt();
+	// document.querySelector(".cpt-slip").innerText = (toRoman(cpt[0])+"."+(cpt[1]));
 	return flag;
     };
     this.nextSlide = () => {
@@ -401,35 +427,40 @@ let Presentation = function (ng, ls) {
     };
     this.skipSlide = (options) => {
 	this.gotoSlideIndex(slideIndex+1, options);
+	this.setCpt();
     };
     this.previousSlide = () => {
 	slideIndex = Math.max(0, slideIndex -1);
 	this.gotoSlide(listSlides[slideIndex]);
-	cpt = listSlides[slideIndex].currentCpt;
-	document.querySelector(".cpt-slip").innerText = (cpt);
+	this.setCpt();
+	// cpt = listSlides[slideIndex].currentCpt;
+	// document.querySelector(".cpt-slip").innerText = (cpt);
     };
     this.previous = () => {
-	let saveCpt = cpt;
+	let saveCpt = this.getCurrentSlide().getActionIndex();
 	this.refresh();
-	if(saveCpt == cpt)
+	if(saveCpt == 0)
 	    this.previousSlide();
 	else
-	    while(cpt<saveCpt-1)
+	    while(this.getCurrentSlide().getActionIndex()<saveCpt-1)
 		this.next();
+	this.setCpt();
     };
     this.refresh = () => {
 	listSlides[slideIndex].refresh();
 	this.gotoSlide(listSlides[slideIndex]);
-	cpt = listSlides[slideIndex].initCpt;
-	document.querySelector(".cpt-slip").innerText = (cpt);
+	// cpt = listSlides[slideIndex].initCpt;
+	// document.querySelector(".cpt-slip").innerText = (cpt);
+	this.setCpt();
     };
     this.start = () => {
 	slideIndex = 0;
 	this.gotoSlide(listSlides[slideIndex]);
 	listSlides[slideIndex].element.style.zIndex = "1";
 	listSlides[slideIndex].firstVisit(this);
-	listSlides[slideIndex].initCpt = cpt;
-	listSlides[slideIndex].currentCpt = cpt;
+	// listSlides[slideIndex].initCpt = cpt;
+	// listSlides[slideIndex].currentCpt = cpt;
+	this.setCpt();
     };
 };
 
