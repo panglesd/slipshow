@@ -243,7 +243,7 @@ function Slip (name, actionL, present, ng, options) {
 		elem.style.visibility = "visible";
 	    }
 	    if(staticAt.includes(-actionIndex)){
-		elem.style.opacity = "absolute";
+		elem.style.position = "absolute";
 		elem.style.visibility = "hidden";
 	    }
 	});	    
