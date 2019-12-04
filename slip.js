@@ -422,7 +422,8 @@ let Presentation = function (ng, ls) {
 	// listSlips[slipIndex].currentCpt = cpt;
 	let flag;
 	if((flag = !listSlips[slipIndex].next(this))) {
-	    this.gotoSlipIndex(Math.min((slipIndex+1),listSlips.length-1));
+	    if(slipIndex<listSlips.length-1)
+		this.gotoSlipIndex(slipIndex+1);
 	}
 	this.setCpt();
 	//	cpt++;
