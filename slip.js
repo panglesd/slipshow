@@ -238,13 +238,13 @@ function Slip (name, actionL, present, ng, options) {
 	});	
 	this.queryAll("*[static-at]").forEach((elem) => {
 	    let staticAt = elem.getAttribute("static-at").split(" ").map((str) => parseInt(str));
-	    if(staticAt.includes(actionIndex)) {
-		elem.style.position = "static";
-		elem.style.visibility = "visible";
-	    }
 	    if(staticAt.includes(-actionIndex)){
 		elem.style.position = "absolute";
 		elem.style.visibility = "hidden";
+	    }
+	    if(staticAt.includes(actionIndex)) {
+		elem.style.position = "static";
+		elem.style.visibility = "visible";
 	    }
 	});	    
     };
