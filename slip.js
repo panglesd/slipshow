@@ -266,9 +266,12 @@ function Slip (name, actionL, present, ng, options) {
 	    options.firstVisit(this);
     };
     this.init = () => {
+	this.queryAll("*[chg-visib-at]").forEach((elem) => {
+	    elem.style.opacity = "0";
+	});	
+	this.hideAndShow();
 	if(options.init)
 	    options.init(this);
-	this.hideAndShow();
     };
     this.whenLeaving = () => {
 	if(options.whenLeaving)
