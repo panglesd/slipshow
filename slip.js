@@ -231,13 +231,22 @@ function Slip (name, actionL, present, ng, options) {
 	});	
 	this.queryAll("*[chg-visib-at]").forEach((elem) => {
 	    let visibAt = elem.getAttribute("chg-visib-at").split(" ").map((str) => parseInt(str));
-	    console.log("fromHideAndShow", actionIndex);
 	    if(visibAt.includes(actionIndex))
 		elem.style.opacity = "1";
 	    if(visibAt.includes(-actionIndex))
 		elem.style.opacity = "0";
 	});	
-	    
+	this.queryAll("*[static-at]").forEach((elem) => {
+	    let staticAt = elem.getAttribute("static-at").split(" ").map((str) => parseInt(str));
+	    if(staticAt.includes(actionIndex)) {
+		elem.style.position = "static";
+		elem.style.visibility = "visible";
+	    }
+	    if(staticAt.includes(-actionIndex)){
+		elem.style.opacity = "absolute";
+		elem.style.visibility = "hidden";
+	    }
+	});	    
     };
     
     this.next = function (presentation) {
@@ -268,6 +277,10 @@ function Slip (name, actionL, present, ng, options) {
     this.init = () => {
 	this.queryAll("*[chg-visib-at]").forEach((elem) => {
 	    elem.style.opacity = "0";
+	});	
+	this.queryAll("*[static-at]").forEach((elem) => {
+	    elem.style.position = "absolute";
+	    elem.style.visibility = "hidden";
 	});	
 	this.hideAndShow();
 	if(options.init)
@@ -349,6 +362,7 @@ function Slip (name, actionL, present, ng, options) {
 	 "up-at",
 	 "down-at",
 	 "center-at",
+	 "static-at",
 	].forEach((attr) => {
 	     this.queryAll("*["+attr+"]").forEach((elem) => {
 		 elem.getAttribute(attr).split(" ").forEach((strMax) => {
