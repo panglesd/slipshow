@@ -437,10 +437,10 @@ let Presentation = function (ng, ls) {
 	},0);
     };
     this.gotoSlipIndex = (index, options) => {
-	if(!listSlips[slipIndex].element.classList.contains("permanent"))
-	    listSlips[slipIndex].element.style.zIndex = "-1";
+	// if(!listSlips[slipIndex].element.classList.contains("permanent"))
+	//     listSlips[slipIndex].element.style.zIndex = "-1";
 	slipIndex = index;
-	listSlips[slipIndex].element.style.zIndex = "1";
+	// listSlips[slipIndex].element.style.zIndex = "1";
 	this.gotoSlip(listSlips[slipIndex], options);
 	if(!listSlips[slipIndex].visited) {
 	    listSlips[slipIndex].visited = true;
