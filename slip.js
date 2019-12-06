@@ -53,13 +53,15 @@ let Engine = function() {
 	winX = x ;
 	winY = y;
 	console.log(x,y);
-	document.querySelector(".scale-container").style.transitionDuration = delay+"s";
-	document.querySelector(".rotate-container").style.transitionDuration = delay+"s";
-	universe.style.transitionDuration = delay+"s, "+delay+ "s"; 
-	universe.style.left = -(x*1440 - 1440/2)+"px";
-	universe.style.top = -(y*1080 - 1080/2)+"px";
-	document.querySelector(".scale-container").style.transform = "scale("+(1/scale)+")";
-	document.querySelector(".rotate-container").style.transform = "rotate("+(rotate)+"deg)";
+	setTimeout(() => {
+	    document.querySelector(".scale-container").style.transitionDuration = delay+"s";
+	    document.querySelector(".rotate-container").style.transitionDuration = delay+"s";
+	    universe.style.transitionDuration = delay+"s, "+delay+ "s"; 
+	    universe.style.left = -(x*1440 - 1440/2)+"px";
+	    universe.style.top = -(y*1080 - 1080/2)+"px";
+	    document.querySelector(".scale-container").style.transform = "scale("+(1/scale)+")";
+	    document.querySelector(".rotate-container").style.transform = "rotate("+(rotate)+"deg)";
+	},0);
     };
     this.moveWindowRelative = function(dx, dy, dscale, drotate, delay) {
 	this.moveWindow(winX+dx, winY+dy, currentScale+dscale, currentRotate+drotate, delay);
@@ -254,10 +256,14 @@ function Slip (name, actionL, present, ng, options) {
 	    return false;
 	actionIndex = actionIndex+1;
 	this.hideAndShow();
-	this.queryAll("*[down-at]").forEach((elem) => {
+	// setTimeout(() => {
+	    this.queryAll("*[down-at]").forEach((elem) => {
 	    let goDownTo = elem.getAttribute("down-at").split(" ").map((str) => parseInt(str));
 	    if(goDownTo.includes(actionIndex))
-		this.moveDownTo(elem, 1);});
+//		setTimeout(() => {
+		this.moveDownTo(elem, 1);
+//		}, 0);
+	    });
 	this.queryAll("*[up-at]").forEach((elem) => {
 	    let goTo = elem.getAttribute("up-at").split(" ").map((str) => parseInt(str));
 	    if(goTo.includes(actionIndex))
@@ -268,6 +274,7 @@ function Slip (name, actionL, present, ng, options) {
 		this.moveCenterTo(elem, 1);});
 	if(typeof actionList[actionIndex-1] == "function")
 	    actionList[actionIndex-1](this);
+	// }, 0);
 	return true;
     };
     this.firstVisit = () => {
@@ -310,34 +317,40 @@ function Slip (name, actionL, present, ng, options) {
     };
     this.init(this, presentation, engine);
     this.moveUpTo = (selector, delay,  offset) => {
-	let elem;
-	if(typeof selector == "string") elem = this.query(selector);
-	else elem = selector;
-	if (typeof offset == "undefined") offset = 0.0125;
-	let d = ((elem.offsetTop)/1080-offset)*this.scale;
-	this.currentX = this.x;
-	this.currentY = this.y+d;
-	engine.moveWindow(this.x, this.y+d, this.scale, this.rotate, delay);
+	setTimeout(() => {
+	    let elem;
+	    if(typeof selector == "string") elem = this.query(selector);
+	    else elem = selector;
+	    if (typeof offset == "undefined") offset = 0.0125;
+	    let d = ((elem.offsetTop)/1080-offset)*this.scale;
+	    this.currentX = this.x;
+	    this.currentY = this.y+d;
+	    engine.moveWindow(this.x, this.y+d, this.scale, this.rotate, delay);
+	},0);
     };
     this.moveDownTo = (selector, delay, offset) => {
-	let elem;
-	if(typeof selector == "string") elem = this.query(selector);
-	else elem = selector;
-	if (typeof offset == "undefined") offset = 0.0125;
-	let d = ((elem.offsetTop+elem.offsetHeight)/1080 - 1 + offset)*this.scale;
-	this.currentX = this.x;
-	this.currentY = this.y+d;
-	engine.moveWindow(this.x, this.y+d, this.scale, this.rotate, delay);
+	setTimeout(() => {
+	    let elem;
+	    if(typeof selector == "string") elem = this.query(selector);
+	    else elem = selector;
+	    if (typeof offset == "undefined") offset = 0.0125;
+	    let d = ((elem.offsetTop+elem.offsetHeight)/1080 - 1 + offset)*this.scale;
+	    this.currentX = this.x;
+	    this.currentY = this.y+d;
+	    engine.moveWindow(this.x, this.y+d, this.scale, this.rotate, delay);
+	},0);
     };
     this.moveCenterTo = (selector, delay, offset) => {
-	let elem;
-	if(typeof selector == "string") elem = this.query(selector);
-	else elem = selector;
-	if (typeof offset == "undefined") offset = 0;
-	let d = ((elem.offsetTop+elem.offsetHeight/2)/1080-1/2+offset)*this.scale;
-	this.currentX = this.x;
-	this.currentY = this.y+d;
-	engine.moveWindow(this.x, this.y+d, this.scale, this.rotate, delay);
+	setTimeout(() => {
+	    let elem;
+	    if(typeof selector == "string") elem = this.query(selector);
+	    else elem = selector;
+	    if (typeof offset == "undefined") offset = 0;
+	    let d = ((elem.offsetTop+elem.offsetHeight/2)/1080-1/2+offset)*this.scale;
+	    this.currentX = this.x;
+	    this.currentY = this.y+d;
+	    engine.moveWindow(this.x, this.y+d, this.scale, this.rotate, delay);
+	},0);
     };
     this.reveal = (selector) => {
 	this.query(selector).style.opacity = "1";
@@ -419,7 +432,9 @@ let Presentation = function (ng, ls) {
 	// let x = slip.x, y = slip.y;
 	// let scale = slip.scale, rotate = slip.rotate, delay = slip.delay;
 	// console.log(x,y, scale, rotate);
-	engine.moveWindow(slip.currentX, slip.currentY, slip.scale, slip.rotate, options.delay ? options.delay : slip.delay);
+	setTimeout(() => {
+	    engine.moveWindow(slip.currentX, slip.currentY, slip.scale, slip.rotate, options.delay ? options.delay : slip.delay);
+	},0);
     };
     this.gotoSlipIndex = (index, options) => {
 	if(!listSlips[slipIndex].element.classList.contains("permanent"))
