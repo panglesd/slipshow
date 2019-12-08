@@ -80,7 +80,7 @@ html, body {
     box-sizing: border-box;
     padding:60px;
     /* position: absolute; */
-    display: flex;
+    display: inline-flex;
     flex-flow: column;
     width: 1440px;
     height: 1080px;
