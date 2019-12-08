@@ -190,8 +190,21 @@ function Slip (name, actionL, present, ng, options) {
     let initialHTML = this.element.outerHTML;
     let innerHTML = this.element.innerHTML;
 
-    this.findSlipCoordinate = () => {
-	return {x: this.element.offsetLeft/1440+0.5, y:this.element.offsetTop/1080+0.5};
+    this.findSlipCoordinate = () => { // rename to getCoordInUniverse
+	let getCoordInParen = (elem) => {
+	    return {x: elem.offsetLeft, y:elem.offsetTop};	    
+	};
+	let getCoordIter = (elem) => {
+	    let cInParent = getCoordInParen(elem);
+	    if(elem.offsetParent.classList.contains("universe"))
+		return cInParent;
+	    let cParent = getCoordIter(elem.offsetParent);
+	    let scale = 1 ; // Has to parse/compute the scale, for now always 1
+	    return {x:cParent.x+cInParent.x*scale, y:cParent.y+cInParent.y*scale };
+	};
+	let c = getCoordIter(this.element);
+	return {x:c.x/1440+0.5, y:c.y/1080+0.5};
+	// return {x: this.element.offsetLeft/1440+0.5, y:this.element.offsetTop/1080+0.5};
     };
 
     let coord = this.findSlipCoordinate();
