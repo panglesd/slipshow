@@ -190,14 +190,22 @@ function Slip (name, actionL, present, ng, options) {
     let initialHTML = this.element.outerHTML;
     let innerHTML = this.element.innerHTML;
 
-    this.x = parseFloat(this.element.getAttribute("pos-x"));
-    this.y = parseFloat(this.element.getAttribute("pos-y"));
+    this.findSlipCoordinate = () => {
+	return {x: this.element.offsetLeft/1440+0.5, y:this.element.offsetTop/1080+0.5};
+    };
+
+    let coord = this.findSlipCoordinate();
+    this.x = coord.x;
+    this.y = coord.y;
+    // this.x = parseFloat(this.element.getAttribute("pos-x"));
+    // this.y = parseFloat(this.element.getAttribute("pos-y"));
     this.currentX = this.x;
     this.currentY = this.y;
     this.scale = parseFloat(this.element.getAttribute("scale"));
     this.rotate = parseFloat(this.element.getAttribute("rotate"));
     this.delay = isNaN(parseFloat(this.element.getAttribute("delay"))) ? 0 : (parseFloat(this.element.getAttribute("delay")));
 
+    
     this.query = (quer) => this.element.querySelector(quer);
     this.queryAll = (quer) => this.element.querySelectorAll(quer);
     let actionList = actionL;
@@ -433,7 +441,9 @@ let Presentation = function (ng, ls) {
 	// let scale = slip.scale, rotate = slip.rotate, delay = slip.delay;
 	// console.log(x,y, scale, rotate);
 	setTimeout(() => {
-	    engine.moveWindow(slip.currentX, slip.currentY, slip.scale, slip.rotate, options.delay ? options.delay : slip.delay);
+	    let coord = slip.findSlipCoordinate();
+	    engine.moveWindow(coord.x, coord.y, slip.scale, slip.rotate, options.delay ? options.delay : slip.delay);
+	    // engine.moveWindow(slip.currentX, slip.currentY, slip.scale, slip.rotate, options.delay ? options.delay : slip.delay);
 	},0);
     };
     this.gotoSlipIndex = (index, options) => {
