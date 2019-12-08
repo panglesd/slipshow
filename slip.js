@@ -303,7 +303,7 @@ function Slip (name, actionL, present, ng, options) {
 	console.log(this.element);
 	// this.element.outerHTML = initialHTML;
 	this.element.innerHTML = innerHTML;
-	if(hljs)
+	if(typeof hljs != "undefined")
 	    document.querySelectorAll('pre code').forEach((block) => {
 		hljs.highlightBlock(block);
 	    });
