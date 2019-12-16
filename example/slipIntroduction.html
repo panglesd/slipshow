@@ -3,6 +3,7 @@
     <head>
 	<title>Slip slip presentation</title>
 	<meta charset="utf-8" />
+	<link rel="stylesheet" type="text/css" href="slipIntroduction.css">
 	<link rel="stylesheet" type="text/css" href="../slip.css">
 	<link rel="stylesheet" type="text/css" href="../theorem.css">
 	<!-- For the use of mathjax -->
@@ -136,14 +137,34 @@ We also have environment for theorems/definitions/examples:
 			<li center-at="6" chg-visib-at="6">Same, we can center on an element with <pre class="inline-code"><code class="inline-code html">center-at</code></pre>.</li>
 			<li chg-visib-at="7">If we really don't want to see what was before, we can align an element with the top of the screen with <pre class="inline-code"><code class="inline-code html">up-at</code></pre>. Here, the first bullet code has in reality <pre class="inline-code"><code class="inline-code html">&lt;li down-at="5" up-at="7"&gt;...&lt;/li&gt;</code></pre>.</li>
 			<h3 chg-visib-at="8">This is the concept of slip.js: a downward infinite slide. But slip.js is much more!</h3>
-			<li chg-visib-at="9">By default, slips are positioned on top of the "universe", from left to right. <span chg-visib-at="11" emphasize-at="11">But we can specify their position, size, and the time taken to go to this slip.</span>
-			    <pre chg-visib-at="11"><code class="html">&lt;div class="slip" id="id" pos-x="3.5" pos-y="2.025" scale="0.25" delay="1"&gt; ... &lt;/div&gt;</code></pre>
+			<li chg-visib-at="9">By default, slips are positioned on top of the "universe", from left to right. <span chg-visib-at="11" emphasize-at="11">But they are just html elements and can be placed statically, relatively and absolutely. </span>
+			    <pre chg-visib-at="11"><code class="html">&lt;div style="display: flex; justify-content: space-around; margin:40px;"&gt;
+   &lt;div class="slip" id="red" scale="0.25" delay="1"&gt; ... &lt;/div&gt;
+   &lt;div class="slip" id="blue" scale="0.25" delay="1"&gt; ... &lt;/div&gt;
+&lt;/div&gt;</code></pre>
 			</li>
-			<div style="height:300px"></div>
+			<div style="display: flex; justify-content: space-around; margin:40px;">
+			    <!-- <div> -->
+				<div class="slip" id="red" style="background-color:red" scale="0.25" delay="1">
+				    <div class="titre">Choose a color</div>
+				    <div class="slip-body-container">
+					<div style="color:blue; font-size:5em;text-align:center">Blue Slip</div>
+				    </div>
+				</div>
+				<!-- </div>
+				     <div> -->
+				<div class="slip" id="blue" style="background-color:blue" scale="0.25" delay="1">
+				    <div class="titre">Choose a color</div>
+				    <div class="slip-body-container">
+					<div style="color:red; font-size:5em;text-align:center">Red Slip</div>
+				    </div>
+				</div>
+				<!-- </div>			 -->
+			</div>
 			<li chg-visib-at="13">
 			    We can use all JS/CSS/HTML power to make more or less useful stuff. The goal is of course to make the presentation clearer!
 			    <ul>
-				<li> Any javascript poorly written:
+				<li down-at="13"> Any javascript poorly written:
 				    <div style="position: relative; height:60px;">
 					<input style="transition: left 1s; position:absolute; left:0px; font-size: 1.5em" type="button" id="mouse" value="Click me!"/>
 				    </div>
@@ -257,18 +278,6 @@ presentation.setSlips([intro, devel, intro]);</code></pre>
 	    </div>
 	    
 	    <!--    The two small slips used to show slip placement                        -->
-	    <div class="slip" id="red" style="background-color:red" pos-x="3.25" pos-y="2.025" scale="0.25" delay="1">
-		<div class="titre">Choose a color</div>
-		<div class="slip-body-container">
-		    <div style="color:blue; font-size:5em;text-align:center">Blue Slip</div>
-		</div>
-	    </div>
-	    <div class="slip" id="blue" style="background-color:blue" pos-x="3.75" pos-y="2.025" scale="0.25" delay="1">
-		<div class="titre">Choose a color</div>
-		<div class="slip-body-container">
-		    <div style="color:red; font-size:5em;text-align:center">Red Slip</div>
-		</div>
-	    </div>
 
 	    <!--    The last slip taking a step back and with links                        -->
 	    <div class="slip" id="links" pos-x="2" pos-y="2" scale="4.3" delay="3">

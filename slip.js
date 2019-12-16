@@ -16,14 +16,34 @@ function parseAndFormat () {
 	</div>\
 	<div class="cpt-slip">0</div>';
     presentationElement.querySelectorAll(".slip").forEach((slipElem) => {
-	slipElem.innerHTML = '\
-    <div class="slip-rotate-container"><canvas style="position:absolute;top:0;left:0;z-index:-2" width="1440" height="1080" class="background-canvas" id="canvas-'+slipElem.id+'"></canvas><div class="slip-container">'+ slipElem.innerHTML + '\
-</div>';
+	setTimeout(() => {
+	    var scaleContainer = document.createElement('div');
+	    var slipContainer = document.createElement('div');
+	    scaleContainer.classList.add("slip-scale-container");
+	    slipContainer.classList.add("slip-container");
+	    let fChild;
+	    while((fChild = slipElem.firstChild)) {
+		slipContainer.appendChild(fChild);
+	    }
+	    scaleContainer.appendChild(slipContainer);
+	    slipElem.appendChild(scaleContainer);
+	    // slipElem.parentNode.insertBefore(scaleContainer, slipElem);
+	    
+	    
+	    // slipElem.parentNode.insertBefore(slipContainer, slipElem);
+	    // slipContainer.appendChild(slipElem);
+	    // var rotateContainer = document.createElement('div');
+	    
+// 	    slipElem.innerHTML = '\
+//     <div class="slip-scale-container"><div class="slip-rotate-container"><canvas style="position:absolute;top:0;left:0;z-index:-2" width="1440" height="1080" class="background-canvas" id="canvas-'+slipElem.id+'"></canvas><div class="slip-container">'+ slipElem.innerHTML + '\
+// </div></div>';
+	},0);
     });
     // document.querySelector(".globalCanvas").addEventListener("click", (ev) => { console.log("vous avez cliquez aux coordonées : ", ev.layerX, ev.layerY); });
     document.querySelectorAll(".background-canvas").forEach((elem)=> {elem.addEventListener("click", (ev) => { console.log("vous avez cliquez aux coordonnées : ", ev.layerX, ev.layerY); });});
     
 }
+
 parseAndFormat();
 
 let Engine = function() {
@@ -72,6 +92,8 @@ let Engine = function() {
 	slips.forEach((slip) => {
 	    let x=parseFloat(slip.getAttribute("pos-x")), y=parseFloat(slip.getAttribute("pos-y"));
 	    let scale = parseFloat(slip.getAttribute("scale"));
+	    console.log(slip);
+	    let slipScaleContainer = slip.querySelector(".slip-scale-container");
 	    let rotate = 0;
 	    scale = isNaN(scale) ? 1 : scale ;
 	    x = (isNaN(x) ? posX : x);
@@ -82,16 +104,19 @@ let Engine = function() {
 	    slip.setAttribute("rotate", rotate);
 	    posX = x + 1;
 	    posY = y;
-	    slip.style.top = (y*1080 - 1080/2)+"px";
-	    slip.style.left = (x*1440 - 1440/2)+"px";
-	    if(!slip.classList.contains("permanent"))
-		slip.style.zIndex = "-1";
-	    slip.style.transformOrigin = "50% 50%";
-	    slip.style.transform = "scale("+scale+")";
-
+	    // slip.style.top = (y*1080 - 1080/2)+"px";
+	    // slip.style.left = (x*1440 - 1440/2)+"px";
+	    // if(!slip.classList.contains("permanent"))
+	    // 	slip.style.zIndex = "-1";
+	    // slip.style.transformOrigin = "50% 50%";
+	    slipScaleContainer.style.transform = "scale("+scale+")";
+	    slip.style.width = 1440*scale+"px";
+	    slip.style.height = 1080*scale+"px";
 	});	
     };
-    this.placeSlips();
+    setTimeout(() => {
+	this.placeSlips();
+    },0);
     this.placeOpenWindow = function () {
 	browserHeight = window.innerHeight;
 	browserWidth = window.innerWidth;
@@ -189,34 +214,55 @@ function Slip (name, actionL, present, ng, options) {
     this.element = document.querySelector(".slip#"+name);
     let initialHTML = this.element.outerHTML;
     let innerHTML = this.element.innerHTML;
-
+    
     this.findSlipCoordinate = () => { // rename to getCoordInUniverse
 	let getCoordInParen = (elem) => {
 	    return {x: elem.offsetLeft, y:elem.offsetTop};	    
 	};
+	let globalScale = 1;
 	let getCoordIter = (elem) => {
 	    let cInParent = getCoordInParen(elem);
 	    if(elem.offsetParent.classList.contains("universe"))
+	    {
+		console.log("universe", cInParent);
 		return cInParent;
+	    }
 	    let cParent = getCoordIter(elem.offsetParent);
-	    let scale = 1 ; // Has to parse/compute the scale, for now always 1
-	    return {x:cParent.x+cInParent.x*scale, y:cParent.y+cInParent.y*scale };
+	    let style = window.getComputedStyle(elem.offsetParent);
+	    // console.log(style);
+	    let scale;
+	    console.log("style", style.transform);
+	    if (style.transform == "none")
+		scale = 1;
+	    else
+		scale = parseFloat(style.transform.split("(")[1].split(",")[0]);
+	    console.log(style.transform);
+	    console.log("scale", scale);
+	    console.log("globalScale", globalScale);
+	    globalScale *= scale;
+	    // let scale = 1 ; // Has to parse/compute the scale, for now always 1
+	    console.log("at step",  "cParent.x", cParent.x, "cInParen.x", cInParent.x, "scale", scale);
+	    return {x:cParent.x+cInParent.x*globalScale, y:cParent.y+cInParent.y*globalScale };
 	};
 	let c = getCoordIter(this.element);
-	return {x:c.x/1440+0.5, y:c.y/1080+0.5};
+	console.log("getCoord", {x:c.x/1440+0.5, y:c.y/1080+0.5}, "globalScale", globalScale);
+	return {x:c.x/1440+0.5*globalScale*this.scale, y:c.y/1080+0.5*globalScale*this.scale, scale: globalScale*this.scale};
 	// return {x: this.element.offsetLeft/1440+0.5, y:this.element.offsetTop/1080+0.5};
     };
+    this.scale = parseFloat(this.element.getAttribute("scale"));
+    if(typeof this.scale == "undefined" || isNaN(this.scale)) this.scale = 1;
+    this.rotate = parseFloat(this.element.getAttribute("rotate"));
+    this.delay = isNaN(parseFloat(this.element.getAttribute("delay"))) ? 0 : (parseFloat(this.element.getAttribute("delay")));
 
     let coord = this.findSlipCoordinate();
+    console.log(coord);
     this.x = coord.x;
     this.y = coord.y;
     // this.x = parseFloat(this.element.getAttribute("pos-x"));
     // this.y = parseFloat(this.element.getAttribute("pos-y"));
-    this.currentX = this.x;
-    this.currentY = this.y;
-    this.scale = parseFloat(this.element.getAttribute("scale"));
-    this.rotate = parseFloat(this.element.getAttribute("rotate"));
-    this.delay = isNaN(parseFloat(this.element.getAttribute("delay"))) ? 0 : (parseFloat(this.element.getAttribute("delay")));
+    // this.currentX = this.x;
+    // this.currentY = this.y;
+    // console.log("currentX", this.currentX);
 
     
     this.query = (quer) => this.element.querySelector(quer);
@@ -343,10 +389,11 @@ function Slip (name, actionL, present, ng, options) {
 	    if(typeof selector == "string") elem = this.query(selector);
 	    else elem = selector;
 	    if (typeof offset == "undefined") offset = 0.0125;
-	    let d = ((elem.offsetTop)/1080-offset)*this.scale;
-	    this.currentX = this.x;
-	    this.currentY = this.y+d;
-	    engine.moveWindow(this.x, this.y+d, this.scale, this.rotate, delay);
+	    let coord = this.findSlipCoordinate();
+	    let d = ((elem.offsetTop)/1080-offset)*coord.scale;
+	    this.currentX = coord.x;
+	    this.currentY = coord.y+d;
+	    engine.moveWindow(coord.x, coord.y+d, coord.scale, this.rotate, delay);
 	},0);
     };
     this.moveDownTo = (selector, delay, offset) => {
@@ -355,10 +402,11 @@ function Slip (name, actionL, present, ng, options) {
 	    if(typeof selector == "string") elem = this.query(selector);
 	    else elem = selector;
 	    if (typeof offset == "undefined") offset = 0.0125;
-	    let d = ((elem.offsetTop+elem.offsetHeight)/1080 - 1 + offset)*this.scale;
-	    this.currentX = this.x;
-	    this.currentY = this.y+d;
-	    engine.moveWindow(this.x, this.y+d, this.scale, this.rotate, delay);
+	    let coord = this.findSlipCoordinate();
+	    let d = ((elem.offsetTop+elem.offsetHeight)/1080 - 1 + offset)*coord.scale;
+	    this.currentX = coord.x;
+	    this.currentY = coord.y+d;
+	    engine.moveWindow(coord.x, coord.y+d, coord.scale, this.rotate, delay);
 	},0);
     };
     this.moveCenterTo = (selector, delay, offset) => {
@@ -367,10 +415,11 @@ function Slip (name, actionL, present, ng, options) {
 	    if(typeof selector == "string") elem = this.query(selector);
 	    else elem = selector;
 	    if (typeof offset == "undefined") offset = 0;
-	    let d = ((elem.offsetTop+elem.offsetHeight/2)/1080-1/2+offset)*this.scale;
-	    this.currentX = this.x;
-	    this.currentY = this.y+d;
-	    engine.moveWindow(this.x, this.y+d, this.scale, this.rotate, delay);
+	    let coord = this.findSlipCoordinate();
+	    let d = ((elem.offsetTop+elem.offsetHeight/2)/1080-1/2+offset)*coord.scale;
+	    this.currentX = coord.x;
+	    this.currentY = coord.y+d;
+	    engine.moveWindow(coord.x, coord.y+d, coord.scale, this.rotate, delay);
 	},0);
     };
     this.reveal = (selector) => {
@@ -455,8 +504,11 @@ let Presentation = function (ng, ls) {
 	// console.log(x,y, scale, rotate);
 	setTimeout(() => {
 	    let coord = slip.findSlipCoordinate();
-	    engine.moveWindow(coord.x, coord.y, slip.scale, slip.rotate, options.delay ? options.delay : slip.delay);
-	    // engine.moveWindow(slip.currentX, slip.currentY, slip.scale, slip.rotate, options.delay ? options.delay : slip.delay);
+	    // engine.moveWindow(coord.x, coord.y, slip.scale, slip.rotate, options.delay ? options.delay : slip.delay);
+	    if(typeof slip.currentX != "undefined" && typeof slip.currentY != "undefined")
+		engine.moveWindow(slip.currentX, slip.currentY, coord.scale, slip.rotate, options.delay ? options.delay : slip.delay);
+	    else
+		engine.moveWindow(coord.x, coord.y, coord.scale, slip.rotate, options.delay ? options.delay : slip.delay);
 	},0);
     };
     this.gotoSlipIndex = (index, options) => {

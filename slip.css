@@ -30,10 +30,17 @@ html, body {
     /* will-change: transform; */
 }
 .slip-scale-container {
+    position: relative;
+    top: 0;
+    /* bottom: 0; */
+    left: 0;
+    /* right: 0; */
     transform-origin: 0 0;
     transition-property: transform;
     transition-duration: 1s;
-    transition-timing-function: ease;    
+    transition-timing-function: ease;
+    width:1440px;
+    min-height:1080px;
     /* will-change: transform; */
 }
 .slip-rotate-container {
@@ -46,8 +53,12 @@ html, body {
     /* flex-flow: column; */
 }
 .slip-container {
-    position:absolute;
-    top:0;bottom:0;left:0;right:0;
+    position:relative;
+    top:0;
+    /* bottom:0; */
+    left:0;right:0;
+    width: 1440px;
+    min-height: 1080px;
     display: flex;
     flex-flow: column;
 }
@@ -78,12 +89,13 @@ html, body {
     pointer-event:none;
     font: 1.8em "Fira Sans", sans-serif;
     box-sizing: border-box;
-    padding:60px;
     /* position: absolute; */
+    position: relative;
     display: inline-flex;
+    white-space: normal;
     flex-flow: column;
     width: 1440px;
-    height: 1080px;
+    /* height: 1080px; */
 }
 .slip .titre {
     flex: 0 1 auto;
@@ -97,6 +109,7 @@ html, body {
     padding-left:60px;
 }
 .slip .slip-body-container {
+    /* padding:60px; */
     margin-top: auto;
     margin-bottom: auto;
     margin-left: 110px;

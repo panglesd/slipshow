@@ -23,6 +23,9 @@ let future = new Slip("future", [], presentation, engine, {firstVisit: (slip) =>
 let red = new Slip("red", [], presentation, engine, { firstVisit: (slip) => { future.delay = 1;}});
 let blue = new Slip("blue", [], presentation, engine, {});
 
+// let scaleTest = new Slip("scale-test", [], presentation, engine, {});
+
+
 // the "c1" elements have to be hidden for when "future" unzoom. They have to be shown as soon as we enter this slip.
 let links = new Slip("links", [], presentation, engine, {firstVisit: (slip) => {slip.revealAll(".c1");}});
 
@@ -34,8 +37,8 @@ future.setNthAction(9, (slip) => {
 });
 future.setNthAction(10, (slip) => {
     engine.moveWindow(slip.savedX,slip.savedY,1,0,1); // recovering initial position
-    red.element.style.display = "block";
-    blue.element.style.display = "block";
+    red.element.style.display = "inline-block";
+    blue.element.style.display = "inline-block";
 });
 future.setNthAction(11, (slip) => {
     presentation.skipSlip({delay:1}); // Leaving "future" without finishing it
@@ -47,6 +50,7 @@ presentation.setSlips([
     beamerPart,
     future,
     red,
+    // scaleTest,
     blue,
     future, // coming back to the unfinished "future"
     links,
