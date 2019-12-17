@@ -86,7 +86,7 @@ html, body {
 }
 
 .slip {
-    pointer-event:none;
+    /* pointer-event:none; */
     font: 1.8em "Fira Sans", sans-serif;
     box-sizing: border-box;
     /* position: absolute; */
