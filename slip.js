@@ -65,7 +65,7 @@ let Engine = function() {
 
     let winX, winY;
     let currentScale, currentRotate;
-
+    this.getCoord = () => { return {x: winX, y: winY, scale: currentScale};};
     this.moveWindow = function (x, y, scale, rotate, delay) {
 	console.log("move to", x, y, "with scale, rotate, delay", scale, rotate, delay);
 	currentScale = scale;
@@ -152,7 +152,33 @@ let Engine = function() {
 	this.placeOpenWindow();
 	this.moveWindow(winX, winY, currentScale, currentRotate, 0);
     });
-    
+
+    // Taken from https://selftaughtjs.com/algorithm-sundays-converting-roman-numerals
+    // Use in showing roman numbers for slip number
+    function toRoman(num) {
+	var result = '';
+	var decimal = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
+	var roman = ["M", "CM","D","CD","C", "XC", "L", "XL", "X","IX","V","IV","I"];
+	for (var i = 0;i<=decimal.length;i++) {
+	    while (num%decimal[i] < num) {     
+		result += roman[i];
+		num -= decimal[i];
+	    }
+	}
+	return result;
+    }
+    this.gotoSlip = function(slip, options) {
+	options = options ? options : {};
+	console.log("options is ", options);
+	setTimeout(() => {
+	    let coord = slip.findSlipCoordinate();
+	    if(typeof slip.currentX != "undefined" && typeof slip.currentY != "undefined")
+		this.moveWindow(slip.currentX, slip.currentY, coord.scale, slip.rotate, options.delay ? options.delay : slip.delay);
+	    else
+		this.moveWindow(coord.x, coord.y, coord.scale, slip.rotate, options.delay ? options.delay : slip.delay);
+	},0);
+    };
+
 };
 
 let Controller = function (ng, pres) {
@@ -253,28 +279,22 @@ function Slip (name, actionL, present, ng, options) {
     if(typeof this.scale == "undefined" || isNaN(this.scale)) this.scale = 1;
     this.rotate = parseFloat(this.element.getAttribute("rotate"));
     this.delay = isNaN(parseFloat(this.element.getAttribute("delay"))) ? 0 : (parseFloat(this.element.getAttribute("delay")));
-
+    
     let coord = this.findSlipCoordinate();
     console.log(coord);
     this.x = coord.x;
     this.y = coord.y;
-    // this.x = parseFloat(this.element.getAttribute("pos-x"));
-    // this.y = parseFloat(this.element.getAttribute("pos-y"));
-    // this.currentX = this.x;
-    // this.currentY = this.y;
-    // console.log("currentX", this.currentX);
-
     
     this.query = (quer) => this.element.querySelector(quer);
     this.queryAll = (quer) => this.element.querySelectorAll(quer);
     let actionList = actionL;
-    let actionIndex=0;
+    let actionIndex=-1;
     this.setActionIndex = (actionI) => actionIndex = actionI;
     this.getActionIndex = () => actionIndex;
     this.setAction = (actionL) => {actionList = actionL;};
     this.setNthAction = (n,action) => {actionList[n] = action;};
 
-    this.hideAndShow = () => {
+    this.doAttributes = () => {
 	this.queryAll("*[mk-hidden-at]").forEach((elem) => {
 	    let hiddenAt = elem.getAttribute("mk-hidden-at").split(" ").map((str) => parseInt(str));
 	    if(hiddenAt.includes(actionIndex))
@@ -316,21 +336,11 @@ function Slip (name, actionL, present, ng, options) {
 		elem.style.visibility = "visible";
 	    }
 	});	    
-    };
-    
-    this.next = function (presentation) {
-	if(actionIndex >= this.getMaxNext())
-	    return false;
-	actionIndex = actionIndex+1;
-	this.hideAndShow();
-	// setTimeout(() => {
-	    this.queryAll("*[down-at]").forEach((elem) => {
+	this.queryAll("*[down-at]").forEach((elem) => {
 	    let goDownTo = elem.getAttribute("down-at").split(" ").map((str) => parseInt(str));
 	    if(goDownTo.includes(actionIndex))
-//		setTimeout(() => {
 		this.moveDownTo(elem, 1);
-//		}, 0);
-	    });
+	});
 	this.queryAll("*[up-at]").forEach((elem) => {
 	    let goTo = elem.getAttribute("up-at").split(" ").map((str) => parseInt(str));
 	    if(goTo.includes(actionIndex))
@@ -338,10 +348,39 @@ function Slip (name, actionL, present, ng, options) {
 	this.queryAll("*[center-at]").forEach((elem) => {
 	    let goDownTo = elem.getAttribute("center-at").split(" ").map((str) => parseInt(str));
 	    if(goDownTo.includes(actionIndex))
-		this.moveCenterTo(elem, 1);});
-	if(typeof actionList[actionIndex-1] == "function")
-	    actionList[actionIndex-1](this);
+		this.moveCenterTo(elem, 1);});	
+    };
+
+    this.incrIndex = () => {
+	console.log("incrIndex");
+	actionIndex = actionIndex+1;
+	this.doAttributes();
+	// this.hideAndShow();
+    };
+    
+    this.next = function (presentation) {
+	if(actionIndex == -1) {
+	    this.incrIndex();
+	    this.firstVisit();
+	    return true;
+	}
+	if(actionIndex >= this.getMaxNext())
+	    return false;
+	console.log(actionList);
+	if(typeof actionList[actionIndex] == "function") {
+	    console.log("here");
+	    actionList[actionIndex](this);
+	}
+	if(actionList[actionIndex] instanceof Slip){
+	    if(!actionList[actionIndex].next()) {
+		// actionIndex += 1;
+		this.incrIndex();
+	    }
+	}
+	else
+	    this.incrIndex();
 	// }, 0);
+	// this.incrIndex();
 	return true;
     };
     this.firstVisit = () => {
@@ -356,7 +395,7 @@ function Slip (name, actionL, present, ng, options) {
 	    elem.style.position = "absolute";
 	    elem.style.visibility = "hidden";
 	});	
-	this.hideAndShow();
+	this.doAttributes();
 	if(options.init)
 	    options.init(this);
     };
@@ -464,20 +503,7 @@ let Presentation = function (ng, ls) {
 	ls = Array.from(document.querySelectorAll(".slip")).map((elem) => { return new Slip(elem.id, [], this, ng, {});});
     console.log(ls);
     // let cpt = 0;
-    // Taken from https://selftaughtjs.com/algorithm-sundays-converting-roman-numerals
-    // Use in showing roman numbers for slip number
-    function toRoman(num) {
-	var result = '';
-	var decimal = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
-	var roman = ["M", "CM","D","CD","C", "XC", "L", "XL", "X","IX","V","IV","I"];
-	for (var i = 0;i<=decimal.length;i++) {
-	    while (num%decimal[i] < num) {     
-		result += roman[i];
-		num -= decimal[i];
-	    }
-	}
-	return result;
-    }
+
     this.getCpt = () => {
 	return [
 	    this.getSlips().findIndex((slip) => {return slip == this.getCurrentSlip();}),
@@ -577,6 +603,41 @@ let Presentation = function (ng, ls) {
 	this.setCpt();
     };
 };
+/*
+  Tasks :
+  - create RootSlip
+  - remove Presentation class
+  - change Slip class
+
+  -> Engine
+  toRoman, DONE
+  gotoSlip,
+
+  -> Slip
+  getCpt, 
+  setCpt,
+  gotoSlip -> gotoSubSlip
+  ??  gotoSlipIndex -> gotoSubSlipIndex,
+  next,
+  nextSlip,
+  skipSlip,
+  previousSlip,
+  previous,
+  refresh,
+
+  -> Trash
+  getEngine,
+  setEngine,
+  listSlips,
+  slipIndex,
+  getSlips,
+  setSlips,
+  getCurrentSlip,
+  start,
+
+
+
+*/
 
 let engine = new Engine();
 let presentation = new Presentation(engine);

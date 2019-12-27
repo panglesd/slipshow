@@ -40,16 +40,16 @@ future.setNthAction(10, (slip) => {
     red.element.style.display = "inline-block";
     blue.element.style.display = "inline-block";
 });
-future.setNthAction(11, (slip) => {
-    presentation.skipSlip({delay:1}); // Leaving "future" without finishing it
-});
+future.setNthAction(11, red);
+		    // (slip) => {
+		    // 	// presentation.skipSlip({delay:1}); // Leaving "future" without finishing it
+		    // });
 
 presentation.setSlips([
     intro,
     base,
     beamerPart,
     future,
-    red,
     // scaleTest,
     blue,
     future, // coming back to the unfinished "future"
