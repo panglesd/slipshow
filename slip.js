@@ -285,10 +285,19 @@ function Slip (name, actionL, present, ng, options) {
     this.x = coord.x;
     this.y = coord.y;
     
-    this.query = (quer) => this.element.querySelector(quer);
-    this.queryAll = (quer) => this.element.querySelectorAll(quer);
+    this.queryAll = (quer) => {
+	let allElem = Array.from(this.element.querySelectorAll(quer));
+	console.log("allElem", allElem);
+	let other = Array.from(this.element.querySelectorAll("#"+name+" .slip "+quer));
+	console.log("other", other, ".slide "+quer);
+	return allElem.filter(value => !other.includes(value));
+    };
+    this.query = (quer) => {
+	return this.queryAll(quer)[0];
+    };
     let actionList = actionL;
-    let actionIndex=-1;
+    let actionIndex = -1;
+    // let actionIndex=-1;
     this.setActionIndex = (actionI) => actionIndex = actionI;
     this.getActionIndex = () => actionIndex;
     this.setAction = (actionL) => {actionList = actionL;};
