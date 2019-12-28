@@ -26,6 +26,8 @@
     <body>
 	<div class="presentation">
 
+	    <div class="slip" id="foo">
+	    </div>
 	    <!--    First slip, an introduction                                  -->
 	    <div class="slip" id="intro">
 		<div class="titre">Slip.js</div>       <!-- Beamer style title   -->
@@ -149,7 +151,7 @@ We also have environment for theorems/definitions/examples:
 				    <div class="titre">Choose a color</div>
 				    <div class="slip-body-container">
 					<div style="color:blue; font-size:5em;text-align:center">Blue Slip</div>
-					<div chg-visib-at="1" style="color:blue; font-size:5em;text-align:center">Blue Slip</div>
+					<div emphasize-at="3" chg-visib-at="1" style="color:blue; font-size:5em;text-align:center">Blue Slip</div>
 					<div chg-visib-at="2" style="color:blue; font-size:5em;text-align:center">Blue Slip</div>
 					<div chg-visib-at="3" style="color:blue; font-size:5em;text-align:center">Blue Slip</div>
 					<div chg-visib-at="4" style="color:blue; font-size:5em;text-align:center">Blue Slip</div>
@@ -165,19 +167,19 @@ We also have environment for theorems/definitions/examples:
 				</div>
 				<!-- </div>			 -->
 			</div>
-			<li chg-visib-at="13">
+			<li chg-visib-at="15">
 			    We can use all JS/CSS/HTML power to make more or less useful stuff. The goal is of course to make the presentation clearer!
 			    <ul>
-				<li down-at="13"> Any javascript poorly written:
+				<li down-at="15"> Any javascript poorly written:
 				    <div style="position: relative; height:60px;">
 					<input style="transition: left 1s; position:absolute; left:0px; font-size: 1.5em" type="button" id="mouse" value="Click me!"/>
 				    </div>
 				</li>
-				<li down-at="14" chg-visib-at="14">
+				<li down-at="16" chg-visib-at="16">
 				    Any HTML5 possibility:
 				    <div style="text-align: center"><iframe width="336" height="189" src="https://www.youtube.com/embed/qk00gbDwGqM" frameborder="0" allowfullscreen></iframe></div>
 				</li>
-				<li down-at="15" chg-visib-at="15">
+				<li down-at="17" chg-visib-at="17">
 				    Any random CSS trick copy-pasted from the internet:
 				    <!-- Should certainly be in a separate file, but as it is random copy-pasted css, it is allowed here -->
 				    <style>
@@ -220,25 +222,25 @@ We also have environment for theorems/definitions/examples:
 		    </ul>
 		    
 		    <!-- Still in the same slip, but somehow next part. Use of a usual html title (h1). -->
-		    <h1 chg-visib-at="16" up-at="16">Slip.js advanced: fine control of events</h1>
+		    <h1 chg-visib-at="18" up-at="18">Slip.js advanced: fine control of events</h1>
 		    <ul>
-			<li chg-visib-at="17">When <pre class="inline-code"><code class="inline-code">slip.js</code></pre> is loaded, several objects are defined:
+			<li chg-visib-at="19">When <pre class="inline-code"><code class="inline-code">slip.js</code></pre> is loaded, several objects are defined:
 			    <ul>
 				<!-- highlight.js again messing with readability -->
 				<li>
 				    A variable <pre class="inline-code"><code class="inline-code">engine</code></pre> which allows to command the window showing the slips. It has the method <pre class="inline-code"><code class="inline-code">moveWindow(x, y, scale, rotate, delay)</code></pre>, <pre class="inline-code"><code class="inline-code">moveWindowRelative(dx, dy, dscale, drotate, delay)</code></pre>.
 				</li>
-				<li chg-visib-at="18">
+				<li chg-visib-at="20">
 				    A variable <pre class="inline-code"><code class="inline-code">presentation</code></pre> which allows to command the presentation. It has the method <pre class="inline-code"><code class="inline-code">next()</code></pre>, <pre class="inline-code"><code class="inline-code">nextSlip()</code></pre>, <pre class="inline-code"><code class="inline-code">gotoSlipIndex()</code></pre>, <pre class="inline-code"><code class="inline-code">getCurrentSlip()</code></pre>, <pre class="inline-code"><code class="inline-code">get/setSlips()</code></pre>, <pre class="inline-code"><code class="inline-code">refresh()</code></pre>.
 				</li>
-				<li chg-visib-at="19">
+				<li chg-visib-at="21">
 				    An object <pre class="inline-code"><code class="inline-code">slip</code></pre> correspond to an HTML element of class <pre class="inline-code"><code class="inline-code">slip</code></pre>. It has the method <pre class="inline-code"><code class="inline-code">query(selector)</code></pre>, <pre class="inline-code"><code class="inline-code">queryAll(selector)</code></pre>, <pre class="inline-code"><code class="inline-code">next()</code></pre>, <pre class="inline-code"><code class="inline-code">move{Up;Down;Center}To(selector, delay, offset)</code></pre>, <pre class="inline-code"><code class="inline-code">{reveal;hide}{∅;All}(selector)</code></pre>, <pre class="inline-code"><code class="inline-code">setAction(actionList)</code></pre>, <pre class="inline-code"><code class="inline-code">setNthAction(n, action)</code></pre>. An action is a function which takes a slip as input.
 				</li>
 			    </ul>
 			</li>
-			<li chg-visib-at="20">The best is to see an example:<br/>
+			<li chg-visib-at="22">The best is to see an example:<br/>
 			    <!-- The JS part of the example -->
-			    <pre down-at="20" style="display: inline-block width:45%"><code class="js">let options = { init: (slip) => {}, firstVisit: (slip) => {}, whenLeaving: (slip) => {}};
+			    <pre down-at="22" style="display: inline-block width:45%"><code class="js">let options = { init: (slip) => {}, firstVisit: (slip) => {}, whenLeaving: (slip) => {}};
 // the "options" parameter allows to set function to call when document is ready, when entering slip for the first time and when leaving the slip
 
 let intro = new Slip("intro", [], presentation, engine, options);
@@ -259,7 +261,7 @@ devel.setNthAction(5, (slip) => {
 // We can specify an order on slips
 presentation.setSlips([intro, devel, intro]);</code></pre>
 			    <!-- The HTML part of the example -->
-			    <pre down-at="21" style="width:45%display: inline-block"><code class="html">&lt;div class="slip" id="intro"&gt;
+			    <pre down-at="23" style="width:45%display: inline-block"><code class="html">&lt;div class="slip" id="intro"&gt;
   &lt;div class="title"&gt;Introduction to the subject&lt;/div&gt; &lt;!-- for Beamer style title --&gt;
   &lt;div class="slip-body-container"&gt; &lt;!-- for Beamer style margin (remove for full-width slips) --&gt;
       Blablabla

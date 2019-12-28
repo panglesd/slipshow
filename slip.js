@@ -46,7 +46,7 @@ function parseAndFormat () {
 
 parseAndFormat();
 
-let Engine = function() {
+let Engine = function(root) {
     // Constants
     document.body.style.cursor = "auto";
     let timeOutIds = [];
@@ -167,7 +167,35 @@ let Engine = function() {
 	}
 	return result;
     }
+    let rootSlip = root;
+    let stack = [rootSlip];
+
+    // this.getRootSlip = () => rootSlip;
+    this.setRootSlip = (root) => {
+	rootSlip = root;
+	stack = [rootSlip];
+    };
+
+    this.next = () => {
+	let currentSlide = stack[stack.length - 1];
+	let n = currentSlide.next();
+	if(n instanceof Slip) {
+	    this.gotoSlip(n);
+	    stack.push(n);
+	    this.next();
+	}
+	else if(!n) {
+	    stack.pop();
+	    let newCurrentSlide = stack[stack.length - 1];
+	    this.gotoSlip(newCurrentSlide);
+	    // newCurrentSlide.incrIndex();
+	    this.next();
+	    console.log(stack);
+	}
+    };
+    
     this.gotoSlip = function(slip, options) {
+	console.log("we goto slip");
 	options = options ? options : {};
 	console.log("options is ", options);
 	setTimeout(() => {
@@ -181,19 +209,19 @@ let Engine = function() {
 
 };
 
-let Controller = function (ng, pres) {
+let Controller = function (ng) {
     let engine = ng;
     this.getEngine = () => this.engine;
     this.setEngine = (ng) => this.engine = ng;
 
-    let presentation = pres;
-    this.getPresentation = () => presentation;
-    this.setPresentation = (pres) => presentation = pres;
+    // let mainSlip = mainS;
+    // this.getMainSlip = () => mainSlip;
+    // this.setMainSlip = (slip) => mainSlip = slip;
 
     let speedMove=1;
     document.addEventListener("keypress", (ev) => {
 	if(ev.key == "f") { speedMove = (speedMove + 4)%30+1; }    
-	if(ev.key == "r") { presentation.refresh(); }    
+	if(ev.key == "r") { engine.refresh(); }    
 	if(ev.key == "#") {
 	    document.querySelectorAll(".slip").forEach((slip) => {slip.style.zIndex = "-1";});
 	    document.querySelectorAll(".background-canvas").forEach((canvas) => {canvas.style.zIndex = "1";});
@@ -213,29 +241,29 @@ let Controller = function (ng, pres) {
 	if(ev.key == "ArrowRight") {
 	    console.log(ev);
 	    if(ev.shiftKey)
-		presentation.nextSlip();
+		engine.nextSlip();
 	    else    
-		presentation.next();
+		engine.next();
 	}
 	else if (ev.key == "ArrowLeft") {
 	    if(ev.shiftKey)
-		presentation.previousSlip();
+		engine.previousSlip();
 	    else    
-		presentation.previous();
+		engine.previous();
 	}
     });  
     
 };
 
 
-function Slip (name, actionL, present, ng, options) {
+function Slip (name, actionL, ng, options) {
     let engine = ng;
     this.getEngine = () => engine;
     this.setEngine = (ng) => engine = ng;
     
-    let presentation = present;
-    this.getPresentation = () => presentation;
-    this.setPresentation = (present) => presentation = present;
+    // let presentation = present;
+    // this.getPresentation = () => presentation;
+    // this.setPresentation = (present) => presentation = present;
     
     this.element = document.querySelector(".slip#"+name);
     let initialHTML = this.element.outerHTML;
@@ -367,27 +395,29 @@ function Slip (name, actionL, present, ng, options) {
 	// this.hideAndShow();
     };
     
-    this.next = function (presentation) {
-	if(actionIndex == -1) {
-	    this.incrIndex();
-	    this.firstVisit();
-	    return true;
-	}
+    this.next = function () {
+	// if(actionIndex == -1) {
+	//     this.incrIndex();
+	//     this.firstVisit();
+	//     return true;
+	// }
 	if(actionIndex >= this.getMaxNext())
 	    return false;
-	console.log(actionList);
+	this.incrIndex();
+	// console.log(actionList);
 	if(typeof actionList[actionIndex] == "function") {
-	    console.log("here");
+	    // console.log("here");
 	    actionList[actionIndex](this);
 	}
 	if(actionList[actionIndex] instanceof Slip){
-	    if(!actionList[actionIndex].next()) {
-		// actionIndex += 1;
-		this.incrIndex();
-	    }
+	    // if(!actionList[actionIndex].next()) {
+	    // 	// actionIndex += 1;
+	    // 	this.incrIndex();
+	    // }
+	    return actionList[actionIndex];
 	}
-	else
-	    this.incrIndex();
+	// else
+	//     this.incrIndex();
 	// }, 0);
 	// this.incrIndex();
 	return true;
@@ -414,6 +444,12 @@ function Slip (name, actionL, present, ng, options) {
     };
 	
     this.refresh = () => {
+	if(actionList[actionIndex] instanceof Slip)
+	    actionList[actionIndex].refresh();
+	else
+	    this.doRefresh();
+    };
+    this.doRefresh = () => {
 	this.setActionIndex(0);
 	console.log(this.element);
 	// this.element.outerHTML = initialHTML;
@@ -430,7 +466,7 @@ function Slip (name, actionL, present, ng, options) {
 	this.firstVisit();
 	console.log("ai", actionIndex);
     };
-    this.init(this, presentation, engine);
+    this.init(this, engine);
     this.moveUpTo = (selector, delay,  offset) => {
 	setTimeout(() => {
 	    let elem;
@@ -621,48 +657,48 @@ let Presentation = function (ng, ls) {
   -> Engine
   toRoman, DONE
   gotoSlip,
+  nextSlip,
+  skipSlip,
+  previousSlip,
+  next,
+  previous,
+  refresh,
+  listSlips,
+  slipIndex -> slipStack,
+  getSlips,
+  setSlips,
+  getCurrentSlip,
+  start,  
 
   -> Slip
   getCpt, 
   setCpt,
   gotoSlip -> gotoSubSlip
   ??  gotoSlipIndex -> gotoSubSlipIndex,
-  next,
-  nextSlip,
-  skipSlip,
-  previousSlip,
-  previous,
-  refresh,
 
   -> Trash
   getEngine,
   setEngine,
-  listSlips,
-  slipIndex,
-  getSlips,
-  setSlips,
-  getCurrentSlip,
-  start,
 
 
 
 */
 
-let engine = new Engine();
-let presentation = new Presentation(engine);
-let controller = new Controller(engine, presentation);
-presentation.start();
+// let engine = new Engine();
+// // let presentation = new Presentation(engine);
+// let controller = new Controller(engine, presentation);
+// presentation.start();
 
-function getAnchor() {
-    var currentUrl = document.URL,
-	urlParts   = currentUrl.split('#');
+// function getAnchor() {
+//     var currentUrl = document.URL,
+// 	urlParts   = currentUrl.split('#');
 		
-    return (urlParts.length > 1) ? urlParts[1] : null;
-}
-let anchor = parseInt(getAnchor());
-if(anchor) {
-    for(let i=0;i<anchor; i++) {
-	presentation.next();
-    }
-}
+//     return (urlParts.length > 1) ? urlParts[1] : null;
+// }
+// let anchor = parseInt(getAnchor());
+// if(anchor) {
+//     for(let i=0;i<anchor; i++) {
+// 	presentation.next();
+//     }
+// }
 
