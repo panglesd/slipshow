@@ -1,3 +1,36 @@
+let myQueryAll = (root, selector) => {
+    if (!root.id)
+	root.id = Math.random();
+    let allElem = Array.from(root.querySelectorAll(selector));
+    let other = Array.from(root.querySelectorAll("#"+root.id+" .slip "+selector));
+    return allElem.filter(value => !other.includes(value));
+};
+
+function cloneNoSubslip (elem) {
+    let newElem = elem.cloneNode(false);
+    elem.childNodes.forEach((child) => {
+	if(child.classList && child.classList.contains("slip")){
+	    let placeholder = document.createElement(child.tagName);
+	    placeholder.classList.add("toReplace");
+	    newElem.appendChild(placeholder);
+	}
+	else
+	    newElem.appendChild(cloneNoSubslip(child));
+    });
+    return newElem;
+}
+function replaceSubslips(clone, subslips) {
+    // return;
+    // let subslips = myQueryAll(elem, ".slip");
+    // console.log("subslips are", subslips);
+    // console.log("subslips are (placeholders)", subslips);
+    let placeholders = myQueryAll(clone, ".toReplace");
+    subslips.forEach((subslip, index) => {
+	// console.log("subslip", subslip, "replace", placeholders[index]);
+	placeholders[index].replaceWith(subslip);
+    });
+}
+
 function parseAndFormat () {
     let presentationElement = document.querySelector(".presentation");
     presentationElement.innerHTML =
@@ -86,33 +119,37 @@ let Engine = function(root) {
     this.moveWindowRelative = function(dx, dy, dscale, drotate, delay) {
 	this.moveWindow(winX+dx, winY+dy, currentScale+dscale, currentRotate+drotate, delay);
     };
-    this.placeSlips = function () {
+    this.placeSlip = function(slip) {
+	// console.log("debug Previous (slip)", slip);
 	let posX = 0.5;
 	let posY = 0.5;
-	slips.forEach((slip) => {
-	    let x=parseFloat(slip.getAttribute("pos-x")), y=parseFloat(slip.getAttribute("pos-y"));
-	    let scale = parseFloat(slip.getAttribute("scale"));
-	    console.log(slip);
-	    let slipScaleContainer = slip.querySelector(".slip-scale-container");
-	    let rotate = 0;
-	    scale = isNaN(scale) ? 1 : scale ;
-	    x = (isNaN(x) ? posX : x);
-	    y = (isNaN(y) ? posY : y);
-	    slip.setAttribute("pos-x", x);
-	    slip.setAttribute("pos-y", y);
-	    slip.setAttribute("scale", scale);
-	    slip.setAttribute("rotate", rotate);
-	    posX = x + 1;
-	    posY = y;
-	    // slip.style.top = (y*1080 - 1080/2)+"px";
-	    // slip.style.left = (x*1440 - 1440/2)+"px";
-	    // if(!slip.classList.contains("permanent"))
-	    // 	slip.style.zIndex = "-1";
-	    // slip.style.transformOrigin = "50% 50%";
-	    slipScaleContainer.style.transform = "scale("+scale+")";
-	    slip.style.width = 1440*scale+"px";
-	    slip.style.height = 1080*scale+"px";
-	});	
+	let x=parseFloat(slip.getAttribute("pos-x")), y=parseFloat(slip.getAttribute("pos-y"));
+	let scale = parseFloat(slip.getAttribute("scale"));
+	// console.log(slip);
+	let slipScaleContainer = slip.querySelector(".slip-scale-container");
+	let rotate = 0;
+	scale = isNaN(scale) ? 1 : scale ;
+	x = (isNaN(x) ? posX : x);
+	y = (isNaN(y) ? posY : y);
+	slip.setAttribute("pos-x", x);
+	slip.setAttribute("pos-y", y);
+	slip.setAttribute("scale", scale);
+	slip.setAttribute("rotate", rotate);
+	posX = x + 1;
+	posY = y;
+	// slip.style.top = (y*1080 - 1080/2)+"px";
+	// slip.style.left = (x*1440 - 1440/2)+"px";
+	// if(!slip.classList.contains("permanent"))
+	// 	slip.style.zIndex = "-1";
+	// slip.style.transformOrigin = "50% 50%";
+	slipScaleContainer.style.transform = "scale("+scale+")";
+	slip.style.width = 1440*scale+"px";
+	slip.style.height = 1080*scale+"px";	
+    };
+    this.placeSlips = function () {
+	// let posX = 0.5;
+	// let posY = 0.5;
+	slips.forEach(this.placeSlip);	
     };
     setTimeout(() => {
 	this.placeSlips();
@@ -178,6 +215,7 @@ let Engine = function(root) {
 
     this.next = () => {
 	let currentSlide = stack[stack.length - 1];
+	// console.log("stack", stack);
 	let n = currentSlide.next();
 	if(n instanceof Slip) {
 	    this.gotoSlip(n);
@@ -190,8 +228,29 @@ let Engine = function(root) {
 	    this.gotoSlip(newCurrentSlide);
 	    // newCurrentSlide.incrIndex();
 	    this.next();
-	    console.log(stack);
+	    // console.log(stack);
 	}
+    };
+    this.previous = () => {
+	let currentSlide = stack[stack.length - 1];
+	// console.log("debug Previous (stack)", stack);
+	// console.log("debug Previous (currentSlide)",currentSlide);
+	let n = currentSlide.previous();
+	// console.log("debug Previous (currentSlide.previous())", n);	
+	if(n instanceof Slip) {
+	    this.gotoSlip(n);
+	    stack.push(n);
+	    // this.previous();
+	}
+	else if(!n && stack.length > 1) {
+	    stack.pop();
+	    let newCurrentSlide = stack[stack.length - 1];
+	    this.gotoSlip(newCurrentSlide);
+	    // newCurrentSlide.incrIndex();
+	    this.previous();
+	    // console.log(stack);
+	}
+	// console.log("returned", n);
     };
     
     this.gotoSlip = function(slip, options) {
@@ -267,7 +326,15 @@ function Slip (name, actionL, ng, options) {
     
     this.element = document.querySelector(".slip#"+name);
     let initialHTML = this.element.outerHTML;
+    let clonedElement;
+    MathJax.startup.promise.then(() => {
+        // console.log('MathJax initial typesetting complete');
+	setTimeout(() => {clonedElement = cloneNoSubslip(this.element);},0);
+      });
     let innerHTML = this.element.innerHTML;
+    this.getCloned = () => clonedElement;
+    this.setCloned = (c) => clonedElement = c;
+    this.setEngine = (ng) => engine = ng;
     
     this.findSlipCoordinate = () => { // rename to getCoordInUniverse
 	let getCoordInParen = (elem) => {
@@ -315,9 +382,9 @@ function Slip (name, actionL, ng, options) {
     
     this.queryAll = (quer) => {
 	let allElem = Array.from(this.element.querySelectorAll(quer));
-	console.log("allElem", allElem);
+	// console.log("allElem", allElem);
 	let other = Array.from(this.element.querySelectorAll("#"+name+" .slip "+quer));
-	console.log("other", other, ".slide "+quer);
+	// console.log("other", other, ".slide "+quer);
 	return allElem.filter(value => !other.includes(value));
     };
     this.query = (quer) => {
@@ -422,6 +489,19 @@ function Slip (name, actionL, ng, options) {
 	// this.incrIndex();
 	return true;
     };
+    this.previous = () => {
+	let savedActionIndex = this.getActionIndex();
+	this.doRefresh();
+	if(savedActionIndex == -1)
+	    // this.previousSlip();
+	    return false;
+ 	let toReturn;
+	while(this.getActionIndex()<savedActionIndex-1)
+	    toReturn = this.next();
+	return toReturn;
+	// this.setCpt();
+    };
+
     this.firstVisit = () => {
 	if(options.firstVisit)
 	    options.firstVisit(this);
@@ -450,21 +530,32 @@ function Slip (name, actionL, ng, options) {
 	    this.doRefresh();
     };
     this.doRefresh = () => {
-	this.setActionIndex(0);
-	console.log(this.element);
+	this.setActionIndex(-1);
+	// console.log(this.element);
 	// this.element.outerHTML = initialHTML;
-	this.element.innerHTML = innerHTML;
-	if(typeof hljs != "undefined")
-	    document.querySelectorAll('pre code').forEach((block) => {
-		hljs.highlightBlock(block);
-	    });
-	if(MathJax && typeof MathJax.typeset == "function")
-	    MathJax.typeset();
-	else if (MathJax && MathJax.Hub && typeof MathJax.Hub.Typeset == "function")
-	    MathJax.Hub.Typeset();
+	// this.element.innerHTML = innerHTML;
+	let subSlipList = myQueryAll(this.element, ".slip");;
+	// console.log("debug refresh,  subsliplist", subSlipList);
+	let clone = clonedElement.cloneNode(true);
+	replaceSubslips(clone, subSlipList);
+	this.element.replaceWith(clone);
+	this.element = clone;
+	// this.element = clonedElement;
+	// this.element.replaceWith(clonedElement);
+	// this.element = clonedElement;
+	// clonedElement = cloneNoSubslip(this.element);
+	// engine.placeSlip(this.element);
+	// if(typeof hljs != "undefined")
+	//     document.querySelectorAll('pre code').forEach((block) => {
+	// 	hljs.highlightBlock(block);
+	//     });
+	// if(MathJax && typeof MathJax.typeset == "function")
+	//     MathJax.typeset();
+	// else if (MathJax && MathJax.Hub && typeof MathJax.Hub.Typeset == "function")
+	//     MathJax.Hub.Typeset();
 	this.init();
 	this.firstVisit();
-	console.log("ai", actionIndex);
+	// console.log("ai", actionIndex);
     };
     this.init(this, engine);
     this.moveUpTo = (selector, delay,  offset) => {
