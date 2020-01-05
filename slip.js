@@ -26,10 +26,14 @@ function replaceSubslips(clone, subslips) {
     });
 }
 
-function parseAndFormat (rootElem) {
-    let container = document.createElement("div");
-    container.innerHTML = 
-'	<div id="open-window">\
+
+
+let Engine = function(root) {
+
+    function prepareRoot (rootElem) {
+	let container = document.createElement("div");
+	container.innerHTML = 
+	    '	<div id="open-window">\
 	    <div class="format-container">\
 	    <div class="rotate-container">\
 		<div class="scale-container">\
@@ -42,57 +46,26 @@ function parseAndFormat (rootElem) {
 	    </div>\
 	</div>\
 	<div class="cpt-slip">0</div>';
-    rootElem.replaceWith(container);
-    container.querySelector(".placeHolder").replaceWith(rootElem);
-//     let presentationElement = document.querySelector(".presentation");
-//     presentationElement.innerHTML =
-// '	<div id="open-window">\
-// 	    <div class="format-container">\
-// 	    <div class="rotate-container">\
-// 		<div class="scale-container">\
-// 		    <div class="universe movable" id="universe">\
-// 			<div width="10000" height="10000" class="fog"></div>\
-// 			<canvas style="position:absolute;top:0;left:0;z-index:-2" width="10000" height="10000" id="globalCanvas" class="background-canvas"></canvas>\
-// ' + presentationElement.innerHTML + '\
-// 		    </div>\
-// 		</div>\
-// 		</div>\
-// 	    </div>\
-// 	</div>\
-// 	<div class="cpt-slip">0</div>';
-    container.querySelectorAll(".slip:not(.root)").forEach((slipElem) => {
-    // presentationElement.querySelectorAll(".slip:not(.root)").forEach((slipElem) => {
-	setTimeout(() => {
-	    var scaleContainer = document.createElement('div');
-	    var slipContainer = document.createElement('div');
-	    scaleContainer.classList.add("slip-scale-container");
-	    slipContainer.classList.add("slip-container");
-	    let fChild;
-	    while((fChild = slipElem.firstChild)) {
-		slipContainer.appendChild(fChild);
-	    }
-	    scaleContainer.appendChild(slipContainer);
-	    slipElem.appendChild(scaleContainer);
-	    // slipElem.parentNode.insertBefore(scaleContainer, slipElem);
-	    
-	    
-	    // slipElem.parentNode.insertBefore(slipContainer, slipElem);
-	    // slipContainer.appendChild(slipElem);
-	    // var rotateContainer = document.createElement('div');
-	    
-// 	    slipElem.innerHTML = '\
-//     <div class="slip-scale-container"><div class="slip-rotate-container"><canvas style="position:absolute;top:0;left:0;z-index:-2" width="1440" height="1080" class="background-canvas" id="canvas-'+slipElem.id+'"></canvas><div class="slip-container">'+ slipElem.innerHTML + '\
-// </div></div>';
-	},0);
-    });
-    // document.querySelector(".globalCanvas").addEventListener("click", (ev) => { console.log("vous avez cliquez aux coordonées : ", ev.layerX, ev.layerY); });
-    document.querySelectorAll(".background-canvas").forEach((elem)=> {elem.addEventListener("click", (ev) => { console.log("vous avez cliquez aux coordonnées : ", ev.layerX, ev.layerY); });});
-    
-}
+	rootElem.replaceWith(container);
+	container.querySelector(".placeHolder").replaceWith(rootElem);
+	rootElem.querySelectorAll(".slip").forEach((slipElem) => {
+	    setTimeout(() => {
+		var scaleContainer = document.createElement('div');
+		var slipContainer = document.createElement('div');
+		scaleContainer.classList.add("slip-scale-container");
+		slipContainer.classList.add("slip-container");
+		let fChild;
+		while((fChild = slipElem.firstChild)) {
+		    slipContainer.appendChild(fChild);
+		}
+		scaleContainer.appendChild(slipContainer);
+		slipElem.appendChild(scaleContainer);
+	    },0);
+	});
+	document.querySelectorAll(".background-canvas").forEach((elem)=> {elem.addEventListener("click", (ev) => { console.log("vous avez cliquez aux coordonnées : ", ev.layerX, ev.layerY); });});	
+    }
+    prepareRoot(root);
 
-parseAndFormat(document.querySelector("#rootSlip"));
-
-let Engine = function(root) {
     // Constants
     document.body.style.cursor = "auto";
     let timeOutIds = [];
@@ -217,15 +190,6 @@ let Engine = function(root) {
 	}
 	return result;
     }
-    let rootSlip = root;
-    let stack = [rootSlip];
-
-    // this.getRootSlip = () => rootSlip;
-    this.setRootSlip = (root) => {
-	rootSlip = root;
-	stack = [rootSlip];
-    };
-
     this.next = () => {
 	let currentSlide = stack[stack.length - 1];
 	// console.log("stack", stack);
@@ -278,7 +242,15 @@ let Engine = function(root) {
 		this.moveWindow(coord.x, coord.y, coord.scale, slip.rotate, options.delay ? options.delay : slip.delay);
 	},0);
     };
+    let rootSlip = new Slip(root.id, [], this, {});
+    let stack = [rootSlip];
 
+    // this.getRootSlip = () => rootSlip;
+    this.setRootSlip = (root) => {
+	rootSlip = root;
+	stack = [rootSlip];
+    };
+    this.getRootSlip = () => rootSlip;
 };
 
 let Controller = function (ng) {
@@ -348,7 +320,6 @@ function Slip (name, actionL, ng, options) {
     let innerHTML = this.element.innerHTML;
     this.getCloned = () => clonedElement;
     this.setCloned = (c) => clonedElement = c;
-    this.setEngine = (ng) => engine = ng;
     
     this.findSlipCoordinate = () => { // rename to getCoordInUniverse
 	let getCoordInParen = (elem) => {

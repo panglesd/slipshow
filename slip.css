@@ -84,6 +84,9 @@ html, body {
     background-color: white;
     overflow: hidden;
 }
+.root.slip {
+    flex-direction: row;
+}
 
 .slip {
     /* pointer-event:none; */
