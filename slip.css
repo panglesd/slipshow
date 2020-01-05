@@ -87,7 +87,7 @@ html, body {
 
 .slip {
     /* pointer-event:none; */
-    font: 1.8em "Fira Sans", sans-serif;
+    font: 30px "Fira Sans", sans-serif;
     box-sizing: border-box;
     /* position: absolute; */
     position: relative;
