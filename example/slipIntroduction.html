@@ -27,10 +27,7 @@
 	</style>
     </head>
     <body>
-	<div class="presentation">
-
-	    <div class="slip" id="foo">
-	    </div>
+	<div class="slip root" id="rootSlip">
 	    <!--    First slip, an introduction                                  -->
 	    <div class="slip" id="intro">
 		<div class="titre">Slip.js</div>       <!-- Beamer style title   -->
@@ -60,8 +57,7 @@
 		<div class="slip-body-container">
 		    You need to write html. This is what a minimal slip presentation looks like:
 		    <!-- Sorry for the mess: including html into html is not very readable... -->
-		    <pre><code class="html">
-&lt;!doctype html&gt;
+		    <pre><code class="html">&lt;!doctype html&gt;
 &lt;html&gt;
     &lt;head&gt;
 	&lt;link rel="stylesheet" type="text/css" href="slip.css"&gt;
@@ -75,8 +71,7 @@
 	&lt;/div&gt;
     &lt;/body&gt;
     &lt;script src="slip.js"&gt;&lt;/script&gt;
-&lt;/html&gt;
-		    </code></pre>
+&lt;/html&gt;</code></pre>
 		    <div chg-visib-at="1">
 			You can use <a href="http://choum.net/panglesd/slides/slip-js">http://choum.net/panglesd/slides/slip-js/</a> as a CDN for including css and javascript:
 			<pre><code>&lt;link rel="stylesheet" type="text/css" href="http://choum.net/panglesd/slides/slip-js/slip.css"&gt;
@@ -158,6 +153,8 @@ We also have environment for theorems/definitions/examples:
 					<div chg-visib-at="2" style="color:blue; font-size:5em;text-align:center">Blue Slip</div>
 					<div chg-visib-at="3" style="color:blue; font-size:5em;text-align:center">Blue Slip</div>
 					<div chg-visib-at="4" style="color:blue; font-size:5em;text-align:center">Blue Slip</div>
+					<div chg-visib-at="4" style="color:blue; font-size:5em;text-align:center">Blue Slip</div>
+					<div chg-visib-at="6" down-at="6" style="color:blue; font-size:5em;text-align:center">Blue Slip</div>
 				    </div>
 				</div>
 				<!-- </div>

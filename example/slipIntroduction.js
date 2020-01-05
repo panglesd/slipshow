@@ -1,5 +1,6 @@
-let engine = new Engine(null);
-let rootSlip = new Slip("foo", [], engine, {});
+setTimeout(() => {
+    let engine = new Engine(null);
+let rootSlip = new Slip("rootSlip", [], engine, {});
 engine.setRootSlip(rootSlip);
 //rootSlip.setEngine(engine);
 // We want a fine control, so we don't let the presentation order the slips by their order of appearance in the HTML file.
@@ -23,6 +24,7 @@ future.setNthAction(0, (slip) => {
     });
     red.element.style.display = "none";
     blue.element.style.display = "none";
+    slip.delay = 1;
 });
 
 // When we enter red, we want that when we go back to future we do that "smoothly" (in 1s)
@@ -73,3 +75,4 @@ rootSlip.setAction([
 //     links,
 // ]);
 let controller = new Controller(engine);
+}, 0);

@@ -20,35 +20,48 @@ function cloneNoSubslip (elem) {
     return newElem;
 }
 function replaceSubslips(clone, subslips) {
-    // return;
-    // let subslips = myQueryAll(elem, ".slip");
-    // console.log("subslips are", subslips);
-    // console.log("subslips are (placeholders)", subslips);
     let placeholders = myQueryAll(clone, ".toReplace");
     subslips.forEach((subslip, index) => {
-	// console.log("subslip", subslip, "replace", placeholders[index]);
 	placeholders[index].replaceWith(subslip);
     });
 }
 
-function parseAndFormat () {
-    let presentationElement = document.querySelector(".presentation");
-    presentationElement.innerHTML =
+function parseAndFormat (rootElem) {
+    let container = document.createElement("div");
+    container.innerHTML = 
 '	<div id="open-window">\
 	    <div class="format-container">\
 	    <div class="rotate-container">\
 		<div class="scale-container">\
 		    <div class="universe movable" id="universe">\
 			<div width="10000" height="10000" class="fog"></div>\
-			<canvas style="position:absolute;top:0;left:0;z-index:-2" width="10000" height="10000" id="globalCanvas" class="background-canvas"></canvas>\
-' + presentationElement.innerHTML + '\
+                        <div class="placeHolder"></div>\
 		    </div>\
 		</div>\
 		</div>\
 	    </div>\
 	</div>\
 	<div class="cpt-slip">0</div>';
-    presentationElement.querySelectorAll(".slip").forEach((slipElem) => {
+    rootElem.replaceWith(container);
+    container.querySelector(".placeHolder").replaceWith(rootElem);
+//     let presentationElement = document.querySelector(".presentation");
+//     presentationElement.innerHTML =
+// '	<div id="open-window">\
+// 	    <div class="format-container">\
+// 	    <div class="rotate-container">\
+// 		<div class="scale-container">\
+// 		    <div class="universe movable" id="universe">\
+// 			<div width="10000" height="10000" class="fog"></div>\
+// 			<canvas style="position:absolute;top:0;left:0;z-index:-2" width="10000" height="10000" id="globalCanvas" class="background-canvas"></canvas>\
+// ' + presentationElement.innerHTML + '\
+// 		    </div>\
+// 		</div>\
+// 		</div>\
+// 	    </div>\
+// 	</div>\
+// 	<div class="cpt-slip">0</div>';
+    container.querySelectorAll(".slip:not(.root)").forEach((slipElem) => {
+    // presentationElement.querySelectorAll(".slip:not(.root)").forEach((slipElem) => {
 	setTimeout(() => {
 	    var scaleContainer = document.createElement('div');
 	    var slipContainer = document.createElement('div');
@@ -77,7 +90,7 @@ function parseAndFormat () {
     
 }
 
-parseAndFormat();
+parseAndFormat(document.querySelector("#rootSlip"));
 
 let Engine = function(root) {
     // Constants
@@ -143,8 +156,8 @@ let Engine = function(root) {
 	// 	slip.style.zIndex = "-1";
 	// slip.style.transformOrigin = "50% 50%";
 	slipScaleContainer.style.transform = "scale("+scale+")";
-	slip.style.width = 1440*scale+"px";
-	slip.style.height = 1080*scale+"px";	
+	slip.style.width = (Math.max(slipScaleContainer.offsetWidth, 1440))*scale+"px";
+	slip.style.height = (Math.max(slipScaleContainer.offsetHeight, 1080))*scale+"px";	
     };
     this.placeSlips = function () {
 	// let posX = 0.5;
@@ -325,6 +338,7 @@ function Slip (name, actionL, ng, options) {
     // this.setPresentation = (present) => presentation = present;
     
     this.element = document.querySelector(".slip#"+name);
+    console.log(this.element);
     let initialHTML = this.element.outerHTML;
     let clonedElement;
     MathJax.startup.promise.then(() => {
