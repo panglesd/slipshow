@@ -193,13 +193,14 @@ let Engine = function(root) {
 	return result;
     }
     this.next = () => {
+	// return true if and only if the stack changed
 	let currentSlide = this.getCurrentSlip();
-	// console.log("stack", stack);
 	let n = currentSlide.next();
 	if(n instanceof Slip) {
 	    this.gotoSlip(n);
 	    this.push(n);
 	    this.next();
+	    return true;
 	}
 	else if(!n) {
 	    this.pop();
@@ -207,8 +208,14 @@ let Engine = function(root) {
 	    this.gotoSlip(newCurrentSlide);
 	    // newCurrentSlide.incrIndex();
 	    this.next();
+	    return true;
 	    // console.log(stack);
 	}
+	return false;
+    };
+    this.nextSlip = function () {
+	// Do this.next() untill the stack change
+	while(!this.next()) {}
     };
     this.previous = () => {
 	let currentSlide = stack[stack.length - 1];
