@@ -189,10 +189,16 @@ let Engine = function(root) {
 
     // Taken from https://selftaughtjs.com/algorithm-sundays-converting-roman-numerals
     // Use in showing roman numbers for slip number
-    function toRoman(num) {
-	var result = '';
-	var decimal = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
-	var roman = ["M", "CM","D","CD","C", "XC", "L", "XL", "X","IX","V","IV","I"];
+    function counterToString(num, depth) {
+	if(depth == 1 || depth > 3)
+	    return num.toString();
+	let result = '';
+	let decimal = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
+	let roman;
+	if(depth == 0)
+	    roman = ["M", "CM","D","CD","C", "XC", "L", "XL", "X","IX","V","IV","I"];
+	else
+	    roman = ["m", "cm","d","cd","c", "xc", "l", "xl", "x","ix","v","iv","i"];
 	for (var i = 0;i<=decimal.length;i++) {
 	    while (num%decimal[i] < num) {     
 		result += roman[i];
@@ -201,10 +207,19 @@ let Engine = function(root) {
 	}
 	return result;
     }
+    this.updateCounter = function () {
+	let counters = stack.map((slip) => slip.getActionIndex());
+	let res = '';
+	res += counterToString(counters[0]+1, 0);
+	for(let i = 1; i < stack.length; i++)
+	    res += "." + counterToString(counters[i]+1, i);
+	document.querySelector(".cpt-slip").innerHTML = res;	
+    };
     this.next = () => {
 	// return true if and only if the stack changed
 	let currentSlide = this.getCurrentSlip();
 	let n = currentSlide.next();
+	this.updateCounter();
 	if(n instanceof Slip) {
 	    this.gotoSlip(n);
 	    this.push(n);
