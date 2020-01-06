@@ -218,25 +218,30 @@ let Engine = function(root) {
 	while(!this.next()) {}
     };
     this.previous = () => {
-	let currentSlide = stack[stack.length - 1];
-	// console.log("debug Previous (stack)", stack);
-	// console.log("debug Previous (currentSlide)",currentSlide);
-	let n = currentSlide.previous();
-	// console.log("debug Previous (currentSlide.previous())", n);	
+	let currentSlip = this.getCurrentSlip();
+	let n = currentSlip.previous();
+	console.log("debug previous (currentSlip, n)", currentSlip, n);
 	if(n instanceof Slip) {
 	    this.gotoSlip(n);
 	    this.push(n);
-	    // this.previous();
+	    return true;
 	}
-	else if(!n && stack.length > 1) {
+	else if(!n) {
 	    this.pop();
 	    let newCurrentSlide = this.getCurrentSlip();
 	    this.gotoSlip(newCurrentSlide);
 	    // newCurrentSlide.incrIndex();
-	    this.previous();
+	    if(stack.length > 1 || newCurrentSlide.getActionIndex() > -1)
+		this.previous();
 	    // console.log(stack);
+	    return true;
 	}
+	return false;
 	// console.log("returned", n);
+    };
+    this.previousSlip = function () {
+	// Do this.previous() untill the stack change
+	while(!this.previous()) {}
     };
 
     this.getCoordinateInUniverse = function (elem) {
