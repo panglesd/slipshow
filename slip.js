@@ -278,9 +278,18 @@ let Engine = function(root) {
 	let c = getCoordIter(elem);
 	let style = window.getComputedStyle(elem);
 	let scale = parseScale(style.transform);
+	globalScale *= scale;
 	console.log("getCoord", {x:c.x/1440+0.5, y:c.y/1080+0.5}, "globalScale", globalScale, style.transform, scale);
-	console.log({x:c.x/1440+0.5*globalScale*scale, y:c.y/1080+0.5*globalScale*scale, scale: globalScale*scale});
-	return {x:c.x/1440+0.5*globalScale*scale, y:c.y/1080+0.5*globalScale*scale, scale: globalScale*scale};
+	let ret = { x: c.x/1440,
+		    y: c.y/1080,
+		    centerX:c.x/1440+0.5*elem.offsetWidth/1440*globalScale,
+		    centerY:c.y/1080+0.5*elem.offsetHeight/1080*globalScale,
+		    width: elem.offsetWidth/1440*globalScale,
+		    height: elem.offsetHeight/1080*globalScale,
+		    scale: globalScale };
+	console.log(ret);
+	return ret;
+	// return {x:c.x/1440+elem*globalScale*scale, y:c.y/1080+0.5*globalScale*scale, scale: globalScale*scale};
 	// return {x: this.element.offsetLeft/1440+0.5, y:this.element.offsetTop/1080+0.5};
     };
     this.moveToElement = function(element, options) {
@@ -399,8 +408,15 @@ function Slip (name, actionL, ng, options) {
     this.setCloned = (c) => clonedElement = c;
     
     this.findSlipCoordinate = () => { // rename to getCoordInUniverse
-	return engine.getCoordinateInUniverse(this.element);
+	let coord = engine.getCoordinateInUniverse(this.element);
+	console.log("debug findslipcoordinate", coord);
+	coord.scale *= this.scale;
+	coord.y = coord.y + 0.5*coord.scale;
+	coord.x = coord.centerX;
+	console.log("debug findslipcoordinate", coord);
+	return coord;
     };
+    
     this.scale = parseFloat(this.element.getAttribute("scale"));
     if(typeof this.scale == "undefined" || isNaN(this.scale)) this.scale = 1;
     this.rotate = parseFloat(this.element.getAttribute("rotate"));
