@@ -36,7 +36,7 @@ let blue = new Slip("blue", [], engine, {});
 
 
 // the "c1" elements have to be hidden for when "future" unzoom. They have to be shown as soon as we enter this slip.
-let links = new Slip("links", [], engine, {firstVisit: (slip) => {slip.revealAll(".c1");}});
+// let links = new Slip("links", [], engine, {firstVisit: (slip) => {slip.revealAll(".c1");}});
 
 // at step 9, future unzooms the window
 future.setNthAction(10, (slip) => {
@@ -63,7 +63,10 @@ rootSlip.setAction([
     // scaleTest,
     // blue,
     future, // coming back to the unfinished "future"
-    links,
+    //    links,
+    (slip) => {
+	
+    }
 ]);
 // presentation.setSlips([
 //     intro,

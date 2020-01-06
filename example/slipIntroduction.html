@@ -27,7 +27,7 @@
 	</style>
     </head>
     <body>
-	<div class="slip root" id="rootSlip">
+	<div class="root" id="rootSlip" delay="1">
 	    <!--    First slip, an introduction                                  -->
 	    <div class="slip" id="intro">
 		<div class="titre">Slip.js</div>       <!-- Beamer style title   -->
@@ -286,10 +286,12 @@ presentation.setSlips([intro, devel, intro]);</code></pre>
 	    <!--    The two small slips used to show slip placement                        -->
 
 	    <!--    The last slip taking a step back and with links                        -->
-	    <div class="slip" id="links" pos-x="2" pos-y="2" scale="4.3" delay="3">
-		<div chg-visib-at="0" class="c1" style="position:absolute; top: 30%; left: 10%;">Github: <a href="https://github.com/panglesd/slip-js">https://github.com/panglesd/slip-js</a>.</div>
-		<div chg-visib-at="0" class="c1" style="position:absolute; top: 40%; left: 10%;">An example (old version of the engine): <a href="https://choum.net/panglesd/slides/slides-js/slides.html">Slips</a>.</div>
-	    </div>
+	    <!-- <div class="slip" id="links" pos-x="2" pos-y="2" scale="4.3" delay="3">
+		 <div chg-visib-at="0" class="c1" style="position:absolute; top: 30%; left: 10%;">Github: <a href="https://github.com/panglesd/slip-js">https://github.com/panglesd/slip-js</a>.</div>
+		 <div chg-visib-at="0" class="c1" style="position:absolute; top: 40%; left: 10%;">An example (old version of the engine): <a href="https://choum.net/panglesd/slides/slides-js/slides.html">Slips</a>.</div>
+		 </div> -->
+	    <div chg-visib-at="5" class="c1" style="font-size: 200px;position:absolute; top: 30%; left: 10%;">Github: <a href="https://github.com/panglesd/slip-js">https://github.com/panglesd/slip-js</a>.</div>
+	    <div chg-visib-at="5" class="c1" style="font-size: 200px;position:absolute; top: 40%; left: 10%;">An example (old version of the engine): <a href="https://choum.net/panglesd/slides/slides-js/slides.html">Slips</a>.</div>
 	</div>
 	<script src="../slip.js"></script>
 	<script src="slipIntroduction.js"></script>

@@ -316,13 +316,20 @@ let Engine = function(root) {
 	console.log("we goto slip");
 	options = options ? options : {};
 	console.log("options is ", options);
-	setTimeout(() => {
-	    let coord = slip.findSlipCoordinate();
-	    if(typeof slip.currentX != "undefined" && typeof slip.currentY != "undefined")
-		this.moveWindow(slip.currentX, slip.currentY, coord.scale, slip.rotate, options.delay ? options.delay : slip.delay);
-	    else
-		this.moveWindow(coord.x, coord.y, coord.scale, slip.rotate, options.delay ? options.delay : slip.delay);
-	},0);
+	if(slip.element.classList.contains("slip"))
+	    setTimeout(() => {
+		let coord = slip.findSlipCoordinate();
+		if(typeof slip.currentX != "undefined" && typeof slip.currentY != "undefined")
+		    this.moveWindow(slip.currentX, slip.currentY, coord.scale, slip.rotate, options.delay ? options.delay : slip.delay);
+		else
+		    this.moveWindow(coord.x, coord.y, coord.scale, slip.rotate, options.delay ? options.delay : slip.delay);
+	    },0);
+	else
+	    setTimeout(() => {
+		console.log("debug slip element", slip.element);
+		let coord = this.getCoordinateInUniverse(slip.element);
+		this.moveWindow(coord.centerX, coord.centerY, Math.max(coord.width, coord.height), 0, options.delay ? options.delay : slip.delay);
+	    },0);
     };
     let rootSlip = new Slip(root.id, [], this, {});
     let stack = [rootSlip];
@@ -409,7 +416,7 @@ function Slip (name, actionL, ng, options) {
     // this.getPresentation = () => presentation;
     // this.setPresentation = (present) => presentation = present;
     
-    this.element = document.querySelector(".slip#"+name);
+    this.element = document.querySelector("#"+name);
     console.log(this.element);
     let initialHTML = this.element.outerHTML;
     let clonedElement;
