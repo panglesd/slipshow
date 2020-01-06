@@ -62,7 +62,7 @@ rootSlip.setAction([
     future,
     // scaleTest,
     // blue,
-    future, // coming back to the unfinished "future"
+//    future, // coming back to the unfinished "future"
     //    links,
     (slip) => {
 	

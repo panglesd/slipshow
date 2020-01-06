@@ -45,6 +45,7 @@ let Engine = function(root) {
 		</div>\
 	    </div>\
 	</div>\
+	<div class="toc-slip"></div>\
 	<div class="cpt-slip">0</div>';
 	rootElem.replaceWith(container);
 	container.querySelector(".placeHolder").replaceWith(rootElem);
@@ -363,6 +364,52 @@ let Engine = function(root) {
     this.getCurrentSlip = function () {
 	return stack[stack.length -1];
     };
+    this.getSlipTree = function (slip) {
+	slip = slip || rootSlip;
+	return {name: slip.name, slip: slip, subslips: slip.getSubSlipList().map((e) => this.getSlipTree(e))};
+    };
+    this.showToC = function () {
+	let toc = document.querySelector(".toc-slip");
+	// let innerHTML = "";
+	let globalElem = document.createElement("div");
+	let tree = this.getSlipTree();
+	let before = true;
+	let displayTree = (tree) => {
+	    console.log("debug treee", tree);
+	    let containerElement = document.createElement("div");
+	    let nameElement = document.createElement("div");
+	    if(before)
+		nameElement.style.color = "blue";
+	    else
+		nameElement.style.color = "yellow";
+	    if(tree.slip == this.getCurrentSlip()) {
+		nameElement.style.color = "red";
+		before = false;
+	    }
+		
+	    nameElement.innerText = tree.name + " (" + (tree.slip.getActionIndex()+1) + "/" + (tree.slip.getMaxNext()+1) + ")";
+	    containerElement.appendChild(nameElement);
+	    // innerHTML += "<div>"+tree.name+"</div>";
+	    if(tree.subslips.length > 0) {
+		let ulElement = document.createElement("ul");
+		// innerHTML += "<ul>";
+		tree.subslips.forEach((subtree) => {
+		    let liElement = document.createElement("li");
+		    // innerHTML += "<li>";
+		    liElement.appendChild(displayTree(subtree));
+		    ulElement.appendChild(liElement);
+		    // innerHTML += "</li>";
+		});
+		containerElement.appendChild(ulElement);
+		// innerHTML += "</ul>";
+	    }
+	    console.log("debug tree, will return", containerElement);
+	    return containerElement;
+	};
+	toc.innerHTML = "";
+	// toc.innerHTML = innerHTML;
+	toc.appendChild(displayTree(tree));
+    };
     
     // this.getRootSlip = () => rootSlip;
     this.setRootSlip = (root) => {
@@ -401,6 +448,10 @@ let Controller = function (ng) {
 	if(ev.key == "p") { engine.moveWindowRelative(0, 0,  0   , -1, 0.1); }                             // Unrotate
 	if(ev.key == "z") { engine.moveWindowRelative(0, 0,  0.01,  0, 0.1); }                          // Zoom
 	if(ev.key == "Z") { engine.moveWindowRelative(0, 0, -0.01,  0, 0.1); }                          // Unzoom
+	if(ev.key == "t") {
+	    engine.showToC();
+	    document.querySelector(".toc-slip").style.display = document.querySelector(".toc-slip").style.display == "none" ? "block" : "none"; 
+	}   
 	if(ev.key == "ArrowRight") {
 	    console.log(ev);
 	    if(ev.shiftKey)
@@ -424,6 +475,9 @@ let Controller = function (ng) {
 
 function Slip (name, actionL, ng, options) {
     let engine = ng;
+
+    this.name = name;
+    
     this.getEngine = () => engine;
     this.setEngine = (ng) => engine = ng;
     
@@ -481,6 +535,10 @@ function Slip (name, actionL, ng, options) {
     this.setAction = (actionL) => {actionList = actionL;};
     this.setNthAction = (n,action) => {actionList[n] = action;};
 
+    this.getSubSlipList = function () {
+	return actionList.filter((action) => action instanceof Slip);
+    };
+    
     this.doAttributes = () => {
 	this.queryAll("*[mk-hidden-at]").forEach((elem) => {
 	    let hiddenAt = elem.getAttribute("mk-hidden-at").split(" ").map((str) => parseInt(str));
