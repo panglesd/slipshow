@@ -40,7 +40,7 @@ html, body {
     transition-duration: 1s;
     transition-timing-function: ease;
     width:1440px;
-    min-height:1080px;
+    /* min-height:1080px; */
     /* will-change: transform; */
 }
 .slip-rotate-container {

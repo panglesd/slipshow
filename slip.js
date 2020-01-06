@@ -1,6 +1,6 @@
 let myQueryAll = (root, selector) => {
     if (!root.id)
-	root.id = Math.random();
+	root.id = '_' + Math.random().toString(36).substr(2, 15);;
     let allElem = Array.from(root.querySelectorAll(selector));
     let other = Array.from(root.querySelectorAll("#"+root.id+" .slip "+selector));
     return allElem.filter(value => !other.includes(value));
@@ -137,11 +137,20 @@ let Engine = function(root) {
     this.placeSlips = function () {
 	// let posX = 0.5;
 	// let posY = 0.5;
-	slips.forEach(this.placeSlip);	
+	let depth = function (elem) {
+	    console.log("debug depth (elem)", elem);
+	    let subslips = myQueryAll(elem, ".slip");
+	    console.log("debug depth (subslips)", elem);
+	    return 1+subslips.map(depth).reduce((a,b) => Math.max(a,b),0);
+	};
+	let rootDepth = depth(document.body);
+	console.log("debug", rootDepth);
+	for(let i= 0; i<rootDepth; i++)
+	    slips.forEach(this.placeSlip);	
     };
     setTimeout(() => {
 	this.placeSlips();
-    },0);
+    },1000);
     this.placeOpenWindow = function () {
 	browserHeight = window.innerHeight;
 	browserWidth = window.innerWidth;
