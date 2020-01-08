@@ -232,7 +232,8 @@ let Engine = function(root) {
 	    let newCurrentSlide = this.getCurrentSlip();
 	    this.gotoSlip(newCurrentSlide);
 	    // newCurrentSlide.incrIndex();
-	    this.next();
+	    if(stack.length > 1 || newCurrentSlide.getActionIndex() < newCurrentSlide.getMaxNext())
+		this.next();
 	    return true;
 	    // console.log(stack);
 	}
