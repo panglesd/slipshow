@@ -696,6 +696,9 @@ function Slip (name, actionL, ng, options) {
 	//     MathJax.Hub.Typeset();
 	this.init();
 	this.firstVisit();
+	delete(this.currentX);
+	delete(this.currentY);
+	engine.gotoSlip(this);
 	// console.log("ai", actionIndex);
     };
     this.init(this, engine);
