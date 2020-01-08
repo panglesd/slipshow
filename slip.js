@@ -151,7 +151,7 @@ let Engine = function(root) {
     };
     setTimeout(() => {
 	this.placeSlips();
-    },1000);
+    },000);
     this.placeOpenWindow = function () {
 	browserHeight = window.innerHeight;
 	browserWidth = window.innerWidth;
