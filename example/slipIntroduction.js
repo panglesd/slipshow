@@ -12,7 +12,7 @@ let base = new Slip("base", [], engine, {});
 let beamerPart = new Slip("beamer-part", [], engine, {});
 
 // All JS added must be done in the init or the firstVisit function
-let future = new Slip("future", [], engine, {});
+let future = new Slip("future", [], engine, {init: (slip) => { slip.delay = 0;}});
 
 future.setNthAction(0, (slip) => {
     let but = slip.query("#mouse");
