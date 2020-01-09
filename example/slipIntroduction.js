@@ -1,8 +1,11 @@
+import { Controller, Engine, Presentation, Slip } from '../lib/slip'
+
 let engine = new Engine(document.querySelector("#rootSlip"));
 let rootSlip = engine.getRootSlip();
 // let rootSlip = new Slip("rootSlip", [], engine, {});
 engine.setRootSlip(rootSlip);
 //rootSlip.setEngine(engine);
+
 // We want a fine control, so we don't let the presentation order the slips by their order of appearance in the HTML file.
 // (this is mostly because we want the slips "red" and "blue" in the middle of the slip "future")
 
