@@ -265,7 +265,7 @@ We also have environment for theorems/definitions/examples:
 			     </li> -->
 			<!-- <li chg-visib-at="22">The best is to see an example:<br/>
 			     <!-- The JS part of the example --\>
-			<pre down-at="22" style="display: inline-block width:45%"><code class="js">let options = { init: (slip) => {}, firstVisit: (slip) => {}, whenLeaving: (slip) => {}};
+			<pre down-at="22" style="display: inline-block; width:45%"><code class="js">let options = { init: (slip) => {}, firstVisit: (slip) => {}, whenLeaving: (slip) => {}};
 // the "options" parameter allows to set function to call when document is ready, when entering slip for the first time and when leaving the slip
 
 let intro = new Slip("intro", [], presentation, engine, options);
@@ -286,7 +286,7 @@ devel.setNthAction(5, (slip) => {
 // We can specify an order on slips
 presentation.setSlips([intro, devel, intro]);</code></pre>
 			<!-- The HTML part of the example --\>
-			<pre down-at="23" style="width:45%display: inline-block"><code class="html">&lt;div class="slip" id="intro"&gt;
+			<pre down-at="23" style="width:45%;display: inline-block"><code class="html">&lt;div class="slip" id="intro"&gt;
   &lt;div class="title"&gt;Introduction to the subject&lt;/div&gt; &lt;!-- for Beamer style title --&gt;
   &lt;div class="slip-body-container"&gt; &lt;!-- for Beamer style margin (remove for full-width slips) --&gt;
       Blablabla
