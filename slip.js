@@ -367,26 +367,28 @@ let Engine = function(root) {
     };
     this.getSlipTree = function (slip) {
 	slip = slip || rootSlip;
-	return {name: slip.name, slip: slip, subslips: slip.getSubSlipList().map((e) => this.getSlipTree(e))};
+	if(slip instanceof Slip) 
+	    return {name: slip.name, slip: slip, subslips: slip.getSubSlipList().map((e) => this.getSlipTree(e))};
+	return {function: true};
     };
     this.showToC = function () {
 	let toc = document.querySelector(".toc-slip");
 	// let innerHTML = "";
 	let globalElem = document.createElement("div");
 	let tree = this.getSlipTree();
-	let before = true;
-	let displayTree = (tree) => {
+	// let before = true;
+	let displayTree = (tree, parentElem, parent) => {
 	    console.log("debug treee", tree);
 	    let containerElement = document.createElement("div");
 	    let nameElement = document.createElement("div");
-	    if(before)
-		nameElement.style.color = "blue";
-	    else
-		nameElement.style.color = "yellow";
-	    if(tree.slip == this.getCurrentSlip()) {
-		nameElement.style.color = "red";
-		before = false;
-	    }
+	    // if(before)
+	    // 	nameElement.style.color = "blue";
+	    // else
+	    // 	nameElement.style.color = "yellow";
+	    // if(tree.slip == this.getCurrentSlip()) {
+	    // 	nameElement.style.color = "red";
+	    // 	before = false;
+	    // }
 		
 	    nameElement.innerText = tree.name + " (" + (tree.slip.getActionIndex()+1) + "/" + (tree.slip.getMaxNext()+1) + ")";
 	    containerElement.appendChild(nameElement);
@@ -534,6 +536,7 @@ function Slip (name, actionL, ng, options) {
     this.setActionIndex = (actionI) => actionIndex = actionI;
     this.getActionIndex = () => actionIndex;
     this.setAction = (actionL) => {actionList = actionL;};
+    this.getActionList = () => actionList;
     this.setNthAction = (n,action) => {actionList[n] = action;};
 
     this.getSubSlipList = function () {
@@ -673,20 +676,11 @@ function Slip (name, actionL, ng, options) {
     };
     this.doRefresh = () => {
 	this.setActionIndex(-1);
-	// console.log(this.element);
-	// this.element.outerHTML = initialHTML;
-	// this.element.innerHTML = innerHTML;
 	let subSlipList = myQueryAll(this.element, ".slip");;
-	// console.log("debug refresh,  subsliplist", subSlipList);
 	let clone = clonedElement.cloneNode(true);
 	replaceSubslips(clone, subSlipList);
 	this.element.replaceWith(clone);
 	this.element = clone;
-	// this.element = clonedElement;
-	// this.element.replaceWith(clonedElement);
-	// this.element = clonedElement;
-	// clonedElement = cloneNoSubslip(this.element);
-	// engine.placeSlip(this.element);
 	// if(typeof hljs != "undefined")
 	//     document.querySelectorAll('pre code').forEach((block) => {
 	// 	hljs.highlightBlock(block);

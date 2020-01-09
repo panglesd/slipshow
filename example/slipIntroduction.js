@@ -51,9 +51,9 @@ future.setNthAction(11, (slip) => {
 });
 future.setNthAction(12, red);
 future.setNthAction(13, blue);
-		    // (slip) => {
-		    // 	// presentation.skipSlip({delay:1}); // Leaving "future" without finishing it
-		    // });
+// (slip) => {
+// 	// presentation.skipSlip({delay:1}); // Leaving "future" without finishing it
+// });
 
 rootSlip.setAction([
     intro,
@@ -62,11 +62,11 @@ rootSlip.setAction([
     future,
     // scaleTest,
     // blue,
-//    future, // coming back to the unfinished "future"
+    //    future, // coming back to the unfinished "future"
     //    links,
-    (slip) => {
-	
-    }
+    // (slip) => {
+    
+    // }
 ]);
 // presentation.setSlips([
 //     intro,
