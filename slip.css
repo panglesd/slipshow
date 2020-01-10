@@ -14,12 +14,33 @@ body {
 .toc-slip {
     position: absolute;
     top: 0;
-    left: 0;
+    left: 20%;
     bottom: 0;
-    right: 0;
+    right: 20%;
     display: none;
     color: grey;
+    background-color: rgba(0,0,0,0.75);
+    font-size: 1.3em;
 }
+.toc-slip .before{
+    color: lightgreen;
+}
+.toc-slip .current{
+    color: lightgreen;
+}
+.toc-slip .toc-function {
+    display: inline-block;
+    
+}
+.toc-slip li{
+    border: solid 1px;
+    margin: 5px;
+    padding: 5px;
+}
+.toc-slip .after{
+    color: lightgrey;
+}
+
 
 /* Classes for transitions */
 .invisible {
@@ -105,7 +126,9 @@ body {
 .root.slip {
     flex-direction: row;
 }
-
+.root {
+    font: 30px "Fira Sans", sans-serif;
+}
 .slip {
     /* pointer-event:none; */
     font: 30px "Fira Sans", sans-serif;

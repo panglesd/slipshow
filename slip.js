@@ -1,8 +1,9 @@
-let myQueryAll = (root, selector) => {
+let myQueryAll = (root, selector, avoid) => {
+    avoid = avoid || ".slip";
     if (!root.id)
 	root.id = '_' + Math.random().toString(36).substr(2, 15);;
     let allElem = Array.from(root.querySelectorAll(selector));
-    let other = Array.from(root.querySelectorAll("#"+root.id+" .slip "+selector));
+    let other = Array.from(root.querySelectorAll("#"+root.id+" " + avoid + " " +selector));
     return allElem.filter(value => !other.includes(value));
 };
 
@@ -45,8 +46,8 @@ let Engine = function(root) {
 		</div>\
 	    </div>\
 	</div>\
-	<div class="toc-slip"></div>\
-	<div class="cpt-slip">0</div>';
+	<div class="cpt-slip">0</div>\
+	<div class="toc-slip" style="display:none;"></div>';
 	rootElem.replaceWith(container);
 	container.querySelector(".placeHolder").replaceWith(rootElem);
 	rootElem.querySelectorAll(".slip").forEach((slipElem) => {
@@ -217,6 +218,8 @@ let Engine = function(root) {
 	document.querySelector(".cpt-slip").innerHTML = res;	
     };
     this.next = () => {
+	if(document.querySelector(".toc-slip").innerHTML == "")
+	    this.showToC();
 	// return true if and only if the stack changed
 	let currentSlide = this.getCurrentSlip();
 	let n = currentSlide.next();
@@ -225,6 +228,7 @@ let Engine = function(root) {
 	    this.gotoSlip(n);
 	    this.push(n);
 	    this.next();
+	    // this.showToC();
 	    return true;
 	}
 	else if(!n) {
@@ -234,9 +238,11 @@ let Engine = function(root) {
 	    // newCurrentSlide.incrIndex();
 	    if(stack.length > 1 || newCurrentSlide.getActionIndex() < newCurrentSlide.getMaxNext())
 		this.next();
+	    // this.showToC();
 	    return true;
 	    // console.log(stack);
 	}
+	// this.showToC();
 	return false;
     };
     this.nextSlip = function () {
@@ -250,6 +256,7 @@ let Engine = function(root) {
 	if(n instanceof Slip) {
 	    this.gotoSlip(n);
 	    this.push(n);
+	    // this.showToC();
 	    return true;
 	}
 	else if(!n) {
@@ -260,8 +267,10 @@ let Engine = function(root) {
 	    if(stack.length > 1 || newCurrentSlide.getActionIndex() > -1)
 		this.previous();
 	    // console.log(stack);
+	    // this.showToC();
 	    return true;
 	}
+	// this.showToC();
 	return false;
 	// console.log("returned", n);
     };
@@ -368,16 +377,32 @@ let Engine = function(root) {
     this.getSlipTree = function (slip) {
 	slip = slip || rootSlip;
 	if(slip instanceof Slip) 
-	    return {name: slip.name, slip: slip, subslips: slip.getSubSlipList().map((e) => this.getSlipTree(e))};
+	    return {name: slip.name, slip: slip, subslips: slip.getActionList().map((e) => this.getSlipTree(e))};
 	return {function: true};
     };
+
+    this.goToState = function(state) {
+	let iter = (state) => {
+	    if(state.length == 0)
+		return;
+	    iter(state[0]);
+	    while(state[1].getActionIndex()<state[2])
+		this.next();
+	};
+	stack = [rootSlip];
+	rootSlip.refreshAll();
+	iter(state);
+	this.gotoSlip(state[1]);
+    };
+
     this.showToC = function () {
+	console.log("debug showtoc");
 	let toc = document.querySelector(".toc-slip");
 	// let innerHTML = "";
 	let globalElem = document.createElement("div");
 	let tree = this.getSlipTree();
 	// let before = true;
-	let displayTree = (tree, parentElem, parent) => {
+	let displayTree = (tree, stackWithNumbers) => {
 	    console.log("debug treee", tree);
 	    let containerElement = document.createElement("div");
 	    let nameElement = document.createElement("div");
@@ -390,28 +415,42 @@ let Engine = function(root) {
 	    // 	before = false;
 	    // }
 		
-	    nameElement.innerText = tree.name + " (" + (tree.slip.getActionIndex()+1) + "/" + (tree.slip.getMaxNext()+1) + ")";
+	    nameElement.innerText = tree.slip.fullName ? tree.slip.fullName : tree.slip.name ; //+ " (" + (tree.slip.getActionIndex()+1) + "/" + (tree.slip.getMaxNext()+1) + ")";
 	    containerElement.appendChild(nameElement);
 	    // innerHTML += "<div>"+tree.name+"</div>";
 	    if(tree.subslips.length > 0) {
 		let ulElement = document.createElement("ul");
 		// innerHTML += "<ul>";
-		tree.subslips.forEach((subtree) => {
+		tree.subslips.forEach((subtree, index) => {
+		    let newStackWithNumbers = [stackWithNumbers, tree.slip, index];
 		    let liElement = document.createElement("li");
 		    // innerHTML += "<li>";
-		    liElement.appendChild(displayTree(subtree));
+		    if(subtree.function) {
+			liElement.innerText = ""+(index+1);
+			liElement.classList.add("toc-function");
+		    } else
+			liElement.appendChild(displayTree(subtree, newStackWithNumbers));
+		    liElement.addEventListener("click", (ev) => {
+		    	if(ev.target == liElement) {
+		    	    this.goToState(newStackWithNumbers);
+		    	    console.log(newStackWithNumbers);
+		    	}
+		    });
 		    ulElement.appendChild(liElement);
+		    
 		    // innerHTML += "</li>";
 		});
 		containerElement.appendChild(ulElement);
+		tree.slip.setTocElem(containerElement);
 		// innerHTML += "</ul>";
 	    }
 	    console.log("debug tree, will return", containerElement);
+	    // containerElement.addEventListener("click", () => { console.log(stackWithNumbers);});
 	    return containerElement;
 	};
 	toc.innerHTML = "";
 	// toc.innerHTML = innerHTML;
-	toc.appendChild(displayTree(tree));
+	toc.appendChild(displayTree(tree, []));
     };
     
     // this.getRootSlip = () => rootSlip;
@@ -451,8 +490,12 @@ let Controller = function (ng) {
 	if(ev.key == "p") { engine.moveWindowRelative(0, 0,  0   , -1, 0.1); }                             // Unrotate
 	if(ev.key == "z") { engine.moveWindowRelative(0, 0,  0.01,  0, 0.1); }                          // Zoom
 	if(ev.key == "Z") { engine.moveWindowRelative(0, 0, -0.01,  0, 0.1); }                          // Unzoom
-	if(ev.key == "t") {
+	if(ev.key == "T") {
 	    engine.showToC();
+	    // document.querySelector(".toc-slip").style.display = document.querySelector(".toc-slip").style.display == "none" ? "block" : "none"; 
+	}   
+	if(ev.key == "t") {
+	    // engine.showToC();
 	    document.querySelector(".toc-slip").style.display = document.querySelector(".toc-slip").style.display == "none" ? "block" : "none"; 
 	}   
 	if(ev.key == "ArrowRight") {
@@ -536,7 +579,16 @@ function Slip (name, actionL, ng, options) {
     this.setActionIndex = (actionI) => actionIndex = actionI;
     this.getActionIndex = () => actionIndex;
     this.setAction = (actionL) => {actionList = actionL;};
-    this.getActionList = () => actionList;
+    this.getActionList = () => {
+	let ret = [];
+	for(let i = 0;i <= this.getMaxNext(); i++) {
+	    if(typeof actionList[i] == "function" || actionList[i] instanceof Slip)
+		ret[i] = actionList[i];
+	    else
+		ret[i] = () => {};
+	}
+	return ret;
+    };
     this.setNthAction = (n,action) => {actionList[n] = action;};
 
     this.getSubSlipList = function () {
@@ -600,10 +652,38 @@ function Slip (name, actionL, ng, options) {
 		this.moveCenterTo(elem, 1);});	
     };
 
+    this.setTocElem = (tocElem) => {this.tocElem = tocElem;};
+    this.updateToC = () => {
+	if(!this.tocElem)
+	    return;
+	let list = myQueryAll(this.tocElem, "li", "li");
+	console.log("debug updateToc", this.name, list);
+	let i;
+	for(i=0;i<this.getActionIndex(); i++) {
+	    console.log("debug updateToc, before with i=", i);
+	    list[i].classList.remove("before", "after", "current");
+	    list[i].classList.add("before");	    
+	}
+	// if(i!=0) i++;
+	if(i<=this.getActionIndex()) {
+	    console.log("debug updateToc, current with i=", i);
+	    list[i].classList.remove("before", "after", "current");
+	    list[i].classList.add("current");
+	    i++;
+	}
+	for(i;i<=this.getMaxNext(); i++) {
+	    console.log("debug updateToc, after with i=", i);
+	    list[i].classList.remove("before", "after", "current");
+	    list[i].classList.add("after");
+	}	
+    };
     this.incrIndex = () => {
 	console.log("incrIndex");
 	actionIndex = actionIndex+1;
 	this.doAttributes();
+	this.updateToC();
+	// if(this.tocElem)
+	//     this.tocElem.innerText = actionIndex;
 	// this.hideAndShow();
     };
     
@@ -648,6 +728,7 @@ function Slip (name, actionL, ng, options) {
     };
 
     this.firstVisit = () => {
+	this.updateToC();
 	if(options.firstVisit)
 	    options.firstVisit(this);
     };
@@ -673,6 +754,10 @@ function Slip (name, actionL, ng, options) {
 	    actionList[actionIndex].refresh();
 	else
 	    this.doRefresh();
+    };
+    this.refreshAll = () => {
+	actionList.filter((elem) => elem instanceof Slip).forEach((subslip) => { subslip.refreshAll();});
+	this.doRefresh();
     };
     this.doRefresh = () => {
 	this.setActionIndex(-1);

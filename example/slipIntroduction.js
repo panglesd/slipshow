@@ -8,11 +8,15 @@ engine.setRootSlip(rootSlip);
 
 // Creation of slips
 let intro = new Slip("intro", [], engine, {});
+intro.fullName = "Slip Intro";
 let base = new Slip("base", [], engine, {});
+base.fullName = "Slip Basics";
 let beamerPart = new Slip("beamer-part", [], engine, {});
+beamerPart.fullName = "Boring part of Slip";
 
 // All JS added must be done in the init or the firstVisit function
 let future = new Slip("future", [], engine, {init: (slip) => { slip.delay = 0;}});
+future.fullName = "Fun part of Slip";
 
 future.setNthAction(0, (slip) => {
     let but = slip.query("#mouse");
@@ -30,7 +34,10 @@ future.setNthAction(1, (slip) => {
 });
 // When we enter red, we want that when we go back to future we do that "smoothly" (in 1s)
 let red = new Slip("red", [], engine, { firstVisit: (slip) => { future.delay = 1;}});
+red.fullName = "red Slip";
+
 let blue = new Slip("blue", [], engine, {});
+blue.fullName = "blue Slip";
 
 // let scaleTest = new Slip("scale-test", [], presentation, engine, {});
 
