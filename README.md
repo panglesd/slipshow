@@ -17,11 +17,28 @@ You can find two examples here:
 - [The slips to present slip](http://choum.net/panglesd/slides/slip-js/slides.html)
 
 Do not hesitate to look at the code of the example in the folder example, both .html and .js files are commented. (This example corresponds to the slip slip presentation of the link above).
+
+## Devellopment
+You will need [`yarn`](https://yarnpkg.com/lang/en/docs/install) (or `npm`) to manage the dependencies.
+
+- To install the dependencies run `yarn` from the root of the cloned repository.
+- To start the devellopment server run `yarn dev`.
+- To build the release files use `yarn build`.
+
+## Production usage
+You can add `slip-js` as a dependency to your project (todo npm package).
+
+Or you can use the pre-compiled files available at: (todo CI).
+[https://panglesd.github.io/slip-js/dist/slip.js](https://panglesd.github.io/slip-js/dist/slip.js)
+[https://panglesd.github.io/slip-js/dist/slip.css](https://panglesd.github.io/slip-js/dist/slip.css)
+[https://panglesd.github.io/slip-js/dist/theorm.css](https://panglesd.github.io/slip-js/dist/theorem.css)
+
+
 ## Minimal example
 
 In order to make you own presentations, you only need to include the files `slip.js`, `slip.css`, and `theorem.css`, and follow the slip structure for your html document. Here is a template:
 
-```html
+```html todo: update
 <!doctype html>
 <html>
     <head>
@@ -39,7 +56,6 @@ In order to make you own presentations, you only need to include the files `slip
     </body>
 </html>
 ```
-You can use https://choum.net/panglesd/slides/slip-js/{slip.js;theorem.css;slides.css} as a CDN so you don't have to download anything.
 
 ## Writing slips
    
