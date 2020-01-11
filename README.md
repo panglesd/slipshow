@@ -1,5 +1,7 @@
 # Slip.js
 
+OUTDATED! OUTDATED! This version of the readme is outdated with the new merge, but will be updated very soon.
+
 ## Principle
 
 This is not another slide engine, but a slip engine with fine customization: not only on the cosmetic part, but also on the interactive part.
