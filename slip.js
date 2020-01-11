@@ -357,7 +357,7 @@ let Engine = function(root) {
 		this.moveWindow(coord.centerX, coord.centerY, Math.max(coord.width, coord.height), 0, options.delay ? options.delay : slip.delay);
 	    },0);
     };
-    let rootSlip = new Slip(root.id, [], this, {});
+    let rootSlip = new Slip(root.id, "Presentation", [], this, {});
     let stack = [rootSlip];
 
     // Stack Management:
@@ -519,9 +519,9 @@ let Controller = function (ng) {
 };
 
 
-function Slip (name, actionL, ng, options) {
+function Slip (name, fullName, actionL, ng, options) {
     let engine = ng;
-
+    this.fullName = fullName;
     this.name = name;
     
     this.getEngine = () => engine;
