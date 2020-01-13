@@ -8,7 +8,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "parcel example/slipIntroduction.html",
-    "build": "parcel build example/slipIntroduction.html"
+    "build": "parcel build example/slipIntroduction.html lib/slip-lib.js"
   },
   "devDependencies": {
     "parcel-bundler": "^1.12.4"

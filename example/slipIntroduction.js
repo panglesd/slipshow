@@ -1,4 +1,4 @@
-import { Controller, Engine, Presentation, Slip } from '../lib/slip'
+import { Slip, Util } from '../lib/slip-lib'
 
 let engine = new Engine(document.querySelector("#rootSlip"));
 let rootSlip = engine.getRootSlip();
