@@ -1,5 +1,6 @@
-export let Engine = function(root) {
+import { myQueryAll } from './util'
 
+export default function (root) {
     function prepareRoot (rootElem) {
 	let container = document.createElement("div");
 	container.innerHTML = 
@@ -121,7 +122,7 @@ export let Engine = function(root) {
     };
     setTimeout(() => {
 	this.placeSlips();
-    },000);
+    },0);
     this.placeOpenWindow = function () {
 	browserHeight = window.innerHeight;
 	browserWidth = window.innerWidth;

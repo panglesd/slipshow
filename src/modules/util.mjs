@@ -1,7 +1,3 @@
-import Engine from './engine'
-import Controller from './controller.mjs'
-import Presentation from './presentation'
-
 export let myQueryAll = (root, selector, avoid) => {
     avoid = avoid || ".slip";
     if (!root.id)

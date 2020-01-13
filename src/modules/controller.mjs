@@ -1,4 +1,4 @@
-export let Controller = function (ng) {
+export default function (ng) {
     let engine = ng;
     this.getEngine = () => this.engine;
     this.setEngine = (ng) => this.engine = ng;

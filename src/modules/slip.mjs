@@ -1,4 +1,6 @@
-export function Slip (name, fullName, actionL, ng, options) {
+import { cloneNoSubslip, myQueryAll } from './util'
+
+export default function (name, fullName, actionL, ng, options) {
     let engine = ng;
     this.fullName = fullName;
     this.name = name;
