@@ -1,4 +1,4 @@
-import { cloneNoSubslip, myQueryAll } from './util'
+import { cloneNoSubslip, myQueryAll, replaceSubslips } from './util'
 
 export default function (name, fullName, actionL, ng, options) {
     let engine = ng;
