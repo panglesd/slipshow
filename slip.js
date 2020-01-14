@@ -209,13 +209,16 @@ let Engine = function(root) {
 	}
 	return result;
     }
+    this.countersToString = (counterList) => {
+	let res = '';
+	res += counterToString(counterList[0]+1, 0);
+	for(let i = 1; i < counterList.length; i++)
+	    res += "." + counterToString(counterList[i]+1, i);
+	return res;	
+    };
     this.updateCounter = function () {
 	let counters = stack.map((slip) => slip.getActionIndex());
-	let res = '';
-	res += counterToString(counters[0]+1, 0);
-	for(let i = 1; i < stack.length; i++)
-	    res += "." + counterToString(counters[i]+1, i);
-	document.querySelector(".cpt-slip").innerHTML = res;	
+	document.querySelector(".cpt-slip").innerHTML = this.countersToString(counters);	
     };
     this.next = () => {
 	if(document.querySelector(".toc-slip").innerHTML == "")
@@ -426,14 +429,20 @@ let Engine = function(root) {
 		    let liElement = document.createElement("li");
 		    // innerHTML += "<li>";
 		    if(subtree.function) {
-			liElement.innerText = ""+(index+1);
+			let toCounter = (c) => {
+			    if(c.length == 0)
+				return [];
+			    return toCounter(c[0]).concat([c[2]]);
+			};
+			liElement.innerText = this.countersToString(toCounter(newStackWithNumbers));
+			//			liElement.innerText = ""+(index+1);
 			liElement.classList.add("toc-function");
 		    } else
 			liElement.appendChild(displayTree(subtree, newStackWithNumbers));
 		    liElement.addEventListener("click", (ev) => {
 		    	if(ev.target == liElement) {
 		    	    this.goToState(newStackWithNumbers);
-		    	    console.log(newStackWithNumbers);
+		    	    console.log("newstack", newStackWithNumbers);
 		    	}
 		    });
 		    ulElement.appendChild(liElement);
