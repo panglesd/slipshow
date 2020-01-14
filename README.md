@@ -18,7 +18,7 @@ You can find two examples here:
 
 Do not hesitate to look at the code of the example in the folder example, both .html and .js files are commented. (This example corresponds to the slip slip presentation of the link above).
 
-## Devellopment
+## Development
 You will need [`yarn`](https://yarnpkg.com/lang/en/docs/install) (or `npm`) to manage the dependencies.
 
 - To install the dependencies run `yarn` from the root of the cloned repository.
