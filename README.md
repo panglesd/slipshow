@@ -1,6 +1,6 @@
 # Slip.js
 
-OUTDATED! OUTDATED! This version of the readme is outdated with the new merge, but will be updated very soon.
+OUTDATED! OUTDATED! This version of the readme is outdated with the new merge, but will be updated very soon. 
 
 ## Principle
 
