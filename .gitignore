@@ -1,0 +1,7 @@
+# NPM / YARN
+node_modules
+yarn-error.log
+
+# BUILD ARTEFACTS
+dist
+.cache
