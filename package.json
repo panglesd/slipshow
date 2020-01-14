@@ -1,0 +1,16 @@
+{
+  "name": "slip-js",
+  "version": "1.0.0",
+  "description": "This is not another slide engine, but a slip engine.",
+  "main": "main.js",
+  "repository": "git@github.com:panglesd/slip-js.git",
+  "author": "panglesd",
+  "license": "MIT",
+  "scripts": {
+    "dev": "parcel example/slipIntroduction.html",
+    "build": "parcel build example/slipIntroduction.html src/slip-lib.js --public-url /slip-js/"
+  },
+  "devDependencies": {
+    "parcel-bundler": "^1.12.4"
+  }
+}

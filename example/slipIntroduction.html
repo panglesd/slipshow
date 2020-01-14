@@ -4,8 +4,8 @@
 	<title>Slip slip presentation</title>
 	<meta charset="utf-8" />
 	<link rel="stylesheet" type="text/css" href="slipIntroduction.css">
-	<link rel="stylesheet" type="text/css" href="../slip.css">
-	<link rel="stylesheet" type="text/css" href="../theorem.css">
+	<link rel="stylesheet" type="text/css" href="../src/css/slip.css">
+	<link rel="stylesheet" type="text/css" href="../src/css/theorem.css">
 	<!-- For the use of mathjax -->
 	<!-- <script type="text/javascript" async
 	     src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML">
@@ -265,7 +265,7 @@ We also have environment for theorems/definitions/examples:
 			     </li> -->
 			<!-- <li chg-visib-at="22">The best is to see an example:<br/>
 			     <!-- The JS part of the example --\>
-			<pre down-at="22" style="display: inline-block width:45%"><code class="js">let options = { init: (slip) => {}, firstVisit: (slip) => {}, whenLeaving: (slip) => {}};
+			<pre down-at="22" style="display: inline-block; width:45%"><code class="js">let options = { init: (slip) => {}, firstVisit: (slip) => {}, whenLeaving: (slip) => {}};
 // the "options" parameter allows to set function to call when document is ready, when entering slip for the first time and when leaving the slip
 
 let intro = new Slip("intro", [], presentation, engine, options);
@@ -286,7 +286,7 @@ devel.setNthAction(5, (slip) => {
 // We can specify an order on slips
 presentation.setSlips([intro, devel, intro]);</code></pre>
 			<!-- The HTML part of the example --\>
-			<pre down-at="23" style="width:45%display: inline-block"><code class="html">&lt;div class="slip" id="intro"&gt;
+			<pre down-at="23" style="width:45%;display: inline-block"><code class="html">&lt;div class="slip" id="intro"&gt;
   &lt;div class="title"&gt;Introduction to the subject&lt;/div&gt; &lt;!-- for Beamer style title --&gt;
   &lt;div class="slip-body-container"&gt; &lt;!-- for Beamer style margin (remove for full-width slips) --&gt;
       Blablabla
@@ -315,13 +315,12 @@ presentation.setSlips([intro, devel, intro]);</code></pre>
 		 <div chg-visib-at="0" class="c1" style="position:absolute; top: 30%; left: 10%;">Github: <a href="https://github.com/panglesd/slip-js">https://github.com/panglesd/slip-js</a>.</div>
 		 <div chg-visib-at="0" class="c1" style="position:absolute; top: 40%; left: 10%;">An example (old version of the engine): <a href="https://choum.net/panglesd/slides/slides-js/slides.html">Slips</a>.</div>
 		 </div> -->
-	    <div chg-visib-at="4" class="c1" style="font-size: 170px;position:absolute; top: 30%; left: 5%; right: 5%; background-color: rgba(255,255,255,0.9): border-radius: 5%;">
+	    <div chg-visib-at="4" class="c1" style="font-size: 170px;position:absolute; top: 30%; left: 5%; right: 5%; background-color: rgba(255,255,255,0.9); border-radius: 5%;">
 		<div style="margin: 100px">Github: <a href="https://github.com/panglesd/slip-js">https://github.com/panglesd/slip-js</a>.</div>
 		<div style="margin: 100px">An example (old version of the engine): <a href="https://choum.net/panglesd/slides/slides-js/slides.html">Slips</a>.</div>
 </div>
 	</div>
-	<script src="../slip.js"></script>
-	<script src="slipIntroduction.js"></script>
+	<script src="./slipIntroduction.js"></script>
 	<script>hljs.initHighlightingOnLoad();</script>
     </body>
 </html>
