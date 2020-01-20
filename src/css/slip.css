@@ -42,6 +42,10 @@ body {
 }
 
 
+*[exec-at] {
+    display: none;
+}
+
 /* Classes for transitions */
 .invisible {
     visibility: hidden;

@@ -131,6 +131,10 @@ export default function (name, fullName, actionL, ng, options) {
 	    let goDownTo = elem.getAttribute("center-at").split(" ").map((str) => parseInt(str));
 	    if(goDownTo.includes(actionIndex))
 		this.moveCenterTo(elem, 1);});	
+	this.queryAll("*[exec-at]").forEach((elem) => {
+	    let toExec = elem.getAttribute("exec-at").split(" ").map((str) => parseInt(str));
+	    if(toExec.includes(actionIndex))
+		(new Function("slip",elem.innerHTML))(this);});	
     };
 
     this.setTocElem = (tocElem) => {this.tocElem = tocElem;};
@@ -326,6 +330,7 @@ export default function (name, fullName, actionL, ng, options) {
 	 "down-at",
 	 "center-at",
 	 "static-at",
+	 "exec-at",
 	].forEach((attr) => {
 	     this.queryAll("*["+attr+"]").forEach((elem) => {
 		 elem.getAttribute(attr).split(" ").forEach((strMax) => {
