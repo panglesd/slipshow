@@ -359,6 +359,8 @@ export default function (name, fullName, actionL, ng, options) {
 	this.queryAll(selector).forEach((elem) => { elem.style.opacity = "0";});
     };
     this.getMaxNext = () => {
+	if(this.maxNext)
+	    return this.maxNext;
 	let maxTemp = actionList.length;
 	["mk-visible-at",
 	 "mk-hidden-at",
