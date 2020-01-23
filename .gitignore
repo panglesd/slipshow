@@ -5,3 +5,8 @@ yarn-error.log
 # BUILD ARTEFACTS
 dist
 .cache
+
+# DOC BUILD ARTEFACTS
+_build
+_static
+_templates
