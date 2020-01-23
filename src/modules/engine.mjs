@@ -309,7 +309,8 @@ export default function (root) {
 	let coord = this.getCoordinateInUniverse(element);
 	let actualSize = {width: element.offsetWidth*coord.scale, height: element.offsetHeight*coord.scale};
 	if(options)
-	this.moveWindow(coord.x, coord.y, coord.scale, 0, options.delay ? options.delay : 1);
+	    this.moveWindow(coord.centerX, coord.centerY, Math.max(coord.width, coord.height)// coord.scale
+			    , 0, options.delay ? options.delay : 1);
     };
     this.gotoSlip = function(slip, options) {
 	console.log("we goto slip");
@@ -318,10 +319,12 @@ export default function (root) {
 	if(slip.element.classList.contains("slip"))
 	    setTimeout(() => {
 		let coord = slip.findSlipCoordinate();
-		if(typeof slip.currentX != "undefined" && typeof slip.currentY != "undefined")
+		if(typeof slip.currentX != "undefined" && typeof slip.currentY != "undefined") {
 		    this.moveWindow(slip.currentX, slip.currentY, coord.scale, slip.rotate, options.delay ? options.delay : slip.delay);
-		else
+		} else {
+		    slip.currentX = coord.x; slip.currentY = coord.y;
 		    this.moveWindow(coord.x, coord.y, coord.scale, slip.rotate, options.delay ? options.delay : slip.delay);
+		}
 	    },0);
 	else
 	    setTimeout(() => {
