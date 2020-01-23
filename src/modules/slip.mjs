@@ -36,7 +36,7 @@ export default function (name, fullName, actionL, ng, options) {
     
     this.scale = parseFloat(this.element.getAttribute("scale"));
     if(typeof this.scale == "undefined" || isNaN(this.scale)) this.scale = 1;
-    this.rotate = parseFloat(this.element.getAttribute("rotate"));
+    this.rotate = parseFloat(this.element.getAttribute("rotate")) || 0;
     this.delay = isNaN(parseFloat(this.element.getAttribute("delay"))) ? 0 : (parseFloat(this.element.getAttribute("delay")));
     
     let coord = this.findSlipCoordinate();
