@@ -75,6 +75,43 @@ export default function (name, fullName, actionL, ng, options) {
     this.getSubSlipList = function () {
 	return actionList.filter((action) => action instanceof Slip);
     };
+    this.updatePauseAncestors = () => {
+	this.queryAll(".pauseAncestor").forEach((elem) => {elem.classList.remove("pauseAncestor");});
+	let pause = this.query("[pause]");
+	while(pause && !pause.classList.contains("slip")) {
+	    pause.classList.add("pauseAncestor");
+	    pause = pause.parentElement;
+	};
+    };
+    this.incrPause = () => {
+	let pause = this.query("[pause]");
+	if(pause) {
+	    if(!pause.getAttribute("pause")) 
+		pause.setAttribute("pause", 1);
+	    let d = pause.getAttribute("pause");
+	    if (d <= 1){
+		pause.removeAttribute("pause");
+		if(pause.hasAttribute("down-at-unpause")) {
+		    if(pause.getAttribute("down-at-unpause") == "")
+			this.moveDownTo(pause, 1);
+		    else
+			this.moveDownTo("#"+pause.getAttribute("down-at-unpause"), 1);			
+		}
+		if(pause.hasAttribute("up-at-unpause")) {
+		    if(pause.getAttribute("up-at-unpause") == "")
+			this.moveUpTo(pause, 1);
+		    else
+			this.moveUpTo("#"+pause.getAttribute("up-at-unpause"), 1);
+		}
+		if(pause.hasAttribute("center-at-unpause"))
+		    this.moveCenterTo(pause, 1);
+	    } else
+		pause.setAttribute("pause", d-1);
+//	    pause.classList.remove("pause");
+	    // pause.classList.add("pauseAncestor");
+	    this.updatePauseAncestors();
+	}
+    };
     
     this.doAttributes = () => {
 	this.queryAll("*[mk-hidden-at]").forEach((elem) => {
@@ -166,6 +203,8 @@ export default function (name, fullName, actionL, ng, options) {
 	console.log("incrIndex");
 	actionIndex = actionIndex+1;
 	this.doAttributes();
+	if(actionIndex>0)
+	    this.incrPause();
 	this.updateToC();
 	// if(this.tocElem)
 	//     this.tocElem.innerText = actionIndex;
@@ -226,6 +265,7 @@ export default function (name, fullName, actionL, ng, options) {
 	    elem.style.visibility = "hidden";
 	});	
 	this.doAttributes();
+	this.updatePauseAncestors();
 	if(options.init)
 	    options.init(this);
     };
@@ -337,7 +377,10 @@ export default function (name, fullName, actionL, ng, options) {
 		     maxTemp = Math.max(Math.abs(parseInt(strMax)),maxTemp);
 		 });
 	     });
-	 });
+	});
+	let sumArray = this.queryAll("*[pause]").map((elem) => { if(elem.getAttribute("pause") != "") return parseInt(elem.getAttribute("pause")); return 1; });
+	maxTemp = Math.max(maxTemp, sumArray.reduce((a,b) => a+b, 0));
+	this.maxNext = maxTemp;
 	return maxTemp;	
     };
 }
