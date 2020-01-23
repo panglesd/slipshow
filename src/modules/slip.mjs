@@ -178,25 +178,26 @@ export default function (name, fullName, actionL, ng, options) {
     this.updateToC = () => {
 	if(!this.tocElem)
 	    return;
-	let list = myQueryAll(this.tocElem, "li", "li");
-	console.log("debug updateToc", this.name, list);
+	if(!this.ToCList)
+	    this.ToCList = myQueryAll(this.tocElem, "li", "li");
+	// console.log("debug updateToc", this.name, this.ToCList);
 	let i;
 	for(i=0;i<this.getActionIndex(); i++) {
-	    console.log("debug updateToc, before with i=", i);
-	    list[i].classList.remove("before", "after", "current");
-	    list[i].classList.add("before");	    
+	    // console.log("debug updateToc, before with i=", i);
+	    this.ToCList[i].classList.remove("before", "after", "current");
+	    this.ToCList[i].classList.add("before");	    
 	}
 	// if(i!=0) i++;
 	if(i<=this.getActionIndex()) {
-	    console.log("debug updateToc, current with i=", i);
-	    list[i].classList.remove("before", "after", "current");
-	    list[i].classList.add("current");
+	    // console.log("debug updateToc, current with i=", i);
+	    this.ToCList[i].classList.remove("before", "after", "current");
+	    this.ToCList[i].classList.add("current");
 	    i++;
 	}
 	for(i;i<=this.getMaxNext(); i++) {
-	    console.log("debug updateToc, after with i=", i);
-	    list[i].classList.remove("before", "after", "current");
-	    list[i].classList.add("after");
+	    // console.log("debug updateToc, after with i=", i);
+	    this.ToCList[i].classList.remove("before", "after", "current");
+	    this.ToCList[i].classList.add("after");
 	}	
     };
     this.incrIndex = () => {
