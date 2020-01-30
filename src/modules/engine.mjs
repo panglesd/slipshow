@@ -441,4 +441,13 @@ export default function (root) {
 	stack = [rootSlip];
     };
     this.getRootSlip = () => rootSlip;
+    this.start = () => {
+	stack = [rootSlip];
+	this.next();
+    };
+    this.restart = () => {
+	stack = [rootSlip];
+	rootSlip.refreshAll();
+	this.next();
+    };
 };

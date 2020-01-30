@@ -83,3 +83,4 @@ rootSlip.setAction([
 //     links,
 // ]);
 let controller = new Controller(engine);
+engine.start();
