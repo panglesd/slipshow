@@ -53,8 +53,8 @@ future.setNthAction(11, (slip) => {
     red.element.style.display = "inline-block";
     blue.element.style.display = "inline-block";
 });
-future.setNthAction(12, red);
-future.setNthAction(13, blue);
+// future.setNthAction(12, red);
+// future.setNthAction(13, blue);
 // (slip) => {
 // 	// presentation.skipSlip({delay:1}); // Leaving "future" without finishing it
 // });

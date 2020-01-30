@@ -1,11 +1,30 @@
 import { cloneNoSubslip, myQueryAll, replaceSubslips } from './util'
 
-export default function (name, fullName, actionL, ng, options) {
+export default function Slip(name, fullName, actionL, ng, options) {
 
     // ******************************
     // Action List
     // ******************************
-    let actionList = actionL || this.generateActionList();
+
+    this.generateActionList = function() {
+	console.log("debug generateactionlist", this.name);
+	let newActionList = [];
+	this.queryAll(".slip[enter-at]").forEach((slip) => {
+	    console.log("new slip with ", slip, null, null, ng, {});
+	    newActionList[slip.getAttribute("enter-at")] = new Slip(slip, "", [], ng, {});
+	});
+	return newActionList;
+    };
+    this.addSubSlips = function() {
+	console.log("debug generateactionlist", this.name);
+	let newActionList = [];
+	this.queryAll(".slip[enter-at]").forEach((slip) => {
+	    console.log("new slip with ", slip, null, null, ng, {});
+	    this.setNthAction(slip.getAttribute("enter-at"), new Slip(slip, "", [], ng, {}));
+	});
+	return newActionList;
+    };
+    let actionList = actionL;// || this.generateActionList();
     this.setAction = (actionL) => {actionList = actionL;};
     this.getActionList = () => {
 	let ret = [];
@@ -20,9 +39,6 @@ export default function (name, fullName, actionL, ng, options) {
     this.setNthAction = (n,action) => {actionList[n] = action;};
     this.getSubSlipList = function () {
 	return actionList.filter((action) => action instanceof Slip);
-    };
-    this.generateActionList = () => {
-	this.queryAll(".slip");
     };
 
     // ******************************
@@ -64,7 +80,7 @@ export default function (name, fullName, actionL, ng, options) {
     // ******************************
     this.queryAll = (quer) => {
 	let allElem = Array.from(this.element.querySelectorAll(quer));
-	let other = Array.from(this.element.querySelectorAll("#"+name+" .slip "+quer));
+	let other = Array.from(this.element.querySelectorAll("#"+this.name+" .slip "+quer));
 	return allElem.filter(value => !other.includes(value));
     };
     this.query = (quer) => {
@@ -348,13 +364,20 @@ export default function (name, fullName, actionL, ng, options) {
     // ******************************
     // names    
     this.fullName = fullName;
-    this.name = name;
+    this.name =
+	typeof name == "string" ?
+	name:
+	name.id;
+    console.log("this name is ", this.name);
     // engine
     let engine = ng;
     this.getEngine = () => engine;
     this.setEngine = (ng) => engine = ng;
     // element
-    this.element = document.querySelector("#"+name);
+    this.element =
+	typeof name == "string" ?
+	document.querySelector("#"+name):
+	name;
     // clonedElement
     let clonedElement;
     if(typeof MathJax != "undefined")
@@ -375,5 +398,6 @@ export default function (name, fullName, actionL, ng, options) {
     this.y = coord.y;
     // Preparing the slip
     this.init(this, engine);
-
+    // Adding "enter-at" subslips
+    this.addSubSlips();
 }
