@@ -86,6 +86,18 @@ export default function Slip(name, fullName, actionL, ng, options) {
     this.query = (quer) => {
 	return this.queryAll(quer)[0];
     };
+    this.findSubslipByID = (id) => {
+	let goodSubslip = this.getSubSlipList().find((subslip) => {
+	    if(subslip.name == id)
+		return 1;
+	    return subslip.findSubslipByID(id);
+	});
+	if(!goodSubslip)
+	    return false;
+	if (goodSubslip.name == id) 
+	    return goodSubslip;
+	return goodSubslip.findSubslipByID(id);
+    };
     
     // ******************************
     // Coordinates
