@@ -264,7 +264,16 @@ export default function (root) {
 	    return parseFloat(transform.split("(")[1].split(",")[0]);
 	};
 	let getCoordIter = (elem) => {
+	    console.log("debug getcoorditer elem", elem);
 	    let cInParent = getCoordInParen(elem);
+	    if(!elem.offsetParent)
+		return { x: 0,
+			 y: 0,
+			 centerX: 0,
+			 centerY: 0,
+			 width: 0,
+			 height: 0,
+			 scale: 0 };
 	    if(elem.offsetParent.classList.contains("universe"))
 	    {
 		console.log("universe", cInParent);
