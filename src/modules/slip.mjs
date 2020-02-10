@@ -79,9 +79,10 @@ export default function Slip(name, fullName, actionL, ng, options) {
     // Queries
     // ******************************
     this.queryAll = (quer) => {
-	let allElem = Array.from(this.element.querySelectorAll(quer));
-	let other = Array.from(this.element.querySelectorAll("#"+this.name+" .slip "+quer));
-	return allElem.filter(value => !other.includes(value));
+	return myQueryAll(this.element, quer);
+	// let allElem = Array.from(this.element.querySelectorAll(quer));
+	// let other = Array.from(this.element.querySelectorAll("#"+this.name+" .slip "+quer));
+	// return allElem.filter(value => !other.includes(value));
     };
     this.query = (quer) => {
 	return this.queryAll(quer)[0];
