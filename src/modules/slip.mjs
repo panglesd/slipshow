@@ -37,6 +37,10 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	return ret;
     };
     this.setNthAction = (n,action) => {actionList[n] = action;};
+    this.getActionListWithAttributes = () => {
+	let enterAtList = myQueryAll(clonedElement, "[enter-at]");
+	let pause = myQueryAll(clonedElement, "pause");
+    };
     this.getSubSlipList = function () {
 	return actionList.filter((action) => action instanceof Slip);
     };
@@ -126,30 +130,45 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	};
     };
     this.incrPause = () => {
-	let pause = this.query("[pause]");
+	let pause = this.query("[pause], [auto-enter~=\"0\"], [step]");
+	// let pause = this.query("[pause]");
 	if(pause) {
-	    if(!pause.getAttribute("pause")) 
-		pause.setAttribute("pause", 1);
-	    let d = pause.getAttribute("pause");
-	    if (d <= 1){
-		pause.removeAttribute("pause");
-		if(pause.hasAttribute("down-at-unpause")) {
-		    if(pause.getAttribute("down-at-unpause") == "")
-			this.moveDownTo(pause, 1);
-		    else
-			this.moveDownTo("#"+pause.getAttribute("down-at-unpause"), 1);			
-		}
-		if(pause.hasAttribute("up-at-unpause")) {
-		    if(pause.getAttribute("up-at-unpause") == "")
-			this.moveUpTo(pause, 1);
-		    else
-			this.moveUpTo("#"+pause.getAttribute("up-at-unpause"), 1);
-		}
-		if(pause.hasAttribute("center-at-unpause"))
-		    this.moveCenterTo(pause, 1);
-	    } else
-		pause.setAttribute("pause", d-1);
-	    this.updatePauseAncestors();
+	    if(pause.hasAttribute("step")) {
+		if(!pause.getAttribute("step")) 
+		    pause.setAttribute("step", 1);
+		let d = pause.getAttribute("step");
+		if (d <= 1){
+		    pause.removeAttribute("step");
+		} else
+		    pause.setAttribute("step", d-1);
+	    }
+	    if(pause.hasAttribute("auto-enter")) {
+		pause.setAttribute("auto-enter", 0);
+	    }
+	    if(pause.hasAttribute("pause")) {
+		if(!pause.getAttribute("pause")) 
+		    pause.setAttribute("pause", 1);
+		let d = pause.getAttribute("pause");
+		if (d <= 1){
+		    pause.removeAttribute("pause");
+		    if(pause.hasAttribute("down-at-unpause")) {
+			if(pause.getAttribute("down-at-unpause") == "")
+			    this.moveDownTo(pause, 1);
+			else
+			    this.moveDownTo("#"+pause.getAttribute("down-at-unpause"), 1);			
+		    }
+		    if(pause.hasAttribute("up-at-unpause")) {
+			if(pause.getAttribute("up-at-unpause") == "")
+			    this.moveUpTo(pause, 1);
+			else
+			    this.moveUpTo("#"+pause.getAttribute("up-at-unpause"), 1);
+		    }
+		    if(pause.hasAttribute("center-at-unpause"))
+			this.moveCenterTo(pause, 1);
+		} else
+		    pause.setAttribute("pause", d-1);
+		this.updatePauseAncestors();
+	    }
 	}
     };
 
@@ -234,6 +253,11 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	if(actionList[actionIndex] instanceof Slip){
 	    return actionList[actionIndex];
 	}
+	if(this.pauseSlipList[actionIndex] instanceof Slip)
+	    return this.pauseSlipList[actionIndex];
+	// let nextSlip = this.query("[pause], [auto-enter]");
+	// if(nextSlip.hasAttribute("auto-enter"))
+	//     return 
 	return true;
     };
     this.previous = () => {
@@ -413,4 +437,34 @@ export default function Slip(name, fullName, actionL, ng, options) {
     this.init(this, engine);
     // Adding "enter-at" subslips
     this.addSubSlips();
+    // Adding "paused-flow" subslips
+    this.generatePauseFlowSlipList = function () {
+	let slipList = [];
+	let bla = this.queryAll("[pause], [step], [auto-enter]");
+	let step = 0;
+	bla.forEach((elem) => {
+	    console.log("debug generatePauseFlowsliplist", elem, step);
+	    if(elem.hasAttribute("auto-enter")){
+		slipList[step] = new Slip(elem, elem.getAttribute("toc-title") || "", [], ng, {});
+		step++;
+	    }
+	    if(elem.hasAttribute("step")){
+		console.log("debug generatePauseFlowsliplist1", elem, step);
+		step += parseInt(elem.getAttribute("step")) || 1 ;
+		console.log("debug generatePauseFlowsliplist2", elem, step);
+	    }
+	    if(elem.hasAttribute("pause")){
+		console.log("debug generatePauseFlowsliplist1", elem, step);
+		step += parseInt(elem.getAttribute("pause")) || 1 ;
+		console.log("debug generatePauseFlowsliplist1", elem, step);
+	    }
+	});
+	return slipList;
+    };
+    this.pauseSlipList = this.generatePauseFlowSlipList();
+    // this.pauseSlipList = this.queryAll("[pause], [step], [auto-enter]").map((elem) => {
+    // 	if(elem.hasAttribute("auto-enter"))
+    // 	    return new Slip(elem, elem.getAttribute("toc-title") || "", [], ng, {});
+    // 	return null;
+    // });
 }
