@@ -7,8 +7,8 @@
   "author": "panglesd",
   "license": "MIT",
   "scripts": {
-    "dev": "parcel example/slipIntroduction.html",
-    "build": "parcel build example/slipIntroduction.html src/slip-lib.js --public-url /slip-js/"
+    "dev": "parcel src/slip-lib.js",
+    "build": "parcel build src/slip-lib.js src/css/*.css"
   },
   "devDependencies": {
     "parcel-bundler": "^1.12.4"
