@@ -31,16 +31,14 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	for(let i = 0;i <= this.getMaxNext(); i++) {
 	    if(typeof actionList[i] == "function" || actionList[i] instanceof Slip)
 		ret[i] = actionList[i];
+	    else if(this.pauseSlipList[i] instanceof Slip)
+		ret[i] = this.pauseSlipList[i];
 	    else
 		ret[i] = () => {};
 	}
 	return ret;
     };
     this.setNthAction = (n,action) => {actionList[n] = action;};
-    this.getActionListWithAttributes = () => {
-	let enterAtList = myQueryAll(clonedElement, "[enter-at]");
-	let pause = myQueryAll(clonedElement, "pause");
-    };
     this.getSubSlipList = function () {
 	return actionList.filter((action) => action instanceof Slip);
     };
@@ -73,7 +71,12 @@ export default function Slip(name, fullName, actionL, ng, options) {
 		 });
 	     });
 	});
-	let sumArray = this.queryAll("*[pause]").map((elem) => { if(elem.getAttribute("pause") != "") return parseInt(elem.getAttribute("pause")); return 1; });
+	let sumArray = this.queryAll("[pause], [step], [auto-enter]").map((elem) => {
+	    if(elem.hasAttribute("pause") && elem.getAttribute("pause") != "")
+		return parseInt(elem.getAttribute("pause"));
+	    if(elem.hasAttribute("step") && elem.getAttribute("step") != "")
+		return parseInt(elem.getAttribute("step"));
+	    return 1; });
 	maxTemp = Math.max(maxTemp, sumArray.reduce((a,b) => a+b, 0));
 	this.maxNext = maxTemp;
 	return maxTemp;	
@@ -130,9 +133,10 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	};
     };
     this.incrPause = () => {
-	let pause = this.query("[pause], [auto-enter~=\"0\"], [step]");
+	let pause = this.query("[pause], [auto-enter]:not([auto-enter=\"0\"]), [step]");
 	// let pause = this.query("[pause]");
 	if(pause) {
+	    console.log("pause is", this.name, pause);
 	    if(pause.hasAttribute("step")) {
 		if(!pause.getAttribute("step")) 
 		    pause.setAttribute("step", 1);
@@ -236,7 +240,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
 		(new Function("slip",elem.innerHTML))(this);});	
     };
     this.incrIndex = () => {
-	console.log("incrIndex");
+	console.log("incrIndex", this.name);
 	actionIndex = actionIndex+1;
 	this.doAttributes();
 	if(actionIndex>0)
@@ -441,7 +445,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
     this.generatePauseFlowSlipList = function () {
 	let slipList = [];
 	let bla = this.queryAll("[pause], [step], [auto-enter]");
-	let step = 0;
+	let step = 1;
 	bla.forEach((elem) => {
 	    console.log("debug generatePauseFlowsliplist", elem, step);
 	    if(elem.hasAttribute("auto-enter")){
