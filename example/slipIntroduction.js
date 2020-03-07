@@ -25,8 +25,8 @@ future.setNthAction(0, (slip) => {
     but.addEventListener("click", (ev) => {
 	alert("yo");
     });
-    red.element.style.display = "none";
-    blue.element.style.display = "none";
+    // red.element.style.visibility = "hidden";
+    // blue.element.style.visibility = "hidden";
 });
 future.setNthAction(1, (slip) => {
     slip.delay = 1;
