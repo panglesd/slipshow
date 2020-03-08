@@ -725,7 +725,10 @@ function Slip$1(name, fullName, actionL, ng, options) {
 			    this.moveUpTo("#"+pause.getAttribute("up-at-unpause"), 1);
 		    }
 		    if(pause.hasAttribute("center-at-unpause"))
-			this.moveCenterTo(pause, 1);
+			if(pause.getAttribute("center-at-unpause") == "")
+			    this.moveCenterTo(pause, 1);
+			else
+			    this.moveCenterTo("#"+pause.getAttribute("center-at-unpause"), 1);
 		} else
 		    pause.setAttribute("pause", d-1);
 		this.updatePauseAncestors();
