@@ -1,48 +1,43 @@
+.. _getting-started:
+
 Getting Started
 ===============
 
-Slip.js is a library for displaying slips. The easiest way is to include the library using a CDN, however in this case you will not be able to display your slips without internet access.
+Slip.js is a library for displaying slips. This section explains how to start writing your slips. In case you want simplicity and have an access to internet, you should choose the CDN option and starts reading the :ref:`tutorial`. If you want to work with everything local, you have several options: either download the library, use github or use npm.
 
-You can also install slip-js it using npm.
+.. todo:: You cannot yet use npm!
+
+..
+   You can also install slip-js it using npm.
 
 Using a CDN
------------
+------------------------------
 
-The minimal example of a slip presentation is the following:
+There is nothing to set up, you will just include the ``css`` and ``js`` files with:
 
 .. code-block:: html
 
-   <!doctype html>
-   <html>
-     <head>
        <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/panglesd/slip-js@gh-pages/css/slip.css">
        <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/panglesd/slip-js@gh-pages/css/theorem.css">
-     </head>
-     <body>
-       <div class="root" id="rootSlip">
-       </div>
-       <script src="https://cdn.jsdelivr.net/gh/panglesd/slip-js@gh-pages/slip-lib.js"></script>
-       <script>
-       	 let engine = new Engine(document.querySelector("#rootSlip"));
-	 let controller = new Controller(engine);
-	 engine.start();
-       </script>
-     </body>
-   </html>
+       <script src="https://cdn.jsdelivr.net/gh/panglesd/slip-js@gh-pages/slip-lib.cdn.min.js"></script>
 
-or in pug:
-
-.. code-block:: pug
-
-   html
-     head
-       script(src="https://panglesd.github.io/slip-js/src/slip-lib.js")
-     body
-       #rootSlip.root
+Read the :ref:`tutorial` to know where to include them!
 
 Installing a local version
 --------------------------
 
+Downloading an archive
+^^^^^^^^^^^^^^^^^^^^^^
+
+Download a release when there will be one, and include the files as it will be explained here.
+
+Usig github
+^^^^^^^^^^^^^^^^^^^^^^
+
+Clone the repo, install, build and link. You can also modify examples.
+
+Using npm
+^^^^^^^^^^^^^^^^^^^^^^
 To install slip-js, just type
 
 .. code-block:: bash

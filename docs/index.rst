@@ -11,7 +11,7 @@ Welcome to slip-js's documentation!
    :caption: Contents:
 
    quick-start
-   
+   tutorial
 
 
 ..
