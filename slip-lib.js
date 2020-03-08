@@ -687,7 +687,7 @@ function Slip$1(name, fullName, actionL, ng, options) {
 	    pause = pause.parentElement;
 	}    };
     this.incrPause = () => {
-	let pause = this.query("[pause], [auto-enter]:not([auto-enter=\"0\"]), [step]");
+	let pause = this.query("[pause], [auto-enter]:not([auto-enter=\"0\"]), [immediate-enter]:not([immediate-enter=\"0\"]), [step]");
 	// let pause = this.query("[pause]");
 	if(pause) {
 	    console.log("pause is", this.name, pause);
@@ -702,6 +702,9 @@ function Slip$1(name, fullName, actionL, ng, options) {
 	    }
 	    if(pause.hasAttribute("auto-enter")) {
 		pause.setAttribute("auto-enter", 0);
+	    }
+	    if(pause.hasAttribute("immediate-enter")) {
+		pause.setAttribute("immediate-enter", 0);
 	    }
 	    if(pause.hasAttribute("pause")) {
 		if(!pause.getAttribute("pause")) 
@@ -997,12 +1000,17 @@ function Slip$1(name, fullName, actionL, ng, options) {
     // Adding "paused-flow" subslips
     this.generatePauseFlowSlipList = function () {
 	let slipList = [];
-	let bla = this.queryAll("[pause], [step], [auto-enter]");
+	let bla = this.queryAll("[pause], [step], [auto-enter], [immediate-enter]");
 	let step = 1;
 	bla.forEach((elem) => {
 	    console.log("debug generatePauseFlowsliplist", elem, step);
 	    if(elem.hasAttribute("auto-enter")){
 		slipList[step] = new Slip$1(elem, elem.getAttribute("toc-title") || "", [], ng, {});
+		step++;
+	    }
+	    if(elem.hasAttribute("immediate-enter")){
+		// the slip is entered before the pause
+		slipList[step-1] = new Slip$1(elem, elem.getAttribute("toc-title") || "", [], ng, {});
 		step++;
 	    }
 	    if(elem.hasAttribute("step")){
