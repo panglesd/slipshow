@@ -681,7 +681,7 @@ var SlipLib = (function (exports) {
         let ret = [];
 
         for (let i = 0; i <= this.getMaxNext(); i++) {
-          if (typeof actionList[i] == "function" || actionList[i] instanceof Slip$1) ret[i] = actionList[i];else if (this.pauseSlipList[i] instanceof Slip$1) ret[i] = this.pauseSlipList[i];else ret[i] = () => {};
+          if (this.pauseSlipList[i] instanceof Slip$1) ret[i] = this.pauseSlipList[i];else if (typeof actionList[i] == "function" || actionList[i] instanceof Slip$1) ret[i] = actionList[i];else ret[i] = () => {};
         }
 
         return ret;
@@ -984,6 +984,7 @@ var SlipLib = (function (exports) {
       this.doRefresh = () => {
         this.setActionIndex(-1);
         let subSlipList = myQueryAll(this.element, ".slip");
+        console.log("mmdebug", clonedElement);
         let clone = clonedElement.cloneNode(true);
         replaceSubslips(clone, subSlipList);
         this.element.replaceWith(clone);
@@ -1079,7 +1080,9 @@ var SlipLib = (function (exports) {
         setTimeout(() => {
           clonedElement = cloneNoSubslip(this.element);
         }, 0);
-      });
+      });else setTimeout(() => {
+        clonedElement = cloneNoSubslip(this.element);
+      }, 0);
 
       this.getCloned = () => clonedElement;
 

@@ -584,10 +584,10 @@ function Slip$1(name, fullName, actionL, ng, options) {
     this.getActionList = () => {
 	let ret = [];
 	for(let i = 0;i <= this.getMaxNext(); i++) {
-	    if(typeof actionList[i] == "function" || actionList[i] instanceof Slip$1)
-		ret[i] = actionList[i];
-	    else if(this.pauseSlipList[i] instanceof Slip$1)
+	    if(this.pauseSlipList[i] instanceof Slip$1)
 		ret[i] = this.pauseSlipList[i];
+	    else if(typeof actionList[i] == "function" || actionList[i] instanceof Slip$1)
+		ret[i] = actionList[i];
 	    else
 		ret[i] = () => {};
 	}
@@ -893,7 +893,9 @@ function Slip$1(name, fullName, actionL, ng, options) {
     };
     this.doRefresh = () => {
 	this.setActionIndex(-1);
-	let subSlipList = myQueryAll(this.element, ".slip");	let clone = clonedElement.cloneNode(true);
+	let subSlipList = myQueryAll(this.element, ".slip");
+	console.log("mmdebug", clonedElement);
+	let clone = clonedElement.cloneNode(true);
 	replaceSubslips(clone, subSlipList);
 	this.element.replaceWith(clone);
 	this.element = clone;
@@ -984,6 +986,8 @@ function Slip$1(name, fullName, actionL, ng, options) {
 	MathJax.startup.promise.then(() => {
 	    setTimeout(() => {clonedElement = cloneNoSubslip(this.element);},0);
 	});
+    else
+	setTimeout(() => {clonedElement = cloneNoSubslip(this.element);},0);
     this.getCloned = () => clonedElement;
     this.setCloned = (c) => clonedElement = c;
     // scale, rotate, delay
