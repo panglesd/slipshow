@@ -15,11 +15,18 @@ The minimal example of a slip presentation is the following:
    <!doctype html>
    <html>
      <head>
-       <script src="https://panglesd.github.io/slip-js/src/slip-lib.js"></script>
+       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/panglesd/slip-js@gh-pages/css/slip.css">
+       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/panglesd/slip-js@gh-pages/css/theorem.css">
      </head>
      <body>
        <div class="root" id="rootSlip">
        </div>
+       <script src="https://cdn.jsdelivr.net/gh/panglesd/slip-js@gh-pages/slip-lib.js"></script>
+       <script>
+       	 let engine = new Engine(document.querySelector("#rootSlip"));
+	 let controller = new Controller(engine);
+	 engine.start();
+       </script>
      </body>
    </html>
 
