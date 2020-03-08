@@ -71,7 +71,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
 		 });
 	     });
 	});
-	let sumArray = this.queryAll("[pause], [step], [auto-enter]").map((elem) => {
+	let sumArray = this.queryAll("[pause], [step], [auto-enter], [immediate-enter]").map((elem) => {
 	    if(elem.hasAttribute("pause") && elem.getAttribute("pause") != "")
 		return parseInt(elem.getAttribute("pause"));
 	    if(elem.hasAttribute("step") && elem.getAttribute("step") != "")
