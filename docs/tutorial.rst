@@ -3,7 +3,7 @@
 Tutorial
 ========
 
-Slip.js is a library for displaying slips. The easiest way is to include the library using a CDN, this is the option we choose to use in this tutorial for its simplicity. However, in this case you will not be able to display your slips without internet access. To use a local version with npm, see :ref:`getting-started`.
+Slip.js is a library for displaying slips. The easiest way is to include the library using a CDN, this is the option we choose to use in this tutorial for its simplicity. However, in this case you will not be able to display your slips without internet access. To use a local version, see :ref:`getting-started`.
 
 ..
    You can also install slip-js it using npm.
@@ -98,6 +98,8 @@ Now save the file and reload the page. Suddenly there is something in the screen
 * ``<div class="titre">...</div>`` defines the title of the slip. Notice the french orientation! (TODO: remove the french orientation)
 * ``<div class="slip-body-container">...</div>`` defines the body of the slip. It includes margin, padding,...
 
+.. note:: If you don't include the ``div`` with ``class=slip-body-container``, the slip will have no margin. It can be usefull if you want to display something "fullscreen".
+  
 The rest is pure html. For latex users, just translate your ``\begin{itemize}`` and ``\end{itemize}`` respectively into ``<ul>`` and ``</ul>``, and you ``\item`` into ``<li>...</li>``.
 
 Making pauses
@@ -161,10 +163,18 @@ For instance, add the following slip to your presentation and reload it.
       <div class="slip" immediate-enter>
         <div class="titre">Blocks</div>
         <div class="slip-body-container">
-	  <div class="block" title="A block">Here is a block</div>
-	  <div class="definition" title="Theme">The theme is the styling of a presentation. It includes the colors  given to the different blocks.</div>
-	  <div class="theorem" title="Meta Theorem">This is a theorem.</div>
-	  <div class="example" title="A block">For instance, this is an example.</div>
+	  <div class="block" title="A block">
+	    Here is a block
+	  </div>
+	  <div class="definition" title="Theme">
+	    The theme is the styling of a presentation. It includes the colors  given to the different blocks.
+	  </div>
+	  <div class="theorem" title="Meta Theorem">
+	    This is a theorem.
+	  </div>
+	  <div class="example" title="A block">
+	    For instance, this is an example.
+	  </div>
 	</div>
       </div>
 
@@ -172,9 +182,72 @@ For instance, add the following slip to your presentation and reload it.
 Using the full power of slips
 -----------------------------
 
+Until now, we have only used the "classic" part of slideshow presentation. Slip allows some more things!
 
 Moving the point of view
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
+Sometimes, you need to show things below the bottom of the slip. You can do this by using one of the attribute ``top-at``,  ``center-at``,  ``bottom-at``, which moves the screen to make the element be at the top (respectively center, bottom) of the screen.
+
+For instance, copy paste this new slip and test the different attributes.
+
+.. code-block:: html
+		
+      <div class="slip" immediate-enter>
+        <div class="titre">Blocks</div>
+        <div class="slip-body-container">
+	  <div class="block" title="Lispum">
+	    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus auctor sem a libero ultricies convallis. Sed hendrerit tellus mi, malesuada lacinia turpis blandit sit amet. Aliquam auctor metus eu massa imperdiet, vel scelerisque metus aliquet. Nulla facilisi. Aliquam erat volutpat. Aenean nec lacus eu massa lacinia ultricies. In eget sollicitudin eros, sed suscipit elit. Quisque ac scelerisque purus, sit amet sodales est. Curabitur efficitur ultrices nunc. Mauris aliquet nisi commodo nulla condimentum, sed tempor nisi suscipit. Quisque magna augue, ultricies eu commodo ut, fringilla ac erat. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Morbi pharetra felis rutrum mi vehicula dapibus. Aliquam sem mi, fringilla ut facilisis efficitur, efficitur vel odio.
+	    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus auctor sem a libero ultricies convallis. Sed hendrerit tellus mi, malesuada lacinia turpis blandit sit amet. Aliquam auctor metus eu massa imperdiet, vel scelerisque metus aliquet. Nulla facilisi. Aliquam erat volutpat. Aenean nec lacus eu massa lacinia ultricies. In eget sollicitudin eros, sed suscipit elit. Quisque ac scelerisque purus, sit amet sodales est. Curabitur efficitur ultrices nunc. Mauris aliquet nisi commodo nulla condimentum, sed tempor nisi suscipit. Quisque magna augue, ultricies eu commodo ut, fringilla ac erat. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Morbi pharetra felis rutrum mi vehicula dapibus. Aliquam sem mi, fringilla ut facilisis efficitur, efficitur vel odio.
+	    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus auctor sem a libero ultricies convallis. Sed hendrerit tellus mi, malesuada lacinia turpis blandit sit amet. Aliquam auctor metus eu massa imperdiet, vel scelerisque metus aliquet. Nulla facilisi. Aliquam erat volutpat. Aenean nec lacus eu massa lacinia ultricies. In eget sollicitudin eros, sed suscipit elit. Quisque ac scelerisque purus, sit amet sodales est. Curabitur efficitur ultrices nunc. Mauris aliquet nisi commodo nulla condimentum, sed tempor nisi suscipit. Quisque magna augue, ultricies eu commodo ut, fringilla ac erat. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Morbi pharetra felis rutrum mi vehicula dapibus. Aliquam sem mi, fringilla ut facilisis efficitur, efficitur vel odio.
+	  </div>
+	  <div down-at="1">
+	    That was long!
+	  </div>
+
+
 Acting at unpause
 ^^^^^^^^^^^^^^^^^^^^^^^^
+
+Until now, we have seen two mechanisms: the "pause" mechanism, which allows to make things appear one by one, and the "absolute" mechanism, where we specify the step number where things are emphasized or "moved to".
+
+The "absolute" mechanism allows more control, however it is sometimes heavier to work with it. Indeed, slips can become quite long, and if you want to add one step at the beginning, you might have to change every ``emphasize-at`` and ``down-at`` values to increment them by one, by hand.
+
+However, there is a way to couple the "pause" mechanism with other actions than pauses, using the ``*-at-unpause``, where ``*`` can be multiple things, for instance ``down-at-unpause``.
+
+.. code-block:: html
+		
+      <div class="slip" immediate-enter>
+        <div class="titre">Déclaration des droits de l'Homme et du Citoyen</div>
+        <div class="slip-body-container">
+	  <ol>
+	    <li>Les hommes naissent et demeurent libres et égaux en droits. Les distinctions sociales ne peuvent être fondées que sur l'utilité commune.</li>
+	    <li pause>Le but de toute association politique est la conservation des droits naturels et imprescriptibles de l'homme. Ces droits sont la liberté, la propriété, la sûreté, et la résistance à l'oppression.</li>
+	    <li pause>Le principe de toute souveraineté réside essentiellement dans la nation. Nul corps, nul individu ne peut exercer d'autorité qui n'en émane expressément.</li>
+	    <li pause>La liberté consiste à pouvoir faire tout ce qui ne nuit pas à autrui : ainsi, l'exercice des droits naturels de chaque homme n'a de bornes que celles qui assurent aux autres membres de la société la jouissance de ces mêmes droits. Ces bornes ne peuvent être déterminées que par la loi.</li>
+	    <li pause>La loi n'a le droit de défendre que les actions nuisibles à la société. Tout ce qui n'est pas défendu par la loi ne peut être empêché, et nul ne peut être contraint à faire ce qu'elle n'ordonne pas.</li>
+	    <li pause>La loi est l'expression de la volonté générale. Tous les citoyens ont droit de concourir personnellement, ou par leurs représentants, à sa formation. Elle doit être la même pour tous, soit qu'elle protège, soit qu'elle punisse. Tous les citoyens étant égaux à ses yeux sont également admissibles à toutes dignités, places et emplois publics, selon leur capacité, et sans autre distinction que celle de leurs vertus et de leurs talents.</li>
+	    <li pause>Nul homme ne peut être accusé, arrêté ni détenu que dans les cas déterminés par la loi, et selon les formes qu'elle a prescrites. Ceux qui sollicitent, expédient, exécutent ou font exécuter des ordres arbitraires, doivent être punis ; mais tout citoyen appelé ou saisi en vertu de la loi doit obéir à l'instant : il se rend coupable par la résistance.</li>
+	    <li pause>La loi ne doit établir que des peines strictement et évidemment nécessaires, et nul ne peut être puni qu'en vertu d'une loi établie et promulguée antérieurement au délit, et légalement appliquée.</li>
+	    <li pause down-at-unpause>Tout homme étant présumé innocent jusqu'à ce qu'il ait été déclaré coupable, s'il est jugé indispensable de l'arrêter, toute rigueur qui ne serait pas nécessaire pour s'assurer de sa personne doit être sévèrement réprimée par la loi.</li>
+	    <li pause down-at-unpause>Nul ne doit être inquiété pour ses opinions, même religieuses, pourvu que leur manifestation ne trouble pas l'ordre public établi par la loi.</li>
+	    <li pause down-at-unpause>La libre communication des pensées et des opinions est un des droits les plus précieux de l'homme : tout citoyen peut donc parler, écrire, imprimer librement, sauf à répondre de l'abus de cette liberté dans les cas déterminés par la loi.</li>
+	    <li pause down-at-unpause>La garantie des droits de l'homme et du citoyen nécessite une force publique : cette force est donc instituée pour l'avantage de tous, et non pour l'utilité particulière de ceux auxquels elle est confiée.</li>
+	    <li pause down-at-unpause>Pour l'entretien de la force publique, et pour les dépenses d'administration, une contribution commune est indispensable : elle doit être également répartie entre tous les citoyens, en raison de leurs facultés.</li>
+	    <li pause down-at-unpause>Tous les citoyens ont le droit de constater, par eux-mêmes ou par leurs représentants, la nécessité de la contribution publique, de la consentir librement, d'en suivre l'emploi, et d'en déterminer la quotité, l'assiette, le recouvrement et la durée.</li>
+	    <li pause down-at-unpause>La société a le droit de demander compte à tout agent public de son administration.</li>
+	    <li pause down-at-unpause>Toute société dans laquelle la garantie des droits n'est pas assurée, ni la séparation des pouvoirs déterminée, n'a point de Constitution.</li>
+	    <li pause down-at-unpause>La propriété étant un droit inviolable et sacré, nul ne peut en être privé, si ce n'est lorsque la nécessité publique, légalement constatée, l'exige évidemment, et sous la condition d'une juste et préalable indemnité.</li>
+	  </ol>
+	</div>
+      </div>
+
+.. tip:: You can make the ``*-at-unpause`` act on another element by specifying its ``id`` as value of the attribute.
+
+.. todo:: The attribute ``emphasize-at-unpause`` is not yet implemented but it will be very soon!
+
+Javascripting your presentation
+--------------------------------
+
+Themes
+-----------------------------
