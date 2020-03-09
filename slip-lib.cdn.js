@@ -168,7 +168,7 @@ var SlipLib = (function (exports) {
       this.placeSlips = function () {
         // let posX = 0.5;
         // let posY = 0.5;
-        let depth = function (elem) {
+        let depth = function depth(elem) {
           console.log("debug depth (elem)", elem);
           let subslips = myQueryAll(elem, ".slip");
           console.log("debug depth (subslips)", elem);
@@ -329,7 +329,7 @@ var SlipLib = (function (exports) {
 
         let globalScale = 1;
 
-        let parseScale = function (transform) {
+        let parseScale = function parseScale(transform) {
           if (transform == "none") return 1;
           return parseFloat(transform.split("(")[1].split(",")[0]);
         };
