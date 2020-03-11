@@ -335,6 +335,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
     };
     this.refreshAll = () => {
 	actionList.filter((elem) => elem instanceof Slip).forEach((subslip) => { subslip.refreshAll();});
+	this.pauseSlipList.filter((elem) => elem instanceof Slip).forEach((subslip) => { subslip.refreshAll();});
 	this.doRefresh();
     };
     this.doRefresh = () => {
