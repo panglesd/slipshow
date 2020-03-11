@@ -264,8 +264,13 @@ function IEngine (root) {
 	let n = currentSlip.previous();
 	console.log("debug previous (currentSlip, n)", currentSlip, n);
 	if(n instanceof Slip) {
-	    this.gotoSlip(n);
+	    while(n.getCurrentSubSlip() instanceof Slip) {
+		this.push(n);
+		n = n.getCurrentSubSlip();
+	    }
 	    this.push(n);
+	    this.gotoSlip(n);
+		
 	    // this.showToC();
 	    return true;
 	}
@@ -594,6 +599,13 @@ function Slip$1(name, fullName, actionL, ng, options) {
 	return ret;
     };
     this.setNthAction = (n,action) => {actionList[n] = action;};
+    this.getCurrentSubSlip = () => {
+	if(actionList[this.getActionIndex()] instanceof Slip$1)
+	    return actionList[this.getActionIndex()];
+	if(this.pauseSlipList[this.getActionIndex()] instanceof Slip$1)
+	    return this.pauseSlipList[this.getActionIndex()];
+	return false;
+    };
     this.getSubSlipList = function () {
 	return actionList.filter((action) => action instanceof Slip$1);
     };
@@ -889,6 +901,7 @@ function Slip$1(name, fullName, actionL, ng, options) {
     };
     this.refreshAll = () => {
 	actionList.filter((elem) => elem instanceof Slip$1).forEach((subslip) => { subslip.refreshAll();});
+	this.pauseSlipList.filter((elem) => elem instanceof Slip$1).forEach((subslip) => { subslip.refreshAll();});
 	this.doRefresh();
     };
     this.doRefresh = () => {
