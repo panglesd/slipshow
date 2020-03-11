@@ -39,6 +39,13 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	return ret;
     };
     this.setNthAction = (n,action) => {actionList[n] = action;};
+    this.getCurrentSubSlip = () => {
+	if(actionList[this.getActionIndex()] instanceof Slip)
+	    return actionList[this.getActionIndex()];
+	if(this.pauseSlipList[this.getActionIndex()] instanceof Slip)
+	    return this.pauseSlipList[this.getActionIndex()];
+	return false;
+    };
     this.getSubSlipList = function () {
 	return actionList.filter((action) => action instanceof Slip);
     };

@@ -227,8 +227,13 @@ export default function (root) {
 	let n = currentSlip.previous();
 	console.log("debug previous (currentSlip, n)", currentSlip, n);
 	if(n instanceof Slip) {
-	    this.gotoSlip(n);
+	    while(n.getCurrentSubSlip() instanceof Slip) {
+		this.push(n);
+		n = n.getCurrentSubSlip();
+	    }
 	    this.push(n);
+	    this.gotoSlip(n);
+		
 	    // this.showToC();
 	    return true;
 	}
