@@ -319,6 +319,7 @@ var SlipLib = (function (exports) {
           this.push(n);
           this.gotoSlip(n); // this.showToC();
 
+          this.updateCounter();
           return true;
         } else if (!n) {
           this.pop();
@@ -327,10 +328,12 @@ var SlipLib = (function (exports) {
           if (stack.length > 1 || newCurrentSlide.getActionIndex() > -1) this.previous();else this.gotoSlip(newCurrentSlide); // console.log(stack);
           // this.showToC();
 
+          this.updateCounter();
           return true;
         } // this.showToC();
 
 
+        this.updateCounter();
         return false; // console.log("returned", n);
       };
 

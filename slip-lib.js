@@ -289,6 +289,7 @@ function IEngine (root) {
 	    this.gotoSlip(n);
 		
 	    // this.showToC();
+	    this.updateCounter();
 	    return true;
 	}
 	else if(!n) {
@@ -301,9 +302,11 @@ function IEngine (root) {
 		this.gotoSlip(newCurrentSlide);
 	    // console.log(stack);
 	    // this.showToC();
+	    this.updateCounter();
 	    return true;
 	}
 	// this.showToC();
+	this.updateCounter();
 	return false;
 	// console.log("returned", n);
     };
