@@ -115,7 +115,18 @@ var SlipLib = (function (exports) {
         };
       };
 
+      let doNotMove = false;
+
+      this.setDoNotMove = m => doNotMove = m;
+
+      this.getDoNotMove = m => doNotMove;
+
       this.moveWindow = function (x, y, scale, rotate, delay) {
+        if (this.getDoNotMove()) {
+          console.log("we cannot move");
+          return;
+        }
+
         console.log("move to", x, y, "with scale, rotate, delay", scale, rotate, delay);
         currentScale = scale;
         currentRotate = rotate;
@@ -126,11 +137,14 @@ var SlipLib = (function (exports) {
           document.querySelector(".scale-container").style.transitionDuration = delay + "s";
           document.querySelector(".rotate-container").style.transitionDuration = delay + "s";
           universe.style.transitionDuration = delay + "s, " + delay + "s";
-          universe.style.left = -(x * 1440 - 1440 / 2) + "px";
-          universe.style.top = -(y * 1080 - 1080 / 2) + "px";
-          document.querySelector(".scale-container").style.transform = "scale(" + 1 / scale + ")";
-          document.querySelector(".rotate-container").style.transform = "rotate(" + rotate + "deg)";
+          setTimeout(() => {
+            universe.style.left = -(x * 1440 - 1440 / 2) + "px";
+            universe.style.top = -(y * 1080 - 1080 / 2) + "px";
+            document.querySelector(".scale-container").style.transform = "scale(" + 1 / scale + ")";
+            document.querySelector(".rotate-container").style.transform = "rotate(" + rotate + "deg)";
+          }, 0);
         }, 0);
+        return;
       };
 
       this.moveWindowRelative = function (dx, dy, dscale, drotate, delay) {
@@ -270,10 +284,10 @@ var SlipLib = (function (exports) {
           return true;
         } else if (!n) {
           this.pop();
-          let newCurrentSlide = this.getCurrentSlip();
-          this.gotoSlip(newCurrentSlide); // newCurrentSlide.incrIndex();
+          let newCurrentSlip = this.getCurrentSlip();
+          if (newCurrentSlip.nextStageNeedGoto()) this.gotoSlip(newCurrentSlip); // newCurrentSlip.incrIndex();
 
-          if (stack.length > 1 || newCurrentSlide.getActionIndex() < newCurrentSlide.getMaxNext()) this.next(); // this.showToC();
+          if (stack.length > 1 || newCurrentSlip.getActionIndex() < newCurrentSlip.getMaxNext()) this.next();else this.gotoSlip(newCurrentSlip); // this.showToC();
 
           return true; // console.log(stack);
         } // this.showToC();
@@ -288,8 +302,12 @@ var SlipLib = (function (exports) {
       };
 
       this.previous = () => {
-        let currentSlip = this.getCurrentSlip();
-        let n = currentSlip.previous();
+        let currentSlip = this.getCurrentSlip(); // setDoNotMove(true);
+        // let stage = currentSlip.previous2();
+        // setDoNotMove(false);
+
+        let n = currentSlip.previous(); // if(stage == "")
+
         console.log("debug previous (currentSlip, n)", currentSlip, n);
 
         if (n instanceof Slip) {
@@ -304,10 +322,9 @@ var SlipLib = (function (exports) {
           return true;
         } else if (!n) {
           this.pop();
-          let newCurrentSlide = this.getCurrentSlip();
-          this.gotoSlip(newCurrentSlide); // newCurrentSlide.incrIndex();
+          let newCurrentSlide = this.getCurrentSlip(); // newCurrentSlide.incrIndex();
 
-          if (stack.length > 1 || newCurrentSlide.getActionIndex() > -1) this.previous(); // console.log(stack);
+          if (stack.length > 1 || newCurrentSlide.getActionIndex() > -1) this.previous();else this.gotoSlip(newCurrentSlide); // console.log(stack);
           // this.showToC();
 
           return true;
@@ -412,7 +429,7 @@ var SlipLib = (function (exports) {
       };
 
       this.gotoSlip = function (slip, options) {
-        console.log("we goto slip");
+        console.log("we goto slip", slip.element, this.getDoNotMove());
         options = options ? options : {};
         console.log("options is ", options);
         if (slip.element.classList.contains("slip")) setTimeout(() => {
@@ -702,6 +719,13 @@ var SlipLib = (function (exports) {
         return false;
       };
 
+      this.nextStageNeedGoto = () => {
+        if (actionList[this.getActionIndex() + 1] instanceof Slip$1) return false;
+        if (this.pauseSlipList[this.getActionIndex() + 1] instanceof Slip$1) return false;
+        if (this.getActionIndex() >= this.getMaxNext()) return false;
+        return true;
+      };
+
       this.getSubSlipList = function () {
         return actionList.filter(action => action instanceof Slip$1);
       }; // ******************************
@@ -922,13 +946,19 @@ var SlipLib = (function (exports) {
 
       this.previous = () => {
         let savedActionIndex = this.getActionIndex();
-        this.doRefresh();
+        this.getEngine().setDoNotMove(true);
+        console.log("gotoslip: we call doRefresh", this.doRefresh());
         if (savedActionIndex == -1) return false;
         let toReturn;
 
+        while (this.getActionIndex() < savedActionIndex - 2) toReturn = this.next();
+
+        if (!this.nextStageNeedGoto()) this.getEngine().setDoNotMove(false);
+
         while (this.getActionIndex() < savedActionIndex - 1) toReturn = this.next();
 
-        return toReturn;
+        this.getEngine().setDoNotMove(false);
+        return toReturn; // return this.next;
       }; // ******************************
       // ToC functions
       // ******************************
@@ -996,6 +1026,7 @@ var SlipLib = (function (exports) {
       };
 
       this.doRefresh = () => {
+        console.log("gotoslip: doRefresh has been called");
         this.setActionIndex(-1);
         let subSlipList = myQueryAll(this.element, ".slip");
         console.log("mmdebug", clonedElement);
