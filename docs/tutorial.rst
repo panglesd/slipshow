@@ -342,7 +342,7 @@ In this example, there are several new things:
 The table of content
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-When you press ``t`` during your presentation. Magic!
+When you press ``t`` during your presentation. Magic! However, this is quite ugly... First add a ``title`` attribute to each of the slips so that they get a name in the table of content.
 	  
 Javascripting your presentation
 --------------------------------
