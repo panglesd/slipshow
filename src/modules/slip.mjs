@@ -46,6 +46,15 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	    return this.pauseSlipList[this.getActionIndex()];
 	return false;
     };
+    this.nextStageNeedGoto = () => {
+	if(actionList[this.getActionIndex()+1] instanceof Slip)
+	    return false;
+	if(this.pauseSlipList[this.getActionIndex()+1] instanceof Slip)
+	    return false;
+	if(this.getActionIndex() >= this.getMaxNext())
+	    return false;
+	return true;
+    };
     this.getSubSlipList = function () {
 	return actionList.filter((action) => action instanceof Slip);
     };
@@ -279,13 +288,21 @@ export default function Slip(name, fullName, actionL, ng, options) {
     };
     this.previous = () => {
 	let savedActionIndex = this.getActionIndex();
-	this.doRefresh();
+	this.getEngine().setDoNotMove(true);
+	console.log("gotoslip: we call doRefresh",this.doRefresh());
 	if(savedActionIndex == -1)
 	    return false;
  	let toReturn;
+	while(this.getActionIndex()<savedActionIndex-2)
+	    toReturn = this.next();
+	if(!this.nextStageNeedGoto())
+	    this.getEngine().setDoNotMove(false);
 	while(this.getActionIndex()<savedActionIndex-1)
 	    toReturn = this.next();
+	this.getEngine().setDoNotMove(false);
 	return toReturn;
+
+	// return this.next;
     };
 
     // ******************************
@@ -346,6 +363,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	this.doRefresh();
     };
     this.doRefresh = () => {
+	console.log("gotoslip: doRefresh has been called");
 	this.setActionIndex(-1);
 	let subSlipList = myQueryAll(this.element, ".slip");
 	console.log("mmdebug", clonedElement);

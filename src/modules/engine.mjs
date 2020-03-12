@@ -59,7 +59,14 @@ export default function (root) {
     let winX, winY;
     let currentScale, currentRotate;
     this.getCoord = () => { return {x: winX, y: winY, scale: currentScale};};
+    let doNotMove = false;
+    this.setDoNotMove = m => doNotMove = m;
+    this.getDoNotMove = m => doNotMove;
     this.moveWindow = function (x, y, scale, rotate, delay) {
+	if(this.getDoNotMove()) {
+	    console.log("we cannot move");
+	    return;
+	}
 	console.log("move to", x, y, "with scale, rotate, delay", scale, rotate, delay);
 	currentScale = scale;
 	currentRotate = rotate;
@@ -70,11 +77,14 @@ export default function (root) {
 	    document.querySelector(".scale-container").style.transitionDuration = delay+"s";
 	    document.querySelector(".rotate-container").style.transitionDuration = delay+"s";
 	    universe.style.transitionDuration = delay+"s, "+delay+ "s"; 
-	    universe.style.left = -(x*1440 - 1440/2)+"px";
-	    universe.style.top = -(y*1080 - 1080/2)+"px";
-	    document.querySelector(".scale-container").style.transform = "scale("+(1/scale)+")";
-	    document.querySelector(".rotate-container").style.transform = "rotate("+(rotate)+"deg)";
+	    setTimeout(() => {
+		universe.style.left = -(x*1440 - 1440/2)+"px";
+		universe.style.top = -(y*1080 - 1080/2)+"px";
+		document.querySelector(".scale-container").style.transform = "scale("+(1/scale)+")";
+		document.querySelector(".rotate-container").style.transform = "rotate("+(rotate)+"deg)";
+	    },0);
 	},0);
+	return;
     };
     this.moveWindowRelative = function(dx, dy, dscale, drotate, delay) {
 	this.moveWindow(winX+dx, winY+dy, currentScale+dscale, currentRotate+drotate, delay);
@@ -206,11 +216,14 @@ export default function (root) {
 	}
 	else if(!n) {
 	    this.pop();
-	    let newCurrentSlide = this.getCurrentSlip();
-	    this.gotoSlip(newCurrentSlide);
-	    // newCurrentSlide.incrIndex();
-	    if(stack.length > 1 || newCurrentSlide.getActionIndex() < newCurrentSlide.getMaxNext())
+	    let newCurrentSlip = this.getCurrentSlip();
+	    if(newCurrentSlip.nextStageNeedGoto())
+		this.gotoSlip(newCurrentSlip);
+	    // newCurrentSlip.incrIndex();
+	    if(stack.length > 1 || newCurrentSlip.getActionIndex() < newCurrentSlip.getMaxNext())
 		this.next();
+	    else
+		this.gotoSlip(newCurrentSlip);
 	    // this.showToC();
 	    return true;
 	    // console.log(stack);
@@ -224,7 +237,11 @@ export default function (root) {
     };
     this.previous = () => {
 	let currentSlip = this.getCurrentSlip();
+	// setDoNotMove(true);
+	// let stage = currentSlip.previous2();
+	// setDoNotMove(false);
 	let n = currentSlip.previous();
+	// if(stage == "")
 	console.log("debug previous (currentSlip, n)", currentSlip, n);
 	if(n instanceof Slip) {
 	    while(n.getCurrentSubSlip() instanceof Slip) {
@@ -240,10 +257,11 @@ export default function (root) {
 	else if(!n) {
 	    this.pop();
 	    let newCurrentSlide = this.getCurrentSlip();
-	    this.gotoSlip(newCurrentSlide);
 	    // newCurrentSlide.incrIndex();
 	    if(stack.length > 1 || newCurrentSlide.getActionIndex() > -1)
 		this.previous();
+	    else
+		this.gotoSlip(newCurrentSlide);
 	    // console.log(stack);
 	    // this.showToC();
 	    return true;
@@ -327,7 +345,7 @@ export default function (root) {
 			    , 0, options.delay ? options.delay : 1);
     };
     this.gotoSlip = function(slip, options) {
-	console.log("we goto slip");
+	console.log("we goto slip", slip.element, this.getDoNotMove());
 	options = options ? options : {};
 	console.log("options is ", options);
 	if(slip.element.classList.contains("slip"))
