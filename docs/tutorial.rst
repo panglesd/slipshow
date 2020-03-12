@@ -246,8 +246,119 @@ However, there is a way to couple the "pause" mechanism with other actions than 
 
 .. todo:: The attribute ``emphasize-at-unpause`` is not yet implemented but it will be very soon!
 
+
+Subslips of slips
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+In slips, a presentation is not anymore linear, but has rather the shape of a tree, just like any text, with section, subsection. So a slip can easily contain slips inside itself !
+
+Consider the following example, that you can add as a new slip:
+
+.. code-block:: html
+
+      <div class="slip" immediate-enter>
+          <div class="titre">A review of the numbers</div>
+          <div class="slip-body-container">
+	      <div>First, we consider the positive numbers</div>
+	      <div style="display: flex; justify-content: space-around;">
+		  <div delay="1" scale="0.25" class="slip" auto-enter>
+		      <div class="titre">The integer</div>
+		      <div class="slip-body-container">
+			  <ul>
+			      <li>1 is an integer,</li>
+			      <li pause>2 is an integer,</li>
+			      <li pause>100 is an integer.</li>
+			  </ul>
+		      </div>
+		  </div>
+		  <div delay="1" scale="0.25" class="slip" auto-enter>
+		      <div class="titre">The rationnals</div>
+		      <div class="slip-body-container">
+			  <ul>
+			      <li>1/2 is a rational,</li>
+			      <li pause>2/3 is a rational,</li>
+			      <li pause>567/87 is a rational.</li>
+			  </ul>
+		      </div>
+		  </div>
+		  <div delay="1" scale="0.25" class="slip" auto-enter>
+		      <div class="titre">The reals</div>
+		      <div class="slip-body-container">
+			  <ul>
+			      <li>π is a real,</li>
+			      <li pause>e is a real,</li>
+			      <li pause>d is a real.</li>
+			  </ul>
+		      </div>
+		  </div>
+	      </div>
+	      <div pause>Then, the negative one</div>
+	      <div style="display: flex; justify-content: space-around;">
+		  <div delay="1" scale="0.25" class="slip" auto-enter>
+		      <div class="titre">The integer</div>
+		      <div class="slip-body-container">
+			  <ul>
+			      <li>-1 is an integer,</li>
+			      <li pause>-2 is an integer,</li>
+			      <li pause>-100 is an integer.</li>
+			  </ul>
+		      </div>
+		  </div>
+		  <div delay="1" scale="0.25" class="slip" auto-enter>
+		      <div class="titre">The rationnals</div>
+		      <div class="slip-body-container">
+			  <ul>
+			      <li>-1/2 is a rational,</li>
+			      <li pause>-2/3 is a rational,</li>
+			      <li pause>-567/87 is a rational.</li>
+			  </ul>
+		      </div>
+		  </div>
+		  <div delay="1" scale="0.25" class="slip" auto-enter>
+		      <div class="titre">The reals</div>
+		      <div class="slip-body-container">
+			  <ul>
+			      <li>-π is a real,</li>
+			      <li pause>-e is a real,</li>
+			      <li pause>-d is a real.</li>
+			  </ul>
+		      </div>
+		  </div>
+	      </div>
+	  </div>
+      </div>
+
+
+In this example, there are several new things:
+
+* The flexbox ``div`` container is just plain css to make the subslips well aligned,
+* The ``scale`` attribute scales the slip. It is better than a css transform as not only the rendering is smaller, but also the size.
+* The ``delay`` attribute make the camera move slowly to enter the slip.
+
+.. note:: The difference between ``immediate-enter`` and ``auto-enter`` is that a slip with ``immediate-enter`` will be entered before the pause, while ``auto-enter`` will be entered after one stop.
+
+.. note:: The transition back to the parent slip is not very good at this point. This is because the parent slip has ``delay="0"`` by default. We wanted this as we do not want to enter this slip "smoothly" the first time. We will see in Javascripting your presentation how to modify this.
+
+The table of content
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+When you press ``t`` during your presentation. Magic!
+	  
 Javascripting your presentation
 --------------------------------
+
+Let us now focus on the second part of the file: the Javascript. Although it is not necessary to modify it, in some special cases you might need to specify it.
+
+.. code-block:: html
+
+       <script>
+       	 let engine = new Engine(document.querySelector("#rootSlip"));
+	 let controller = new Controller(engine);
+	 // customize the presentation here with JS 
+	 engine.start();
+       </script>
+
+The object ``engine`` what the object that will tak care of the presentation: how to handle 
 
 Themes
 -----------------------------
