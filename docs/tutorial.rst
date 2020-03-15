@@ -8,7 +8,7 @@ Slip.js is a library for displaying slips. The easiest way is to include the lib
 ..
    You can also install slip-js it using npm.
 
-A minimal file, using a CDN
+A minimal file
 ---------------------------
 
 A presentation is just a html file, together with some javascript and css. For simple presentation, you will only need to write some html.
@@ -342,8 +342,12 @@ In this example, there are several new things:
 The table of content
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-When you press ``t`` during your presentation. Magic! However, this is quite ugly... First add a ``title`` attribute to each of the slips so that they get a name in the table of content.
-	  
+When you press ``t`` during your presentation. Magic! However, this is quite ugly... and will be improved shortly. You can first add a ``toc-title`` attribute to each of the slips so that they get a name in the table of content.
+
+.. code-block:: html
+
+      <div class="slip" immediate-enter toc-title="Name that will appear in the table of content">
+
 Javascripting your presentation
 --------------------------------
 
