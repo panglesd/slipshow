@@ -59,11 +59,7 @@ Create a file named ``myPresentation.html`` and copy-paste the minimal example. 
 
 Writing standard slips
 -----------------------
-In this section, we learn how to add slips.
-
-Adding a plain slip
-^^^^^^^^^^^^^^^^^^^
-Modify the file ``myPresentation.html`` to turn:
+In this section, we learn how to add slips. Everything will be added inside the ``root`` element, that is, inbetween the opening ``<div class="root" id="rootSlip">`` and the closing ``</div>``:
 
 .. code-block:: html
 
@@ -72,12 +68,13 @@ Modify the file ``myPresentation.html`` to turn:
          <!-- Add the slips here -->
        </div>
 
-into
+
+Adding a plain slip
+^^^^^^^^^^^^^^^^^^^
+Modify the file ``myPresentation.html`` to add the following slip:
 
 .. code-block:: html
 
-     <!-- This is the presentation -->
-       <div class="root" id="rootSlip">
          <div class="slip" immediate-enter>
            <div class="titre">My first slip</div>
            <div class="slip-body-container">
@@ -89,7 +86,6 @@ into
 	     </ul>
 	   </div>
 	 </div>
-       </div>
 
 Now save the file and reload the page. Suddenly there is something in the screen! Let us describe what each of these things mean.
 
@@ -348,10 +344,48 @@ When you press ``t`` during your presentation. Magic! However, this is quite ugl
 
       <div class="slip" immediate-enter toc-title="Name that will appear in the table of content">
 
+.. todo:: The way the table of content looks like will very likely change a lot, please tell me how you would like it to be.
+      
 Javascripting your presentation
 --------------------------------
 
-Let us now focus on the second part of the file: the Javascript. Although it is not necessary to modify it, in some special cases you might need to specify it.
+One of the advantage of slip is that you can make animation. In order to start your animation or any special events, you will have to execute javascript at some steps.
+
+Executing Javascript in the flow
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Following other events, there are two ways to execute javascript: with the ``execute-at`` and the ``execute-at-unpause`` attributes. You need to enclose the script you want to execute inside script tags, with type ``slip-script``.
+
+.. code-block:: html
+
+		<script type="slip-script">
+		  // Your script here, with variable "slip"
+		</script>
+
+For instance, recall that the delay for the slip named "A review of the numbers" was set to 0, but when we leave the subslips, we want it to be 1. Just insert wherever in the corresponding slip (but not in a subslip) the following code:
+
+.. code-block:: html
+
+		<script type="slip-script" execute-at="1">
+		  slip.delay = 1;
+		</script>
+
+However, one should be very careful when making javascript changes. Indeed, slip cannot automatically (yet) revert your scripts. You should revert your changes at step 0:
+
+.. code-block:: html
+
+		<script type="slip-script" execute-at="0">
+		  slip.delay = 0;
+		</script>
+		<script type="slip-script" execute-at="1">
+		  slip.delay = 1;
+		</script>
+
+
+Program your presentation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Let us now focus on the second part of the file: the Javascript. Although it is not necessary to modify it, in some special cases you might need to change a few things.
 
 .. code-block:: html
 
@@ -362,7 +396,6 @@ Let us now focus on the second part of the file: the Javascript. Although it is 
 	 engine.start();
        </script>
 
-The object ``engine`` what the object that will tak care of the presentation: how to handle 
+Modifying this part is somehow more advanced, and thus out of the scope of a tutorial. We will still consider the following scenario: we just want to specify the order of the slips. This way, it is very easy to skip a part by just commenting a few lines, if you want to have a "light" version of your presentation.
 
-Themes
------------------------------
+To be continued
