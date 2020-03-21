@@ -6,8 +6,30 @@ List of all keywords
 The \*-at attributes
 ---------------------------
 
-* ``down-at``
-* ``up-at``
-* ``center-at``
+* ``mk-visible-at``
+* ``mk-hidden-at``
+* ``mk-emphasize-at``
+* ``mk-unemphasize-at``
 * ``emphasize-at``
+* ``chg-visib-at``
+* ``up-at``
+* ``down-at``
+* ``center-at``
+* ``static-at``
 * ``exec-at``
+
+The \*-at-unpause attributes
+-----------------------------
+
+* ``up-at-unpause``
+* ``down-at-unpause``
+* ``center-at-unpause``
+
+The pause attributes
+---------------------------
+
+* ``pause``
+* ``step``
+* ``auto-enter``
+* ``immediate-enter``
+

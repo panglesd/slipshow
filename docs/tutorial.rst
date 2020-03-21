@@ -3,7 +3,14 @@
 Tutorial
 ========
 
-Slip.js is a library for displaying slips. The easiest way is to include the library using a CDN, this is the option we choose to use in this tutorial for its simplicity. However, in this case you will not be able to display your slips without internet access. To use a local version, see :ref:`getting-started`.
+Slip.js is a library for displaying slips. A presentation is just an ``html`` file. You do not need much knowledge on either ``html`` nor ``css`` and ``javascript`` to create slip presentations, but it allows any customization of your slips.
+
+In this tutorial, you will create your first slip presentation. It is entirely self-contained but you should take a look at :ref:`getting-started` to know the different ways of creating a minimal file and starting a project. The first part is about the creation of simple presentation, following the usual concept of slides. The second part explains more advanced concepts on what makes slips different from other slideshow frameworks.
+
+..
+   Writing slips should not differ too much from writing beamer presentation, when not using any of the advanced functionalities: there an delimiters for . The syntax is different, and there are 
+..
+   The easiest way is to include the library using a CDN, this is the option we choose to use in this tutorial for its simplicity. However, in this case you will not be able to display your slips without internet access. To use a local version, see :ref:`getting-started`.
 
 ..
    You can also install slip-js it using npm.
@@ -11,9 +18,10 @@ Slip.js is a library for displaying slips. The easiest way is to include the lib
 A minimal file
 ---------------------------
 
-A presentation is just a html file, together with some javascript and css. For simple presentation, you will only need to write some html.
+A presentation is just an ``html`` file. You can find a more detailed presentation on how to start your project, but for this tutorial, just copy the following text into a file that you name for instance ``myPresentation.html``.
 
-The minimal example of a slip presentation still need to include both the css and the javascript. Either you have the files locally, or you include them from a CDN, a "Content Delivery Network". In the second option, a minimal file looks like the following:
+..
+   The minimal example of a slip presentation still need to include both the css and the javascript. Either you have the files locally, or you include them from a CDN, a "Content Delivery Network". In the second option, a minimal file looks like the following:
 
 .. code-block:: html
 
@@ -55,8 +63,42 @@ The minimal example of a slip presentation still need to include both the css an
        #rootSlip.root
 
 
-Create a file named ``myPresentation.html`` and copy-paste the minimal example. Now open it with a browser. What do you see? Nothing!
+..
+   Create a file named ``myPresentation.html`` and copy-paste the minimal example.
 
+Now open ``myPresentation.html`` with a browser, by double clicking on the file or selecting ``File > Open > "Your file"``. What do you see? Nothing! Let's inspect what is in the file.
+
+.. code-block:: html
+
+       <!-- Add css and theme -->
+       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/panglesd/slip-js@gh-pages/css/slip.css">
+       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/panglesd/slip-js@gh-pages/css/theorem.css">
+
+Those lines include the rules to display the presentation. The first one is mandatory for the presentation, while the second one corresponds to the theme: the background color, how to display the title, the blocks and theorems...
+
+.. code-block:: html
+
+	<!-- This is the presentation -->
+        <div class="root" id="rootSlip">
+          <!-- Add the slips here -->
+        </div>
+
+This delimits where the slips will be put. In this tutorial, we will (almost) only modify this part.
+
+.. code-block:: html
+
+     <!-- Include the library -->
+       <script src="https://cdn.jsdelivr.net/gh/panglesd/slip-js@gh-pages/slip-lib.cdn.min.js"></script>
+       <!-- Start the presentation () -->
+       <script>
+       	 let engine = new Engine(document.querySelector("#rootSlip"));
+	 let controller = new Controller(engine);
+	 // customize the presentation here with JS 
+	 engine.start();
+       </script>
+
+This is to include the library, and start the engine. Usually, you won't have to modify this.
+		
 Writing standard slips
 -----------------------
 In this section, we learn how to add slips. Everything will be added inside the ``root`` element, that is, inbetween the opening ``<div class="root" id="rootSlip">`` and the closing ``</div>``:
@@ -87,21 +129,24 @@ Modify the file ``myPresentation.html`` to add the following slip:
 	   </div>
 	 </div>
 
-Now save the file and reload the page. Suddenly there is something in the screen! Let us describe what each of these things mean.
+Now save the file and reload the page in the browser. Suddenly there is something in the screen! Let us describe what each of these things mean.
 
 * ``<div class="slip">...</div>`` defines the boundary of the new slip.
 * the attribute ``immediate-enter`` ensures that the slips will be entered in order.
-* ``<div class="titre">...</div>`` defines the title of the slip. Notice the french orientation! (TODO: remove the french orientation)
+* ``<div class="titre">...</div>`` defines the title of the slip. Notice the french touch! (TODO: remove the french touch)
 * ``<div class="slip-body-container">...</div>`` defines the body of the slip. It includes margin, padding,...
 
-.. note:: If you don't include the ``div`` with ``class=slip-body-container``, the slip will have no margin. It can be usefull if you want to display something "fullscreen".
+.. note:: If you don't include the ``<div class="slip-body-container"> ... </div>``, the slip will have no margin. It can be usefull if you want to display something "fullscreen".
   
-The rest is pure html. For latex users, just translate your ``\begin{itemize}`` and ``\end{itemize}`` respectively into ``<ul>`` and ``</ul>``, and you ``\item`` into ``<li>...</li>``.
+The rest is pure `html <https://www.w3schools.com/html/html_intro.asp>`_. You will need at least a bit of understanding of html to be comfortable. But I do think that these skills are very useful in our world, and not so hard to learn! There is a discussion on the html syntax `here <todo>`_ (soon).
+
+..
+   For latex users, just translate your ``\begin{itemize}`` and ``\end{itemize}`` respectively into ``<ul>`` and ``</ul>``, and you ``\item`` into ``<li>...</li>``.
 
 Making pauses
 ^^^^^^^^^^^^^
 
-Add another slip with the following content:
+Add another slip, just after the closing tag of the previous one, with the following content:
 
 .. code-block:: html
 
@@ -130,12 +175,12 @@ Reload the page and push the right arrow. You see the new slip appearing. Suppos
 
 Reload and see what it does! It does what was expected.
 
-.. warning:: You should never let some plain text be in a slip, otherwise the "pause" mechanism won't work for it! This is because css styling cannot be made to text node. For instance, try to remove the "And you?" outside of a div, it won't be affected by the pause.
+.. warning:: You should never let some plain text be in a slip, otherwise the "pause" mechanism won't work for it! This is because css styling cannot be made to text node. For instance, try to move the "And you?" outside of a div, it won't be affected by the pause.
 
 Emphasizing
 ^^^^^^^^^^^^^
 
-It is common in presentation to emphasize or highlight some words. The following slip shows how it works in slip, add it to your file.
+It is common in presentation to emphasize or highlight some words. The following slip shows how it works in slip-js, add it after the last one.
 
 .. code-block:: html
 
@@ -146,11 +191,11 @@ It is common in presentation to emphasize or highlight some words. The following
 	   </div>
 	 </div>
 
-This is pretty self-explanatory! When the attribute emphasize-at is setted to a list of numbers separated by spaces, the content will be emphasized exactly at these steps! There are several other way to emphasize depending on the need, such as ``mk-emphasize-at``, see the doc.
+This is pretty self-explanatory! When the attribute ``emphasize-at`` is set to a list of numbers separated by spaces, for instance ``emphasize-at="1 4"``, the content will be emphasized exactly at these steps, that is, step 1 and 4 in the example. There are several other ways to emphasize depending on the need, such as ``mk-emphasize-at``, or soonish ``emphasize-at-unpause``, see the :ref:`listAttributes`.
 
 Stating theorems
 ^^^^^^^^^^^^^^^^^
-To state a theorem, juste create a ``div`` with the right class, that is either ``block``, ``definition``, ``theorem`` or ``example``. You can also give a title to any of those with the attribute ``title``.
+To state a theorem, juste create a ``div`` with the right class, that is either ``block``, ``definition``, ``theorem`` or ``example``. You can also give a title with the attribute ``title``.
 
 For instance, add the following slip to your presentation and reload it.
 
@@ -185,7 +230,7 @@ Moving the point of view
 
 Sometimes, you need to show things below the bottom of the slip. You can do this by using one of the attribute ``top-at``,  ``center-at``,  ``bottom-at``, which moves the screen to make the element be at the top (respectively center, bottom) of the screen.
 
-For instance, copy paste this new slip and test the different attributes.
+For instance, copy paste this new slip and test the attributes ``down-at``.
 
 .. code-block:: html
 		
@@ -238,7 +283,7 @@ However, there is a way to couple the "pause" mechanism with other actions than 
 	</div>
       </div>
 
-.. tip:: You can make the ``*-at-unpause`` act on another element by specifying its ``id`` as value of the attribute.
+.. tip:: You can make the ``*-at-unpause`` act on another element by specifying its ``id`` as value of the attribute. For instance, ``<div pause center-at-unpause="thm1">...</div><div id="thm1" class="theorem">...</div>`` will center the window around the theorem when the first ``div`` is unpaused.
 
 .. todo:: The attribute ``emphasize-at-unpause`` is not yet implemented but it will be very soon!
 
@@ -246,7 +291,7 @@ However, there is a way to couple the "pause" mechanism with other actions than 
 Subslips of slips
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-In slips, a presentation is not anymore linear, but has rather the shape of a tree, just like any text, with section, subsection. So a slip can easily contain slips inside itself !
+In slips-js, a presentation is not anymore linear, but has rather the shape of a tree. So a slip can easily contain slips inside itself!
 
 Consider the following example, that you can add as a new slip:
 
