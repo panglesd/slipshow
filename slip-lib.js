@@ -102,8 +102,10 @@ function IEngine (root) {
     this.moveWindow = function (x, y, scale, rotate, delay) {
 	if(this.getDoNotMove()) {
 	    console.log("we cannot move");
+	    console.log("previous is ca we cannot move !");
 	    return;
 	}
+	console.log("previous is ca getDoNotMove !", x,y,scale, rotate, delay, this.getDoNotMove());
 	console.log("move to", x, y, "with scale, rotate, delay", scale, rotate, delay);
 	currentScale = scale;
 	currentRotate = rotate;
@@ -272,7 +274,8 @@ function IEngine (root) {
 	// Do this.next() untill the stack change
 	while(!this.next()) {}
     };
-    this.previous = () => {
+    this.previous = (options) => {
+	console.log("previous is called with option", options);
 	let currentSlip = this.getCurrentSlip();
 	// setDoNotMove(true);
 	// let stage = currentSlip.previous2();
@@ -286,7 +289,10 @@ function IEngine (root) {
 		n = n.getCurrentSubSlip();
 	    }
 	    this.push(n);
-	    this.gotoSlip(n);
+	    console.log("previous is ca GOTOSLIP FROM 1", options);
+	    
+	    this.gotoSlip(n, options);
+	    // this.gotoSlip(n, {delay: currentSlip.delay});
 		
 	    // this.showToC();
 	    this.updateCounter();
@@ -296,14 +302,23 @@ function IEngine (root) {
 	    this.pop();
 	    let newCurrentSlide = this.getCurrentSlip();
 	    // newCurrentSlide.incrIndex();
+	    console.log("previous is ca currentDelay, delay", currentSlip.currentDelay , currentSlip.delay);
+	    
 	    if(stack.length > 1 || newCurrentSlide.getActionIndex() > -1)
-		this.previous();
-	    else
-		this.gotoSlip(newCurrentSlide);
+		this.previous({delay: (currentSlip.currentDelay ? currentSlip.currentDelay : currentSlip.delay )});
+	    else {
+		this.gotoSlip(newCurrentSlide, options);
+		console.log("previous is ca GOTOSLIP FROM 2", options);
+	    }
+		// this.gotoSlip(newCurrentSlide, {delay: currentSlip.delay});
 	    // console.log(stack);
 	    // this.showToC();
 	    this.updateCounter();
 	    return true;
+	} else if(options){
+	    setTimeout(() => {
+		this.gotoSlip(currentSlip, options);
+	    },0);
 	}
 	// this.showToC();
 	this.updateCounter();
@@ -385,25 +400,31 @@ function IEngine (root) {
 			    , 0, options.delay ? options.delay : 1);
     };
     this.gotoSlip = function(slip, options) {
+	console.log("previous is ca goto slip", options, slip.element, this.getDoNotMove());
 	console.log("we goto slip", slip.element, this.getDoNotMove());
 	options = options ? options : {};
 	console.log("options is ", options);
 	if(slip.element.classList.contains("slip"))
-	    setTimeout(() => {
+	{
+	     setTimeout(() => {
 		let coord = slip.findSlipCoordinate();
 		if(typeof slip.currentX != "undefined" && typeof slip.currentY != "undefined") {
-		    this.moveWindow(slip.currentX, slip.currentY, coord.scale, slip.rotate, options.delay ? options.delay : slip.delay);
+		    console.log("previous is ca ORIGIN 1", slip.currentX, slip.currentY, this.getDoNotMove(), options);
+		    this.moveWindow(slip.currentX, slip.currentY, coord.scale, slip.rotate, typeof(options.delay)!="undefined" ? options.delay : (typeof(slip.currentDelay)!="undefined" ? slip.currentDelay : slip.delay));
 		} else {
-		    slip.currentX = coord.x; slip.currentY = coord.y;
-		    this.moveWindow(coord.x, coord.y, coord.scale, slip.rotate, options.delay ? options.delay : slip.delay);
+		    slip.currentX = coord.x; slip.currentY = coord.y; slip.currentDelay = slip.delay;
+		    console.log("previous is ca ORIGIN 2", coord.x, coord.y, this.getDoNotMove());
+		    this.moveWindow(coord.x, coord.y, coord.scale, slip.rotate, typeof(options.delay)!="undefined" ? options.delay : (typeof(slip.currentDelay)!="undefined" ? slip.currentDelay : slip.delay));
 		}
-	    },0);
-	else
-	    setTimeout(() => {
+	     },0);
+	}
+	else {
+	     setTimeout(() => {
 		console.log("debug slip element", slip.element);
 		let coord = this.getCoordinateInUniverse(slip.element);
-		this.moveWindow(coord.centerX, coord.centerY, Math.max(coord.width, coord.height), 0, options.delay ? options.delay : slip.delay);
-	    },0);
+		 this.moveWindow(coord.centerX, coord.centerY, Math.max(coord.width, coord.height), 0, typeof(options.delay)!="undefined" ? options.delay : slip.delay);
+	     },0);
+	}
     };
     let rootSlip = new Slip(root.id, "Presentation", [], this, {});
     let stack = [rootSlip];
@@ -661,6 +682,7 @@ function Slip$1(name, fullName, actionL, ng, options) {
 	 "center-at",
 	 "static-at",
 	 "exec-at",
+	 "enter-at",
 	].forEach((attr) => {
 	     this.queryAll("*["+attr+"]").forEach((elem) => {
 		 elem.getAttribute(attr).split(" ").forEach((strMax) => {
@@ -868,18 +890,22 @@ function Slip$1(name, fullName, actionL, ng, options) {
     };
     this.previous = () => {
 	let savedActionIndex = this.getActionIndex();
+	let savedDelay = this.currentDelay;
 	this.getEngine().setDoNotMove(true);
 	console.log("gotoslip: we call doRefresh",this.doRefresh());
 	if(savedActionIndex == -1)
 	    return false;
  	let toReturn;
-	while(this.getActionIndex()<savedActionIndex-2)
+	while(this.getActionIndex()<savedActionIndex-1){
+	    console.log("previous is ca we do next", this.getEngine().getDoNotMove());
 	    toReturn = this.next();
-	if(!this.nextStageNeedGoto())
-	    this.getEngine().setDoNotMove(false);
-	while(this.getActionIndex()<savedActionIndex-1)
-	    toReturn = this.next();
-	this.getEngine().setDoNotMove(false);
+	}
+	// if(!this.nextStageNeedGoto())
+	//     this.getEngine().setDoNotMove(false);
+	// while(this.getActionIndex()<savedActionIndex-1)
+	//     toReturn = this.next();
+	setTimeout(() => {this.getEngine().setDoNotMove(false);},0);
+	this.getEngine().gotoSlip(this, {delay:savedDelay});
 	return toReturn;
 
 	// return this.next;
@@ -955,7 +981,9 @@ function Slip$1(name, fullName, actionL, ng, options) {
 	this.firstVisit();
 	delete(this.currentX);
 	delete(this.currentY);
-	engine.gotoSlip(this);
+	delete(this.currentDelay);
+	console.log("previous is ca GOTOSLIP FROM 3", options, this.getEngine().getDoNotMove());
+	this.getEngine().gotoSlip(this);
     };
 
     // ******************************
@@ -969,9 +997,11 @@ function Slip$1(name, fullName, actionL, ng, options) {
 	    if (typeof offset == "undefined") offset = 0.0125;
 	    let coord = this.findSlipCoordinate();
 	    let d = ((elem.offsetTop)/1080-offset)*coord.scale;
-	    this.currentX = coord.x;
-	    this.currentY = coord.y+d;
-	    engine.moveWindow(coord.x, coord.y+d, coord.scale, this.rotate, delay);
+	    this.moveWindow(coord.x, coord.y+d, coord.scale, this.rotate, delay);
+	    // this.currentX = coord.x;
+	    // this.currentY = coord.y+d;
+	    // this.currentDelay = delay;
+	    // engine.moveWindow(coord.x, coord.y+d, coord.scale, this.rotate, delay);
 	},0);
     };
     this.moveDownTo = (selector, delay, offset) => {
@@ -982,9 +1012,11 @@ function Slip$1(name, fullName, actionL, ng, options) {
 	    if (typeof offset == "undefined") offset = 0.0125;
 	    let coord = this.findSlipCoordinate();
 	    let d = ((elem.offsetTop+elem.offsetHeight)/1080 - 1 + offset)*coord.scale;
-	    this.currentX = coord.x;
-	    this.currentY = coord.y+d;
-	    engine.moveWindow(coord.x, coord.y+d, coord.scale, this.rotate, delay);
+	    this.moveWindow(coord.x, coord.y+d, coord.scale, this.rotate, delay);
+	    // this.currentX = coord.x;
+	    // this.currentY = coord.y+d;
+	    // this.currentDelay = delay;
+	    // engine.moveWindow(coord.x, coord.y+d, coord.scale, this.rotate, delay);
 	},0);
     };
     this.moveCenterTo = (selector, delay, offset) => {
@@ -995,10 +1027,22 @@ function Slip$1(name, fullName, actionL, ng, options) {
 	    if (typeof offset == "undefined") offset = 0;
 	    let coord = this.findSlipCoordinate();
 	    let d = ((elem.offsetTop+elem.offsetHeight/2)/1080-1/2+offset)*coord.scale;
-	    this.currentX = coord.x;
-	    this.currentY = coord.y+d;
-	    engine.moveWindow(coord.x, coord.y+d, coord.scale, this.rotate, delay);
+	    this.moveWindow(coord.x, coord.y+d, coord.scale, this.rotate, delay);
+	    // this.currentX = coord.x;
+	    // this.currentY = coord.y+d;
+	    // this.currentDelay = delay;
+	    // engine.moveWindow(coord.x, coord.y+d, coord.scale, this.rotate, delay);
 	},0);
+    };
+    this.moveWindow = (x,y,scale,rotate, delay) => {
+	this.currentX = x;
+	this.currentY = y;
+	this.currentDelay = delay;
+	console.log("previous is ca we try to move win", this.getEngine().getDoNotMove());
+	console.log("previous is ca ORIGIN 3", x, y, this.getEngine().getDoNotMove());
+//	setTimeout(() => {
+	    this.getEngine().moveWindow(x, y, scale, rotate, delay);
+//	}, 0);
     };
     this.reveal = (selector) => {
 	this.query(selector).style.opacity = "1";
