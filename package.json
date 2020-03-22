@@ -1,32 +1,33 @@
 {
-   "name": "slip-js",
-   "version": "1.0.0",
-   "description": "This is not another slide engine, but a slip engine.",
-   "main": "./dist/slip-lib.js",
-   "files": [
-      "./dist/slip-lib.js",
-      "./dist/css/slip.css",
-      "./dist/css/theorem.css"
-   ],
-   "repository": "git@github.com:panglesd/slip-js.git",
-   "author": "panglesd",
-   "license": "MIT",
-   "scripts": {
-      "dev": "parcel src/slip-lib.js",
-      "old-build": "parcel build src/slip-lib.js src/css/*.css",
-      "build": "node build/build.js"
-   },
-   "devDependencies": {
-      "@babel/cli": "^7.8.4",
-      "@babel/core": "^7.8.7",
-      "@babel/preset-env": "^7.8.7",
-      "@rollup/plugin-commonjs": "^11.0.2",
-      "@rollup/plugin-node-resolve": "^7.1.1",
-      "parcel-bundler": "^1.12.4",
-      "rollup": "^2.0.2",
-      "rollup-plugin-babel": "^4.4.0",
-      "rollup-plugin-css-only": "^2.0.0",
-      "rollup-plugin-terser": "^5.2.0",
-      "shelljs": "^0.8.3"
-   }
+    "name": "slip-js",
+    "version": "1.0.0",
+    "description": "This is not another slide engine, but a slip engine.",
+    "main": "./dist/slip-lib.js",
+    "files": [
+	"./dist/slip-lib.js",
+	"./dist/css/slip.css",
+	"./dist/css/theorem.css"
+    ],
+    "repository": "git@github.com:panglesd/slip-js.git",
+    "author": "panglesd",
+    "license": "MIT",
+    "scripts": {
+	"dev": "parcel src/slip-lib.js",
+	"old-build": "parcel build src/slip-lib.js src/css/*.css",
+	"build": "node build/build.js",
+	"watch": "rollup -w -c build/rollup.config.js"
+    },
+    "devDependencies": {
+	"@babel/cli": "^7.8.4",
+	"@babel/core": "^7.8.7",
+	"@babel/preset-env": "^7.8.7",
+	"@rollup/plugin-commonjs": "^11.0.2",
+	"@rollup/plugin-node-resolve": "^7.1.1",
+	"parcel-bundler": "^1.12.4",
+	"rollup": "^2.0.2",
+	"rollup-plugin-babel": "^4.4.0",
+	"rollup-plugin-css-only": "^2.0.0",
+	"rollup-plugin-terser": "^5.2.0",
+	"shelljs": "^0.8.3"
+    }
 }
