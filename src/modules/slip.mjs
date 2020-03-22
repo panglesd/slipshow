@@ -80,6 +80,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	 "center-at",
 	 "static-at",
 	 "exec-at",
+	 "enter-at",
 	].forEach((attr) => {
 	     this.queryAll("*["+attr+"]").forEach((elem) => {
 		 elem.getAttribute(attr).split(" ").forEach((strMax) => {
@@ -288,18 +289,22 @@ export default function Slip(name, fullName, actionL, ng, options) {
     };
     this.previous = () => {
 	let savedActionIndex = this.getActionIndex();
+	let savedDelay = this.currentDelay;
 	this.getEngine().setDoNotMove(true);
 	console.log("gotoslip: we call doRefresh",this.doRefresh());
 	if(savedActionIndex == -1)
 	    return false;
  	let toReturn;
-	while(this.getActionIndex()<savedActionIndex-2)
+	while(this.getActionIndex()<savedActionIndex-1){
+	    console.log("previous is ca we do next", this.getEngine().getDoNotMove());
 	    toReturn = this.next();
-	if(!this.nextStageNeedGoto())
-	    this.getEngine().setDoNotMove(false);
-	while(this.getActionIndex()<savedActionIndex-1)
-	    toReturn = this.next();
-	this.getEngine().setDoNotMove(false);
+	}
+	// if(!this.nextStageNeedGoto())
+	//     this.getEngine().setDoNotMove(false);
+	// while(this.getActionIndex()<savedActionIndex-1)
+	//     toReturn = this.next();
+	setTimeout(() => {this.getEngine().setDoNotMove(false);},0);
+	this.getEngine().gotoSlip(this, {delay:savedDelay});
 	return toReturn;
 
 	// return this.next;
@@ -375,7 +380,9 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	this.firstVisit();
 	delete(this.currentX);
 	delete(this.currentY);
-	engine.gotoSlip(this);
+	delete(this.currentDelay);
+	console.log("previous is ca GOTOSLIP FROM 3", options, this.getEngine().getDoNotMove());
+	this.getEngine().gotoSlip(this);
     };
 
     // ******************************
@@ -389,9 +396,11 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	    if (typeof offset == "undefined") offset = 0.0125;
 	    let coord = this.findSlipCoordinate();
 	    let d = ((elem.offsetTop)/1080-offset)*coord.scale;
-	    this.currentX = coord.x;
-	    this.currentY = coord.y+d;
-	    engine.moveWindow(coord.x, coord.y+d, coord.scale, this.rotate, delay);
+	    this.moveWindow(coord.x, coord.y+d, coord.scale, this.rotate, delay);
+	    // this.currentX = coord.x;
+	    // this.currentY = coord.y+d;
+	    // this.currentDelay = delay;
+	    // engine.moveWindow(coord.x, coord.y+d, coord.scale, this.rotate, delay);
 	},0);
     };
     this.moveDownTo = (selector, delay, offset) => {
@@ -402,9 +411,11 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	    if (typeof offset == "undefined") offset = 0.0125;
 	    let coord = this.findSlipCoordinate();
 	    let d = ((elem.offsetTop+elem.offsetHeight)/1080 - 1 + offset)*coord.scale;
-	    this.currentX = coord.x;
-	    this.currentY = coord.y+d;
-	    engine.moveWindow(coord.x, coord.y+d, coord.scale, this.rotate, delay);
+	    this.moveWindow(coord.x, coord.y+d, coord.scale, this.rotate, delay);
+	    // this.currentX = coord.x;
+	    // this.currentY = coord.y+d;
+	    // this.currentDelay = delay;
+	    // engine.moveWindow(coord.x, coord.y+d, coord.scale, this.rotate, delay);
 	},0);
     };
     this.moveCenterTo = (selector, delay, offset) => {
@@ -415,10 +426,22 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	    if (typeof offset == "undefined") offset = 0;
 	    let coord = this.findSlipCoordinate();
 	    let d = ((elem.offsetTop+elem.offsetHeight/2)/1080-1/2+offset)*coord.scale;
-	    this.currentX = coord.x;
-	    this.currentY = coord.y+d;
-	    engine.moveWindow(coord.x, coord.y+d, coord.scale, this.rotate, delay);
+	    this.moveWindow(coord.x, coord.y+d, coord.scale, this.rotate, delay);
+	    // this.currentX = coord.x;
+	    // this.currentY = coord.y+d;
+	    // this.currentDelay = delay;
+	    // engine.moveWindow(coord.x, coord.y+d, coord.scale, this.rotate, delay);
 	},0);
+    };
+    this.moveWindow = (x,y,scale,rotate, delay) => {
+	this.currentX = x;
+	this.currentY = y;
+	this.currentDelay = delay;
+	console.log("previous is ca we try to move win", this.getEngine().getDoNotMove());
+	console.log("previous is ca ORIGIN 3", x, y, this.getEngine().getDoNotMove());
+//	setTimeout(() => {
+	    this.getEngine().moveWindow(x, y, scale, rotate, delay);
+//	}, 0);
     };
     this.reveal = (selector) => {
 	this.query(selector).style.opacity = "1";
