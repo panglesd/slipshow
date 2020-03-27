@@ -174,7 +174,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	    this.executeScript("#"+pause.getAttribute("exec-at-unpause"));	
 	if(pause.hasAttribute("reveal-at-unpause"))
 	    if(pause.getAttribute("reveal-at-unpause") == "")
-		this.reaveal(pause);
+		this.reveal(pause);
 	else
 	    this.reveal("#"+pause.getAttribute("exec-at-unpause"));
     };
