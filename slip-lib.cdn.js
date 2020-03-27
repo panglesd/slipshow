@@ -878,6 +878,7 @@ var SlipLib = (function (exports) {
               }
 
               if (pause.hasAttribute("center-at-unpause")) if (pause.getAttribute("center-at-unpause") == "") this.moveCenterTo(pause, 1);else this.moveCenterTo("#" + pause.getAttribute("center-at-unpause"), 1);
+              if (pause.hasAttribute("exec-at-unpause")) if (pause.getAttribute("exec-at-unpause") == "") this.executeScript(pause);else this.executeScript("#" + pause.getAttribute("center-at-unpause"));
             } else pause.setAttribute("pause", d - 1);
 
             this.updatePauseAncestors();
@@ -941,7 +942,7 @@ var SlipLib = (function (exports) {
         });
         this.queryAll("*[exec-at]").forEach(elem => {
           let toExec = elem.getAttribute("exec-at").split(" ").map(str => parseInt(str));
-          if (toExec.includes(actionIndex)) new Function("slip", elem.innerHTML)(this);
+          if (toExec.includes(actionIndex)) this.executeScript(elem);
         });
       };
 
@@ -1079,9 +1080,15 @@ var SlipLib = (function (exports) {
         console.log("previous is ca GOTOSLIP FROM 3", options, this.getEngine().getDoNotMove());
         this.getEngine().gotoSlip(this);
       }; // ******************************
-      // Movement and hide/show
+      // Movement, execution and hide/show
       // ******************************
 
+
+      this.executeScript = selector => {
+        let elem;
+        if (typeof selector == "string") elem = this.query(selector);else elem = selector;
+        new Function("slip", elem.innerHTML)(this);
+      };
 
       this.moveUpTo = (selector, delay, offset) => {
         setTimeout(() => {
