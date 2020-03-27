@@ -750,6 +750,35 @@ function Slip$1(name, fullName, actionL, ng, options) {
 	    pause.classList.add("pauseAncestor");
 	    pause = pause.parentElement;
 	}    };
+    this.unpause = (pause) => {
+	if(pause.hasAttribute("down-at-unpause")) {
+	    if(pause.getAttribute("down-at-unpause") == "")
+		this.moveDownTo(pause, 1);
+	    else
+		this.moveDownTo("#"+pause.getAttribute("down-at-unpause"), 1);			
+	}
+	if(pause.hasAttribute("up-at-unpause")) {
+	    if(pause.getAttribute("up-at-unpause") == "")
+		this.moveUpTo(pause, 1);
+	    else
+		this.moveUpTo("#"+pause.getAttribute("up-at-unpause"), 1);
+	}
+	if(pause.hasAttribute("center-at-unpause"))
+	    if(pause.getAttribute("center-at-unpause") == "")
+		this.moveCenterTo(pause, 1);
+	else
+	    this.moveCenterTo("#"+pause.getAttribute("center-at-unpause"), 1);
+	if(pause.hasAttribute("exec-at-unpause"))
+	    if(pause.getAttribute("exec-at-unpause") == "")
+		this.executeScript(pause);
+	else
+	    this.executeScript("#"+pause.getAttribute("exec-at-unpause"));	
+	if(pause.hasAttribute("reveal-at-unpause"))
+	    if(pause.getAttribute("reveal-at-unpause") == "")
+		this.reaveal(pause);
+	else
+	    this.reveal("#"+pause.getAttribute("exec-at-unpause"));
+    };
     this.incrPause = () => {
 	let pause = this.query("[pause], [auto-enter]:not([auto-enter=\"0\"]), [immediate-enter]:not([immediate-enter=\"0\"]), [step]");
 	// let pause = this.query("[pause]");
@@ -761,14 +790,17 @@ function Slip$1(name, fullName, actionL, ng, options) {
 		let d = pause.getAttribute("step");
 		if (d <= 1){
 		    pause.removeAttribute("step");
+		    this.unpause(pause);
 		} else
 		    pause.setAttribute("step", d-1);
 	    }
 	    if(pause.hasAttribute("auto-enter")) {
 		pause.setAttribute("auto-enter", 0);
+		this.unpause(pause);
 	    }
 	    if(pause.hasAttribute("immediate-enter")) {
 		pause.setAttribute("immediate-enter", 0);
+		this.unpause(pause);
 	    }
 	    if(pause.hasAttribute("pause")) {
 		if(!pause.getAttribute("pause")) 
@@ -776,29 +808,7 @@ function Slip$1(name, fullName, actionL, ng, options) {
 		let d = pause.getAttribute("pause");
 		if (d <= 1){
 		    pause.removeAttribute("pause");
-		    if(pause.hasAttribute("down-at-unpause")) {
-			if(pause.getAttribute("down-at-unpause") == "")
-			    this.moveDownTo(pause, 1);
-			else
-			    this.moveDownTo("#"+pause.getAttribute("down-at-unpause"), 1);			
-		    }
-		    if(pause.hasAttribute("up-at-unpause")) {
-			if(pause.getAttribute("up-at-unpause") == "")
-			    this.moveUpTo(pause, 1);
-			else
-			    this.moveUpTo("#"+pause.getAttribute("up-at-unpause"), 1);
-		    }
-		    if(pause.hasAttribute("center-at-unpause"))
-			if(pause.getAttribute("center-at-unpause") == "")
-			    this.moveCenterTo(pause, 1);
-			else
-			    this.moveCenterTo("#"+pause.getAttribute("center-at-unpause"), 1);
-		    if(pause.hasAttribute("exec-at-unpause"))
-			if(pause.getAttribute("exec-at-unpause") == "")
-			    this.executeScript(pause);
-			else
-			    this.executeScript("#"+pause.getAttribute("exec-at-unpause"));
-
+		    this.unpause(pause);
 		} else
 		    pause.setAttribute("pause", d-1);
 		this.updatePauseAncestors();
@@ -996,9 +1006,9 @@ function Slip$1(name, fullName, actionL, ng, options) {
     // Movement, execution and hide/show
     // ******************************
     this.executeScript = (selector) => {
-	    let elem;
-	    if(typeof selector == "string") elem = this.query(selector);
-	    else elem = selector;
+	let elem;
+	if(typeof selector == "string") elem = this.query(selector);
+	else elem = selector;
 	(new Function("slip",elem.innerHTML))(this);
     };
     this.moveUpTo = (selector, delay,  offset) => {
@@ -1057,7 +1067,10 @@ function Slip$1(name, fullName, actionL, ng, options) {
 //	}, 0);
     };
     this.reveal = (selector) => {
-	this.query(selector).style.opacity = "1";
+	let elem;
+	if(typeof selector == "string") elem = this.query(selector);
+	else elem = selector;
+	elem.style.opacity = "1";
     };
     this.revealAll = (selector) => {
 	this.queryAll(selector).forEach((elem) => { elem.style.opacity = "1";});
