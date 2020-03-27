@@ -24,6 +24,7 @@ The \*-at-unpause attributes
 * ``up-at-unpause``
 * ``down-at-unpause``
 * ``center-at-unpause``
+* ``exec-at-unpause``
 
 The pause attributes
 ---------------------------

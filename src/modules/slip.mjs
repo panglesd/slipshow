@@ -192,6 +192,12 @@ export default function Slip(name, fullName, actionL, ng, options) {
 			    this.moveCenterTo(pause, 1);
 			else
 			    this.moveCenterTo("#"+pause.getAttribute("center-at-unpause"), 1);
+		    if(pause.hasAttribute("exec-at-unpause"))
+			if(pause.getAttribute("exec-at-unpause") == "")
+			    this.executeScript(pause);
+			else
+			    this.executeScript("#"+pause.getAttribute("center-at-unpause"));
+
 		} else
 		    pause.setAttribute("pause", d-1);
 		this.updatePauseAncestors();
@@ -260,7 +266,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	this.queryAll("*[exec-at]").forEach((elem) => {
 	    let toExec = elem.getAttribute("exec-at").split(" ").map((str) => parseInt(str));
 	    if(toExec.includes(actionIndex))
-		(new Function("slip",elem.innerHTML))(this);});	
+		this.executeScript(elem);});	
     };
     this.incrIndex = () => {
 	console.log("incrIndex", this.name);
@@ -386,8 +392,14 @@ export default function Slip(name, fullName, actionL, ng, options) {
     };
 
     // ******************************
-    // Movement and hide/show
+    // Movement, execution and hide/show
     // ******************************
+    this.executeScript = (selector) => {
+	    let elem;
+	    if(typeof selector == "string") elem = this.query(selector);
+	    else elem = selector;
+	(new Function("slip",elem.innerHTML))(this);
+    };
     this.moveUpTo = (selector, delay,  offset) => {
 	setTimeout(() => {
 	    let elem;
