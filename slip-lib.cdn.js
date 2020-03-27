@@ -850,7 +850,7 @@ var SlipLib = (function (exports) {
 
         if (pause.hasAttribute("center-at-unpause")) if (pause.getAttribute("center-at-unpause") == "") this.moveCenterTo(pause, 1);else this.moveCenterTo("#" + pause.getAttribute("center-at-unpause"), 1);
         if (pause.hasAttribute("exec-at-unpause")) if (pause.getAttribute("exec-at-unpause") == "") this.executeScript(pause);else this.executeScript("#" + pause.getAttribute("exec-at-unpause"));
-        if (pause.hasAttribute("reveal-at-unpause")) if (pause.getAttribute("reveal-at-unpause") == "") this.reaveal(pause);else this.reveal("#" + pause.getAttribute("exec-at-unpause"));
+        if (pause.hasAttribute("reveal-at-unpause")) if (pause.getAttribute("reveal-at-unpause") == "") this.reveal(pause);else this.reveal("#" + pause.getAttribute("exec-at-unpause"));
       };
 
       this.incrPause = () => {
