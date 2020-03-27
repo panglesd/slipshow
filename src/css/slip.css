@@ -57,6 +57,9 @@ body {
 .invisible {
     visibility: hidden;
 }
+.unrevealed {
+    opacity: 0;
+}
 
 .movable {
     transform-origin: 0 0;

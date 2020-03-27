@@ -405,9 +405,9 @@ export default function Slip(name, fullName, actionL, ng, options) {
     // Movement, execution and hide/show
     // ******************************
     this.executeScript = (selector) => {
-	    let elem;
-	    if(typeof selector == "string") elem = this.query(selector);
-	    else elem = selector;
+	let elem;
+	if(typeof selector == "string") elem = this.query(selector);
+	else elem = selector;
 	(new Function("slip",elem.innerHTML))(this);
     };
     this.moveUpTo = (selector, delay,  offset) => {
@@ -466,7 +466,10 @@ export default function Slip(name, fullName, actionL, ng, options) {
 //	}, 0);
     };
     this.reveal = (selector) => {
-	this.query(selector).style.opacity = "1";
+	let elem;
+	if(typeof selector == "string") elem = this.query(selector);
+	else elem = selector;
+	elem.style.opacity = "1";
     };
     this.revealAll = (selector) => {
 	this.queryAll(selector).forEach((elem) => { elem.style.opacity = "1";});
