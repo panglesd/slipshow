@@ -109,6 +109,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	// return allElem.filter(value => !other.includes(value));
     };
     this.query = (quer) => {
+	if(typeof quer != "string") return quer;
 	return this.queryAll(quer)[0];
     };
     this.findSubslipByID = (id) => {
