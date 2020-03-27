@@ -196,7 +196,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
 			if(pause.getAttribute("exec-at-unpause") == "")
 			    this.executeScript(pause);
 			else
-			    this.executeScript("#"+pause.getAttribute("center-at-unpause"));
+			    this.executeScript("#"+pause.getAttribute("exec-at-unpause"));
 
 		} else
 		    pause.setAttribute("pause", d-1);
