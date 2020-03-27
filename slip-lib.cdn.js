@@ -797,6 +797,7 @@ var SlipLib = (function (exports) {
       };
 
       this.query = quer => {
+        if (typeof quer != "string") return quer;
         return this.queryAll(quer)[0];
       };
 
@@ -926,13 +927,13 @@ var SlipLib = (function (exports) {
           let staticAt = elem.getAttribute("static-at").split(" ").map(str => parseInt(str));
 
           if (staticAt.includes(-actionIndex)) {
-            elem.style.position = "absolute";
-            elem.style.visibility = "hidden";
+            this.makeUnStatic(elem); // elem.style.position = "absolute";
+            // elem.style.visibility = "hidden";
           }
 
           if (staticAt.includes(actionIndex)) {
-            elem.style.position = "static";
-            elem.style.visibility = "visible";
+            this.makeStatic(elem); // elem.style.position = "static";
+            // elem.style.visibility = "visible";
           }
         });
         this.queryAll("*[down-at]").forEach(elem => {
@@ -1043,11 +1044,11 @@ var SlipLib = (function (exports) {
       this.init = () => {
         this.queryAll("*[chg-visib-at]").forEach(elem => {
           elem.style.opacity = "0";
-        });
-        this.queryAll("*[static-at]").forEach(elem => {
-          elem.style.position = "absolute";
-          elem.style.visibility = "hidden";
-        });
+        }); // this.queryAll("*[static-at]").forEach((elem) => {
+        //     elem.style.position = "absolute";
+        //     elem.style.visibility = "hidden";
+        // });	
+
         this.doAttributes();
         this.updatePauseAncestors();
         if (options.init) options.init(this);
@@ -1090,6 +1091,29 @@ var SlipLib = (function (exports) {
       // Movement, execution and hide/show
       // ******************************
 
+
+      this.makeUnStatic = (selector, delay, opacity) => {
+        let elem = this.query(selector);
+        setTimeout(() => {
+          elem.style.overflow = "hidden";
+          setTimeout(() => {
+            elem.style.transition = "height " + (typeof delay == "undefined" ? "1s" : delay + "s");
+            if (opacity) elem.style.transition += ", opacity " + (typeof delay == "undefined" ? "1s" : delay + "s");
+            elem.style.height = elem.offsetHeight + "px";
+            if (opacity) elem.style.opacity = "1";
+            setTimeout(() => {
+              if (opacity) elem.style.opacity = "0";
+              elem.style.height = "0px";
+            }, 10);
+          }, 0);
+        }, 0); // elem.style.position = "absolute";
+      };
+
+      this.makeStatic = selector => {
+        let elem = this.query(selector);
+        elem.style.position = "static";
+        elem.style.visibility = "visible";
+      };
 
       this.executeScript = selector => {
         let elem;
