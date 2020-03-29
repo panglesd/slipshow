@@ -29,8 +29,8 @@ A presentation is just an ``html`` file. You can find a more detailed presentati
    <html>
      <head>
        <!-- Add css and theme -->
-       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/panglesd/slip-js@gh-pages/css/slip.css">
-       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/panglesd/slip-js@gh-pages/css/theorem.css">
+       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/panglesd/slipshow@gh-pages/css/slip.css">
+       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/panglesd/slipshow@gh-pages/css/theorem.css">
      </head>
      <body>
 
@@ -40,13 +40,10 @@ A presentation is just an ``html`` file. You can find a more detailed presentati
        </div>
 
      <!-- Include the library -->
-       <script src="https://cdn.jsdelivr.net/gh/panglesd/slip-js@gh-pages/slip-lib.cdn.min.js"></script>
+       <script src="https://cdn.jsdelivr.net/gh/panglesd/slipshow@gh-pages/slipshow.cdn.min.js"></script>
        <!-- Start the presentation () -->
        <script>
-       	 let engine = new Engine(document.querySelector("#rootSlip"));
-	 let controller = new Controller(engine);
-	 // customize the presentation here with JS 
-	 engine.start();
+         Slipshow.startSlipshow();
        </script>
      </body>
    </html>
@@ -58,7 +55,7 @@ A presentation is just an ``html`` file. You can find a more detailed presentati
 
    html
      head
-       script(src="https://panglesd.github.io/slip-js/src/slip-lib.js")
+       script(src="https://panglesd.github.io/slip-js/src/slipshow.js")
      body
        #rootSlip.root
 
@@ -71,8 +68,8 @@ Now open ``myPresentation.html`` with a browser, by double clicking on the file 
 .. code-block:: html
 
        <!-- Add css and theme -->
-       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/panglesd/slip-js@gh-pages/css/slip.css">
-       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/panglesd/slip-js@gh-pages/css/theorem.css">
+       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/panglesd/slipshow@gh-pages/css/slip.css">
+       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/panglesd/slipshow@gh-pages/css/theorem.css">
 
 Those lines include the rules to display the presentation. The first one is mandatory for the presentation, while the second one corresponds to the theme: the background color, how to display the title, the blocks and theorems...
 
@@ -88,13 +85,10 @@ This delimits where the slips will be put. In this tutorial, we will (almost) on
 .. code-block:: html
 
      <!-- Include the library -->
-       <script src="https://cdn.jsdelivr.net/gh/panglesd/slip-js@gh-pages/slip-lib.cdn.min.js"></script>
+       <script src="https://cdn.jsdelivr.net/gh/panglesd/slipshow@gh-pages/slipshow.cdn.min.js"></script>
        <!-- Start the presentation () -->
        <script>
-       	 let engine = new Engine(document.querySelector("#rootSlip"));
-	 let controller = new Controller(engine);
-	 // customize the presentation here with JS 
-	 engine.start();
+         Slipshow.startSlipshow();
        </script>
 
 This is to include the library, and start the engine. Usually, you won't have to modify this.
@@ -435,10 +429,7 @@ Let us now focus on the second part of the file: the Javascript. Although it is 
 .. code-block:: html
 
        <script>
-       	 let engine = new Engine(document.querySelector("#rootSlip"));
-	 let controller = new Controller(engine);
-	 // customize the presentation here with JS 
-	 engine.start();
+         Slipshow.startSlipshow();
        </script>
 
 Modifying this part is somehow more advanced, and thus out of the scope of a tutorial. We will still consider the following scenario: we just want to specify the order of the slips. This way, it is very easy to skip a part by just commenting a few lines, if you want to have a "light" version of your presentation.
