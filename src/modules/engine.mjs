@@ -1,4 +1,6 @@
-import { myQueryAll } from './util'
+import { myQueryAll } from './util';
+import Controller from './controller';
+import Slip from './slip';
 
 export default function (root) {
     function prepareRoot (rootElem) {
@@ -500,10 +502,13 @@ export default function (root) {
     this.start = () => {
 	stack = [rootSlip];
 	this.next();
+	return this;
     };
     this.restart = () => {
 	stack = [rootSlip];
 	rootSlip.refreshAll();
 	this.next();
     };
+    let controller = new Controller(this);
+    this.getController = () => controller;
 };
