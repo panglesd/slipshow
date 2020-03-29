@@ -3,7 +3,7 @@
 Tutorial
 ========
 
-Slip.js is a library for displaying slips. A presentation is just an ``html`` file. You do not need much knowledge on either ``html`` nor ``css`` and ``javascript`` to create slip presentations, but it allows any customization of your slips.
+Slipshow.js is a library for displaying slips. A presentation is just an ``html`` file. You do not need much knowledge on either ``html`` nor ``css`` and ``javascript`` to create slip presentations, but it allows any customization of your slips.
 
 In this tutorial, you will create your first slip presentation. It is entirely self-contained but you should take a look at :ref:`getting-started` to know the different ways of creating a minimal file and starting a project. The first part is about the creation of simple presentation, following the usual concept of slides. The second part explains more advanced concepts on what makes slips different from other slideshow frameworks.
 

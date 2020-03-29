@@ -17,7 +17,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'slip-js'
+project = 'slipshow'
 copyright = '2020, Paul-Elliot'
 author = 'Paul-Elliot'
 

@@ -1,6 +1,6 @@
 .. _listAttributes:
 
-List of all keywords
+Slipshow API
 ====================
 
 The \*-at attributes
@@ -17,6 +17,7 @@ The \*-at attributes
 * ``center-at``
 * ``static-at``
 * ``exec-at``
+* ...
 
 The \*-at-unpause attributes
 -----------------------------
@@ -25,6 +26,7 @@ The \*-at-unpause attributes
 * ``down-at-unpause``
 * ``center-at-unpause``
 * ``exec-at-unpause``
+* ...
 
 The pause attributes
 ---------------------------
@@ -33,4 +35,16 @@ The pause attributes
 * ``step``
 * ``auto-enter``
 * ``immediate-enter``
+* ...
 
+Slip scripting
+---------------------------
+
+* ``slip.query``
+* ``slip.queryAll``
+* ``delay``
+* ``reveal``
+* ``downTo``
+* ``centerTo``
+* ``upTo``
+* ...
