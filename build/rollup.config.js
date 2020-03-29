@@ -11,7 +11,7 @@ export default [
     {
 	input: 'src/slip-lib.js',
 	output: {
-	    file: 'dist/slip-lib.cdn.js',
+	    file: 'dist/slipshow.cdn.js',
 	    name: 'Slipshow',
 	    format: 'iife', // immediately-invoked function expression — suitable for <script> tags
 	    sourcemap: true,
@@ -29,7 +29,7 @@ export default [
     {
 	input: 'src/slip-lib.js',
 	output: {
-	    file: 'dist/slip-lib.cdn.min.js',
+	    file: 'dist/slipshow.cdn.min.js',
 	    name: 'Slipshow',
 	    format: 'iife', // immediately-invoked function expression — suitable for <script> tags
 	    sourcemap: true,
@@ -46,8 +46,8 @@ export default [
     },    {
 	input: 'src/slip-lib.js',
 	output: {
-	    file: 'dist/slip-lib.js',
-	    format: 'es', // immediately-invoked function expression — suitable for <script> tags
+	    file: 'dist/slipshow.js',
+	    format: 'es', 
 	    sourcemap: true
 	},
 	plugins: [
