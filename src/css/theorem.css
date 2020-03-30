@@ -2,7 +2,7 @@
 /*    Blocks                         */
 /*************************************/
 
-.block, .theorem, .lemma, .definition, .example, .my-theorem {
+.block, .theorem, .lemma, .definition, .example, .my-theorem, .corollary, .remark {
     display: block;
     margin-top: 20px;
     margin-bottom: 40px;
@@ -10,9 +10,9 @@
     border-radius: 10px;
     -webkit-box-shadow: 5px 5px 18px 5px rgba(0,0,0,0.42); 
     box-shadow: 5px 5px 18px 5px rgba(0,0,0,0.42);
-    
+    background-color:white;    
 }
-.block:before, .theorem:before, .lemma:before, .definition:before, .example:before, .my-theorem:before {
+.block:before, .theorem:before, .lemma:before, .definition:before, .example:before, .my-theorem:before, .corollary:before, .remark:before {
     font-weight: bold;
     display: block;
     margin-top: -30px;
@@ -152,4 +152,21 @@
 }
 .remark[title]:before {
     content: "Remark (" attr(title) ") ";
+}
+
+/*************************************/
+/*    Corollary                      */
+/*************************************/
+
+.corollary {
+    font-style: normal;
+    background-color: lightyellow;
+    border: 1px solid #CCCC00;
+}
+.corollary:before {
+    content: "Corollary.";
+    background-color: #CCCC00;
+}
+.corollary[title]:before {
+    content: "Corollary (" attr(title) ") ";
 }
