@@ -177,7 +177,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	    if(pause.getAttribute("reveal-at-unpause") == "")
 		this.reveal(pause);
 	else
-	    this.reveal("#"+pause.getAttribute("exec-at-unpause"));
+	    this.reveal("#"+pause.getAttribute("reveal-at-unpause"));
     };
     this.incrPause = () => {
 	let pause = this.query("[pause], [auto-enter]:not([auto-enter=\"0\"]), [immediate-enter]:not([immediate-enter=\"0\"]), [step]");
