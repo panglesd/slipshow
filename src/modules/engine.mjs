@@ -6,8 +6,11 @@ export default function (root) {
     function prepareRoot (rootElem) {
 	let container = document.createElement("div");
 	container.innerHTML = 
-	    '	<div id="open-window">\
-	    <div class="format-container">\
+	    '	\
+	<div class="toc-slip" style="display:none;"></div>\
+        <div id="open-window">\
+	  <div class="cpt-slip">0</div>\
+	  <div class="format-container">\
 	    <div class="rotate-container">\
 		<div class="scale-container">\
 		    <div class="universe movable" id="universe">\
@@ -15,11 +18,9 @@ export default function (root) {
                         <div class="placeHolder"></div>\
 		    </div>\
 		</div>\
-		</div>\
+              </div>\
 	    </div>\
-	</div>\
-	<div class="cpt-slip">0</div>\
-	<div class="toc-slip" style="display:none;"></div>';
+	</div>';
 	rootElem.replaceWith(container);
 	container.querySelector(".placeHolder").replaceWith(rootElem);
 	rootElem.querySelectorAll(".slip").forEach((slipElem) => {
