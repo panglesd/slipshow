@@ -31,7 +31,7 @@ This will create an html file called `test-slipshow.html`. Open this file in a b
 
 ## Contributing
 
-You can issue a Pull Request of any kind, report a bug, ask for a new feature, suggest or PR an enhancement on the documentation...
+You can issue a Pull Request of any kind, report a bug, ask for a new feature, suggest or PR an enhancement on the documentation... You can also [write a theme](https://slipshow.readthedocs.io/en/latest/themes.html#writing-a-theme).
 
 ## License
 
