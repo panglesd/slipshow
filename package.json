@@ -1,12 +1,14 @@
 {
 			"name": "slipshow",
-			"version": "0.0.1",
+			"version": "0.0.3",
 			"description": "This is not another slide engine, but a slip engine.",
 			"main": "./dist/slipshow.js",
 			"browser": "./dist/slipshow.cdn.min.js",
 			"files": [
 						"/dist",
-						"/bin"
+						"/bin",
+						"!*~",
+						"!*.tar.gz"
 			],
 			"repository": "git@github.com:panglesd/slipshow.git",
 			"author": "panglesd",
