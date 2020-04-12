@@ -7,13 +7,12 @@ Slip.js is a library for displaying slips. This section explains how to start wr
 
 * You want to start right away and you will have access to internet when displaying your slips. Then, you should go for the CDN (Content Delivery Network) solution, where you do not have to download anything, the library will just have to be linked in the file.
 * You want to have everything local to be able to work or show your slips without internet access, but you want to keep it simple. In this case, you should just download the archive containing all you need.
-* You want to have everything local and include your own javascript libraries, or use some advanced features (that will be added later). In this case you should go for the ``npm`` or ``github`` install (not yet implemented).
+* You want to have everything local and include your own javascript libraries, or use some advanced features (that will be added later). In this case you should go for the ``npm`` install.
 
   
 ..
    In case you want simplicity and have an access to internet, you should choose the CDN option and start reading the :ref:`tutorial`. If you want to work with everything local, you have several options: either download the library, use github or use npm.
 
-.. todo:: I will need to prepare slip for local use before writing those parts!
 
 ..
    You can also install slip-js it using npm.
@@ -66,20 +65,43 @@ Installing a local version
 Downloading an archive
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Download a release when there will be one, and include the files as it will be explained here.
-
-
-Using npm
-^^^^^^^^^^^^^^^^^^^^^^
-To install slip-js, just type
+Download the latest release here: `slipshow.tar.gz <https://panglesd.github.io/slipshow/slipshow.tar.gz>`_.
+Then unpack the archive:
 
 .. code-block:: bash
 
-   npm install slip-js
+   tar xvf slipshow.tar.gz
 
-However, this won't work as we haven't yet released the first version of slip.
+You are already ready to go. You still might want to modify the directory name.
 
-Usig github
+.. code-block:: bash
+
+   mv slipshow my_presentation_name
+
+You can now modify the file in the directory called ``slideshow.html``, and open it in a browser to see the result.
+
+Using npm
 ^^^^^^^^^^^^^^^^^^^^^^
+To install slipshow, go into an empty directory where you want to write your presentation. In this directory, just type:
 
-Clone the repo, install, build and link. You can also modify examples.
+.. code-block:: bash
+
+   npm install slipshow
+
+This install the slipshow engine. If you want to add math support (slipshow also work with katex), you have to add:
+
+.. code-block:: bash
+
+   npm install mathjax
+
+Now, to create a new file with a template presentation, type:
+
+.. code-block:: bash
+
+   npx new-slipshow > name_of_your_file.html
+.. code-block:: bash
+
+   npx new-slipshow --mathjax > name_of_your_file.html
+
+Open ``name_of_your_file.html`` in an editor to start writing you presentation, and in browser to see it!
+
