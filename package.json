@@ -1,8 +1,9 @@
 {
-			"name": "slipshow-test-test",
+			"name": "slipshow",
 			"version": "0.0.1",
 			"description": "This is not another slide engine, but a slip engine.",
-			"main": "./dist/slip-lib.js",
+			"main": "./dist/slipshow.js",
+			"browser": "./dist/slipshow.cdn.min.js",
 			"files": [
 						"/dist",
 						"/bin"
