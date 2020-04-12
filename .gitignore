@@ -4,9 +4,12 @@ yarn-error.log
 
 # BUILD ARTEFACTS
 dist
+bin
 .cache
 
 # DOC BUILD ARTEFACTS
 _build
 _static
 _templates
+
+.tern-port
