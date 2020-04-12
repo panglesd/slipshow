@@ -5,7 +5,7 @@ Tutorial
 
 Slipshow.js is a library for displaying slips. A presentation is just an ``html`` file. You do not need much knowledge on either ``html`` nor ``css`` and ``javascript`` to create slip presentations, but it allows any customization of your slips.
 
-In this tutorial, you will create your first slip presentation. It is entirely self-contained but you should take a look at :ref:`getting-started` to know the different ways of creating a minimal file and starting a project. The first part is about the creation of simple presentation, following the usual concept of slides. The second part explains more advanced concepts on what makes slips different from other slideshow frameworks.
+In this tutorial, you will create your first slip presentation. It is entirely self-contained but you should take a look at :ref:`getting-started` to know the different ways of creating a minimal file and starting a project, in particular if you want to write or show your presentation locally, without internet access. The first part is about the creation of simple presentation, following the usual concept of slides. The second part explains more advanced concepts on what makes slips different from other slideshow frameworks.
 
 ..
    Writing slips should not differ too much from writing beamer presentation, when not using any of the advanced functionalities: there an delimiters for . The syntax is different, and there are 
@@ -18,7 +18,7 @@ In this tutorial, you will create your first slip presentation. It is entirely s
 A minimal file
 ---------------------------
 
-A presentation is just an ``html`` file. You can find a more detailed presentation on how to start your project, but for this tutorial, just copy the following text into a file that you name for instance ``myPresentation.html``.
+A presentation is just an ``html`` file. There are several ways to start a project and get a minimal file, described in :ref:`getting-started`. For self-coontainedness of the tutorial, we suppose you followed the "CDN" version, as it only requires you to copy the following text into a file, called for instance ``myPresentation.html``.
 
 ..
    The minimal example of a slip presentation still need to include both the css and the javascript. Either you have the files locally, or you include them from a CDN, a "Content Delivery Network". In the second option, a minimal file looks like the following:

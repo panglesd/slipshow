@@ -16,6 +16,7 @@ Slip is an engine for displaying an enhanced version of slides, called slips. Yo
    tutorial
    themes
    listAttributes
+   faq
 
 ..
    Indices and tables
