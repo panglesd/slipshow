@@ -7,6 +7,9 @@ Slipshow.js is a library for displaying slips. A presentation is just an ``html`
 
 In this tutorial, you will create your first slip presentation. It is entirely self-contained but you should take a look at :ref:`getting-started` to know the different ways of creating a minimal file and starting a project, in particular if you want to write or show your presentation locally, without internet access. The first part is about the creation of simple presentation, following the usual concept of slides. The second part explains more advanced concepts on what makes slips different from other slideshow frameworks.
 
+.. contents:: Outline of the tutorial
+   :local:
+   
 ..
    Writing slips should not differ too much from writing beamer presentation, when not using any of the advanced functionalities: there an delimiters for . The syntax is different, and there are 
 ..
@@ -213,7 +216,37 @@ For instance, add the following slip to your presentation and reload it.
 	</div>
       </div>
 
-      
+Writing Math
+^^^^^^^^^^^^^^^^^
+
+If you need to write mathematics, there are two very good options you can use: Mathjax and Katex. Both can be used with slipshow. You can follow their tutorial, or just add the following line to your file:
+
+.. code-block:: html
+
+   <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+   </script>
+
+inside the ``head`` tag. Then, you can write mathematics like this: ``\( \sqrt{2} \)`` for inline and ``\[\bigcup_{n} E_n\]`` for math blocks.
+
+The rest of this section concerns only the people who want to work without internet access. If you downloaded the archive containing the library, it already contains eerything you need to write math using mathjax. If you used ``npm`` to install the library, install  ``mathjax`` or ``katex``  using:
+
+.. code-block:: bash
+
+   $ npm install mathjax@3
+
+and then link the library using
+
+.. code-block:: html
+
+   <script src="node_modules/mathjax/es5/tex-chtml.js" id="MathJax-script" async></script>
+
+This line is automatically added if you generated you minimal file using:
+
+.. code-block:: bash
+		
+   $ npx new-slipshow --mathjax-local > name-of-slipshow-file.html
+   
 Using the full power of slips
 -----------------------------
 
@@ -384,8 +417,8 @@ When you press ``t`` during your presentation. Magic! However, this is quite ugl
       <div class="slip" immediate-enter toc-title="Name that will appear in the table of content">
 
 .. todo:: The way the table of content looks like will very likely change a lot, please tell me how you would like it to be.
-      
-Javascripting your presentation
+
+Scripting your presentation
 --------------------------------
 
 One of the advantage of slip is that you can make animation. In order to start your animation or any special events, you will have to execute javascript at some steps.
@@ -409,7 +442,7 @@ For instance, recall that the delay for the slip named "A review of the numbers"
 		  slip.delay = 1;
 		</script>
 
-However, one should be very careful when making javascript changes. Indeed, slip cannot automatically (yet) revert your scripts. You should revert your changes at step 0:
+However, one should be very careful when making javascript changes. Indeed, slip cannot automatically (yet) revert your scripts, and if you go back in the presentation you should make sure they are reverted at step 0. For instance, in our case:
 
 .. code-block:: html
 
@@ -420,7 +453,7 @@ However, one should be very careful when making javascript changes. Indeed, slip
 		  slip.delay = 1;
 		</script>
 
-
+		
 Program your presentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -432,6 +465,68 @@ Let us now focus on the second part of the file: the Javascript. Although it is 
          Slipshow.startSlipshow();
        </script>
 
-Modifying this part is somehow more advanced, and thus out of the scope of a tutorial. We will still consider the following scenario: we just want to specify the order of the slips. This way, it is very easy to skip a part by just commenting a few lines, if you want to have a "light" version of your presentation.
+Modifying this part is more advanced, as it requires to know a bit of javascript, and thus somehow out of the scope of a tutorial. It is still possible to understand the following if you now a bit of computer programming. We will consider the following scenario: we just want to programmatically specify the order of the slips. This way, it is very easy to skip a part by just commenting a few lines,, if you want to have a "light" version of your presentation, or to change the order of the slips.
 
-To be continued
+Start by removing the attributes ``immediate-enter``, and replace them by an ``id``. For instance, the lines starting the first few slips might look like this:
+
+.. code-block:: html
+
+      <div class="slip" id="content-first-slip" toc-title="My First Slip">
+      <div class="slip" id="question" toc-title="A question about colors">
+      <div class="slip" id="emphasizing" toc-title="How to emphasize when you are shy">
+      <div class="slip" id="block" toc-title="Meta Definitions, Meta Theorems">
+      <div class="slip" id="latin" toc-title="Latin Overflow">
+
+Now, instead of ``Slipshow.startSlipshow();`` in the ``script`` tag, put the following lines:
+
+.. code-block:: javascript
+
+   // Slipshow.startslipshow() create a slipshow engine and starts
+   // it, with slips that have immediate-enter or auto-enter attributes
+   // We commented this line because we want to specify the slips before
+   // starting the slipshow
+   
+   // Slipshow.startSlipshow();
+
+   // We first create a slip engine inside the element "rootSlip"
+   let engine = new Slipshow.Engine("rootSlip");
+   // We get the root Slip of the presentation (remember that a slipshow is a tree)
+   let rootSlip = engine.getRootSlip()
+
+   // We create the slips we want to add as subslips of the root
+   let firstContentSlip = new Slipshow.Slip("content-first-slip", null, [], engine, {})
+   let questionSlip = new Slipshow.Slip("question", null, [], engine, {})
+   let emphasizingSlip = new Slipshow.Slip("emphasizing", null, [], engine, {})
+   let blockSlip = new Slipshow.Slip("block", null, [], engine, {})
+   let latinSlip = new Slipshow.Slip("latin", null, [], engine, {})
+
+   // We add the subslips to the root
+   rootSlip.setAction([
+       firstContentSlip,
+       questionSlip,
+       emphasizingSlip,
+       blockSlip,
+       latinSlip,
+       ]);
+
+   // We start the engine
+   engine.start();
+   
+It is now very easy to mess with the order of the slips. It is also possible add actions instead of subslips. For instance, if you want to add an alert, reverse the order of the slips and omit the emphasizing slip, replace ``rootSlip.setAction([...])`` by:
+
+.. code-block:: javascript
+
+   rootSlip.setAction([
+       latinSlip,
+       (slip) => { alert(); }
+       blockSlip,
+       // emphasizingSlip,
+       questionSlip,
+       firstContentSlip,
+       ]);
+
+
+Changing the shortcuts
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. todo:: If have to make this easily possible...

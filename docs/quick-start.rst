@@ -70,13 +70,13 @@ Then unpack the archive:
 
 .. code-block:: bash
 
-   tar xvf slipshow.tar.gz
+   $ tar xvf slipshow.tar.gz
 
 You are already ready to go. You still might want to modify the directory name.
 
 .. code-block:: bash
 
-   mv slipshow my_presentation_name
+   $ mv slipshow my_presentation_name
 
 You can now modify the file in the directory called ``slideshow.html``, and open it in a browser to see the result.
 
@@ -86,22 +86,25 @@ To install slipshow, go into an empty directory where you want to write your pre
 
 .. code-block:: bash
 
-   npm install slipshow
+   $ npm install slipshow
 
 This install the slipshow engine. If you want to add math support (slipshow also work with katex), you have to add:
 
 .. code-block:: bash
 
-   npm install mathjax
+   $ npm install mathjax
 
 Now, to create a new file with a template presentation, type:
 
 .. code-block:: bash
 
-   npx new-slipshow > name_of_your_file.html
+   $ npx new-slipshow > name_of_your_file.html
+
+or, if you need to write math:
+
 .. code-block:: bash
 
-   npx new-slipshow --mathjax > name_of_your_file.html
+   $ npx new-slipshow --mathjax-local > name_of_your_file.html
 
 Open ``name_of_your_file.html`` in an editor to start writing you presentation, and in browser to see it!
 
