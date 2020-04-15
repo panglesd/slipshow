@@ -502,21 +502,23 @@ function Slip(name, fullName, actionL, ng, options) {
     // ******************************
     this.makeUnStatic = (selector, delay, opacity) => {
 	let elem = this.query(selector);
-	setTimeout(() => {
-	    elem.style.overflow = "hidden"; 
-	    setTimeout(() => {
-		elem.style.transition = "height "+ (typeof(delay) == "undefined" ? "1s" : (delay+"s"));
-		if(opacity)
-		    elem.style.transition += ", opacity "+ (typeof(delay) == "undefined" ? "1s" : (delay+"s"));
-		elem.style.height = (elem.offsetHeight+"px");
-		if(opacity)
-		    elem.style.opacity = "1";
-		setTimeout(() => {
-		    if(opacity)
-		    	elem.style.opacity = "0"; 
-		    elem.style.height = ("0px");}, 10);
-	    }, 0);
-	},0);	// elem.style.position = "absolute";
+	// setTimeout(() => {
+	//     elem.style.overflow = "hidden"; 
+	//     setTimeout(() => {
+	// 	elem.style.transition = "height "+ (typeof(delay) == "undefined" ? "1s" : (delay+"s"));
+	// 	if(opacity)
+	// 	    elem.style.transition += ", opacity "+ (typeof(delay) == "undefined" ? "1s" : (delay+"s"));
+	// 	elem.style.height = (elem.offsetHeight+"px");
+	// 	if(opacity)
+	// 	    elem.style.opacity = "1";
+	// 	setTimeout(() => {
+	// 	    if(opacity)
+	// 	    	elem.style.opacity = "0"; 
+	// 	    elem.style.height = ("0px");}, 10);
+	//     }, 0);
+	// },0);
+	elem.style.position = "absolute";
+	elem.style.visibility = "hidden";
     };
     this.makeStatic = (selector) => {
 	let elem = this.query(selector);
@@ -603,13 +605,6 @@ function Slip(name, fullName, actionL, ng, options) {
     // ******************************
     // Initialisation of the object
     // ******************************
-    // names    
-    this.fullName = fullName;
-    this.name =
-	typeof name == "string" ?
-	name:
-	name.id;
-    console.log("this name is ", this.name);
     // engine
     let engine = ng;
     this.getEngine = () => engine;
@@ -617,8 +612,20 @@ function Slip(name, fullName, actionL, ng, options) {
     // element
     this.element =
 	typeof name == "string" ?
-	document.querySelector("#"+name):
+	document.querySelector(name[0]=="#" ? name : ("#"+name)):
 	name;
+    // names
+    this.name =
+	typeof name == "string" ?
+	name:
+	name.id;
+    if(typeof(fullName) == "string")
+	this.fullName = fullName ;
+    else if (this.element.hasAttribute("toc-title"))
+	this.fullName = this.element.getAttribute("toc-title");
+    else
+	this.fullName = this.name;
+    console.log("this name is ", this.name);
     // clonedElement
     let clonedElement;
     if(typeof MathJax != "undefined")
@@ -718,6 +725,11 @@ function IEngine (root) {
 	rootElem.style.width = "unset";
 	rootElem.style.height = "unset";
 	document.querySelectorAll(".background-canvas").forEach((elem)=> {elem.addEventListener("click", (ev) => { console.log("vous avez cliquez aux coordonnées : ", ev.layerX, ev.layerY); });});	
+    }
+    if (typeof(root) == "string") {
+	if(root[0] != "#")
+	    root = "#"+root;
+	root = document.querySelector(root);
     }
     prepareRoot(root);
 
@@ -1128,7 +1140,7 @@ function IEngine (root) {
 	    // 	before = false;
 	    // }
 		
-	    nameElement.innerText = tree.slip.fullName ? tree.slip.fullName : tree.slip.name ; //+ " (" + (tree.slip.getActionIndex()+1) + "/" + (tree.slip.getMaxNext()+1) + ")";
+	    nameElement.innerText = tree.slip.fullName; //? tree.slip.fullName : tree.slip.name ; //+ " (" + (tree.slip.getActionIndex()+1) + "/" + (tree.slip.getMaxNext()+1) + ")";
 	    containerElement.appendChild(nameElement);
 	    // innerHTML += "<div>"+tree.name+"</div>";
 	    if(tree.subslips.length > 0) {
