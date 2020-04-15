@@ -4,7 +4,7 @@ node_js:
   - 13.6.0
 
 script:
-- yarn build
+- yarn build-and-pack
 
 deploy:
   provider: pages
