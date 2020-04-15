@@ -41,6 +41,11 @@ export default function (root) {
 	rootElem.style.height = "unset";
 	document.querySelectorAll(".background-canvas").forEach((elem)=> {elem.addEventListener("click", (ev) => { console.log("vous avez cliquez aux coordonnées : ", ev.layerX, ev.layerY); });});	
     }
+    if (typeof(root) == "string") {
+	if(root[0] != "#")
+	    root = "#"+root;
+	root = document.querySelector(root);
+    }
     prepareRoot(root);
 
     // Constants
@@ -450,7 +455,7 @@ export default function (root) {
 	    // 	before = false;
 	    // }
 		
-	    nameElement.innerText = tree.slip.fullName ? tree.slip.fullName : tree.slip.name ; //+ " (" + (tree.slip.getActionIndex()+1) + "/" + (tree.slip.getMaxNext()+1) + ")";
+	    nameElement.innerText = tree.slip.fullName; //? tree.slip.fullName : tree.slip.name ; //+ " (" + (tree.slip.getActionIndex()+1) + "/" + (tree.slip.getMaxNext()+1) + ")";
 	    containerElement.appendChild(nameElement);
 	    // innerHTML += "<div>"+tree.name+"</div>";
 	    if(tree.subslips.length > 0) {
