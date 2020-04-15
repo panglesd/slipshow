@@ -1,6 +1,6 @@
 {
 			"name": "slipshow",
-			"version": "0.0.3",
+			"version": "0.0.4",
 			"description": "This is not another slide engine, but a slip engine.",
 			"main": "./dist/slipshow.js",
 			"browser": "./dist/slipshow.cdn.min.js",
@@ -12,7 +12,18 @@
 			],
 			"repository": "git@github.com:panglesd/slipshow.git",
 			"author": "panglesd",
-			"license": "MIT",
+    "license": "MIT",
+    "keywords": [
+	"slideshow",
+	"slides",
+	"slide",
+	"presentation",
+	"slip",
+	"slipshow",
+	"slips",
+	"prezi",
+	"reveal.js",
+	"impress.js"],
 			"scripts": {
 						"dev": "parcel src/slip-lib.js",
 						"old-build": "parcel build src/slip-lib.js src/css/*.css",
