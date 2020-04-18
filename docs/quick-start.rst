@@ -36,9 +36,9 @@ Recall that a slip presentation is just an ``html`` file. Therefore, a minimal p
      <body>
 
      <!-- This is the presentation -->
-       <div class="root" id="rootSlip">
+       <slip-slipshow>
          <!-- Add the slips here -->
-       </div>
+       </slip-slipshow>
 
      <!-- Include the library -->
        <script src="https://cdn.jsdelivr.net/gh/panglesd/slipshow@gh-pages/slipshow.cdn.min.js"></script>

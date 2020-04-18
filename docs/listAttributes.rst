@@ -10,6 +10,38 @@ Slipshow API
 ----------------
       
       
+Slip-specific tags
+----------------------------------------------
+
+We list here the custom tags that are specific to slipshow.
+
+.. _slip-slipshow:
+
+``slip-slipshow``
+~~~~~~~~~~~~~~~~~
+  The root of a slipshow.
+
+.. _slip-slip:
+
+``slip-slip``
+~~~~~~~~~~~~~~~~~
+  A slip.
+
+.. _slip-title:
+
+``slip-title``
+~~~~~~~~~~~~~~~~~
+  The title of a slip.
+
+.. _slip-body:
+
+``slip-body``
+~~~~~~~~~~~~~~~~~
+  The body of a slip.
+
+
+
+
 Slip-specific classes
 ----------------------------------------------
 
@@ -26,12 +58,6 @@ We list here the class that can be given to elements that are specific to slipsh
 ``movable``
 ~~~~~~~~~~~~~~~~~
   Make an element move smoothly when moved using the not yet implemented ``move-element-to``.
-
-.. _titre:
-
-``titre``
-~~~~~~~~~~~~~~~~~
-  A title of a splip.
   
 .. _emphasize:
 

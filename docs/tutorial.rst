@@ -38,9 +38,9 @@ A presentation is just an ``html`` file. There are several ways to start a proje
      <body>
 
      <!-- This is the presentation -->
-       <div class="root" id="rootSlip">
+       <slip-slipshow>
          <!-- Add the slips here -->
-       </div>
+       </slip-slipshow>
 
      <!-- Include the library -->
        <script src="https://cdn.jsdelivr.net/gh/panglesd/slipshow@gh-pages/slipshow.cdn.min.js"></script>
@@ -79,9 +79,9 @@ Those lines include the rules to display the presentation. The first one is mand
 .. code-block:: html
 
 	<!-- This is the presentation -->
-        <div class="root" id="rootSlip">
+        <slip-slipshow>
           <!-- Add the slips here -->
-        </div>
+        </slip-slipshow>
 
 This delimits where the slips will be put. In this tutorial, we will (almost) only modify this part.
 
@@ -98,14 +98,14 @@ This is to include the library, and start the engine. Usually, you won't have to
 		
 Writing standard slips
 -----------------------
-In this section, we learn how to add slips. Everything will be added inside the ``root`` element, that is, inbetween the opening ``<div class="root" id="rootSlip">`` and the closing ``</div>``:
+In this section, we learn how to add slips. Everything will be added inside the ``slip-slipshow`` element, that is, inbetween the opening ``<slip-slipshow>`` and the closing ``</slip-slipshow>``:
 
 .. code-block:: html
 
      <!-- This is the presentation -->
-       <div class="root" id="rootSlip">
+       <slip-slipshow>
          <!-- Add the slips here -->
-       </div>
+       </slip-slipshow>
 
 
 Adding a plain slip
@@ -114,28 +114,28 @@ Modify the file ``myPresentation.html`` to add the following slip:
 
 .. code-block:: html
 
-         <div class="slip" immediate-enter>
-           <div class="titre">My first slip</div>
-           <div class="slip-body-container">
+         <slip-slip immediate-enter>
+           <slip-title>My first slip</slip-title>
+           <slip-body>
 	     <div>Here is the content of my first slip:</div>
 	     <ul>
 	       <li>A title</li>
 	       <li>Some text</li>
 	       <li>An itemized list</li>
 	     </ul>
-	   </div>
-	 </div>
+	   </slip-body>
+	 </slip-slip>
 
 Now save the file and reload the page in the browser. Suddenly there is something in the screen! Let us describe what each of these things mean.
 
-* ``<div class="slip">...</div>`` defines the boundary of the new slip.
+* ``<slip-slip>...</slip-slip>`` defines the boundary of the new slip.
 * the attribute ``immediate-enter`` ensures that the slips will be entered in order.
-* ``<div class="titre">...</div>`` defines the title of the slip. Notice the french touch! (TODO: remove the french touch)
-* ``<div class="slip-body-container">...</div>`` defines the body of the slip. It includes margin, padding,...
+* ``<slip-title>...</slip-title>`` defines the title of the slip. Notice the french touch! (TODO: remove the french touch)
+* ``<slip-body>...</slip-body>`` defines the body of the slip. It includes margin, padding,...
 
-.. note:: If you don't include the ``<div class="slip-body-container"> ... </div>``, the slip will have no margin. It can be usefull if you want to display something "fullscreen".
+.. note:: If you don't include the ``<slip-body> ... </slip-body>``, the slip will have no margin. It can be usefull if you want to display something "fullscreen".
   
-The rest is pure `html <https://www.w3schools.com/html/html_intro.asp>`_. You will need at least a bit of understanding of html to be comfortable. But I do think that these skills are very useful in our world, and not so hard to learn! There is a discussion on the html syntax `here <todo>`_ (soon).
+The rest is pure `html <https://www.w3schools.com/html/html_intro.asp>`_. You will need at least a small bit of understanding of html to be comfortable. But I do think that these skills are very useful in our world, and not so hard to learn! See the FAQ.
 
 ..
    For latex users, just translate your ``\begin{itemize}`` and ``\end{itemize}`` respectively into ``<ul>`` and ``</ul>``, and you ``\item`` into ``<li>...</li>``.
@@ -147,9 +147,9 @@ Add another slip, just after the closing tag of the previous one, with the follo
 
 .. code-block:: html
 
-         <div class="slip" immediate-enter>
-           <div class="titre">Question</div>
-           <div class="slip-body-container">
+         <slip-slip immediate-enter>
+           <slip-title>Question</slip-title>
+           <slip-body>
 	     <div>What do you think are my three favourite colors?</div>
 	     <ul>
 	       <li>Green</li>
@@ -157,8 +157,8 @@ Add another slip, just after the closing tag of the previous one, with the follo
 	       <li>Apple</li>
 	     </ul>
 	     <div>And you?</div>
-	   </div>
-	 </div>
+	   </slip-body>
+	 </slip-slip>
 
 Reload the page and push the right arrow. You see the new slip appearing. Suppose that we don't want to reveal directly the results, but we want to show them one by one. This is done with the pause mechanism. At each push of the right arrow, everything after a ``pause`` attribute is revealed, until the next ``pause``. Transform the list into this:
 
@@ -181,12 +181,12 @@ It is common in presentation to emphasize or highlight some words. The following
 
 .. code-block:: html
 
-         <div class="slip" immediate-enter>
-           <div class="titre">Emphasizing</div>
-           <div class="slip-body-container">
+         <slip-slip immediate-enter>
+           <slip-title>Emphasizing</slip-title>
+           <slip-body>
 	     <div>I have <span emphasize-at="1 4">nothing to say</span> but my <span emphasize-at="2 4">words</span> are <span emphasize-at="3 4">important</span>!</div>
-	   </div>
-	 </div>
+	   </slip-body>
+	 </slip-slip>
 
 This is pretty self-explanatory! When the attribute ``emphasize-at`` is set to a list of numbers separated by spaces, for instance ``emphasize-at="1 4"``, the content will be emphasized exactly at these steps, that is, step 1 and 4 in the example. There are several other ways to emphasize depending on the need, such as ``mk-emphasize-at``, or soonish ``emphasize-at-unpause``, see the :ref:`listAttributes`.
 
@@ -198,9 +198,9 @@ For instance, add the following slip to your presentation and reload it.
 
 .. code-block:: html
 		
-      <div class="slip" immediate-enter>
-        <div class="titre">Blocks</div>
-        <div class="slip-body-container">
+      <slip-slip immediate-enter>
+        <slip-title>Blocks</slip-title>
+        <slip-body>
 	  <div class="block" title="A block">
 	    Here is a block
 	  </div>
@@ -213,8 +213,8 @@ For instance, add the following slip to your presentation and reload it.
 	  <div class="example" title="A block">
 	    For instance, this is an example.
 	  </div>
-	</div>
-      </div>
+	</slip-body>
+      </slip-slip>
 
 Writing Math
 ^^^^^^^^^^^^^^^^^
@@ -261,9 +261,9 @@ For instance, copy paste this new slip and test the attributes ``down-at``.
 
 .. code-block:: html
 		
-      <div class="slip" immediate-enter>
-        <div class="titre">Blocks</div>
-        <div class="slip-body-container">
+      <slip-slip immediate-enter>
+        <slip-title>Blocks</slip-title>
+        <slip-body>
 	  <div class="block" title="Lispum">
 	    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus auctor sem a libero ultricies convallis. Sed hendrerit tellus mi, malesuada lacinia turpis blandit sit amet. Aliquam auctor metus eu massa imperdiet, vel scelerisque metus aliquet. Nulla facilisi. Aliquam erat volutpat. Aenean nec lacus eu massa lacinia ultricies. In eget sollicitudin eros, sed suscipit elit. Quisque ac scelerisque purus, sit amet sodales est. Curabitur efficitur ultrices nunc. Mauris aliquet nisi commodo nulla condimentum, sed tempor nisi suscipit. Quisque magna augue, ultricies eu commodo ut, fringilla ac erat. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Morbi pharetra felis rutrum mi vehicula dapibus. Aliquam sem mi, fringilla ut facilisis efficitur, efficitur vel odio.
 	    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus auctor sem a libero ultricies convallis. Sed hendrerit tellus mi, malesuada lacinia turpis blandit sit amet. Aliquam auctor metus eu massa imperdiet, vel scelerisque metus aliquet. Nulla facilisi. Aliquam erat volutpat. Aenean nec lacus eu massa lacinia ultricies. In eget sollicitudin eros, sed suscipit elit. Quisque ac scelerisque purus, sit amet sodales est. Curabitur efficitur ultrices nunc. Mauris aliquet nisi commodo nulla condimentum, sed tempor nisi suscipit. Quisque magna augue, ultricies eu commodo ut, fringilla ac erat. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Morbi pharetra felis rutrum mi vehicula dapibus. Aliquam sem mi, fringilla ut facilisis efficitur, efficitur vel odio.
@@ -272,6 +272,8 @@ For instance, copy paste this new slip and test the attributes ``down-at``.
 	  <div down-at="1">
 	    That was long!
 	  </div>
+	</slip-body>
+      </slip-slip>
 
 
 Acting at unpause
@@ -285,9 +287,9 @@ However, there is a way to couple the "pause" mechanism with other actions than 
 
 .. code-block:: html
 		
-      <div class="slip" immediate-enter>
-        <div class="titre">Déclaration des droits de l'Homme et du Citoyen</div>
-        <div class="slip-body-container">
+      <slip-slip immediate-enter>
+        <slip-title>Déclaration des droits de l'Homme et du Citoyen</slip-title>
+        <slip-body>
 	  <ol>
 	    <li>Les hommes naissent et demeurent libres et égaux en droits. Les distinctions sociales ne peuvent être fondées que sur l'utilité commune.</li>
 	    <li pause>Le but de toute association politique est la conservation des droits naturels et imprescriptibles de l'homme. Ces droits sont la liberté, la propriété, la sûreté, et la résistance à l'oppression.</li>
@@ -307,8 +309,8 @@ However, there is a way to couple the "pause" mechanism with other actions than 
 	    <li pause down-at-unpause>Toute société dans laquelle la garantie des droits n'est pas assurée, ni la séparation des pouvoirs déterminée, n'a point de Constitution.</li>
 	    <li pause down-at-unpause>La propriété étant un droit inviolable et sacré, nul ne peut en être privé, si ce n'est lorsque la nécessité publique, légalement constatée, l'exige évidemment, et sous la condition d'une juste et préalable indemnité.</li>
 	  </ol>
-	</div>
-      </div>
+	</slip-body>
+      </slip-slip>
 
 .. tip:: You can make the ``*-at-unpause`` act on another element by specifying its ``id`` as value of the attribute. For instance, ``<div pause center-at-unpause="thm1">...</div><div id="thm1" class="theorem">...</div>`` will center the window around the theorem when the first ``div`` is unpaused.
 
@@ -324,77 +326,77 @@ Consider the following example, that you can add as a new slip:
 
 .. code-block:: html
 
-      <div class="slip" immediate-enter>
-          <div class="titre">A review of the numbers</div>
-          <div class="slip-body-container">
+      <slip-slip immediate-enter>
+          <slip-title>A review of the numbers</slip-title>
+          <slip-body>
 	      <div>First, we consider the positive numbers</div>
 	      <div style="display: flex; justify-content: space-around;">
-		  <div delay="1" scale="0.25" class="slip" auto-enter>
-		      <div class="titre">The integer</div>
-		      <div class="slip-body-container">
+		  <slip-slip delay="1" scale="0.25" auto-enter>
+		      <slip-title>The integer</slip-title>
+		      <slip-body>
 			  <ul>
 			      <li>1 is an integer,</li>
 			      <li pause>2 is an integer,</li>
 			      <li pause>100 is an integer.</li>
 			  </ul>
-		      </div>
-		  </div>
-		  <div delay="1" scale="0.25" class="slip" auto-enter>
-		      <div class="titre">The rationnals</div>
-		      <div class="slip-body-container">
+		      </slip-body>
+		  </slip-slip>
+		  <slip-slip delay="1" scale="0.25" auto-enter>
+		      <slip-title>The rationnals</slip-title>
+		      <slip-body>
 			  <ul>
 			      <li>1/2 is a rational,</li>
 			      <li pause>2/3 is a rational,</li>
 			      <li pause>567/87 is a rational.</li>
 			  </ul>
-		      </div>
-		  </div>
-		  <div delay="1" scale="0.25" class="slip" auto-enter>
-		      <div class="titre">The reals</div>
-		      <div class="slip-body-container">
+		      </slip-body>
+		  </slip-slip>
+		  <slip-slip delay="1" scale="0.25" auto-enter>
+		      <slip-title>The reals</slip-title>
+		      <slip-body>
 			  <ul>
 			      <li>π is a real,</li>
 			      <li pause>e is a real,</li>
 			      <li pause>d is a real.</li>
 			  </ul>
-		      </div>
-		  </div>
+		      </slip-body>
+		  </slip-slip>
 	      </div>
 	      <div pause>Then, the negative one</div>
 	      <div style="display: flex; justify-content: space-around;">
-		  <div delay="1" scale="0.25" class="slip" auto-enter>
-		      <div class="titre">The integer</div>
-		      <div class="slip-body-container">
+		  <slip-slip delay="1" scale="0.25" auto-enter>
+		      <slip-title>The integer</slip-title>
+		      <slip-body>
 			  <ul>
 			      <li>-1 is an integer,</li>
 			      <li pause>-2 is an integer,</li>
 			      <li pause>-100 is an integer.</li>
 			  </ul>
-		      </div>
-		  </div>
-		  <div delay="1" scale="0.25" class="slip" auto-enter>
-		      <div class="titre">The rationnals</div>
-		      <div class="slip-body-container">
+		      </slip-body>
+		  </slip-slip>
+		  <slip-slip delay="1" scale="0.25" auto-enter>
+		      <slip-title>The rationnals</slip-title>
+		      <slip-body>
 			  <ul>
 			      <li>-1/2 is a rational,</li>
 			      <li pause>-2/3 is a rational,</li>
 			      <li pause>-567/87 is a rational.</li>
 			  </ul>
-		      </div>
-		  </div>
-		  <div delay="1" scale="0.25" class="slip" auto-enter>
-		      <div class="titre">The reals</div>
-		      <div class="slip-body-container">
+		      </slip-body>
+		  </slip-slip>
+		  <slip-slip delay="1" scale="0.25" auto-enter>
+		      <slip-title>The reals</slip-title>
+		      <slip-body>
 			  <ul>
 			      <li>-π is a real,</li>
 			      <li pause>-e is a real,</li>
 			      <li pause>-d is a real.</li>
 			  </ul>
-		      </div>
-		  </div>
+		      </slip-body>
+		  </slip-slip>
 	      </div>
-	  </div>
-      </div>
+	  </slip-body>
+      </slip-slip>
 
 
 In this example, there are several new things:
@@ -414,7 +416,7 @@ When you press ``t`` during your presentation. Magic! However, this is quite ugl
 
 .. code-block:: html
 
-      <div class="slip" immediate-enter toc-title="Name that will appear in the table of content">
+      <slip-slip immediate-enter toc-title="Name that will appear in the table of content">
 
 .. todo:: The way the table of content looks like will very likely change a lot, please tell me how you would like it to be.
 
@@ -471,11 +473,11 @@ Start by removing the attributes ``immediate-enter``, and replace them by an ``i
 
 .. code-block:: html
 
-      <div class="slip" id="content-first-slip" toc-title="My First Slip">
-      <div class="slip" id="question" toc-title="A question about colors">
-      <div class="slip" id="emphasizing" toc-title="How to emphasize when you are shy">
-      <div class="slip" id="block" toc-title="Meta Definitions, Meta Theorems">
-      <div class="slip" id="latin" toc-title="Latin Overflow">
+      <slip-slip id="content-first-slip" toc-title="My First Slip">
+      <slip-slip id="question" toc-title="A question about colors">
+      <slip-slip id="emphasizing" toc-title="How to emphasize when you are shy">
+      <slip-slip id="block" toc-title="Meta Definitions, Meta Theorems">
+      <slip-slip id="latin" toc-title="Latin Overflow">
 
 Now, instead of ``Slipshow.startSlipshow();`` in the ``script`` tag, put the following lines:
 
