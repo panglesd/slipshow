@@ -2,7 +2,7 @@ var Slipshow = (function (exports) {
     'use strict';
 
     let myQueryAll = (root, selector, avoid) => {
-      avoid = avoid || ".slip";
+      avoid = avoid || "slip-slip";
       if (!root.id) root.id = '_' + Math.random().toString(36).substr(2, 15);
       let allElem = Array.from(root.querySelectorAll(selector));
       let separatedSelector = selector.split(",").map(selec => "#" + root.id + " " + avoid + " " + selec).join(); // console.log("debug myQueryAll", selector, "VS",  separatedSelector);
@@ -15,7 +15,7 @@ var Slipshow = (function (exports) {
     function cloneNoSubslip(elem) {
       let newElem = elem.cloneNode(false);
       elem.childNodes.forEach(child => {
-        if (child.classList && child.classList.contains("slip")) {
+        if (child.tagName && child.tagName == "SLIP-SLIP") {
           let placeholder = document.createElement(child.tagName);
           placeholder.classList.add("toReplace");
           newElem.appendChild(placeholder);
@@ -58,7 +58,7 @@ var Slipshow = (function (exports) {
         }
 
         if (ev.key == "#") {
-          document.querySelectorAll(".slip").forEach(slip => {
+          document.querySelectorAll("slip-slip").forEach(slip => {
             slip.style.zIndex = "-1";
           });
           document.querySelectorAll(".background-canvas").forEach(canvas => {
@@ -137,7 +137,7 @@ var Slipshow = (function (exports) {
       this.generateActionList = function () {
         console.log("debug generateactionlist", this.name);
         let newActionList = [];
-        this.queryAll(".slip[enter-at]").forEach(slip => {
+        this.queryAll("slip-slip[enter-at]").forEach(slip => {
           console.log("new slip with ", slip, null, null, ng, {});
           newActionList[slip.getAttribute("enter-at")] = new Slip(slip, "", [], ng, {});
         });
@@ -147,7 +147,7 @@ var Slipshow = (function (exports) {
       this.addSubSlips = function () {
         console.log("debug generateactionlist", this.name);
         let newActionList = [];
-        this.queryAll(".slip[enter-at]").forEach(slip => {
+        this.queryAll("slip-slip[enter-at]").forEach(slip => {
           console.log("new slip with ", slip, null, null, ng, {});
           this.setNthAction(slip.getAttribute("enter-at"), new Slip(slip, "", [], ng, {}));
         });
@@ -225,7 +225,7 @@ var Slipshow = (function (exports) {
 
       this.queryAll = quer => {
         return myQueryAll(this.element, quer); // let allElem = Array.from(this.element.querySelectorAll(quer));
-        // let other = Array.from(this.element.querySelectorAll("#"+this.name+" .slip "+quer));
+        // let other = Array.from(this.element.querySelectorAll("#"+this.name+" slip "+quer));
         // return allElem.filter(value => !other.includes(value));
       };
 
@@ -267,7 +267,7 @@ var Slipshow = (function (exports) {
         });
         let pause = this.query("[pause]");
 
-        while (pause && !pause.classList.contains("slip")) {
+        while (pause && !pause.tagName == "SLIP-SLIP") {
           pause.classList.add("pauseAncestor");
           pause = pause.parentElement;
         }
@@ -507,7 +507,7 @@ var Slipshow = (function (exports) {
       this.doRefresh = () => {
         console.log("gotoslip: doRefresh has been called");
         this.setActionIndex(-1);
-        let subSlipList = myQueryAll(this.element, ".slip");
+        let subSlipList = myQueryAll(this.element, "slip-slip");
         console.log("mmdebug", clonedElement);
         let clone = clonedElement.cloneNode(true);
         replaceSubslips(clone, subSlipList);
@@ -737,7 +737,7 @@ var Slipshow = (function (exports) {
 	</div>';
         rootElem.replaceWith(container);
         container.querySelector(".placeHolder").replaceWith(rootElem);
-        rootElem.querySelectorAll(".slip").forEach(slipElem => {
+        rootElem.querySelectorAll("slip-slip").forEach(slipElem => {
           setTimeout(() => {
             var scaleContainer = document.createElement('div');
             var slipContainer = document.createElement('div');
@@ -782,7 +782,7 @@ var Slipshow = (function (exports) {
       });
       let openWindow = document.querySelector("#open-window");
       let universe = document.querySelector("#universe");
-      let slips = universe.querySelectorAll(".slip:not(.root)");
+      let slips = universe.querySelectorAll("slip-slip:not(slip-slipshow)");
       let browserHeight, openWindowWidth;
       let browserWidth, openWindowHeight;
 
@@ -872,7 +872,7 @@ var Slipshow = (function (exports) {
         // let posY = 0.5;
         let depth = function depth(elem) {
           console.log("debug depth (elem)", elem);
-          let subslips = myQueryAll(elem, ".slip");
+          let subslips = myQueryAll(elem, "slip-slip");
           console.log("debug depth (subslips)", elem);
           return 1 + subslips.map(depth).reduce((a, b) => Math.max(a, b), 0);
         };
@@ -1139,7 +1139,7 @@ var Slipshow = (function (exports) {
         options = options ? options : {};
         console.log("options is ", options);
 
-        if (slip.element.classList.contains("slip")) {
+        if (slip.element.tagName == "SLIP-SLIP") {
           setTimeout(() => {
             let coord = slip.findSlipCoordinate();
 
@@ -1163,7 +1163,7 @@ var Slipshow = (function (exports) {
         }
       };
 
-      let rootSlip = new Slip(root.id, "Presentation", [], this, {});
+      let rootSlip = new Slip(root, "Presentation", [], this, {});
       let stack = [rootSlip]; // Stack Management:
 
       this.push = function (n) {
@@ -1308,8 +1308,8 @@ var Slipshow = (function (exports) {
     let startSlipshow = () => {
       let engine;
       if (typeof MathJax != "undefined") MathJax.startup.promise.then(() => {
-        engine = new Engine(document.querySelector("#rootSlip")).start();
-      });else engine = new Engine(document.querySelector("#rootSlip")).start();
+        engine = new Engine(document.querySelector("slip-slipshow")).start();
+      });else engine = new Engine(document.querySelector("slip-slipshow")).start();
       return engine;
     };
     /**

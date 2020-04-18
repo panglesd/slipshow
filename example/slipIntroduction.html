@@ -29,11 +29,11 @@
 	</style>
     </head>
     <body>
-	<div class="root" id="rootSlip" delay="1">
+	<slip-slipshow delay="1">
 	    <!--    First slip, an introduction                                  -->
-	    <div class="slip" id="intro">
-		<div class="titre">Slip.js</div>       <!-- Beamer style title   -->
-		<div class="slip-body-container">     <!-- Beamer style margin  -->
+	    <slip-slip id="intro">
+		<slip-title>Slip.js</slip-title>       <!-- Beamer style title   -->
+		<slip-body>     <!-- Beamer style margin  -->
 		    <ul>
 			<li><span emphasize-at="0">Slip.js</span> is a "slide" engine written in javascript.</li>
 			<li pause>Its goal is to keep the best from both worlds of:
@@ -50,13 +50,13 @@
 		    <div class="theorem" title="Fundamental Theorem of slip" pause>  <!-- Beamer style theorem -->
 			Slip.js, it's slip party.
 		    </div>
-		</div>
-	    </div>
+		</slip-body>
+	    </slip-slip>
 
 	    <!--    Second slip, the basics                        -->
-	    <div class="slip" id="base">
-		<div class="titre">The basics</div>
-		<div class="slip-body-container">
+	    <slip-slip id="base">
+		<slip-title>The basics</slip-title>
+		<slip-body>
 		    You need to write html. This is what a minimal slip presentation looks like:
 		    <!-- Sorry for the mess: including html into html is not very readable... -->
 		    <pre><code class="html">&lt;!doctype html&gt;
@@ -82,13 +82,13 @@
 &lt;script src="http://choum.net/panglesd/slides/slip-js/slip.js"&gt;&lt;/script&gt;
 			</code></pre>
 		    </div>
-		</div>
-	    </div>
+		</slip-body>
+	    </slip-slip>
 
 	    <!--    Third slip, the beamer part                        -->
-	    <div class="slip" id="beamer-part">
-		<div class="titre">The slide part of Slip</div>
-		<div class="slip-body-container">
+	    <slip-slip id="beamer-part">
+		<slip-title>The slide part of Slip</slip-title>
+		<slip-body>
 		    We list the "slides" behaviour that slip can also do:
 		    <ul>
 			<!-- Highlight makes it unreadable, should be changed. -->
@@ -113,13 +113,13 @@ We also have environment for theorems/definitions/examples:
 			The <pre class="inline-code"><code class="inline-code">title</code></pre> attribute allows to choose the title.
 		    </div>
 		    <div chg-visib-at="9">We can also write math with \(mathjax\). This amounts to most of the things done with classic slides.</div>
-		</div>
-	    </div>
+		</slip-body>
+	    </slip-slip>
 
 	    <!--    Fouth slip, the slip part                        -->
-	    <div class="slip" id="future">
-		<div class="titre">The future: slips</div>
-		<div class="slip-body-container">
+	    <slip-slip id="future">
+		<slip-title>The future: slips</slip-title>
+		<slip-body>
 		    <h1>Problem</h1>
 		    The problems with slides are the following:
 		    <ul>
@@ -147,9 +147,9 @@ We also have environment for theorems/definitions/examples:
 			</li>
 			<div style="display: flex; justify-content: space-around; margin:40px;">
 			    <!-- <div> -->
-				<div auto-enter class="slip" id="red" style="background-color:red" scale="0.25" delay="1"> <!--  enter-at="12" -->
-				    <div class="titre">Choose a color</div>
-				    <div class="slip-body-container">
+				<slip-slip auto-enter id="red" style="background-color:red" scale="0.25" delay="1"> <!--  enter-at="12" -->
+				    <slip-title>Choose a color</slip-title>
+				    <slip-body>
 					<div style="color:blue; font-size:5em;text-align:center">Blue Slip</div>
 					<div pause style="color:blue; font-size:2em;text-align:center">The presentation is structured as a tree rather than a linear presentation</div>
 					<div pause style="color:blue; font-size:2em;text-align:center">Press "t" to hide/see the table of content</div>
@@ -159,19 +159,19 @@ We also have environment for theorems/definitions/examples:
 					<div  style="color:blue; font-size:5em;text-align:center">Blue Slip</div>
 					<div  style="color:blue; font-size:5em;text-align:center">Blue Slip</div>
 					<div  down-at="5" style="color:blue; font-size:2em;text-align:center">Remember: slips are not of fixed height!</div>
-				    </div>
-				</div>
+				    </slip-body>
+				</slip-slip>
 				<!-- </div>
 				     <div> -->
-				<div auto-enter class="slip" id="blue" style="background-color:blue" scale="0.25" delay="1"> <!--  enter-at="13" -->
-				    <div class="titre">Choose a color</div>
-				    <div class="slip-body-container">
+				<slip-slip auto-enter id="blue" style="background-color:blue" scale="0.25" delay="1"> <!--  enter-at="13" -->
+				    <slip-title>Choose a color</slip-title>
+				    <slip-body>
 					<div style="color:red; font-size:5em;text-align:center">Red Slip</div>
 					<div pause style="color:red; font-size:2em;text-align:center">You can navigate slip by slip with shift+left/right</div>
 					<div pause style="color:red; font-size:2em;text-align:center">You can restart a slip with "r"</div>
 					<div pause style="color:red; font-size:2em;text-align:center">Soon there will be more navigation fun!</div>
-				    </div>
-				</div>
+				    </slip-body>
+				</slip-slip>
 				<!-- </div>			 -->
 			</div>
 			<li pause down-at-unpause="js-example">
@@ -251,8 +251,8 @@ We also have environment for theorems/definitions/examples:
 			<li pause>The project is open-source and will (soon) be well-documented!
 			</li>
 		    </ul>
-		</div>
-	    </div>
+		</slip-body>
+	    </slip-slip>
 	    
 	    <!--    The two small slips used to show slip placement                        -->
 
@@ -265,10 +265,10 @@ We also have environment for theorems/definitions/examples:
 		<div style="margin: 100px">Github: <a href="https://github.com/panglesd/slip-js">https://github.com/panglesd/slip-js</a>.</div>
 		<div style="margin: 100px">An example (old version of the engine): <a href="https://choum.net/panglesd/slides/slides-js/slides.html">Slips</a>.</div>
 </div>
-	</div>
+	</slip-slipshow>
 	<script src="../slipshow.cdn.min.js"></script>
 	<script>
-	 let engine = new Slipshow.Engine(document.querySelector("#rootSlip"));
+	 let engine = new Slipshow.Engine(document.querySelector("slip-slipshow"));
 	 window.engine = engine;
 	 let rootSlip = engine.getRootSlip();
 	 // let rootSlip = new Slip("rootSlip", [], engine, {});
