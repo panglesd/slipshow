@@ -24,20 +24,20 @@ if(process.argv.includes("--mathjax-local"))
 template += '  <body>\n\
 \n\
     <!-- This is the presentation -->\n\
-    <div class="root" id="rootSlip">\n\
+    <slip-slipshow>\n\
 \n\
       <!-- Add the slips here -->\n\
 \n\
       <!-- For instance here is a slip -->\n\
-      <div class="slip" immediate-enter toc-title="Example of a slip">\n\
-	<div class="titre">The first slip of your presentation</div>\n\
-	<div class="slip-body-container">\n\
+      <slip-slip immediate-enter toc-title="Example of a slip">\n\
+	<slip-title>The first slip of your presentation</slip-title>\n\
+	<slip-body>\n\
           Example\n\
-	</div>\n\
-      </div>\n\
+	</slip-body>\n\
+      </slip-slip>\n\
       <!-- End of slip "Example of a slip" -->\n\
 \n\
-    </div>\n\
+    </slip-slipshow>\n\
 \n\
     <!-- Include the library -->\n\
 ';
