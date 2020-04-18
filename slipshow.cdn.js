@@ -203,7 +203,7 @@ var Slipshow = (function (exports) {
       this.getMaxNext = () => {
         if (this.maxNext) return this.maxNext;
         let maxTemp = actionList.length;
-        ["mk-visible-at", "mk-hidden-at", "mk-emphasize-at", "mk-unemphasize-at", "emphasize-at", "chg-visib-at", "up-at", "down-at", "center-at", "static-at", "exec-at", "enter-at"].forEach(attr => {
+        ["mk-visible-at", "mk-hidden-at", "mk-emphasize-at", "mk-unemphasize-at", "emphasize-at", "chg-visib-at", "up-at", "down-at", "center-at", "static-at", "exec-at", "enter-at", "focus-at", "unfocus-at"].forEach(attr => {
           this.queryAll("*[" + attr + "]").forEach(elem => {
             elem.getAttribute(attr).split(" ").forEach(strMax => {
               maxTemp = Math.max(Math.abs(parseInt(strMax)), maxTemp);
@@ -267,7 +267,7 @@ var Slipshow = (function (exports) {
         });
         let pause = this.query("[pause]");
 
-        while (pause && !pause.tagName == "SLIP-SLIP") {
+        while (pause && pause.tagName != "SLIP-SLIP") {
           pause.classList.add("pauseAncestor");
           pause = pause.parentElement;
         }
@@ -285,6 +285,8 @@ var Slipshow = (function (exports) {
         if (pause.hasAttribute("center-at-unpause")) if (pause.getAttribute("center-at-unpause") == "") this.moveCenterTo(pause, 1);else this.moveCenterTo("#" + pause.getAttribute("center-at-unpause"), 1);
         if (pause.hasAttribute("exec-at-unpause")) if (pause.getAttribute("exec-at-unpause") == "") this.executeScript(pause);else this.executeScript("#" + pause.getAttribute("exec-at-unpause"));
         if (pause.hasAttribute("reveal-at-unpause")) if (pause.getAttribute("reveal-at-unpause") == "") this.reveal(pause);else this.reveal("#" + pause.getAttribute("reveal-at-unpause"));
+        if (pause.hasAttribute("focus-at-unpause")) if (pause.getAttribute("focus-at-unpause") == "") this.focus(pause);else this.focus("#" + pause.getAttribute("focus-at-unpause"));
+        if (pause.hasAttribute("unfocus-at-unpause")) if (pause.getAttribute("unfocus-at-unpause") == "") this.unfocus(pause);else this.unfocus("#" + pause.getAttribute("unfocus-at-unpause"));
       };
 
       this.incrPause = () => {
@@ -380,6 +382,14 @@ var Slipshow = (function (exports) {
         this.queryAll("*[center-at]").forEach(elem => {
           let goDownTo = elem.getAttribute("center-at").split(" ").map(str => parseInt(str));
           if (goDownTo.includes(actionIndex)) this.moveCenterTo(elem, 1);
+        });
+        this.queryAll("*[focus-at]").forEach(elem => {
+          let focus = elem.getAttribute("focus-at").split(" ").map(str => parseInt(str));
+          if (focus.includes(actionIndex)) this.focus(elem, 1);
+        });
+        this.queryAll("*[unfocus-at]").forEach(elem => {
+          let focus = elem.getAttribute("unfocus-at").split(" ").map(str => parseInt(str));
+          if (focus.includes(actionIndex)) this.unfocus(elem, 1);
         });
         this.queryAll("*[exec-at]").forEach(elem => {
           let toExec = elem.getAttribute("exec-at").split(" ").map(str => parseInt(str));
@@ -552,6 +562,17 @@ var Slipshow = (function (exports) {
         elem.style.visibility = "visible";
       };
 
+      this.unfocus = selector => {
+        this.getEngine().gotoSlip(this, {
+          delay: 1
+        });
+      };
+
+      this.focus = selector => {
+        let elem = this.query(selector);
+        this.getEngine().moveToElement(elem, {});
+      };
+
       this.executeScript = selector => {
         let elem;
         if (typeof selector == "string") elem = this.query(selector);else elem = selector;
@@ -598,6 +619,10 @@ var Slipshow = (function (exports) {
           // this.currentDelay = delay;
           // engine.moveWindow(coord.x, coord.y+d, coord.scale, this.rotate, delay);
         }, 0);
+      };
+
+      this.restoreWindow = () => {
+        this.getEngine;
       };
 
       this.moveWindow = (x, y, scale, rotate, delay) => {
