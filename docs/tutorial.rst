@@ -312,7 +312,9 @@ However, there is a way to couple the "pause" mechanism with other actions than 
 	</slip-body>
       </slip-slip>
 
-.. tip:: You can make the ``*-at-unpause`` act on another element by specifying its ``id`` as value of the attribute. For instance, ``<div pause center-at-unpause="thm1">...</div><div id="thm1" class="theorem">...</div>`` will center the window around the theorem when the first ``div`` is unpaused.
+.. tip:: You can make the ``*-at-unpause`` act on another element by specifying its ``id`` as value of the attribute. For instance, ``<div pause center-at-unpause="thm1">...</div>``, ``<div id="thm1" class="theorem">...</div>`` will center the window around the theorem when the first ``div`` is unpaused.
+
+.. tip:: If a slip has many steps, and you want to go directly to the next one, you can hold ``Shift`` while you press the right arrow. It will go through all steps until the next slip.
 
 .. todo:: The attribute ``emphasize-at-unpause`` is not yet implemented but it will be very soon!
 
