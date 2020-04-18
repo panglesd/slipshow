@@ -18,10 +18,10 @@ export let startSlipshow = () => {
     let engine;
     if(typeof MathJax != "undefined")
 	MathJax.startup.promise.then(() => {
-	    engine = new Engine(document.querySelector("#rootSlip")).start();
+	    engine = new Engine(document.querySelector("slip-slipshow")).start();
 	});
     else
-	engine = new Engine(document.querySelector("#rootSlip")).start();
+	engine = new Engine(document.querySelector("slip-slipshow")).start();
     return engine;
 };
 

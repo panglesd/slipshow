@@ -29,7 +29,7 @@
 	</style>
     </head>
     <body>
-	<div class="root" id="rootSlip" delay="1">
+	<slip-slipshow delay="1">
 	    <!--    First slip, an introduction                                  -->
 	    <slip-slip id="intro">
 		<slip-title>Slip.js</slip-title>       <!-- Beamer style title   -->
@@ -265,10 +265,10 @@ We also have environment for theorems/definitions/examples:
 		<div style="margin: 100px">Github: <a href="https://github.com/panglesd/slip-js">https://github.com/panglesd/slip-js</a>.</div>
 		<div style="margin: 100px">An example (old version of the engine): <a href="https://choum.net/panglesd/slides/slides-js/slides.html">Slips</a>.</div>
 </div>
-	</div>
+	</slip-slipshow>
 	<script src="../slipshow.cdn.min.js"></script>
 	<script>
-	 let engine = new Slipshow.Engine(document.querySelector("#rootSlip"));
+	 let engine = new Slipshow.Engine(document.querySelector("slip-slipshow"));
 	 window.engine = engine;
 	 let rootSlip = engine.getRootSlip();
 	 // let rootSlip = new Slip("rootSlip", [], engine, {});

@@ -58,7 +58,7 @@ export default function (root) {
     });
     let openWindow = document.querySelector("#open-window");
     let universe = document.querySelector("#universe");
-    let slips = universe.querySelectorAll("slip-slip:not(.root)");
+    let slips = universe.querySelectorAll("slip-slip:not(slip-slipshow)");
     let browserHeight, openWindowWidth;
     let browserWidth, openWindowHeight;
     this.getOpenWindowHeight = () => openWindowHeight;
@@ -397,7 +397,7 @@ export default function (root) {
 	     },0);
 	}
     };
-    let rootSlip = new Slip(root.id, "Presentation", [], this, {});
+    let rootSlip = new Slip(root, "Presentation", [], this, {});
     let stack = [rootSlip];
 
     // Stack Management:

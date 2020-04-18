@@ -138,10 +138,10 @@ body {
     background-color: white;
     overflow: hidden;
 }
-.root.slip {
+.slip-slipshow.slip {
     flex-direction: row;
 }
-.root {
+.slip-slipshow {
     font: 30px "Fira Sans", sans-serif;
 }
 slip-slip {
