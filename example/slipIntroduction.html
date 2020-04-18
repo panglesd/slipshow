@@ -266,9 +266,9 @@ We also have environment for theorems/definitions/examples:
 		<div style="margin: 100px">An example (old version of the engine): <a href="https://choum.net/panglesd/slides/slides-js/slides.html">Slips</a>.</div>
 </div>
 	</div>
-	<script src="../slip-lib.cdn.min.js"></script>
+	<script src="../slipshow.cdn.min.js"></script>
 	<script>
-	 let engine = new Engine(document.querySelector("#rootSlip"));
+	 let engine = new Slipshow.Engine(document.querySelector("#rootSlip"));
 	 window.engine = engine;
 	 let rootSlip = engine.getRootSlip();
 	 // let rootSlip = new Slip("rootSlip", [], engine, {});
@@ -279,15 +279,15 @@ We also have environment for theorems/definitions/examples:
 	 // (this is mostly because we want the slips "red" and "blue" in the middle of the slip "future")
 
 	 // Creation of slips
-	 let intro = new Slip("intro", "Slip Intro", [], engine, {});
+	 let intro = new Slipshow.Slip("intro", "Slip Intro", [], engine, {});
 	 window.intro = intro;
-	 let base = new Slip("base", "Slip Basics", [], engine, {});
+	 let base = new Slipshow.Slip("base", "Slip Basics", [], engine, {});
 	 window.base = base;
-	 let beamerPart = new Slip("beamer-part", "Boring part of Slip", [], engine, {});
+	 let beamerPart = new Slipshow.Slip("beamer-part", "Boring part of Slip", [], engine, {});
 	 window.beamerPart = beamerPart;
 
 	 // All JS added must be done in the init or the firstVisit function
-	 let future = new Slip("future", "Fun part of Slip", [], engine, {init: (slip) => { slip.delay = 0;}});
+	 let future = new Slipshow.Slip("future", "Fun part of Slip", [], engine, {init: (slip) => { slip.delay = 0;}});
 	 window.future = future;
 
 	 future.setNthAction(0, (slip) => {
@@ -303,15 +303,15 @@ We also have environment for theorems/definitions/examples:
 	     slip.delay = 1;
 	 });
 	 // When we enter red, we want that when we go back to future we do that "smoothly" (in 1s)
-	 let red = new Slip("red", "red Slip", [], engine, { firstVisit: (slip) => { future.delay = 1;}});
+	 let red = new Slipshow.Slip("red", "red Slip", [], engine, { firstVisit: (slip) => { future.delay = 1;}});
 
-	 let blue = new Slip("blue", "blue Slip", [], engine, {});
+	 let blue = new Slipshow.Slip("blue", "blue Slip", [], engine, {});
 
-	 // let scaleTest = new Slip("scale-test", [], presentation, engine, {});
+	 // let scaleTest = new Slipshow.Slip("scale-test", [], presentation, engine, {});
 
 
 	 // the "c1" elements have to be hidden for when "future" unzoom. They have to be shown as soon as we enter this slip.
-	 // let links = new Slip("links", [], engine, {firstVisit: (slip) => {slip.revealAll(".c1");}});
+	 // let links = new Slipshow.Slip("links", [], engine, {firstVisit: (slip) => {slip.revealAll(".c1");}});
 
 	 // at step 9, future unzooms the window
 	 future.setNthAction(10, (slip) => {
@@ -331,7 +331,7 @@ We also have environment for theorems/definitions/examples:
 	     beamerPart,
 	     future,
 	 ]);
-	 let controller = new Controller(engine);
+	 // let controller = new Controller(engine);
 	 engine.start();
 
 	</script>
