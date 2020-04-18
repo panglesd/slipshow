@@ -1,5 +1,5 @@
 export let myQueryAll = (root, selector, avoid) => {
-    avoid = avoid || ".slip";
+    avoid = avoid || "slip-slip";
     if (!root.id)
 	root.id = '_' + Math.random().toString(36).substr(2, 15);;
     let allElem = Array.from(root.querySelectorAll(selector));
@@ -14,7 +14,7 @@ window.myQueryAll = myQueryAll;
 export function cloneNoSubslip (elem) {
     let newElem = elem.cloneNode(false);
     elem.childNodes.forEach((child) => {
-	if(child.classList && child.classList.contains("slip")){
+	if(child.tagName && child.tagName == "SLIP-SLIP"){
 	    let placeholder = document.createElement(child.tagName);
 	    placeholder.classList.add("toReplace");
 	    newElem.appendChild(placeholder);

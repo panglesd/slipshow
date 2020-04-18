@@ -144,7 +144,7 @@ body {
 .root {
     font: 30px "Fira Sans", sans-serif;
 }
-.slip {
+slip-slip {
     /* pointer-event:none; */
     font: 30px "Fira Sans", sans-serif;
     box-sizing: border-box;
@@ -156,7 +156,7 @@ body {
     width: 1440px;
     /* height: 1080px; */
 }
-.slip .titre {
+slip-slip slip-title {
     flex: 0 1 auto;
     -webkit-box-shadow: 0px 5px 18px 5px rgba(0,0,0,0.42); 
     box-shadow: 0px 5px 18px 5px rgba(0,0,0,0.42);
@@ -167,7 +167,7 @@ body {
     padding: 10px;
     padding-left:60px;
 }
-.slip .slip-body-container {
+slip-slip slip-body {
     /* padding:60px; */
     margin-top: auto;
     margin-bottom: auto;
@@ -178,7 +178,7 @@ body {
     transform-origin: 0 0;
     
 }
-.slip .emphasize {
+slip-slip .emphasize {
     background-color: yellow;
 }
 
@@ -188,7 +188,7 @@ body {
     line-height: 72px;
 }
 
-.slip.no-flex .slip-container {
+slip-slip.no-flex .slip-container {
     display: block;
 }
 h1 {

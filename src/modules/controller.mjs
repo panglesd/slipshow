@@ -12,7 +12,7 @@ export default function (ng) {
 	if(ev.key == "f") { speedMove = (speedMove + 4)%30+1; }    
 	if(ev.key == "r") { engine.getCurrentSlip().refresh(); }    
 	if(ev.key == "#") {
-	    document.querySelectorAll(".slip").forEach((slip) => {slip.style.zIndex = "-1";});
+	    document.querySelectorAll("slip-slip").forEach((slip) => {slip.style.zIndex = "-1";});
 	    document.querySelectorAll(".background-canvas").forEach((canvas) => {canvas.style.zIndex = "1";});
 	}    
     });

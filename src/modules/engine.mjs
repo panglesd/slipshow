@@ -23,7 +23,7 @@ export default function (root) {
 	</div>';
 	rootElem.replaceWith(container);
 	container.querySelector(".placeHolder").replaceWith(rootElem);
-	rootElem.querySelectorAll(".slip").forEach((slipElem) => {
+	rootElem.querySelectorAll("slip-slip").forEach((slipElem) => {
 	    setTimeout(() => {
 		var scaleContainer = document.createElement('div');
 		var slipContainer = document.createElement('div');
@@ -58,7 +58,7 @@ export default function (root) {
     });
     let openWindow = document.querySelector("#open-window");
     let universe = document.querySelector("#universe");
-    let slips = universe.querySelectorAll(".slip:not(.root)");
+    let slips = universe.querySelectorAll("slip-slip:not(.root)");
     let browserHeight, openWindowWidth;
     let browserWidth, openWindowHeight;
     this.getOpenWindowHeight = () => openWindowHeight;
@@ -131,7 +131,7 @@ export default function (root) {
 	// let posY = 0.5;
 	let depth = function (elem) {
 	    console.log("debug depth (elem)", elem);
-	    let subslips = myQueryAll(elem, ".slip");
+	    let subslips = myQueryAll(elem, "slip-slip");
 	    console.log("debug depth (subslips)", elem);
 	    return 1+subslips.map(depth).reduce((a,b) => Math.max(a,b),0);
 	};
@@ -375,7 +375,7 @@ export default function (root) {
 	console.log("we goto slip", slip.element, this.getDoNotMove());
 	options = options ? options : {};
 	console.log("options is ", options);
-	if(slip.element.classList.contains("slip"))
+	if(slip.element.tagName == "SLIP-SLIP")
 	{
 	     setTimeout(() => {
 		let coord = slip.findSlipCoordinate();

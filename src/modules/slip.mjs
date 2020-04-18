@@ -9,7 +9,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
     this.generateActionList = function() {
 	console.log("debug generateactionlist", this.name);
 	let newActionList = [];
-	this.queryAll(".slip[enter-at]").forEach((slip) => {
+	this.queryAll("slip-slip[enter-at]").forEach((slip) => {
 	    console.log("new slip with ", slip, null, null, ng, {});
 	    newActionList[slip.getAttribute("enter-at")] = new Slip(slip, "", [], ng, {});
 	});
@@ -18,7 +18,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
     this.addSubSlips = function() {
 	console.log("debug generateactionlist", this.name);
 	let newActionList = [];
-	this.queryAll(".slip[enter-at]").forEach((slip) => {
+	this.queryAll("slip-slip[enter-at]").forEach((slip) => {
 	    console.log("new slip with ", slip, null, null, ng, {});
 	    this.setNthAction(slip.getAttribute("enter-at"), new Slip(slip, "", [], ng, {}));
 	});
@@ -105,7 +105,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
     this.queryAll = (quer) => {
 	return myQueryAll(this.element, quer);
 	// let allElem = Array.from(this.element.querySelectorAll(quer));
-	// let other = Array.from(this.element.querySelectorAll("#"+this.name+" .slip "+quer));
+	// let other = Array.from(this.element.querySelectorAll("#"+this.name+" slip "+quer));
 	// return allElem.filter(value => !other.includes(value));
     };
     this.query = (quer) => {
@@ -145,7 +145,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
     this.updatePauseAncestors = () => {
 	this.queryAll(".pauseAncestor").forEach((elem) => {elem.classList.remove("pauseAncestor");});
 	let pause = this.query("[pause]");
-	while(pause && !pause.classList.contains("slip")) {
+	while(pause && !pause.tagName == "SLIP-SLIP") {
 	    pause.classList.add("pauseAncestor");
 	    pause = pause.parentElement;
 	};
@@ -389,7 +389,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
     this.doRefresh = () => {
 	console.log("gotoslip: doRefresh has been called");
 	this.setActionIndex(-1);
-	let subSlipList = myQueryAll(this.element, ".slip");
+	let subSlipList = myQueryAll(this.element, "slip-slip");
 	console.log("mmdebug", clonedElement);
 	let clone = clonedElement.cloneNode(true);
 	replaceSubslips(clone, subSlipList);
