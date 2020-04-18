@@ -12,12 +12,12 @@ In the canvas are placed not slides, but slips. A slip is a slide with no bottom
 
 You can find several example of slip presentation, from different versions of slip. As they were from early stage of developpement, looking at the source code can be helpful but many things may have changed. Only the official example, tutorial and documentation are kept up to date.
 
-- [The slips to present slip](http://choum.net/panglesd/slides/slip-js/slides.html)
+- [The slips to present slip](https://panglesd.github.io/slipshow/example/slipIntroduction.html)
 - [The slips of my thesis](http://choum.net/panglesd/slides/slides-js/slides.html) (old version of the engine)
 
 ##  Tutorial, API and Documentation
 
-You can find an extensive documentation, with a tutorial at the readthedocs [documentation](https://slipshow.readthedocs.io)
+You can find an extensive documentation, with a tutorial at the readthedocs [documentation](https://slipshow.readthedocs.io).
 
 ## Very quick start
 
