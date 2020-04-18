@@ -409,6 +409,31 @@ In this example, there are several new things:
 
 .. note:: The transition back to the parent slip is not very good at this point. This is because the parent slip has ``delay="0"`` by default. We wanted this as we do not want to enter this slip "smoothly" the first time. We will see in Javascripting your presentation how to modify this.
 
+Focusing on elements
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Another important feature of slipshow is that it allows easily to focus on element of a slip. For instance, add the following more or less self-explanatory slip to you slipshow:
+
+.. code-block:: html
+
+      <slip-slip immediate-enter>
+        <slip-title>A table</slip-title>
+	<slip-body>
+	  <table>
+	    <tr unfocus-at="5">
+	      <td focus-at="1"> Here is some other text </td>
+	      <td focus-at="4"><img src="https://picsum.photos/200"/></td>
+	    </tr>
+	    <tr>
+	      <td focus-at="2"><img src="https://picsum.photos/200"/></td>
+	      <td focus-at="3"> Here is some text </td>
+	    </tr>
+	  </table>
+	</slip-body>	
+      </slip-slip>
+
+.. note:: It is not important which element has the attribute ``unfocus-at``.
+      
 The table of content
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -428,7 +453,7 @@ One of the advantage of slip is that you can make animation. In order to start y
 Executing Javascript in the flow
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Following other events, there are two ways to execute javascript: with the ``execute-at`` and the ``execute-at-unpause`` attributes. You need to enclose the script you want to execute inside script tags, with type ``slip-script``.
+Following other events, there are two ways to execute javascript: with the ``exec-at`` and the ``exec-at-unpause`` attributes. You need to enclose the script you want to execute inside script tags, with type ``slip-script``.
 
 .. code-block:: html
 
@@ -440,20 +465,21 @@ For instance, recall that the delay for the slip named "A review of the numbers"
 
 .. code-block:: html
 
-		<script type="slip-script" execute-at="1">
-		  slip.delay = 1;
+		<script type="slip-script" exec-at="1">
+		  slip.currentDelay = 1;
 		</script>
 
-However, one should be very careful when making javascript changes. Indeed, slip cannot automatically (yet) revert your scripts, and if you go back in the presentation you should make sure they are reverted at step 0. For instance, in our case:
+..
+   However, one should be very careful when making javascript changes. Indeed, slip cannot automatically (yet) revert your scripts, and if you go back in the presentation you should make sure they are reverted at step 0. For instance, in our case:
 
-.. code-block:: html
+   .. code-block:: html
 
-		<script type="slip-script" execute-at="0">
-		  slip.delay = 0;
-		</script>
-		<script type="slip-script" execute-at="1">
-		  slip.delay = 1;
-		</script>
+		   <script type="slip-script" exec-at="0">
+		     slip.delay = 0;
+		   </script>
+		   <script type="slip-script" exec-at="1">
+		     slip.delay = 1;
+		   </script>
 
 		
 Program your presentation

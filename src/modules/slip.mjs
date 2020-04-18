@@ -81,6 +81,8 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	 "static-at",
 	 "exec-at",
 	 "enter-at",
+	 "focus-at",
+	 "unfocus-at",
 	].forEach((attr) => {
 	     this.queryAll("*["+attr+"]").forEach((elem) => {
 		 elem.getAttribute(attr).split(" ").forEach((strMax) => {
@@ -145,7 +147,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
     this.updatePauseAncestors = () => {
 	this.queryAll(".pauseAncestor").forEach((elem) => {elem.classList.remove("pauseAncestor");});
 	let pause = this.query("[pause]");
-	while(pause && !pause.tagName == "SLIP-SLIP") {
+	while(pause && pause.tagName != "SLIP-SLIP") {
 	    pause.classList.add("pauseAncestor");
 	    pause = pause.parentElement;
 	};
@@ -178,6 +180,16 @@ export default function Slip(name, fullName, actionL, ng, options) {
 		this.reveal(pause);
 	else
 	    this.reveal("#"+pause.getAttribute("reveal-at-unpause"));
+	if(pause.hasAttribute("focus-at-unpause"))
+	    if(pause.getAttribute("focus-at-unpause") == "")
+		this.focus(pause);
+	else
+	    this.focus("#"+pause.getAttribute("focus-at-unpause"));
+	if(pause.hasAttribute("unfocus-at-unpause"))
+	    if(pause.getAttribute("unfocus-at-unpause") == "")
+		this.unfocus(pause);
+	else
+	    this.unfocus("#"+pause.getAttribute("unfocus-at-unpause"));
     };
     this.incrPause = () => {
 	let pause = this.query("[pause], [auto-enter]:not([auto-enter=\"0\"]), [immediate-enter]:not([immediate-enter=\"0\"]), [step]");
@@ -276,6 +288,14 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	    let goDownTo = elem.getAttribute("center-at").split(" ").map((str) => parseInt(str));
 	    if(goDownTo.includes(actionIndex))
 		this.moveCenterTo(elem, 1);});	
+	this.queryAll("*[focus-at]").forEach((elem) => {
+	    let focus = elem.getAttribute("focus-at").split(" ").map((str) => parseInt(str));
+	    if(focus.includes(actionIndex))
+		this.focus(elem, 1);});	
+	this.queryAll("*[unfocus-at]").forEach((elem) => {
+	    let focus = elem.getAttribute("unfocus-at").split(" ").map((str) => parseInt(str));
+	    if(focus.includes(actionIndex))
+		this.unfocus(elem, 1);});	
 	this.queryAll("*[exec-at]").forEach((elem) => {
 	    let toExec = elem.getAttribute("exec-at").split(" ").map((str) => parseInt(str));
 	    if(toExec.includes(actionIndex))
@@ -432,6 +452,14 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	elem.style.position = "static";
 	elem.style.visibility = "visible";
     };
+    this.unfocus = (selector) => {
+	this.getEngine().gotoSlip(this, { delay: 1});
+    };
+    this.focus = (selector) => {
+	let elem = this.query(selector);
+	this.getEngine().moveToElement(elem, {});
+    };
+
     this.executeScript = (selector) => {
 	let elem;
 	if(typeof selector == "string") elem = this.query(selector);
@@ -482,6 +510,9 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	    // this.currentDelay = delay;
 	    // engine.moveWindow(coord.x, coord.y+d, coord.scale, this.rotate, delay);
 	},0);
+    };
+    this.restoreWindow = () => {
+	this.getEngine
     };
     this.moveWindow = (x,y,scale,rotate, delay) => {
 	this.currentX = x;

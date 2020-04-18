@@ -134,6 +134,18 @@ Here, we list the attributes that act at predefined steps of the presentation.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   If an element has attribute ``center-at="n"``, then the window will move at step :math:`n` so that the element appear at the center of the screen.
 
+.. _focus-at:
+
+``focus-at``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  If an element has attribute ``focus-at="n"``, then the window will move at step :math:`n` so that the element takes all the screen.
+
+.. _unfocus-at:
+
+``unfocus-at``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  If an element has attribute ``unfocus-at="n"`` at step :math:`n`, and the window was focusing on an element, then the window will return to its original place.
+
 .. _static-at:
 
 ``static-at``
@@ -206,6 +218,18 @@ When an element has focus from the pause mechanism, and its attribute is removed
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   When an element with the ``center-at-unpause`` attribute is unpaused, the window will move so that the element appear at the center of the screen. If the attribute has a value, e.g. ``center-at-unpause="id"``, then the element with id ``id`` will be put at the center of the screen instead.
 
+.. _focus-at-unpause:
+
+``focus-at-unpause``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  When an element with the ``focus-at-unpause`` attribute is unpaused, the window will move so that the element takes all the screen. If the attribute has a value, e.g. ``focus-at-unpause="id"``, then the element with id ``id`` will be the one taking all the screen instead.  
+
+.. _unfocus-at-unpause:
+
+``unfocus-at-unpause``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  When an element with the ``focus-at-unpause`` attribute is unpaused, and the window was focusing on an element, the window will return to its original place.
+
 .. _exec-at-unpause:
 
 ``exec-at-unpause``
@@ -256,6 +280,17 @@ A slip script can be executed either with :ref:`exec-at`, :ref:`exec-at-unpause`
 .. _upTo:
 
 ``slip.upTo``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+.. _focus:
+
+``slip.focus``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. _unfocus:
+
+``slip.unfocus``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. _setAction:
