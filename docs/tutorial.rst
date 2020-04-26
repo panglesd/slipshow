@@ -519,7 +519,7 @@ Now, instead of ``Slipshow.startSlipshow();`` in the ``script`` tag, put the fol
    // Slipshow.startSlipshow();
 
    // We first create a slip engine inside the element "rootSlip"
-   let engine = new Slipshow.Engine("rootSlip");
+   let engine = new Slipshow.Engine();
    // We get the root Slip of the presentation (remember that a slipshow is a tree)
    let rootSlip = engine.getRootSlip()
 
