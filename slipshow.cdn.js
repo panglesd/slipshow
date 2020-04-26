@@ -790,7 +790,7 @@ var Slipshow = (function (exports) {
       if (typeof root == "string") {
         if (root[0] != "#") root = "#" + root;
         root = document.querySelector(root);
-      }
+      } else if (typeof root == "undefined") root = document.querySelector("slip-slipshow");
 
       prepareRoot(root); // Constants
 

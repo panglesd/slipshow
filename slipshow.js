@@ -762,6 +762,8 @@ function IEngine (root) {
 	    root = "#"+root;
 	root = document.querySelector(root);
     }
+    else if (typeof(root) == "undefined")
+	root = document.querySelector("slip-slipshow");
     prepareRoot(root);
 
     // Constants
