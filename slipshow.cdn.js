@@ -188,7 +188,7 @@ var Slipshow = (function (exports) {
       };
 
       this.getSubSlipList = function () {
-        return actionList.filter(action => action instanceof Slip);
+        return this.getActionList().filter(action => action instanceof Slip);
       }; // ******************************
       // Action Index
       // ******************************
