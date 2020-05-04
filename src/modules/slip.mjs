@@ -56,7 +56,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	return true;
     };
     this.getSubSlipList = function () {
-	return actionList.filter((action) => action instanceof Slip);
+	return this.getActionList().filter((action) => action instanceof Slip);
     };
 
     // ******************************
