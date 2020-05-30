@@ -1192,13 +1192,17 @@ var Slipshow = (function (exports) {
       let stack = [rootSlip]; // Stack Management:
 
       this.push = function (n) {
+        this.getToC().querySelectorAll(".toc-slip .active-slip").forEach(elem => elem.classList.remove("active-slip"));
+        if (n.tocElem) n.tocElem.classList.add("active-slip");
         stack.push(n);
         return;
       };
 
       this.pop = function () {
+        this.getToC().querySelectorAll(".toc-slip .active-slip").forEach(elem => elem.classList.remove("active-slip"));
         let n = stack.pop();
         if (stack.length == 0) stack.push(n);
+        if (stack[stack.length - 1].tocElem) stack[stack.length - 1].tocElem.classList.add("active-slip");
         return n;
       };
 
@@ -1230,6 +1234,14 @@ var Slipshow = (function (exports) {
         rootSlip.refreshAll();
         iter(state);
         this.gotoSlip(state[1]);
+      };
+
+      let toc;
+
+      this.getToC = function () {
+        if (toc) return toc;
+        toc = document.querySelector(".toc-slip");
+        return toc;
       };
 
       this.showToC = function () {

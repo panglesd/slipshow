@@ -19,7 +19,8 @@ body {
 }
 
 .toc-slip {
-    position: absolute;
+    position: fixed;
+    overflow: scroll;
     z-index:1000000;
     top: 0;
     left: 20%;
@@ -30,6 +31,9 @@ body {
     background-color: rgba(0,0,0,0.75);
     font-size: 1.3em;
 }
+.toc-slip * {
+    list-style: none;
+}
 .toc-slip .before{
     color: lightgreen;
 }
@@ -38,7 +42,11 @@ body {
 }
 .toc-slip .toc-function {
     display: inline-block;
-    
+    transition: font-size 1s;
+    font-size: 0.1em;
+}
+.toc-slip .active-slip > ul > .toc-function {
+    font-size: 1em;
 }
 .toc-slip li{
     border: solid 1px;
