@@ -357,12 +357,14 @@ function Slip(name, fullName, actionL, ng, options) {
 	});	
 	this.queryAll("*[static-at]").forEach((elem) => {
 	    let staticAt = elem.getAttribute("static-at").split(" ").map((str) => parseInt(str));
+	    if(actionIndex < 0) return;
 	    if(staticAt.includes(-actionIndex)){
+		console.log("make unstatic actionIndex elem", actionIndex, elem);
 		this.makeUnStatic(elem);
 		// elem.style.position = "absolute";
 		// elem.style.visibility = "hidden";
 	    }
-	    if(staticAt.includes(actionIndex)) {
+	    else if(staticAt.includes(actionIndex)) {
 		this.makeStatic(elem);
 		// elem.style.position = "static";
 		// elem.style.visibility = "visible";
@@ -479,7 +481,7 @@ function Slip(name, fullName, actionL, ng, options) {
 	//     elem.style.position = "absolute";
 	//     elem.style.visibility = "hidden";
 	// });	
-	this.doAttributes();
+//	this.doAttributes();
 	this.updatePauseAncestors();
 	if(options.init)
 	    options.init(this);
