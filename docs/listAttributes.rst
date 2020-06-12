@@ -156,7 +156,7 @@ Here, we list the attributes that act at predefined steps of the presentation.
 
 ``exec-at``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  If an element has attribute ``exec-at="n"``, then its content will be executed at step :math:`n`. See :ref:`slip-scripting` for more information of the execution of a script.
+  If an element has attribute ``exec-at="n"``, then its content will be executed at step :math:`n`. See :ref:`slip-scripting` for more information on the execution of a script.
 
 ----------------
 
@@ -234,7 +234,7 @@ When an element has focus from the pause mechanism, and its attribute is removed
 
 ``exec-at-unpause``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  When an element with the ``exec-at-unpause`` attribute is unpaused, the content of the element will be executed. If the attribute has a value, e.g. ``exec-at-unpause="id"``, then the element with id ``id`` will be executed instead. See :ref:`slip-scripting` for more information of the execution of a script.
+  When an element with the ``exec-at-unpause`` attribute is unpaused, the content of the element will be executed. If the attribute has a value, e.g. ``exec-at-unpause="id"``, then the element with id ``id`` will be executed instead. See :ref:`slip-scripting` for more information on the execution of a script.
 
 
 ----------------

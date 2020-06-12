@@ -7,7 +7,7 @@ shell.rm('-r', 'bin')
 shell.mkdir("dist");
 shell.mkdir("bin");
 shell.cp('-r', 'src/css', 'dist/css');
-shell.cp('-r', 'src/scripts/generate.js', 'bin');
+shell.cp('-r', 'src/scripts/*', 'bin');
 shell.cp('-r', 'example', 'dist/example');
 shell.exec('rollup -c build/rollup.config.js');
 

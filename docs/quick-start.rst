@@ -94,6 +94,12 @@ This install the slipshow engine. If you want to add math support (slipshow also
 
    $ npm install mathjax
 
+If you want all the scripts from slipshow to work, for instance to be able to manage your tikz figures, you need a file describing the project. Using this file, the scripts will know the root of the project. To create it, run:
+
+.. code-block:: bash
+
+   $ npm init
+
 Now, to create a new file with a template presentation, type:
 
 .. code-block:: bash

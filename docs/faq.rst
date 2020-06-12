@@ -1,9 +1,6 @@
 .. _faq:
 
 
-FAQ and the rest
-==========================
-
 Frequently Asked Questions
 --------------------------
 
@@ -49,11 +46,4 @@ I don't like your system, what can I do?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   There are other great HTML5 presentation system such as `reveal.js <https://revealjs.com/>`_, `impress.js <https://impress.js.org/>`_, `eagle.js <https://zulko.github.io/eaglejs-demo/#/>`_, `Flides <https://github.com/nathanael-fijalkow/Flides>`_. There are great way to write pdf based presentation such as `Beamer <https://ctan.org/pkg/beamer>`_. You can also use `Libreoffice <https://www.libreoffice.org/discover/impress/>`_ (I have never tried).
 
-
-
-
-The rest
-----------
-
-Please contribute, like, share, subscribe, use, help, live, blablabla... (I just needed a new section so that the question are not added in the table of content of the index file)
 
