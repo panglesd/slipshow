@@ -15,6 +15,8 @@ If you are coming from latex, you might have many figures already written in tik
 
 There is a way to include your figures from tikz to slipshow: compile your figures with pdflatex, convert them into svg, and include them in you slipshow presentation. Slipshow provides a script to do this automatically, but the second section explains how to do it "by hand". Note that the script works only for linux.
 
+Here is an `example <https://choum.net/panglesd/slides/tikz-slipshow/sliptest.html>`_ of a figure made with tikz (courtesy of Pascal Vanier) and included in a slipshow presentation.
+
 Using the slipshow built-in tools (linux only)
 *************************************************
 
@@ -101,3 +103,7 @@ The last step, is to include your files inside your presentation, such as with:
 	    <img static-at="0 4" src="figures/fig-1/fig-1_4.svg"/>
 	</div>
 
+A drawback
+*********************************
+
+I don't know why, but the ``.svg`` created by ``pdf2svg`` are huge compared to the pdf files. If you have a presentation with a lot of figures it might start to cause a problem for people with small disk space or slow internet connection. One way would be to find a better pdf2svg converter. Another would be to adapt pdfjs to directly embed pdf, seemlessly.
