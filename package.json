@@ -52,6 +52,7 @@
 			},
 			"dependencies": {
 						"app-root-path": "^3.0.0",
+						"hammerjs": "^2.0.8",
 						"readline-sync": "^1.4.10",
 						"shelljs": "^0.8.4"
 			}

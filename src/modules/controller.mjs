@@ -1,3 +1,5 @@
+import Hammer from 'hammerjs';
+
 export default function (ng) {
     let engine = ng;
     this.getEngine = () => this.engine;
@@ -7,6 +9,15 @@ export default function (ng) {
     // this.getMainSlip = () => mainSlip;
     // this.setMainSlip = (slip) => mainSlip = slip;
 
+    let mc = new Hammer(document.body);
+    mc.on("swipe", (ev) => {
+	if (ev.direction == 2) {
+	    engine.next();
+	}
+	if (ev.direction == 4) {
+	    engine.previous();
+	}
+    });
     let speedMove=1;
     document.addEventListener("keypress", (ev) => {
 	if(ev.key == "f") { speedMove = (speedMove + 4)%30+1; }    
