@@ -39,6 +39,11 @@ We list here the custom tags that are specific to slipshow.
 ~~~~~~~~~~~~~~~~~
   The body of a slip.
 
+.. _slip-figure:
+
+``slip-figure``
+~~~~~~~~~~~~~~~~~
+  A TikZ figure. This custom element extends the element ``img``, thus it has to be written like this: ``<img is="slip-figure" figure-name="fig"/>``. A figure can be created with ``npx new-figure``, and the name should correspond.
 
 
 
@@ -160,6 +165,15 @@ Here, we list the attributes that act at predefined steps of the presentation.
 
 ----------------
 
+.. _figure-next-at:
+
+``figure-next-at``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  If a ``slip-figure`` element has attribute ``figure-next-at="n1 n2 n3"``, then the next overlay will be shown at every step :math:`n_i`. See :ref:`slip-figure` for more information on a figure.
+
+----------------
+
+
 
 ``pause`` attributes
 ---------------------------
@@ -253,6 +267,18 @@ When an element has focus from the pause mechanism, and its attribute is removed
 ``reveal-at-unpause``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   When an element with the ``reveal-at-unpause`` attribute is unpaused, the element will be "revealed" at unpause. If the attribute has a value, e.g. ``reveal-at-unpause="id1 id2 ..."``, then the element with those ids will be "revealed" at unpause. By "revealed" we mean the css styling ``opacity:1`` will be applied.
+
+.. _figure-next-at-unpause:
+
+``figure-next-at-unpause``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  When an element with the ``figure-next-at-unpause`` attribute is unpaused, the element (provided it is a slip-figure, that is an element ``<img is="slip-figure"/>``) will show the next overlay of the figure. If the attribute has a value, e.g. ``reveal-at-unpause="id1 id2 ..."``, then this will happen for every figures with one of those ids. See :ref:`slip-figure` for more information on a figure.
+
+.. _figure-set-at-unpause:
+
+``figure-set-at-unpause``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  When an element with the ``figure-set-at-unpause="id overlay"`` attribute is unpaused, the element of id ``id`` (provided it is a slip-figure, that is an element ``<img is="slip-figure"/>``) will show the overlay ``overlay`` of the figure. See :ref:`slip-figure` for more information on a figure.
 
 ----------------
   
