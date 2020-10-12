@@ -153,6 +153,22 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	};
     };
     this.unpause = (pause) => {
+	if(pause.hasAttribute("static-at-unpause")) {
+	    if(pause.getAttribute("static-at-unpause") == "")
+		this.makeStatic(pause);
+	    else
+		pause.getAttribute("static-at-unpause").split(" ").map((strID) => {
+		    this.makeStatic("#"+strID);
+		});
+	}
+	if(pause.hasAttribute("unstatic-at-unpause")) {
+	    if(pause.getAttribute("unstatic-at-unpause") == "")
+		this.makeUnStatic(pause);
+	    else
+		pause.getAttribute("unstatic-at-unpause").split(" ").map((strID) => {
+		    this.makeUnStatic("#"+strID);
+		});
+	}
 	if(pause.hasAttribute("down-at-unpause")) {
 	    if(pause.getAttribute("down-at-unpause") == "")
 		this.moveDownTo(pause, 1);

@@ -236,6 +236,18 @@ When an element has focus from the pause mechanism, and its attribute is removed
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   When an element with the ``exec-at-unpause`` attribute is unpaused, the content of the element will be executed. If the attribute has a value, e.g. ``exec-at-unpause="id"``, then the element with id ``id`` will be executed instead. See :ref:`slip-scripting` for more information on the execution of a script.
 
+.. _static-at-unpause:
+
+``static-at-unpause``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  When an element with the ``static-at-unpause`` attribute is unpaused, the element will be made "static" at unpause. If the attribute has a value, e.g. ``static-at-unpause="id1 id2 ..."``, then the element with thos ids will be made static at unpause. By "made static" we mean the css styling ``position:static; visibility:visible`` will be applied.
+
+.. _unstatic-at-unpause:
+
+``unstatic-at-unpause``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  When an element with the ``unstatic-at-unpause`` attribute is unpaused, the element will be made "unstatic" at unpause. If the attribute has a value, e.g. ``unstatic-at-unpause="id1 id2 ..."``, then the element with those ids will be made unstatic at unpause. By "made unstatic" we mean the css styling ``position:absolute; visibility:hidden`` will be applied.
+
 
 ----------------
   
