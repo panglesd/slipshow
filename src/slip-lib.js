@@ -1,3 +1,5 @@
+import './modules/slip-figure'
+
 import IEngine from './modules/engine'
 import IController from './modules/controller.mjs'
 import ISlip from './modules/slip'
