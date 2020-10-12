@@ -5,10 +5,15 @@ class SlipFigure extends HTMLImageElement {
     constructor() {
 	// Toujours appeler "super" d'abord dans le constructeur
 	super();
-	this.internalStep = 0;
+	if (typeof(this.internalStep) == "undefined") {
+ 	    this.internalStep = 0;   
+	}
 	this.img = [];
 	this.maxStep = 0;
-	// Ecrire la fonctionnalité de l'élément ici
+	this.figureName = this.getAttribute("figure-name");
+	this.promise = this.preloadImages(0).then(() => {
+	    this.updateSRC();
+	});
     }
     preloadImage(i) {
 	return new Promise((resolve, reject) => {
@@ -19,18 +24,16 @@ class SlipFigure extends HTMLImageElement {
 	});
     }
     preloadImages(i) {
-	this.preloadImage(i).then(()=> {
-	    this.preloadImages(i+1);
-	}).catch(() => {
-	    this.maxStep = i-1;
-	    console.log("Stopping at image", i); 
+	return new Promise((resolve, reject) => {
+	    this.preloadImage(i).then(()=> {
+		this.preloadImages(i+1).then(() => { resolve(); });
+	    }).catch(() => {
+		this.maxStep = i-1;
+		resolve();
+	    });	    
 	});
     }
     connectedCallback() {
-	this.figureName = this.getAttribute("figure-name");
-	this.updateSRC();
-	let i=0;
-	this.preloadImages(i);
     }
 
     getURL(i) {
@@ -41,13 +44,15 @@ class SlipFigure extends HTMLImageElement {
     }
     
     set figureStep(step) {
-	if(step > this.maxStep)
-	    this.internalStep = this.maxStep;
-	else if (step < 0)
-	    this.internalStep = 0;
-	else
-	    this.internalStep=step;
-	this.updateSRC();
+	this.promise = this.promise.then(() => {
+	    if(step > this.maxStep)
+		this.internalStep = this.maxStep;
+	    else if (step < 0)
+		this.internalStep = 0;
+	    else
+		this.internalStep=step;
+	    this.updateSRC();
+	});
     }
     get figureStep() {
 	return this.internalStep;
@@ -55,9 +60,12 @@ class SlipFigure extends HTMLImageElement {
     
     attributeChangedCallback(name, oldValue, newValue) {
 	if(name == "figure-name") {
-	    this.figureName = this.getAttribute("figure-name");
-	    this.preloadImages(0);
-	    this.updateSRC();
+	    this.figureName = newValue;
+	    this.promise = this.promise.then(() => {
+		this.preloadImages(0).then(() => {
+		    this.updateSRC();
+		});
+	    });
 	}
     }
     nextFigure() {
