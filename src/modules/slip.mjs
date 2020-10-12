@@ -84,11 +84,11 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	 "focus-at",
 	 "unfocus-at",
 	].forEach((attr) => {
-	     this.queryAll("*["+attr+"]").forEach((elem) => {
-		 elem.getAttribute(attr).split(" ").forEach((strMax) => {
-		     maxTemp = Math.max(Math.abs(parseInt(strMax)),maxTemp);
-		 });
-	     });
+	    this.queryAll("*["+attr+"]").forEach((elem) => {
+		elem.getAttribute(attr).split(" ").forEach((strMax) => {
+		    maxTemp = Math.max(Math.abs(parseInt(strMax)),maxTemp);
+		});
+	    });
 	});
 	let sumArray = this.queryAll("[pause], [step], [auto-enter], [immediate-enter]").map((elem) => {
 	    if(elem.hasAttribute("pause") && elem.getAttribute("pause") != "")
@@ -181,31 +181,48 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	    else
 		this.moveUpTo("#"+pause.getAttribute("up-at-unpause"), 1);
 	}
-	if(pause.hasAttribute("center-at-unpause"))
+	if(pause.hasAttribute("center-at-unpause")) {
 	    if(pause.getAttribute("center-at-unpause") == "")
 		this.moveCenterTo(pause, 1);
-	else
-	    this.moveCenterTo("#"+pause.getAttribute("center-at-unpause"), 1);
-	if(pause.hasAttribute("exec-at-unpause"))
+	    else
+		this.moveCenterTo("#"+pause.getAttribute("center-at-unpause"), 1);
+	}
+	if(pause.hasAttribute("exec-at-unpause")) {
 	    if(pause.getAttribute("exec-at-unpause") == "")
 		this.executeScript(pause);
-	else
-	    this.executeScript("#"+pause.getAttribute("exec-at-unpause"));	
-	if(pause.hasAttribute("reveal-at-unpause"))
+	    else
+		pause.getAttribute("exec-at-unpause").split(" ").map((strID) => {
+		    this.executeScript("#"+strID);	
+		});
+	}
+	if(pause.hasAttribute("reveal-at-unpause")) {
 	    if(pause.getAttribute("reveal-at-unpause") == "")
 		this.reveal(pause);
-	else
-	    this.reveal("#"+pause.getAttribute("reveal-at-unpause"));
-	if(pause.hasAttribute("focus-at-unpause"))
+	    else
+		pause.getAttribute("reveal-at-unpause").split(" ").map((strID) => {
+		    this.reveal("#"+strID);
+		});
+	}
+	if(pause.hasAttribute("hide-at-unpause")) {
+	    if(pause.getAttribute("hide-at-unpause") == "")
+		this.hide(pause);
+	    else
+		pause.getAttribute("hide-at-unpause").split(" ").map((strID) => {
+		    this.hide("#"+strID);
+		});
+	}
+	if(pause.hasAttribute("focus-at-unpause")) {
 	    if(pause.getAttribute("focus-at-unpause") == "")
 		this.focus(pause);
-	else
-	    this.focus("#"+pause.getAttribute("focus-at-unpause"));
-	if(pause.hasAttribute("unfocus-at-unpause"))
+	    else
+		this.focus("#"+pause.getAttribute("focus-at-unpause"));
+	}
+	if(pause.hasAttribute("unfocus-at-unpause")){
 	    if(pause.getAttribute("unfocus-at-unpause") == "")
 		this.unfocus(pause);
-	else
-	    this.unfocus("#"+pause.getAttribute("unfocus-at-unpause"));
+	    else
+		this.unfocus("#"+pause.getAttribute("unfocus-at-unpause"));
+	}
     };
     this.incrPause = () => {
 	let pause = this.query("[pause], [auto-enter]:not([auto-enter=\"0\"]), [immediate-enter]:not([immediate-enter=\"0\"]), [step]");
