@@ -83,6 +83,8 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	 "enter-at",
 	 "focus-at",
 	 "unfocus-at",
+	 "figure-next-at",
+	 "figure-previous-at",
 	].forEach((attr) => {
 	    this.queryAll("*["+attr+"]").forEach((elem) => {
 		elem.getAttribute(attr).split(" ").forEach((strMax) => {
@@ -211,6 +213,20 @@ export default function Slip(name, fullName, actionL, ng, options) {
 		    this.hide("#"+strID);
 		});
 	}
+	if(pause.hasAttribute("figure-set-at-unpause")) {
+	    let [figureID, figureStep] = pause.getAttribute("figure-set-at-unpause").split(" ");
+	    this.query("#"+figureID).figureStep = figureStep;
+	}
+	if(pause.hasAttribute("figure-next-at-unpause")) {
+	    pause.getAttribute("figure-next-at-unpause").split(" ").map((figureID) => {
+		this.query("#"+figureID).figureStep++;
+	    });
+	}
+	if(pause.hasAttribute("figure-previous-at-unpause")) {
+	    pause.getAttribute("figure-previous-at-unpause").split(" ").map((figureID) => {
+		this.query("#"+figureID).figureStep--;
+	    });
+	}
 	if(pause.hasAttribute("focus-at-unpause")) {
 	    if(pause.getAttribute("focus-at-unpause") == "")
 		this.focus(pause);
@@ -335,6 +351,14 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	    let toExec = elem.getAttribute("exec-at").split(" ").map((str) => parseInt(str));
 	    if(toExec.includes(actionIndex))
 		this.executeScript(elem);});	
+	this.queryAll("*[figure-next-at]").forEach((elem) => {
+	    let toFigureNext = elem.getAttribute("figure-next-at").split(" ").map((str) => parseInt(str));
+	    if(toFigureNext.includes(actionIndex))
+		elem.figureStep++;});	
+	this.queryAll("*[figure-previous-at]").forEach((elem) => {
+	    let toFigureNext = elem.getAttribute("figure-previous-at").split(" ").map((str) => parseInt(str));
+	    if(toFigureNext.includes(actionIndex))
+		elem.figureStep--;});	
     };
     this.incrIndex = () => {
 	console.log("incrIndex", this.name);
@@ -371,6 +395,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
  	let toReturn;
 	while(this.getActionIndex()<savedActionIndex-1){
 	    console.log("previous is ca we do next", this.getEngine().getDoNotMove());
+	    console.log("(figure) actionIndex is", actionIndex);
 	    toReturn = this.next();
 	}
 	// if(!this.nextStageNeedGoto())
