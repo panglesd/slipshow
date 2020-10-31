@@ -1,53 +1,136 @@
 import { cloneNoSubslip, myQueryAll, replaceSubslips } from './util'
 
-export default function Slip(name, fullName, actionL, ng, options) {
+class Slip extends HTMLElement {
+
+    constructor(name, fullName, actionL, ng, options) {
+	super();
+
+	this.actionList = actionL;// || this.generateActionList();
+	this.actionIndex = -1;
+	this.engine = ng;
+	this.options = options;
+
+	this.element =
+	    typeof name == "string" ?
+	    document.querySelector(name[0]=="#" ? name : ("#"+name)):
+	    name;
+	// names
+	this.name =
+	    typeof name == "string" ?
+	    name:
+	    name.id;
+	if(typeof(fullName) == "string")
+	    this.fullName = fullName ;
+	else if (this.element.hasAttribute("toc-title"))
+	    this.fullName = this.element.getAttribute("toc-title");
+	else
+	    this.fullName = this.name;
+	console.log("this name is ", this.name);
+	// clonedElement
+	// let clonedElement;
+	if(typeof MathJax != "undefined")
+	    MathJax.startup.promise.then(() => {
+		setTimeout(() => {this.clonedElement = cloneNoSubslip(this.element);},0);
+	    });
+	else
+	    setTimeout(() => {this.clonedElement = cloneNoSubslip(this.element);},0);
+	this.getCloned = () => this.clonedElement;
+	this.setCloned = (c) => this.clonedElement = c;
+	// scale, rotate, delay
+	this.scale = parseFloat(this.element.getAttribute("scale"));
+	if(typeof this.scale == "undefined" || isNaN(this.scale)) this.scale = 1;
+	this.rotate = parseFloat(this.element.getAttribute("rotate")) || 0;
+	this.delay = isNaN(parseFloat(this.element.getAttribute("delay"))) ? 0 : (parseFloat(this.element.getAttribute("delay")));
+	// coord
+	let coord = this.findSlipCoordinate();
+	console.log(coord);
+	this.x = coord.x;
+	this.y = coord.y;
+	// Preparing the slip
+	this.init(this, this.engine);
+	// Adding "enter-at" subslips
+	this.addSubSlips();
+	// Adding "paused-flow" subslips
+	this.generatePauseFlowSlipList = function () {
+	    let slipList = [];
+	    let bla = this.queryAll("[pause], [step], [auto-enter], [immediate-enter]");
+	    let step = 1;
+	    bla.forEach((elem) => {
+		console.log("debug generatePauseFlowsliplist", elem, step);
+		if(elem.hasAttribute("auto-enter")){
+		    slipList[step] = new Slip(elem, elem.getAttribute("toc-title") || "", [], ng, {});
+		    step++;
+		}
+		if(elem.hasAttribute("immediate-enter")){
+		    // the slip is entered before the pause
+		    slipList[step-1] = new Slip(elem, elem.getAttribute("toc-title") || "", [], ng, {});
+		    step++;
+		}
+		if(elem.hasAttribute("step")){
+		    console.log("debug generatePauseFlowsliplist1", elem, step);
+		    step += parseInt(elem.getAttribute("step")) || 1 ;
+		    console.log("debug generatePauseFlowsliplist2", elem, step);
+		}
+		if(elem.hasAttribute("pause")){
+		    console.log("debug generatePauseFlowsliplist1", elem, step);
+		    step += parseInt(elem.getAttribute("pause")) || 1 ;
+		    console.log("debug generatePauseFlowsliplist1", elem, step);
+		}
+	    });
+	    return slipList;
+	};
+	this.pauseSlipList = this.generatePauseFlowSlipList();
+
+    }
+    
+    get actionL() { return this.internalActionList;}
+    set actionL(value) { this.internalActionList = value;}
 
     // ******************************
     // Action List
     // ******************************
 
-    this.generateActionList = function() {
+    generateActionList() {
 	console.log("debug generateactionlist", this.name);
 	let newActionList = [];
 	this.queryAll("slip-slip[enter-at]").forEach((slip) => {
-	    console.log("new slip with ", slip, null, null, ng, {});
-	    newActionList[slip.getAttribute("enter-at")] = new Slip(slip, "", [], ng, {});
+	    console.log("new slip with ", slip, null, null, this.engine, {});
+	    newActionList[slip.getAttribute("enter-at")] = new Slip(slip, "", [], this.engine, {});
 	});
 	return newActionList;
     };
-    this.addSubSlips = function() {
+    addSubSlips(){
 	console.log("debug generateactionlist", this.name);
 	let newActionList = [];
 	this.queryAll("slip-slip[enter-at]").forEach((slip) => {
-	    console.log("new slip with ", slip, null, null, ng, {});
-	    this.setNthAction(slip.getAttribute("enter-at"), new Slip(slip, "", [], ng, {}));
+	    console.log("new slip with ", slip, null, null, this.engine, {});
+	    this.setNthAction(slip.getAttribute("enter-at"), new Slip(slip, "", [], this.engine, {}));
 	});
 	return newActionList;
     };
-    let actionList = actionL;// || this.generateActionList();
-    this.setAction = (actionL) => {actionList = actionL;};
-    this.getActionList = () => {
+    setAction(actionL) {this.actionList = actionL;};
+    getActionList() {
 	let ret = [];
 	for(let i = 0;i <= this.getMaxNext(); i++) {
 	    if(this.pauseSlipList[i] instanceof Slip)
 		ret[i] = this.pauseSlipList[i];
-	    else if(typeof actionList[i] == "function" || actionList[i] instanceof Slip)
-		ret[i] = actionList[i];
+	    else if(typeof this.actionList[i] == "function" || this.actionList[i] instanceof Slip)
+		ret[i] = this.actionList[i];
 	    else
 		ret[i] = () => {};
 	}
 	return ret;
     };
-    this.setNthAction = (n,action) => {actionList[n] = action;};
-    this.getCurrentSubSlip = () => {
-	if(actionList[this.getActionIndex()] instanceof Slip)
-	    return actionList[this.getActionIndex()];
+    setNthAction(n,action) {this.actionList[n] = action;};
+    getCurrentSubSlip() {
+	if(this.actionList[this.getActionIndex()] instanceof Slip)
+	    return this.actionList[this.getActionIndex()];
 	if(this.pauseSlipList[this.getActionIndex()] instanceof Slip)
 	    return this.pauseSlipList[this.getActionIndex()];
 	return false;
     };
-    this.nextStageNeedGoto = () => {
-	if(actionList[this.getActionIndex()+1] instanceof Slip)
+    nextStageNeedGoto() {
+	if(this.actionList[this.getActionIndex()+1] instanceof Slip)
 	    return false;
 	if(this.pauseSlipList[this.getActionIndex()+1] instanceof Slip)
 	    return false;
@@ -55,20 +138,20 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	    return false;
 	return true;
     };
-    this.getSubSlipList = function () {
+    getSubSlipList() {
 	return this.getActionList().filter((action) => action instanceof Slip);
     };
 
     // ******************************
     // Action Index
     // ******************************
-    let actionIndex = -1;
-    this.setActionIndex = (actionI) => actionIndex = actionI;
-    this.getActionIndex = () => actionIndex;
-    this.getMaxNext = () => {
+
+    setActionIndex(actionI) { return this.actionIndex = actionI; };
+    getActionIndex() { return this.actionIndex; };
+    getMaxNext() {
 	if(this.maxNext)
 	    return this.maxNext;
-	let maxTemp = actionList.length;
+	let maxTemp = this.actionList.length;
 	["mk-visible-at",
 	 "mk-hidden-at",
 	 "mk-emphasize-at",
@@ -106,17 +189,17 @@ export default function Slip(name, fullName, actionL, ng, options) {
     // ******************************
     // Queries
     // ******************************
-    this.queryAll = (quer) => {
+    queryAll(quer) {
 	return myQueryAll(this.element, quer);
 	// let allElem = Array.from(this.element.querySelectorAll(quer));
 	// let other = Array.from(this.element.querySelectorAll("#"+this.name+" slip "+quer));
 	// return allElem.filter(value => !other.includes(value));
     };
-    this.query = (quer) => {
+    query(quer) {
 	if(typeof quer != "string") return quer;
 	return this.queryAll(quer)[0];
     };
-    this.findSubslipByID = (id) => {
+    findSubslipByID(id) {
 	let goodSubslip = this.getSubSlipList().find((subslip) => {
 	    if(subslip.name == id)
 		return 1;
@@ -132,8 +215,8 @@ export default function Slip(name, fullName, actionL, ng, options) {
     // ******************************
     // Coordinates
     // ******************************
-    this.findSlipCoordinate = () => { // rename to getCoordInUniverse
-	let coord = engine.getCoordinateInUniverse(this.element);
+    findSlipCoordinate() { // rename to getCoordInUniverse
+	let coord = this.engine.getCoordinateInUniverse(this.element);
 	console.log("debug findslipcoordinate", coord);
 	coord.scale *= this.scale;
 	coord.y = coord.y + 0.5*coord.scale;
@@ -146,7 +229,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
     // ******************************
     // Pause functions
     // ******************************
-    this.updatePauseAncestors = () => {
+    updatePauseAncestors() {
 	this.queryAll(".pauseAncestor").forEach((elem) => {elem.classList.remove("pauseAncestor");});
 	let pause = this.query("[pause]");
 	while(pause && pause.tagName != "SLIP-SLIP") {
@@ -154,7 +237,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	    pause = pause.parentElement;
 	};
     };
-    this.unpause = (pause) => {
+    unpause(pause) {
 	if(pause.hasAttribute("static-at-unpause")) {
 	    if(pause.getAttribute("static-at-unpause") == "")
 		this.makeStatic(pause);
@@ -240,7 +323,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
 		this.unfocus("#"+pause.getAttribute("unfocus-at-unpause"));
 	}
     };
-    this.incrPause = () => {
+    incrPause() {
 	let pause = this.query("[pause], [auto-enter]:not([auto-enter=\"0\"]), [immediate-enter]:not([immediate-enter=\"0\"]), [step]");
 	// let pause = this.query("[pause]");
 	if(pause) {
@@ -280,47 +363,47 @@ export default function Slip(name, fullName, actionL, ng, options) {
     // ******************************
     // Next functions
     // ******************************
-    this.doAttributes = () => {
+    doAttributes() {
 	this.queryAll("*[mk-hidden-at]").forEach((elem) => {
 	    let hiddenAt = elem.getAttribute("mk-hidden-at").split(" ").map((str) => parseInt(str));
-	    if(hiddenAt.includes(actionIndex))
+	    if(hiddenAt.includes(this.actionIndex))
 		elem.style.opacity = "0";});	
 	this.queryAll("*[mk-visible-at]").forEach((elem) => {
 	    let visibleAt = elem.getAttribute("mk-visible-at").split(" ").map((str) => parseInt(str));
-	    if(visibleAt.includes(actionIndex))
+	    if(visibleAt.includes(this.actionIndex))
 		elem.style.opacity = "1";});	
 	this.queryAll("*[mk-emphasize-at]").forEach((elem) => {
 	    let emphAt = elem.getAttribute("mk-emphasize-at").split(" ").map((str) => parseInt(str));
-	    if(emphAt.includes(actionIndex))
+	    if(emphAt.includes(this.actionIndex))
 		elem.classList.add("emphasize");});	
 	this.queryAll("*[mk-unemphasize-at]").forEach((elem) => {
 	    let unemphAt = elem.getAttribute("mk-unemphasize-at").split(" ").map((str) => parseInt(str));
-	    if(unemphAt.includes(actionIndex))
+	    if(unemphAt.includes(this.actionIndex))
 		elem.classList.remove("emphasize");});	
 	this.queryAll("*[emphasize-at]").forEach((elem) => {
 	    let emphAt = elem.getAttribute("emphasize-at").split(" ").map((str) => parseInt(str));
-	    if(emphAt.includes(actionIndex))
+	    if(emphAt.includes(this.actionIndex))
 		elem.classList.add("emphasize");
 	    else
 		elem.classList.remove("emphasize");
 	});	
 	this.queryAll("*[chg-visib-at]").forEach((elem) => {
 	    let visibAt = elem.getAttribute("chg-visib-at").split(" ").map((str) => parseInt(str));
-	    if(visibAt.includes(actionIndex))
+	    if(visibAt.includes(this.actionIndex))
 		elem.style.opacity = "1";
-	    if(visibAt.includes(-actionIndex))
+	    if(visibAt.includes(-this.actionIndex))
 		elem.style.opacity = "0";
 	});	
 	this.queryAll("*[static-at]").forEach((elem) => {
 	    let staticAt = elem.getAttribute("static-at").split(" ").map((str) => parseInt(str));
-	    if(actionIndex < 0) return;
-	    if(staticAt.includes(-actionIndex)){
-		console.log("make unstatic actionIndex elem", actionIndex, elem);
+	    if(this.actionIndex < 0) return;
+	    if(staticAt.includes(-this.actionIndex)){
+		console.log("make unstatic this.actionIndex elem", this.actionIndex, elem);
 		this.makeUnStatic(elem);
 		// elem.style.position = "absolute";
 		// elem.style.visibility = "hidden";
 	    }
-	    else if(staticAt.includes(actionIndex)) {
+	    else if(staticAt.includes(this.actionIndex)) {
 		this.makeStatic(elem);
 		// elem.style.position = "static";
 		// elem.style.visibility = "visible";
@@ -328,64 +411,64 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	});	    
 	this.queryAll("*[down-at]").forEach((elem) => {
 	    let goDownTo = elem.getAttribute("down-at").split(" ").map((str) => parseInt(str));
-	    if(goDownTo.includes(actionIndex))
+	    if(goDownTo.includes(this.actionIndex))
 		this.moveDownTo(elem, 1);
 	});
 	this.queryAll("*[up-at]").forEach((elem) => {
 	    let goTo = elem.getAttribute("up-at").split(" ").map((str) => parseInt(str));
-	    if(goTo.includes(actionIndex))
+	    if(goTo.includes(this.actionIndex))
 		this.moveUpTo(elem, 1);});
 	this.queryAll("*[center-at]").forEach((elem) => {
 	    let goDownTo = elem.getAttribute("center-at").split(" ").map((str) => parseInt(str));
-	    if(goDownTo.includes(actionIndex))
+	    if(goDownTo.includes(this.actionIndex))
 		this.moveCenterTo(elem, 1);});	
 	this.queryAll("*[focus-at]").forEach((elem) => {
 	    let focus = elem.getAttribute("focus-at").split(" ").map((str) => parseInt(str));
-	    if(focus.includes(actionIndex))
+	    if(focus.includes(this.actionIndex))
 		this.focus(elem, 1);});	
 	this.queryAll("*[unfocus-at]").forEach((elem) => {
 	    let focus = elem.getAttribute("unfocus-at").split(" ").map((str) => parseInt(str));
-	    if(focus.includes(actionIndex))
+	    if(focus.includes(this.actionIndex))
 		this.unfocus(elem, 1);});	
 	this.queryAll("*[exec-at]").forEach((elem) => {
 	    let toExec = elem.getAttribute("exec-at").split(" ").map((str) => parseInt(str));
-	    if(toExec.includes(actionIndex))
+	    if(toExec.includes(this.actionIndex))
 		this.executeScript(elem);});	
 	this.queryAll("*[figure-next-at]").forEach((elem) => {
 	    let toFigureNext = elem.getAttribute("figure-next-at").split(" ").map((str) => parseInt(str));
-	    if(toFigureNext.includes(actionIndex))
+	    if(toFigureNext.includes(this.actionIndex))
 		elem.figureStep++;});	
 	this.queryAll("*[figure-previous-at]").forEach((elem) => {
 	    let toFigureNext = elem.getAttribute("figure-previous-at").split(" ").map((str) => parseInt(str));
-	    if(toFigureNext.includes(actionIndex))
+	    if(toFigureNext.includes(this.actionIndex))
 		elem.figureStep--;});	
     };
-    this.incrIndex = () => {
+    incrIndex() {
 	console.log("incrIndex", this.name);
-	actionIndex = actionIndex+1;
+	this.actionIndex = this.actionIndex+1;
 	this.doAttributes();
-	if(actionIndex>0)
+	if(this.actionIndex>0)
 	    this.incrPause();
 	this.updateToC();
     };
-    this.next = function () {
-	if(actionIndex >= this.getMaxNext())
+    next() {
+	if(this.actionIndex >= this.getMaxNext())
 	    return false;
 	this.incrIndex();
-	if(typeof actionList[actionIndex] == "function") {
-	    actionList[actionIndex](this);
+	if(typeof this.actionList[this.actionIndex] == "function") {
+	    this.actionList[this.actionIndex](this);
 	}
-	if(actionList[actionIndex] instanceof Slip){
-	    return actionList[actionIndex];
+	if(this.actionList[this.actionIndex] instanceof Slip){
+	    return this.actionList[this.actionIndex];
 	}
-	if(this.pauseSlipList[actionIndex] instanceof Slip)
-	    return this.pauseSlipList[actionIndex];
+	if(this.pauseSlipList[this.actionIndex] instanceof Slip)
+	    return this.pauseSlipList[this.actionIndex];
 	// let nextSlip = this.query("[pause], [auto-enter]");
 	// if(nextSlip.hasAttribute("auto-enter"))
 	//     return 
 	return true;
     };
-    this.previous = () => {
+    previous() {
 	let savedActionIndex = this.getActionIndex();
 	let savedDelay = this.currentDelay;
 	this.getEngine().setDoNotMove(true);
@@ -395,7 +478,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
  	let toReturn;
 	while(this.getActionIndex()<savedActionIndex-1){
 	    console.log("previous is ca we do next", this.getEngine().getDoNotMove());
-	    console.log("(figure) actionIndex is", actionIndex);
+	    console.log("(figure) actionIndex is", this.actionIndex);
 	    toReturn = this.next();
 	}
 	// if(!this.nextStageNeedGoto())
@@ -412,8 +495,8 @@ export default function Slip(name, fullName, actionL, ng, options) {
     // ******************************
     // ToC functions
     // ******************************
-    this.setTocElem = (tocElem) => {this.tocElem = tocElem;};
-    this.updateToC = () => {
+    setTocElem(tocElem) {this.tocElem = tocElem;};
+    updateToC() {
 	if(!this.tocElem)
 	    return;
 	if(!this.ToCList)
@@ -433,12 +516,12 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	    this.ToCList[i].classList.add("after");
 	}	
     };
-    this.firstVisit = () => {
+    firstVisit() {
 	this.updateToC();
-	if(options.firstVisit)
-	    options.firstVisit(this);
+	if(this.options.firstVisit)
+	    this.options.firstVisit(this);
     };
-    this.init = () => {
+    init() {
 	this.queryAll("*[chg-visib-at]").forEach((elem) => {
 	    elem.style.opacity = "0";
 	});	
@@ -448,30 +531,30 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	// });	
 //	this.doAttributes();
 	this.updatePauseAncestors();
-	if(options.init)
-	    options.init(this);
+	if(this.options.init)
+	    this.options.init(this);
     };
 
     // ******************************
     // Refreshes
     // ******************************
-    this.refresh = () => {
-	if(actionList[actionIndex] instanceof Slip)
-	    actionList[actionIndex].refresh();
+    refresh() {
+	if(this.actionList[this.actionIndex] instanceof Slip)
+	    this.actionList[this.actionIndex].refresh();
 	else
 	    this.doRefresh();
     };
-    this.refreshAll = () => {
-	actionList.filter((elem) => elem instanceof Slip).forEach((subslip) => { subslip.refreshAll();});
+    refreshAll() {
+	this.actionList.filter((elem) => elem instanceof Slip).forEach((subslip) => { subslip.refreshAll();});
 	this.pauseSlipList.filter((elem) => elem instanceof Slip).forEach((subslip) => { subslip.refreshAll();});
 	this.doRefresh();
     };
-    this.doRefresh = () => {
+    doRefresh() {
 	console.log("gotoslip: doRefresh has been called");
 	this.setActionIndex(-1);
 	let subSlipList = myQueryAll(this.element, "slip-slip");
-	console.log("mmdebug", clonedElement);
-	let clone = clonedElement.cloneNode(true);
+	console.log("mmdebug", this.clonedElement);
+	let clone = this.clonedElement.cloneNode(true);
 	replaceSubslips(clone, subSlipList);
 	this.element.replaceWith(clone);
 	this.element = clone;
@@ -480,14 +563,14 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	delete(this.currentX);
 	delete(this.currentY);
 	delete(this.currentDelay);
-	console.log("previous is ca GOTOSLIP FROM 3", options, this.getEngine().getDoNotMove());
+	console.log("previous is ca GOTOSLIP FROM 3", this.options, this.getEngine().getDoNotMove());
 	this.getEngine().gotoSlip(this);
     };
 
     // ******************************
     // Movement, execution and hide/show
     // ******************************
-    this.makeUnStatic = (selector, delay, opacity) => {
+    makeUnStatic(selector, delay, opacity) {
 	let elem = this.query(selector);
 	// setTimeout(() => {
 	//     elem.style.overflow = "hidden"; 
@@ -507,26 +590,26 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	elem.style.position = "absolute";
 	elem.style.visibility = "hidden";
     };
-    this.makeStatic = (selector) => {
+    makeStatic(selector) {
 	let elem = this.query(selector);
 	elem.style.position = "static";
 	elem.style.visibility = "visible";
     };
-    this.unfocus = (selector) => {
+    unfocus(selector) {
 	this.getEngine().gotoSlip(this, { delay: 1});
     };
-    this.focus = (selector) => {
+    focus(selector) {
 	let elem = this.query(selector);
 	this.getEngine().moveToElement(elem, {});
     };
 
-    this.executeScript = (selector) => {
+    executeScript(selector) {
 	let elem;
 	if(typeof selector == "string") elem = this.query(selector);
 	else elem = selector;
 	(new Function("slip",elem.innerHTML))(this);
     };
-    this.moveUpTo = (selector, delay,  offset) => {
+    moveUpTo(selector, delay,  offset) {
 	setTimeout(() => {
 	    let elem;
 	    if(typeof selector == "string") elem = this.query(selector);
@@ -541,7 +624,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	    // engine.moveWindow(coord.x, coord.y+d, coord.scale, this.rotate, delay);
 	},0);
     };
-    this.moveDownTo = (selector, delay, offset) => {
+    moveDownTo(selector, delay, offset) {
 	setTimeout(() => {
 	    let elem;
 	    if(typeof selector == "string") elem = this.query(selector);
@@ -556,7 +639,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	    // engine.moveWindow(coord.x, coord.y+d, coord.scale, this.rotate, delay);
 	},0);
     };
-    this.moveCenterTo = (selector, delay, offset) => {
+    moveCenterTo(selector, delay, offset) {
 	setTimeout(() => {
 	    let elem;
 	    if(typeof selector == "string") elem = this.query(selector);
@@ -571,10 +654,10 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	    // engine.moveWindow(coord.x, coord.y+d, coord.scale, this.rotate, delay);
 	},0);
     };
-    this.restoreWindow = () => {
+    restoreWindow() {
 	this.getEngine
     };
-    this.moveWindow = (x,y,scale,rotate, delay) => {
+    moveWindow(x,y,scale,rotate, delay) {
 	this.currentX = x;
 	this.currentY = y;
 	this.currentDelay = delay;
@@ -584,19 +667,19 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	    this.getEngine().moveWindow(x, y, scale, rotate, delay);
 //	}, 0);
     };
-    this.reveal = (selector) => {
+    reveal(selector) {
 	let elem;
 	if(typeof selector == "string") elem = this.query(selector);
 	else elem = selector;
 	elem.style.opacity = "1";
     };
-    this.revealAll = (selector) => {
+    revealAll(selector) {
 	this.queryAll(selector).forEach((elem) => { elem.style.opacity = "1";});
     };
-    this.hide = (selector) => {
+    hide(selector) {
 	this.query(selector).style.opacity = "0";
     };
-    this.hideAll = (selector) => {
+    hideAll(selector) {
 	this.queryAll(selector).forEach((elem) => { elem.style.opacity = "0";});
     };
 
@@ -604,83 +687,14 @@ export default function Slip(name, fullName, actionL, ng, options) {
     // Initialisation of the object
     // ******************************
     // engine
-    let engine = ng;
-    this.getEngine = () => engine;
-    this.setEngine = (ng) => engine = ng;
+    getEngine() {return this.engine;};
+    setEngine(ng) {return this.engine = ng;};
     // element
-    this.element =
-	typeof name == "string" ?
-	document.querySelector(name[0]=="#" ? name : ("#"+name)):
-	name;
-    // names
-    this.name =
-	typeof name == "string" ?
-	name:
-	name.id;
-    if(typeof(fullName) == "string")
-	this.fullName = fullName ;
-    else if (this.element.hasAttribute("toc-title"))
-	this.fullName = this.element.getAttribute("toc-title");
-    else
-	this.fullName = this.name;
-    console.log("this name is ", this.name);
-    // clonedElement
-    let clonedElement;
-    if(typeof MathJax != "undefined")
-	MathJax.startup.promise.then(() => {
-	    setTimeout(() => {clonedElement = cloneNoSubslip(this.element);},0);
-	});
-    else
-	setTimeout(() => {clonedElement = cloneNoSubslip(this.element);},0);
-    this.getCloned = () => clonedElement;
-    this.setCloned = (c) => clonedElement = c;
-    // scale, rotate, delay
-    this.scale = parseFloat(this.element.getAttribute("scale"));
-    if(typeof this.scale == "undefined" || isNaN(this.scale)) this.scale = 1;
-    this.rotate = parseFloat(this.element.getAttribute("rotate")) || 0;
-    this.delay = isNaN(parseFloat(this.element.getAttribute("delay"))) ? 0 : (parseFloat(this.element.getAttribute("delay")));
-    // coord
-    let coord = this.findSlipCoordinate();
-    console.log(coord);
-    this.x = coord.x;
-    this.y = coord.y;
-    // Preparing the slip
-    this.init(this, engine);
-    // Adding "enter-at" subslips
-    this.addSubSlips();
-    // Adding "paused-flow" subslips
-    this.generatePauseFlowSlipList = function () {
-	let slipList = [];
-	let bla = this.queryAll("[pause], [step], [auto-enter], [immediate-enter]");
-	let step = 1;
-	bla.forEach((elem) => {
-	    console.log("debug generatePauseFlowsliplist", elem, step);
-	    if(elem.hasAttribute("auto-enter")){
-		slipList[step] = new Slip(elem, elem.getAttribute("toc-title") || "", [], ng, {});
-		step++;
-	    }
-	    if(elem.hasAttribute("immediate-enter")){
-		// the slip is entered before the pause
-		slipList[step-1] = new Slip(elem, elem.getAttribute("toc-title") || "", [], ng, {});
-		step++;
-	    }
-	    if(elem.hasAttribute("step")){
-		console.log("debug generatePauseFlowsliplist1", elem, step);
-		step += parseInt(elem.getAttribute("step")) || 1 ;
-		console.log("debug generatePauseFlowsliplist2", elem, step);
-	    }
-	    if(elem.hasAttribute("pause")){
-		console.log("debug generatePauseFlowsliplist1", elem, step);
-		step += parseInt(elem.getAttribute("pause")) || 1 ;
-		console.log("debug generatePauseFlowsliplist1", elem, step);
-	    }
-	});
-	return slipList;
-    };
-    this.pauseSlipList = this.generatePauseFlowSlipList();
     // this.pauseSlipList = this.queryAll("[pause], [step], [auto-enter]").map((elem) => {
     // 	if(elem.hasAttribute("auto-enter"))
     // 	    return new Slip(elem, elem.getAttribute("toc-title") || "", [], ng, {});
     // 	return null;
     // });
 }
+
+customElements.define('slip-slip', Slip);
