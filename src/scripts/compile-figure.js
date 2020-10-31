@@ -2,8 +2,7 @@
 
 var shell = require('shelljs');
 var appRoot = require('app-root-path');
-
-console.log("This script requires pdflatex and pdf2svg to work");
+var readlineSync = require('readline-sync');
 
 function doFigure(fig) {
     console.log("Figure "+fig);
@@ -16,16 +15,37 @@ function doFigure(fig) {
 	console.log('Outputed '+fig+("_"+i+".svg"));
     });    
 }
-
-if(process.argv.includes("--all")) {
+function doAllFigures() {
     shell.ls(appRoot+"/figures/").forEach((fig) => {
 	doFigure(fig);	
+    });    
+}
+
+if(process.argv.includes("--help")) {
+    console.log("This script requires pdflatex and pdf2svg to work")
+    console.log("Usage: npx compile-figure [--all] [figure-name] [--help]")
+}
+else if(process.argv.includes("--all")) {
+    doAllFigures()
+}
+else if (process.argv.length > 2) {
+    process.argv.forEach((fig) => {
+	if(!fig.includes("/"))
+	    doFigure(fig);	
     });
+console.log("This script requires pdflatex and pdf2svg to work");
 }
 else {
-    process.argv.forEach((fig) => {
-	doFigure(fig);	
+    let figTranslation = shell.ls(appRoot+"/figures/");
+    figTranslation.forEach((fig, index) => {
+	console.log(index, fig)
     });
+    var listFigures = readlineSync.question('What figure do you want to compile? (empty for all, spaces for multiple answers): ');
+    listFigArray = listFigures.split(" ");
+    if(listFigures == "")
+	doAllFigures()
+    else
+	listFigArray.forEach((figNumber) => {
+	    doFigure(figTranslation[parseInt(figNumber)])
+	})
 }
-
-
