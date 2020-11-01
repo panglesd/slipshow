@@ -8,3 +8,4 @@ You can find examples of slipshows here. Do not hesitate to look at the source c
 
 * `The slips to present slip <https://panglesd.github.io/slipshow/example/slipIntroduction.html>`_
 * `The slips of my thesis <http://choum.net/panglesd/slides/slides-js/slides.html>`_ (old version of the engine).
+* `The slips of a presentation on reverse mathematics <https://choum.net/panglesd/slides/slides_CTA/cta_anglesdauriac.html>`_.
