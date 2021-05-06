@@ -121,6 +121,31 @@ function IController (ng) {
     this.getEngine = () => this.engine;
     this.setEngine = (ng) => this.engine = ng;
 
+    let activated = true;
+    this.activate = () => {
+	activated = true;
+    };
+    this.deactivate = () => {
+	activated = false;
+    };
+    
+    let left_keys = ["k"],
+	right_keys = ["m"],
+	up_keys = ["o"],
+	down_keys = ["l"],
+	rotate_keys = ["i"],
+	unrotate_keys = ["p"],
+	zoom_keys = ["z"],
+	unzoom_keys = ["Z"],
+	show_toc_keys = ["T"],
+	show_toc2_keys = ["t"],
+	next_keys = ["ArrowRight", "ArrowDown"],
+	previous_keys = ["ArrowLeft", "ArrowUp"],
+	refresh_keys = ["r"],
+	change_speed_keys = ["f"],
+	up_slip_keys = ["ArrowUp"],
+	background_canvas_keys = ["#"];
+
     // let mainSlip = mainS;
     // this.getMainSlip = () => mainSlip;
     // this.setMainSlip = (slip) => mainSlip = slip;
@@ -136,9 +161,9 @@ function IController (ng) {
     // });
     let speedMove=1;
     document.addEventListener("keypress", (ev) => {
-	if(ev.key == "f") { speedMove = (speedMove + 4)%30+1; }    
-	if(ev.key == "r") { engine.getCurrentSlip().refresh(); }    
-	if(ev.key == "#") {
+	if(change_speed_keys.includes(ev.key) && activated) { speedMove = (speedMove + 4)%30+1; }    
+	if(refresh_keys.includes(ev.key) && activated) { engine.getCurrentSlip().refresh(); }    
+	if(background_canvas_keys.includes(ev.key) && activated) {
 	    document.querySelectorAll("slip-slip").forEach((slip) => {slip.style.zIndex = "-1";});
 	    document.querySelectorAll(".background-canvas").forEach((canvas) => {canvas.style.zIndex = "1";});
 	}    
@@ -146,40 +171,39 @@ function IController (ng) {
     document.addEventListener("keydown", (ev) => {
 	let openWindowHeight = engine.getOpenWindowHeight();
 	let openWindowWidth = engine.getOpenWindowWidth();
-	if(ev.key == "l") { engine.moveWindowRelative( 0                          ,  (speedMove)/openWindowHeight, 0, 0, 0.1); }   // Bas
-	if(ev.key == "o") { engine.moveWindowRelative( 0                          , -(speedMove)/openWindowHeight, 0, 0, 0.1); }  // Haut
-	if(ev.key == "k") { engine.moveWindowRelative(-(speedMove)/openWindowWidth,  0                           , 0, 0, 0.1); }   // Gauche
-	if(ev.key == "m") { engine.moveWindowRelative( (speedMove)/openWindowWidth,  0                           , 0, 0, 0.1); }   // Droite
-	if(ev.key == "i") { engine.moveWindowRelative(0, 0,  0   ,  1, 0.1); }                             // Rotate 
-	if(ev.key == "p") { engine.moveWindowRelative(0, 0,  0   , -1, 0.1); }                             // Unrotate
-	if(ev.key == "z") { engine.moveWindowRelative(0, 0,  0.01,  0, 0.1); }                          // Zoom
-	if(ev.key == "Z") { engine.moveWindowRelative(0, 0, -0.01,  0, 0.1); }                          // Unzoom
-	if(ev.key == "T") {
+	if(down_keys.includes(ev.key) && activated) { engine.moveWindowRelative( 0                          ,  (speedMove)/openWindowHeight, 0, 0, 0.1); }   // Bas
+	if(up_keys.includes(ev.key) && activated) { engine.moveWindowRelative( 0                          , -(speedMove)/openWindowHeight, 0, 0, 0.1); }  // Haut
+	if(left_keys.includes(ev.key) && activated) { engine.moveWindowRelative(-(speedMove)/openWindowWidth,  0                           , 0, 0, 0.1); }   // Gauche
+	if(right_keys.includes(ev.key) && activated) { engine.moveWindowRelative( (speedMove)/openWindowWidth,  0                           , 0, 0, 0.1); }   // Droite
+	if(rotate_keys.includes(ev.key) && activated) { engine.moveWindowRelative(0, 0,  0   ,  1, 0.1); }                             // Rotate 
+	if(unrotate_keys.includes(ev.key) && activated) { engine.moveWindowRelative(0, 0,  0   , -1, 0.1); }                             // Unrotate
+	if(zoom_keys.includes(ev.key) && activated) { engine.moveWindowRelative(0, 0,  0.01,  0, 0.1); }                          // Zoom
+	if(unzoom_keys.includes(ev.key) && activated) { engine.moveWindowRelative(0, 0, -0.01,  0, 0.1); }                          // Unzoom
+	if(show_toc_keys.includes(ev.key) && activated) {
 	    engine.showToC();
 	    // document.querySelector(".toc-slip").style.display = document.querySelector(".toc-slip").style.display == "none" ? "block" : "none"; 
 	}   
-	if(ev.key == "t") {
+	if(show_toc2_keys.includes(ev.key) && activated) {
 	    // engine.showToC();
 	    document.querySelector(".toc-slip").style.display = document.querySelector(".toc-slip").style.display == "none" ? "block" : "none"; 
 	}   
-	if(ev.key == "ArrowRight") {
+	if(next_keys.includes(ev.key) && activated) {
 	    console.log(ev);
 	    if(ev.shiftKey)
 		engine.nextSlip();
 	    else    
 		engine.next();
 	}
-	else if (ev.key == "ArrowLeft") {
+	else if (previous_keys.includes(ev.key) && activated) {
 	    if(ev.shiftKey)
 		engine.previousSlip();
 	    else    
 		engine.previous();
 	}
-	else if (ev.key == "ArrowUp") {
+	else if (up_slip_keys.includes(ev.key) && activated) {
 	    engine.pop();
 	}
-    });  
-    
+    });    
 }
 
 function Slip(name, fullName, actionL, ng, options) {
