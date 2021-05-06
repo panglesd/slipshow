@@ -300,94 +300,131 @@ A slip script can be executed either with :ref:`exec-at`, :ref:`exec-at-unpause`
 ``slip.query``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+A function that takes a string consisting of a ``css`` selector as input. Works as ``querySelector`` except that it does not select inside the subslips.
+
 .. _queryAll:
 
 ``slip.queryAll``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A function that takes a string consisting of a ``css`` selector as input. Works as ``querySelectorAll`` except that it does not select inside the subslips.
 
 .. _slip.delay:
 
 ``slip.delay``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+An integer telling the time taken by the ``camera`` to move when entering this slip.
+
 .. _reveal:
 
 ``slip.reveal``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A function to "reveal" the elements with class ``unrevealed``. Argument can be either the element to reveal, or a ``css`` selector.
 
 .. _downTo:
 
 ``slip.downTo``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+A function to move the camera so that the element appears at the bottom of the view. First argument can be either an element, or a ``css`` selector. Second argument is optionnal, and is the margin from the bottom.
+
+
 .. _centerTo:
 
 ``slip.centerTo``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+A function to move the camera so that the element appears at the center of the view. First argument can be either an element, or a ``css`` selector. 
 
 .. _upTo:
 
 ``slip.upTo``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+A function to move the camera so that the element appears at the top of the view. First argument can be either an element, or a ``css`` selector. Second argument is optionnal, and is the margin from the top.
 
 .. _focus:
 
 ``slip.focus``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+A function to move the camera so that the element takes the entire screen. First argument can be either an element, or a ``css`` selector.
+
 .. _unfocus:
 
 ``slip.unfocus``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A function to return the camera to where it was before a ``focus`` to an element. No arguments.
 
 .. _setAction:
 
 ``slip.setAction``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Function to set the action list of a slip. Takes a list of functions as input.
+
 .. _setNthAction:
 
 ``slip.setNthAction``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Function to set the ``n``-th  action of a slip. Takes an integer ``n`` and a function as input.
 
 .. _getEngine:
 
 ``slip.getEngine``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Function with no arguments that returns the engine used by a slip.
+
 .. _getRoot:
 
 ``engine.getRoot``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Returns the "root slip", which is slip containing all the presentation, of an engine.
 
 .. _start:
 
 ``engine.start``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Starts the engine.
+
 .. _restart:
 
 ``engine.restart``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Restarts the engine.
 
 .. _getController:
 
 ``engine.getController``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Function with no arguments that returns the controller used by an engine.
+
 .. _startSlipshow:
 
 ``Slipshow.startSlipshow``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Create an engine with root slip the element of tag ``slip-slipshow``, starts it, and returns it.
 
 .. _Slip:
 
 ``Slipshow.Slip``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+A slip object constructor. Takes as arguments: the ``name``, the ``fullName``, the ``actionList``, the ``engine`` and a js object ``options`` with field ``firstVisit`` end ``init`` that are called respetively when entering the slip, and when initialising the slip.
+
 .. _Engine:
 
 ``Slipshow.Engine``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+An engine object constructor. Takes as arguments: the ``root`` of the engine, which can be either an element, a ``css`` selector or undefined (and in this case, it defaults to the element with tag ``slip-slipshow``).
