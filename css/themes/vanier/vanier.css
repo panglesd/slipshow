@@ -1,0 +1,296 @@
+@font-face {
+ font-family: 'Dosis';
+ src: url('fonts/dosis-variable.ttf') format('truetype-variations');
+ font-weight: 500;
+}
+/*************************************/
+/*		Title page										 */
+/*************************************/
+* {
+	font-family: "Dosis";
+}
+slip-slip.titlepage{
+	display:flex;
+	justify-content: center;
+	align-items:center;
+}
+
+.titlepage h1 {
+		font-family: "Dosis";
+		font-size: 3em;
+		font-weight: 800;
+	}
+.titlepage .author {
+	margin: auto;
+	width: 75%;
+	font-size: 1.3em;
+	color: #777;
+}
+
+.titlepage .affiliation {
+	color: #aaa;
+}
+
+.titlepage .affiliation::before{
+    content: " - ";
+}
+/** On doit obligatoirement mettre la regle slip-slip slip-title sinon
+ * on est pas assez précis et la règle de base prend la précédence */
+
+slip-slip slip-title{
+    all: unset;
+    flex: 0 1 auto;
+	font-family: "Dosis";
+    font-size: 1.9em;
+    padding-left: 60px;
+    border-radius: 0 0 0 0;
+    background-color: transparent;
+    color: #777;
+    border-bottom: 7px dashed #666;
+}
+
+/*************************************/
+/*    Theorems                       */
+/*************************************/
+:root{
+    --thm-title-color: black;
+    --thm-title-bg-color: #bbbbbb;
+    --thm-bg-color: #eeeeee;
+    --thm-bold-color: darkred;
+}
+
+.theorem {
+    font-style: normal;
+    background-color: var(--thm-bg-color);
+    border-color: var(--thm-title-bg-color);
+}
+.theorem[title]:not([title=""])::before {
+    content: "Theorem. " attr(title) "";
+    font-weight: 800;
+    background-color: var(--thm-title-bg-color);
+    color: var(--thm-title-color);
+}
+
+.theorem:not([title])::before{
+    all:unset;
+}
+
+.theorem[title=""]::before {
+    content: "Theorem. ";
+    font-weight: 800;
+    background-color: var(--thm-bg-color);
+    color: var(--thm-title-color);
+}
+
+
+.theorem em{
+	all: unset;
+	font-weight: 1000;
+    font-style: normal;
+	color: var(--thm-bold-color);
+}
+
+
+
+/*************************************/
+/*    Theorems                       */
+/*************************************/
+
+:root{
+    --mythm-title-color: black;
+    --mythm-title-bg-color: #ff1414;
+    --mythm-bg-color: #ff9c9c;
+    --mythm-bold-color: darkred;
+}
+
+.my-theorem {
+    font-style: normal;
+    background-color: var(--mythm-bg-color);
+    border-color: var(--mythm-title-bg-color);
+}
+.my-theorem[title]:not([title=""])::before {
+    content: "Theorem. " attr(title) "";
+    font-weight: 800;
+    background-color: var(--mythm-title-bg-color);
+    color: var(--mythm-title-color);
+}
+
+.my-theorem:not([title])::before{
+    all:unset;
+}
+
+.my-theorem[title=""]::before {
+    content: "Theorem. ";
+    font-weight: 800;
+    background-color: var(--mythm-bg-color);
+    color: var(--mythm-title-color);
+}
+
+
+.my-theorem em{
+	all: unset;
+	font-weight: 1000;
+    font-style: normal;
+	color: var(--mythm-bold-color);
+}
+
+/*************************************/
+/*    Lemmas                         */
+/*************************************/
+
+.lemma {
+    font-style: italic;
+    background-color: lightgray;
+    border: 1px solid darkgray;
+}
+.lemma:before {
+    content: "Lemma";
+    background-color: darkgray;
+}
+.lemma[title]:before {
+    content: "Lemma (" attr(title) ") ";
+}
+
+/*************************************/
+/*    Proof                          */
+/*************************************/
+
+.proof {
+    font-family: Helvetica;
+    font-size: .9em;
+    display: block;
+    margin-left: 30px;
+    font-style: normal;
+}
+.proof:before {
+    content: "Proof. ";
+    font-weight: 800;
+    font-style: normal;
+}
+.proof:after {
+    content: "\25FC";
+    float:right;
+}
+
+/*************************************/
+/*    Definitions                    */
+/*************************************/
+
+:root{
+	--def-title-color: black;
+    --def-title-bg-color: #62dd7a;
+	--def-bg-color: #A3EBB1;
+    --def-bold-color: #18a558;
+}
+
+.definition {
+    font-style: normal;
+    background-color: var(--def-bg-color);
+    border: 2px solid var(--def-title-bg-color);
+    /* box-shadow: none; */
+}
+.definition[title]:not([title=""])::before {
+    content: "Definition. " attr(title);
+    font-weight: 800;
+    background-color: var(--def-title-bg-color);
+    color: var(--def-title-color);
+}
+
+.definition:not([title])::before{
+    all:unset;
+}
+
+.definition[title=""]::before {
+    content: "Definition. ";
+    font-weight: 800;
+    background-color: var(--def-bg-color);
+    color: var(--def-title-color);
+}
+
+
+.definition em{
+	all: unset;
+	font-weight: 1000;
+	color: var(--def-bold-color);
+}
+
+/*************************************/
+/*    Examples                       */
+/*************************************/
+:root{
+    --ex-title-color: black;
+    --ex-title-bg-color: #bbbbbb;
+    --ex-bg-color: #eeeeee;
+    --ex-bold-color: darkred;
+}
+
+.example {
+    font-style: normal;
+    background-color: var(--ex-bg-color);
+    border: unset;
+    border-radius: 0;
+    box-shadow: unset
+    /* box-shadow: none; */
+}
+.example[title]:not([title=""])::before {
+    content: "Example. (" attr(title) ")";
+    font-weight: 800;
+    background-color: var(--ex-title-bg-color);
+    color: var(--ex-title-color);
+}
+
+.example:not([title])::before{
+    all:unset;
+}
+
+.example[title=""]::before {
+    content: "Example. ";
+    font-weight: 800;
+    background-color: var(--ex-bg-color);
+    color: var(--ex-title-color);
+}
+
+
+.example em{
+	all: unset;
+	font-weight: 1000;
+    font-style: normal;
+	color: var(--ex-bold-color);
+}
+
+
+/*************************************/
+/*    Remark                         */
+/*************************************/
+
+.remark {
+    font-style: normal;
+    background-color: white;
+    border: 1px solid black;
+}
+.remark:before {
+    content: "Remark.";
+    color: darkgray;
+    background-color: white;
+}
+.remark[title]:before {
+    color: darkgray;
+    content: "Remark (" attr(title) ") ";
+}
+
+/*************************************/
+/*    Corollary                      */
+/*************************************/
+
+.corollary {
+    font-style: normal;
+    background-color: lightyellow;
+    border: 1px solid #CCCC00;
+}
+.corollary:before {
+    content: "Corollary.";
+    background-color: #CCCC00;
+}
+.corollary[title]:before {
+    content: "Corollary (" attr(title) ") ";
+}
