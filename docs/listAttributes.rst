@@ -280,6 +280,12 @@ When an element has focus from the pause mechanism, and its attribute is removed
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   When an element with the ``figure-set-at-unpause="id overlay"`` attribute is unpaused, the element of id ``id`` (provided it is a slip-figure, that is an element ``<img is="slip-figure"/>``) will show the overlay ``overlay`` of the figure. See :ref:`slip-figure` for more information on a figure.
 
+.. _enter-at-unpause:
+
+``enter-at-unpause``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  When an element with the ``enter-at-unpause="id"`` attribute is unpaused, the slip of id ``id`` will be entered wen the element with the attribute is unpaused.
+
 ----------------
   
 .. _slip-scripting:
