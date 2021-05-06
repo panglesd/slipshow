@@ -392,6 +392,32 @@ A slip script can be executed either with :ref:`exec-at`, :ref:`exec-at-unpause`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   Function with no arguments that returns the controller used by an engine.
 
+	 engine.push(slip);                       // add the slip to the stack of slips of the engine
+	 engine.next();
+ .. _gotoSlip:
+
+``engine.gotoSlip``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  Move the window to show the slip. Takes as arguments a ``Slip``, and a js object ``options`` with field ``delay``.
+
+.. _push:
+
+``engine.push``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  Function that pushes the slip given as input in the slip stack of the engine.
+
+.. _next:
+
+``engine.next``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  Function with no arguments to make one step in the presentation.
+
+.. _enter:
+
+``engine.enter``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  Makes the engine effectively enter the slip given as input. This is equivalent to a ``gotoSlip`` followed by a ``push`` and a ``next``.
+
 .. _startSlipshow:
 
 ``Slipshow.startSlipshow``
