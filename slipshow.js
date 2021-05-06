@@ -1119,6 +1119,11 @@ function IEngine (root) {
 	let counters = stack.map((slip) => slip.getActionIndex());
 	document.querySelector(".cpt-slip").innerHTML = this.countersToString(counters);	
     };
+    this.enter = (n) => {
+	this.gotoSlip(n);
+	this.push(n);
+	this.next();
+    };
     this.next = () => {
 	if(document.querySelector(".toc-slip").innerHTML == "")
 	    this.showToC();
@@ -1127,9 +1132,10 @@ function IEngine (root) {
 	let n = currentSlide.next();
 	this.updateCounter();
 	if(n instanceof Slip) {
-	    this.gotoSlip(n);
-	    this.push(n);
-	    this.next();
+	    this.enter(n);
+	    // this.gotoSlip(n);
+	    // this.push(n);
+	    // this.next();
 	    // this.showToC();
 	    return true;
 	}

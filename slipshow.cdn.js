@@ -1186,6 +1186,12 @@ var Slipshow = (function (exports) {
 	    document.querySelector(".cpt-slip").innerHTML = this.countersToString(counters);
 	  };
 
+	  this.enter = n => {
+	    this.gotoSlip(n);
+	    this.push(n);
+	    this.next();
+	  };
+
 	  this.next = () => {
 	    if (document.querySelector(".toc-slip").innerHTML == "") this.showToC(); // return true if and only if the stack changed
 
@@ -1194,9 +1200,10 @@ var Slipshow = (function (exports) {
 	    this.updateCounter();
 
 	    if (n instanceof Slip) {
-	      this.gotoSlip(n);
-	      this.push(n);
-	      this.next(); // this.showToC();
+	      this.enter(n); // this.gotoSlip(n);
+	      // this.push(n);
+	      // this.next();
+	      // this.showToC();
 
 	      return true;
 	    } else if (!n) {
