@@ -157,7 +157,7 @@ var Slipshow = (function (exports) {
 	      previous_keys = ["ArrowLeft", "ArrowUp"],
 	      refresh_keys = ["r"],
 	      change_speed_keys = ["f"],
-	      up_slip_keys = ["ArrowUp"],
+	      up_slip_keys = [],
 	      background_canvas_keys = ["#"]; // let mainSlip = mainS;
 	  // this.getMainSlip = () => mainSlip;
 	  // this.setMainSlip = (slip) => mainSlip = slip;
