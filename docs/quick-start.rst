@@ -30,8 +30,8 @@ Recall that a slip presentation is just an ``html`` file. Therefore, a minimal p
    <html>
      <head>
        <!-- Add css and theme -->
-       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/panglesd/slipshow@gh-pages/css/slip.css">
-       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/panglesd/slipshow@gh-pages/css/theorem.css">
+       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slipshow@0.0.17/dist/css/slip.css">
+       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slipshow@0.0.17/dist/css/theorem.css">
      </head>
      <body>
 
@@ -41,7 +41,7 @@ Recall that a slip presentation is just an ``html`` file. Therefore, a minimal p
        </slip-slipshow>
 
      <!-- Include the library -->
-       <script src="https://cdn.jsdelivr.net/gh/panglesd/slipshow@gh-pages/slipshow.cdn.min.js"></script>
+       <script src="https://cdn.jsdelivr.net/npm/slipshow@0.0.17/dist/slipshow.cdn.min.js"></script>
        <!-- Start the presentation () -->
        <script>
          Slipshow.startSlipshow();
@@ -53,9 +53,9 @@ The part that includes the library are the following:
 
 .. code-block:: html
 
-       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/panglesd/slipshow@gh-pages/css/slip.css">
-       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/panglesd/slipshow@gh-pages/css/theorem.css">
-       <script src="https://cdn.jsdelivr.net/gh/panglesd/slipshow@gh-pages/slipshow.cdn.min.js"></script>
+       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slipshow@0.0.17/css/slip.css">
+       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slipshow@0.0.17/css/theorem.css">
+       <script src="https://cdn.jsdelivr.net/npm/slipshow@0.0.17/slipshow.cdn.min.js"></script>
 
 The first line define the style of your presentation requires by slip. The second line is a theme for your presentation, you can choose one from this list or even write your own theme. The last line is the library itself. You can now read the :ref:`tutorial`!
 

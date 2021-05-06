@@ -32,8 +32,8 @@ A presentation is just an ``html`` file. There are several ways to start a proje
    <html>
      <head>
        <!-- Add css and theme -->
-       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/panglesd/slipshow@gh-pages/css/slip.css">
-       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/panglesd/slipshow@gh-pages/css/theorem.css">
+       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slipshow@0.0.17/dist/css/slip.css">
+       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slipshow@0.0.17/dist/css/theorem.css">
      </head>
      <body>
 
@@ -43,7 +43,7 @@ A presentation is just an ``html`` file. There are several ways to start a proje
        </slip-slipshow>
 
      <!-- Include the library -->
-       <script src="https://cdn.jsdelivr.net/gh/panglesd/slipshow@gh-pages/slipshow.cdn.min.js"></script>
+       <script src="https://cdn.jsdelivr.net/npm/slipshow@0.0.17/dist/slipshow.cdn.min.js"></script>
        <!-- Start the presentation () -->
        <script>
          Slipshow.startSlipshow();
@@ -71,8 +71,8 @@ Now open ``myPresentation.html`` with a browser, by double clicking on the file 
 .. code-block:: html
 
        <!-- Add css and theme -->
-       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/panglesd/slipshow@gh-pages/css/slip.css">
-       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/panglesd/slipshow@gh-pages/css/theorem.css">
+       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slipshow@0.0.17/dist/css/slip.css">
+       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slipshow@0.0.17/dist/css/theorem.css">
 
 Those lines include the rules to display the presentation. The first one is mandatory for the presentation, while the second one corresponds to the theme: the background color, how to display the title, the blocks and theorems...
 
@@ -88,7 +88,7 @@ This delimits where the slips will be put. In this tutorial, we will (almost) on
 .. code-block:: html
 
      <!-- Include the library -->
-       <script src="https://cdn.jsdelivr.net/gh/panglesd/slipshow@gh-pages/slipshow.cdn.min.js"></script>
+       <script src="https://cdn.jsdelivr.net/npm/slipshow@0.0.17/dist/slipshow.cdn.min.js"></script>
        <!-- Start the presentation () -->
        <script>
          Slipshow.startSlipshow();
