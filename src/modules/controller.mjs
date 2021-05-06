@@ -27,7 +27,7 @@ export default function (ng) {
 	previous_keys = ["ArrowLeft", "ArrowUp"],
 	refresh_keys = ["r"],
 	change_speed_keys = ["f"],
-	up_slip_keys = ["ArrowUp"],
+	up_slip_keys = [],
 	background_canvas_keys = ["#"];
 
     // let mainSlip = mainS;
