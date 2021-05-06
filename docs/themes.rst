@@ -12,7 +12,20 @@ Just add the following line in the end of the head tag:
 
     <link rel="stylesheet" type="text/css" href="<link to your style>.css">
 
+Theme list
+---------------------------
 
+Slipshow comes with its set of themes.
+
+* Theme ``Vanier``:
+
+.. code-block:: html
+
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slipshow@0.0.18/dist/css/themes/vanier/vanier.css">
+
+
+If you want your theme
+    
 Writing a theme
 ---------------------------
 
