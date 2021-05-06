@@ -881,12 +881,30 @@ var Slipshow = (function (exports) {
 	      }
 
 	      if (elem.hasAttribute("step")) {
+	        console.log("has enter-at-unpause?");
+
+	        if (elem.hasAttribute("enter-at-unpause")) {
+	          console.log("has enter-at-unpause");
+
+	          if (elem.getAttribute("enter-at-unpause") != "") {
+	            let s = this.query("#" + elem.getAttribute("enter-at-unpause"));
+	            slipList[step] = new Slip(s, s.getAttribute("toc-title") || "", [], ng, {}); //			slipList[step + (parseInt(elem.getAttribute("step")) || 1) - 1] = new Slip(s, s.getAttribute("toc-title") || "", [], ng, {});
+	          } else slipList[step + (parseInt(elem.getAttribute("step")) || 1) - 1] = new Slip(elem, elem.getAttribute("toc-title") || "", [], ng, {});
+	        }
+
 	        console.log("debug generatePauseFlowsliplist1", elem, step);
 	        step += parseInt(elem.getAttribute("step")) || 1;
 	        console.log("debug generatePauseFlowsliplist2", elem, step);
 	      }
 
 	      if (elem.hasAttribute("pause")) {
+	        if (elem.hasAttribute("enter-at-unpause")) {
+	          if (elem.getAttribute("enter-at-unpause") != "") {
+	            let s = this.query(elem.getAttribute("enter-at-unpause"));
+	            slipList[step + (parseInt(elem.getAttribute("step")) || 1) - 1] = new Slip(s, s.getAttribute("toc-title") || "", [], ng, {});
+	          } else slipList[step + (parseInt(elem.getAttribute("step")) || 1) - 1] = new Slip(elem, elem.getAttribute("toc-title") || "", [], ng, {});
+	        }
+
 	        console.log("debug generatePauseFlowsliplist1", elem, step);
 	        step += parseInt(elem.getAttribute("pause")) || 1;
 	        console.log("debug generatePauseFlowsliplist1", elem, step);
