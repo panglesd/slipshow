@@ -1,5 +1,5 @@
 import { cloneNoSubslip, myQueryAll, replaceSubslips } from './util'
-
+import Atrament from 'atrament';
 export default function Slip(name, fullName, actionL, ng, options) {
 
     // ******************************
@@ -389,7 +389,8 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	let savedActionIndex = this.getActionIndex();
 	let savedDelay = this.currentDelay;
 	this.getEngine().setDoNotMove(true);
-	console.log("gotoslip: we call doRefresh",this.doRefresh());
+	let r = this.doRefresh();
+	console.log("gotoslip: we call doRefresh",r);
 	if(savedActionIndex == -1)
 	    return false;
  	let toReturn;
@@ -467,12 +468,14 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	this.doRefresh();
     };
     this.doRefresh = () => {
+	console.log("to Atrament debug",this.element);
 	console.log("gotoslip: doRefresh has been called");
 	this.setActionIndex(-1);
 	let subSlipList = myQueryAll(this.element, "slip-slip");
 	console.log("mmdebug", clonedElement);
+	console.log("to Atrament debug clonedElement",clonedElement);
 	let clone = clonedElement.cloneNode(true);
-	replaceSubslips(clone, subSlipList);
+	replaceSubslips(clone, subSlipList, this.sketchpadCanvas);
 	this.element.replaceWith(clone);
 	this.element = clone;
 	this.init();
@@ -601,6 +604,29 @@ export default function Slip(name, fullName, actionL, ng, options) {
     };
 
     // ******************************
+    // Function for writing and highlighting
+    // ******************************
+
+    this.setTool = (tool) => {
+	this.element.classList.remove("drawing", "highlighting");
+	if(tool == "highlighting") {
+	    this.element.classList.add("highlighting");
+	    this.sketchpadHighlight.mode = "draw";
+	} else if(tool == "highlighting-erase") {
+	    this.element.classList.add("highlighting");
+	    this.sketchpadHighlight.mode = "erase";
+	} else if(tool == "drawing") {
+	    this.element.classList.add("drawing");
+	    this.sketchpad.mode = "draw";
+	    this.sketchpad.weight = 2;
+	} else if(tool == "drawing-erase") {
+	    this.element.classList.add("drawing");
+	    this.sketchpad.weight = 20;
+	    this.sketchpad.mode = "erase";
+	}
+    };
+
+    // ******************************
     // Initialisation of the object
     // ******************************
     // engine
@@ -612,6 +638,36 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	typeof name == "string" ?
 	document.querySelector(name[0]=="#" ? name : ("#"+name)):
 	name;
+    // canvas for drawing
+    var that = this;
+    console.log("element bug before", this.element, that.element);
+    let element = this.element;
+    setTimeout(function() {
+	let canvas = document.createElement('canvas');
+	canvas.height = element.offsetHeight;
+	canvas.width = element.offsetWidth;
+	console.log("element bug after", element, that.element);
+	canvas.classList.add("sketchpad", "drawing");
+	canvas.style.opacity = "1";
+	that.sketchpadCanvas = canvas;
+	element.firstChild.firstChild.appendChild(canvas);
+	that.sketchpad = new Atrament(canvas);
+	that.sketchpad.smoothing = 0.2;
+    // }, 0);
+    // canvas for highlighting 
+    // setTimeout(function() {
+	let canvas2 = document.createElement('canvas');
+	canvas2.height = that.element.offsetHeight;
+	canvas2.width = that.element.offsetWidth;
+	canvas2.classList.add("sketchpad", "sketchpad-highlighting");
+	canvas2.style.opacity = "0.5";
+	that.sketchpadCanvasHighlight = canvas2;
+	element.firstChild.firstChild.appendChild(canvas2);
+	that.sketchpadHighlight = new Atrament(canvas2);
+	that.sketchpadHighlight.color = "yellow";
+	that.sketchpadHighlight.weight = 30;
+	that.sketchpadHighlight.smoothing = 0.2;
+    }, 0);
     // names
     this.name =
 	typeof name == "string" ?
@@ -632,6 +688,8 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	});
     else
 	setTimeout(() => {clonedElement = cloneNoSubslip(this.element);},0);
+    console.log("to Atrament debug before",this.element);
+
     this.getCloned = () => clonedElement;
     this.setCloned = (c) => clonedElement = c;
     // scale, rotate, delay

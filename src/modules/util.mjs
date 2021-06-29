@@ -19,14 +19,21 @@ export function cloneNoSubslip (elem) {
 	    placeholder.classList.add("toReplace");
 	    newElem.appendChild(placeholder);
 	}
+	else if(child.tagName && child.tagName == "CANVAS" && child.classList.contains("sketchpad")){
+	    let placeholder = document.createElement(child.tagName);
+	    placeholder.classList.add("toReplaceSketchpad");
+	    newElem.appendChild(placeholder);
+	}
 	else
 	    newElem.appendChild(cloneNoSubslip(child));
     });
     return newElem;
 }
-export function replaceSubslips(clone, subslips) {
+export function replaceSubslips(clone, subslips, sketchpad) {
     let placeholders = myQueryAll(clone, ".toReplace");
     subslips.forEach((subslip, index) => {
 	placeholders[index].replaceWith(subslip);
     });
+    let sketchPlaceholder = myQueryAll(clone, ".toReplaceSketchpad")[0];
+    sketchPlaceholder.replaceWith(sketchpad);
 }

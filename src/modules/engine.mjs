@@ -35,6 +35,16 @@ export default function (root) {
 		}
 		scaleContainer.appendChild(slipContainer);
 		slipElem.appendChild(scaleContainer);
+		setTimeout(() => {
+		    // let canvas = document.createElement('canvas');
+		    // canvas.height = slipContainer.offsetHeight;
+		    // canvas.width = slipContainer.offsetWidth;
+		    // canvas.classList.add("sketchpad");
+		    // canvas.style.opacity = "1";
+		    // slipContainer.appendChild(canvas);
+		    // let sketchpad = new Atrament(canvas);
+		    // sketchpad.smoothing = 0.2;
+		},0);
 	    },0);
 	});
 	rootElem.style.width = "unset";
@@ -413,14 +423,19 @@ export default function (root) {
 	this.getToC().querySelectorAll(".toc-slip .active-slip").forEach(elem => elem.classList.remove("active-slip"));
 	if(n.tocElem)
 	    n.tocElem.classList.add("active-slip");
+	n.element.classList.add("active-true-slip");
+	if(stack.length>0)
+	    stack[stack.length-1].element.classList.remove("active-true-slip");
 	stack.push(n);
 	return ;
     };
     this.pop = function () {
 	this.getToC().querySelectorAll(".toc-slip .active-slip").forEach(elem => elem.classList.remove("active-slip"));
 	let n = stack.pop();
+	n.element.classList.remove("active-true-slip");
 	if(stack.length == 0)
 	    stack.push(n);
+	stack[stack.length-1].element.classList.add("active-true-slip");
 	if(stack[stack.length -1].tocElem)
 	    stack[stack.length -1].tocElem.classList.add("active-slip");
 	return n;
@@ -518,6 +533,20 @@ export default function (root) {
 	// toc.innerHTML = innerHTML;
 	toc.appendChild(displayTree(tree, []));
     };
+
+    // ******************************
+    // Function for writing and highlighting
+    // ******************************
+
+    this.setTool = (tool) => {
+	this.getCurrentSlip().setTool(tool);
+    };
+
+    // ******************************
+    // 
+    // ******************************
+
+
     
     // this.getRootSlip = () => rootSlip;
     this.setRootSlip = (root) => {
