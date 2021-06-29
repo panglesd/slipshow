@@ -447,6 +447,19 @@ When you press ``t`` during your presentation. Magic! However, this is quite ugl
 
 .. todo:: The way the table of content looks like will very likely change a lot, please tell me how you would like it to be.
 
+Annotating during a talk
+--------------------------------
+
+During a talk, you might need to add a drawing to your explanation, correct a typo, highlight the important part of some text... Especially if you have a drawing tablet!
+
+Slipshow embeds these tools:
+
+* Press ``w`` to start drawing with a blue pen
+* Press ``W`` to start erasing the blue pen
+* Press ``h`` to start highlighting with a yellow highlighter
+* Press ``H`` to start erasing the yellow highlighter
+* Press ``x`` to go back to the normal state (where you can select texts for instance)
+
 Scripting your presentation
 --------------------------------
 
