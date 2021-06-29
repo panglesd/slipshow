@@ -208,3 +208,22 @@ h1 {
     background-color: white;
     padding:5px;
 }
+.sketchpad {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+}
+.active-true-slip > * > * > .sketchpad {
+    pointer-events: none;
+}
+.active-true-slip.no-writing > * > * > .sketchpad {
+    pointer-events: none;
+}
+
+.active-true-slip.drawing > * > * > .sketchpad.drawing {
+    pointer-events: initial;
+}
+.active-true-slip.highlighting > * > * > .sketchpad.sketchpad-highlighting {
+    pointer-events: initial;
+}

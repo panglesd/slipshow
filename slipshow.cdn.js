@@ -107,15 +107,21 @@ var Slipshow = (function (exports) {
 	      let placeholder = document.createElement(child.tagName);
 	      placeholder.classList.add("toReplace");
 	      newElem.appendChild(placeholder);
+	    } else if (child.tagName && child.tagName == "CANVAS" && child.classList.contains("sketchpad")) {
+	      let placeholder = document.createElement(child.tagName);
+	      placeholder.classList.add("toReplaceSketchpad");
+	      newElem.appendChild(placeholder);
 	    } else newElem.appendChild(cloneNoSubslip(child));
 	  });
 	  return newElem;
 	}
-	function replaceSubslips(clone, subslips) {
+	function replaceSubslips(clone, subslips, sketchpad) {
 	  let placeholders = myQueryAll(clone, ".toReplace");
 	  subslips.forEach((subslip, index) => {
 	    placeholders[index].replaceWith(subslip);
 	  });
+	  let sketchPlaceholder = myQueryAll(clone, ".toReplaceSketchpad")[0];
+	  sketchPlaceholder.replaceWith(sketchpad);
 	}
 
 	var IUtil = /*#__PURE__*/Object.freeze({
@@ -158,6 +164,11 @@ var Slipshow = (function (exports) {
 	      refresh_keys = ["r"],
 	      change_speed_keys = ["f"],
 	      up_slip_keys = [],
+	      draw_on_slip_keys = ["w"],
+	      erase_on_slip_keys = ["W"],
+	      highlight_on_slip_keys = ["h"],
+	      erase_highlight_on_slip_keys = ["H"],
+	      stop_writing_on_slip_keys = ["x"],
 	      background_canvas_keys = ["#"]; // let mainSlip = mainS;
 	  // this.getMainSlip = () => mainSlip;
 	  // this.setMainSlip = (slip) => mainSlip = slip;
@@ -179,6 +190,26 @@ var Slipshow = (function (exports) {
 
 	    if (refresh_keys.includes(ev.key) && activated) {
 	      engine.getCurrentSlip().refresh();
+	    }
+
+	    if (draw_on_slip_keys.includes(ev.key) && activated) {
+	      engine.setTool("drawing");
+	    }
+
+	    if (erase_on_slip_keys.includes(ev.key) && activated) {
+	      engine.setTool("drawing-erase");
+	    }
+
+	    if (highlight_on_slip_keys.includes(ev.key) && activated) {
+	      engine.setTool("highlighting");
+	    }
+
+	    if (erase_highlight_on_slip_keys.includes(ev.key) && activated) {
+	      engine.setTool("highlighting-erase");
+	    }
+
+	    if (stop_writing_on_slip_keys.includes(ev.key) && activated) {
+	      engine.setTool("no-tool");
 	    }
 
 	    if (background_canvas_keys.includes(ev.key) && activated) {
@@ -253,6 +284,603 @@ var Slipshow = (function (exports) {
 	    }
 	  });
 	}
+
+	// make a class for Point
+	class Point {
+	  constructor(x, y) {
+	    this.x = x;
+	    this.y = y;
+	  }
+
+	  set(x, y) {
+	    this.x = x;
+	    this.y = y;
+	  }
+
+	} // make a class for the mouse data
+
+
+	class Mouse extends Point {
+	  constructor() {
+	    super(0, 0);
+	    this.down = false;
+	    this.previous = new Point(0, 0);
+	  }
+
+	}
+
+	var mouse = {
+	  Mouse,
+	  Point
+	};
+
+	const C = {};
+	C.floodFillInterval = 100;
+	C.maxLineThickness = 50;
+	C.minLineThickness = 1;
+	C.lineThicknessRange = C.maxLineThickness - C.minLineThickness;
+	C.thicknessIncrement = 0.5;
+	C.minSmoothingFactor = 0.87;
+	C.initialSmoothingFactor = 0.85;
+	C.weightSpread = 10;
+	C.initialThickness = 2;
+	var constants = C;
+
+	class AtramentEventTarget {
+	  constructor() {
+	    this.eventListeners = new Map();
+	  }
+
+	  addEventListener(eventName, handler) {
+	    const handlers = this.eventListeners.get(eventName) || new Set();
+	    handlers.add(handler);
+	    this.eventListeners.set(eventName, handlers);
+	  }
+
+	  removeEventListener(eventName, handler) {
+	    const handlers = this.eventListeners.get(eventName);
+	    if (!handlers) return;
+	    handlers.delete(handler);
+	  }
+
+	  dispatchEvent(eventName, data) {
+	    const handlers = this.eventListeners.get(eventName);
+	    if (!handlers) return;
+	    [...handlers].forEach(handler => handler(data));
+	  }
+
+	}
+
+	var events = {
+	  AtramentEventTarget
+	};
+
+	function createCommonjsModule(fn, module) {
+		return module = { exports: {} }, fn(module, module.exports), module.exports;
+	}
+
+	var pixels = createCommonjsModule(function (module, exports) {
+	  exports.lineDistance = (x1, y1, x2, y2) => {
+	    // calculate euclidean distance between (x1, y1) and (x2, y2)
+	    const xs = Math.pow(x2 - x1, 2);
+	    const ys = Math.pow(y2 - y1, 2);
+	    return Math.sqrt(xs + ys);
+	  };
+
+	  exports.hexToRgb = hexColor => {
+	    // Since input type color provides hex and ImageData accepts RGB need to transform
+	    const m = hexColor.match(/^#?([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i);
+	    return [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)];
+	  };
+
+	  exports.matchColor = (data, compR, compG, compB, compA) => pixelPos => {
+	    // Pixel color equals comp color?
+	    const r = data[pixelPos];
+	    const g = data[pixelPos + 1];
+	    const b = data[pixelPos + 2];
+	    const a = data[pixelPos + 3];
+	    return r === compR && g === compG && b === compB && a === compA;
+	  };
+
+	  exports.colorPixel = (data, fillR, fillG, fillB, startColor, alpha) => {
+	    const matcher = exports.matchColor(data, ...startColor);
+	    return pixelPos => {
+	      // Update fill color in matrix
+	      data[pixelPos] = fillR;
+	      data[pixelPos + 1] = fillG;
+	      data[pixelPos + 2] = fillB;
+	      data[pixelPos + 3] = alpha;
+
+	      if (!matcher(pixelPos + 4)) {
+	        data[pixelPos + 4] = data[pixelPos + 4] * 0.01 + fillR * 0.99;
+	        data[pixelPos + 4 + 1] = data[pixelPos + 4 + 1] * 0.01 + fillG * 0.99;
+	        data[pixelPos + 4 + 2] = data[pixelPos + 4 + 2] * 0.01 + fillB * 0.99;
+	        data[pixelPos + 4 + 3] = data[pixelPos + 4 + 3] * 0.01 + alpha * 0.99;
+	      }
+
+	      if (!matcher(pixelPos - 4)) {
+	        data[pixelPos - 4] = data[pixelPos - 4] * 0.01 + fillR * 0.99;
+	        data[pixelPos - 4 + 1] = data[pixelPos - 4 + 1] * 0.01 + fillG * 0.99;
+	        data[pixelPos - 4 + 2] = data[pixelPos - 4 + 2] * 0.01 + fillB * 0.99;
+	        data[pixelPos - 4 + 3] = data[pixelPos - 4 + 3] * 0.01 + alpha * 0.99;
+	      }
+	    };
+	  };
+	});
+	var pixels_1 = pixels.lineDistance;
+	var pixels_2 = pixels.hexToRgb;
+	var pixels_3 = pixels.matchColor;
+	var pixels_4 = pixels.colorPixel;
+
+	const {
+	  Mouse: Mouse$1,
+	  Point: Point$1
+	} = mouse;
+	const {
+	  AtramentEventTarget: AtramentEventTarget$1
+	} = events;
+	const DrawingMode = {
+	  DRAW: 'draw',
+	  ERASE: 'erase',
+	  FILL: 'fill',
+	  DISABLED: 'disabled'
+	};
+	const PathDrawingModes = [DrawingMode.DRAW, DrawingMode.ERASE];
+	var atrament = class Atrament extends AtramentEventTarget$1 {
+	  constructor(selector) {
+	    let config = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+	    if (typeof window === 'undefined') {
+	      throw new Error('Looks like we\'re not running in a browser');
+	    }
+
+	    super(); // get canvas element
+
+	    if (selector instanceof window.Node && selector.tagName === 'CANVAS') this.canvas = selector;else if (typeof selector === 'string') this.canvas = document.querySelector(selector);else throw new Error("can't look for canvas based on '".concat(selector, "'"));
+	    if (!this.canvas) throw new Error('canvas not found'); // set external canvas params
+
+	    this.canvas.width = config.width || this.canvas.width;
+	    this.canvas.height = config.height || this.canvas.height; // create a mouse object
+
+	    this.mouse = new Mouse$1(); // mousemove handler
+
+	    const mouseMove = event => {
+	      if (event.cancelable) {
+	        event.preventDefault();
+	      }
+
+	      const rect = this.canvas.getBoundingClientRect();
+	      const position = event.changedTouches && event.changedTouches[0] || event;
+	      let x = position.offsetX;
+	      let y = position.offsetY;
+
+	      if (typeof x === 'undefined') {
+	        x = position.clientX - rect.left;
+	      }
+
+	      if (typeof y === 'undefined') {
+	        y = position.clientY - rect.top;
+	      }
+
+	      const {
+	        mouse
+	      } = this; // draw if we should draw
+
+	      if (mouse.down && PathDrawingModes.includes(this.mode)) {
+	        const {
+	          x: newX,
+	          y: newY
+	        } = this.draw(x, y, mouse.previous.x, mouse.previous.y);
+
+	        if (!this._dirty && this.mode === DrawingMode.DRAW && (x !== mouse.x || y !== mouse.y)) {
+	          this._dirty = true;
+	          this.fireDirty();
+	        }
+
+	        mouse.set(x, y);
+	        mouse.previous.set(newX, newY);
+	      } else {
+	        mouse.set(x, y);
+	      }
+	    }; // mousedown handler
+
+
+	    const mouseDown = event => {
+	      if (event.cancelable) {
+	        event.preventDefault();
+	      } // update position just in case
+
+
+	      mouseMove(event); // if we are filling - fill and return
+
+	      if (this.mode === DrawingMode.FILL) {
+	        this.fill();
+	        return;
+	      } // remember it
+
+
+	      const {
+	        mouse
+	      } = this;
+	      mouse.previous.set(mouse.x, mouse.y);
+	      mouse.down = true;
+	      this.beginStroke(mouse.previous.x, mouse.previous.y);
+	    };
+
+	    const mouseUp = e => {
+	      if (this.mode === DrawingMode.FILL) {
+	        return;
+	      }
+
+	      const {
+	        mouse
+	      } = this;
+
+	      if (!mouse.down) {
+	        return;
+	      }
+
+	      const position = e.changedTouches && e.changedTouches[0] || e;
+	      const x = position.offsetX;
+	      const y = position.offsetY;
+	      mouse.down = false;
+
+	      if (mouse.x === x && mouse.y === y && PathDrawingModes.includes(this.mode)) {
+	        const {
+	          x: nx,
+	          y: ny
+	        } = this.draw(mouse.x, mouse.y, mouse.previous.x, mouse.previous.y);
+	        mouse.previous.set(nx, ny);
+	      }
+
+	      this.endStroke(mouse.x, mouse.y);
+	    }; // attach listeners
+
+
+	    this.canvas.addEventListener('mousemove', mouseMove);
+	    this.canvas.addEventListener('mousedown', mouseDown);
+	    document.addEventListener('mouseup', mouseUp);
+	    this.canvas.addEventListener('touchstart', mouseDown);
+	    this.canvas.addEventListener('touchend', mouseUp);
+	    this.canvas.addEventListener('touchmove', mouseMove); // helper for destroying Atrament (removing event listeners)
+
+	    this.destroy = () => {
+	      this.clear();
+	      this.canvas.removeEventListener('mousemove', mouseMove);
+	      this.canvas.removeEventListener('mousedown', mouseDown);
+	      document.removeEventListener('mouseup', mouseUp);
+	      this.canvas.removeEventListener('touchstart', mouseDown);
+	      this.canvas.removeEventListener('touchend', mouseUp);
+	      this.canvas.removeEventListener('touchmove', mouseMove);
+	    }; // set internal canvas params
+
+
+	    this.context = this.canvas.getContext('2d');
+	    this.context.globalCompositeOperation = 'source-over';
+	    this.context.globalAlpha = 1;
+	    this.context.strokeStyle = config.color || 'rgba(0,0,0,1)';
+	    this.context.lineCap = 'round';
+	    this.context.lineJoin = 'round';
+	    this.context.translate(0.5, 0.5);
+	    this._filling = false;
+	    this._fillStack = []; // set drawing params
+
+	    this.recordStrokes = false;
+	    this.strokeMemory = [];
+	    this.smoothing = constants.initialSmoothingFactor;
+	    this._thickness = constants.initialThickness;
+	    this._targetThickness = this._thickness;
+	    this._weight = this._thickness;
+	    this._maxWeight = this._thickness + constants.weightSpread;
+	    this._mode = DrawingMode.DRAW;
+	    this.adaptiveStroke = true; // update from config object
+
+	    ['weight', 'smoothing', 'adaptiveStroke', 'mode'].forEach(key => config[key] === undefined ? 0 : this[key] = config[key]);
+	  }
+	  /**
+	   * Begins a stroke at a given position
+	   *
+	   * @param {number} x
+	   * @param {number} y
+	   */
+
+
+	  beginStroke(x, y) {
+	    this.context.beginPath();
+	    this.context.moveTo(x, y);
+
+	    if (this.recordStrokes) {
+	      this.strokeMemory.push(new Point$1(x, y));
+	    }
+
+	    this.dispatchEvent('strokestart', {
+	      x,
+	      y
+	    });
+	  }
+	  /**
+	   * Ends a stroke at a given position
+	   *
+	   * @param {number} x
+	   * @param {number} y
+	   */
+
+
+	  endStroke(x, y) {
+	    this.context.closePath();
+
+	    if (this.recordStrokes) {
+	      this.strokeMemory.push(new Point$1(x, y));
+	    }
+
+	    this.dispatchEvent('strokeend', {
+	      x,
+	      y
+	    });
+
+	    if (this.recordStrokes) {
+	      const stroke = {
+	        points: this.strokeMemory.slice(),
+	        mode: this.mode,
+	        weight: this.weight,
+	        smoothing: this.smoothing,
+	        color: this.color,
+	        adaptiveStroke: this.adaptiveStroke
+	      };
+	      this.dispatchEvent('strokerecorded', {
+	        stroke
+	      });
+	    }
+
+	    this.strokeMemory = [];
+	  }
+	  /**
+	   * Draws a smooth quadratic curve with adaptive stroke thickness
+	   * between two points
+	   *
+	   * @param {number} x current X coordinate
+	   * @param {number} y current Y coordinate
+	   * @param {number} prevX previous X coordinate
+	   * @param {number} prevY previous Y coordinate
+	   */
+
+
+	  draw(x, y, prevX, prevY) {
+	    if (this.recordStrokes) {
+	      this.strokeMemory.push(new Point$1(x, y));
+	    }
+
+	    const {
+	      context
+	    } = this; // calculate distance from previous point
+
+	    const rawDist = pixels.lineDistance(x, y, prevX, prevY); // now, here we scale the initial smoothing factor by the raw distance
+	    // this means that when the mouse moves fast, there is more smoothing
+	    // and when we're drawing small detailed stuff, we have more control
+	    // also we hard clip at 1
+
+	    const smoothingFactor = Math.min(constants.minSmoothingFactor, this.smoothing + (rawDist - 60) / 3000); // calculate processed coordinates
+
+	    const procX = x - (x - prevX) * smoothingFactor;
+	    const procY = y - (y - prevY) * smoothingFactor; // recalculate distance from previous point, this time relative to the smoothed coords
+
+	    const dist = pixels.lineDistance(procX, procY, prevX, prevY);
+
+	    if (this.adaptiveStroke) {
+	      // calculate target thickness based on the new distance
+	      this._targetThickness = (dist - constants.minLineThickness) / constants.lineThicknessRange * (this._maxWeight - this._weight) + this._weight; // approach the target gradually
+
+	      if (this._thickness > this._targetThickness) {
+	        this._thickness -= constants.thicknessIncrement;
+	      } else if (this._thickness < this._targetThickness) {
+	        this._thickness += constants.thicknessIncrement;
+	      } // set line width
+
+
+	      context.lineWidth = this._thickness;
+	    } else {
+	      // line width is equal to default weight
+	      context.lineWidth = this._weight;
+	    } // draw using quad interpolation
+
+
+	    context.quadraticCurveTo(prevX, prevY, procX, procY);
+	    context.stroke();
+	    return {
+	      x: procX,
+	      y: procY
+	    };
+	  }
+
+	  get color() {
+	    return this.context.strokeStyle;
+	  }
+
+	  set color(c) {
+	    if (typeof c !== 'string') throw new Error('wrong argument type');
+	    this.context.strokeStyle = c;
+	  }
+
+	  get weight() {
+	    return this._weight;
+	  }
+
+	  set weight(w) {
+	    if (typeof w !== 'number') throw new Error('wrong argument type');
+	    this._weight = w;
+	    this._thickness = w;
+	    this._targetThickness = w;
+	    this._maxWeight = w + constants.weightSpread;
+	  }
+
+	  get mode() {
+	    return this._mode;
+	  }
+
+	  set mode(m) {
+	    if (typeof m !== 'string') throw new Error('wrong argument type');
+
+	    switch (m) {
+	      case DrawingMode.ERASE:
+	        this._mode = DrawingMode.ERASE;
+	        this.context.globalCompositeOperation = 'destination-out';
+	        break;
+
+	      case DrawingMode.FILL:
+	        this._mode = DrawingMode.FILL;
+	        this.context.globalCompositeOperation = 'source-over';
+	        break;
+
+	      case DrawingMode.DISABLED:
+	        this._mode = DrawingMode.DISABLED;
+	        break;
+
+	      default:
+	        this._mode = DrawingMode.DRAW;
+	        this.context.globalCompositeOperation = 'source-over';
+	        break;
+	    }
+	  }
+
+	  isDirty() {
+	    return !!this._dirty;
+	  }
+
+	  fireDirty() {
+	    this.dispatchEvent('dirty');
+	  }
+
+	  clear() {
+	    if (!this.isDirty) {
+	      return;
+	    }
+
+	    this._dirty = false;
+	    this.dispatchEvent('clean'); // make sure we're in the right compositing mode, and erase everything
+
+	    if (this.mode === DrawingMode.ERASE) {
+	      this.mode = DrawingMode.DRAW;
+	      this.context.clearRect(-10, -10, this.canvas.width + 20, this.canvas.height + 20);
+	      this.mode = DrawingMode.ERASE;
+	    } else {
+	      this.context.clearRect(-10, -10, this.canvas.width + 20, this.canvas.height + 20);
+	    }
+	  }
+
+	  toImage() {
+	    return this.canvas.toDataURL();
+	  }
+
+	  fill() {
+	    const {
+	      mouse
+	    } = this;
+	    const {
+	      context
+	    } = this; // converting to Array because Safari 9
+
+	    const startColor = Array.from(context.getImageData(mouse.x, mouse.y, 1, 1).data);
+
+	    if (!this._filling) {
+	      const {
+	        x,
+	        y
+	      } = mouse;
+	      this.dispatchEvent('fillstart', {
+	        x,
+	        y
+	      });
+	      this._filling = true;
+	      setTimeout(() => {
+	        this._floodFill(mouse.x, mouse.y, startColor);
+	      }, constants.floodFillInterval);
+	    } else {
+	      this._fillStack.push([mouse.x, mouse.y, startColor]);
+	    }
+	  }
+
+	  _floodFill(_startX, _startY, startColor) {
+	    const {
+	      context
+	    } = this;
+	    const startX = Math.floor(_startX);
+	    const startY = Math.floor(_startY);
+	    const canvasWidth = context.canvas.width;
+	    const canvasHeight = context.canvas.height;
+	    const pixelStack = [[startX, startY]]; // hex needs to be trasformed to rgb since colorLayer accepts RGB
+
+	    const fillColor = pixels.hexToRgb(this.color); // Need to save current context with colors, we will update it
+
+	    const colorLayer = context.getImageData(0, 0, context.canvas.width, context.canvas.height);
+	    const alpha = Math.min(context.globalAlpha * 10 * 255, 255);
+	    const colorPixel = pixels.colorPixel(colorLayer.data, ...fillColor, startColor, alpha);
+	    const matchColor = pixels.matchColor(colorLayer.data, ...startColor);
+	    const matchFillColor = pixels.matchColor(colorLayer.data, ...[...fillColor, 255]); // check if we're trying to fill with the same colour, if so, stop
+
+	    if (matchFillColor((startY * context.canvas.width + startX) * 4)) {
+	      this._filling = false;
+	      this.dispatchEvent('fillend', {});
+	      return;
+	    }
+
+	    while (pixelStack.length) {
+	      const newPos = pixelStack.pop();
+	      const x = newPos[0];
+	      let y = newPos[1];
+	      let pixelPos = (y * canvasWidth + x) * 4;
+
+	      while (y-- >= 0 && matchColor(pixelPos)) {
+	        pixelPos -= canvasWidth * 4;
+	      }
+
+	      pixelPos += canvasWidth * 4;
+	      ++y;
+	      let reachLeft = false;
+	      let reachRight = false;
+
+	      while (y++ < canvasHeight - 1 && matchColor(pixelPos)) {
+	        colorPixel(pixelPos);
+
+	        if (x > 0) {
+	          if (matchColor(pixelPos - 4)) {
+	            if (!reachLeft) {
+	              pixelStack.push([x - 1, y]);
+	              reachLeft = true;
+	            }
+	          } else if (reachLeft) {
+	            reachLeft = false;
+	          }
+	        }
+
+	        if (x < canvasWidth - 1) {
+	          if (matchColor(pixelPos + 4)) {
+	            if (!reachRight) {
+	              pixelStack.push([x + 1, y]);
+	              reachRight = true;
+	            }
+	          } else if (reachRight) {
+	            reachRight = false;
+	          }
+	        }
+
+	        pixelPos += canvasWidth * 4;
+	      }
+	    } // Update context with filled bucket!
+
+
+	    context.putImageData(colorLayer, 0, 0);
+
+	    if (this._fillStack.length) {
+	      this._floodFill(...this._fillStack.shift());
+	    } else {
+	      this._filling = false;
+	      this.dispatchEvent('fillend', {});
+	    }
+	  }
+
+	};
+
+	var atrament$1 = atrament;
 
 	function Slip(name, fullName, actionL, ng, options) {
 	  // ******************************
@@ -613,7 +1241,8 @@ var Slipshow = (function (exports) {
 	    let savedActionIndex = this.getActionIndex();
 	    let savedDelay = this.currentDelay;
 	    this.getEngine().setDoNotMove(true);
-	    console.log("gotoslip: we call doRefresh", this.doRefresh());
+	    let r = this.doRefresh();
+	    console.log("gotoslip: we call doRefresh", r);
 	    if (savedActionIndex == -1) return false;
 	    let toReturn;
 
@@ -701,12 +1330,14 @@ var Slipshow = (function (exports) {
 	  };
 
 	  this.doRefresh = () => {
+	    console.log("to Atrament debug", this.element);
 	    console.log("gotoslip: doRefresh has been called");
 	    this.setActionIndex(-1);
 	    let subSlipList = myQueryAll(this.element, "slip-slip");
 	    console.log("mmdebug", clonedElement);
+	    console.log("to Atrament debug clonedElement", clonedElement);
 	    let clone = clonedElement.cloneNode(true);
-	    replaceSubslips(clone, subSlipList);
+	    replaceSubslips(clone, subSlipList, this.sketchpadCanvas);
 	    this.element.replaceWith(clone);
 	    this.element = clone;
 	    this.init();
@@ -842,6 +1473,29 @@ var Slipshow = (function (exports) {
 	      elem.style.opacity = "0";
 	    });
 	  }; // ******************************
+	  // Function for writing and highlighting
+	  // ******************************
+
+
+	  this.setTool = tool => {
+	    this.element.classList.remove("drawing", "highlighting");
+
+	    if (tool == "highlighting") {
+	      this.element.classList.add("highlighting");
+	      this.sketchpadHighlight.mode = "draw";
+	    } else if (tool == "highlighting-erase") {
+	      this.element.classList.add("highlighting");
+	      this.sketchpadHighlight.mode = "erase";
+	    } else if (tool == "drawing") {
+	      this.element.classList.add("drawing");
+	      this.sketchpad.mode = "draw";
+	      this.sketchpad.weight = 2;
+	    } else if (tool == "drawing-erase") {
+	      this.element.classList.add("drawing");
+	      this.sketchpad.weight = 20;
+	      this.sketchpad.mode = "erase";
+	    }
+	  }; // ******************************
 	  // Initialisation of the object
 	  // ******************************
 	  // engine
@@ -854,7 +1508,38 @@ var Slipshow = (function (exports) {
 	  this.setEngine = ng => engine = ng; // element
 
 
-	  this.element = typeof name == "string" ? document.querySelector(name[0] == "#" ? name : "#" + name) : name; // names
+	  this.element = typeof name == "string" ? document.querySelector(name[0] == "#" ? name : "#" + name) : name; // canvas for drawing
+
+	  var that = this;
+	  console.log("element bug before", this.element, that.element);
+	  let element = this.element;
+	  setTimeout(function () {
+	    let canvas = document.createElement('canvas');
+	    canvas.height = element.offsetHeight;
+	    canvas.width = element.offsetWidth;
+	    console.log("element bug after", element, that.element);
+	    canvas.classList.add("sketchpad", "drawing");
+	    canvas.style.opacity = "1";
+	    that.sketchpadCanvas = canvas;
+	    element.firstChild.firstChild.appendChild(canvas);
+	    that.sketchpad = new atrament$1(canvas);
+	    that.sketchpad.smoothing = 0.2;
+	    that.sketchpad.color = "blue"; // }, 0);
+	    // canvas for highlighting 
+	    // setTimeout(function() {
+
+	    let canvas2 = document.createElement('canvas');
+	    canvas2.height = that.element.offsetHeight;
+	    canvas2.width = that.element.offsetWidth;
+	    canvas2.classList.add("sketchpad", "sketchpad-highlighting");
+	    canvas2.style.opacity = "0.5";
+	    that.sketchpadCanvasHighlight = canvas2;
+	    element.firstChild.firstChild.appendChild(canvas2);
+	    that.sketchpadHighlight = new atrament$1(canvas2);
+	    that.sketchpadHighlight.color = "yellow";
+	    that.sketchpadHighlight.weight = 30;
+	    that.sketchpadHighlight.smoothing = 0.2;
+	  }, 0); // names
 
 	  this.name = typeof name == "string" ? name : name.id;
 	  if (typeof fullName == "string") this.fullName = fullName;else if (this.element.hasAttribute("toc-title")) this.fullName = this.element.getAttribute("toc-title");else this.fullName = this.name;
@@ -868,6 +1553,7 @@ var Slipshow = (function (exports) {
 	  });else setTimeout(() => {
 	    clonedElement = cloneNoSubslip(this.element);
 	  }, 0);
+	  console.log("to Atrament debug before", this.element);
 
 	  this.getCloned = () => clonedElement;
 
@@ -980,6 +1666,15 @@ var Slipshow = (function (exports) {
 
 	        scaleContainer.appendChild(slipContainer);
 	        slipElem.appendChild(scaleContainer);
+	        setTimeout(() => {// let canvas = document.createElement('canvas');
+	          // canvas.height = slipContainer.offsetHeight;
+	          // canvas.width = slipContainer.offsetWidth;
+	          // canvas.classList.add("sketchpad");
+	          // canvas.style.opacity = "1";
+	          // slipContainer.appendChild(canvas);
+	          // let sketchpad = new Atrament(canvas);
+	          // sketchpad.smoothing = 0.2;
+	        }, 0);
 	      }, 0);
 	    });
 	    rootElem.style.width = "unset";
@@ -1405,6 +2100,8 @@ var Slipshow = (function (exports) {
 	  this.push = function (n) {
 	    this.getToC().querySelectorAll(".toc-slip .active-slip").forEach(elem => elem.classList.remove("active-slip"));
 	    if (n.tocElem) n.tocElem.classList.add("active-slip");
+	    n.element.classList.add("active-true-slip");
+	    if (stack.length > 0) stack[stack.length - 1].element.classList.remove("active-true-slip");
 	    stack.push(n);
 	    return;
 	  };
@@ -1412,7 +2109,9 @@ var Slipshow = (function (exports) {
 	  this.pop = function () {
 	    this.getToC().querySelectorAll(".toc-slip .active-slip").forEach(elem => elem.classList.remove("active-slip"));
 	    let n = stack.pop();
+	    n.element.classList.remove("active-true-slip");
 	    if (stack.length == 0) stack.push(n);
+	    stack[stack.length - 1].element.classList.add("active-true-slip");
 	    if (stack[stack.length - 1].tocElem) stack[stack.length - 1].tocElem.classList.add("active-slip");
 	    return n;
 	  };
@@ -1516,7 +2215,17 @@ var Slipshow = (function (exports) {
 	    toc.innerHTML = ""; // toc.innerHTML = innerHTML;
 
 	    toc.appendChild(displayTree(tree, []));
-	  }; // this.getRootSlip = () => rootSlip;
+	  }; // ******************************
+	  // Function for writing and highlighting
+	  // ******************************
+
+
+	  this.setTool = tool => {
+	    this.getCurrentSlip().setTool(tool);
+	  }; // ******************************
+	  // 
+	  // ******************************
+	  // this.getRootSlip = () => rootSlip;
 
 
 	  this.setRootSlip = root => {
