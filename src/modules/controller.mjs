@@ -32,6 +32,7 @@ export default function (ng) {
 	erase_on_slip_keys = ["W"],
 	highlight_on_slip_keys = ["h"],
 	erase_highlight_on_slip_keys = ["H"],
+	stop_writing_on_slip_keys = ["x"],
 	background_canvas_keys = ["#"];
 
     // let mainSlip = mainS;
@@ -54,7 +55,8 @@ export default function (ng) {
 	if(draw_on_slip_keys.includes(ev.key) && activated) { engine.setTool("drawing"); }    
 	if(erase_on_slip_keys.includes(ev.key) && activated) { engine.setTool("drawing-erase"); }    
 	if(highlight_on_slip_keys.includes(ev.key) && activated) { engine.setTool("highlighting"); }    
-	if(erase_highlight_on_slip_keys.includes(ev.key) && activated) { engine.setTool("highlighting-erase"); }    
+	if(erase_highlight_on_slip_keys.includes(ev.key) && activated) { engine.setTool("highlighting-erase"); }
+	if(stop_writing_on_slip_keys.includes(ev.key) && activated) { engine.setTool("no-tool"); }    
 	if(background_canvas_keys.includes(ev.key) && activated) {
 	    document.querySelectorAll("slip-slip").forEach((slip) => {slip.style.zIndex = "-1";});
 	    document.querySelectorAll(".background-canvas").forEach((canvas) => {canvas.style.zIndex = "1";});

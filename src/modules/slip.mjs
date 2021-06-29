@@ -653,6 +653,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	element.firstChild.firstChild.appendChild(canvas);
 	that.sketchpad = new Atrament(canvas);
 	that.sketchpad.smoothing = 0.2;
+	that.sketchpad.color = "blue";
     // }, 0);
     // canvas for highlighting 
     // setTimeout(function() {
