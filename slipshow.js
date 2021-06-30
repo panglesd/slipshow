@@ -103,15 +103,19 @@ function cloneNoSubslip (elem) {
 	else
 	    newElem.appendChild(cloneNoSubslip(child));
     });
+    if(newElem.tagName == "SLIP-SLIP")
+	console.log("debug cloneNosubslip", newElem);
     return newElem;
 }
-function replaceSubslips(clone, subslips, sketchpad) {
+function replaceSubslips(clone, subslips, sketchpad, sketchpadHighlight) {
     let placeholders = myQueryAll(clone, ".toReplace");
     subslips.forEach((subslip, index) => {
 	placeholders[index].replaceWith(subslip);
     });
-    let sketchPlaceholder = myQueryAll(clone, ".toReplaceSketchpad")[0];
-    sketchPlaceholder.replaceWith(sketchpad);
+    console.log("debug cloneNosubslip2", myQueryAll(clone, ".toReplaceSketchpad"));
+    let sketchPlaceholder = myQueryAll(clone, ".toReplaceSketchpad");
+    sketchPlaceholder[0].replaceWith(sketchpad);
+    sketchPlaceholder[1].replaceWith(sketchpadHighlight);
 }
 
 var IUtil = /*#__PURE__*/Object.freeze({
@@ -1190,7 +1194,9 @@ function Slip(name, fullName, actionL, ng, options) {
 	let savedActionIndex = this.getActionIndex();
 	let savedDelay = this.currentDelay;
 	this.getEngine().setDoNotMove(true);
+	let savedClass = this.element.className;
 	let r = this.doRefresh();
+	this.element.className = savedClass;
 	console.log("gotoslip: we call doRefresh",r);
 	if(savedActionIndex == -1)
 	    return false;
@@ -1276,7 +1282,7 @@ function Slip(name, fullName, actionL, ng, options) {
 	console.log("mmdebug", clonedElement);
 	console.log("to Atrament debug clonedElement",clonedElement);
 	let clone = clonedElement.cloneNode(true);
-	replaceSubslips(clone, subSlipList, this.sketchpadCanvas);
+	replaceSubslips(clone, subSlipList, this.sketchpadCanvas, this.sketchpadCanvasHighlight);
 	this.element.replaceWith(clone);
 	this.element = clone;
 	this.init();
