@@ -169,6 +169,7 @@ var Slipshow = (function (exports) {
 	      highlight_on_slip_keys = ["h"],
 	      erase_highlight_on_slip_keys = ["H"],
 	      stop_writing_on_slip_keys = ["x"],
+	      clear_annotations_keys = ["X"],
 	      background_canvas_keys = ["#"]; // let mainSlip = mainS;
 	  // this.getMainSlip = () => mainSlip;
 	  // this.setMainSlip = (slip) => mainSlip = slip;
@@ -210,6 +211,10 @@ var Slipshow = (function (exports) {
 
 	    if (stop_writing_on_slip_keys.includes(ev.key) && activated) {
 	      engine.setTool("no-tool");
+	    }
+
+	    if (clear_annotations_keys.includes(ev.key) && activated) {
+	      engine.setTool("clear-all");
 	    }
 
 	    if (background_canvas_keys.includes(ev.key) && activated) {
@@ -1489,11 +1494,14 @@ var Slipshow = (function (exports) {
 	    } else if (tool == "drawing") {
 	      this.element.classList.add("drawing");
 	      this.sketchpad.mode = "draw";
-	      this.sketchpad.weight = 2;
+	      this.sketchpad.weight = 1;
 	    } else if (tool == "drawing-erase") {
 	      this.element.classList.add("drawing");
 	      this.sketchpad.weight = 20;
 	      this.sketchpad.mode = "erase";
+	    } else if (tool == "clear-all") {
+	      this.sketchpad.clear();
+	      this.sketchpadHighlight.clear();
 	    }
 	  }; // ******************************
 	  // Initialisation of the object
