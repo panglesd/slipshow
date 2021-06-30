@@ -389,7 +389,9 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	let savedActionIndex = this.getActionIndex();
 	let savedDelay = this.currentDelay;
 	this.getEngine().setDoNotMove(true);
+	let savedClass = this.element.className;
 	let r = this.doRefresh();
+	this.element.className = savedClass;
 	console.log("gotoslip: we call doRefresh",r);
 	if(savedActionIndex == -1)
 	    return false;
@@ -475,7 +477,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	console.log("mmdebug", clonedElement);
 	console.log("to Atrament debug clonedElement",clonedElement);
 	let clone = clonedElement.cloneNode(true);
-	replaceSubslips(clone, subSlipList, this.sketchpadCanvas);
+	replaceSubslips(clone, subSlipList, this.sketchpadCanvas, this.sketchpadCanvasHighlight);
 	this.element.replaceWith(clone);
 	this.element = clone;
 	this.init();

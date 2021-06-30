@@ -27,13 +27,17 @@ export function cloneNoSubslip (elem) {
 	else
 	    newElem.appendChild(cloneNoSubslip(child));
     });
+    if(newElem.tagName == "SLIP-SLIP")
+	console.log("debug cloneNosubslip", newElem);
     return newElem;
 }
-export function replaceSubslips(clone, subslips, sketchpad) {
+export function replaceSubslips(clone, subslips, sketchpad, sketchpadHighlight) {
     let placeholders = myQueryAll(clone, ".toReplace");
     subslips.forEach((subslip, index) => {
 	placeholders[index].replaceWith(subslip);
     });
-    let sketchPlaceholder = myQueryAll(clone, ".toReplaceSketchpad")[0];
-    sketchPlaceholder.replaceWith(sketchpad);
+    console.log("debug cloneNosubslip2", myQueryAll(clone, ".toReplaceSketchpad"));
+    let sketchPlaceholder = myQueryAll(clone, ".toReplaceSketchpad");
+    sketchPlaceholder[0].replaceWith(sketchpad);
+    sketchPlaceholder[1].replaceWith(sketchpadHighlight);
 }
