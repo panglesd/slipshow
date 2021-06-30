@@ -1516,15 +1516,20 @@ var Slipshow = (function (exports) {
 	  this.setEngine = ng => engine = ng; // element
 
 
-	  this.element = typeof name == "string" ? document.querySelector(name[0] == "#" ? name : "#" + name) : name; // canvas for drawing
+	  this.element = typeof name == "string" ? document.querySelector(name[0] == "#" ? name : "#" + name) : name; // scale, rotate, delay
+
+	  this.scale = parseFloat(this.element.getAttribute("scale"));
+	  if (typeof this.scale == "undefined" || isNaN(this.scale)) this.scale = 1;
+	  this.rotate = parseFloat(this.element.getAttribute("rotate")) || 0;
+	  this.delay = isNaN(parseFloat(this.element.getAttribute("delay"))) ? 0 : parseFloat(this.element.getAttribute("delay")); // canvas for drawing
 
 	  var that = this;
 	  console.log("element bug before", this.element, that.element);
 	  let element = this.element;
 	  setTimeout(function () {
 	    let canvas = document.createElement('canvas');
-	    canvas.height = element.offsetHeight;
-	    canvas.width = element.offsetWidth;
+	    canvas.height = element.offsetHeight / that.scale;
+	    canvas.width = element.offsetWidth / that.scale;
 	    console.log("element bug after", element, that.element);
 	    canvas.classList.add("sketchpad", "drawing");
 	    canvas.style.opacity = "1";
@@ -1537,8 +1542,8 @@ var Slipshow = (function (exports) {
 	    // setTimeout(function() {
 
 	    let canvas2 = document.createElement('canvas');
-	    canvas2.height = that.element.offsetHeight;
-	    canvas2.width = that.element.offsetWidth;
+	    canvas2.height = that.element.offsetHeight / that.scale;
+	    canvas2.width = that.element.offsetWidth / that.scale;
 	    canvas2.classList.add("sketchpad", "sketchpad-highlighting");
 	    canvas2.style.opacity = "0.5";
 	    that.sketchpadCanvasHighlight = canvas2;
@@ -1565,13 +1570,8 @@ var Slipshow = (function (exports) {
 
 	  this.getCloned = () => clonedElement;
 
-	  this.setCloned = c => clonedElement = c; // scale, rotate, delay
+	  this.setCloned = c => clonedElement = c; // coord
 
-
-	  this.scale = parseFloat(this.element.getAttribute("scale"));
-	  if (typeof this.scale == "undefined" || isNaN(this.scale)) this.scale = 1;
-	  this.rotate = parseFloat(this.element.getAttribute("rotate")) || 0;
-	  this.delay = isNaN(parseFloat(this.element.getAttribute("delay"))) ? 0 : parseFloat(this.element.getAttribute("delay")); // coord
 
 	  let coord = this.findSlipCoordinate();
 	  console.log(coord);
