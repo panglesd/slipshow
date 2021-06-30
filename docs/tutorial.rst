@@ -459,6 +459,7 @@ Slipshow embeds these tools:
 * Press ``h`` to start highlighting with a yellow highlighter
 * Press ``H`` to start erasing the yellow highlighter
 * Press ``x`` to go back to the normal state (where you can select texts for instance)
+* Press ``X`` to clear all annotations.
 
 Scripting your presentation
 --------------------------------

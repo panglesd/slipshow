@@ -618,11 +618,14 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	} else if(tool == "drawing") {
 	    this.element.classList.add("drawing");
 	    this.sketchpad.mode = "draw";
-	    this.sketchpad.weight = 2;
+	    this.sketchpad.weight = 1;
 	} else if(tool == "drawing-erase") {
 	    this.element.classList.add("drawing");
 	    this.sketchpad.weight = 20;
 	    this.sketchpad.mode = "erase";
+	} else if(tool == "clear-all") {
+	    this.sketchpad.clear();
+	    this.sketchpadHighlight.clear();
 	}
     };
 
