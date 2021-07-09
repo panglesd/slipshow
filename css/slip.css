@@ -227,3 +227,132 @@ h1 {
 .active-true-slip.highlighting > * > * > .sketchpad.sketchpad-highlighting {
     pointer-events: initial;
 }
+
+.slip-writing-toolbar:hover, .slip-writing-toolbar.active {
+    width: 32px;
+    height: 640px;
+    /* height: 32px; */
+}
+.slip-writing-toolbar {
+    background-color: white;
+    overflow: hidden;
+    transition: width 0.5s, height 0.5s;
+    /* transition: height 1s; */
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    /* top: 0; */
+    left: 0;
+    /* height:8px; */
+    width:32px;
+    height:32px;
+    z-index: 10;
+    border-radius: 0px 0px 16px 16px;
+}
+
+.slip-writing-toolbar > * {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 10px;
+    /* margin-left: 10px; */
+}
+/* .slip-writing-toolbar > .slip-toolbar-color { */
+/*     display: flex; */
+    
+/* } */
+/* .slip-writing-toolbar > .slip-toolbar-tool { */
+/*     display: flex; */
+    
+/* } */
+.slip-writing-toolbar > * > * {
+    width: 30px;
+    height: 30px;
+    border: 1px solid black;
+    border-radius: 30px;
+    transition: border-radius 0.5s;
+}
+/* .slip-writing-toolbar > .slip-toolbar-color > * { */
+/*     width: 40px; */
+/*     height: 40px; */
+/*     border: 1px solid black; */
+/*     border-radius: 80px; */
+/* } */
+/* .slip-writing-toolbar > .slip-toolbar-tool > * { */
+/*     width: 40px; */
+/*     height: 40px; */
+/*     border: 1px solid black; */
+/*     border-radius: 80px; */
+/* } */
+.slip-writing-toolbar > .slip-toolbar-color > .slip-toolbar-red {
+    background-color: red;
+}
+.slip-writing-toolbar > .slip-toolbar-color > .slip-toolbar-black {
+    background-color: black;
+}
+.slip-writing-toolbar > .slip-toolbar-color > .slip-toolbar-blue {
+    background-color: blue;
+}
+.slip-writing-toolbar > .slip-toolbar-color > .slip-toolbar-green {
+    background-color: green;
+}
+.slip-writing-toolbar > .slip-toolbar-color > .slip-toolbar-yellow {
+    background-color: yellow;
+}
+.slip-writing-toolbar > .slip-toolbar-tool {
+    
+}
+.slip-writing-toolbar > * > * {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+/* .slip-writing-toolbar > .slip-toolbar-tool > .slip-toolbar-highlighter { */
+/*     background: url('highlighter.svg') no-repeat center center / 70%; */
+/* } */
+/* .slip-writing-toolbar > .slip-toolbar-tool > .slip-toolbar-pen { */
+/*     background: url('https://api.iconify.design/cil:pencil.svg') no-repeat center center / 70%; */
+/* } */
+/* .slip-writing-toolbar > .slip-toolbar-tool > .slip-toolbar-eraser { */
+/*     background: url('https://api.iconify.design/cil:eraser.svg') no-repeat center center / 70%; */
+/* } */
+.slip-writing-toolbar > .slip-toolbar-width > * > * {
+    width: 14px;
+    border-radius: 16px;
+}
+
+.slip-writing-toolbar > .slip-toolbar-width > .slip-toolbar-small > * {
+    border: 1px solid black;
+}
+.slip-writing-toolbar > .slip-toolbar-width > .slip-toolbar-medium > * {
+    border: 2px solid black;
+}
+.slip-writing-toolbar > .slip-toolbar-width > .slip-toolbar-large > * {
+    border: 4px solid black;
+}
+.slip-writing-toolbar > .slip-toolbar-tool.drawing > .slip-toolbar-pen,
+.slip-writing-toolbar > .slip-toolbar-tool.drawing-erase > .slip-toolbar-pen,
+.slip-writing-toolbar > .slip-toolbar-tool.drawing-erase > .slip-toolbar-eraser,
+.slip-writing-toolbar > .slip-toolbar-tool.highlighting-erase > .slip-toolbar-eraser,
+.slip-writing-toolbar > .slip-toolbar-tool.highlighting-erase > .slip-toolbar-highlighter,
+.slip-writing-toolbar > .slip-toolbar-tool.no-tool > .slip-toolbar-cursor,
+.slip-writing-toolbar > .slip-toolbar-tool.highlighting > .slip-toolbar-highlighter,
+.slip-writing-toolbar > .slip-toolbar-width.small > .slip-toolbar-small,
+.slip-writing-toolbar > .slip-toolbar-width.medium > .slip-toolbar-medium,
+.slip-writing-toolbar > .slip-toolbar-width.large > .slip-toolbar-large
+
+{
+    background-color: lightsteelblue;
+    border-radius: 5px;
+}
+
+.slip-writing-toolbar > .slip-toolbar-color.black > .slip-toolbar-black,
+.slip-writing-toolbar > .slip-toolbar-color.blue > .slip-toolbar-blue,
+.slip-writing-toolbar > .slip-toolbar-color.red > .slip-toolbar-red,
+.slip-writing-toolbar > .slip-toolbar-color.green > .slip-toolbar-green,
+.slip-writing-toolbar > .slip-toolbar-color.yellow > .slip-toolbar-yellow
+{
+    height: 25px;
+    width: 25px;
+    border: 3px solid steelblue;
+    border-radius: 5px;
+}
