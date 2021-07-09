@@ -1,4 +1,4 @@
-import { cloneNoSubslip, myQueryAll, replaceSubslips } from './util'
+import { cloneNoSubslip, myQueryAll, replaceSubslips } from './util';
 import Atrament from 'atrament';
 export default function Slip(name, fullName, actionL, ng, options) {
 
@@ -608,8 +608,15 @@ export default function Slip(name, fullName, actionL, ng, options) {
     // ******************************
     // Function for writing and highlighting
     // ******************************
-
+    this.tool = "no-tool";
+    this.getTool = (tool) => {return this.tool;};
     this.setTool = (tool) => {
+	if(tool == "clear-all") {
+	    this.sketchpad.clear();
+	    this.sketchpadHighlight.clear();
+	    return;
+	}
+	this.tool = tool;
 	this.element.classList.remove("drawing", "highlighting");
 	if(tool == "highlighting") {
 	    this.element.classList.add("highlighting");
@@ -626,9 +633,93 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	    this.sketchpad.weight = 20;
 	    this.sketchpad.mode = "erase";
 	} else if(tool == "clear-all") {
-	    this.sketchpad.clear();
-	    this.sketchpadHighlight.clear();
 	}
+    };
+    this.color = "blue";
+    this.colorHighlight = "yellow";
+    this.getColor = () => {
+	console.log("slip getting color : ", this.colorHighlight, this.color);
+	if(["highlighting","highlighting-erase"].includes(this.getTool())) {
+	    return this.colorHighlight;
+	}
+	else if(["drawing","drawing-erase"].includes(this.getTool())) {
+	    return this.color;
+	}
+	return "no-color";
+    };
+    this.setColor = (color) => {
+	console.log("slip : setting color: ", color, "for tool :", this.getTool());
+	switch(this.getTool()) {
+	case("highlighting"):
+	case("highlighting-erase"):
+	    this.colorHighlight = color;
+	    this.sketchpadHighlight.color = color;	    
+	    break;
+	case("drawing"):
+	case("drawing-erase"):
+	    this.color = color;
+	    this.sketchpad.color = color;	    
+	    break;
+	}
+    };
+    this.lineWidth = "medium";
+    this.lineWidthErase = "medium";
+    this.lineWidthHighlight = "medium";
+    this.getLineWidth = () => {
+	if(["highlighting","highlighting-erase"].includes(this.getTool())) 
+	    return this.lineWidthHighlight;
+	else if(["drawing"].includes(this.getTool())) 
+	    return this.lineWidth;
+	else if(["drawing-erase"].includes(this.getTool()))
+	    return this.lineWidthErase;
+	return "no-line-width";
+    };
+    this.setLineWidth = (lineWidth) => {
+	console.log("slip : setting linewidth: ", lineWidth, "for tool :", this.getTool());
+	if(["highlighting","highlighting-erase"].includes(this.getTool())) {
+	    this.lineWidthHighlight = lineWidth;
+	    switch(lineWidth) {
+	    case("small"):
+		this.sketchpadHighlight.weight = 10;	    
+		break;
+	    case("medium"):
+		this.sketchpadHighlight.weight = 30;	    
+		break;
+	    case("large"):
+		this.sketchpadHighlight.weight = 90;	    
+		break;
+		
+	    }
+	}
+	else if(["drawing"].includes(this.getTool())) {
+	    this.lineWidth = lineWidth;
+	    switch(lineWidth) {
+	    case("small"):
+		this.sketchpad.weight = 0.25;	    
+		break;
+	    case("medium"):
+		this.sketchpad.weight = 1;	    
+		break;
+	    case("large"):
+		this.sketchpad.weight = 5;	    
+		break;
+	    }
+	}
+	else if(["drawing-erase"].includes(this.getTool())) {
+	    this.lineWidthErase = lineWidth;
+	    switch(lineWidth) {
+	    case("small"):
+		this.sketchpad.weight = 5;	    
+		break;
+	    case("medium"):
+		this.sketchpad.weight = 20;	    
+		break;
+	    case("large"):
+		this.sketchpad.weight = 80;	    
+		break;
+	    }
+	}
+	console.log("setting new line width values :", this.sketchpad.weight, this.sketchpadHighlight.weight);
     };
 
     // ******************************
@@ -660,7 +751,10 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	canvas.classList.add("sketchpad", "drawing");
 	canvas.style.opacity = "1";
 	that.sketchpadCanvas = canvas;
-	element.firstChild.firstChild.appendChild(canvas);
+	if(element && element.firstChild && element.firstChild.firstChild)
+	    element.firstChild.firstChild.appendChild(canvas);
+	else
+	    element.appendChild(canvas);
 	that.sketchpad = new Atrament(canvas);
 	that.sketchpad.smoothing = 0.2;
 	that.sketchpad.color = "blue";
@@ -673,12 +767,57 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	canvas2.classList.add("sketchpad", "sketchpad-highlighting");
 	canvas2.style.opacity = "0.5";
 	that.sketchpadCanvasHighlight = canvas2;
-	element.firstChild.firstChild.appendChild(canvas2);
+	if(element && element.firstChild && element.firstChild.firstChild)
+	    element.firstChild.firstChild.appendChild(canvas2);
+	else
+	    element.appendChild(canvas);
 	that.sketchpadHighlight = new Atrament(canvas2);
 	that.sketchpadHighlight.color = "yellow";
 	that.sketchpadHighlight.weight = 30;
 	that.sketchpadHighlight.smoothing = 0.2;
     }, 0);
+    this.reloadCanvas = () => {
+	var that = this;
+	console.log("element bug before", this.element, that.element);
+	let element = this.element;
+	setTimeout(function() {
+	    let canvas = document.createElement('canvas');
+	    canvas.height = element.offsetHeight/that.scale;
+	    canvas.width = element.offsetWidth/that.scale;
+	    console.log("element bug after", element, that.element);
+	    canvas.classList.add("sketchpad", "drawing");
+	    canvas.style.opacity = "1";
+	    that.sketchpadCanvas = canvas;
+	    let q = that.queryAll(".sketchpad");
+	    q[0].replaceWith(canvas);
+	    //     if(element && element.firstChild && element.firstChild.firstChild)
+	    //     element.firstChild.firstChild.appendChild(canvas);
+	    // else
+	    //     element.appendChild(canvas);
+	    that.sketchpad = new Atrament(canvas);
+	    that.sketchpad.smoothing = 0.2;
+	    that.sketchpad.color = "blue";
+	    // }, 0);
+	    // canvas for highlighting 
+	    // setTimeout(function() {
+	    let canvas2 = document.createElement('canvas');
+	    canvas2.height = that.element.offsetHeight/that.scale;
+	    canvas2.width = that.element.offsetWidth/that.scale;
+	    canvas2.classList.add("sketchpad", "sketchpad-highlighting");
+	    canvas2.style.opacity = "0.5";
+	    that.sketchpadCanvasHighlight = canvas2;
+	    q[0].replaceWith(canvas2);
+	    // if(element && element.firstChild && element.firstChild.firstChild)
+	    //     element.firstChild.firstChild.appendChild(canvas2);
+	    // else
+	    //     element.appendChild(canvas);
+	    that.sketchpadHighlight = new Atrament(canvas2);
+	    that.sketchpadHighlight.color = "yellow";
+	    that.sketchpadHighlight.weight = 30;
+	    that.sketchpadHighlight.smoothing = 0.2;
+	}, 0);
+
+    };
     // names
     this.name =
 	typeof name == "string" ?

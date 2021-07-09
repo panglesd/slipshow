@@ -38,6 +38,8 @@ export function replaceSubslips(clone, subslips, sketchpad, sketchpadHighlight) 
     });
     console.log("debug cloneNosubslip2", myQueryAll(clone, ".toReplaceSketchpad"));
     let sketchPlaceholder = myQueryAll(clone, ".toReplaceSketchpad");
-    sketchPlaceholder[0].replaceWith(sketchpad);
-    sketchPlaceholder[1].replaceWith(sketchpadHighlight);
+    if(sketchPlaceholder[0])
+	sketchPlaceholder[0].replaceWith(sketchpad);
+    if(sketchPlaceholder[1])
+	sketchPlaceholder[1].replaceWith(sketchpadHighlight);
 }
