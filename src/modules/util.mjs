@@ -16,6 +16,11 @@ export function cloneNoSubslip (elem) {
     elem.childNodes.forEach((child) => {
 	if(child.tagName && child.tagName == "SLIP-SLIP"){
 	    let placeholder = document.createElement(child.tagName);
+	    let importantAttributes =["pause","step", "auto-enter", "immediate-enter"];
+	    importantAttributes.forEach((attr) => {
+		if(child.hasAttribute(attr))
+		    placeholder.setAttribute(attr, child.getAttribute(attr));
+	    });
 	    placeholder.classList.add("toReplace");
 	    newElem.appendChild(placeholder);
 	}
@@ -34,6 +39,11 @@ export function cloneNoSubslip (elem) {
 export function replaceSubslips(clone, subslips, sketchpad, sketchpadHighlight) {
     let placeholders = myQueryAll(clone, ".toReplace");
     subslips.forEach((subslip, index) => {
+	let importantAttributes =["pause","step", "auto-enter", "immediate-enter"];
+	importantAttributes.forEach((attr) => {
+	    if(placeholders[index].hasAttribute(attr))
+		subslip.setAttribute(attr, placeholders[index].getAttribute(attr));
+	});
 	placeholders[index].replaceWith(subslip);
     });
     console.log("debug cloneNosubslip2", myQueryAll(clone, ".toReplaceSketchpad"));

@@ -272,8 +272,8 @@ export default function (root) {
 	if(document.querySelector(".toc-slip").innerHTML == "")
 	    this.showToC();
 	// return true if and only if the stack changed
-	let currentSlide = this.getCurrentSlip();
-	let n = currentSlide.next();
+	let currentSlip = this.getCurrentSlip();
+	let n = currentSlip.next();
 	this.updateCounter();
 	if(n instanceof Slip) {
 	    this.enter(n);
@@ -330,17 +330,18 @@ export default function (root) {
 	}
 	else if(!n) {
 	    this.pop();
-	    let newCurrentSlide = this.getCurrentSlip();
-	    // newCurrentSlide.incrIndex();
+	    let newCurrentSlip = this.getCurrentSlip();
+	    // newCurrentSlip.incrIndex();
 	    console.log("previous is ca currentDelay, delay", currentSlip.currentDelay , currentSlip.delay);
+	    console.log("debug stack", stack);
 	    
-	    if(stack.length > 1 || newCurrentSlide.getActionIndex() > -1)
+	    if(stack.length > 1 || newCurrentSlip.getActionIndex() > -1)
 		this.previous({delay: (currentSlip.currentDelay ? currentSlip.currentDelay : currentSlip.delay )});
 	    else {
-		this.gotoSlip(newCurrentSlide, options);
+		this.gotoSlip(newCurrentSlip, options);
 		console.log("previous is ca GOTOSLIP FROM 2", options);
 	    }
-		// this.gotoSlip(newCurrentSlide, {delay: currentSlip.delay});
+		// this.gotoSlip(newCurrentSlip, {delay: currentSlip.delay});
 	    // console.log(stack);
 	    // this.showToC();
 	    this.updateCounter();
