@@ -168,8 +168,16 @@ export default function (root) {
 	// 	slip.style.zIndex = "-1";
 	// slip.style.transformOrigin = "50% 50%";
 	slipScaleContainer.style.transform = "scale("+scale+")";
-	slip.style.width = (Math.max(slipScaleContainer.offsetWidth, 1440))*scale+"px";
-	slip.style.height = (Math.max(slipScaleContainer.offsetHeight, 1080))*scale+"px";	
+	// slip.style.width = (Math.max(slipScaleContainer.offsetWidth, 1440))*scale+"px";
+	// slip.style.height = (Math.max(slipScaleContainer.offsetHeight, 1080))*scale+"px";
+	const resizeObserver = new ResizeObserver(entries => {
+	    slip.style.width = (Math.max(slipScaleContainer.offsetWidth, 1440))*scale+"px";
+	    slip.style.height = (Math.max(slipScaleContainer.offsetHeight, 1080))*scale+"px";
+	    
+	    console.log('Size changed', entries);
+	});
+
+	resizeObserver.observe(slipScaleContainer);
     };
     this.placeSlips = function () {
 	// let posX = 0.5;
