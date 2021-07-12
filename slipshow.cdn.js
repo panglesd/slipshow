@@ -908,20 +908,16 @@ var Slipshow = (function (exports) {
 	  // Action List
 	  // ******************************
 	  this.generateActionList = function () {
-	    console.log("debug generateactionlist", this.name);
 	    let newActionList = [];
 	    this.queryAll("slip-slip[enter-at]").forEach(slip => {
-	      console.log("new slip with ", slip, null, null, ng, {});
 	      newActionList[slip.getAttribute("enter-at")] = new Slip(slip, "", [], ng, {});
 	    });
 	    return newActionList;
 	  };
 
 	  this.addSubSlips = function () {
-	    console.log("debug generateactionlist", this.name);
 	    let newActionList = [];
 	    this.queryAll("slip-slip[enter-at]").forEach(slip => {
-	      console.log("new slip with ", slip, null, null, ng, {});
 	      this.setNthAction(slip.getAttribute("enter-at"), new Slip(slip, "", [], ng, {}));
 	    });
 	    return newActionList;
@@ -1347,7 +1343,6 @@ var Slipshow = (function (exports) {
 	  };
 
 	  this.doRefresh = () => {
-	    console.log("gotoslip: doRefresh has been called");
 	    this.setActionIndex(-1);
 	    let subSlipList = myQueryAll(this.element, "slip-slip");
 	    let clone = clonedElement.cloneNode(true);
@@ -1536,8 +1531,6 @@ var Slipshow = (function (exports) {
 	  };
 
 	  this.setColor = color => {
-	    console.log("slip : setting color: ", color, "for tool :", this.getTool());
-
 	    switch (this.getTool()) {
 	      case "highlighting":
 	      case "highlighting-erase":
@@ -1563,8 +1556,6 @@ var Slipshow = (function (exports) {
 	  };
 
 	  this.setLineWidth = lineWidth => {
-	    console.log("slip : setting linewidth: ", lineWidth, "for tool :", this.getTool());
-
 	    if (["highlighting", "highlighting-erase"].includes(this.getTool())) {
 	      this.lineWidthHighlight = lineWidth;
 
@@ -1614,8 +1605,6 @@ var Slipshow = (function (exports) {
 	          break;
 	      }
 	    }
-
-	    console.log("setting new line width values :", this.sketchpad.weight, this.sketchpadHighlight.weight);
 	  }; // ******************************
 	  // Initialisation of the object
 	  // ******************************
@@ -1675,7 +1664,6 @@ var Slipshow = (function (exports) {
 	      that.sketchpadHighlight.weight = 30;
 	      that.sketchpadHighlight.smoothing = 0.2;
 	      const resizeObserver = new ResizeObserver(entries => {
-	        console.log("sketch color", that.sketchpad.color, that.sketchpad);
 	        canvas.height = slipScaleContainer.offsetHeight / that.scale;
 	        canvas.width = slipScaleContainer.offsetWidth / that.scale;
 	        canvas2.height = slipScaleContainer.offsetHeight / that.scale;
@@ -1708,8 +1696,7 @@ var Slipshow = (function (exports) {
 	  }, 0); // names
 
 	  this.name = typeof name == "string" ? name : name.id;
-	  if (typeof fullName == "string") this.fullName = fullName;else if (this.element.hasAttribute("toc-title")) this.fullName = this.element.getAttribute("toc-title");else this.fullName = this.name;
-	  console.log("this name is ", this.name); // clonedElement
+	  if (typeof fullName == "string") this.fullName = fullName;else if (this.element.hasAttribute("toc-title")) this.fullName = this.element.getAttribute("toc-title");else this.fullName = this.name; // clonedElement
 
 	  let clonedElement;
 	  if (typeof MathJax != "undefined") MathJax.startup.promise.then(() => {
@@ -1719,7 +1706,6 @@ var Slipshow = (function (exports) {
 	  });else setTimeout(() => {
 	    clonedElement = cloneNoSubslip(this.element);
 	  }, 0);
-	  console.log("to Atrament debug before", this.element);
 
 	  this.getCloned = () => clonedElement;
 
@@ -1727,7 +1713,6 @@ var Slipshow = (function (exports) {
 
 
 	  let coord = this.findSlipCoordinate();
-	  console.log(coord);
 	  this.x = coord.x;
 	  this.y = coord.y; // Preparing the slip
 
@@ -1740,8 +1725,6 @@ var Slipshow = (function (exports) {
 	    let bla = this.queryAll("[pause], [step], [auto-enter], [immediate-enter]");
 	    let step = 1;
 	    bla.forEach(elem => {
-	      console.log("debug generatePauseFlowsliplist", elem, step);
-
 	      if (elem.hasAttribute("auto-enter")) {
 	        slipList[step] = new Slip(elem, elem.getAttribute("toc-title") || "", [], ng, {});
 	        step++;
@@ -1754,20 +1737,14 @@ var Slipshow = (function (exports) {
 	      }
 
 	      if (elem.hasAttribute("step")) {
-	        console.log("has enter-at-unpause?");
-
 	        if (elem.hasAttribute("enter-at-unpause")) {
-	          console.log("has enter-at-unpause");
-
 	          if (elem.getAttribute("enter-at-unpause") != "") {
 	            let s = this.query("#" + elem.getAttribute("enter-at-unpause"));
 	            slipList[step] = new Slip(s, s.getAttribute("toc-title") || "", [], ng, {}); //			slipList[step + (parseInt(elem.getAttribute("step")) || 1) - 1] = new Slip(s, s.getAttribute("toc-title") || "", [], ng, {});
 	          } else slipList[step + (parseInt(elem.getAttribute("step")) || 1) - 1] = new Slip(elem, elem.getAttribute("toc-title") || "", [], ng, {});
 	        }
 
-	        console.log("debug generatePauseFlowsliplist1", elem, step);
 	        step += parseInt(elem.getAttribute("step")) || 1;
-	        console.log("debug generatePauseFlowsliplist2", elem, step);
 	      }
 
 	      if (elem.hasAttribute("pause")) {
@@ -1778,9 +1755,7 @@ var Slipshow = (function (exports) {
 	          } else slipList[step + (parseInt(elem.getAttribute("step")) || 1) - 1] = new Slip(elem, elem.getAttribute("toc-title") || "", [], ng, {});
 	        }
 
-	        console.log("debug generatePauseFlowsliplist1", elem, step);
 	        step += parseInt(elem.getAttribute("pause")) || 1;
-	        console.log("debug generatePauseFlowsliplist1", elem, step);
 	      }
 	    });
 	    return slipList;
@@ -1825,12 +1800,7 @@ var Slipshow = (function (exports) {
 	      }, 0);
 	    });
 	    rootElem.style.width = "unset";
-	    rootElem.style.height = "unset";
-	    document.querySelectorAll(".background-canvas").forEach(elem => {
-	      elem.addEventListener("click", ev => {
-	        console.log("vous avez cliquez aux coordonnées : ", ev.layerX, ev.layerY);
-	      });
-	    });
+	    rootElem.style.height = "unset"; // document.querySelectorAll(".background-canvas").forEach((elem)=> {elem.addEventListener("click", (ev) => { console.log("vous avez cliquez aux coordonnées : ", ev.layerX, ev.layerY); });});	
 	  }
 
 	  if (typeof root == "string") {
@@ -1880,18 +1850,13 @@ var Slipshow = (function (exports) {
 
 	  this.moveWindow = function (x, y, scale, rotate, delay) {
 	    if (this.getDoNotMove()) {
-	      console.log("we cannot move");
-	      console.log("previous is ca we cannot move !");
 	      return;
 	    }
 
-	    console.log("previous is ca getDoNotMove !", x, y, scale, rotate, delay, this.getDoNotMove());
-	    console.log("move to", x, y, "with scale, rotate, delay", scale, rotate, delay);
 	    currentScale = scale;
 	    currentRotate = rotate;
 	    winX = x;
 	    winY = y;
-	    console.log(x, y);
 	    setTimeout(() => {
 	      document.querySelector(".scale-container").style.transitionDuration = delay + "s";
 	      document.querySelector(".rotate-container").style.transitionDuration = delay + "s";
@@ -1911,51 +1876,24 @@ var Slipshow = (function (exports) {
 	  };
 
 	  this.placeSlip = function (slip) {
-	    // console.log("debug Previous (slip)", slip);
-	    // let posX = 0.5;
-	    // let posY = 0.5;
-	    // let x=parseFloat(slip.getAttribute("pos-x")), y=parseFloat(slip.getAttribute("pos-y"));
-	    let scale = parseFloat(slip.getAttribute("scale")); // // console.log(slip);
-
-	    let slipScaleContainer = slip.querySelector(".slip-scale-container"); // let rotate = 0;
-
-	    scale = isNaN(scale) ? 1 : scale; // x = (isNaN(x) ? posX : x);
-	    // y = (isNaN(y) ? posY : y);
-	    // slip.setAttribute("pos-x", x);
-	    // slip.setAttribute("pos-y", y);
-	    // slip.setAttribute("scale", scale);
-	    // slip.setAttribute("rotate", rotate);
-	    // posX = x + 1;
-	    // posY = y;
-	    // slip.style.top = (y*1080 - 1080/2)+"px";
-	    // slip.style.left = (x*1440 - 1440/2)+"px";
-	    // if(!slip.classList.contains("permanent"))
-	    // 	slip.style.zIndex = "-1";
-	    // slip.style.transformOrigin = "50% 50%";
-
-	    slipScaleContainer.style.transform = "scale(" + scale + ")"; // slip.style.width = (Math.max(slipScaleContainer.offsetWidth, 1440))*scale+"px";
-	    // slip.style.height = (Math.max(slipScaleContainer.offsetHeight, 1080))*scale+"px";
-
+	    let scale = parseFloat(slip.getAttribute("scale"));
+	    let slipScaleContainer = slip.querySelector(".slip-scale-container");
+	    scale = isNaN(scale) ? 1 : scale;
+	    slipScaleContainer.style.transform = "scale(" + scale + ")";
 	    const resizeObserver = new ResizeObserver(entries => {
 	      slip.style.width = Math.max(slipScaleContainer.offsetWidth, 1440) * scale + "px";
 	      slip.style.height = Math.max(slipScaleContainer.offsetHeight, 1080) * scale + "px";
-	      console.log('Size changed', entries);
 	    });
 	    resizeObserver.observe(slipScaleContainer);
 	  };
 
 	  this.placeSlips = function () {
-	    // let posX = 0.5;
-	    // let posY = 0.5;
 	    let depth = function depth(elem) {
-	      console.log("debug depth (elem)", elem);
 	      let subslips = myQueryAll(elem, "slip-slip");
-	      console.log("debug depth (subslips)", elem);
 	      return 1 + subslips.map(depth).reduce((a, b) => Math.max(a, b), 0);
 	    };
 
 	    let rootDepth = depth(document.body);
-	    console.log("debug", rootDepth);
 
 	    for (let i = 0; i < rootDepth; i++) slips.forEach(this.placeSlip);
 	  };
@@ -2057,13 +1995,10 @@ var Slipshow = (function (exports) {
 	    } else if (!n) {
 	      this.pop();
 	      let newCurrentSlip = this.getCurrentSlip();
-	      if (newCurrentSlip.nextStageNeedGoto()) this.gotoSlip(newCurrentSlip); // newCurrentSlip.incrIndex();
-
-	      if (stack.length > 1 || newCurrentSlip.getActionIndex() < newCurrentSlip.getMaxNext()) this.next();else this.gotoSlip(newCurrentSlip); // this.showToC();
-
-	      return true; // console.log(stack);
-	    } // this.showToC();
-
+	      if (newCurrentSlip.nextStageNeedGoto()) this.gotoSlip(newCurrentSlip);
+	      if (stack.length > 1 || newCurrentSlip.getActionIndex() < newCurrentSlip.getMaxNext()) this.next();else this.gotoSlip(newCurrentSlip);
+	      return true;
+	    }
 
 	    return false;
 	  };
@@ -2074,14 +2009,11 @@ var Slipshow = (function (exports) {
 	  };
 
 	  this.previous = options => {
-	    console.log("previous is called with option", options);
 	    let currentSlip = this.getCurrentSlip(); // setDoNotMove(true);
 	    // let stage = currentSlip.previous2();
 	    // setDoNotMove(false);
 
 	    let n = currentSlip.previous(); // if(stage == "")
-
-	    console.log("debug previous (currentSlip, n)", currentSlip, n);
 
 	    if (n instanceof Slip) {
 	      while (n.getCurrentSubSlip() instanceof Slip) {
@@ -2090,7 +2022,6 @@ var Slipshow = (function (exports) {
 	      }
 
 	      this.push(n);
-	      console.log("previous is ca GOTOSLIP FROM 1", options);
 	      this.gotoSlip(n, options); // this.gotoSlip(n, {delay: currentSlip.delay});
 	      // this.showToC();
 
@@ -2100,15 +2031,11 @@ var Slipshow = (function (exports) {
 	      this.pop();
 	      let newCurrentSlip = this.getCurrentSlip(); // newCurrentSlip.incrIndex();
 
-	      console.log("previous is ca currentDelay, delay", currentSlip.currentDelay, currentSlip.delay);
-	      console.log("debug stack", stack);
 	      if (stack.length > 1 || newCurrentSlip.getActionIndex() > -1) this.previous({
 	        delay: currentSlip.currentDelay ? currentSlip.currentDelay : currentSlip.delay
 	      });else {
 	        this.gotoSlip(newCurrentSlip, options);
-	        console.log("previous is ca GOTOSLIP FROM 2", options);
 	      } // this.gotoSlip(newCurrentSlip, {delay: currentSlip.delay});
-	      // console.log(stack);
 	      // this.showToC();
 
 	      this.updateCounter();
@@ -2121,7 +2048,7 @@ var Slipshow = (function (exports) {
 
 
 	    this.updateCounter();
-	    return false; // console.log("returned", n);
+	    return false;
 	  };
 
 	  this.previousSlip = function () {
@@ -2130,8 +2057,6 @@ var Slipshow = (function (exports) {
 	  };
 
 	  this.getCoordinateInUniverse = function (elem) {
-	    console.log("debug getcoord elem", elem);
-
 	    let getCoordInParen = elem => {
 	      return {
 	        x: elem.offsetLeft,
@@ -2147,7 +2072,6 @@ var Slipshow = (function (exports) {
 	    };
 
 	    let getCoordIter = elem => {
-	      console.log("debug getcoorditer elem", elem);
 	      let cInParent = getCoordInParen(elem);
 	      if (!elem.offsetParent) return {
 	        x: 0,
@@ -2160,25 +2084,18 @@ var Slipshow = (function (exports) {
 	      };
 
 	      if (elem.offsetParent.classList.contains("universe")) {
-	        console.log("universe", cInParent);
 	        return cInParent;
 	      }
 
 	      let cParent = getCoordIter(elem.offsetParent);
-	      let style = window.getComputedStyle(elem.offsetParent); // console.log(style);
-
-	      let scale; // console.log("style", style.transform);
-	      // if (style.transform == "none")
+	      let style = window.getComputedStyle(elem.offsetParent);
+	      let scale; // if (style.transform == "none")
 	      // 	scale = 1;
 	      // else
 	      // 	scale = parseFloat(style.transform.split("(")[1].split(",")[0]);
 
-	      scale = parseScale(style.transform); // console.log(style.transform);
-	      // console.log("scale", scale);
-	      // console.log("globalScale", globalScale);
-
+	      scale = parseScale(style.transform);
 	      globalScale *= scale; // let scale = 1 ; // Has to parse/compute the scale, for now always 1
-	      // console.log("at step",  "cParent.x", cParent.x, "cInParen.x", cInParent.x, "scale", scale);
 
 	      return {
 	        x: cParent.x + cInParent.x * globalScale,
@@ -2190,10 +2107,6 @@ var Slipshow = (function (exports) {
 	    let style = window.getComputedStyle(elem);
 	    let scale = parseScale(style.transform);
 	    globalScale *= scale;
-	    console.log("getCoord", {
-	      x: c.x / 1440 + 0.5,
-	      y: c.y / 1080 + 0.5
-	    }, "globalScale", globalScale, style.transform, scale);
 	    let ret = {
 	      x: c.x / 1440,
 	      y: c.y / 1080,
@@ -2203,7 +2116,6 @@ var Slipshow = (function (exports) {
 	      height: elem.offsetHeight / 1080 * globalScale,
 	      scale: globalScale
 	    };
-	    console.log(ret);
 	    return ret; // return {x:c.x/1440+elem*globalScale*scale, y:c.y/1080+0.5*globalScale*scale, scale: globalScale*scale};
 	    // return {x: this.element.offsetLeft/1440+0.5, y:this.element.offsetTop/1080+0.5};
 	  };
@@ -2219,29 +2131,23 @@ var Slipshow = (function (exports) {
 	  };
 
 	  this.gotoSlip = function (slip, options) {
-	    console.log("previous is ca goto slip", options, slip.element, this.getDoNotMove());
-	    console.log("we goto slip", slip.element, this.getDoNotMove());
 	    options = options ? options : {};
-	    console.log("options is ", options);
 
 	    if (slip.element.tagName == "SLIP-SLIP") {
 	      setTimeout(() => {
 	        let coord = slip.findSlipCoordinate();
 
 	        if (typeof slip.currentX != "undefined" && typeof slip.currentY != "undefined" && typeof slip.currentScale != "undefined") {
-	          console.log("previous is ca ORIGIN 1", slip.currentX, slip.currentY, this.getDoNotMove(), options);
 	          this.moveWindow(slip.currentX, slip.currentY, slip.currentScale, slip.rotate, typeof options.delay != "undefined" ? options.delay : typeof slip.currentDelay != "undefined" ? slip.currentDelay : slip.delay);
 	        } else {
 	          slip.currentX = coord.x;
 	          slip.currentY = coord.y;
 	          slip.currentDelay = slip.delay;
-	          console.log("previous is ca ORIGIN 2", coord.x, coord.y, this.getDoNotMove());
 	          this.moveWindow(coord.x, coord.y, coord.scale, slip.rotate, typeof options.delay != "undefined" ? options.delay : typeof slip.currentDelay != "undefined" ? slip.currentDelay : slip.delay);
 	        }
 	      }, 0);
 	    } else {
 	      setTimeout(() => {
-	        console.log("debug slip element", slip.element);
 	        let coord = this.getCoordinateInUniverse(slip.element);
 	        this.moveWindow(coord.centerX, coord.centerY, Math.max(coord.width, coord.height), 0, typeof options.delay != "undefined" ? options.delay : slip.delay);
 	      }, 0);
@@ -2309,14 +2215,12 @@ var Slipshow = (function (exports) {
 	  };
 
 	  this.showToC = function () {
-	    console.log("debug showtoc");
 	    let toc = document.querySelector(".toc-slip"); // let innerHTML = "";
 
 	    let globalElem = document.createElement("div");
 	    let tree = this.getSlipTree(); // let before = true;
 
 	    let displayTree = (tree, stackWithNumbers) => {
-	      console.log("debug treee", tree);
 	      let containerElement = document.createElement("div");
 	      let nameElement = document.createElement("div"); // if(before)
 	      // 	nameElement.style.color = "blue";
@@ -2352,7 +2256,6 @@ var Slipshow = (function (exports) {
 	          liElement.addEventListener("click", ev => {
 	            if (ev.target == liElement) {
 	              this.goToState(newStackWithNumbers);
-	              console.log("newstack", newStackWithNumbers);
 	            }
 	          });
 	          ulElement.appendChild(liElement); // innerHTML += "</li>";
@@ -2360,8 +2263,6 @@ var Slipshow = (function (exports) {
 	        containerElement.appendChild(ulElement);
 	        tree.slip.setTocElem(containerElement); // innerHTML += "</ul>";
 	      }
-
-	      console.log("debug tree, will return", containerElement); // containerElement.addEventListener("click", () => { console.log(stackWithNumbers);});
 
 	      return containerElement;
 	    };
@@ -2379,7 +2280,6 @@ var Slipshow = (function (exports) {
 	  };
 
 	  this.setTool = tool => {
-	    console.log("setting tool: ", tool);
 	    this.getCurrentSlip().setTool(tool);
 	    this.updateToolClasses();
 	  };
@@ -2389,19 +2289,16 @@ var Slipshow = (function (exports) {
 	  };
 
 	  this.setColor = color => {
-	    console.log("setting color: ", color);
 	    this.getCurrentSlip().setColor(color);
 	    this.updateToolClasses();
 	  };
 
 	  this.setLineWidth = lw => {
-	    console.log("setting line width: ", lw);
 	    this.getCurrentSlip().setLineWidth(lw);
 	    this.updateToolClasses();
 	  };
 
 	  this.getLineWidth = () => {
-	    console.log("getting line width ");
 	    return this.getCurrentSlip().getLineWidth();
 	  };
 
@@ -2419,8 +2316,6 @@ var Slipshow = (function (exports) {
 	      that.setTool("no-tool");
 	    });
 	    document.querySelector(".slip-toolbar-eraser").addEventListener("click", function (ev) {
-	      console.log("that.getTool", that.getTool());
-
 	      switch (that.getTool()) {
 	        case "drawing-erase":
 	          that.setTool("drawing");
