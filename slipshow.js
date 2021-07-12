@@ -92,6 +92,11 @@ function cloneNoSubslip (elem) {
     elem.childNodes.forEach((child) => {
 	if(child.tagName && child.tagName == "SLIP-SLIP"){
 	    let placeholder = document.createElement(child.tagName);
+	    let importantAttributes =["pause","step", "auto-enter", "immediate-enter"];
+	    importantAttributes.forEach((attr) => {
+		if(child.hasAttribute(attr))
+		    placeholder.setAttribute(attr, child.getAttribute(attr));
+	    });
 	    placeholder.classList.add("toReplace");
 	    newElem.appendChild(placeholder);
 	}
@@ -110,6 +115,11 @@ function cloneNoSubslip (elem) {
 function replaceSubslips(clone, subslips, sketchpad, sketchpadHighlight) {
     let placeholders = myQueryAll(clone, ".toReplace");
     subslips.forEach((subslip, index) => {
+	let importantAttributes =["pause","step", "auto-enter", "immediate-enter"];
+	importantAttributes.forEach((attr) => {
+	    if(placeholders[index].hasAttribute(attr))
+		subslip.setAttribute(attr, placeholders[index].getAttribute(attr));
+	});
 	placeholders[index].replaceWith(subslip);
     });
     console.log("debug cloneNosubslip2", myQueryAll(clone, ".toReplaceSketchpad"));
@@ -944,11 +954,9 @@ function Slip(name, fullName, actionL, ng, options) {
     // ******************************
     this.findSlipCoordinate = () => { // rename to getCoordInUniverse
 	let coord = engine.getCoordinateInUniverse(this.element);
-	console.log("debug findslipcoordinate", coord);
 	coord.scale *= this.scale;
 	coord.y = coord.y + 0.5*coord.scale;
 	coord.x = coord.centerX;
-	console.log("debug findslipcoordinate", coord);
 	return coord;
     };
 
@@ -1053,7 +1061,6 @@ function Slip(name, fullName, actionL, ng, options) {
 	let pause = this.query("[pause], [auto-enter]:not([auto-enter=\"0\"]), [immediate-enter]:not([immediate-enter=\"0\"]), [step]");
 	// let pause = this.query("[pause]");
 	if(pause) {
-	    console.log("pause is", this.name, pause);
 	    if(pause.hasAttribute("step")) {
 		if(!pause.getAttribute("step")) 
 		    pause.setAttribute("step", 1);
@@ -1124,7 +1131,6 @@ function Slip(name, fullName, actionL, ng, options) {
 	    let staticAt = elem.getAttribute("static-at").split(" ").map((str) => parseInt(str));
 	    if(actionIndex < 0) return;
 	    if(staticAt.includes(-actionIndex)){
-		console.log("make unstatic actionIndex elem", actionIndex, elem);
 		this.makeUnStatic(elem);
 		// elem.style.position = "absolute";
 		// elem.style.visibility = "hidden";
@@ -1170,7 +1176,6 @@ function Slip(name, fullName, actionL, ng, options) {
 		elem.figureStep--;});	
     };
     this.incrIndex = () => {
-	console.log("incrIndex", this.name);
 	actionIndex = actionIndex+1;
 	this.doAttributes();
 	if(actionIndex>0)
@@ -1201,13 +1206,10 @@ function Slip(name, fullName, actionL, ng, options) {
 	let savedClass = this.element.className;
 	let r = this.doRefresh();
 	this.element.className = savedClass;
-	console.log("gotoslip: we call doRefresh",r);
 	if(savedActionIndex == -1)
 	    return false;
  	let toReturn;
 	while(this.getActionIndex()<savedActionIndex-1){
-	    console.log("previous is ca we do next", this.getEngine().getDoNotMove());
-	    console.log("(figure) actionIndex is", actionIndex);
 	    toReturn = this.next();
 	}
 	// if(!this.nextStageNeedGoto())
@@ -1279,12 +1281,9 @@ function Slip(name, fullName, actionL, ng, options) {
 	this.doRefresh();
     };
     this.doRefresh = () => {
-	console.log("to Atrament debug",this.element);
 	console.log("gotoslip: doRefresh has been called");
 	this.setActionIndex(-1);
 	let subSlipList = myQueryAll(this.element, "slip-slip");
-	console.log("mmdebug", clonedElement);
-	console.log("to Atrament debug clonedElement",clonedElement);
 	let clone = clonedElement.cloneNode(true);
 	replaceSubslips(clone, subSlipList, this.sketchpadCanvas, this.sketchpadCanvasHighlight);
 	this.element.replaceWith(clone);
@@ -1294,7 +1293,6 @@ function Slip(name, fullName, actionL, ng, options) {
 	delete(this.currentX);
 	delete(this.currentY);
 	delete(this.currentDelay);
-	console.log("previous is ca GOTOSLIP FROM 3", options, this.getEngine().getDoNotMove());
 	this.getEngine().gotoSlip(this);
     };
 
@@ -1392,8 +1390,6 @@ function Slip(name, fullName, actionL, ng, options) {
 	this.currentX = x;
 	this.currentY = y;
 	this.currentDelay = delay;
-	console.log("previous is ca we try to move win", this.getEngine().getDoNotMove());
-	console.log("previous is ca ORIGIN 3", x, y, this.getEngine().getDoNotMove());
 //	setTimeout(() => {
 	    this.getEngine().moveWindow(x, y, scale, rotate, delay);
 //	}, 0);
@@ -1446,7 +1442,6 @@ function Slip(name, fullName, actionL, ng, options) {
     this.color = "blue";
     this.colorHighlight = "yellow";
     this.getColor = () => {
-	console.log("slip getting color : ", this.colorHighlight, this.color, this.sketchpad.color, this.sketchpadHighlight.color, "for sketchpad :", this.sketchpad);
 	if(["highlighting","highlighting-erase"].includes(this.getTool())) {
 	    return this.colorHighlight;
 	}
@@ -1549,23 +1544,18 @@ function Slip(name, fullName, actionL, ng, options) {
     this.delay = isNaN(parseFloat(this.element.getAttribute("delay"))) ? 0 : (parseFloat(this.element.getAttribute("delay")));
     // canvas for drawing
     var that = this;
-    console.log("element bug before", this.element, that.element);
     let element = this.element;
     this.reloadCanvas = () => {
 	var that = this;
-	console.log("element bug before", this.element, that.element);
-	console.log("Calling reloadcanvas", this.element, that.element);
 	let element = this.element;
 	setTimeout(function() {
 	    let slipScaleContainer = element.firstChild;
 	    let canvas = document.createElement('canvas');
 
-	    console.log("element bug after", element, that.element);
 	    canvas.classList.add("sketchpad", "drawing");
 	    canvas.style.opacity = "1";
 	    that.sketchpadCanvas = canvas;
 	    let q = that.queryAll(".sketchpad");
-	    console.log("debug q", q);
 	    q[0].replaceWith(canvas);
 	    //     if(element && element.firstChild && element.firstChild.firstChild)
 	    //     element.firstChild.firstChild.appendChild(canvas);
@@ -1602,9 +1592,7 @@ function Slip(name, fullName, actionL, ng, options) {
 		that.sketchpadHighlight.color = "yellow";
 		that.sketchpadHighlight.weight = 30;
 		that.sketchpadHighlight.smoothing = 0.2;
-		console.log('Size changed bliiiiiiiiiiiii', entries);
 	    });
-	    console.log("slipScaleContainer", slipScaleContainer);
 	    if(slipScaleContainer && slipScaleContainer.classList && slipScaleContainer.classList.contains("slip-scale-container"))
 		resizeObserver.observe(slipScaleContainer);
 	}, 0);
@@ -1991,8 +1979,8 @@ function IEngine (root) {
 	if(document.querySelector(".toc-slip").innerHTML == "")
 	    this.showToC();
 	// return true if and only if the stack changed
-	let currentSlide = this.getCurrentSlip();
-	let n = currentSlide.next();
+	let currentSlip = this.getCurrentSlip();
+	let n = currentSlip.next();
 	this.updateCounter();
 	if(n instanceof Slip) {
 	    this.enter(n);
@@ -2049,17 +2037,18 @@ function IEngine (root) {
 	}
 	else if(!n) {
 	    this.pop();
-	    let newCurrentSlide = this.getCurrentSlip();
-	    // newCurrentSlide.incrIndex();
+	    let newCurrentSlip = this.getCurrentSlip();
+	    // newCurrentSlip.incrIndex();
 	    console.log("previous is ca currentDelay, delay", currentSlip.currentDelay , currentSlip.delay);
+	    console.log("debug stack", stack);
 	    
-	    if(stack.length > 1 || newCurrentSlide.getActionIndex() > -1)
+	    if(stack.length > 1 || newCurrentSlip.getActionIndex() > -1)
 		this.previous({delay: (currentSlip.currentDelay ? currentSlip.currentDelay : currentSlip.delay )});
 	    else {
-		this.gotoSlip(newCurrentSlide, options);
+		this.gotoSlip(newCurrentSlip, options);
 		console.log("previous is ca GOTOSLIP FROM 2", options);
 	    }
-		// this.gotoSlip(newCurrentSlide, {delay: currentSlip.delay});
+		// this.gotoSlip(newCurrentSlip, {delay: currentSlip.delay});
 	    // console.log(stack);
 	    // this.showToC();
 	    this.updateCounter();
