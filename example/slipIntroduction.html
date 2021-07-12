@@ -326,12 +326,18 @@ We also have environment for theorems/definitions/examples:
 
 	 // at step 9, future unzooms the window
 	 future.setNthAction(10, (slip) => {
-	     slip.savedX = slip.currentX; // saving initial coordinates inside slip
-	     slip.savedY = slip.currentY; // so that they are accessible in the next action
-	     engine.moveWindow(2,2,4,0,1);
+	     if(typeof slip.savedX == "undefined") {
+		 slip.savedX = slip.currentX; // saving initial coordinates inside slip
+		 slip.savedY = slip.currentY; // so that they are accessible in the next action
+	     }
+	     setTimeout(()=> {
+		 slip.moveWindow(2,2,4,0,1);	 
+	     }, 0);
 	 });
 	 future.setNthAction(11, (slip) => {
-	     engine.moveWindow(slip.savedX,slip.savedY,1,0,1); // recovering initial position
+	     setTimeout(()=> {
+		 slip.moveWindow(slip.savedX,slip.savedY,1,0,1); // recovering initial position
+	     }, 0);
 	     red.element.style.display = "inline-block";
 	     blue.element.style.display = "inline-block";
 	 });
