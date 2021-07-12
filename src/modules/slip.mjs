@@ -397,7 +397,10 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	//     this.getEngine().setDoNotMove(false);
 	// while(this.getActionIndex()<savedActionIndex-1)
 	//     toReturn = this.next();
-	setTimeout(() => {this.getEngine().setDoNotMove(false);},0);
+	setTimeout(() => {
+	    this.getEngine().setDoNotMove(false);
+	    this.getEngine().gotoSlip(this, {delay:savedDelay});
+	},0);
 	this.getEngine().gotoSlip(this, {delay:savedDelay});
 	return toReturn;
 
@@ -570,6 +573,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
     this.moveWindow = (x,y,scale,rotate, delay) => {
 	this.currentX = x;
 	this.currentY = y;
+	this.currentScale = scale;
 	this.currentDelay = delay;
 //	setTimeout(() => {
 	    this.getEngine().moveWindow(x, y, scale, rotate, delay);

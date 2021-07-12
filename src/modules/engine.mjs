@@ -439,9 +439,9 @@ export default function (root) {
 	{
 	     setTimeout(() => {
 		let coord = slip.findSlipCoordinate();
-		if(typeof slip.currentX != "undefined" && typeof slip.currentY != "undefined") {
+		if(typeof slip.currentX != "undefined" && typeof slip.currentY != "undefined" && typeof slip.currentScale != "undefined") {
 		    console.log("previous is ca ORIGIN 1", slip.currentX, slip.currentY, this.getDoNotMove(), options);
-		    this.moveWindow(slip.currentX, slip.currentY, coord.scale, slip.rotate, typeof(options.delay)!="undefined" ? options.delay : (typeof(slip.currentDelay)!="undefined" ? slip.currentDelay : slip.delay));
+		    this.moveWindow(slip.currentX, slip.currentY, slip.currentScale, slip.rotate, typeof(options.delay)!="undefined" ? options.delay : (typeof(slip.currentDelay)!="undefined" ? slip.currentDelay : slip.delay));
 		} else {
 		    slip.currentX = coord.x; slip.currentY = coord.y; slip.currentDelay = slip.delay;
 		    console.log("previous is ca ORIGIN 2", coord.x, coord.y, this.getDoNotMove());
