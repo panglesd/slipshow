@@ -2425,15 +2425,16 @@ const Controller = IController;
 const Slip$1 = Slip;
 const Util = IUtil;
 
-let startSlipshow = () => {
+let startSlipshow = async () => {
     let engine;
     if(typeof MathJax != "undefined")
-	MathJax.startup.promise.then(() => {
+	return MathJax.startup.promise.then(() => {
 	    engine = new Engine(document.querySelector("slip-slipshow")).start();
+	    return Promise.resolve(engine);
 	});
     else
 	engine = new Engine(document.querySelector("slip-slipshow")).start();
-    return engine;
+    return Promise.resolve(engine);
 };
 
 /**
