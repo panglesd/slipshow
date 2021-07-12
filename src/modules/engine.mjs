@@ -82,7 +82,7 @@ export default function (root) {
 	});
 	rootElem.style.width = "unset";
 	rootElem.style.height = "unset";
-	document.querySelectorAll(".background-canvas").forEach((elem)=> {elem.addEventListener("click", (ev) => { console.log("vous avez cliquez aux coordonnées : ", ev.layerX, ev.layerY); });});	
+	// document.querySelectorAll(".background-canvas").forEach((elem)=> {elem.addEventListener("click", (ev) => { console.log("vous avez cliquez aux coordonnées : ", ev.layerX, ev.layerY); });});	
     }
     if (typeof(root) == "string") {
 	if(root[0] != "#")
@@ -117,17 +117,12 @@ export default function (root) {
     this.getDoNotMove = m => doNotMove;
     this.moveWindow = function (x, y, scale, rotate, delay) {
 	if(this.getDoNotMove()) {
-	    console.log("we cannot move");
-	    console.log("previous is ca we cannot move !");
 	    return;
 	}
-	console.log("previous is ca getDoNotMove !", x,y,scale, rotate, delay, this.getDoNotMove());
-	console.log("move to", x, y, "with scale, rotate, delay", scale, rotate, delay);
 	currentScale = scale;
 	currentRotate = rotate;
 	winX = x ;
 	winY = y;
-	console.log(x,y);
 	setTimeout(() => {
 	    document.querySelector(".scale-container").style.transitionDuration = delay+"s";
 	    document.querySelector(".rotate-container").style.transitionDuration = delay+"s";
@@ -145,51 +140,23 @@ export default function (root) {
 	this.moveWindow(winX+dx, winY+dy, currentScale+dscale, currentRotate+drotate, delay);
     };
     this.placeSlip = function(slip) {
-	// console.log("debug Previous (slip)", slip);
-	// let posX = 0.5;
-	// let posY = 0.5;
-	// let x=parseFloat(slip.getAttribute("pos-x")), y=parseFloat(slip.getAttribute("pos-y"));
 	let scale = parseFloat(slip.getAttribute("scale"));
-	// // console.log(slip);
 	let slipScaleContainer = slip.querySelector(".slip-scale-container");
-	// let rotate = 0;
 	scale = isNaN(scale) ? 1 : scale ;
-	// x = (isNaN(x) ? posX : x);
-	// y = (isNaN(y) ? posY : y);
-	// slip.setAttribute("pos-x", x);
-	// slip.setAttribute("pos-y", y);
-	// slip.setAttribute("scale", scale);
-	// slip.setAttribute("rotate", rotate);
-	// posX = x + 1;
-	// posY = y;
-	// slip.style.top = (y*1080 - 1080/2)+"px";
-	// slip.style.left = (x*1440 - 1440/2)+"px";
-	// if(!slip.classList.contains("permanent"))
-	// 	slip.style.zIndex = "-1";
-	// slip.style.transformOrigin = "50% 50%";
 	slipScaleContainer.style.transform = "scale("+scale+")";
-	// slip.style.width = (Math.max(slipScaleContainer.offsetWidth, 1440))*scale+"px";
-	// slip.style.height = (Math.max(slipScaleContainer.offsetHeight, 1080))*scale+"px";
 	const resizeObserver = new ResizeObserver(entries => {
 	    slip.style.width = (Math.max(slipScaleContainer.offsetWidth, 1440))*scale+"px";
 	    slip.style.height = (Math.max(slipScaleContainer.offsetHeight, 1080))*scale+"px";
-	    
-	    console.log('Size changed', entries);
 	});
 
 	resizeObserver.observe(slipScaleContainer);
     };
     this.placeSlips = function () {
-	// let posX = 0.5;
-	// let posY = 0.5;
 	let depth = function (elem) {
-	    console.log("debug depth (elem)", elem);
 	    let subslips = myQueryAll(elem, "slip-slip");
-	    console.log("debug depth (subslips)", elem);
 	    return 1+subslips.map(depth).reduce((a,b) => Math.max(a,b),0);
 	};
 	let rootDepth = depth(document.body);
-	console.log("debug", rootDepth);
 	for(let i= 0; i<rootDepth; i++)
 	    slips.forEach(this.placeSlip);	
     };
@@ -288,16 +255,12 @@ export default function (root) {
 	    let newCurrentSlip = this.getCurrentSlip();
 	    if(newCurrentSlip.nextStageNeedGoto())
 		this.gotoSlip(newCurrentSlip);
-	    // newCurrentSlip.incrIndex();
 	    if(stack.length > 1 || newCurrentSlip.getActionIndex() < newCurrentSlip.getMaxNext())
 		this.next();
 	    else
 		this.gotoSlip(newCurrentSlip);
-	    // this.showToC();
 	    return true;
-	    // console.log(stack);
 	}
-	// this.showToC();
 	return false;
     };
     this.nextSlip = function () {
@@ -305,21 +268,18 @@ export default function (root) {
 	while(!this.next()) {}
     };
     this.previous = (options) => {
-	console.log("previous is called with option", options);
 	let currentSlip = this.getCurrentSlip();
 	// setDoNotMove(true);
 	// let stage = currentSlip.previous2();
 	// setDoNotMove(false);
 	let n = currentSlip.previous();
 	// if(stage == "")
-	console.log("debug previous (currentSlip, n)", currentSlip, n);
 	if(n instanceof Slip) {
 	    while(n.getCurrentSubSlip() instanceof Slip) {
 		this.push(n);
 		n = n.getCurrentSubSlip();
 	    }
 	    this.push(n);
-	    console.log("previous is ca GOTOSLIP FROM 1", options);
 	    
 	    this.gotoSlip(n, options);
 	    // this.gotoSlip(n, {delay: currentSlip.delay});
@@ -332,17 +292,13 @@ export default function (root) {
 	    this.pop();
 	    let newCurrentSlip = this.getCurrentSlip();
 	    // newCurrentSlip.incrIndex();
-	    console.log("previous is ca currentDelay, delay", currentSlip.currentDelay , currentSlip.delay);
-	    console.log("debug stack", stack);
 	    
 	    if(stack.length > 1 || newCurrentSlip.getActionIndex() > -1)
 		this.previous({delay: (currentSlip.currentDelay ? currentSlip.currentDelay : currentSlip.delay )});
 	    else {
 		this.gotoSlip(newCurrentSlip, options);
-		console.log("previous is ca GOTOSLIP FROM 2", options);
 	    }
 		// this.gotoSlip(newCurrentSlip, {delay: currentSlip.delay});
-	    // console.log(stack);
 	    // this.showToC();
 	    this.updateCounter();
 	    return true;
@@ -354,7 +310,6 @@ export default function (root) {
 	// this.showToC();
 	this.updateCounter();
 	return false;
-	// console.log("returned", n);
     };
     this.previousSlip = function () {
 	// Do this.previous() untill the stack change
@@ -362,7 +317,6 @@ export default function (root) {
     };
 
     this.getCoordinateInUniverse = function (elem) {
-	console.log("debug getcoord elem", elem);
 	let getCoordInParen = (elem) => {
 	    return {x: elem.offsetLeft, y:elem.offsetTop};	    
 	};
@@ -373,7 +327,6 @@ export default function (root) {
 	    return parseFloat(transform.split("(")[1].split(",")[0]);
 	};
 	let getCoordIter = (elem) => {
-	    console.log("debug getcoorditer elem", elem);
 	    let cInParent = getCoordInParen(elem);
 	    if(!elem.offsetParent)
 		return { x: 0,
@@ -385,32 +338,24 @@ export default function (root) {
 			 scale: 0 };
 	    if(elem.offsetParent.classList.contains("universe"))
 	    {
-		console.log("universe", cInParent);
 		return cInParent;
 	    }
 	    let cParent = getCoordIter(elem.offsetParent);
 	    let style = window.getComputedStyle(elem.offsetParent);
-	    // console.log(style);
 	    let scale;
-	    // console.log("style", style.transform);
 	    // if (style.transform == "none")
 	    // 	scale = 1;
 	    // else
 	    // 	scale = parseFloat(style.transform.split("(")[1].split(",")[0]);
 	    scale = parseScale(style.transform);
-	    // console.log(style.transform);
-	    // console.log("scale", scale);
-	    // console.log("globalScale", globalScale);
 	    globalScale *= scale;
 	    // let scale = 1 ; // Has to parse/compute the scale, for now always 1
-	    // console.log("at step",  "cParent.x", cParent.x, "cInParen.x", cInParent.x, "scale", scale);
 	    return {x:cParent.x+cInParent.x*globalScale, y:cParent.y+cInParent.y*globalScale };
 	};
 	let c = getCoordIter(elem);
 	let style = window.getComputedStyle(elem);
 	let scale = parseScale(style.transform);
 	globalScale *= scale;
-	console.log("getCoord", {x:c.x/1440+0.5, y:c.y/1080+0.5}, "globalScale", globalScale, style.transform, scale);
 	let ret = { x: c.x/1440,
 		    y: c.y/1080,
 		    centerX:c.x/1440+0.5*elem.offsetWidth/1440*globalScale,
@@ -418,7 +363,6 @@ export default function (root) {
 		    width: elem.offsetWidth/1440*globalScale,
 		    height: elem.offsetHeight/1080*globalScale,
 		    scale: globalScale };
-	console.log(ret);
 	return ret;
 	// return {x:c.x/1440+elem*globalScale*scale, y:c.y/1080+0.5*globalScale*scale, scale: globalScale*scale};
 	// return {x: this.element.offsetLeft/1440+0.5, y:this.element.offsetTop/1080+0.5};
@@ -431,27 +375,21 @@ export default function (root) {
 			    , 0, options.delay ? options.delay : 1);
     };
     this.gotoSlip = function(slip, options) {
-	console.log("previous is ca goto slip", options, slip.element, this.getDoNotMove());
-	console.log("we goto slip", slip.element, this.getDoNotMove());
 	options = options ? options : {};
-	console.log("options is ", options);
 	if(slip.element.tagName == "SLIP-SLIP")
 	{
 	     setTimeout(() => {
 		let coord = slip.findSlipCoordinate();
 		if(typeof slip.currentX != "undefined" && typeof slip.currentY != "undefined" && typeof slip.currentScale != "undefined") {
-		    console.log("previous is ca ORIGIN 1", slip.currentX, slip.currentY, this.getDoNotMove(), options);
 		    this.moveWindow(slip.currentX, slip.currentY, slip.currentScale, slip.rotate, typeof(options.delay)!="undefined" ? options.delay : (typeof(slip.currentDelay)!="undefined" ? slip.currentDelay : slip.delay));
 		} else {
 		    slip.currentX = coord.x; slip.currentY = coord.y; slip.currentDelay = slip.delay;
-		    console.log("previous is ca ORIGIN 2", coord.x, coord.y, this.getDoNotMove());
 		    this.moveWindow(coord.x, coord.y, coord.scale, slip.rotate, typeof(options.delay)!="undefined" ? options.delay : (typeof(slip.currentDelay)!="undefined" ? slip.currentDelay : slip.delay));
 		}
 	     },0);
 	}
 	else {
 	     setTimeout(() => {
-		console.log("debug slip element", slip.element);
 		let coord = this.getCoordinateInUniverse(slip.element);
 		 this.moveWindow(coord.centerX, coord.centerY, Math.max(coord.width, coord.height), 0, typeof(options.delay)!="undefined" ? options.delay : slip.delay);
 	     },0);
@@ -513,14 +451,12 @@ export default function (root) {
 	return toc;
     };
     this.showToC = function () {
-	console.log("debug showtoc");
 	let toc = document.querySelector(".toc-slip");
 	// let innerHTML = "";
 	let globalElem = document.createElement("div");
 	let tree = this.getSlipTree();
 	// let before = true;
 	let displayTree = (tree, stackWithNumbers) => {
-	    console.log("debug treee", tree);
 	    let containerElement = document.createElement("div");
 	    let nameElement = document.createElement("div");
 	    // if(before)
@@ -556,7 +492,6 @@ export default function (root) {
 		    liElement.addEventListener("click", (ev) => {
 		    	if(ev.target == liElement) {
 		    	    this.goToState(newStackWithNumbers);
-		    	    console.log("newstack", newStackWithNumbers);
 		    	}
 		    });
 		    ulElement.appendChild(liElement);
@@ -567,8 +502,6 @@ export default function (root) {
 		tree.slip.setTocElem(containerElement);
 		// innerHTML += "</ul>";
 	    }
-	    console.log("debug tree, will return", containerElement);
-	    // containerElement.addEventListener("click", () => { console.log(stackWithNumbers);});
 	    return containerElement;
 	};
 	toc.innerHTML = "";
@@ -584,7 +517,6 @@ export default function (root) {
 	return this.getCurrentSlip().getTool();
     };
     this.setTool = (tool) => {
-	console.log("setting tool: ", tool);
 	this.getCurrentSlip().setTool(tool);
 	this.updateToolClasses();
     };
@@ -592,17 +524,14 @@ export default function (root) {
 	return this.getCurrentSlip().getColor();
     };
     this.setColor = (color) => {
-	console.log("setting color: ", color);
 	this.getCurrentSlip().setColor(color);
 	this.updateToolClasses();
     };
     this.setLineWidth = (lw) => {
-	console.log("setting line width: ", lw);
 	this.getCurrentSlip().setLineWidth(lw);
 	this.updateToolClasses();
     };
     this.getLineWidth = () => {
-	console.log("getting line width ");
 	return this.getCurrentSlip().getLineWidth();
     };
     this.reloadCanvas = () => {
@@ -617,7 +546,6 @@ export default function (root) {
 	    that.setTool("no-tool");
 	});
 	document.querySelector(".slip-toolbar-eraser").addEventListener("click", function(ev) {
-	    console.log("that.getTool", that.getTool());
 	    switch(that.getTool()) {
 	    case "drawing-erase":
 		that.setTool("drawing");

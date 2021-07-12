@@ -7,19 +7,15 @@ export default function Slip(name, fullName, actionL, ng, options) {
     // ******************************
 
     this.generateActionList = function() {
-	console.log("debug generateactionlist", this.name);
 	let newActionList = [];
 	this.queryAll("slip-slip[enter-at]").forEach((slip) => {
-	    console.log("new slip with ", slip, null, null, ng, {});
 	    newActionList[slip.getAttribute("enter-at")] = new Slip(slip, "", [], ng, {});
 	});
 	return newActionList;
     };
     this.addSubSlips = function() {
-	console.log("debug generateactionlist", this.name);
 	let newActionList = [];
 	this.queryAll("slip-slip[enter-at]").forEach((slip) => {
-	    console.log("new slip with ", slip, null, null, ng, {});
 	    this.setNthAction(slip.getAttribute("enter-at"), new Slip(slip, "", [], ng, {}));
 	});
 	return newActionList;
@@ -465,7 +461,6 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	this.doRefresh();
     };
     this.doRefresh = () => {
-	console.log("gotoslip: doRefresh has been called");
 	this.setActionIndex(-1);
 	let subSlipList = myQueryAll(this.element, "slip-slip");
 	let clone = clonedElement.cloneNode(true);
@@ -637,7 +632,6 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	return "no-color";
     };
     this.setColor = (color) => {
-	console.log("slip : setting color: ", color, "for tool :", this.getTool());
 	switch(this.getTool()) {
 	case("highlighting"):
 	case("highlighting-erase"):
@@ -664,7 +658,6 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	return "no-line-width";
     };
     this.setLineWidth = (lineWidth) => {
-	console.log("slip : setting linewidth: ", lineWidth, "for tool :", this.getTool());
 	if(["highlighting","highlighting-erase"].includes(this.getTool())) {
 	    this.lineWidthHighlight = lineWidth;
 	    switch(lineWidth) {
@@ -708,7 +701,6 @@ export default function Slip(name, fullName, actionL, ng, options) {
 		break;
 	    }
 	}
-	console.log("setting new line width values :", this.sketchpad.weight, this.sketchpadHighlight.weight);
     };
 
     // ******************************
@@ -768,7 +760,6 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	    that.sketchpadHighlight.weight = 30;
 	    that.sketchpadHighlight.smoothing = 0.2;
 	    const resizeObserver = new ResizeObserver(entries => {
-		console.log("sketch color", that.sketchpad.color, that.sketchpad);
 		canvas.height = slipScaleContainer.offsetHeight/that.scale;
 		canvas.width = slipScaleContainer.offsetWidth/that.scale;
 		canvas2.height = slipScaleContainer.offsetHeight/that.scale;
@@ -817,7 +808,6 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	this.fullName = this.element.getAttribute("toc-title");
     else
 	this.fullName = this.name;
-    console.log("this name is ", this.name);
     // clonedElement
     let clonedElement;
     if(typeof MathJax != "undefined")
@@ -826,13 +816,11 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	});
     else
 	setTimeout(() => {clonedElement = cloneNoSubslip(this.element);},0);
-    console.log("to Atrament debug before",this.element);
 
     this.getCloned = () => clonedElement;
     this.setCloned = (c) => clonedElement = c;
     // coord
     let coord = this.findSlipCoordinate();
-    console.log(coord);
     this.x = coord.x;
     this.y = coord.y;
     // Preparing the slip
@@ -845,7 +833,6 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	let bla = this.queryAll("[pause], [step], [auto-enter], [immediate-enter]");
 	let step = 1;
 	bla.forEach((elem) => {
-	    console.log("debug generatePauseFlowsliplist", elem, step);
 	    if(elem.hasAttribute("auto-enter")){
 		slipList[step] = new Slip(elem, elem.getAttribute("toc-title") || "", [], ng, {});
 		step++;
@@ -856,9 +843,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
 		step++;
 	    }
 	    if(elem.hasAttribute("step")){
-		console.log("has enter-at-unpause?");
 		if(elem.hasAttribute("enter-at-unpause")) {
-		    console.log("has enter-at-unpause");
 		    if(elem.getAttribute("enter-at-unpause") != "") {
 			let s = this.query("#"+elem.getAttribute("enter-at-unpause"));
 			slipList[step] = new Slip(s, s.getAttribute("toc-title") || "", [], ng, {});
@@ -867,9 +852,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
 		    else
 			slipList[step + (parseInt(elem.getAttribute("step")) || 1) - 1] = new Slip(elem, elem.getAttribute("toc-title") || "", [], ng, {});
 		}
-		console.log("debug generatePauseFlowsliplist1", elem, step);
 		step += parseInt(elem.getAttribute("step")) || 1 ;
-		console.log("debug generatePauseFlowsliplist2", elem, step);
 	    }
 	    if(elem.hasAttribute("pause")){
 		if(elem.hasAttribute("enter-at-unpause")) {
@@ -880,9 +863,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
 		    else
 			slipList[step + (parseInt(elem.getAttribute("step")) || 1) - 1] = new Slip(elem, elem.getAttribute("toc-title") || "", [], ng, {});
 		}
-		console.log("debug generatePauseFlowsliplist1", elem, step);
 		step += parseInt(elem.getAttribute("pause")) || 1 ;
-		console.log("debug generatePauseFlowsliplist1", elem, step);
 	    }
 	});
 	return slipList;
