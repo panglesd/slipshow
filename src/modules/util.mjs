@@ -4,7 +4,6 @@ export let myQueryAll = (root, selector, avoid) => {
 	root.id = '_' + Math.random().toString(36).substr(2, 15);;
     let allElem = Array.from(root.querySelectorAll(selector));
     let separatedSelector = selector.split(",").map(selec => "#"+root.id+" " + avoid + " " + selec).join();
-    // console.log("debug myQueryAll", selector, "VS",  separatedSelector);
     let other = Array.from(root.querySelectorAll(separatedSelector));
     // let other = Array.from(root.querySelectorAll("#"+root.id+" " + avoid + " " + separatedSelector));
     return allElem.filter(value => !other.includes(value));
@@ -32,8 +31,6 @@ export function cloneNoSubslip (elem) {
 	else
 	    newElem.appendChild(cloneNoSubslip(child));
     });
-    if(newElem.tagName == "SLIP-SLIP")
-	console.log("debug cloneNosubslip", newElem);
     return newElem;
 }
 export function replaceSubslips(clone, subslips, sketchpad, sketchpadHighlight) {
@@ -46,7 +43,6 @@ export function replaceSubslips(clone, subslips, sketchpad, sketchpadHighlight) 
 	});
 	placeholders[index].replaceWith(subslip);
     });
-    console.log("debug cloneNosubslip2", myQueryAll(clone, ".toReplaceSketchpad"));
     let sketchPlaceholder = myQueryAll(clone, ".toReplaceSketchpad");
     if(sketchPlaceholder[0])
 	sketchPlaceholder[0].replaceWith(sketchpad);
