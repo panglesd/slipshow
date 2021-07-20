@@ -308,6 +308,9 @@ export default function (root) {
 	    },0);
 	}
 	// this.showToC();
+	setTimeout(() => {
+	    this.gotoSlip(currentSlip, options);
+	},0);
 	this.updateCounter();
 	return false;
     };
@@ -375,6 +378,7 @@ export default function (root) {
 			    , 0, options.delay ? options.delay : 1);
     };
     this.gotoSlip = function(slip, options) {
+	// console.log("going to slip", slip, slip.element);
 	options = options ? options : {};
 	if(slip.element.tagName == "SLIP-SLIP")
 	{

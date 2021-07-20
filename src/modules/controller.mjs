@@ -86,7 +86,7 @@ export default function (ng) {
 	    document.querySelector(".toc-slip").style.display = document.querySelector(".toc-slip").style.display == "none" ? "block" : "none"; 
 	}   
 	if(next_keys.includes(ev.key) && activated) {
-	    console.log(ev);
+	    // console.log(ev);
 	    if(ev.shiftKey)
 		engine.nextSlip();
 	    else    

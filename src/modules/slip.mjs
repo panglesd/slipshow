@@ -395,9 +395,9 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	//     toReturn = this.next();
 	setTimeout(() => {
 	    this.getEngine().setDoNotMove(false);
-	    this.getEngine().gotoSlip(this, {delay:savedDelay});
+	    // this.getEngine().gotoSlip(this, {delay:savedDelay});
 	},0);
-	this.getEngine().gotoSlip(this, {delay:savedDelay});
+	// this.getEngine().gotoSlip(this, {delay:savedDelay});
 	return toReturn;
 
 	// return this.next;
@@ -473,6 +473,18 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	delete(this.currentY);
 	delete(this.currentDelay);
 	this.getEngine().gotoSlip(this);
+	setTimeout(() => {
+	    this.reObserve();
+	},0);
+    };
+
+    this.reObserve = () => {
+	let slipScaleContainer = this.element.firstChild;
+	if(slipScaleContainer && slipScaleContainer.classList && slipScaleContainer.classList.contains("slip-scale-container"))
+	    this.resizeObserver.observe(slipScaleContainer);
+	this.getSubSlipList().forEach((slip) => {
+	    slip.reObserve();
+	});
     };
 
     // ******************************
@@ -759,7 +771,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	    that.sketchpadHighlight.color = "yellow";
 	    that.sketchpadHighlight.weight = 30;
 	    that.sketchpadHighlight.smoothing = 0.2;
-	    const resizeObserver = new ResizeObserver(entries => {
+	    that.resizeObserver = new ResizeObserver(entries => {
 		canvas.height = slipScaleContainer.offsetHeight/that.scale;
 		canvas.width = slipScaleContainer.offsetWidth/that.scale;
 		canvas2.height = slipScaleContainer.offsetHeight/that.scale;
@@ -771,7 +783,7 @@ export default function Slip(name, fullName, actionL, ng, options) {
 		that.sketchpadHighlight.smoothing = 0.2;
 	    });
 	    if(slipScaleContainer && slipScaleContainer.classList && slipScaleContainer.classList.contains("slip-scale-container"))
-		resizeObserver.observe(slipScaleContainer);
+		that.resizeObserver.observe(slipScaleContainer);
 	}, 0);
 
     };
