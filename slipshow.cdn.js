@@ -293,7 +293,7 @@ var Slipshow = (function (exports) {
 	    }
 
 	    if (next_keys.includes(ev.key) && activated) {
-	      console.log(ev);
+	      // console.log(ev);
 	      if (ev.shiftKey) engine.nextSlip();else engine.next();
 	    } else if (previous_keys.includes(ev.key) && activated) {
 	      if (ev.shiftKey) engine.previousSlip();else engine.previous();
@@ -1264,14 +1264,9 @@ var Slipshow = (function (exports) {
 
 
 	    setTimeout(() => {
-	      this.getEngine().setDoNotMove(false);
-	      this.getEngine().gotoSlip(this, {
-	        delay: savedDelay
-	      });
-	    }, 0);
-	    this.getEngine().gotoSlip(this, {
-	      delay: savedDelay
-	    });
+	      this.getEngine().setDoNotMove(false); // this.getEngine().gotoSlip(this, {delay:savedDelay});
+	    }, 0); // this.getEngine().gotoSlip(this, {delay:savedDelay});
+
 	    return toReturn; // return this.next;
 	  }; // ******************************
 	  // ToC functions
@@ -1352,6 +1347,17 @@ var Slipshow = (function (exports) {
 	    delete this.currentY;
 	    delete this.currentDelay;
 	    this.getEngine().gotoSlip(this);
+	    setTimeout(() => {
+	      this.reObserve();
+	    }, 0);
+	  };
+
+	  this.reObserve = () => {
+	    let slipScaleContainer = this.element.firstChild;
+	    if (slipScaleContainer && slipScaleContainer.classList && slipScaleContainer.classList.contains("slip-scale-container")) this.resizeObserver.observe(slipScaleContainer);
+	    this.getSubSlipList().forEach(slip => {
+	      slip.reObserve();
+	    });
 	  }; // ******************************
 	  // Movement, execution and hide/show
 	  // ******************************
@@ -1660,7 +1666,7 @@ var Slipshow = (function (exports) {
 	      that.sketchpadHighlight.color = "yellow";
 	      that.sketchpadHighlight.weight = 30;
 	      that.sketchpadHighlight.smoothing = 0.2;
-	      const resizeObserver = new ResizeObserver(entries => {
+	      that.resizeObserver = new ResizeObserver(entries => {
 	        canvas.height = slipScaleContainer.offsetHeight / that.scale;
 	        canvas.width = slipScaleContainer.offsetWidth / that.scale;
 	        canvas2.height = slipScaleContainer.offsetHeight / that.scale;
@@ -1671,7 +1677,7 @@ var Slipshow = (function (exports) {
 	        that.sketchpadHighlight.weight = 30;
 	        that.sketchpadHighlight.smoothing = 0.2;
 	      });
-	      if (slipScaleContainer && slipScaleContainer.classList && slipScaleContainer.classList.contains("slip-scale-container")) resizeObserver.observe(slipScaleContainer);
+	      if (slipScaleContainer && slipScaleContainer.classList && slipScaleContainer.classList.contains("slip-scale-container")) that.resizeObserver.observe(slipScaleContainer);
 	    }, 0);
 	  };
 
@@ -2044,6 +2050,9 @@ var Slipshow = (function (exports) {
 	    } // this.showToC();
 
 
+	    setTimeout(() => {
+	      this.gotoSlip(currentSlip, options);
+	    }, 0);
 	    this.updateCounter();
 	    return false;
 	  };
@@ -2128,6 +2137,7 @@ var Slipshow = (function (exports) {
 	  };
 
 	  this.gotoSlip = function (slip, options) {
+	    // console.log("going to slip", slip, slip.element);
 	    options = options ? options : {};
 
 	    if (slip.element.tagName == "SLIP-SLIP") {

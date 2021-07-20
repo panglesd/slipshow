@@ -221,7 +221,7 @@ function IController (ng) {
 	    document.querySelector(".toc-slip").style.display = document.querySelector(".toc-slip").style.display == "none" ? "block" : "none"; 
 	}   
 	if(next_keys.includes(ev.key) && activated) {
-	    console.log(ev);
+	    // console.log(ev);
 	    if(ev.shiftKey)
 		engine.nextSlip();
 	    else    
@@ -1210,9 +1210,9 @@ function Slip(name, fullName, actionL, ng, options) {
 	//     toReturn = this.next();
 	setTimeout(() => {
 	    this.getEngine().setDoNotMove(false);
-	    this.getEngine().gotoSlip(this, {delay:savedDelay});
+	    // this.getEngine().gotoSlip(this, {delay:savedDelay});
 	},0);
-	this.getEngine().gotoSlip(this, {delay:savedDelay});
+	// this.getEngine().gotoSlip(this, {delay:savedDelay});
 	return toReturn;
 
 	// return this.next;
@@ -1288,6 +1288,18 @@ function Slip(name, fullName, actionL, ng, options) {
 	delete(this.currentY);
 	delete(this.currentDelay);
 	this.getEngine().gotoSlip(this);
+	setTimeout(() => {
+	    this.reObserve();
+	},0);
+    };
+
+    this.reObserve = () => {
+	let slipScaleContainer = this.element.firstChild;
+	if(slipScaleContainer && slipScaleContainer.classList && slipScaleContainer.classList.contains("slip-scale-container"))
+	    this.resizeObserver.observe(slipScaleContainer);
+	this.getSubSlipList().forEach((slip) => {
+	    slip.reObserve();
+	});
     };
 
     // ******************************
@@ -1573,7 +1585,7 @@ function Slip(name, fullName, actionL, ng, options) {
 	    that.sketchpadHighlight.color = "yellow";
 	    that.sketchpadHighlight.weight = 30;
 	    that.sketchpadHighlight.smoothing = 0.2;
-	    const resizeObserver = new ResizeObserver(entries => {
+	    that.resizeObserver = new ResizeObserver(entries => {
 		canvas.height = slipScaleContainer.offsetHeight/that.scale;
 		canvas.width = slipScaleContainer.offsetWidth/that.scale;
 		canvas2.height = slipScaleContainer.offsetHeight/that.scale;
@@ -1585,7 +1597,7 @@ function Slip(name, fullName, actionL, ng, options) {
 		that.sketchpadHighlight.smoothing = 0.2;
 	    });
 	    if(slipScaleContainer && slipScaleContainer.classList && slipScaleContainer.classList.contains("slip-scale-container"))
-		resizeObserver.observe(slipScaleContainer);
+		that.resizeObserver.observe(slipScaleContainer);
 	}, 0);
 
     };
@@ -1996,6 +2008,9 @@ function IEngine (root) {
 	    },0);
 	}
 	// this.showToC();
+	setTimeout(() => {
+	    this.gotoSlip(currentSlip, options);
+	},0);
 	this.updateCounter();
 	return false;
     };
@@ -2063,6 +2078,7 @@ function IEngine (root) {
 			    , 0, options.delay ? options.delay : 1);
     };
     this.gotoSlip = function(slip, options) {
+	// console.log("going to slip", slip, slip.element);
 	options = options ? options : {};
 	if(slip.element.tagName == "SLIP-SLIP")
 	{
