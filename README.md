@@ -21,9 +21,11 @@ You can find an extensive documentation, with a tutorial at the readthedocs [doc
 
 ## Very quick start
 
-If you do not want to read any of the tutorial but you still want to test a slipshow, type the following **in an empty directory**:
+If you do not want to read any of the tutorial but you still want to test a slipshow, type the following:
 
 ```
+$ mkdir my_presentation
+$ cd my_presentation
 $ npm install slipshow
 $ npx new-slipshow > test-slipshow.html
 ```
