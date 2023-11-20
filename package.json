@@ -31,7 +31,7 @@
 						"build": "node build/build.js",
 						"pack-in-tar": "node build/pack.js",
 						"build-and-pack": "yarn build; yarn pack-in-tar",
-						"watch": "rollup -w -c build/rollup.config.js"
+						"watch": "rollup -w -c build/rollup.config.mjs"
 			},
 			"bin": {
 						"new-slipshow": "bin/generate.js",
