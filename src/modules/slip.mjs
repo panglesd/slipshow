@@ -227,6 +227,22 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	    else
 		this.focus("#"+pause.getAttribute("focus-at-unpause"));
 	}
+	if(pause.hasAttribute("emph-at-unpause")) {
+	    if(pause.getAttribute("emph-at-unpause") == "")
+		this.makeEmph(pause);
+	    else
+		pause.getAttribute("emph-at-unpause").split(" ").map((strID) => {
+		    this.makeEmph("#"+strID);
+		});
+	}
+	if(pause.hasAttribute("unemph-at-unpause")) {
+	    if(pause.getAttribute("unemph-at-unpause") == "")
+		this.makeUnEmph(pause);
+	    else
+		pause.getAttribute("unemph-at-unpause").split(" ").map((strID) => {
+		    this.makeUnEmph("#"+strID);
+		});
+	}
 	if(pause.hasAttribute("unfocus-at-unpause")){
 	    if(pause.getAttribute("unfocus-at-unpause") == "")
 		this.unfocus(pause);
@@ -514,6 +530,14 @@ export default function Slip(name, fullName, actionL, ng, options) {
 	let elem = this.query(selector);
 	elem.style.position = "static";
 	elem.style.visibility = "visible";
+    };
+    this.makeEmph = (selector) => {
+	let elem = this.query(selector);
+	elem.classList.add = "emphasize";
+    };
+    this.makeUnEmph = (selector) => {
+	let elem = this.query(selector);
+	elem.classList.remove = "emphasize";
     };
     this.unfocus = (selector) => {
 	this.getEngine().gotoSlip(this, { delay: 1});
