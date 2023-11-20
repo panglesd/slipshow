@@ -6,6 +6,7 @@ yarn-error.log
 dist
 bin
 .cache
+.parcel-cache
 
 # DOC BUILD ARTEFACTS
 _build
