@@ -533,11 +533,11 @@ export default function Slip(name, fullName, actionL, ng, options) {
     };
     this.makeEmph = (selector) => {
 	let elem = this.query(selector);
-	elem.classList.add = "emphasize";
+	elem.classList.add("emphasize");
     };
     this.makeUnEmph = (selector) => {
 	let elem = this.query(selector);
-	elem.classList.remove = "emphasize";
+	elem.classList.remove("emphasize");
     };
     this.unfocus = (selector) => {
 	this.getEngine().gotoSlip(this, { delay: 1});
