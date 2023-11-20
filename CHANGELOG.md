@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.0.25] November 20th, 2023.
+
 ### Added
 
 - Added `emph-at-unpause` and `unemph-at-unpause` attributes.
