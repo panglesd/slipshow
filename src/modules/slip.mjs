@@ -1,5 +1,5 @@
 import { cloneNoSubslip, myQueryAll, replaceSubslips } from './util';
-import Atrament from 'atrament';
+import { Atrament } from 'atrament';
 export default function Slip(name, fullName, actionL, ng, options) {
 
     // ******************************
