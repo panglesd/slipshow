@@ -115,18 +115,25 @@ export default function (root) {
     let doNotMove = false;
     this.setDoNotMove = m => doNotMove = m;
     this.getDoNotMove = m => doNotMove;
+    let alwaysMoveFast = false;
+    this.setAlwaysMoveFast = m => {setTimeout(() => {alwaysMoveFast = m}, 0)};
+    this.getAlwaysMoveFast = m => alwaysMoveFast;
     this.moveWindow = function (x, y, scale, rotate, delay) {
 	if(this.getDoNotMove()) {
 	    return;
+	}
+	let my_delay = delay;
+	if(this.getAlwaysMoveFast()) {
+	    my_delay = "0";
 	}
 	currentScale = scale;
 	currentRotate = rotate;
 	winX = x ;
 	winY = y;
 	setTimeout(() => {
-	    document.querySelector(".scale-container").style.transitionDuration = delay+"s";
-	    document.querySelector(".rotate-container").style.transitionDuration = delay+"s";
-	    universe.style.transitionDuration = delay+"s, "+delay+ "s"; 
+	    document.querySelector(".scale-container").style.transitionDuration = my_delay+"s";
+	    document.querySelector(".rotate-container").style.transitionDuration = my_delay+"s";
+	    universe.style.transitionDuration = my_delay+"s, "+my_delay+ "s"; 
 	    setTimeout(() => {
 		universe.style.left = -(x*1440 - 1440/2)+"px";
 		universe.style.top = -(y*1080 - 1080/2)+"px";
@@ -228,6 +235,12 @@ export default function (root) {
     };
     this.updateCounter = function () {
 	let counters = stack.map((slip) => slip.getActionIndex());
+	let hash = counters.join(',');
+	if(window.parent !== window){
+	    window.parent.postMessage(hash, "*");
+	}
+	else
+ 	    window.history.replaceState(null, null, '#' + hash);
 	document.querySelector(".cpt-slip").innerHTML = this.countersToString(counters);	
     };
     this.enter = (n) => {
@@ -627,7 +640,33 @@ export default function (root) {
     this.getRootSlip = () => rootSlip;
     this.start = () => {
 	stack = [rootSlip];
-	this.next();
+	if(window.location.hash) {
+
+	    let target_stack = window.location.hash.slice(1).split(",").map(x => parseInt(x));
+	    this.setAlwaysMoveFast(true);
+	    console.log("alwaysMoveFast", this.getAlwaysMoveFast())
+	    let unfinished = -1;
+	    let continue_please = 0;
+	    let stop_now = 1;
+	    let not_arrived = function () {
+		let counters = stack.map((slip) => slip.getActionIndex());
+		let return_value = unfinished;
+		target_stack.forEach((target, i) => {
+		    if (return_value != unfinished)
+			return;
+		    if (target < counters[i])
+			return_value = stop_now;
+		    if (target > counters[i])
+			return_value = continue_please;
+		});
+		return return_value;
+	    }
+	    while(not_arrived() == continue_please)
+		this.next();
+	    this.setAlwaysMoveFast(false);
+	}
+	else
+	    this.next();
 	return this;
     };
     this.restart = () => {
@@ -637,4 +676,32 @@ export default function (root) {
     };
     let controller = new Controller(this);
     this.getController = () => controller;
+    // if(window !== window.parent)
+    window.addEventListener("message", (event) => {
+	console.log(event);
+	    this.restart();
+	    let target_stack = event.data.split(",").map(x => parseInt(x));
+	    this.setAlwaysMoveFast(true);
+	    console.log("alwaysMoveFast", this.getAlwaysMoveFast())
+	    let unfinished = -1;
+	    let continue_please = 0;
+	    let stop_now = 1;
+	    let not_arrived = function () {
+		let counters = stack.map((slip) => slip.getActionIndex());
+		let return_value = unfinished;
+		target_stack.forEach((target, i) => {
+		    if (return_value != unfinished)
+			return;
+		    if (target < counters[i])
+			return_value = stop_now;
+		    if (target > counters[i])
+			return_value = continue_please;
+		});
+		return return_value;
+	    }
+	    while(not_arrived() == continue_please)
+		this.next();
+	    this.setAlwaysMoveFast(false);
+
+	});
 };
