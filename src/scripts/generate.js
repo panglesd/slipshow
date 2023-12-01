@@ -58,4 +58,3 @@ template += '\
 '
 ;
 console.log(template)
-

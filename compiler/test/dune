@@ -1,0 +1,5 @@
+(test
+ (name slip_of_mark))
+
+(cram
+ (deps %{bin:slip_of_mark}))
