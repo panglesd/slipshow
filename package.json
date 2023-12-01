@@ -1,6 +1,6 @@
 {
 			"name": "slipshow",
-			"version": "0.0.28",
+			"version": "0.0.29",
 			"description": "This is not another slide engine, but a slip engine.",
 			"main": "./dist/slipshow.js",
 			"browser": "./dist/slipshow.cdn.min.js",
