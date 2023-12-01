@@ -237,7 +237,8 @@ export default function (root) {
 	let counters = stack.map((slip) => slip.getActionIndex());
 	let hash = counters.join(',');
 	if(window.parent !== window){
-	    window.parent.postMessage(hash, "*");
+	    if (this.send_stage)
+		window.parent.postMessage({id: this.id, kind: "state" , data: hash}, "*");
 	}
 	else
  	    window.history.replaceState(null, null, '#' + hash);
@@ -638,13 +639,25 @@ export default function (root) {
 	stack = [rootSlip];
     };
     this.getRootSlip = () => rootSlip;
-    this.start = () => {
+    this.send_stage = false;
+    this.start = async (startingPoint, id) => {
+	this.id = id;
 	stack = [rootSlip];
-	if(window.location.hash) {
-
-	    let target_stack = window.location.hash.slice(1).split(",").map(x => parseInt(x));
+	if(window.location.hash || startingPoint) {
+	    let target_stack;
+	    if(window.location.hash) {
+		target_stack = window.location.hash.slice(1).split(",").map(x => parseInt(x));
+	    }
+	    else {
+		target_stack = startingPoint;
+	    }
 	    this.setAlwaysMoveFast(true);
 	    console.log("alwaysMoveFast", this.getAlwaysMoveFast())
+	    let later = () => {
+		return new Promise(function(resolve) {
+		    setTimeout(resolve, 0);
+		});
+	    };
 	    let unfinished = -1;
 	    let continue_please = 0;
 	    let stop_now = 1;
@@ -661,12 +674,17 @@ export default function (root) {
 		});
 		return return_value;
 	    }
-	    while(not_arrived() == continue_please)
-		this.next();
+	    while(not_arrived() == continue_please){
+		await later();
+		await this.next()};
 	    this.setAlwaysMoveFast(false);
 	}
 	else
 	    this.next();
+	this.send_stage = true;
+	if(window.parent !== window){
+	    window.parent.postMessage({id: id, kind: "ready" , data: id}, "*");
+	}
 	return this;
     };
     this.restart = () => {
@@ -679,29 +697,28 @@ export default function (root) {
     // if(window !== window.parent)
     window.addEventListener("message", (event) => {
 	console.log(event);
-	    this.restart();
-	    let target_stack = event.data.split(",").map(x => parseInt(x));
-	    this.setAlwaysMoveFast(true);
-	    console.log("alwaysMoveFast", this.getAlwaysMoveFast())
-	    let unfinished = -1;
-	    let continue_please = 0;
-	    let stop_now = 1;
-	    let not_arrived = function () {
-		let counters = stack.map((slip) => slip.getActionIndex());
-		let return_value = unfinished;
-		target_stack.forEach((target, i) => {
-		    if (return_value != unfinished)
-			return;
-		    if (target < counters[i])
-			return_value = stop_now;
-		    if (target > counters[i])
-			return_value = continue_please;
-		});
-		return return_value;
-	    }
-	    while(not_arrived() == continue_please)
-		this.next();
-	    this.setAlwaysMoveFast(false);
-
-	});
+	this.restart();
+	let target_stack = event.data.split(",").map(x => parseInt(x));
+	this.setAlwaysMoveFast(true);
+	console.log("alwaysMoveFast", this.getAlwaysMoveFast())
+	let unfinished = -1;
+	let continue_please = 0;
+	let stop_now = 1;
+	let not_arrived = function () {
+	    let counters = stack.map((slip) => slip.getActionIndex());
+	    let return_value = unfinished;
+	    target_stack.forEach((target, i) => {
+		if (return_value != unfinished)
+		    return;
+		if (target < counters[i])
+		    return_value = stop_now;
+		if (target > counters[i])
+		    return_value = continue_please;
+	    });
+	    return return_value;
+	}
+	while(not_arrived() == continue_please)
+	    this.next();
+	this.setAlwaysMoveFast(false);
+    });
 };

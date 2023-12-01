@@ -16,15 +16,15 @@ export const Controller = IController;
 export const Slip = ISlip;
 export const Util = IUtil;
 
-export let startSlipshow = async () => {
+export let startSlipshow = async (startingPoint, id) => {
     let engine;
     if(typeof MathJax != "undefined")
 	return MathJax.startup.promise.then(() => {
-	    engine = new Engine(document.querySelector("slip-slipshow")).start();
+	    engine = new Engine(document.querySelector("slip-slipshow")).start(startingPoint, id);
 	    return Promise.resolve(engine);
 	});
     else
-	engine = new Engine(document.querySelector("slip-slipshow")).start();
+	engine = new Engine(document.querySelector("slip-slipshow")).start(startingPoint, id);
     return Promise.resolve(engine);
 };
 
