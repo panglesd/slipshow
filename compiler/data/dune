@@ -1,6 +1,6 @@
 (rule
  (deps %{project_root}/staged_dist/slipshow.cdn.min.js)
- (target "slipshow.cdn.min.js")
+ (target "slipshow.cdn.min.js.crunch")
  (enabled_if
   (= %{profile} "with-bundle"))
  (mode promote)
@@ -9,7 +9,7 @@
 
 (rule
  (deps %{project_root}/staged_dist/css/slip.css)
- (target "slip.css")
+ (target "slip.css.crunch")
  (enabled_if
   (= %{profile} "with-bundle"))
  (mode promote)
@@ -18,7 +18,7 @@
 
 (rule
  (deps %{project_root}/staged_dist/css/theorem.css)
- (target "theorem.css")
+ (target "theorem.css.crunch")
  (enabled_if
   (= %{profile} "with-bundle"))
  (mode promote)
@@ -27,7 +27,7 @@
 
 (rule
  (deps %{project_root}/node_modules/mathjax/es5/tex-chtml.js)
- (target "tex-chtml.js")
+ (target "tex-chtml.js.crunch")
  (enabled_if
   (= %{profile} "with-bundle"))
  (mode promote)
@@ -35,49 +35,49 @@
   (copy %{deps} %{target})))
 
 (rule
- (target highlight-js.css)
+ (target highlight-js.css.crunch)
  (enabled_if
   (= %{profile} "with-bundle"))
  (mode promote)
  (action
   (run
-    wget --output-document highlight-js.css https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css
+    wget --output-document highlight-js.css.crunch https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css
 )))
 
 (rule
- (target highlight-js.js)
+ (target highlight-js.js.crunch)
  (enabled_if
   (= %{profile} "with-bundle"))
  (mode promote)
  (action
   (run
-    wget --output-document highlight-js.js https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js
+    wget --output-document highlight-js.js.crunch https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js
 )))
 
 (rule
- (target highlight-js.ocaml.js)
+ (target highlight-js.ocaml.js.crunch)
  (enabled_if
   (= %{profile} "with-bundle"))
  (mode promote)
  (action
   (run
-    wget --output-document highlight-js.ocaml.js https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/ocaml.min.js
+    wget --output-document highlight-js.ocaml.js.crunch https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/ocaml.min.js
 )))
 
 	
 	
 
-(rule
- (target "tailwindcss.js")
- (enabled_if
-  (= %{profile} "with-bundle"))
- (mode promote)
- (action
-  (run
-    wget
-    --output-document
-    tailwindcss.js
-    https://cdn.tailwindcss.com)))
+; (rule
+;  (target "tailwindcss.js")
+;  (enabled_if
+;   (= %{profile} "with-bundle"))
+;  (mode promote)
+;  (action
+;   (run
+;     wget
+;     --output-document
+;     tailwindcss.js
+;     https://cdn.tailwindcss.com)))
 
 ; warning: node modules are not managed by dune
 ; to generate a new bundle one should run `npm install` before the first build
@@ -89,8 +89,7 @@
  (aliases runtest data-files)
  (deps
   (:x data_contents.ml)
-  (glob_files *.js)
-  (glob_files *.css))
+  (glob_files *.crunch))
  (enabled_if
   (= %{profile} "with-bundle"))
  (action
@@ -102,9 +101,7 @@
      ocaml-crunch
      .
      -e
-     js
-     -e
-     css
+     crunch
      -o
      %{x}.corrected
      -m
