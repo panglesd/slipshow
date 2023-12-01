@@ -4,6 +4,7 @@ yarn-error.log
 
 # BUILD ARTEFACTS
 dist
+staged_dist
 bin
 .cache
 .parcel-cache
