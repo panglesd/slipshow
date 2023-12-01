@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.0.29] December 1st, 2023.
+
+### Fixed
+
+- Use `release` mode for compiler, to save space
+
+## [v0.0.28] December 1st, 2023.
+
 ### Added
 
 - Compiler from a superset of markdown to a standalone html page
