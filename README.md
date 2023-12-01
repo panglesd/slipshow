@@ -1,5 +1,9 @@
 # slipshow
 
+:bangbang: Slipshow is under heavy modifications: it now includes a compiler from markdown to a standalone slipshow presentation! :bangbang:
+
+:bangbang: the documentation isn't yet up-to-date. You can have a look [here](choum.net:8085) for some preliminary information.
+
 > This is not another slideshow html5 engine, but a slip engine.
 
 A slipshow is a presentation in between the standard slide-based slideshow and the prezi-like presentation. It is stored in an html file that you open in a browser.
