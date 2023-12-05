@@ -15,7 +15,7 @@ Here are the goals of slipshow, in no specific orders:
 - Lift restrictions from traditional slide-based presentation. In particular, make it closer to a blackboard presentation!
 - Easy to write and readable syntax: markdown with few extensions. No manual placement like in powerpoint. No crazy syntax like in latex.
 - Source of the presentation is plain text: much better for source control, sharing with people, using your favorite editor, readability, compatibility.
-- Open the possibilities for presentations. Watching math video on youtube shows how an explanation supported by animation can make a difficult subject more understandable.
+- Open the possibility for a dynamic presentation. Watching scientific popularization video demonstrates how well-chosen animations can make a difficult subject more understandable.
 
 If you want to see it in action, go to the [example section](#examples). If you want to start writing your presentation, go to [Quick start](#quick-start). Click for the [full documentation and API](#tutorial-api-documentation), or continue reading to know more about this project!
 
