@@ -3,9 +3,31 @@
 Tutorial
 ========
 
-Slipshow.js is a library for displaying slips. A presentation is just an ``html`` file. You do not need much knowledge on either ``html`` nor ``css`` and ``javascript`` to create slip presentations, but it allows any customization of your slips.
+This tutorial assumes you completed the :ref:`getting-started` part of the
+document, more precisely, that the ``slipshow`` tool is installed on your
+machine!
 
-In this tutorial, you will create your first slip presentation. It is entirely self-contained but you should take a look at :ref:`getting-started` to know the different ways of creating a minimal file and starting a project, in particular if you want to write or show your presentation locally, without internet access. The first part is about the creation of simple presentation, following the usual concept of slides. The second part explains more advanced concepts on what makes slips different from other slideshow frameworks.
+Slipshow is a compiler from a source file to a source language to a slipshow
+presentation, so unlike other presentation tools, you simply write text to
+describe your presentation. This makes it portable, lightweight and let you use
+your favorite text editor instead of forcing you into one. It has also
+drawbacks: it can be less visual than other solutions such as "power-point"
+style presentations.
+
+When you turn your source file into a presentation (you *compile* the
+presentation), the file created is actually an html file: the format used to
+describe websites. So, even if it is a local file, you need to open it with a
+web browser with javascript enabled: most web browsers will work. An important
+thing to know is that (unless special setup) the file is fully self-contained:
+it can be viewed offline, and if you want to send your presentation to someone,
+you just need to send them the file. It is also highly portable: it will work on
+any OS with a web browser (virtually all of them!).
+
+In this tutorial, you will create your first slipshow presentation. It is
+entirely self-contained, and introduces both the usage, the syntax and the
+different features of slipshow. Once you are familiar with the basics, for a
+complete overview of each of these, you should refer to the reference: the
+:ref:`syntax`, and :ref:`API`.
 
 .. contents:: Outline of the tutorial
    :local:
@@ -18,688 +40,527 @@ In this tutorial, you will create your first slip presentation. It is entirely s
 ..
    You can also install slip-js it using npm.
 
-A minimal file
----------------------------
+A minimal example
+----------------
 
-A presentation is just an ``html`` file. There are several ways to start a project and get a minimal file, described in :ref:`getting-started`. For self-coontainedness of the tutorial, we suppose you followed the "CDN" version, as it only requires you to copy the following text into a file, called for instance ``myPresentation.html``.
+We start by considering a simple but complete example. This allows us to cover
+the basic usage of the tools, the basic syntax, and the basic features of
+slipshow. The next parts of the tutorial will build on this example to explain
+the more advanced workflows!
+
+To start, copy the following lines in a file, named for instance
+``prime-numbers.md``:
+
+.. code-block:: markdown
+
+   # Prime numbers
+
+   What is a prime number?
+
+   {pause}
+
+   {.definition}
+   A **prime number** is an integer divisible by exactly two integers: 1, and itself.
+
+Compiling your presentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The file that we just created is the *source* for a minimal prime-numbers. In
+order to get the presentation itself, we need to *compile* it, using the
+``slipshow`` tool. In a terminal, issue the following command:
+
+.. code-block:: shell
+
+		$ slipshow prime-numbers.md
+
+Note that if you named your file differently, you need to change the line above
+to reflect that. This should create a file with the same name but a different
+extension: ``prime-numbers.html``. The ``.md`` file is the one you'll use to
+modify the presentation, and the one you'll share with another author of the
+presentation. The ``.html`` file is the one you'll use to view or do your
+presentation, or to share with someone interested in viewing the presentation.
+
+.. note::
+
+   The extension of the file (``.md``) is for ``markdown``. Many editors will
+   open files with such extension in a special mode that will help you read and
+   write it. Slipshow's syntax is an extension of markdown.
+
+Viewing your presentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Now, open the file you just created with a web-browser: ``firefox``,
+``chromium`` or ``chrome``, ``safari``, ``opera``, ``edge``, ... There are
+several ways to do that. One is just to double-click on the file in a graphical
+interface. Another is to open your web browser, and open the file from there
+(often, you can use ``File > Open`` in the menu, or ``Ctrl + o`` or ``Apple +
+o`` on Mac). The last one is to use the command line, since you just used it to
+compile the file: just ``firefox prime-numbers.html`` in the command line.
+
+Once the presentation is opened: you should see the familiar format for
+slide-based presentations (4:3 rectangle with black borders). Click on it to be
+sure you have the window focused, and hit the right arrow key (or equivalently,
+the down-arrow key) to step through the presentation! Right now, it has only two
+steps: the initial one, and the last one.
+
+.. note::
+
+   The process of compiling, opening the presentation to have a feedback on what
+   it will look like can seem tedious. We will see in future parts that it can
+   be improved drastically to have almost live-feedback on what you are writing!
+
+The syntax used
+~~~~~~~~~~~~~~~~
+
+The precise syntax is explained in :ref:`syntax` in an almost readable way, but
+let's focus on the syntax used in this example file.
+
+Titles
+""""""
+
+The file starts with the following line:
+
+.. code-block:: markdown
+
+		# Prime numbers
+
+As you might have guessed from the compiled presentations, this is a
+title. Titles are lines that start with ``#``. The less ``#`` there are, the
+more important the title is.
+
+Paragraphs
+""""""""""
+
+Next, we have a line, separated from the rest of by empty blank lines:
+
+.. code-block:: markdown
+
+   What is a prime number?
+
+This is a paragraph, in the rendered presentation. here, the paragraph is only a
+simple line, but it could a long multiline paragraph. Paragraphs are always
+separated from the rest by empty blank lines!
+
+Pauses
+""""""
+
+The next line is:
+
+.. code-block:: markdown
+
+   {pause}
+
+This line does not appear as is in the rendered presentation. In fact, any
+content inside curly braces ``{...}`` is considered "metadata" and will be
+interpreted in specific ways, but not displayed in the presentation.
+
+The purpose of this line is to inform the slipshow engine that the presentation
+should "pause" here. Indeed, when opening the presentation, only the title and
+the first paragraph were shown. The rest of the presentation was shown only
+after the "right" key was pressed.
+
+Blocks
+""""""
+
+Following the ``{pause}`` keyword, we have the following content:
+
+.. code-block:: markdown
+
+   {.definition}
+   A **prime number** is a number divisible by exactly two integers: 1, and itself.
+
+The meaning should be clear from the rendered presentation: this is a
+"definition" block. As you can see, we use the "metadata" syntax once again: the
+``{.definition}`` part is not rendered, but is used to describe the content. In
+this case, there is a ``.`` followed by a word: such syntax is used for add a
+"class" to an element, an information which is used only for alter the rendering
+of an element.
+
+There are several classes available. To describe blocks, in addition to the
+"definition" block, you can chose from ``.theorem``, ``.proof``, ``.alert``, and
+``.block``.
+
+.. note::
+
+   Blocks support the display of a title. You can provide the title in the
+   metadata: ``{.definition title="Prime numbers"}``. Try it in the example!
+
+
+If your block includes multiple paragraphs or elements, just indent all those
+elements using ``>``. For instance, try the following in the examples:
+
+.. code-block:: markdown
+
+		 {.definition}
+		 > A **prime number** is a number divisible by exactly two integers: 1, and itself.
+		 >
+		 > We consider 1 not to be a primer number, as it is divisible only by one integer.
+
+
+Emphasizing
+"""""""""""
+
+In a presentation we often want to help the viewer by emphasizing some words. In
+slipshow, this is used by enclosing the emphasized words with ``**``. In the
+example, we define primer numbers, and emphasize the defined terms by writing
+``**prime numbers**``!
+
+
+Your presentation as a papyrus
+------------------------------
+
+In the minimal example, we haven't yet touched the *core* of slipshow. But we
+are close to that!
+
+Let's expand our basic example with the fact and proof that there are infinitely
+many prime numbers. This is one of the first important fact to know!
+
+Append the following lines to the example file. (If you are dissatisfied with the
+proof, feel free to improve it 🙂.)
+
+.. code-block:: markdown
+
+
+   {pause}
+
+   {.theorem}
+   There are infinitely many prime numbers.
+
+   {pause .proof}
+   > Suppose there are finitely many prime numbers.
+   >
+   > Let's write $p_0, p_1, \dots, p_{n-1}$ a list of all prime numbers. We define:
+   >
+   > ```math
+   > P = \prod_{i=0}^{n-1}p_i, \quad
+   > N = P + 1.
+   > ```
+   >
+   > {pause}
+   >
+   > Let $p$ be a prime divisor of $N$. We claim that:
+   >
+   > ```math
+   > \forall i, p\neq p_i
+   > ```
+   > {pause}
+   > Indeed,
+   >
+   > ```math
+   > p \text{ divides } N \land\ p\text{ divides } P \implies p\text{ divides } 1
+   > ```
+   >
+   > So $p$ is a prime that is not part of the $p_i$, a contradiction. {pause}
+   > **Therefore, there must exists infinitely many prime numbers.**
+
+
+The modifications you made to the file are not instantly reproduced in your view
+of the presentation, even if you still have the web browser opened on the
+page. Indeed, you need to recompile the file!
+
+.. code-block:: shell
+
+   $ slipshow prime-numbers.md
+
+And it is not even finished, you need to refresh your browser! The usual way to
+do that is to click on the refresh button (a circle arrow), or hit the refresh
+shortcut (usually ``ctrl + r`` or ``apple + r`` on Mac).
+
+Refresh to see the added content, and step through the presentation: What you
+see is quite disapointing. There is too many content for the space available,
+and the last part of the proof overflows and is invisible. Most presentations
+would solve this problem by creating a new slides, but slipshow does it very
+differently, which is what makes it unique!
+
+In this section of the tutorial, we'll see how to tackle the two problems
+identified here:
+
+- Modifying the presentation requires many steps to make it through the rendered
+  version
+- Overflow content is not displayed!
+
+Watching for file changes
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. warning::
+
+   This section is not available for users who have installed ``slipshow``
+   through ``npm``. Such users might want to look for (great!) external
+   solutions such as ``inotifywatch``, ``fswatch`` and ``node-livereload``.
+
+Having to manually recompile the file and refresh the browser to get any
+feedback is not ideal for quick correction of any mistake. There might be
+discrepancies between how the presentation looks as a source code, and how it
+looks in the rendered presentation. The ``slipshow`` tool provides first class
+support for solution against these issue.
+
+A useful flag is ``--watch``. Instead of compiling and stopping, the
+``slipshow`` compiler won't return to the shell at the end of the compilation;
+but will instead wait for any change in an input file. Whenever such change
+happen, the compilation is re-run, keeping the rendered presentation always
+up-to-date with the source file.
+
+.. code-block:: shell
+
+   $ slipshow --watch prime-numbers.md   # watch for file changes
+
+However, event with an automatic recompilation, the web browser does not know
+that the file has changed (unlike many pdf-viewer which can reload on file
+changes). This means that a more complex solution has to be made in order to
+auto-reload the preview on file change. This solution comes as the ``--serve``
+flag, which creates a web-server serving the file, with an auto-reload script on
+file changes.
+
+.. code-block:: shell
+
+   $ slipshow --serve prime-numbers.md   # watch for file changes
+   Visit http://localhost:8080 to view your presentation, with auto-reloading on file changes.
+
+As reminded in the message, the server listens on the 8080 port. Open your
+browser on this url, and enjoy live reloading of your presentation!
+
+Uncovering new content
+~~~~~~~~~~~~~~~~~~~~~~
+
+Recall the problem here. There is too much content for the space we have: the
+proof of the infinity of prime numbers overflow through the bottom end!
+
+The usual answer from traditional slideshow programs are to create a new slide
+to hold the new content. But that does not come without problems. For instance,
+what to put in this new slide? Obviously, we don't want to put *only* the
+overflown content in the new slide: this content should be seen in some context,
+that you want to have on screen.
+
+So, one way would be to duplicate some content from the previous slide on the
+second slide. This works reasonably well, but is often difficult to follow for
+the viewer: it takes cognitive load to distinguish between what is new and what
+is just duplicated content in a new slide.
+
+Moreover, it is also a problem for the author: duplicated content means
+duplicated work when, for instance, rewording the duplicated content.
 
 ..
-   The minimal example of a slip presentation still need to include both the css and the javascript. Either you have the files locally, or you include them from a CDN, a "Content Delivery Network". In the second option, a minimal file looks like the following:
+   - **Create a new slide**
 
-.. code-block:: html
+     When there is no space available, traditional presentations just create a new
+     slide, with all free space. But what to put in this new slide? Obviously, we
+     don't want to put *only* the overflown content in the new slide: this content
+     should be seen in some context, that you want to have on screen.
 
-   <!doctype html>
-   <html>
-     <head>
-       <!-- Add css and theme -->
-       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slipshow@0.0.17/dist/css/slip.css">
-       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slipshow@0.0.17/dist/css/theorem.css">
-     </head>
-     <body>
+     So, one way would be to duplicate some content from the previous slide on the
+     second slide. This works reasonably well, but is often difficult to follow for
+     the viewer: it takes cognitive load to distinguish between what is new and
+     what is just duplicated content in a new slide.
 
-     <!-- This is the presentation -->
-       <slip-slipshow>
-         <!-- Add the slips here -->
-       </slip-slipshow>
-
-     <!-- Include the library -->
-       <script src="https://cdn.jsdelivr.net/npm/slipshow@0.0.17/dist/slipshow.cdn.min.js"></script>
-       <!-- Start the presentation () -->
-       <script>
-         Slipshow.startSlipshow();
-       </script>
-     </body>
-   </html>
+     Moreover, it is also a problem for the author: duplicated content means
+     duplicated work when, for instance, rewording the duplicated content.
 
 ..
-   or in pug:
+   - **Put less content in the slide**.
 
-   .. code-block:: pug
-
-   html
-     head
-       script(src="https://panglesd.github.io/slip-js/src/slipshow.js")
-     body
-       #rootSlip.root
+     This is usually a good thing, not to try to put too much content in a
+     slide. However, there are situations (specifically targetted by slipshow)
+     where you don't want to compromise the content for brevity. For instance, you
+     are making a complex presentation on some topics, and want all proofs to be
+     self-contained.
 
 
 ..
    Create a file named ``myPresentation.html`` and copy-paste the minimal example.
 
-Now open ``myPresentation.html`` with a browser, by double clicking on the file or selecting ``File > Open > "Your file"``. What do you see? Nothing! Let's inspect what is in the file.
+Slipshow's solution
+'''''''''''''''''''
 
-.. code-block:: html
+Slipshow's solution is to, instead of clearing the whole screen and duplicating
+some content, just "scroll" the window down to get more space for the new
+content, hiding only what you do not need anymore!
 
-       <!-- Add css and theme -->
-       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slipshow@0.0.17/dist/css/slip.css">
-       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slipshow@0.0.17/dist/css/theorem.css">
+Let's focus on our specific case here. We don't have enough space for the whole
+proof, but we do not need to see the presentation title, nor the (kind of
+useless) rhetorical question. However, we do want to keep the "prime number"
+definition, as long as possible, and the theorem statement as well, of course.
 
-Those lines include the rules to display the presentation. The first one is mandatory for the presentation, while the second one corresponds to the theme: the background color, how to display the title, the blocks and theorems...
+So what we want to do is to "scroll" (I also like the idea of a papyrus being
+unrolled), until the definition is at the top of the screen. We need two things for that:
 
-.. code-block:: html
+1. Be able to refer to the definition,
+2. Tell the slipshow engine *when* to move the screen (in our case: when we
+   start displaying the proof),
+3. Tell the slipshow engine *where* to move the screen (in our case: such that
+   the definition is on top).
 
-	<!-- This is the presentation -->
-        <slip-slipshow>
-          <!-- Add the slips here -->
-        </slip-slipshow>
+Unsuprisingly, all these information are put in the metadatas parts of slipshow
+syntax: everything enclosed in ``{}``.
 
-This delimits where the slips will be put. In this tutorial, we will (almost) only modify this part.
+For the first point, slipshow uses a system of ids. An id is just a string
+without space, that must be unique amongst all ids. In order to assign an id to
+a block, one must adds the id prepended with a ``#`` inside the metadata of the
+block. For instance, let's add the ``prime-def`` id to the definition. The
+source should look like this now:
 
-.. code-block:: html
+.. code-block:: markdown
 
-     <!-- Include the library -->
-       <script src="https://cdn.jsdelivr.net/npm/slipshow@0.0.17/dist/slipshow.cdn.min.js"></script>
-       <!-- Start the presentation () -->
-       <script>
-         Slipshow.startSlipshow();
-       </script>
+   		 {.definition #prime-def}
+		 A **prime number** is a number divisible by exactly two integers: 1, and itself.
 
-This is to include the library, and start the engine. Usually, you won't have to modify this.
-		
-Writing standard slips
------------------------
-In this section, we learn how to add slips. Everything will be added inside the ``slip-slipshow`` element, that is, inbetween the opening ``<slip-slipshow>`` and the closing ``</slip-slipshow>``:
+For the second point, we use the ``at-unpause`` metadata kind. Such metadata
+should only be grouped with a ``pause`` metadata. It says that a specific action
+must be taken when stepping through this pause.
 
-.. code-block:: html
+For the third point, slipshow has several commands to move the screen. In our
+case, we want to put something on top of the screen, so we use ``up`` keyword.
 
-     <!-- This is the presentation -->
-       <slip-slipshow>
-         <!-- Add the slips here -->
-       </slip-slipshow>
+Putting everything together, we want to add ``up-at-unpause=prime-def`` to the
+pause associated to the proof. The modified source should look like this:
+
+.. code-block:: markdown
+
+   {.definition #prime-def}
+   A **prime number** is a number divisible by exactly two integers: 1, and itself.
+
+   [...]
+
+   {pause .proof up-at-unpause=prime-def}
+   > Suppose there are finitely many prime numbers.
+   > [...]
+
+Try the rendered version of this new source: by getting rid of anything not
+useful, there is enough space in the screen to display the definition, theorem
+statement and whole proof!
+
+The source is still readable, the flow is not broken, and the presentation is
+easy to follow for the viewer.
+
+.. note::
+
+   The main instructions to move the window are ``up`` to put some element on
+   top of the screen, ``down`` to put it at the bottom, and ``center`` to center
+   it.
+
+   If no id is given, the instruction is considered to apply on the element
+   itself. For instance, ``down-at-unpause`` without id is a useful command,
+   that we could have used on the ``proof`` element.
+
+.. note::
+
+   It is not always best to remove everything that you don't need. For instance,
+   in the example above, suppose that you continue by giving an example of a
+   very big prime number. Technically, you could start fresh, the example does
+   not *need* the proof to be on screen. However, for any viewer that is a
+   little bit late, it is very good to keep at least the end of the proof
+   visible, in order to let them finish their note-taking and catch up with the
+   presentation.
 
 
-Adding a plain slip
-^^^^^^^^^^^^^^^^^^^
-Modify the file ``myPresentation.html`` to add the following slip:
-
-.. code-block:: html
-
-         <slip-slip immediate-enter>
-           <slip-title>My first slip</slip-title>
-           <slip-body>
-	     <div>Here is the content of my first slip:</div>
-	     <ul>
-	       <li>A title</li>
-	       <li>Some text</li>
-	       <li>An itemized list</li>
-	     </ul>
-	   </slip-body>
-	 </slip-slip>
-
-Now save the file and reload the page in the browser. Suddenly there is something in the screen! Let us describe what each of these things mean.
-
-* ``<slip-slip>...</slip-slip>`` defines the boundary of the new slip.
-* the attribute ``immediate-enter`` ensures that the slips will be entered in order.
-* ``<slip-title>...</slip-title>`` defines the title of the slip. Notice the french touch! (TODO: remove the french touch)
-* ``<slip-body>...</slip-body>`` defines the body of the slip. It includes margin, padding,...
-
-.. note:: If you don't include the ``<slip-body> ... </slip-body>``, the slip will have no margin. It can be usefull if you want to display something "fullscreen".
-  
-The rest is pure `html <https://www.w3schools.com/html/html_intro.asp>`_. You will need at least a small bit of understanding of html to be comfortable. But I do think that these skills are very useful in our world, and not so hard to learn! See the FAQ.
-
-..
-   For latex users, just translate your ``\begin{itemize}`` and ``\end{itemize}`` respectively into ``<ul>`` and ``</ul>``, and you ``\item`` into ``<li>...</li>``.
-
-Making pauses
-^^^^^^^^^^^^^
-
-Add another slip, just after the closing tag of the previous one, with the following content:
-
-.. code-block:: html
-
-         <slip-slip immediate-enter>
-           <slip-title>Question</slip-title>
-           <slip-body>
-	     <div>What do you think are my three favourite colors?</div>
-	     <ul>
-	       <li>Green</li>
-	       <li>Orange</li>
-	       <li>Apple</li>
-	     </ul>
-	     <div>And you?</div>
-	   </slip-body>
-	 </slip-slip>
-
-Reload the page and push the right arrow. You see the new slip appearing. Suppose that we don't want to reveal directly the results, but we want to show them one by one. This is done with the pause mechanism. At each push of the right arrow, everything after a ``pause`` attribute is revealed, until the next ``pause``. Transform the list into this:
-
-.. code-block:: html
-		
-	     <ul>
-	       <li pause>Green</li>
-	       <li pause>Orange</li>
-	       <li pause>Apple</li>
-	     </ul>
-
-Reload and see what it does! It does what was expected.
-
-.. warning:: You should never let some plain text be in a slip, otherwise the "pause" mechanism won't work for it! This is because css styling cannot be made to text node. For instance, try to move the "And you?" outside of a div, it won't be affected by the pause.
-
-Emphasizing
-^^^^^^^^^^^^^
-
-It is common in presentation to emphasize or highlight some words. The following slip shows how it works in slip-js, add it after the last one.
-
-.. code-block:: html
-
-         <slip-slip immediate-enter>
-           <slip-title>Emphasizing</slip-title>
-           <slip-body>
-	     <div>I have <span emphasize-at="1 4">nothing to say</span> but my <span emphasize-at="2 4">words</span> are <span emphasize-at="3 4">important</span>!</div>
-	   </slip-body>
-	 </slip-slip>
-
-This is pretty self-explanatory! When the attribute ``emphasize-at`` is set to a list of numbers separated by spaces, for instance ``emphasize-at="1 4"``, the content will be emphasized exactly at these steps, that is, step 1 and 4 in the example. There are several other ways to emphasize depending on the need, such as ``mk-emphasize-at``, or soonish ``emphasize-at-unpause``, see the :ref:`listAttributes`.
-
-Stating theorems
-^^^^^^^^^^^^^^^^^
-To state a theorem, juste create a ``div`` with the right class, that is either ``block``, ``definition``, ``theorem`` or ``example``. You can also give a title with the attribute ``title``.
-
-For instance, add the following slip to your presentation and reload it.
-
-.. code-block:: html
-		
-      <slip-slip immediate-enter>
-        <slip-title>Blocks</slip-title>
-        <slip-body>
-	  <div class="block" title="A block">
-	    Here is a block
-	  </div>
-	  <div class="definition" title="Theme">
-	    The theme is the styling of a presentation. It includes the colors  given to the different blocks.
-	  </div>
-	  <div class="theorem" title="Meta Theorem">
-	    This is a theorem.
-	  </div>
-	  <div class="example" title="A block">
-	    For instance, this is an example.
-	  </div>
-	</slip-body>
-      </slip-slip>
-
-Writing Math
-^^^^^^^^^^^^^^^^^
-
-If you need to write mathematics, there are two very good options you can use: Mathjax and Katex. Both can be used with slipshow. You can follow their tutorial, or just add the following line to your file:
-
-.. code-block:: html
-
-   <script type="text/javascript" id="MathJax-script" async
-      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
-   </script>
-
-inside the ``head`` tag. Then, you can write mathematics like this: ``\( \sqrt{2} \)`` for inline and ``\[\bigcup_{n} E_n\]`` for math blocks.
-
-The rest of this section concerns only the people who want to work without internet access. If you downloaded the archive containing the library, it already contains eerything you need to write math using mathjax. If you used ``npm`` to install the library, install  ``mathjax`` or ``katex``  using:
-
-.. code-block:: bash
-
-   $ npm install mathjax@3
-
-and then link the library using
-
-.. code-block:: html
-
-   <script src="node_modules/mathjax/es5/tex-chtml.js" id="MathJax-script" async></script>
-
-This line is automatically added if you generated you minimal file using:
-
-.. code-block:: bash
-		
-   $ npx new-slipshow --mathjax-local > name-of-slipshow-file.html
-   
-Using the full power of slips
+Making your presentation live
 -----------------------------
 
-Until now, we have only used the "classic" part of slideshow presentation. Slip allows some more things!
-
-Moving the point of view
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-Sometimes, you need to show things below the bottom of the slip. You can do this by using one of the attribute ``top-at``,  ``center-at``,  ``bottom-at``, which moves the screen to make the element be at the top (respectively center, bottom) of the screen.
-
-For instance, copy paste this new slip and test the attributes ``down-at``.
-
-.. code-block:: html
-		
-      <slip-slip immediate-enter>
-        <slip-title>Blocks</slip-title>
-        <slip-body>
-	  <div class="block" title="Lispum">
-	    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus auctor sem a libero ultricies convallis. Sed hendrerit tellus mi, malesuada lacinia turpis blandit sit amet. Aliquam auctor metus eu massa imperdiet, vel scelerisque metus aliquet. Nulla facilisi. Aliquam erat volutpat. Aenean nec lacus eu massa lacinia ultricies. In eget sollicitudin eros, sed suscipit elit. Quisque ac scelerisque purus, sit amet sodales est. Curabitur efficitur ultrices nunc. Mauris aliquet nisi commodo nulla condimentum, sed tempor nisi suscipit. Quisque magna augue, ultricies eu commodo ut, fringilla ac erat. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Morbi pharetra felis rutrum mi vehicula dapibus. Aliquam sem mi, fringilla ut facilisis efficitur, efficitur vel odio.
-	    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus auctor sem a libero ultricies convallis. Sed hendrerit tellus mi, malesuada lacinia turpis blandit sit amet. Aliquam auctor metus eu massa imperdiet, vel scelerisque metus aliquet. Nulla facilisi. Aliquam erat volutpat. Aenean nec lacus eu massa lacinia ultricies. In eget sollicitudin eros, sed suscipit elit. Quisque ac scelerisque purus, sit amet sodales est. Curabitur efficitur ultrices nunc. Mauris aliquet nisi commodo nulla condimentum, sed tempor nisi suscipit. Quisque magna augue, ultricies eu commodo ut, fringilla ac erat. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Morbi pharetra felis rutrum mi vehicula dapibus. Aliquam sem mi, fringilla ut facilisis efficitur, efficitur vel odio.
-	    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus auctor sem a libero ultricies convallis. Sed hendrerit tellus mi, malesuada lacinia turpis blandit sit amet. Aliquam auctor metus eu massa imperdiet, vel scelerisque metus aliquet. Nulla facilisi. Aliquam erat volutpat. Aenean nec lacus eu massa lacinia ultricies. In eget sollicitudin eros, sed suscipit elit. Quisque ac scelerisque purus, sit amet sodales est. Curabitur efficitur ultrices nunc. Mauris aliquet nisi commodo nulla condimentum, sed tempor nisi suscipit. Quisque magna augue, ultricies eu commodo ut, fringilla ac erat. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Morbi pharetra felis rutrum mi vehicula dapibus. Aliquam sem mi, fringilla ut facilisis efficitur, efficitur vel odio.
-	  </div>
-	  <div down-at="1">
-	    That was long!
-	  </div>
-	</slip-body>
-      </slip-slip>
-
-
-Acting at unpause
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-Until now, we have seen two mechanisms: the "pause" mechanism, which allows to make things appear one by one, and the "absolute" mechanism, where we specify the step number where things are emphasized or "moved to".
-
-The "absolute" mechanism allows more control, however it is sometimes heavier to work with it. Indeed, slips can become quite long, and if you want to add one step at the beginning, you might have to change every ``emphasize-at`` and ``down-at`` values to increment them by one, by hand.
-
-However, there is a way to couple the "pause" mechanism with other actions than pauses, using the ``*-at-unpause``, where ``*`` can be multiple things, for instance ``down-at-unpause``.
-
-.. code-block:: html
-		
-      <slip-slip immediate-enter>
-        <slip-title>Déclaration des droits de l'Homme et du Citoyen</slip-title>
-        <slip-body>
-	  <ol>
-	    <li>Les hommes naissent et demeurent libres et égaux en droits. Les distinctions sociales ne peuvent être fondées que sur l'utilité commune.</li>
-	    <li pause>Le but de toute association politique est la conservation des droits naturels et imprescriptibles de l'homme. Ces droits sont la liberté, la propriété, la sûreté, et la résistance à l'oppression.</li>
-	    <li pause>Le principe de toute souveraineté réside essentiellement dans la nation. Nul corps, nul individu ne peut exercer d'autorité qui n'en émane expressément.</li>
-	    <li pause>La liberté consiste à pouvoir faire tout ce qui ne nuit pas à autrui : ainsi, l'exercice des droits naturels de chaque homme n'a de bornes que celles qui assurent aux autres membres de la société la jouissance de ces mêmes droits. Ces bornes ne peuvent être déterminées que par la loi.</li>
-	    <li pause>La loi n'a le droit de défendre que les actions nuisibles à la société. Tout ce qui n'est pas défendu par la loi ne peut être empêché, et nul ne peut être contraint à faire ce qu'elle n'ordonne pas.</li>
-	    <li pause>La loi est l'expression de la volonté générale. Tous les citoyens ont droit de concourir personnellement, ou par leurs représentants, à sa formation. Elle doit être la même pour tous, soit qu'elle protège, soit qu'elle punisse. Tous les citoyens étant égaux à ses yeux sont également admissibles à toutes dignités, places et emplois publics, selon leur capacité, et sans autre distinction que celle de leurs vertus et de leurs talents.</li>
-	    <li pause>Nul homme ne peut être accusé, arrêté ni détenu que dans les cas déterminés par la loi, et selon les formes qu'elle a prescrites. Ceux qui sollicitent, expédient, exécutent ou font exécuter des ordres arbitraires, doivent être punis ; mais tout citoyen appelé ou saisi en vertu de la loi doit obéir à l'instant : il se rend coupable par la résistance.</li>
-	    <li pause>La loi ne doit établir que des peines strictement et évidemment nécessaires, et nul ne peut être puni qu'en vertu d'une loi établie et promulguée antérieurement au délit, et légalement appliquée.</li>
-	    <li pause down-at-unpause>Tout homme étant présumé innocent jusqu'à ce qu'il ait été déclaré coupable, s'il est jugé indispensable de l'arrêter, toute rigueur qui ne serait pas nécessaire pour s'assurer de sa personne doit être sévèrement réprimée par la loi.</li>
-	    <li pause down-at-unpause>Nul ne doit être inquiété pour ses opinions, même religieuses, pourvu que leur manifestation ne trouble pas l'ordre public établi par la loi.</li>
-	    <li pause down-at-unpause>La libre communication des pensées et des opinions est un des droits les plus précieux de l'homme : tout citoyen peut donc parler, écrire, imprimer librement, sauf à répondre de l'abus de cette liberté dans les cas déterminés par la loi.</li>
-	    <li pause down-at-unpause>La garantie des droits de l'homme et du citoyen nécessite une force publique : cette force est donc instituée pour l'avantage de tous, et non pour l'utilité particulière de ceux auxquels elle est confiée.</li>
-	    <li pause down-at-unpause>Pour l'entretien de la force publique, et pour les dépenses d'administration, une contribution commune est indispensable : elle doit être également répartie entre tous les citoyens, en raison de leurs facultés.</li>
-	    <li pause down-at-unpause>Tous les citoyens ont le droit de constater, par eux-mêmes ou par leurs représentants, la nécessité de la contribution publique, de la consentir librement, d'en suivre l'emploi, et d'en déterminer la quotité, l'assiette, le recouvrement et la durée.</li>
-	    <li pause down-at-unpause>La société a le droit de demander compte à tout agent public de son administration.</li>
-	    <li pause down-at-unpause>Toute société dans laquelle la garantie des droits n'est pas assurée, ni la séparation des pouvoirs déterminée, n'a point de Constitution.</li>
-	    <li pause down-at-unpause>La propriété étant un droit inviolable et sacré, nul ne peut en être privé, si ce n'est lorsque la nécessité publique, légalement constatée, l'exige évidemment, et sous la condition d'une juste et préalable indemnité.</li>
-	  </ol>
-	</slip-body>
-      </slip-slip>
-
-.. tip:: You can make the ``*-at-unpause`` act on another element by specifying its ``id`` as value of the attribute. For instance, ``<div pause center-at-unpause="thm1">...</div>``, ``<div id="thm1" class="theorem">...</div>`` will center the window around the theorem when the first ``div`` is unpaused.
-
-.. tip:: If a slip has many steps, and you want to go directly to the next one, you can hold ``Shift`` while you press the right arrow. It will go through all steps until the next slip.
-
-.. todo:: The attribute ``emphasize-at-unpause`` is not yet implemented but it will be very soon!
-
-
-Subslips of slips
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-In slips-js, a presentation is not anymore linear, but has rather the shape of a tree. So a slip can easily contain slips inside itself!
-
-Consider the following example, that you can add as a new slip:
-
-.. code-block:: html
-
-      <slip-slip immediate-enter>
-          <slip-title>A review of the numbers</slip-title>
-          <slip-body>
-	      <div>First, we consider the positive numbers</div>
-	      <div style="display: flex; justify-content: space-around;">
-		  <slip-slip delay="1" scale="0.25" auto-enter>
-		      <slip-title>The integer</slip-title>
-		      <slip-body>
-			  <ul>
-			      <li>1 is an integer,</li>
-			      <li pause>2 is an integer,</li>
-			      <li pause>100 is an integer.</li>
-			  </ul>
-		      </slip-body>
-		  </slip-slip>
-		  <slip-slip delay="1" scale="0.25" auto-enter>
-		      <slip-title>The rationnals</slip-title>
-		      <slip-body>
-			  <ul>
-			      <li>1/2 is a rational,</li>
-			      <li pause>2/3 is a rational,</li>
-			      <li pause>567/87 is a rational.</li>
-			  </ul>
-		      </slip-body>
-		  </slip-slip>
-		  <slip-slip delay="1" scale="0.25" auto-enter>
-		      <slip-title>The reals</slip-title>
-		      <slip-body>
-			  <ul>
-			      <li>π is a real,</li>
-			      <li pause>e is a real,</li>
-			      <li pause>d is a real.</li>
-			  </ul>
-		      </slip-body>
-		  </slip-slip>
-	      </div>
-	      <div pause>Then, the negative one</div>
-	      <div style="display: flex; justify-content: space-around;">
-		  <slip-slip delay="1" scale="0.25" auto-enter>
-		      <slip-title>The integer</slip-title>
-		      <slip-body>
-			  <ul>
-			      <li>-1 is an integer,</li>
-			      <li pause>-2 is an integer,</li>
-			      <li pause>-100 is an integer.</li>
-			  </ul>
-		      </slip-body>
-		  </slip-slip>
-		  <slip-slip delay="1" scale="0.25" auto-enter>
-		      <slip-title>The rationnals</slip-title>
-		      <slip-body>
-			  <ul>
-			      <li>-1/2 is a rational,</li>
-			      <li pause>-2/3 is a rational,</li>
-			      <li pause>-567/87 is a rational.</li>
-			  </ul>
-		      </slip-body>
-		  </slip-slip>
-		  <slip-slip delay="1" scale="0.25" auto-enter>
-		      <slip-title>The reals</slip-title>
-		      <slip-body>
-			  <ul>
-			      <li>-π is a real,</li>
-			      <li pause>-e is a real,</li>
-			      <li pause>-d is a real.</li>
-			  </ul>
-		      </slip-body>
-		  </slip-slip>
-	      </div>
-	  </slip-body>
-      </slip-slip>
-
-
-In this example, there are several new things:
-
-* The flexbox ``div`` container is just plain css to make the subslips well aligned,
-* The ``scale`` attribute scales the slip. It is better than a css transform as not only the rendering is smaller, but also the size.
-* The ``delay`` attribute make the camera move slowly to enter the slip.
-
-.. note:: The difference between ``immediate-enter`` and ``auto-enter`` is that a slip with ``immediate-enter`` will be entered before the pause, while ``auto-enter`` will be entered after one stop.
-
-.. note:: The transition back to the parent slip is not very good at this point. This is because the parent slip has ``delay="0"`` by default. We wanted this as we do not want to enter this slip "smoothly" the first time. We will see in Javascripting your presentation how to modify this.
-
-Focusing on elements
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-Another important feature of slipshow is that it allows easily to focus on element of a slip. For instance, add the following more or less self-explanatory slip to you slipshow:
-
-.. code-block:: html
-
-      <slip-slip immediate-enter>
-        <slip-title>A table</slip-title>
-	<slip-body>
-	  <table>
-	    <tr unfocus-at="5">
-	      <td focus-at="1"> Here is some other text </td>
-	      <td focus-at="4"><img src="https://picsum.photos/200"/></td>
-	    </tr>
-	    <tr>
-	      <td focus-at="2"><img src="https://picsum.photos/200"/></td>
-	      <td focus-at="3"> Here is some text </td>
-	    </tr>
-	  </table>
-	</slip-body>	
-      </slip-slip>
-
-.. note:: It is not important which element has the attribute ``unfocus-at``.
-      
-The table of content
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-When you press ``t`` during your presentation. Magic! However, this is quite ugly... and will be improved shortly. You can first add a ``toc-title`` attribute to each of the slips so that they get a name in the table of content.
-
-.. code-block:: html
-
-      <slip-slip immediate-enter toc-title="Name that will appear in the table of content">
-
-.. todo:: The way the table of content looks like will very likely change a lot, please tell me how you would like it to be.
-
-Annotating during a talk
---------------------------------
-
-During a talk, you might need to add a drawing to your explanation, correct a typo, highlight the important part of some text... Especially if you have a drawing tablet!
-
-Slipshow embeds these tools:
-
-* Press ``w`` to start drawing with a blue pen
-* Press ``W`` to start erasing the blue pen
-* Press ``h`` to start highlighting with a yellow highlighter
-* Press ``H`` to start erasing the yellow highlighter
-* Press ``x`` to go back to the normal state (where you can select texts for instance)
-* Press ``X`` to clear all annotations.
-
-Scripting your presentation
---------------------------------
-
-One of the advantage of slip is that you can make animation. In order to start your animation or any special events, you will have to execute javascript at some steps.
-
-Executing Javascript in the flow
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Following other events, there are two ways to execute javascript: with the ``exec-at`` and the ``exec-at-unpause`` attributes. You need to enclose the script you want to execute inside script tags, with type ``slip-script``.
-
-.. code-block:: html
-
-		<script type="slip-script">
-		  // Your script here, with variable "slip"
-		</script>
-
-For instance, recall that the delay for the slip named "A review of the numbers" was set to 0, but when we leave the subslips, we want it to be 1. Just insert wherever in the corresponding slip (but not in a subslip) the following code:
-
-.. code-block:: html
-
-		<script type="slip-script" exec-at="1">
-		  slip.currentDelay = 1;
-		</script>
-
-..
-   However, one should be very careful when making javascript changes. Indeed, slip cannot automatically (yet) revert your scripts, and if you go back in the presentation you should make sure they are reverted at step 0. For instance, in our case:
-
-   .. code-block:: html
-
-		   <script type="slip-script" exec-at="0">
-		     slip.delay = 0;
-		   </script>
-		   <script type="slip-script" exec-at="1">
-		     slip.delay = 1;
-		   </script>
-
-		
-Program your presentation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Let us now focus on the second part of the file: the Javascript. Although it is not necessary to modify it, in some special cases you might need to change a few things.
-
-.. code-block:: html
-
-       <script>
-         Slipshow.startSlipshow();
-       </script>
-
-Modifying this part is more advanced, as it requires to know a bit of javascript, and thus somehow out of the scope of a tutorial. It is still possible to understand the following if you now a bit of computer programming. We will consider the following scenario: we just want to programmatically specify the order of the slips. This way, it is very easy to skip a part by just commenting a few lines,, if you want to have a "light" version of your presentation, or to change the order of the slips.
-
-Start by removing the attributes ``immediate-enter``, and replace them by an ``id``. For instance, the lines starting the first few slips might look like this:
-
-.. code-block:: html
-
-      <slip-slip id="content-first-slip" toc-title="My First Slip">
-      <slip-slip id="question" toc-title="A question about colors">
-      <slip-slip id="emphasizing" toc-title="How to emphasize when you are shy">
-      <slip-slip id="block" toc-title="Meta Definitions, Meta Theorems">
-      <slip-slip id="latin" toc-title="Latin Overflow">
-
-Now, instead of ``Slipshow.startSlipshow();`` in the ``script`` tag, put the following lines:
-
-.. code-block:: javascript
-
-   // Slipshow.startslipshow() create a slipshow engine and starts
-   // it, with slips that have immediate-enter or auto-enter attributes
-   // We commented this line because we want to specify the slips before
-   // starting the slipshow
-   
-   // Slipshow.startSlipshow();
-
-   // We first create a slip engine inside the element "rootSlip"
-   let engine = new Slipshow.Engine();
-   // We get the root Slip of the presentation (remember that a slipshow is a tree)
-   let rootSlip = engine.getRootSlip()
-
-   // We create the slips we want to add as subslips of the root
-   let firstContentSlip = new Slipshow.Slip("content-first-slip", null, [], engine, {})
-   let questionSlip = new Slipshow.Slip("question", null, [], engine, {})
-   let emphasizingSlip = new Slipshow.Slip("emphasizing", null, [], engine, {})
-   let blockSlip = new Slipshow.Slip("block", null, [], engine, {})
-   let latinSlip = new Slipshow.Slip("latin", null, [], engine, {})
-
-   // We add the subslips to the root
-   rootSlip.setAction([
-       firstContentSlip,
-       questionSlip,
-       emphasizingSlip,
-       blockSlip,
-       latinSlip,
-       ]);
-
-   // We start the engine
-   engine.start();
-   
-It is now very easy to mess with the order of the slips. It is also possible add actions instead of subslips. For instance, if you want to add an alert, reverse the order of the slips and omit the emphasizing slip, replace ``rootSlip.setAction([...])`` by:
-
-.. code-block:: javascript
-
-   rootSlip.setAction([
-       latinSlip,
-       (slip) => { alert(); }
-       blockSlip,
-       // emphasizingSlip,
-       questionSlip,
-       firstContentSlip,
-       ]);
-
-
-
-       
-Changing the shortcuts
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. todo:: If have to make this easily possible...
-
-
-
-Including figures with multiple overlays
------------------------------------------
-
-Often in a presentation, you display a figure in several steps. Here is a small `example <https://choum.net/panglesd/slides/tikz-slipshow/sliptest.html>`_ of such a "multiple step" figure. As you can see in the code, slipshow has a custom element dedicated to this, ``slip-figure``, along with several attributes to control it, such as ``figure-next-at``. A ``slip-figure`` must have a ``figure-name`` attribute containing, well, the figure name. Here is an example of such a custom element:
-
-.. code-block:: html
-
-   <img is="slip-figure" figure-name="fig1"/>
-		
-
-..
-   If you are coming from latex, you might have many figures already written in tikz, that you don't want to do again using another tool. Or, you might just want to keep doing your figures in tikz.
-
-   There is a way to include your figures from tikz to slipshow: compile your figures with pdflatex, convert them into svg, and include them in you slipshow presentation. Slipshow provides a script to do this automatically, but the second section explains how to do it "by hand". Note that the script works only for linux.
-
-   Then, there is a custom element, ``slip-figure``, to include and control your figures.
-   Here is an `example <https://choum.net/panglesd/slides/tikz-slipshow/sliptest.html>`_ of a figure made with tikz (courtesy of Pascal Vanier) and included in a slipshow presentation.
-
-
-How it works
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If you want to display a figure in several steps, you need have a folder called ``figures`` in the root of your project, containing a folder with the name of the figure, containing all the figures in ``svg`` format with names ``figure-name_i.svg`` for ``i`` starting from 0.
-
-Then, to control the figure, one has ``figure-next-at``, ``figure-next-at-unpause``, ``figure-set-at-unpause``, as described in the API.
-
-
-Interfacing slipshow and TikZ
---------------------------------------
-
-If you are coming from latex, you might have many figures already written in tikz, that you don't want to do again using another tool. Or, you might just want to keep doing your figures in tikz.
-
-There is a way to include your figures from tikz to slipshow: compile your figures with pdflatex, convert them into svg, and include them in you slipshow presentation. Slipshow provides a script to do this automatically, but the second section explains how to do it "by hand". 
-
-Using the slipshow built-in tools
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If you want to use the scripts in slipshow, you need not to use the CDN provided version, but rather install it using npm or from the archive, see :ref:`getting-started`. Make sure you have a ``package.json`` file in the root folder of your presentation, otherwise type ``npm init`` to create this file. This allows the script to know where the root of the presentation is.
-
-The figures will be stored in he ``figures`` directory, at the root of the project. Each figure will have its own subdirectory. To create a new figure, named for instance ``fig-1``, run:
-
-.. code-block:: bash
-
-   $ npx new-figure
-
-This script will ask you the name of the new figure, and then create the necessary subdirectories and files. In particular, a file in ``figures/awesome-figure/awesome-figure.tex`` has the minimal content to be a tikz figure, waiting for you to complete it. In particular, you can use the beamer overlays to generate multiple figures. In this case, you might need to tell pdflatex how many overlays there are, by enclosing the whole picture into ``\only<1-N>{ ... }`` where ``N`` is the number of overlays.
-
-Now that you have written your figure, you need to compile it. To do so, run:
-
-.. code-block:: bash
-
-   $ npx compile-figure fig-1
-
-or
-
-.. code-block:: bash
-
-   $ npx compile-figure --all
-
-This will create a bunch of ``svg`` files, called ``fig-1_1.svg``, ``fig-1_2.svg``, ... corresponding to the different overlays of your figure.
-
-Lastly, you need to include your figures in your presentation. To do so, add the following html tag:
-
-.. code-block:: html
-
-	<div style="text-align: center" pause>
-	    <img static-at="-2" src="figures/fig-1/fig-1_1.svg"/>
-	    <img static-at="0 2 -3" src="figures/fig-1/fig-1_2.svg"/>
-	    <img static-at="0 3 -4" src="figures/fig-1/fig-1_3.svg"/>
-	    <img static-at="0 4" src="figures/fig-1/fig-1_4.svg"/>
-	</div>
-
-Of course, you need to adjust the values of the parameter ``static-at`` to suit you needs (the doc on :ref:`static-at`). I might add a dedicated tag called ``slip-tikz`` to make it less verbose someday...
-
-
-By hand
-^^^^^^^^^^^^^^^
-
-Here is what the scripts do, in case you want to have more control, and execute the commands yourself. First, just create in the right directory a file containing:
-
-.. code-block:: latex
-
-		\documentclass[beamer]{standalone}
-		\usepackage{tikz}
-		\usetikzlibrary{external}
-		\tikzexternalize % activate! 
-		\begin{document}
-		\begin{standaloneframe}
-		
-		% If overlays do not work, use \only<1-n>{...} where n is the max overlay
-		% \only<1-1000>{
-		  \begin{tikzpicture}[]
-			% ...   
-		  \end{tikzpicture}
-		% }
-		\end{standaloneframe}
-		\end{document}
-
-
-Write your tikz figure in a file like this. Once it is done, to compile, use
-
-.. code-block:: bash
-
-		$ pdflatex -shell-escape
-
-Indeed, in order for the figures to be compiled in separate files by ``tikzexternalize``, you need the argument ``-shell-escape`` to be given. If you are using windows, please tell me whether this works or not!
-
-Running this command will create several files containing the different overlays of the figure (only one file if it has no overlay). If your tex file is called ``name.tex``, they are named ``name-figure0.pdf``, ``name-figure1.pdf``, ... However, html cannot read pdf out of the box, so you need to convert them into ``svg`` files, for instance using the ``pdf2svg`` utility (windows users... sorry I don't know. Maybe `here <https://github.com/jalios/pdf2svg-windows>`_?)
-
-The last step, is to include your files inside your presentation, such as with:
-
-.. code-block:: html
-
-	<div style="text-align: center" pause>
-	    <img static-at="-2" src="figures/fig-1/fig-1_1.svg"/>
-	    <img static-at="0 2 -3" src="figures/fig-1/fig-1_2.svg"/>
-	    <img static-at="0 3 -4" src="figures/fig-1/fig-1_3.svg"/>
-	    <img static-at="0 4" src="figures/fig-1/fig-1_4.svg"/>
-	</div>
-
-A drawback
-^^^^^^^^^^^^^
-
-I don't know why, but the ``.svg`` created by ``pdf2svg`` are huge compared to the pdf files. If you have a presentation with a lot of figures it might start to cause a problem for people with small disk space or slow internet connection. One way would be to find a better pdf2svg converter. Another would be to adapt pdfjs to directly embed pdf, seemlessly.
+The previous sections cover most of the first phase of making a presentation:
+the preparation. Slipshow has also several important features regarding the
+presentation in itself!
+
+Writing on the screen
+~~~~~~~~~~~~~~~~~~~~~
+
+One of the design goal of slipshow is to make digital presentations "less bad"
+compared to the blackboard ones.
+
+One of the great features of boards is that you can write on them while
+explaining, doodle, make arrows all over the place. To try to do something
+similar, the slipshow rendering engine allows you to write on your presentation,
+using the tools present on the top left of your presentation.
+
+The best is still to use the shortcuts:
+
+- ``w`` to write,
+- ``W`` to erase,
+- ``H`` to erase the highlighted parts,
+- ``x`` to go back to a normal cursor,
+- ``X`` to clear all annotations.
+
+Add the following content to your presentation:
+
+.. code-blocks::
+
+   |1|2|3|4|5|6|7|8|9|10|
+   |11|12|13|14|15|16|17|18|19|20|
+   |21|22|23|24|25|26|27|28|29|30|
+   |31|32|33|34|35|36|37|38|39|40|
+   |41|42|43|44|45|46|47|48|49|50|
+   |51|52|53|54|55|56|57|58|59|60|
+   |61|62|63|64|65|66|67|68|69|70|
+   |71|72|73|74|75|76|77|78|79|80|
+   |81|82|83|84|85|86|87|88|89|90|
+   |91|92|93|94|95|96|97|98|99|100|
+
+and explain the erasthotema schema by executing it live!
+
+Starting animations
+~~~~~~~~~~~~~~~~~~~
+
+Many concepts are much easier to understand with animations. I have always been
+impressed at how scientific popularization video can make very difficult
+concepts much easier to understand, and also much more fun to learn. There is no
+point in not using this in our presentations!
+
+Altough slipshow itself does not provide any support for defining animations, it
+allows you to embed a video, or use any javascript library. For a scripted start
+and stepping of your animation, you can use the ``exec-at-unpause`` attribute,
+combined with the special ``slip-script`` codeblock!
+
+Here is a minimal example of an erasthotema animation. It is very dably written,
+in JS/CSS/HTML, so you need some basic skills on these to understand it, but you
+can use libraries to make it less tedious.
+
+.. code-block:: markdown
+
+   {#container}
+
+   {pause exec-at-unpause}
+   ```slip-script
+   let d = document.querySelector("#container");
+   d.style="display: grid; grid-template-columns: repeat(10, auto)";
+   for(i=1; i<=50 ; i++) {
+     let e = document.createElement("div")
+     e.style = "border: 1px solid black; padding: 5px ; margin: 5px";
+     e.textContent = i;
+     d.appendChild(e)
+   }
+   ```
+
+   {pause exec-at-unpause}
+   ```slip-script
+   let array = document.querySelectorAll("#container > *");
+   function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms))
+   }
+   async function do_(start, w) {
+     array[start - 1].style.background="green";
+     await sleep(w);
+     for(j = start * 2 ; j <= 50 ; j += start) {
+       await sleep(125);
+       array[j-1].style.background="red";
+     }
+   }
+   slip.do_ = do_
+   do_(2, 50)
+   ```
+
+   {pause exec-at-unpause}
+   ```slip-script
+   slip.do_(3, 100)
+   ```
+
+
+Using the table of content
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Press ``t`` during a presentation to open the table of content, with fast jump
+to any part of your presentation!
+
+Moving freely
+~~~~~~~~~~~~~
+
+During a presentation, it is important to be not be too tied to the original
+program. You can move the window freely, using the ``i``, ``j``, ``k`` and ``l``
+keys. Change the "fastness" using the ``f`` key.

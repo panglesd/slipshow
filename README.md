@@ -17,6 +17,8 @@ Here are the goals of slipshow, in no specific orders:
 - Source of the presentation is plain text: much better for source control, sharing with people, using your favorite editor, readability, compatibility.
 - Open the possibility for a dynamic presentation. Watching scientific popularization video demonstrates how well-chosen animations can make a difficult subject more understandable.
 
+Slipshow compiles files written in an extension of markdown, to a standalone html file viewable offline in any web browser.
+
 If you want to see it in action, go to the [example section](#examples). If you want to start writing your presentation, go to [Quick start](#quick-start). Click for the [full documentation and API](#tutorial-api-documentation), or continue reading to know more about this project!
 
 ## The issue with traditional slides
