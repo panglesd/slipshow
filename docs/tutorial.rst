@@ -41,7 +41,7 @@ complete overview of each of these, you should refer to the reference: the
    You can also install slip-js it using npm.
 
 A minimal example
-----------------
+-----------------
 
 We start by considering a simple but complete example. This allows us to cover
 the basic usage of the tools, the basic syntax, and the basic features of
@@ -71,14 +71,19 @@ order to get the presentation itself, we need to *compile* it, using the
 
 .. code-block:: shell
 
-		$ slipshow prime-numbers.md
+		$ slipshow prime-numbers.md --serve
+		Visit http://localhost:8080 to view your presentation, with auto-reloading on file changes.
 
-Note that if you named your file differently, you need to change the line above
-to reflect that. This should create a file with the same name but a different
-extension: ``prime-numbers.html``. The ``.md`` file is the one you'll use to
-modify the presentation, and the one you'll share with another author of the
+This command (which do not return due to the ``--serve`` flag) creates a file
+with the same name as the input name, but a different extension:
+``prime-numbers.html``. The ``.md`` file is the one you'll use to modify the
+presentation, and the one you'll share with another author of the
 presentation. The ``.html`` file is the one you'll use to view or do your
 presentation, or to share with someone interested in viewing the presentation.
+
+The ``--serve`` flag is very useful when writing your presentation. It will
+propagate any saved changes in the input file, and "live-reload" the
+presentation served at the address ``http://localhost:8080``.
 
 .. note::
 
@@ -89,13 +94,19 @@ presentation, or to share with someone interested in viewing the presentation.
 Viewing your presentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Now, open the file you just created with a web-browser: ``firefox``,
-``chromium`` or ``chrome``, ``safari``, ``opera``, ``edge``, ... There are
-several ways to do that. One is just to double-click on the file in a graphical
-interface. Another is to open your web browser, and open the file from there
-(often, you can use ``File > Open`` in the menu, or ``Ctrl + o`` or ``Apple +
-o`` on Mac). The last one is to use the command line, since you just used it to
-compile the file: just ``firefox prime-numbers.html`` in the command line.
+Now, go to `<http://localhost:8080>`_ to see your presentation. You could also
+open the file you just created with any web browser, which is actually the
+recommended way outside of the preparation of the presentation: you won't need
+``slipshow`` running for that!
+
+.. note::
+
+   There are several ways to open an html file in a browser. One is just to
+   double-click on the file in a graphical interface. Another is to open your
+   web browser, and open the file from there (often, you can use ``File > Open``
+   in the menu, or ``Ctrl + o`` or ``Apple + o`` on Mac). The last one is to use
+   the command line, since you just used it to compile the file: just ``firefox
+   prime-numbers.html`` in the command line.
 
 Once the presentation is opened: you should see the familiar format for
 slide-based presentations (4:3 rectangle with black borders). Click on it to be
@@ -103,17 +114,20 @@ sure you have the window focused, and hit the right arrow key (or equivalently,
 the down-arrow key) to step through the presentation! Right now, it has only two
 steps: the initial one, and the last one.
 
-.. note::
-
-   The process of compiling, opening the presentation to have a feedback on what
-   it will look like can seem tedious. We will see in future parts that it can
-   be improved drastically to have almost live-feedback on what you are writing!
+Try to make a modification in ``prime-numbers.md`` and save the file. The page
+opened on ``localhost:8080`` should refresh automatically with the new content!
 
 The syntax used
 ~~~~~~~~~~~~~~~~
 
-The precise syntax is explained in :ref:`syntax` in an almost readable way, but
-let's focus on the syntax used in this example file.
+Slipshow uses an extension of Markdown for its main syntax. The precise syntax
+is explained in :ref:`syntax` in an almost readable way, but let's focus on the
+syntax used in this example file.
+
+.. note::
+
+   If you are familiar with markdown, the important things to read are
+   `pauses`_ and `blocks`_.
 
 Titles
 """"""
@@ -253,74 +267,14 @@ proof, feel free to improve it 🙂.)
    > So $p$ is a prime that is not part of the $p_i$, a contradiction. {pause}
    > **Therefore, there must exists infinitely many prime numbers.**
 
+Let's look at the updated rendering of the presentation: What you see is quite
+disapointing. There is too many content for the space available, and the last
+part of the proof overflows and is invisible. Most presentations would solve
+this problem by creating a new slide, but slipshow does it very differently,
+which is what makes it unique!
 
-The modifications you made to the file are not instantly reproduced in your view
-of the presentation, even if you still have the web browser opened on the
-page. Indeed, you need to recompile the file!
-
-.. code-block:: shell
-
-   $ slipshow prime-numbers.md
-
-And it is not even finished, you need to refresh your browser! The usual way to
-do that is to click on the refresh button (a circle arrow), or hit the refresh
-shortcut (usually ``ctrl + r`` or ``apple + r`` on Mac).
-
-Refresh to see the added content, and step through the presentation: What you
-see is quite disapointing. There is too many content for the space available,
-and the last part of the proof overflows and is invisible. Most presentations
-would solve this problem by creating a new slides, but slipshow does it very
-differently, which is what makes it unique!
-
-In this section of the tutorial, we'll see how to tackle the two problems
-identified here:
-
-- Modifying the presentation requires many steps to make it through the rendered
-  version
-- Overflow content is not displayed!
-
-Watching for file changes
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. warning::
-
-   This section is not available for users who have installed ``slipshow``
-   through ``npm``. Such users might want to look for (great!) external
-   solutions such as ``inotifywatch``, ``fswatch`` and ``node-livereload``.
-
-Having to manually recompile the file and refresh the browser to get any
-feedback is not ideal for quick correction of any mistake. There might be
-discrepancies between how the presentation looks as a source code, and how it
-looks in the rendered presentation. The ``slipshow`` tool provides first class
-support for solution against these issue.
-
-A useful flag is ``--watch``. Instead of compiling and stopping, the
-``slipshow`` compiler won't return to the shell at the end of the compilation;
-but will instead wait for any change in an input file. Whenever such change
-happen, the compilation is re-run, keeping the rendered presentation always
-up-to-date with the source file.
-
-.. code-block:: shell
-
-   $ slipshow --watch prime-numbers.md   # watch for file changes
-
-However, event with an automatic recompilation, the web browser does not know
-that the file has changed (unlike many pdf-viewer which can reload on file
-changes). This means that a more complex solution has to be made in order to
-auto-reload the preview on file change. This solution comes as the ``--serve``
-flag, which creates a web-server serving the file, with an auto-reload script on
-file changes.
-
-.. code-block:: shell
-
-   $ slipshow --serve prime-numbers.md   # watch for file changes
-   Visit http://localhost:8080 to view your presentation, with auto-reloading on file changes.
-
-As reminded in the message, the server listens on the 8080 port. Open your
-browser on this url, and enjoy live reloading of your presentation!
-
-Uncovering new content
-~~~~~~~~~~~~~~~~~~~~~~
+The problem of uncovering new content
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Recall the problem here. There is too much content for the space we have: the
 proof of the infinity of prime numbers overflow through the bottom end!
@@ -368,8 +322,8 @@ duplicated work when, for instance, rewording the duplicated content.
 ..
    Create a file named ``myPresentation.html`` and copy-paste the minimal example.
 
-Slipshow's solution
-'''''''''''''''''''
+Slipshow's way
+~~~~~~~~~~~~~~
 
 Slipshow's solution is to, instead of clearing the whole screen and duplicating
 some content, just "scroll" the window down to get more space for the new
@@ -383,7 +337,8 @@ definition, as long as possible, and the theorem statement as well, of course.
 So what we want to do is to "scroll" (I also like the idea of a papyrus being
 unrolled), until the definition is at the top of the screen. We need two things for that:
 
-1. Be able to refer to the definition,
+1. Be able to refer to a part of your presentation (in our case, the
+   definition),
 2. Tell the slipshow engine *when* to move the screen (in our case: when we
    start displaying the proof),
 3. Tell the slipshow engine *where* to move the screen (in our case: such that
@@ -391,6 +346,9 @@ unrolled), until the definition is at the top of the screen. We need two things 
 
 Unsuprisingly, all these information are put in the metadatas parts of slipshow
 syntax: everything enclosed in ``{}``.
+
+Be able to refer to a part of your presentation
+"""""""""""""""""""""""""""""""""""""""""""""""
 
 For the first point, slipshow uses a system of ids. An id is just a string
 without space, that must be unique amongst all ids. In order to assign an id to
@@ -403,14 +361,23 @@ source should look like this now:
    		 {.definition #prime-def}
 		 A **prime number** is a number divisible by exactly two integers: 1, and itself.
 
+Tell the engine *when* to move the screen
+"""""""""""""""""""""""""""""""""""""""""
+
 For the second point, we use the ``at-unpause`` metadata kind. Such metadata
 should only be grouped with a ``pause`` metadata. It says that a specific action
 must be taken when stepping through this pause.
 
+Tell the engine *where* to move the screen
+""""""""""""""""""""""""""""""""""""""""""
+
 For the third point, slipshow has several commands to move the screen. In our
 case, we want to put something on top of the screen, so we use ``up`` keyword.
 
-Putting everything together, we want to add ``up-at-unpause=prime-def`` to the
+Putting everything together
+"""""""""""""""""""""""""""
+
+So, we want to add ``up-at-unpause=prime-def`` to the
 pause associated to the proof. The modified source should look like this:
 
 .. code-block:: markdown
@@ -478,9 +445,10 @@ The best is still to use the shortcuts:
 - ``x`` to go back to a normal cursor,
 - ``X`` to clear all annotations.
 
-Add the following content to your presentation:
+Add the following content to your presentation, which creates a table in
+slipshow, following markdown "GFM" syntax:
 
-.. code-blocks::
+.. code-block::
 
    |1|2|3|4|5|6|7|8|9|10|
    |11|12|13|14|15|16|17|18|19|20|
