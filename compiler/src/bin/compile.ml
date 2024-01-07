@@ -38,7 +38,7 @@ let mime_of_ext = function
 
 let to_asset s =
   if Astring.String.is_infix ~affix:"://" s || String.starts_with ~prefix:"//" s
-  then Slip_of_mark.Remote s
+  then Slipshow.Remote s
   else
     let fp = Fpath.v s in
     match Io.read (`File fp) with
@@ -59,7 +59,7 @@ let compile ~math_link ~slip_css_link ~theorem_css_link ~slipshow_js_link ~input
   let f () =
     let+ content = Io.read input in
     let html =
-      Slip_of_mark.convert ?math_link ?slip_css_link ?theorem_css_link
+      Slipshow.convert ?math_link ?slip_css_link ?theorem_css_link
         ?slipshow_js_link ~resolve_images:to_asset content
     in
     match output with

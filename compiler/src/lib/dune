@@ -1,4 +1,4 @@
 (library
- (name slip_of_mark)
- (public_name slip_of_mark)
+ (name slipshow)
+ (public_name slipshow)
  (libraries cmarkit data_files base64 fpath magic-mime))

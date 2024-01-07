@@ -6,9 +6,9 @@ maintainer: ["Paul-Elliot"]
 authors: ["Paul-Elliot"]
 license: "MIT"
 tags: ["slipsow" "presentation" "slideshow" "beamer"]
-homepage: "https://github.com/panglesd/slip_of_mark"
+homepage: "https://github.com/panglesd/slipshow"
 doc: "https://url/to/documentation"
-bug-reports: "https://github.com/panglesd/slip_of_mark/issues"
+bug-reports: "https://github.com/panglesd/slipshow/issues"
 depends: [
   "ocaml"
   "dune" {>= "3.6"}
@@ -34,4 +34,4 @@ build: [
     "@doc" {with-doc}
   ]
 ]
-dev-repo: "git+https://github.com/panglesd/slip_of_mark.git"
+dev-repo: "git+https://github.com/panglesd/slipshow.git"

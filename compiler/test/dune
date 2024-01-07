@@ -1,5 +1,5 @@
 (test
- (name slip_of_mark))
+ (name slipshow))
 
 (cram
- (deps %{bin:slip_of_mark}))
+ (deps %{bin:slipshow}))

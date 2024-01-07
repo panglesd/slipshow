@@ -1,11 +1,11 @@
 (lang dune 3.6)
 
-(name slip_of_mark)
+(name slipshow)
 
 (generate_opam_files true)
 
 (source
- (github panglesd/slip_of_mark))
+ (github panglesd/slipshow))
 
 (authors "Paul-Elliot")
 
@@ -18,7 +18,7 @@
 (using directory-targets 0.1)
 
 (package
- (name slip_of_mark)
+ (name slipshow)
  (synopsis "A compiler from markdown to slipshow")
  (description "A longer description")
  (depends

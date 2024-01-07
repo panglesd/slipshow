@@ -111,5 +111,5 @@
 
 (library
  (name data_files)
-  (public_name slip_of_mark.datafiles)
+  (public_name slipshow.datafiles)
  (wrapped false))
