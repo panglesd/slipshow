@@ -1,0 +1,48 @@
+(executable
+ (public_name slipshow)
+ (name main)
+ (modes native)
+ (modules main compile)
+ (libraries
+  slip_of_mark
+  cmdliner
+  fpath
+  logs.cli
+  fmt.cli
+  fmt.tty
+  logs.fmt
+  serve
+  serve_native
+  ))
+
+(rule
+ (deps main.ml)
+ (target main_js.ml)
+ (action
+  (bash
+   "printf 'module Compile = Compile_js\n' > main_js.ml && cat main.ml >> main_js.ml")))
+
+(rule
+ (copy compile.ml compile_js.ml))
+
+(executable
+ (name main_js)
+ (modes js)
+ (modules main_js compile_js)
+ (libraries
+  slip_of_mark
+  cmdliner
+  fpath
+  logs.cli
+  fmt.cli
+  fmt.tty
+  logs.fmt
+  serve
+  serve_js
+  ))
+
+(library
+ (name serve)
+ (virtual_modules serve)
+ (modules serve)
+ (libraries fpath))

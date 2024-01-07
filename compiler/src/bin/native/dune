@@ -1,0 +1,12 @@
+(library
+ (name serve_native)
+ (modes native)
+ (implements serve)
+ (libraries
+   fpath
+   lwt
+   inotify.lwt
+   dream
+   dream-livereload
+  ; bos
+))
