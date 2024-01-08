@@ -1606,10 +1606,10 @@ function Slip$1(name, fullName, actionL, ng, options) {
 	    that.sketchpadHighlight.weight = 30;
 	    that.sketchpadHighlight.smoothing = 0.2;
 	    that.resizeObserver = new ResizeObserver(entries => {
-		canvas.height = slipScaleContainer.offsetHeight/that.scale;
-		canvas.width = slipScaleContainer.offsetWidth/that.scale;
-		canvas2.height = slipScaleContainer.offsetHeight/that.scale;
-		canvas2.width = slipScaleContainer.offsetWidth/that.scale;
+		canvas.height = that.element.firstChild.offsetHeight/that.scale;
+		canvas.width = that.element.firstChild.offsetWidth/that.scale;
+		canvas2.height = that.element.firstChild.offsetHeight/that.scale;
+		canvas2.width = that.element.firstChild.offsetWidth/that.scale;
 		that.sketchpad.smoothing = 0.2;
 		that.sketchpad.color = "blue";
 		that.sketchpadHighlight.color = "yellow";
