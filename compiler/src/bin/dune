@@ -3,6 +3,9 @@
  (name main)
  (modes native)
  (modules main compile)
+ (flags
+  (:standard
+   (:include static-linking-flags/flags)))
  (libraries
   slipshow
   cmdliner

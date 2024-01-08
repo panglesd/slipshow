@@ -29,6 +29,13 @@
    base64
    bos
    cmarkit
+   lwt
+   inotify
+   js_of_ocaml-compiler
+   magic-mime
+   dream
+   fpath
+   dream-livereload
   (odoc :with-doc)
   (ocamlformat
    (and :with-dev-setup (= 0.26.1))))

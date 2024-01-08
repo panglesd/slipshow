@@ -1,0 +1,140 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  linux-build:
+    strategy:
+      matrix:
+        platform:
+          - { name: "linux/amd64", filename_suffix: "linux-amd64", target_arch: "x86_64" }
+          - { name: "linux/arm64", filename_suffix: "linux-arm64", target_arch: "arm64" }
+        runAllTests:
+          - ${{ startsWith(github.ref, 'refs/tags/') }}
+        # exclude:
+        #   - platform: { name: "linux/arm64", filename_suffix: "linux-arm64", target_arch: "arm64"  }
+        #     runAllTests: false
+      fail-fast: false
+    runs-on: ubuntu-latest
+
+    env:
+      SLIPSHOW_PLATFORM: ${{ matrix.platform.name }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Needed to fetch tags
+
+      # The latest tag is needed to build the release tarball but
+      # actions/checkout fails to fetch it properly.
+      # https://github.com/actions/checkout/issues/882
+      - name: Fetch tags
+        run: git fetch --tags --force origin
+
+      - name: Set up QEMU
+        id: qemu
+        uses: docker/setup-qemu-action@v1
+        with:
+          image: tonistiigi/binfmt:latest
+          platforms: all
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          driver: docker
+
+      - name: Check images
+        run: docker image ls
+
+      - name: Build release tarball
+        # if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          mkdir -p new_release; chmod a+rw new_release;
+          docker buildx build --platform ${{ matrix.platform.name }} --load \
+            -f release/Dockerfile \
+            -t slipshow-release-${{ matrix.platform.name }} .
+          docker run --platform ${{ matrix.platform.name }} -v $PWD/new_release:/release \
+            -e VERSION=$GITHUB_REF_NAME \
+            -e TARGETOS=linux \
+            -e TARGETARCH=${{ matrix.platform.target_arch }} \
+            -e OUTPUT=/release \
+            slipshow-release-${{ matrix.platform.name }} \
+            opam exec -- bash release/release.sh
+
+      - name: upload archives
+        # if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/upload-artifact@v3
+        with:
+          name: archives
+          path: new_release/*
+
+  mac-build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-latest
+        ocaml-compiler:
+          - 4.14.x
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      # See the same step in the linux build
+      - name: Fetch tags
+        run: git fetch --tags --force origin
+
+      - name: Use OCaml ${{ matrix.ocaml-compiler }}
+        uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: ${{ matrix.ocaml-compiler }}
+          dune-cache: ${{ matrix.os != 'macos-latest' }}
+
+      - name: Install dependencies
+        run: opam install --deps-only --with-test --with-doc -y .
+
+      - name: Build release tarball
+        # if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          mkdir -p new_release;
+          export OUTPUT=$PWD/new_release;
+          export TARGETOS=macos;
+          export TARGETARCH=x86_64;
+          export VERSION=$GITHUB_REF_NAME;
+          opam exec -- bash release/release.sh
+
+      - name: upload archives
+        # if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/upload-artifact@v3
+        with:
+          name: archives
+          path: new_release/*
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [linux-build, mac-build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: archives
+          path: archives
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            archives/*
