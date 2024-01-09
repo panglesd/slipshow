@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.0.30] January 9th, 2024.
+
+## Fixed
+
+- Fix sketchpad disappearing when going backward
+
 ## [v0.0.29] December 1st, 2023.
 
 ### Fixed
