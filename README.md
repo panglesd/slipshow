@@ -4,7 +4,7 @@
 >
 > Slipshow is under heavy modifications: it now includes a compiler from markdown to a standalone slipshow presentation!
 >
-> The documentation isn't yet up-to-date. You can have a look [here](http://choum.net:8085) for some preliminary information.
+> The documentation isn't yet up-to-date. You can have at look at [sliphub.choum.net](https://sliphub.choum.net) for some preliminary information.
 
 **Slipshow is a tool specifically designed for technical presentations where traditional slides are not enough.**
 
@@ -46,7 +46,7 @@ You can find an extensive documentation, with a tutorial at the readthedocs [doc
 
 ## Quick start
 
-For a super quick start, just click [here](http://choum.net:8085) to start writing a presentation online.
+For a super quick start, just click visit [sliphub.choum.net](https://sliphub.choum.net) to start writing a presentation online.
 
 For using slipshow offline, you'll need to install the slipshow tool. Currently, there are several ways to get it:
 

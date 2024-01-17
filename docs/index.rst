@@ -9,7 +9,7 @@ Welcome to slipshow's documentation!
 .. warning::
    Slipshow is under heavy modifications: it now includes a compiler from markdown to a standalone slipshow presentation!
 
-   The documentation isn't yet up-to-date. You can have a look `here <http://choum.net:8085>`_ for some preliminary information.
+   The documentation isn't fully up-to-date yet. You can have a look at `sliphub.choum.net <https://sliphub.choum.net>`_ for some preliminary information.
 
 **Slipshow is a tool specifically designed for technical presentations where traditional slides are not enough.**
 

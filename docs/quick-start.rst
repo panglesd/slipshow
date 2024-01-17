@@ -14,7 +14,7 @@ This page is about the different ways to get access to the slipshow compiler: ei
 Using a webservice
 ------------------
 
-The simplest way to get started with slipshow is to go to `http://choum.net:8085/new`_. This will open a page with an editor on the left, and a preview on the right.
+The simplest way to get started with slipshow is to go to `sliphub.choum.net <https://sliphub.choum.net/new>`_. This will open a page with an editor on the left, and a preview on the right.
 
 Currently, the interface is quite minimal. Your progress is saved "live" and you can even do collaborative editing: two people editing the same document. But do not type an accent! Or your progress won't be saved anymore...
 
