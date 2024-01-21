@@ -275,6 +275,10 @@ export default function (root) {
 		this.gotoSlip(newCurrentSlip);
 	    return true;
 	}
+        if (currentSlip.element.tagName == "SLIP-SLIPSHOW" && currentSlip.getActionIndex() >= currentSlip.getMaxNext()) {
+            this.previous();
+            return false
+        }
 	return false;
     };
     this.nextSlip = function () {
@@ -315,6 +319,10 @@ export default function (root) {
 		// this.gotoSlip(newCurrentSlip, {delay: currentSlip.delay});
 	    // this.showToC();
 	    this.updateCounter();
+            if (currentSlip.element.tagName == "SLIP-SLIPSHOW" && currentSlip.getActionIndex() <= 0) {
+                this.next();
+                return true
+            }
 	    return true;
 	} else if(options){
 	    setTimeout(() => {
