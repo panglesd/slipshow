@@ -102,7 +102,7 @@ var Slipshow = (function (exports) {
 	  });
 	  return newElem;
 	}
-	function replaceSubslips(clone, subslips, sketchpad, sketchpadHighlight) {
+	function replaceSubslips(clone, subslips, sketchpad, sketchpadHighlight, element) {
 	  let placeholders = myQueryAll(clone, ".toReplace");
 	  subslips.forEach((subslip, index) => {
 	    let importantAttributes = ["pause", "step", "auto-enter", "immediate-enter"];
@@ -111,6 +111,7 @@ var Slipshow = (function (exports) {
 	    });
 	    placeholders[index].replaceWith(subslip);
 	  });
+	  element.replaceWith(clone);
 	  let sketchPlaceholder = myQueryAll(clone, ".toReplaceSketchpad");
 	  if (sketchPlaceholder[0]) sketchPlaceholder[0].replaceWith(sketchpad);
 	  if (sketchPlaceholder[1]) sketchPlaceholder[1].replaceWith(sketchpadHighlight);
@@ -364,14 +365,15 @@ var Slipshow = (function (exports) {
 	};
 	const PathDrawingModes = [DrawingMode.DRAW, DrawingMode.ERASE];
 	class Atrament extends AtramentEventTarget {
-	  constructor(selector, config = {}) {
+	  constructor(selector) {
+	    let config = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 	    if (typeof window === 'undefined') {
 	      throw new Error('Looks like we\'re not running in a browser');
 	    }
 	    super();
 
 	    // get canvas element
-	    if (selector instanceof window.Node && selector.tagName === 'CANVAS') this.canvas = selector;else if (typeof selector === 'string') this.canvas = document.querySelector(selector);else throw new Error(`can't look for canvas based on '${selector}'`);
+	    if (selector instanceof window.Node && selector.tagName === 'CANVAS') this.canvas = selector;else if (typeof selector === 'string') this.canvas = document.querySelector(selector);else throw new Error("can't look for canvas based on '".concat(selector, "'"));
 	    if (!this.canvas) throw new Error('canvas not found');
 
 	    // set external canvas params
@@ -1198,9 +1200,17 @@ var Slipshow = (function (exports) {
 	    this.setActionIndex(-1);
 	    let subSlipList = myQueryAll(this.element, "slip-slip");
 	    let clone = clonedElement.cloneNode(true);
-	    replaceSubslips(clone, subSlipList, this.sketchpadCanvas, this.sketchpadCanvasHighlight);
-	    this.element.replaceWith(clone);
+	    replaceSubslips(clone, subSlipList, this.sketchpadCanvas, this.sketchpadCanvasHighlight, this.element);
+	    // let old_element = this.element;
 	    this.element = clone;
+	    // old_element.replaceWith(this.element);
+	    //	setTimeout(() => {
+	    //	},0);
+	    //         console.log("GO", this.element, clone)
+	    // 	setTimeout(() => {
+	    // 	this.element.parentElement.insertBefore(clone, this.element);
+	    // //	this.element = clone;
+	    // 	},10);
 	    this.init();
 	    this.firstVisit();
 	    delete this.currentX;
@@ -1212,11 +1222,7 @@ var Slipshow = (function (exports) {
 	    }, 0);
 	  };
 	  this.reObserve = () => {
-	    let slipScaleContainer = this.element.firstChild;
-	    if (slipScaleContainer && slipScaleContainer.classList && slipScaleContainer.classList.contains("slip-scale-container")) this.resizeObserver.observe(slipScaleContainer);
-	    this.getSubSlipList().forEach(slip => {
-	      slip.reObserve();
-	    });
+	    return;
 	  };
 
 	  // ******************************
@@ -1475,12 +1481,20 @@ var Slipshow = (function (exports) {
 	      canvas.style.opacity = "1";
 	      that.sketchpadCanvas = canvas;
 	      let q = that.queryAll(".sketchpad");
+	      console.log("replacing", q[0], "with", canvas);
 	      q[0].replaceWith(canvas);
 	      //     if(element && element.firstChild && element.firstChild.firstChild)
 	      //     element.firstChild.firstChild.appendChild(canvas);
 	      // else
 	      //     element.appendChild(canvas);
-	      let sketchpad = new Atrament(canvas);
+
+	      let sketchpad;
+	      if (that.sketchpad) {
+	        sketchpad = that.sketchpad;
+	      } else {
+	        console.log("new sketchpad");
+	        sketchpad = new Atrament(canvas);
+	      }
 	      sketchpad.smoothing = 0.2;
 	      sketchpad.color = "blue";
 	      that.sketchpad = sketchpad;
@@ -1501,17 +1515,25 @@ var Slipshow = (function (exports) {
 	      that.sketchpadHighlight.weight = 30;
 	      that.sketchpadHighlight.smoothing = 0.2;
 	      that.resizeObserver = new ResizeObserver(entries => {
-	        canvas.height = that.element.firstChild.offsetHeight / that.scale;
-	        canvas.width = that.element.firstChild.offsetWidth / that.scale;
-	        canvas2.height = that.element.firstChild.offsetHeight / that.scale;
-	        canvas2.width = that.element.firstChild.offsetWidth / that.scale;
-	        that.sketchpad.smoothing = 0.2;
-	        that.sketchpad.color = "blue";
-	        that.sketchpadHighlight.color = "yellow";
-	        that.sketchpadHighlight.weight = 30;
-	        that.sketchpadHighlight.smoothing = 0.2;
+	        if (that.element.firstChild.offsetHeight > 0 && that.element.firstChild.offsetWidth > 0) {
+	          canvas.height = that.element.firstChild.offsetHeight / that.scale;
+	          canvas.width = that.element.firstChild.offsetWidth / that.scale;
+	          canvas2.height = that.element.firstChild.offsetHeight / that.scale;
+	          canvas2.width = that.element.firstChild.offsetWidth / that.scale;
+	          that.sketchpad.smoothing = 0.2;
+	          that.sketchpad.color = "blue";
+	          that.sketchpadHighlight.color = "yellow";
+	          that.sketchpadHighlight.weight = 30;
+	          that.sketchpadHighlight.smoothing = 0.2;
+	        }
 	      });
-	      if (slipScaleContainer && slipScaleContainer.classList && slipScaleContainer.classList.contains("slip-scale-container")) that.resizeObserver.observe(slipScaleContainer);
+	      canvas.height = that.element.firstChild.offsetHeight / that.scale;
+	      canvas.width = that.element.firstChild.offsetWidth / that.scale;
+	      canvas2.height = that.element.firstChild.offsetHeight / that.scale;
+	      canvas2.width = that.element.firstChild.offsetWidth / that.scale;
+	      that.sketchpad.color = "blue";
+	      if (slipScaleContainer && slipScaleContainer.classList && slipScaleContainer.classList.contains("slip-scale-container")) console.log();
+	      //that.resizeObserver.observe(slipScaleContainer);
 	    }, 0);
 	  };
 	  setTimeout(function () {
@@ -1600,54 +1622,7 @@ var Slipshow = (function (exports) {
 	function IEngine (root) {
 	  function prepareRoot(rootElem) {
 	    let container = document.createElement("div");
-	    container.innerHTML = `	
-	<div class="toc-slip" style="display:none;"></div>
-        <div id="open-window">
-	  <div class="cpt-slip">0</div>
-	  <div class="slip-writing-toolbar">
-              <div class="slip-toolbar-tool no-tool">
-                  <div class="slip-toolbar-pen">
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" width="20" height="20" style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);" preserveAspectRatio="xMidYMid meet" viewBox="0 0 36 36"><path class="clr-i-outline clr-i-outline-path-1" d="M33.87 8.32L28 2.42a2.07 2.07 0 0 0-2.92 0L4.27 23.2l-1.9 8.2a2.06 2.06 0 0 0 2 2.5a2.14 2.14 0 0 0 .43 0l8.29-1.9l20.78-20.76a2.07 2.07 0 0 0 0-2.92zM12.09 30.2l-7.77 1.63l1.77-7.62L21.66 8.7l6 6zM29 13.25l-6-6l3.48-3.46l5.9 6z" fill="#000000"/><rect x="0" y="0" width="36" height="36" fill="rgba(0, 0, 0, 0)" /></svg>
-                  </div>
-                  <div class="slip-toolbar-highlighter">
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" width="25" height="25" style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);" preserveAspectRatio="xMidYMid meet" viewBox="0 0 36 36"><path d="M15.82 26.06a1 1 0 0 1-.71-.29l-6.44-6.44a1 1 0 0 1-.29-.71a1 1 0 0 1 .29-.71L23 3.54a5.55 5.55 0 1 1 7.85 7.86L16.53 25.77a1 1 0 0 1-.71.29zm-5-7.44l5 5L29.48 10a3.54 3.54 0 0 0 0-5a3.63 3.63 0 0 0-5 0z" class="clr-i-outline clr-i-outline-path-1" fill="#000000"/><path d="M10.38 28.28a1 1 0 0 1-.71-.28l-3.22-3.23a1 1 0 0 1-.22-1.09l2.22-5.44a1 1 0 0 1 1.63-.33l6.45 6.44A1 1 0 0 1 16.2 26l-5.44 2.22a1.33 1.33 0 0 1-.38.06zm-2.05-4.46l2.29 2.28l3.43-1.4l-4.31-4.31z" class="clr-i-outline clr-i-outline-path-2" fill="#000000"/><path d="M8.94 30h-5a1 1 0 0 1-.84-1.55l3.22-4.94a1 1 0 0 1 1.55-.16l3.21 3.22a1 1 0 0 1 .06 1.35L9.7 29.64a1 1 0 0 1-.76.36zm-3.16-2h2.69l.53-.66l-1.7-1.7z" class="clr-i-outline clr-i-outline-path-3" fill="#000000"/><rect x="0" y="0" width="36" height="36" fill="rgba(0, 0, 0, 0)" /></svg>
-</div>
-                  <div class="slip-toolbar-eraser">
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" width="20" height="20" style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);" preserveAspectRatio="xMidYMid meet" viewBox="0 0 36 36"><path d="M35.62 12a2.82 2.82 0 0 0-.84-2l-7.29-7.35a2.9 2.9 0 0 0-4 0L2.83 23.28a2.84 2.84 0 0 0 0 4L7.53 32H3a1 1 0 0 0 0 2h25a1 1 0 0 0 0-2H16.74l18-18a2.82 2.82 0 0 0 .88-2zM13.91 32h-3.55l-6.11-6.11a.84.84 0 0 1 0-1.19l5.51-5.52l8.49 8.48zm19.46-19.46L19.66 26.25l-8.48-8.49l13.7-13.7a.86.86 0 0 1 1.19 0l7.3 7.29a.86.86 0 0 1 .25.6a.82.82 0 0 1-.25.59z" class="clr-i-outline clr-i-outline-path-1" fill="#000000"/><rect x="0" y="0" width="36" height="36" fill="rgba(0, 0, 0, 0)" /></svg>
-</div>
-                  <div class="slip-toolbar-cursor">
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" width="20" height="20" style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);" preserveAspectRatio="xMidYMid meet" viewBox="0 0 36 36"><path class="clr-i-outline clr-i-outline-path-1" d="M14.58 32.31a1 1 0 0 1-.94-.65L4 5.65a1 1 0 0 1 1.25-1.28l26 9.68a1 1 0 0 1-.05 1.89l-8.36 2.57l8.3 8.3a1 1 0 0 1 0 1.41l-3.26 3.26a1 1 0 0 1-.71.29a1 1 0 0 1-.71-.29l-8.33-8.33l-2.6 8.45a1 1 0 0 1-.93.71zm3.09-12a1 1 0 0 1 .71.29l8.79 8.79L29 27.51l-8.76-8.76a1 1 0 0 1 .41-1.66l7.13-2.2L6.6 7l7.89 21.2l2.22-7.2a1 1 0 0 1 .71-.68z" fill="#000000"/><rect x="0" y="0" width="36" height="36" fill="rgba(0, 0, 0, 0)" /></svg>
-</div>
-              </div>
-              <div class="slip-toolbar-color">
-                  <div class="slip-toolbar-black"></div>
-                  <div class="slip-toolbar-blue"></div>
-                  <div class="slip-toolbar-red"></div>
-                  <div class="slip-toolbar-green"></div>
-                  <div class="slip-toolbar-yellow"></div>
-              </div>
-
-              <div class="slip-toolbar-width">
-                  <div class="slip-toolbar-small"><div></div></div>
-                  <div class="slip-toolbar-medium"><div></div></div>
-                  <div class="slip-toolbar-large"><div></div></div>
-              </div>
-              <div class="slip-toolbar-control">
-                  <!-- <div class="slip-toolbar-stop">✓</div> -->
-                  <div class="slip-toolbar-clear">✗</div>
-              </div>
-          </div>
-	  <div class="format-container">
-	    <div class="rotate-container">
-		<div class="scale-container">
-		    <div class="universe movable" id="universe">
-			<div width="10000" height="10000" class="fog"></div>
-                        <div class="placeHolder"></div>
-		    </div>
-		</div>
-              </div>
-	    </div>
-	</div>`;
+	    container.innerHTML = "\t\n\t<div class=\"toc-slip\" style=\"display:none;\"></div>\n        <div id=\"open-window\">\n\t  <div class=\"cpt-slip\">0</div>\n\t  <div class=\"slip-writing-toolbar\">\n              <div class=\"slip-toolbar-tool no-tool\">\n                  <div class=\"slip-toolbar-pen\">\n<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" aria-hidden=\"true\" focusable=\"false\" width=\"20\" height=\"20\" style=\"-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);\" preserveAspectRatio=\"xMidYMid meet\" viewBox=\"0 0 36 36\"><path class=\"clr-i-outline clr-i-outline-path-1\" d=\"M33.87 8.32L28 2.42a2.07 2.07 0 0 0-2.92 0L4.27 23.2l-1.9 8.2a2.06 2.06 0 0 0 2 2.5a2.14 2.14 0 0 0 .43 0l8.29-1.9l20.78-20.76a2.07 2.07 0 0 0 0-2.92zM12.09 30.2l-7.77 1.63l1.77-7.62L21.66 8.7l6 6zM29 13.25l-6-6l3.48-3.46l5.9 6z\" fill=\"#000000\"/><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" fill=\"rgba(0, 0, 0, 0)\" /></svg>\n                  </div>\n                  <div class=\"slip-toolbar-highlighter\">\n<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" aria-hidden=\"true\" focusable=\"false\" width=\"25\" height=\"25\" style=\"-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);\" preserveAspectRatio=\"xMidYMid meet\" viewBox=\"0 0 36 36\"><path d=\"M15.82 26.06a1 1 0 0 1-.71-.29l-6.44-6.44a1 1 0 0 1-.29-.71a1 1 0 0 1 .29-.71L23 3.54a5.55 5.55 0 1 1 7.85 7.86L16.53 25.77a1 1 0 0 1-.71.29zm-5-7.44l5 5L29.48 10a3.54 3.54 0 0 0 0-5a3.63 3.63 0 0 0-5 0z\" class=\"clr-i-outline clr-i-outline-path-1\" fill=\"#000000\"/><path d=\"M10.38 28.28a1 1 0 0 1-.71-.28l-3.22-3.23a1 1 0 0 1-.22-1.09l2.22-5.44a1 1 0 0 1 1.63-.33l6.45 6.44A1 1 0 0 1 16.2 26l-5.44 2.22a1.33 1.33 0 0 1-.38.06zm-2.05-4.46l2.29 2.28l3.43-1.4l-4.31-4.31z\" class=\"clr-i-outline clr-i-outline-path-2\" fill=\"#000000\"/><path d=\"M8.94 30h-5a1 1 0 0 1-.84-1.55l3.22-4.94a1 1 0 0 1 1.55-.16l3.21 3.22a1 1 0 0 1 .06 1.35L9.7 29.64a1 1 0 0 1-.76.36zm-3.16-2h2.69l.53-.66l-1.7-1.7z\" class=\"clr-i-outline clr-i-outline-path-3\" fill=\"#000000\"/><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" fill=\"rgba(0, 0, 0, 0)\" /></svg>\n</div>\n                  <div class=\"slip-toolbar-eraser\">\n<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" aria-hidden=\"true\" focusable=\"false\" width=\"20\" height=\"20\" style=\"-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);\" preserveAspectRatio=\"xMidYMid meet\" viewBox=\"0 0 36 36\"><path d=\"M35.62 12a2.82 2.82 0 0 0-.84-2l-7.29-7.35a2.9 2.9 0 0 0-4 0L2.83 23.28a2.84 2.84 0 0 0 0 4L7.53 32H3a1 1 0 0 0 0 2h25a1 1 0 0 0 0-2H16.74l18-18a2.82 2.82 0 0 0 .88-2zM13.91 32h-3.55l-6.11-6.11a.84.84 0 0 1 0-1.19l5.51-5.52l8.49 8.48zm19.46-19.46L19.66 26.25l-8.48-8.49l13.7-13.7a.86.86 0 0 1 1.19 0l7.3 7.29a.86.86 0 0 1 .25.6a.82.82 0 0 1-.25.59z\" class=\"clr-i-outline clr-i-outline-path-1\" fill=\"#000000\"/><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" fill=\"rgba(0, 0, 0, 0)\" /></svg>\n</div>\n                  <div class=\"slip-toolbar-cursor\">\n<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" aria-hidden=\"true\" focusable=\"false\" width=\"20\" height=\"20\" style=\"-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);\" preserveAspectRatio=\"xMidYMid meet\" viewBox=\"0 0 36 36\"><path class=\"clr-i-outline clr-i-outline-path-1\" d=\"M14.58 32.31a1 1 0 0 1-.94-.65L4 5.65a1 1 0 0 1 1.25-1.28l26 9.68a1 1 0 0 1-.05 1.89l-8.36 2.57l8.3 8.3a1 1 0 0 1 0 1.41l-3.26 3.26a1 1 0 0 1-.71.29a1 1 0 0 1-.71-.29l-8.33-8.33l-2.6 8.45a1 1 0 0 1-.93.71zm3.09-12a1 1 0 0 1 .71.29l8.79 8.79L29 27.51l-8.76-8.76a1 1 0 0 1 .41-1.66l7.13-2.2L6.6 7l7.89 21.2l2.22-7.2a1 1 0 0 1 .71-.68z\" fill=\"#000000\"/><rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" fill=\"rgba(0, 0, 0, 0)\" /></svg>\n</div>\n              </div>\n              <div class=\"slip-toolbar-color\">\n                  <div class=\"slip-toolbar-black\"></div>\n                  <div class=\"slip-toolbar-blue\"></div>\n                  <div class=\"slip-toolbar-red\"></div>\n                  <div class=\"slip-toolbar-green\"></div>\n                  <div class=\"slip-toolbar-yellow\"></div>\n              </div>\n\n              <div class=\"slip-toolbar-width\">\n                  <div class=\"slip-toolbar-small\"><div></div></div>\n                  <div class=\"slip-toolbar-medium\"><div></div></div>\n                  <div class=\"slip-toolbar-large\"><div></div></div>\n              </div>\n              <div class=\"slip-toolbar-control\">\n                  <!-- <div class=\"slip-toolbar-stop\">\u2713</div> -->\n                  <div class=\"slip-toolbar-clear\">\u2717</div>\n              </div>\n          </div>\n\t  <div class=\"format-container\">\n\t    <div class=\"rotate-container\">\n\t\t<div class=\"scale-container\">\n\t\t    <div class=\"universe movable\" id=\"universe\">\n\t\t\t<div width=\"10000\" height=\"10000\" class=\"fog\"></div>\n                        <div class=\"placeHolder\"></div>\n\t\t    </div>\n\t\t</div>\n              </div>\n\t    </div>\n\t</div>";
 	    rootElem.replaceWith(container);
 	    container.querySelector(".placeHolder").replaceWith(rootElem);
 	    rootElem.querySelectorAll("slip-slip").forEach(slipElem => {
@@ -1763,7 +1738,7 @@ var Slipshow = (function (exports) {
 	    resizeObserver.observe(slipScaleContainer);
 	  };
 	  this.placeSlips = function () {
-	    let depth = function (elem) {
+	    let depth = function depth(elem) {
 	      let subslips = myQueryAll(elem, "slip-slip");
 	      return 1 + subslips.map(depth).reduce((a, b) => Math.max(a, b), 0);
 	    };
@@ -1938,7 +1913,7 @@ var Slipshow = (function (exports) {
 	      };
 	    };
 	    let globalScale = 1;
-	    let parseScale = function (transform) {
+	    let parseScale = function parseScale(transform) {
 	      if (transform == "none") return 1;
 	      return parseFloat(transform.split("(")[1].split(",")[0]);
 	    };
@@ -2259,7 +2234,7 @@ var Slipshow = (function (exports) {
 	      let unfinished = -1;
 	      let continue_please = 0;
 	      let stop_now = 1;
-	      let not_arrived = function () {
+	      let not_arrived = function not_arrived() {
 	        let counters = stack.map(slip => slip.getActionIndex());
 	        let return_value = unfinished;
 	        target_stack.forEach((target, i) => {
@@ -2302,7 +2277,7 @@ var Slipshow = (function (exports) {
 	    let unfinished = -1;
 	    let continue_please = 0;
 	    let stop_now = 1;
-	    let not_arrived = function () {
+	    let not_arrived = function not_arrived() {
 	      let counters = stack.map(slip => slip.getActionIndex());
 	      let return_value = unfinished;
 	      target_stack.forEach((target, i) => {

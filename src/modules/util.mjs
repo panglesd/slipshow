@@ -33,7 +33,7 @@ export function cloneNoSubslip (elem) {
     });
     return newElem;
 }
-export function replaceSubslips(clone, subslips, sketchpad, sketchpadHighlight) {
+export function replaceSubslips(clone, subslips, sketchpad, sketchpadHighlight, element) {
     let placeholders = myQueryAll(clone, ".toReplace");
     subslips.forEach((subslip, index) => {
 	let importantAttributes =["pause","step", "auto-enter", "immediate-enter"];
@@ -43,6 +43,7 @@ export function replaceSubslips(clone, subslips, sketchpad, sketchpadHighlight) 
 	});
 	placeholders[index].replaceWith(subslip);
     });
+    element.replaceWith(clone);
     let sketchPlaceholder = myQueryAll(clone, ".toReplaceSketchpad");
     if(sketchPlaceholder[0])
 	sketchPlaceholder[0].replaceWith(sketchpad);

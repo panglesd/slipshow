@@ -109,7 +109,7 @@ function cloneNoSubslip (elem) {
     });
     return newElem;
 }
-function replaceSubslips(clone, subslips, sketchpad, sketchpadHighlight) {
+function replaceSubslips(clone, subslips, sketchpad, sketchpadHighlight, element) {
     let placeholders = myQueryAll(clone, ".toReplace");
     subslips.forEach((subslip, index) => {
 	let importantAttributes =["pause","step", "auto-enter", "immediate-enter"];
@@ -119,6 +119,7 @@ function replaceSubslips(clone, subslips, sketchpad, sketchpadHighlight) {
 	});
 	placeholders[index].replaceWith(subslip);
     });
+    element.replaceWith(clone);
     let sketchPlaceholder = myQueryAll(clone, ".toReplaceSketchpad");
     if(sketchPlaceholder[0])
 	sketchPlaceholder[0].replaceWith(sketchpad);
@@ -1291,9 +1292,17 @@ function Slip$1(name, fullName, actionL, ng, options) {
 	this.setActionIndex(-1);
 	let subSlipList = myQueryAll(this.element, "slip-slip");
 	let clone = clonedElement.cloneNode(true);
-	replaceSubslips(clone, subSlipList, this.sketchpadCanvas, this.sketchpadCanvasHighlight);
-	this.element.replaceWith(clone);
+	replaceSubslips(clone, subSlipList, this.sketchpadCanvas, this.sketchpadCanvasHighlight, this.element);
+        // let old_element = this.element;
 	this.element = clone;
+	// old_element.replaceWith(this.element);
+//	setTimeout(() => {
+//	},0);
+//         console.log("GO", this.element, clone)
+// 	setTimeout(() => {
+// 	this.element.parentElement.insertBefore(clone, this.element);
+// //	this.element = clone;
+// 	},10);
 	this.init();
 	this.firstVisit();
 	delete(this.currentX);
@@ -1306,12 +1315,7 @@ function Slip$1(name, fullName, actionL, ng, options) {
     };
 
     this.reObserve = () => {
-	let slipScaleContainer = this.element.firstChild;
-	if(slipScaleContainer && slipScaleContainer.classList && slipScaleContainer.classList.contains("slip-scale-container"))
-	    this.resizeObserver.observe(slipScaleContainer);
-	this.getSubSlipList().forEach((slip) => {
-	    slip.reObserve();
-	});
+        return;
     };
 
     // ******************************
@@ -1580,12 +1584,20 @@ function Slip$1(name, fullName, actionL, ng, options) {
 	    canvas.style.opacity = "1";
 	    that.sketchpadCanvas = canvas;
 	    let q = that.queryAll(".sketchpad");
+            console.log("replacing", q[0], "with", canvas);
 	    q[0].replaceWith(canvas);
 	    //     if(element && element.firstChild && element.firstChild.firstChild)
 	    //     element.firstChild.firstChild.appendChild(canvas);
 	    // else
 	    //     element.appendChild(canvas);
-	    let sketchpad = new Atrament(canvas);
+            
+	    let sketchpad;
+            if (that.sketchpad ) {
+                sketchpad = that.sketchpad;
+            } else {
+                console.log("new sketchpad");
+                sketchpad = new Atrament(canvas);
+            }
 	    sketchpad.smoothing = 0.2;
 	    sketchpad.color = "blue";
 	    that.sketchpad = sketchpad;
@@ -1606,18 +1618,25 @@ function Slip$1(name, fullName, actionL, ng, options) {
 	    that.sketchpadHighlight.weight = 30;
 	    that.sketchpadHighlight.smoothing = 0.2;
 	    that.resizeObserver = new ResizeObserver(entries => {
-		canvas.height = that.element.firstChild.offsetHeight/that.scale;
-		canvas.width = that.element.firstChild.offsetWidth/that.scale;
+                if(that.element.firstChild.offsetHeight > 0 && that.element.firstChild.offsetWidth > 0) {
+		    canvas.height = that.element.firstChild.offsetHeight/that.scale;
+		    canvas.width = that.element.firstChild.offsetWidth/that.scale;
 		canvas2.height = that.element.firstChild.offsetHeight/that.scale;
 		canvas2.width = that.element.firstChild.offsetWidth/that.scale;
 		that.sketchpad.smoothing = 0.2;
 		that.sketchpad.color = "blue";
 		that.sketchpadHighlight.color = "yellow";
 		that.sketchpadHighlight.weight = 30;
-		that.sketchpadHighlight.smoothing = 0.2;
+		    that.sketchpadHighlight.smoothing = 0.2;}
 	    });
+		    canvas.height = that.element.firstChild.offsetHeight/that.scale;
+		    canvas.width = that.element.firstChild.offsetWidth/that.scale;
+		canvas2.height = that.element.firstChild.offsetHeight/that.scale;
+		canvas2.width = that.element.firstChild.offsetWidth/that.scale;
+		that.sketchpad.color = "blue";
 	    if(slipScaleContainer && slipScaleContainer.classList && slipScaleContainer.classList.contains("slip-scale-container"))
-		that.resizeObserver.observe(slipScaleContainer);
+                console.log();
+		//that.resizeObserver.observe(slipScaleContainer);
 	}, 0);
 
     };
