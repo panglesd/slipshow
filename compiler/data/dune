@@ -26,8 +26,8 @@
   (copy %{deps} %{target})))
 
 (rule
- (deps %{project_root}/node_modules/mathjax/es5/tex-chtml.js)
- (target "tex-chtml.js.crunch")
+ (deps %{project_root}/node_modules/mathjax/es5/tex-svg.js)
+ (target "tex-svg.js.crunch")
  (enabled_if
   (= %{profile} "with-bundle"))
  (mode promote)

@@ -16,3 +16,4 @@ Blibli.
 
 And {pause} [standalone][emph] inlines2
 
+And some $(\sqrt{m})_a^t\cdot h$.

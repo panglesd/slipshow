@@ -12,7 +12,7 @@ let string_of_file = function
   | Slipshow_js -> "slipshow.cdn.min.js.crunch"
   | Slip_css -> "slip.css.crunch"
   | Theorem_css -> "theorem.css.crunch"
-  | Mathjax_js -> "tex-chtml.js.crunch"
+  | Mathjax_js -> "tex-svg.js.crunch"
   | Tailwind_css -> "tailwindcss.js.crunch"
   | Highlight_css -> "highlight-js.css.crunch"
   | Highlight_js -> "highlight-js.js.crunch"
