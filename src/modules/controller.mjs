@@ -23,7 +23,7 @@ export default function (ng) {
 	unzoom_keys = ["Z"],
 	show_toc_keys = ["T"],
 	show_toc2_keys = ["t"],
-	next_keys = ["ArrowRight", "ArrowDown"],
+	next_keys = ["ArrowRight", "ArrowDown", " "],
 	previous_keys = ["ArrowLeft", "ArrowUp"],
 	refresh_keys = ["r"],
 	change_speed_keys = ["f"],
