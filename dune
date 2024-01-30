@@ -1,5 +1,5 @@
 (rule
- (deps (source_tree src) (source_tree build) (file package.json))
+ (deps (source_tree src) (source_tree build) (file package.json) (source_tree node_modules) (file babel.config.json))
  (targets (dir staged_dist))
   (mode promote)
  (action
