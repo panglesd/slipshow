@@ -32,10 +32,10 @@
 	<slip-slipshow delay="1">
 	    <!--    First slip, an introduction                                  -->
 	    <slip-slip id="intro">
-		<slip-title>Slip.js</slip-title>       <!-- Beamer style title   -->
+		<slip-title>Slipshow</slip-title>       <!-- Beamer style title   -->
 		<slip-body>     <!-- Beamer style margin  -->
 		    <ul>
-			<li><span emphasize-at="0">Slip.js</span> is a "slide" engine written in javascript.</li>
+			<li><span emphasize-at="0">Slipshow</span> is a "slide" engine written in javascript.</li>
 			<li pause>Its goal is to keep the best from both worlds of:
 			    <ul>
 				<li><span emphasize-at="1">Beamer</span>, its simplicity to create slides without worrying too much on presentation.</li>
@@ -48,7 +48,7 @@
 			A slip is a slide without inferior boundary (the view moving step by step to show it entirely).
 		    </div>
 		    <div class="theorem" title="Fundamental Theorem of slip" pause>  <!-- Beamer style theorem -->
-			Slip.js, it's slip party.
+			Slipshow, it's slip party.
 		    </div>
 		</slip-body>
 	    </slip-slip>
@@ -72,14 +72,14 @@
 	    &lt;div class="slip" id="id-slip-2"&gt; ... &lt;/div&gt;
 	&lt;/div&gt;
     &lt;/body&gt;
-    &lt;script src="slip.js"&gt;&lt;/script&gt;
+    &lt;script src="slipshow.js"&gt;&lt;/script&gt;
 &lt;/html&gt;</code></pre>
 		    <div pause>
 			You can use <a href="http://choum.net/panglesd/slides/slip-js">http://choum.net/panglesd/slides/slip-js/</a> as a CDN for including css and javascript:
 			<pre><code>&lt;link rel="stylesheet" type="text/css" href="http://choum.net/panglesd/slides/slip-js/slip.css"&gt;
 &lt;link rel="stylesheet" type="text/css" href="http://choum.net/panglesd/slides/slip-js/theorem.css"&gt;
 ...
-&lt;script src="http://choum.net/panglesd/slides/slip-js/slip.js"&gt;&lt;/script&gt;
+&lt;script src="http://choum.net/panglesd/slides/slip-js/slipshow.cdn.js"&gt;&lt;/script&gt;
 			</code></pre>
 		    </div>
 		</slip-body>
@@ -138,7 +138,7 @@ We also have environment for theorems/definitions/examples:
 			<li id="first-li" pause down-at-unpause>We can move the screen to see an element below with <pre class="inline-code"><code class="inline-code html">down-at</code></pre>. <!-- Here, we have <pre class="inline-code"><code class="inline-code html">&lt;li down-at="5"&gt;...&lt;/li&gt;</code></pre>. --></li>
 			<li pause center-at-unpause>Same, we can center on an element with <pre class="inline-code"><code class="inline-code html">center-at</code></pre>.</li>
 			<li pause up-at-unpause="first-li">If we really don't want to see what was before, we can align an element with the top of the screen with <pre class="inline-code"><code class="inline-code html">up-at</code></pre>. Here, it is done with the first bullet.<!-- the first bullet code has in reality <pre class="inline-code"><code class="inline-code html">&lt;li down-at="5" up-at="7"&gt;...&lt;/li&gt;</code></pre>. --></li>
-			<h3 pause>This is the concept of slip.js: a downward infinite slide. But slip.js is much more!</h3>
+			<h3 pause>This is the concept of slipshow: a downward infinite slide. But slipshow is much more!</h3>
 			<li pause>All slips are placed on a big "universe". <span pause="2" emphasize-at="11">But they are just html elements and can be placed statically, relatively or absolutely. </span>
 			    <pre pause><code class="html">&lt;div style="display: flex; justify-content: space-around; margin:40px;"&gt;
    &lt;div class="slip" id="red" scale="0.25" delay="1"&gt; ... &lt;/div&gt;
@@ -230,7 +230,7 @@ We also have environment for theorems/definitions/examples:
 		    </ul>
 		    
 		    <!-- Still in the same slip, but somehow next part. Use of a usual html title (h1). -->
-		    <h1 pause up-at-unpause>Slip.js advanced: fine control of events</h1>
+		    <h1 pause up-at-unpause>Slipshow advanced: fine control of events</h1>
 
 		    <ul>
 			<li>You can annotate presentations: Press "w" to start annotating! Try it on the box below!</li>
@@ -241,7 +241,7 @@ We also have environment for theorems/definitions/examples:
 		    </ul>
 		    
 		    <!-- Still in the same slip, but somehow next part. Use of a usual html title (h1). -->
-		    <h1 pause up-at-unpause>Slip.js advanced: fine control of events</h1>
+		    <h1 pause up-at-unpause>Slipshow advanced: fine control of events</h1>
 		    <ul>
 			<li pause>It is easy to define custom functions to be called at precise time of the presentation:
 			    <ul>
@@ -273,7 +273,7 @@ We also have environment for theorems/definitions/examples:
 		 <div chg-visib-at="0" class="c1" style="position:absolute; top: 40%; left: 10%;">An example (old version of the engine): <a href="https://choum.net/panglesd/slides/slides-js/slides.html">Slips</a>.</div>
 		 </div> -->
 	    <div chg-visib-at="4" class="c1" style="font-size: 170px;position:absolute; top: 30%; left: 5%; right: 5%; background-color: rgba(255,255,255,0.9); border-radius: 5%;">
-		<div style="margin: 100px">Github: <a href="https://github.com/panglesd/slip-js">https://github.com/panglesd/slip-js</a>.</div>
+		<div style="margin: 100px">Github: <a href="https://github.com/panglesd/slipshow">https://github.com/panglesd/slipshow</a>.</div>
 		<div style="margin: 100px">An example (old version of the engine): <a href="https://choum.net/panglesd/slides/slides-js/slides.html">Slips</a>.</div>
 </div>
 	</slip-slipshow>
