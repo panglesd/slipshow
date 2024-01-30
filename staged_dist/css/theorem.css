@@ -96,6 +96,7 @@
 .proof:before {
     content: "Proof.";
     font-style: italic;
+    margin-right: 1ch;
 }
 .proof:after {
     content: "\25FC";
