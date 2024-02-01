@@ -6,24 +6,30 @@ Getting Started
 Installation
 ~~~~~~~~~~~~
 
-
-
-Slipshow compiles files written in an extension of markdown, to a standalone html file viewable offline in any web browser.
+Slipshow compiles files written in a specific syntax (an extension of markdown), to a standalone file viewable offline in any web browser.
 This page is about the different ways to get access to the slipshow compiler: either by downloading and installing it, or by using a webservice.
+
+- If you want to try slipshow without installing anything, you should use a webservice.
+- If you want to use slipshow and can install it, you should use precompiled binaries.
+- If there are no precompiled binaries for your system, and you are an ``opam`` user, you should use it.
+- Otherwise, you should use ``npm``.
 
 Using a webservice
 ------------------
 
 The simplest way to get started with slipshow is to go to `sliphub.choum.net <https://sliphub.choum.net/new>`_. This will open a page with an editor on the left, and a preview on the right.
 
-Currently, the interface is quite minimal. Your progress is saved "live" and you can even do collaborative editing: two people editing the same document. But do not type an accent! Or your progress won't be saved anymore...
+Currently, the interface is quite minimal. Your progress is saved "live" and you can even do collaborative editing: two people editing the same document.
 
 Remember the link to be able to come back to your document later! And save your work locally. This is still highly experimental.
 
+Using precompiled binaries
+--------------------------
+
+Download the binary corresponding to your environment in the `release <https://github.com/panglesd/slipshow/releases/latest>`_ page of the project. You might want to install the binary in the archive, e.g. in ``/usr/local/bin``.
+
 Using ``opam``
 ----------
-
-If you are a user of ``opam``, installation through it is the best way to install slipshow. If not, either turn to precompiled-binaries, or (as a last ressource) the npm installation.
 
 Just run the following command:
 
@@ -35,12 +41,6 @@ Just run the following command:
 
 
 and you are done!
-
-
-Using precompiled binaries
---------------------------
-
-TODO
 
 
 Using ``npm``
