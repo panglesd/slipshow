@@ -42,12 +42,11 @@ let do_serve input f =
           @@ Dream.router
                [
                  Dream.get "/" (fun _ ->
-                     Dream.log "Browser reloaded";
+                     Dream.log "A browser reloaded";
                      Dream.html !content);
                  Dream.get "/_livereload" (fun _ ->
                      Dream.websocket (fun socket ->
                          let* () = !waiter in
-                         Dream.log "Asking browser to reload";
                          Dream.close_websocket socket));
                ]
         in
@@ -56,10 +55,12 @@ let do_serve input f =
           content := new_content;
           let* _event = Lwt_inotify.read inotify in
           Logs.app (fun m -> m "Recompiling");
-          Lwt.wakeup_later !resolver ();
+          let old_resolver = !resolver in
           let nwaiter, nresolver = Lwt.wait () in
           waiter := nwaiter;
           resolver := nresolver;
+          Dream.log "Asking browsers to reload";
+          Lwt.wakeup_later old_resolver ();
           loop ()
         in
         loop ()
