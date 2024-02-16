@@ -73,6 +73,6 @@ let compile ~math_link ~slip_css_link ~theorem_css_link ~slipshow_js_link ~input
   if serve then Serve.do_serve input f
   else if watch then Serve.do_watch input f
   else
-    let+ _ = f () in
+    let+ _html = f () in
     Ok ()
 (* do_serve *)

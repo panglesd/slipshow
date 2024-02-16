@@ -11,7 +11,7 @@ let do_watch input f =
       in
       let rec loop () =
         let _event = Inotify.read inotify in
-        (* Logs.app (fun m -> m "Change detected, recompiling"); *)
+        Logs.app (fun m -> m "Recompiling");
         let+ _ = f () in
         loop ()
       in
@@ -41,10 +41,13 @@ let do_serve input f =
           @@ Dream_livereload.inject_script ()
           @@ Dream.router
                [
-                 Dream.get "/" (fun _ -> Dream.html !content);
+                 Dream.get "/" (fun _ ->
+                     Dream.log "Browser reloaded";
+                     Dream.html !content);
                  Dream.get "/_livereload" (fun _ ->
                      Dream.websocket (fun socket ->
                          let* () = !waiter in
+                         Dream.log "Asking browser to reload";
                          Dream.close_websocket socket));
                ]
         in
@@ -52,6 +55,7 @@ let do_serve input f =
           let new_content = match f () with Ok s -> s | Error (`Msg s) -> s in
           content := new_content;
           let* _event = Lwt_inotify.read inotify in
+          Logs.app (fun m -> m "Recompiling");
           Lwt.wakeup_later !resolver ();
           let nwaiter, nresolver = Lwt.wait () in
           waiter := nwaiter;
