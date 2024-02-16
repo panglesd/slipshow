@@ -35,7 +35,9 @@ let do_serve input f =
         let resolver = ref resolver in
         let content = ref "" in
         let _ =
-          Dream.serve
+          (* We serve on [127.0.0.1] since in musl libc library, localhost would
+             trigger a DNS request (which might not resolve) *)
+          Dream.serve ~interface:"127.0.0.1"
           @@ Dream_livereload.inject_script ()
           @@ Dream.router
                [
@@ -60,6 +62,6 @@ let do_serve input f =
   in
   Logs.app (fun m ->
       m
-        "Visit http://localhost:8080 to view your presentation, with \
+        "Visit http://127.0.0.1:8080 to view your presentation, with \
          auto-reloading on file changes.");
   Lwt_main.run @@ do_serve input f
