@@ -1,37 +1,98 @@
 .. _getting-started:
 
-Getting Started
-===============
+=================
+ Getting Started
+=================
 
 Installation
-~~~~~~~~~~~~
+============
 
-Slipshow compiles files written in a specific syntax (an extension of markdown), to a standalone file viewable offline in any web browser.
-This page is about the different ways to get access to the slipshow compiler: either by downloading and installing it, or by using a webservice.
+There are different ways to have access to the slipshow compiler:
 
-- If you want to try slipshow without installing anything, you should use a webservice.
-- If you want to use slipshow and can install it, you should use precompiled binaries.
-- If there are no precompiled binaries for your system, and you are an ``opam`` user, you should use it.
-- Otherwise, you should use ``npm``.
+- **VSCode user**: Use the :ref:`VSCode extension<The VS Code plugin>`.
+- **Linux or Mac user**, reasonably comfortable with the command line: Use
+  :ref:`precompiled binaries<Precompiled binaries>`.
+- For **online-only use**, consider the :ref:`online sliphub editor<the sliphub online editor>`.
+- Otherwise, use the :ref:`slipshow editor<the slipshow editor>`.
 
-Using a webservice
+In addition to this, for advanced users, you also have the following options:
+
+- You can always :ref:`compile from source<compiling from source>`! This solution is convenient
+  for ``opam`` users.
+- A :ref:`javascript version<using npm>` of the slipshow compile is distributed through npm. It lacks some features but might be useful in some setups
+
+..
+   .. contents:: Installation methods
+     :local:
+
+The VS Code plugin
 ------------------
 
-The simplest way to get started with slipshow is to go to `sliphub.choum.net <https://sliphub.choum.net/new>`_. This will open a page with an editor on the left, and a preview on the right.
+The VS Code plugin can be downloaded from the `official marketplace
+<https://marketplace.visualstudio.com/items?itemName=Slipshow.slipshow>`_ as
+well as from `open VSX
+<https://open-vsx.org/extension/Slipshow/slipshow>`_. This means that searching
+the ``slipshow`` extension directly from within VS Code should yield a result in
+most cases!
 
-Currently, the interface is quite minimal. Your progress is saved "live" and you can even do collaborative editing: two people editing the same document.
+The VS Code plugin provides two commands:
+- Compile presentation. Open the command palette, and type "Compile slipshow". This should compile the presentation in a ``.html`` of the same name.
+- Preview presentation.  Open the command palette, and type "Preview
+slipshow". This should open a new window with a live preview of your
+presentation!
 
-Remember the link to be able to come back to your document later! And save your work locally. This is still highly experimental.
+Precompiled binaries
+--------------------
 
-Using precompiled binaries
---------------------------
+Precompiled binaries are available to download in the `release
+<https://github.com/panglesd/slipshow/releases/latest>`_ page of the
+project. Save the file corresponding to your architecture, and make it available
+by moving to a directory included in your ``$PATH``, eg ``/usr/local/bin``.
 
-Download the binary corresponding to your environment in the `release <https://github.com/panglesd/slipshow/releases/latest>`_ page of the project. You might want to install the binary in the archive, e.g. in ``/usr/local/bin``.
+You can test that the ``slipshow`` binary is available by running:
 
-Using ``opam``
-----------
+.. code-block:: shell
 
-Just run the following command:
+   $ slipshow --help
+
+If the help shows up, you successfully installed slipshow!
+
+Then, you can use ``slipshow`` to compile your documents:
+
+.. code-block:: shell
+
+   $ slipshow presentation.md            # Compiles to `presentation.html`
+   $ slipshow --serve presentation.md    # Compiles to `presentation.html` and serves a live-preview on 127.0.0.1:8080
+
+
+The sliphub online editor
+-------------------------
+
+The `sliphub online editor <https://sliphub.choum.net/new>`_ is a quick way to
+try out slipshow, as it does not require any setup. This link will open a page with
+an editor on the left, and a preview on the right.
+
+Currently, the interface is quite minimal. Your progress is saved "live" and you
+can even do collaborative editing: two people editing the same document.
+
+Remember the link to be able to come back to your document later! And save your
+work locally: This is still experimental.
+
+The slipshow editor
+-------------------
+
+The slipshow editor is an editor specialized in writing slipshow
+presentations. It provides live-previewing of your presentation.
+
+However, since the project is very new compared to most editors, you might miss
+features from eg VS Code, Emacs or Vim.
+
+Compiling from source
+---------------------
+
+This requires ``opam``.
+
+Run the following command:
 
 .. code-block:: shell
 
@@ -42,8 +103,7 @@ Just run the following command:
 
 and you are done!
 
-
-Using ``npm``
+Using npm
 -------------
 
 For a reason described below, installing slipshow through npm will install a slightly slower version, with less functionalities. So, installing it like that is somehow discouraged, unless you don't mind the missing functionalities!
@@ -62,7 +122,7 @@ So, here are the limitations of the npm version of slipshow:
 The reason for such limitations is that slipshow is written in OCaml, not javascript. Luckily, OCaml can compile to javascript! But for some functionalities, like file-watching (which relies on a C library), this compilation cannot be meaningful.
 
 Your first presentation
-~~~~~~~~~~~~~~~~~~~~~~~
+=======================
 
 Copy and paste the following example file in ``my-first-slipshow.md``:
 
