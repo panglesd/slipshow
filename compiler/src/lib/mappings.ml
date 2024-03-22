@@ -2,21 +2,25 @@ open Cmarkit
 
 let of_cmarkit resolve_images =
   let block m = function
-    | Block.Block_quote ((bq, ((attrs, _) as a)), meta) ->
+    | Block.Block_quote ((bq, (attrs, meta2)), meta) ->
         if Attributes.mem "blockquote" attrs then Mapper.default
         else
           let b = Block.Block_quote.block bq in
           let b =
             match Mapper.map_block m b with None -> Block.empty | Some b -> b
           in
-          Mapper.ret (Ast.Div ((b, a), meta))
-    | Block.Code_block (((cb, _), _) as cbm) ->
+          let attrs = Mapper.map_attrs m attrs in
+          Mapper.ret (Ast.Div ((b, (attrs, meta2)), meta))
+    | Block.Code_block ((cb, (attrs, meta)), meta2) ->
         let ret =
           match Block.Code_block.info_string cb with
           | None -> Mapper.default
           | Some (info, _) -> (
               match Block.Code_block.language_of_info_string info with
-              | Some ("slip-script", _) -> Mapper.ret (Ast.SlipScript cbm)
+              | Some ("slip-script", _) ->
+                  Mapper.ret
+                    (Ast.SlipScript
+                       ((cb, (Mapper.map_attrs m attrs, meta)), meta2))
               | _ -> Mapper.default)
         in
         ret

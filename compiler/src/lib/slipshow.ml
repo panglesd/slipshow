@@ -93,7 +93,6 @@ let embed_in_page content ~starting_state ~has_math ~math_link ~slip_css_link
 let convert ?starting_state ?math_link ?slip_css_link ?theorem_css_link
     ?slipshow_js_link ?(resolve_images = fun x -> Remote x) s =
   let md = Cmarkit.Doc.of_string ~heading_auto_ids:true ~strict:false s in
-  ignore resolve_images;
   let md = Cmarkit.Mapper.map_doc (Mappings.of_cmarkit resolve_images) md in
   let content =
     Cmarkit_renderer.doc_to_string Renderers.custom_html_renderer md
