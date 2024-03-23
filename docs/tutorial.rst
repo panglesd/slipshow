@@ -3,16 +3,26 @@
 Tutorial
 ========
 
-This tutorial assumes you completed the :ref:`getting-started` part of the
-document, more precisely, that the ``slipshow`` tool is installed on your
-machine!
+This tutorial assumes you have access to the slipshow compiler. If you are only
+interested in trying out slipshow before deciding to install it (or not), you
+can use the `sliphub editor<sliphub.choum.net/new`_: it requires no installation
+on your computer, nor to create any account!
+
+If you do want to use slipshow, we recommand completing the
+:ref:`getting-started` part of the document.
+
+.. contents:: Outline of the tutorial
+   :local:
+   
+
+Introduction
+-----------------
 
 Slipshow is a compiler from a source file to a source language to a slipshow
-presentation, so unlike other presentation tools, you simply write text to
-describe your presentation. This makes it portable, lightweight and let you use
-your favorite text editor instead of forcing you into one. It has also
-drawbacks: it can be less visual than other solutions such as "power-point"
-style presentations.
+presentation, so you simply write a text file to describe your
+presentation. This makes it portable, lightweight and lets you use your favorite
+text editor instead of forcing you into one. It has also drawbacks: it can be
+less visual than other solutions such as "power-point" style presentations.
 
 When you turn your source file into a presentation (you *compile* the
 presentation), the file created is actually an html file: the format used to
@@ -29,9 +39,6 @@ different features of slipshow. Once you are familiar with the basics, for a
 complete overview of each of these, you should refer to the reference: the
 :ref:`syntax`, and :ref:`API`.
 
-.. contents:: Outline of the tutorial
-   :local:
-   
 ..
    Writing slips should not differ too much from writing beamer presentation, when not using any of the advanced functionalities: there an delimiters for . The syntax is different, and there are 
 ..
@@ -62,28 +69,6 @@ To start, copy the following lines in a file, named for instance
    {.definition}
    A **prime number** is an integer divisible by exactly two integers: 1, and itself.
 
-Compiling your presentation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The file that we just created is the *source* for a minimal prime-numbers. In
-order to get the presentation itself, we need to *compile* it, using the
-``slipshow`` tool. In a terminal, issue the following command:
-
-.. code-block:: shell
-
-		$ slipshow prime-numbers.md --serve
-		Visit http://localhost:8080 to view your presentation, with auto-reloading on file changes.
-
-This command (which do not return due to the ``--serve`` flag) creates a file
-with the same name as the input name, but a different extension:
-``prime-numbers.html``. The ``.md`` file is the one you'll use to modify the
-presentation, and the one you'll share with another author of the
-presentation. The ``.html`` file is the one you'll use to view or do your
-presentation, or to share with someone interested in viewing the presentation.
-
-The ``--serve`` flag is very useful when writing your presentation. It will
-propagate any saved changes in the input file, and "live-reload" the
-presentation served at the address ``http://localhost:8080``.
 
 .. note::
 
@@ -91,80 +76,91 @@ presentation served at the address ``http://localhost:8080``.
    open files with such extension in a special mode that will help you read and
    write it. Slipshow's syntax is an extension of markdown.
 
-Viewing your presentation
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Compiling and viewing your presentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Now, go to `<http://localhost:8080>`_ to see your presentation. You could also
-open the file you just created with any web browser, which is actually the
-recommended way outside of the preparation of the presentation: you won't need
-``slipshow`` running for that!
+The file that we just created is the *source* for a minimal prime-numbers. In
+order to get the presentation itself, we need to *compile* it, using the
+``slipshow`` tool.
 
-.. note::
+This step depends on the way you have access to the slipshow compiler.
 
-   There are several ways to open an html file in a browser. One is just to
-   double-click on the file in a graphical interface. Another is to open your
-   web browser, and open the file from there (often, you can use ``File > Open``
-   in the menu, or ``Ctrl + o`` or ``Apple + o`` on Mac). The last one is to use
-   the command line, since you just used it to compile the file: just ``firefox
-   prime-numbers.html`` in the command line.
+.. tabs::
 
-Once the presentation is opened: you should see the familiar format for
+   .. tab:: In VS Code
+
+      In the command palette (``Cmd + Maj + P``), write ``Compile slipshow``. This will create a file in the same directory, with the same name but the ``.html`` extension.
+
+      To view this file, opening it in a browser is sufficient! However, the file won't automatically update to new modifications on your source file. For this, open the command palette again and this time, write ``Preview slipshow``. This will open a preview of the presentation, which will automatically update to the newest changes!
+
+      In conclusion: use the preview command when writing your presentation, and use the compile one when your presentation is finished!
+
+   .. tab:: Using the binary
+
+      In a terminal, issue the following command:
+
+      .. code-block:: shell
+
+		$ slipshow prime-numbers.md --serve
+		Visit http://localhost:8080 to view your presentation, with auto-reloading on file changes.
+
+      This command (which do not return due to the ``--serve`` flag) creates a file
+      with the same name as the input name, but a different extension:
+      ``prime-numbers.html``. The ``.md`` file is the one you'll use to modify the
+      presentation, and the one you'll share with another author of the
+      presentation. The ``.html`` file is the one you'll use to view or do your
+      presentation, or to share with someone interested in viewing the presentation.
+
+      The ``--serve`` flag is very useful when writing your presentation. It will
+      propagate any saved changes in the input file, and "live-reload" the
+      presentation served at the address ``http://localhost:8080``.
+
+   .. tab:: In the slipshow editor
+
+            On the right, you have a preview of your presentation: very useful when writing it! However, when your presentation is ready, you will want to turn it into a file that you can open in the browser.
+
+            Just click on the ``Compile`` button on the top bar. This will ask you the compiled file name. Then, whenever your source file and compiled file become out of sync, the color of the compiled file will turn red!
+
+   .. tab:: In sliphub
+
+            Your file is saved on the server live!
+
+            On the right, you have a preview of your presentation: very useful when writing it! However, when your presentation is ready, you might want to turn it into a local file that you can open in the browser.
+
+            To locally save a compiled source file, click on the ``Download
+            presentation`` button.
+
+            You can also use the "presentation link" which allow to share a "readonly" version of your presentation!
+
+On the slipshow preview, you should see the familiar format for
 slide-based presentations (4:3 rectangle with black borders). Click on it to be
 sure you have the window focused, and hit the right arrow key (or equivalently,
 the down-arrow key) to step through the presentation! Right now, it has only two
 steps: the initial one, and the last one.
 
-Try to make a modification in ``prime-numbers.md`` and save the file. The page
-opened on ``localhost:8080`` should refresh automatically with the new content!
+Try to make a modification in ``prime-numbers.md`` and save the file. The
+preview should refresh automatically with the new content!
 
 The syntax used
 ~~~~~~~~~~~~~~~~
 
-Slipshow uses an extension of Markdown for its main syntax. The precise syntax
-is explained in :ref:`syntax` in an almost readable way, but let's focus on the
-syntax used in this example file.
+Slipshow uses an extension of Markdown for its main syntax. So, knowing Markdown is a prerequisite to using slipshow.
+Fortunately, Markdown is very simple! And is already widely used. So instead of explaining the markdown syntax in this tutorial, I'll link to some great resources to learn Markdown, and only explain the additions:
 
-.. note::
+The `Learn Markdown in 60 seconds <https://commonmark.org/help/>`_ is from CommonMark, the organization that proposed a well-defined specification for Markdown. They also have a 10-minute tutorial to learn but also train!
 
-   If you are familiar with markdown, the important things to read are
-   `pauses`_ and `blocks`_.
-
-Titles
-""""""
-
-The file starts with the following line:
-
-.. code-block:: markdown
-
-		# Prime numbers
-
-As you might have guessed from the compiled presentations, this is a
-title. Titles are lines that start with ``#``. The less ``#`` there are, the
-more important the title is.
-
-Paragraphs
-""""""""""
-
-Next, we have a line, separated from the rest of by empty blank lines:
-
-.. code-block:: markdown
-
-   What is a prime number?
-
-This is a paragraph, in the rendered presentation. here, the paragraph is only a
-simple line, but it could a long multiline paragraph. Paragraphs are always
-separated from the rest by empty blank lines!
+The slipshow syntax is defined in  :ref:`syntax`. In this tutorial, let's only focus on the syntax used in the example.
 
 Pauses
 """"""
 
-The next line is:
+The fifth line is the first one that is not regular markdown:
 
 .. code-block:: markdown
 
    {pause}
 
-This line does not appear as is in the rendered presentation. In fact, any
+This line won't appear as is in the rendered presentation. In fact, any
 content inside curly braces ``{...}`` is considered "metadata" and will be
 interpreted in specific ways, but not displayed in the presentation.
 
@@ -209,16 +205,6 @@ elements using ``>``. For instance, try the following in the examples:
 		 > A **prime number** is a number divisible by exactly two integers: 1, and itself.
 		 >
 		 > We consider 1 not to be a primer number, as it is divisible only by one integer.
-
-
-Emphasizing
-"""""""""""
-
-In a presentation we often want to help the viewer by emphasizing some words. In
-slipshow, this is used by enclosing the emphasized words with ``**``. In the
-example, we define primer numbers, and emphasize the defined terms by writing
-``**prime numbers**``!
-
 
 Your presentation as a papyrus
 ------------------------------

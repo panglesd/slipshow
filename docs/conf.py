@@ -29,7 +29,8 @@ author = 'Paul-Elliot'
 # ones.
 extensions = [
     'sphinx_rtd_theme',
-    'sphinx.ext.autosectionlabel'
+    'sphinx.ext.autosectionlabel',
+    'sphinx_tabs.tabs'
 ]
 extensions.append('sphinx.ext.todo')
 todo_include_todos=True
