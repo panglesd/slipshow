@@ -18,6 +18,27 @@ The compiled file is a standalone html file! Just send that, no dependencies.
 That is, unless you've made some special things, such as including a video. In
 this case, put all dependencies in an archive.
 
+How can I insert an image in my presentation?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Use the markdown syntax! ``![alternative text](path_to_file)``. The supported image types are those `supported on the web <https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#supported_image_formats>`_.
+
+If using a local image does not work (as in the online sliphub editor), a workaround when available is to use a link to the image on the web.
+
+How can I add math to my presentation?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Use the markdown syntax!
+To add inline formulas, use ``$`` as in Latex. To add "display" mathematics, use a block block with math language. Here is an example:
+
+.. code-block:: markdown
+
+   let $m$ be the mass, $E$ be the energy and $c$ be the light celerity. The we have:
+
+   ```math
+   E = mc^2
+   ```
+
 Is there a Markdown syntax for slipshow?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ..

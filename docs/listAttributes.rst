@@ -3,6 +3,8 @@
 Slipshow API
 ============
 
+.. warning::
+   This is mostly relevant only if you are writing HTML by hand..
 
 .. contents:: Table of contents
    :local:
