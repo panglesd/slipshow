@@ -183,7 +183,7 @@ The meaning should be clear from the rendered presentation: this is a
 "definition" block. As you can see, we use the "metadata" syntax once again: the
 ``{.definition}`` part is not rendered, but is used to describe the content. In
 this case, there is a ``.`` followed by a word: such syntax is used for add a
-"class" to an element, an information which is used only for alter the rendering
+"class" to an element, an information which is used only to alter the rendering
 of an element.
 
 There are several classes available. To describe blocks, in addition to the
