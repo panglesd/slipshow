@@ -1,18 +1,27 @@
-let ( let+ ) a b = Result.bind a b
-
 let do_watch input f =
   match input with
   | `Stdin -> Error (`Msg "--watch is incompatible with stdin input")
   | `File input ->
-      let input = Fpath.to_string input in
+      let parent = Fpath.parent input in
+      let parent = Fpath.to_string parent in
+      let input_filename = Fpath.filename input in
       let inotify = Inotify.create () in
       let _watch_descriptor =
-        Inotify.add_watch inotify input [ Inotify.S_Modify ]
+        Inotify.add_watch inotify parent [ Inotify.S_Close_write ]
       in
       let rec loop () =
-        let _event = Inotify.read inotify in
-        Logs.app (fun m -> m "Recompiling");
-        let+ _ = f () in
+        let events = Inotify.read inotify in
+        List.iter
+          (function
+            | _, _, _, Some filename ->
+                if String.equal filename input_filename then (
+                  Logs.app (fun m -> m "Recompiling");
+                  match f () with
+                  | Ok _ -> ()
+                  | Error (`Msg s) -> Logs.warn (fun m -> m "%s" s))
+                else ()
+            | _ -> ())
+          events;
         loop ()
       in
       loop ()
@@ -21,14 +30,15 @@ let do_serve input f =
   let do_serve input f =
     match input with
     | `Stdin ->
-        Lwt.return
-        @@ Error (`Msg "--watch-and-serve is incompatible with stdin input")
+        Lwt.return @@ Error (`Msg "--serve is incompatible with stdin input")
     | `File input ->
         let open Lwt.Syntax in
-        let input = Fpath.to_string input in
+        let parent = Fpath.parent input in
+        let parent = Fpath.to_string parent in
+        let input_filename = Fpath.filename input in
         let* inotify = Lwt_inotify.create () in
         let _watch_descriptor =
-          Lwt_inotify.add_watch inotify input [ Inotify.S_Modify ]
+          Lwt_inotify.add_watch inotify parent [ Inotify.S_Close_write ]
         in
         let waiter, resolver = Lwt.wait () in
         let waiter = ref waiter in
@@ -51,17 +61,28 @@ let do_serve input f =
                ]
         in
         let rec loop () =
-          let new_content = match f () with Ok s -> s | Error (`Msg s) -> s in
-          content := new_content;
-          let* _event = Lwt_inotify.read inotify in
-          Logs.app (fun m -> m "Recompiling");
-          let old_resolver = !resolver in
-          let nwaiter, nresolver = Lwt.wait () in
-          waiter := nwaiter;
-          resolver := nresolver;
-          Dream.log "Asking browsers to reload";
-          Lwt.wakeup_later old_resolver ();
-          loop ()
+          let* _descriptor, _event_kinds, _, filename =
+            Lwt_inotify.read inotify
+          in
+          match filename with
+          | Some filename when String.equal filename input_filename ->
+              Logs.app (fun m -> m "Recompiling");
+              let new_content =
+                match f () with
+                | Ok s -> s
+                | Error (`Msg s) ->
+                    Logs.warn (fun m -> m "%s" s);
+                    s
+              in
+              content := new_content;
+              let old_resolver = !resolver in
+              let nwaiter, nresolver = Lwt.wait () in
+              waiter := nwaiter;
+              resolver := nresolver;
+              Dream.log "Asking browsers to reload";
+              Lwt.wakeup_later old_resolver ();
+              loop ()
+          | _ -> loop ()
         in
         loop ()
   in
