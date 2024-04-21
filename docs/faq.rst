@@ -95,6 +95,11 @@ Can I export to PDF?
   export a presentation to latex and compile the produced latex. It is useful to
   send as notes, rather than sending the slipshow presentation!
 
+Can I include a PDF in a presentation?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  Slipshow can only include images supported on the web. You can convert your pdf image to a supported format.
+
 Will it look the same on all screens?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   Mostly yes. Browser do what they can to render exactly the same. A low resolution might make your presentation blurry, but things will be at the same place.
