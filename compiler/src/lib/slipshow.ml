@@ -89,6 +89,12 @@ let embed_in_page content ~has_math ~math_link ~slip_css_link ~theorem_css_link
 type starting_state = int list * string
 type delayed = string * string
 
+let delayed_to_string s = Marshal.to_string s [] |> Base64.encode_string
+
+let string_to_delayed s =
+  let s = s |> Base64.decode |> Result.get_ok in
+  Marshal.from_string s 0
+
 let delayed ?math_link ?slip_css_link ?theorem_css_link ?slipshow_js_link
     ?(resolve_images = fun x -> Remote x) s =
   let md = Cmarkit.Doc.of_string ~heading_auto_ids:true ~strict:false s in

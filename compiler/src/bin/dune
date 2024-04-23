@@ -48,4 +48,4 @@
  (name serve)
  (virtual_modules serve)
  (modules serve)
- (libraries fpath))
+ (libraries fpath slipshow))

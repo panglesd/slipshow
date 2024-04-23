@@ -35,7 +35,6 @@
    magic-mime
    dream
    fpath
-   dream-livereload
   (odoc :with-doc)
   (ocamlformat
    (and :with-dev-setup (= 0.26.1))))

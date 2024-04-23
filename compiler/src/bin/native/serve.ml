@@ -26,6 +26,33 @@ let do_watch input f =
       in
       loop ()
 
+let html_source =
+  Format.sprintf
+    {html|<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+           <title>Slipshow preview</title>
+           <style>
+           #right-panel1.active_panel, #right-panel2.active_panel {
+             z-index: 1;
+           }
+           #right-panel1, #right-panel2 {
+             z-index: 0;
+           }
+</style>
+</head>
+           <body>
+           <div id="iframes">
+	     <iframe name="frame" id="right-panel1" style="width:100%%; position:absolute; top:0;bottom:0;left:0;right:0;border:0; height: 100vh"></iframe>
+	     <iframe name="frame" id="right-panel2" style="width:100%%; position:absolute; top:0;bottom:0;left:0;right:0;border:0; height: 100vh"></iframe>
+           </div>
+           <script>%s</script>
+</body>
+</html>
+  >|html}
+    [%blob "compiler/src/bin/native/client/client.bc.js"]
+
 let do_serve input f =
   let do_serve input f =
     match input with
@@ -44,18 +71,27 @@ let do_serve input f =
         let waiter = ref waiter in
         let resolver = ref resolver in
         let content = ref "" in
+        let new_content =
+          match f () with
+          | Ok s -> Slipshow.delayed_to_string s
+          | Error (`Msg s) ->
+              Logs.warn (fun m -> m "%s" s);
+              s
+        in
+        content := new_content;
         let _ =
           (* We serve on [127.0.0.1] since in musl libc library, localhost would
              trigger a DNS request (which might not resolve) *)
           Dream.serve ~interface:"127.0.0.1"
-          @@ Dream_livereload.inject_script ()
           @@ Dream.router
                [
                  Dream.get "/" (fun _ ->
                      Dream.log "A browser reloaded";
-                     Dream.html !content);
-                 Dream.get "/_livereload" (fun _ ->
+                     Dream.html html_source);
+                 Dream.get "/getNewDoc" (fun _ ->
                      Dream.websocket (fun socket ->
+                         (* Dream.log "Sending data: %S" !content; *)
+                         let* () = Dream.send socket !content in
                          let* () = !waiter in
                          Dream.close_websocket socket));
                ]
@@ -69,7 +105,7 @@ let do_serve input f =
               Logs.app (fun m -> m "Recompiling");
               let new_content =
                 match f () with
-                | Ok s -> s
+                | Ok s -> Slipshow.delayed_to_string s
                 | Error (`Msg s) ->
                     Logs.warn (fun m -> m "%s" s);
                     s

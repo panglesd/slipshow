@@ -12,3 +12,4 @@ type previewer
 
 val create_previewer : Brr.El.t -> previewer
 val preview : previewer -> string -> unit
+val preview_compiled : previewer -> Slipshow.delayed -> unit

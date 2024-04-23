@@ -5,6 +5,9 @@ type asset = Ast.asset =
 type starting_state = int list * string
 type delayed
 
+val delayed_to_string : delayed -> string
+val string_to_delayed : string -> delayed
+
 val delayed :
   ?math_link:asset ->
   ?slip_css_link:asset ->

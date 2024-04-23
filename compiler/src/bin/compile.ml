@@ -70,7 +70,16 @@ let compile ~math_link ~slip_css_link ~theorem_css_link ~slipshow_js_link ~input
         let* () = Io.write output html in
         html
   in
-  if serve then Serve.do_serve input f
+  let f2 () =
+    let* content = Io.read input in
+    let result =
+      Slipshow.delayed ?math_link ?slip_css_link ?theorem_css_link
+        ?slipshow_js_link ~resolve_images:to_asset content
+    in
+    (* let () = print_endline (Slipshow.add_starting_state result None) in *)
+    result
+  in
+  if serve then Serve.do_serve input f2
   else if watch then Serve.do_watch input f
   else
     let+ _html = f () in
