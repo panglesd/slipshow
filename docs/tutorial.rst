@@ -204,7 +204,7 @@ elements using ``>``. For instance, try the following in the examples:
 		 {.definition}
 		 > A **prime number** is a number divisible by exactly two integers: 1, and itself.
 		 >
-		 > We consider 1 not to be a primer number, as it is divisible only by one integer.
+		 > We consider 1 not to be a prime number, as it is divisible only by one integer.
 
 Your presentation as a papyrus
 ------------------------------
@@ -330,7 +330,7 @@ unrolled), until the definition is at the top of the screen. We need two things 
 3. Tell the slipshow engine *where* to move the screen (in our case: such that
    the definition is on top).
 
-Unsuprisingly, all these information are put in the metadatas parts of slipshow
+Unsurprisingly, all these information are put in the metadatas parts of slipshow
 syntax: everything enclosed in ``{}``.
 
 Be able to refer to a part of your presentation
@@ -447,7 +447,7 @@ slipshow, following markdown "GFM" syntax:
    |81|82|83|84|85|86|87|88|89|90|
    |91|92|93|94|95|96|97|98|99|100|
 
-and explain the erasthotema schema by executing it live!
+and explain the Eratosthenes schema by executing it live!
 
 Starting animations
 ~~~~~~~~~~~~~~~~~~~
@@ -462,7 +462,7 @@ allows you to embed a video, or use any javascript library. For a scripted start
 and stepping of your animation, you can use the ``exec-at-unpause`` attribute,
 combined with the special ``slip-script`` codeblock!
 
-Here is a minimal example of an erasthotema animation. It is very dably written,
+Here is a minimal example of an Eratosthenes animation. It is very dably written,
 in JS/CSS/HTML, so you need some basic skills on these to understand it, but you
 can use libraries to make it less tedious.
 
@@ -515,6 +515,6 @@ to any part of your presentation!
 Moving freely
 ~~~~~~~~~~~~~
 
-During a presentation, it is important to be not be too tied to the original
+During a presentation, it is important to not be too tied to the original
 program. You can move the window freely, using the ``i``, ``j``, ``k`` and ``l``
 keys. Change the "fastness" using the ``f`` key.

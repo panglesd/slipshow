@@ -31,7 +31,7 @@ The presenter might want to show three information (`1`, `2` and `3`), each requ
 
 Of course, for many kind of presentation, with very few content in the slide, this is not a problem at all. However, for some of them, it can be quite an issue! Having had many courses on various technical subjects (mostly math and computer science), I can see how slides degraded the experience from a blackboard presentation.
 
-By having the presentation "scroll down", to reveal new space usable by the presenter, without hiding everything. This is much closer to what happens with a blackboard: the presenter can erase half of it, and continue with the new free space! And a viewer a little bit late still has a chance to catchup, since half of the information is still there.
+Instead of starting of with a fresh slide, a slipshow presentation "scrolls down" to reveal new space usable by the presenter, without hiding everything. This is much closer to what happens with a blackboard: the presenter can erase half of it, and continue with the new free space! And a viewer a little bit late still has a chance to catch up, since half of the information is still there.
 
 ## Examples
 
@@ -39,6 +39,8 @@ You can find several example of slip presentation, from different versions of sl
 
 - [The slips to present slip](https://panglesd.github.io/slipshow/example/slipIntroduction.html)
 - [The slips of my thesis](http://choum.net/panglesd/slides/slides-js/slides.html) (old version of the engine)
+
+Use the arrows to navigate in the presentation.
 
 ##  Tutorial, API and Documentation
 
@@ -71,11 +73,11 @@ $ slipshow -o file.html file.md --watch
 $ slipshow -o file.html file.md --serve
 ```
 
-Your ready to go! Have a look at the syntax, or the full tutorial for a more gentle introduction.
+You're ready to go! Have a look at the syntax, or the full tutorial for a more gentle introduction.
 
 ## Contributing
 
-You can issue a Pull Request of any kind, report a bug, ask for a new feature, suggest or PR an enhancement on the documentation... You can also [write a theme](https://slipshow.readthedocs.io/en/latest/themes.html#writing-a-theme).
+You can issue a Pull Request of any kind, report a bug, ask for a new feature, suggest an enhancement on the documentation (or make a Pull Request)... You can also [write a theme](https://slipshow.readthedocs.io/en/latest/themes.html#writing-a-theme).
 
 ## License
 
