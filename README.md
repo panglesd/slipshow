@@ -37,8 +37,8 @@ Instead of starting of with a fresh slide, a slipshow presentation "scrolls down
 
 You can find several example of slip presentation, from different versions of slip. As they were from early stage of developpement, looking at the source code can be helpful but many things may have changed. Only the official example, tutorial and documentation are kept up to date.
 
-- [The slips to present slip](https://panglesd.github.io/slipshow/example/slipIntroduction.html)
-- [The slips of my thesis](http://choum.net/panglesd/slides/slides-js/slides.html) (old version of the engine)
+- [The slips of my thesis](http://choum.net/panglesd/slides/slides-js/slides.html), the very first presentation that used (a very early version of) slipshow,
+- [Some other technical presentation](https://choum.net/panglesd/slides/WDCM-2021-slips/wdcm-ada.html) (that also used an early version of the engine)
 
 Use the arrows to navigate in the presentation.
 
