@@ -20,10 +20,11 @@ depends: [
   "lwt"
   "inotify"
   "js_of_ocaml-compiler"
+  "js_of_ocaml-lwt"
   "magic-mime"
   "dream"
   "fpath"
-  "dream-livereload"
+  "ppx_blob"
   "odoc" {with-doc}
   "ocamlformat" {with-dev-setup & = "0.26.1"}
 ]

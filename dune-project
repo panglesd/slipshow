@@ -32,9 +32,12 @@
    lwt
    inotify
    js_of_ocaml-compiler
+   js_of_ocaml-lwt
    magic-mime
    dream
    fpath
+   brr
+   ppx_blob
   (odoc :with-doc)
   (ocamlformat
    (and :with-dev-setup (= 0.26.1))))
