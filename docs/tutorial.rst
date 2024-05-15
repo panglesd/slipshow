@@ -5,7 +5,7 @@ Tutorial
 
 This tutorial assumes you have access to the slipshow compiler. If you are only
 interested in trying out slipshow before deciding to install it (or not), you
-can use the `sliphub editor<sliphub.choum.net/new`_: it requires no installation
+can use the `sliphub editor<sliphub.choum.net/new>`_: it requires no installation
 on your computer, nor to create any account!
 
 If you do want to use slipshow, we recommand completing the
