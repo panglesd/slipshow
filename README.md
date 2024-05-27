@@ -1,14 +1,10 @@
 # slipshow
 
-> [!WARNING]
->
-> Slipshow is under heavy modifications: it now includes a compiler from markdown to a standalone slipshow presentation!
->
-> The documentation isn't yet up-to-date. You can have at look at [sliphub.choum.net](https://sliphub.choum.net) for some preliminary information.
-
 **Slipshow is a tool specifically designed for technical presentations where traditional slides are not enough.**
 
 In a slipshow presentation, the equivalent of a slide is called a _slip_. Each slip is like a slide, but with no bottom limit. That is, the content can be arbitrarily long! During the presentation, the camera will "scroll" down to reveal the hidden content, following a script given by the presenter!
+
+![](slip_scroll.gif)
 
 Here are the goals of slipshow, in no specific orders:
 
