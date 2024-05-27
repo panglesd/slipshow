@@ -24,6 +24,7 @@ depends: [
   "magic-mime"
   "dream"
   "fpath"
+  "brr"
   "ppx_blob"
   "odoc" {with-doc}
   "ocamlformat" {with-dev-setup & = "0.26.1"}
