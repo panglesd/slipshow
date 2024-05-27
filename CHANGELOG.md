@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## Fixed
+
+- Use 127.0.0.1 to avoid problem with `localhost` in musl-based compilation
+- Fix log message in `--serve`
+- Fix `slip-script` attributes
+- Fixed file watching for emacs and vim
+- Fixed flickering on `--serve` when saving, using slipshow preview
+- Vendor forked cmarkit
+
 ## [v0.0.31] February 5th, 2024.
 
 ### Added
