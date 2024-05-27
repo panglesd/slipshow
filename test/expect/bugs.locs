@@ -1,0 +1,50 @@
+Blocks:
+File "bugs.md", lines 1-17
+  Heading, level 1:
+  File "bugs.md", lines 1-2, characters 0-4
+    Text:
+    File "bugs.md", line 1, characters 0-4
+    Setext underline:
+    File "bugs.md", line 2, characters 0-4
+  Blank line:
+  File "bugs.md", line 3
+  Paragraph:
+  File "bugs.md", lines 4-5, characters 0-8
+    Inlines:
+    File "bugs.md", lines 4-5, characters 0-8
+      Text:
+      File "bugs.md", line 4, characters 0-64
+      Soft break:
+      File "bugs.md", lines 4-5, characters 64-0
+        Layout before:
+        File "bugs.md", line 4, characters 64-65
+        Layout after:
+        File "bugs.md", line 5
+      Text:
+      File "bugs.md", line 5, characters 0-8
+  Blank line:
+  File "bugs.md", line 6
+  Code block:
+  File "bugs.md", lines 7-11, characters 0-3
+    Opening fence:
+    File "bugs.md", line 7, characters 0-3
+    Code line:
+    File "bugs.md", line 8, characters 0-10
+    Code line:
+    File "bugs.md", line 9
+    Code line:
+    File "bugs.md", line 10, characters 0-25
+    Closing fence:
+    File "bugs.md", line 11, characters 0-3
+  Blank line:
+  File "bugs.md", line 12
+  Blank line:
+  File "bugs.md", line 13
+  Blank line:
+  File "bugs.md", line 14
+  Blank line:
+  File "bugs.md", line 15
+  Blank line:
+  File "bugs.md", line 16
+  Blank line:
+  File "bugs.md", line 17

@@ -1,0 +1,10 @@
+\section{Bugs}
+
+Add a section for the bug and the CommonMark that triggers it as
+follows:
+
+\begin{verbatim}
+# Bug #NUM
+
+The triggering CommonMark
+\end{verbatim}

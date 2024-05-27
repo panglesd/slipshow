@@ -1,0 +1,465 @@
+\section{Extensions}
+
+\subsection{Footnotes}
+
+This is a footnote in history\footnote{\label{fn-1}
+And it can have
+lazy continuation lines and multiple paragraphs
+
+If you indent one column after the footnote label start.
+
+\begin{verbatim}
+cb
+\end{verbatim}
+
+\begin{itemize}
+\item{}
+list item
+ablc
+\item{}
+another item
+\end{itemize}
+} with mutiple references\textsuperscript{\ref{fn-1}}
+and even \textsuperscript{\ref{fn-1}}
+
+This is no longer the footnote.
+
+Can we make footnotes in footnotes\footnote{\label{fn-2}
+This gets tricky but I guess we could have a footnote\footnote{\label{fn-tricky}
+The foot of the footnote. But that's not going to link back\textsuperscript{\ref{fn-2}}
+} in
+a footnote. Also footnote\textsuperscript{\ref{fn-1}} in footnotes\textsuperscript{\ref{fn-2}} is\footnote{\label{fn-3}} tricky for getting
+all back references rendered correctly.
+
+Second footnote
+} ?
+
+Not the footnote
+
+Not the footnote but a reference to an empty footnote\textsuperscript{\ref{fn-3}}
+
+Not a footnote [\textasciicircum{}]
+
+[\textasciicircum{}]: not a footnote.
+
+\subsection{Strikethrough}
+
+The stroken \sout{\emph{emph}}.
+
+Nesting the nest \sout{\emph{emph} \sout{stroke} \emph{emph \textbf{emph  \sout{strikeagain}}}}
+
+There must be no blanks after the opener and before the closer. This
+is \textasciitilde{}\textasciitilde{} not an opener and \textasciitilde{}\textasciitilde{}this won't open \sout{that does}.
+
+\begin{itemize}
+\item{}
+Here we have \sout{stroken \texttt{code}}.
+\item{}
+Here we have \sout{nested \sout{stroken} ok}
+\end{itemize}
+
+\subsection{Math}
+
+The inline \(\sqrt{x^2-1}\) equation.
+
+There must be no blanks after the opener and before the closer. This
+makes so you can donate \$5 or \$10 dollars here and there without problem.
+
+There is no such think as nesting \(\sqrt{x^2-1}\)+3\(+3\). As usual
+delimiters can be \$escaped\$ \(\sqrt{16\$}\)
+
+Amazing, this is \href{https://example.org}{hyperlinked math \(3x^2\)}
+
+The HTML renderer should be careful with \(a < b\) escapes.
+
+Display math can be in \texttt{math} code blocks.
+\[
+\left( \sum_{k=1}^n a_k b_k \right)^2 < \Phi
+\]
+
+But it can also be in \[ \left( \sum_{k=1}^n
+a_k b_k \right)^2 < \Phi \]
+
+\subsection{List task items}
+
+\begin{itemize}
+\item{} \lbrack\phantom{x}\rbrack \enspace
+Task open
+\item{} \lbrack x\rbrack \enspace
+Task done
+\item{} \lbrack X\rbrack \enspace
+Task done
+\item{} \lbrack ✓\rbrack \enspace
+Task done (U+2713, CHECK MARK)
+\item{} \lbrack ✔\rbrack \enspace
+Task done (U+2714, HEAVY CHECK MARK)
+Indent
+\item{}
+Of course this can all be nested
+
+\begin{itemize}
+\item{} \lbrack 𐄂\rbrack \enspace
+Task done (U+10102, AEGEAN CHECK MARK)
+It will be done for sure.
+
+\begin{verbatim}
+code block
+\end{verbatim}
+
+Not a code block
+\item{} \lbrack x\rbrack \enspace
+Task done
+\item{} \lbrack ~\rbrack \enspace
+Task cancelled
+Paragraphy
+\item{}
+[x]Not a task
+\item{}
+[x] Not a task
+\end{itemize}
+\item{} \lbrack\phantom{x}\rbrack \enspace\item{} \lbrack\phantom{x}\rbrack \enspace
+a
+
+\begin{verbatim}
+Code
+\end{verbatim}
+
+Not code
+\item{} \lbrack\phantom{x}\rbrack \enspace
+\begin{verbatim}
+Code
+\end{verbatim}
+
+Not code
+\end{itemize}
+
+\subsection{Tables}
+
+A sample table:
+
+\bigskip
+\begin{tabular}{llll}
+\multicolumn{1}{c}{\bfseries{}Id}
+ &
+\multicolumn{1}{r}{\bfseries{}Name}
+ &
+\multicolumn{1}{l}{\bfseries{}Description}
+ &
+\multicolumn{1}{r}{\bfseries{}Link}
+\\
+\hline
+\multicolumn{1}{c}{1}
+ &
+\multicolumn{1}{r}{OCaml}
+ &
+\multicolumn{1}{l}{The OCaml website}
+ &
+\multicolumn{1}{r}{\url{https://ocaml.org}}
+\\
+\multicolumn{1}{c}{2}
+ &
+\multicolumn{1}{r}{Haskell}
+ &
+\multicolumn{1}{l}{The Haskell website}
+ &
+\multicolumn{1}{r}{\url{https://haskell.org}}
+\\
+\multicolumn{1}{c}{3}
+ &
+\multicolumn{1}{r}{MDN Web docs}
+ &
+\multicolumn{1}{l}{Web dev docs}
+ &
+\multicolumn{1}{r}{\url{https://developer.mozilla.org/}}
+\\
+\multicolumn{1}{c}{4}
+ &
+\multicolumn{1}{r}{Wikipedia}
+ &
+\multicolumn{1}{l}{The Free Encyclopedia}
+ &
+\multicolumn{1}{r}{\url{https://wikipedia.org}}
+\\
+\hline
+\end{tabular}
+\bigskip
+
+Testing these non separator pipes.
+
+\bigskip
+\begin{tabular}{lll}
+{\bfseries{}Fancy}
+ &
+{\bfseries{}maybe}
+ &
+{\bfseries{}hu|glu}
+\\
+\hline
+{\emph{a | b}}
+ &
+{\texttt{code |}}
+ &
+{\href{https://example.org}{bl|a}}
+\\
+{not | two cols}
+ &
+{\(\sqrt(x^2 - 1)\)}
+ &
+\\
+\hline
+\end{tabular}
+\bigskip
+
+A table with changing labels and alignement:
+
+\bigskip
+\begin{tabular}{ll}
+{\bfseries{}h1}
+ &
+\multicolumn{1}{c}{\bfseries{}h2}
+\\
+\hline
+{1}
+ &
+\multicolumn{1}{c}{2}
+\\
+\multicolumn{1}{l}{\bfseries{}h3}
+ &
+\multicolumn{1}{r}{\bfseries{}h4}
+\\
+\hline
+\multicolumn{1}{l}{3}
+ &
+\multicolumn{1}{r}{4}
+\\
+\hline
+\end{tabular}
+\bigskip
+
+A simple header less table with left and right aligned columns
+
+\bigskip
+\begin{tabular}{ll}
+\hline
+\multicolumn{1}{l}{1}
+ &
+\multicolumn{1}{r}{2}
+\\
+\hline
+\end{tabular}
+\bigskip
+
+The simplest table:
+
+\bigskip
+\begin{tabular}{ll}
+\hline
+{1}
+ &
+{2}
+\\
+\hline
+\end{tabular}
+\bigskip
+
+A header only table:
+
+\bigskip
+\begin{tabular}{ll}
+\multicolumn{1}{c}{\bfseries{}h1}
+ &
+\multicolumn{1}{c}{\bfseries{}h2}
+\\
+\hline
+\hline
+\end{tabular}
+\bigskip
+
+Maximal number of columns all rows defines number of colums:
+
+\bigskip
+\begin{tabular}{llll}
+\multicolumn{1}{l}{\bfseries{}h1}
+ &
+\multicolumn{1}{c}{\bfseries{}h2}
+ &
+\multicolumn{1}{r}{\bfseries{}h3}
+ &
+\\
+\hline
+\multicolumn{1}{l}{left}
+ &
+\multicolumn{1}{c}{center}
+ &
+\multicolumn{1}{r}{right}
+ &
+\\
+\multicolumn{1}{l}{ha!}
+ &
+\multicolumn{1}{c}{four}
+ &
+\multicolumn{1}{r}{columns}
+ &
+{in fact}
+\\
+\multicolumn{1}{l}{}
+ &
+\multicolumn{1}{c}{}
+ &
+\multicolumn{1}{r}{}
+ &
+{}
+\\
+\multicolumn{1}{l}{}
+ &
+\multicolumn{1}{c}{}
+ &
+\multicolumn{1}{r}{}
+ &
+{a}
+\\
+\hline
+\end{tabular}
+\bigskip
+
+Header less table:
+
+\bigskip
+\begin{tabular}{ll}
+\hline
+{header}
+ &
+{less}
+\\
+{this}
+ &
+{is}
+\\
+\hline
+\end{tabular}
+\bigskip
+
+Another quoted header less table with aligement
+
+\begin{quote}
+\bigskip
+\begin{tabular}{ll}
+\hline
+\multicolumn{1}{r}{header}
+ &
+\multicolumn{1}{r}{less}
+\\
+\multicolumn{1}{r}{again}
+ &
+\multicolumn{1}{r}{aligned}
+\\
+\hline
+\end{tabular}
+\bigskip
+\end{quote}
+
+This is an empty table with three columns:
+
+\bigskip
+\begin{tabular}{lll}
+\hline
+{}
+ &
+{}
+ &
+{}
+\\
+\hline
+\end{tabular}
+\bigskip
+
+\subsection{Attributes}
+
+\subsubsection{Block attributes}
+% Attributes cannot be rendered in latex
+
+This is a paragraph with the \texttt{my-id} is.
+% Attributes cannot be rendered in latex
+
+I have \texttt{your-id}, not mine
+% Attributes cannot be rendered in latex
+
+I have \texttt{his-id}, not mine, not yours
+% Attributes cannot be rendered in latex
+
+\paragraph{This is a title with the \texttt{.blue} class}
+% Attributes cannot be rendered in latex
+
+\begin{itemize}
+\item{}
+This is an item where \texttt{key} has value \texttt{value}.
+\item{}
+It is not possible to attach attributes to list items... yet
+\end{itemize}
+% Attributes cannot be rendered in latex
+
+I'm a paragraph with many attributes
+% Attributes cannot be rendered in latex
+
+I have much more attribute than the previous one, since they stack
+% Attributes cannot be rendered in latex
+
+I have your id
+% Attributes cannot be rendered in latex
+
+I have a lot of class: \texttt{class1}, \texttt{class2}, \texttt{class3} and \texttt{class4}
+% Attributes cannot be rendered in latex
+
+Me too!
+% Attributes cannot be rendered in latex
+
+But spaceships matter.
+% Attributes cannot be rendered in latex
+
+Some word
+% Attributes cannot be rendered in latex
+% Attributes cannot be rendered in latex
+
+\subsubsection{Inline attributes}
+
+% Attributes omitted
+ not a block attribute, but a standalone inline attribute, as I have content in the line.
+
+In the middle of paragraphs, % Attributes omitted
+ work.
+
+Similarly, at the end, they work % Attributes omitted
+
+
+Without specified delimitations, inline attributes are either % Attributes omitted
+ or attached to the % Attributes omitted
+.
+
+Inline attributes can % Attributes omitted
+ including % Attributes omitted
+.
+
+Attributes can be nested: \href{example.com}{link % Attributes omitted
+}, % Attributes omitted
+, % Attributes omitted
+.
+
+\subsubsection{Attributes definition}
+
+We can provide attributes% Unknown label definition type for a
+ definition to avoid% Unknown label definition type for a
+ cluttering% Unknown label definition type for cluttering
+ a line with% Unknown label definition type for a
+ attributes.
+% Unknown Cmarkit block
+% Unknown Cmarkit block
+
+Attributes attached to attribute definition do nothing:
+
+A b% Unknown label definition type for attr-attached-def
+ c
+% Unknown Cmarkit block
+
+However, for link definition, they are present:
+
+A \href{http://example.com}{b} c

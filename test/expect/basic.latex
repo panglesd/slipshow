@@ -1,0 +1,213 @@
+\section{Basic tests}
+
+Basic tests for all CommonMark constructs.
+
+\subsection{Testing autolinks}
+
+This is an \url{http://example.org} and another one \url{mailto:you@example.org}.
+
+\subsection{Testing breaks}
+
+A line ending (not in a code span or HTML tag) that is preceded by two
+or more spaces and does not occur at the end of a block is parsed as a
+hard line break.
+
+So this means we had softbreaks so far and now we get  \\
+a hard break\\
+and another one.
+
+\begin{quote}
+So this means we had softbreaks so far and now we get  \\
+a hard break\\
+and another one.
+This is very soooft.
+\end{quote}
+
+\subsection{Testing code spans}
+
+This is a multi-line code\texttt{ code span `` it has backticks in there}
+
+Sometimes code spans \texttt{`can have really ``` strange layout}. Do you fancy \texttt{`A\_polymorphic\_variant} ?
+
+\subsection{Testing emphasis}
+
+There is \emph{more} than \emph{one syntax} for \textbf{emphasis} and \textbf{strong
+emphasis}.  We should be careful about \textbf{embedded * marker}. This
+will be \textbf{tricky * to handle}. This \emph{is not ** what} you want ?
+
+\subsection{Testing links, images and link reference definitions}
+
+This is an \protect\includegraphics{/heyho}
+
+That is totally \href{/hohoho}{colla    psed} and
+that is \href{/veryshort}{\texttt{short cuted}}
+
+Shortcuts can be better than \href{/veryshort}{full references} but not
+always and we'd like to trip their \href{/veryshort}{label}.
+
+\begin{quote}\end{quote}
+
+\subsection{Testing raw HTML}
+
+Haha % Raw CommonMark HTML omitted
+a% Raw CommonMark HTML omitted
+% Raw CommonMark HTML omitted
+ hihi this is not the end yet.
+
+foo % Raw CommonMark HTML omitted
+u% Raw CommonMark HTML omitted
+
+
+\begin{quote}
+Haha % Raw CommonMark HTML omitted
+a% Raw CommonMark HTML omitted
+% Raw CommonMark HTML omitted
+ hihi this is not the end yet.
+\end{quote}
+
+\subsection{Testing blank lines}
+
+Impressive isn't it ?
+
+\subsection{Testing block quotes}
+
+\begin{quote}
+\begin{quote}
+How is
+Nestyfing going on
+These irregularities \textbf{will} normalize
+We keep only the first block quote indent
+\end{quote}
+\end{quote}
+
+\begin{quote}
+\subsection{Further tests}
+\end{quote}
+
+We need a little quote here
+
+\begin{quote}
+It's warranted.
+\end{quote}
+
+\subsection{Testing code blocks}
+
+\begin{lstlisting}[language=layout]
+\end{lstlisting}
+
+\begin{lstlisting}[language=ocaml]
+
+type t = 
+| A of int
+| B of string
+
+let square x = x *. x
+\end{lstlisting}
+
+The indented code block:
+
+\begin{verbatim}
+a b c d 
+ a b c d
+ a b c d
+  
+
+a
+   a b c
+\end{verbatim}
+
+\begin{quote}
+\begin{lstlisting}[language=ocaml]
+
+type t = 
+| A of int
+| B of string
+
+let square x = x *. x
+\end{lstlisting}
+\end{quote}
+
+\subsection{Testing headings}
+
+\section{aaa
+aaaa}
+
+\begin{quote}
+\subsection{bbb \texttt{hey}
+bbbb}
+\end{quote}
+
+\section{That's one way}
+
+\subsubsection{It's a long way to the heading}
+
+\subsection{Testing HTML block}
+
+% CommonMark HTML block omitted
+
+\begin{itemize}
+\item{}
+% CommonMark HTML block omitted
+\end{itemize}
+
+\subsection{Testing lists}
+
+The \texttt{square} function is the root. There are reasons for this:
+
+\begin{enumerate}
+\item{}
+There is no reason. There should be a reason or an \url{http://example.org}
+\item{}
+Maybe that's the reason. But it may not be the reason.
+\item{}
+Is reason the only tool ?
+\end{enumerate}
+
+\begin{quote}
+Quoted bullets
+
+\begin{itemize}
+\item{}
+Is this important ?
+\end{itemize}
+\end{quote}
+
+\begin{itemize}
+\item{}
+\begin{itemize}
+\item{}
+Well it's in the spec
+\end{itemize}
+\item{}\end{itemize}
+
+Empty list item above
+
+\subsection{Testing paragraphs}
+
+We really want your paragraph layout preserved.
+Really ?
+Really.
+Really.
+Really.
+
+\begin{quote}
+We really want your paragraph layout preserved.
+Really ?
+Really.
+Really.
+Really.
+\end{quote}
+
+\subsection{Testing thematic breaks}
+
+\begin{center}\rule{0.5\linewidth}{.25pt}\end{center}
+
+\begin{center}\rule{0.5\linewidth}{.25pt}\end{center}
+
+\begin{center}\rule{0.5\linewidth}{.25pt}\end{center}
+
+\begin{center}\rule{0.5\linewidth}{.25pt}\end{center}
+
+\begin{quote}
+\begin{center}\rule{0.5\linewidth}{.25pt}\end{center}
+\end{quote}

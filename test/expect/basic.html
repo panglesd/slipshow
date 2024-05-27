@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Basic</title>
+  <style type="text/css">
+    *, *::before, *::after { box-sizing: border-box }
+    body { min-height: 100vh; min-height: 100svh; }
+    body, h1, h2, h3, h4, p, figure, blockquote, dl, dd { margin: 0; }
+    pre, input, button, textarea, select { font: inherit }
+
+    :root
+    {  font-size: 100%;
+       /* font-synthesis: none; */
+       -webkit-text-size-adjust: none;
+
+      --font_headings: system-ui, sans-serif;
+      --font_body: system-ui, sans-serif;
+      --font_mono: monospace;
+
+      --font_m: 1rem; --leading_m: 1.5rem;
+      --font_s: 0.82rem;
+      --font_l: 1.125rem; --leadig_l: 1.34rem;
+      --font_xl: 1.5rem; --leading_xl: 1.8rem;
+      --font_xxl: 2.5rem; --leading_xxl: 3rem;
+
+      --font_mono_ratio:
+        /* mono / body size, difficult to find a good cross-browser value */
+           0.92;
+      --leading_mono_m: calc(var(--leading_m) * var(--font_mono_ratio));
+
+      --sp_xxs: calc(0.25 * var(--leading_m));
+      --sp_xs: calc(0.5 * var(--leading_m));
+      --sp_s: calc(0.75 * var(--leading_m));
+      --sp_m: var(--leading_m);
+      --sp_l: calc(1.125 * var(--leading_m));
+      --sp_xl: calc(1.5 * var(--leading_m));
+      --sp_xxl: calc(2.0 * var(--leading_m));
+
+      --measure_m: 73ch;
+      --page_inline_pad: var(--sp_m);
+      --page_block_pad: var(--sp_xl);
+
+      --blockquote_border: 2px solid #ACACAC;
+      --rule_border: 1px solid #CACBCE;
+      --heading_border: 1px solid #EAECEF;
+      --table_cell_pad: 0.4em;
+      --table_hover: #f5f5f5;
+      --table_sep: #efefef;
+      --table_cell_inline_pad: 0.625em;
+      --table_cell_block_pad: 0.25em;
+
+      --code_span_bg: #EFF1F3;
+      --code_span_inline_pad: 0.35ch;
+      --code_block_bg: #F6F8FA;
+      --code_block_bleed: 0.8ch;
+      --code_block_block_pad: 1ch;
+
+      --a_fg: #0969DA;
+      --a_fg_hover: #1882ff;
+      --a_visited: #8E34A5;
+      --target_color: #FFFF96;
+    }
+
+    body
+    { font-family: var(--font_body); font-weight: 400;
+      font-size: var(--font_m); line-height: var(--leading_m);
+      max-inline-size: var(--measure_m);
+      padding-block: var(--page_block_pad);
+      padding-inline: var(--page_inline_pad);
+      margin-inline: auto;
+      background-color: white; color: black; }
+
+    body > *:first-child { margin-block-start: 0 }
+    body * + * { margin-block-start: var(--sp_xs) }
+
+    /* Blocks */
+
+    h1, h2, h3, h4, h5, h6
+    { font-family: var(--font_headings); font-weight: 600}
+
+    h1 { font-size: var(--font_xxl); line-height: var(--leading_xxl);
+         margin-block-start: var(--sp_xl); }
+
+    h3 + *, h4 + *, h5 + *, h6 + *
+    { margin-block-start: var(--sp_xs); }
+
+    h2 { font-size: var(--font_xl); line-height: var(--leading_xl);
+         margin-block-start: var(--sp_m);
+         padding-block-end: var(--sp_xxs);
+         border-bottom: var(--heading_border); }
+
+    h3 { font-size: var(--font_l); line-height: var(--leading_l);
+         margin-block-start: var(--sp_m); }
+
+    h4 { font-weight: 400; font-style: oblique; }
+
+    ul, ol { padding-inline-start: 3ch; }
+    li + li { margin-block-start: var(--sp_xxs); }
+
+    li > .task { display: flex; margin:0; padding:0; align-items: baseline;
+                 column-gap: var(--sp_xxs); }
+    li > .task > input { padding:0; margin:0 }
+    li > .task > div { margin:0; padding:0 }
+
+    blockquote > blockquote { margin-inline: 0.25ch; }
+    blockquote
+    {  margin-inline: 2ch;
+       padding-inline: 1ch;
+       border-left: var(--blockquote_border) }
+
+    hr + * { margin-block-start: calc(var(--sp_s) - 1px); }
+    hr { border: 0; border-block-end: var(--rule_border);
+         width: 10ch;
+         margin-block-start: var(--sp_s); margin-inline: auto; }
+
+    pre
+    { line-height: var(--leading_mono_m);
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+      background-color: var(--code_block_bg);
+      padding-block: var(--code_block_block_pad);
+      padding-inline: var(--code_block_bleed);
+      margin-inline: calc(-1.0 * var(--code_block_bleed)) }
+
+    pre code { padding-inline: 0; background-color: inherit }
+
+    [role="region"] { overflow: auto }
+    table { border-collapse: separate; border-spacing: 0; white-space: nowrap }
+    tr:hover > td { background: var(--table_hover) }
+    th, td, th.left, td.left { text-align: left }
+    th.right, td.right { text-align: right }
+    th.center, td.center { text-align: center }
+    td, th { border: 0px solid var(--table_sep); border-block-end-width: 1px }
+    tr:first-child td { border-block-start-width: 1px; } /* headerless */
+    th { font-weight: 600 }
+    th, td { padding-inline: var(--table_cell_inline_pad);
+             padding-block: var(--table_cell_block_pad); }
+
+    /* Inlines */
+
+    code
+    { font-family: var(--font_mono);
+      font-size: calc(1em * var(--font_mono_ratio));
+      background-color: var(--code_span_bg);
+      padding-inline: var(--code_span_inline_pad);
+      border-radius: 3px;
+      white-space: break-spaces; }
+
+    a:hover { color: var(--a_fg_hover) }
+    a:hover:visited { color: var(--a_visited); }
+    a { color: var(--a_fg);
+        text-decoration: underline;
+        text-decoration-thickness: 0.04em;
+        text-decoration-skip-ink: all;
+        text-underline-offset: 3px; }
+
+    *:hover > a.anchor { visibility: visible; }
+    body > *:hover:first-child > a.anchor { visibility: hidden }
+    a.anchor:visited { color: var(--a_fg); }
+    a.anchor:before { content: "#";  }
+    a.anchor:hover { color: var(--a_fg_hover); }
+    a.anchor
+    { visibility: hidden; position: absolute;
+      font-weight: 400; font-style: normal;
+      font-size: 0.9em;
+      margin-left: -2.5ch;
+      padding-right: 1ch; padding-left: 1ch; /* To remain selectable */
+      color: var(--a_fg_hover);
+      text-decoration: none; }
+
+    *:target
+    { background-color: var(--target_color);
+      box-shadow: 0 0 0 3px var(--target_color); }
+
+    em { font-style: oblique }
+    b, strong { font-weight: 600 }
+    small { font-size: var(--font_s) }
+    sub, sup { vertical-align: baseline;
+               font-size: 0.75em;
+               line-height: 0; position:relative }
+    sub { bottom: -0.25em }
+    sup { top: -0.5em }
+
+    /* Footnotes */
+
+    a.fn-label { text-decoration: none; }
+    a:target.fn-label { box-shadow: none }
+
+    [role="doc-endnotes"]
+    { font-size: 87.5%;
+      line-height: calc(0.875 * var(--leading_m));
+      margin-block-start: var(--sp_m);
+      border-block-start: var(--rule_border); }
+    [role="doc-endnotes"] > ol > li * + * { margin-block-start: var(--sp_xxs) }
+    [role="doc-endnotes"] > ol { padding-inline-start: 2ex; }
+    [role="doc-endnotes"] a.fn-label { padding-right:0.5ex; }
+
+    [role="doc-endnotes"] > ol > li:target
+    { background-color: inherit; box-shadow: none }
+    [role="doc-endnotes"] > ol > li:target::marker
+    { font-weight:900; /* Can't set background */ }
+
+  </style>
+</head>
+<body>
+<h1>Basic tests</h1>
+<p>Basic tests for all CommonMark constructs.</p>
+<h2>Testing autolinks</h2>
+<p>This is an <a href="http://example.org">http://example.org</a> and another one <a href="mailto:you@example.org">you@example.org</a>.</p>
+<h2>Testing breaks</h2>
+<p>A line ending (not in a code span or HTML tag) that is preceded by two
+or more spaces and does not occur at the end of a block is parsed as a
+hard line break.</p>
+<p>So this means we had softbreaks so far and now we get  <br>
+a hard break<br>
+and another one.</p>
+<blockquote>
+<p>So this means we had softbreaks so far and now we get  <br>
+a hard break<br>
+and another one.
+This is very soooft.</p>
+</blockquote>
+<h2>Testing code spans</h2>
+<p>This is a multi-line code<code> code span `` it has backticks in there</code></p>
+<p>Sometimes code spans <code>`can have really ``` strange layout</code>. Do you fancy <code>`A_polymorphic_variant</code> ?</p>
+<h2>Testing emphasis</h2>
+<p>There is <em>more</em> than <em>one syntax</em> for <strong>emphasis</strong> and <strong>strong
+emphasis</strong>.  We should be careful about <strong>embedded * marker</strong>. This
+will be <strong>tricky * to handle</strong>. This <em>is not ** what</em> you want ?</p>
+<h2>Testing links, images and link reference definitions</h2>
+<p>This is an <img src="/heyho" alt="inline image" title="The
+multine title" ></p>
+<p>That is totally <a href="/hohoho" title="And again these 
+multi
+line titles">colla    psed</a> and
+that is <a href="/veryshort" title="But very
+important"><code>short cuted</code></a></p>
+<p>Shortcuts can be better than <a href="/veryshort" title="But very
+important">full references</a> but not
+always and we'd like to trip their <a href="/veryshort" title="But very
+important">label</a>.</p>
+<blockquote>
+</blockquote>
+<h2>Testing raw HTML</h2>
+<p>Haha <a>a</a><b2
+data="foo" > hihi this is not the end yet.</p>
+<p>foo <a href="\*" />u</a></p>
+<blockquote>
+<p>Haha <a>a</a><b2
+data="foo" > hihi this is not the end yet.</p>
+</blockquote>
+<h2>Testing blank lines</h2>
+<p>Impressive isn't it ?</p>
+<h2>Testing block quotes</h2>
+<blockquote>
+<blockquote>
+<p>How is
+Nestyfing going on
+These irregularities <strong>will</strong> normalize
+We keep only the first block quote indent</p>
+</blockquote>
+</blockquote>
+<blockquote>
+<h2>Further tests</h2>
+</blockquote>
+<p>We need a little quote here</p>
+<blockquote>
+<p>It's warranted.</p>
+</blockquote>
+<h2>Testing code blocks</h2>
+<pre><code class="language-layout"></code></pre>
+<pre><code class="language-ocaml">
+type t = 
+| A of int
+| B of string
+
+let square x = x *. x
+</code></pre>
+<p>The indented code block:</p>
+<pre><code>a b c d 
+ a b c d
+ a b c d
+  
+
+a
+   a b c
+</code></pre>
+<blockquote>
+<pre><code class="language-ocaml">
+type t = 
+| A of int
+| B of string
+
+let square x = x *. x
+</code></pre>
+</blockquote>
+<h2>Testing headings</h2>
+<h1>aaa
+aaaa</h1>
+<blockquote>
+<h2>bbb <code>hey</code>
+bbbb</h2>
+</blockquote>
+<h1>That's one way</h1>
+<h3>It's a long way to the heading</h3>
+<h2>Testing HTML block</h2>
+<aside>
+<p>There is no aside</p>
+</aside>
+<ul>
+<li>
+<aside>
+<p>There is no aside</p>
+</aside>
+</li>
+</ul>
+<h2>Testing lists</h2>
+<p>The <code>square</code> function is the root. There are reasons for this:</p>
+<ol>
+<li>There is no reason. There should be a reason or an <a href="http://example.org">http://example.org</a></li>
+<li>Maybe that's the reason. But it may not be the reason.</li>
+<li>Is reason the only tool ?</li>
+</ol>
+<blockquote>
+<p>Quoted bullets</p>
+<ul>
+<li>Is this important ?</li>
+</ul>
+</blockquote>
+<ul>
+<li>
+<ul>
+<li>Well it's in the spec</li>
+</ul>
+</li>
+<li></li>
+</ul>
+<p>Empty list item above</p>
+<h2>Testing paragraphs</h2>
+<p>We really want your paragraph layout preserved.
+Really ?
+Really.
+Really.
+Really.</p>
+<blockquote>
+<p>We really want your paragraph layout preserved.
+Really ?
+Really.
+Really.
+Really.</p>
+</blockquote>
+<h2>Testing thematic breaks</h2>
+<hr>
+<hr>
+<hr>
+<hr>
+<blockquote>
+<hr>
+</blockquote>
+</body>
+</html>

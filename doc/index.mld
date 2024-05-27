@@ -1,0 +1,68 @@
+{0 Cmarkit {%html: <span class="version">%%VERSION%%</span>%}}
+
+Cmarkit parses the {{:https://spec.commonmark.org/current}CommonMark
+specification}. It provides:
+
+- A CommonMark parser for UTF-8 encoded documents. Link label resolution
+  can be {{!Cmarkit.Label.resolvers}customized} and a non-strict
+  parsing mode can be activated to {{!Cmarkit.extensions}add}: strikethrough,
+  L{^A}T{_E}X math, footnotes, task items and tables.
+- An extensible abstract syntax tree for CommonMark documents with source
+  location tracking and best effort {{!Cmarkit_commonmark.layout}source layout
+  preservation}.
+- Abstract syntax tree {{!Cmarkit.Mapper}mapper} and {{!Cmarkit.Folder}folder}
+  abstractions for quick and concise tree transformations.
+- Extensible renderers for {{!Cmarkit_html}HTML},
+  {{!Cmarkit_latex}L{^A}T{_E}X} and {{!Cmarkit_commonmark}CommonMark} with
+  source layout preservation.
+
+See the {{!quick}quick start}.
+
+{1:cmarkit_library Library [cmarkit]}
+
+{!modules:
+Cmarkit
+Cmarkit_renderer
+Cmarkit_commonmark
+Cmarkit_html
+Cmarkit_latex
+}
+
+{1:quick Quick start}
+
+The following functions render CommonMark snippets using the built-in
+renderers. The parsing bit via {!Cmarkit.Doc.of_string} is always the same
+except for CommonMark rendering where we make sure to keep the layout
+for {{!Cmarkit_commonmark.layout}source layout preservation}.
+
+If [strict] is [true] the CommonMark specification is strictly
+followed otherwise the built-in {{!Cmarkit.extensions}extensions} are
+enabled.
+
+{[
+let cmark_to_html : strict:bool -> safe:bool -> string -> string =
+fun ~strict ~safe md ->
+  let doc = Cmarkit.Doc.of_string ~strict md in
+  Cmarkit_html.of_doc ~safe doc
+
+let cmark_to_latex : strict:bool -> string -> string =
+fun ~strict md ->
+  let doc = Cmarkit.Doc.of_string ~strict md in
+  Cmarkit_latex.of_doc doc
+
+let cmark_to_commonmark : strict:bool -> string -> string =
+fun ~strict md ->
+  let doc = Cmarkit.Doc.of_string ~layout:true ~strict md in
+  Cmarkit_commonmark.of_doc doc
+]}
+
+If you want to:
+
+{ul
+{- Extend the abstract syntax tree or the renderers, see
+   {{!Cmarkit_renderer.example}this example}.}
+{- Map parts of an abstract syntax, see {!Cmarkit.Mapper}.}
+{- Fold over parts of an abstract syntax, see {!Cmarkit.Folder}.}
+{- Interfere with link label definition and resolution, see
+   {{!Cmarkit.Label}labels} and their
+   {{!Cmarkit.Label.resolvers}resolvers}.}}
