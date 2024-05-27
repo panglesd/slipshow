@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Basic.exts</title>
+  <style type="text/css">
+    *, *::before, *::after { box-sizing: border-box }
+    body { min-height: 100vh; min-height: 100svh; }
+    body, h1, h2, h3, h4, p, figure, blockquote, dl, dd { margin: 0; }
+    pre, input, button, textarea, select { font: inherit }
+
+    :root
+    {  font-size: 100%;
+       /* font-synthesis: none; */
+       -webkit-text-size-adjust: none;
+
+      --font_headings: system-ui, sans-serif;
+      --font_body: system-ui, sans-serif;
+      --font_mono: monospace;
+
+      --font_m: 1rem; --leading_m: 1.5rem;
+      --font_s: 0.82rem;
+      --font_l: 1.125rem; --leadig_l: 1.34rem;
+      --font_xl: 1.5rem; --leading_xl: 1.8rem;
+      --font_xxl: 2.5rem; --leading_xxl: 3rem;
+
+      --font_mono_ratio:
+        /* mono / body size, difficult to find a good cross-browser value */
+           0.92;
+      --leading_mono_m: calc(var(--leading_m) * var(--font_mono_ratio));
+
+      --sp_xxs: calc(0.25 * var(--leading_m));
+      --sp_xs: calc(0.5 * var(--leading_m));
+      --sp_s: calc(0.75 * var(--leading_m));
+      --sp_m: var(--leading_m);
+      --sp_l: calc(1.125 * var(--leading_m));
+      --sp_xl: calc(1.5 * var(--leading_m));
+      --sp_xxl: calc(2.0 * var(--leading_m));
+
+      --measure_m: 73ch;
+      --page_inline_pad: var(--sp_m);
+      --page_block_pad: var(--sp_xl);
+
+      --blockquote_border: 2px solid #ACACAC;
+      --rule_border: 1px solid #CACBCE;
+      --heading_border: 1px solid #EAECEF;
+      --table_cell_pad: 0.4em;
+      --table_hover: #f5f5f5;
+      --table_sep: #efefef;
+      --table_cell_inline_pad: 0.625em;
+      --table_cell_block_pad: 0.25em;
+
+      --code_span_bg: #EFF1F3;
+      --code_span_inline_pad: 0.35ch;
+      --code_block_bg: #F6F8FA;
+      --code_block_bleed: 0.8ch;
+      --code_block_block_pad: 1ch;
+
+      --a_fg: #0969DA;
+      --a_fg_hover: #1882ff;
+      --a_visited: #8E34A5;
+      --target_color: #FFFF96;
+    }
+
+    body
+    { font-family: var(--font_body); font-weight: 400;
+      font-size: var(--font_m); line-height: var(--leading_m);
+      max-inline-size: var(--measure_m);
+      padding-block: var(--page_block_pad);
+      padding-inline: var(--page_inline_pad);
+      margin-inline: auto;
+      background-color: white; color: black; }
+
+    body > *:first-child { margin-block-start: 0 }
+    body * + * { margin-block-start: var(--sp_xs) }
+
+    /* Blocks */
+
+    h1, h2, h3, h4, h5, h6
+    { font-family: var(--font_headings); font-weight: 600}
+
+    h1 { font-size: var(--font_xxl); line-height: var(--leading_xxl);
+         margin-block-start: var(--sp_xl); }
+
+    h3 + *, h4 + *, h5 + *, h6 + *
+    { margin-block-start: var(--sp_xs); }
+
+    h2 { font-size: var(--font_xl); line-height: var(--leading_xl);
+         margin-block-start: var(--sp_m);
+         padding-block-end: var(--sp_xxs);
+         border-bottom: var(--heading_border); }
+
+    h3 { font-size: var(--font_l); line-height: var(--leading_l);
+         margin-block-start: var(--sp_m); }
+
+    h4 { font-weight: 400; font-style: oblique; }
+
+    ul, ol { padding-inline-start: 3ch; }
+    li + li { margin-block-start: var(--sp_xxs); }
+
+    li > .task { display: flex; margin:0; padding:0; align-items: baseline;
+                 column-gap: var(--sp_xxs); }
+    li > .task > input { padding:0; margin:0 }
+    li > .task > div { margin:0; padding:0 }
+
+    blockquote > blockquote { margin-inline: 0.25ch; }
+    blockquote
+    {  margin-inline: 2ch;
+       padding-inline: 1ch;
+       border-left: var(--blockquote_border) }
+
+    hr + * { margin-block-start: calc(var(--sp_s) - 1px); }
+    hr { border: 0; border-block-end: var(--rule_border);
+         width: 10ch;
+         margin-block-start: var(--sp_s); margin-inline: auto; }
+
+    pre
+    { line-height: var(--leading_mono_m);
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+      background-color: var(--code_block_bg);
+      padding-block: var(--code_block_block_pad);
+      padding-inline: var(--code_block_bleed);
+      margin-inline: calc(-1.0 * var(--code_block_bleed)) }
+
+    pre code { padding-inline: 0; background-color: inherit }
+
+    [role="region"] { overflow: auto }
+    table { border-collapse: separate; border-spacing: 0; white-space: nowrap }
+    tr:hover > td { background: var(--table_hover) }
+    th, td, th.left, td.left { text-align: left }
+    th.right, td.right { text-align: right }
+    th.center, td.center { text-align: center }
+    td, th { border: 0px solid var(--table_sep); border-block-end-width: 1px }
+    tr:first-child td { border-block-start-width: 1px; } /* headerless */
+    th { font-weight: 600 }
+    th, td { padding-inline: var(--table_cell_inline_pad);
+             padding-block: var(--table_cell_block_pad); }
+
+    /* Inlines */
+
+    code
+    { font-family: var(--font_mono);
+      font-size: calc(1em * var(--font_mono_ratio));
+      background-color: var(--code_span_bg);
+      padding-inline: var(--code_span_inline_pad);
+      border-radius: 3px;
+      white-space: break-spaces; }
+
+    a:hover { color: var(--a_fg_hover) }
+    a:hover:visited { color: var(--a_visited); }
+    a { color: var(--a_fg);
+        text-decoration: underline;
+        text-decoration-thickness: 0.04em;
+        text-decoration-skip-ink: all;
+        text-underline-offset: 3px; }
+
+    *:hover > a.anchor { visibility: visible; }
+    body > *:hover:first-child > a.anchor { visibility: hidden }
+    a.anchor:visited { color: var(--a_fg); }
+    a.anchor:before { content: "#";  }
+    a.anchor:hover { color: var(--a_fg_hover); }
+    a.anchor
+    { visibility: hidden; position: absolute;
+      font-weight: 400; font-style: normal;
+      font-size: 0.9em;
+      margin-left: -2.5ch;
+      padding-right: 1ch; padding-left: 1ch; /* To remain selectable */
+      color: var(--a_fg_hover);
+      text-decoration: none; }
+
+    *:target
+    { background-color: var(--target_color);
+      box-shadow: 0 0 0 3px var(--target_color); }
+
+    em { font-style: oblique }
+    b, strong { font-weight: 600 }
+    small { font-size: var(--font_s) }
+    sub, sup { vertical-align: baseline;
+               font-size: 0.75em;
+               line-height: 0; position:relative }
+    sub { bottom: -0.25em }
+    sup { top: -0.5em }
+
+    /* Footnotes */
+
+    a.fn-label { text-decoration: none; }
+    a:target.fn-label { box-shadow: none }
+
+    [role="doc-endnotes"]
+    { font-size: 87.5%;
+      line-height: calc(0.875 * var(--leading_m));
+      margin-block-start: var(--sp_m);
+      border-block-start: var(--rule_border); }
+    [role="doc-endnotes"] > ol > li * + * { margin-block-start: var(--sp_xxs) }
+    [role="doc-endnotes"] > ol { padding-inline-start: 2ex; }
+    [role="doc-endnotes"] a.fn-label { padding-right:0.5ex; }
+
+    [role="doc-endnotes"] > ol > li:target
+    { background-color: inherit; box-shadow: none }
+    [role="doc-endnotes"] > ol > li:target::marker
+    { font-weight:900; /* Can't set background */ }
+
+  </style>
+</head>
+<body>
+<h1>Extensions</h1>
+<h2>Footnotes</h2>
+<p>This is a footnote in history<sup><a href="#fn-1" id="ref-1-fn-1" role="doc-noteref" class="fn-label">[1]</a></sup> with mutiple references<sup><a href="#fn-1" id="ref-2-fn-1" role="doc-noteref" class="fn-label">[1]</a></sup>
+and even <a href="#fn-1" id="ref-3-fn-1" role="doc-noteref">text references</a></p>
+<p>This is no longer the footnote.</p>
+<p>Can we make footnotes in footnotes<sup><a href="#fn-2" id="ref-1-fn-2" role="doc-noteref" class="fn-label">[2]</a></sup> ?</p>
+<p>Not the footnote</p>
+<p>Not the footnote but a reference to an empty footnote<sup><a href="#fn-3" id="ref-1-fn-3" role="doc-noteref" class="fn-label">[3]</a></sup></p>
+<p>Not a footnote [^]</p>
+<p>[^]: not a footnote.</p>
+<h2>Strikethrough</h2>
+<p>The stroken <del><em>emph</em></del>.</p>
+<p>Nesting the nest <del><em>emph</em> <del>stroke</del> <em>emph <strong>emph  <del>strikeagain</del></strong></em></del></p>
+<p>There must be no blanks after the opener and before the closer. This
+is ~~ not an opener and ~~this won't open <del>that does</del>.</p>
+<ul>
+<li>Here we have <del>stroken <code>code</code></del>.</li>
+<li>Here we have <del>nested <del>stroken</del> ok</del></li>
+</ul>
+<h2>Math</h2>
+<p>The inline \(\sqrt{x^2-1}\) equation.</p>
+<p>There must be no blanks after the opener and before the closer. This
+makes so you can donate $5 or $10 dollars here and there without problem.</p>
+<p>There is no such think as nesting \(\sqrt{x^2-1}\)+3\(+3\). As usual
+delimiters can be $escaped$ \(\sqrt{16\$}\)</p>
+<p>Amazing, this is <a href="https://example.org">hyperlinked math \(3x^2\)</a></p>
+<p>The HTML renderer should be careful with \(a &lt; b\) escapes.</p>
+<p>Display math can be in <code>math</code> code blocks.</p>
+\[
+\left( \sum_{k=1}^n a_k b_k \right)^2 &lt; \Phi
+\]
+<p>But it can also be in \[ \left( \sum_{k=1}^n
+a_k b_k \right)^2 &lt; \Phi \]</p>
+<h2>List task items</h2>
+<ul>
+<li><div class="task"><input type="checkbox" disabled><div>
+<p>Task open</p>
+</div></div></li>
+<li><div class="task"><input type="checkbox" disabled checked><div>
+<p>Task done</p>
+</div></div></li>
+<li><div class="task"><input type="checkbox" disabled checked><div>
+<p>Task done</p>
+</div></div></li>
+<li><div class="task"><input type="checkbox" disabled checked><div>
+<p>Task done (U+2713, CHECK MARK)</p>
+</div></div></li>
+<li><div class="task"><input type="checkbox" disabled checked><div>
+<p>Task done (U+2714, HEAVY CHECK MARK)
+Indent</p>
+</div></div></li>
+<li>
+<p>Of course this can all be nested</p>
+<ul>
+<li><div class="task"><input type="checkbox" disabled checked><div>
+<p>Task done (U+10102, AEGEAN CHECK MARK)
+It will be done for sure.</p>
+<pre><code>code block
+</code></pre>
+<p>Not a code block</p>
+</div></div></li>
+<li><div class="task"><input type="checkbox" disabled checked><div>
+<p>Task done</p>
+</div></div></li>
+<li><div class="task"><input type="checkbox" disabled><del>
+<p>Task cancelled
+Paragraphy</p>
+<del></div></li>
+<li>
+<p>[x]Not a task</p>
+</li>
+<li>
+<p>[x] Not a task</p>
+</li>
+</ul>
+</li>
+<li><div class="task"><input type="checkbox" disabled><div></div></div></li>
+<li><div class="task"><input type="checkbox" disabled><div>
+<p>a</p>
+<pre><code>Code
+</code></pre>
+<p>Not code</p>
+</div></div></li>
+<li><div class="task"><input type="checkbox" disabled><div>
+<pre><code>Code
+</code></pre>
+<p>Not code</p>
+</div></div></li>
+</ul>
+<h2>Tables</h2>
+<p>A sample table:</p>
+<div role="region"><table>
+<tr>
+<th class="center">Id</th>
+<th class="right">Name</th>
+<th class="left">Description</th>
+<th class="right">Link</th>
+</tr>
+<tr>
+<td class="center">1</td>
+<td class="right">OCaml</td>
+<td class="left">The OCaml website</td>
+<td class="right"><a href="https://ocaml.org">https://ocaml.org</a></td>
+</tr>
+<tr>
+<td class="center">2</td>
+<td class="right">Haskell</td>
+<td class="left">The Haskell website</td>
+<td class="right"><a href="https://haskell.org">https://haskell.org</a></td>
+</tr>
+<tr>
+<td class="center">3</td>
+<td class="right">MDN Web docs</td>
+<td class="left">Web dev docs</td>
+<td class="right"><a href="https://developer.mozilla.org/">https://developer.mozilla.org/</a></td>
+</tr>
+<tr>
+<td class="center">4</td>
+<td class="right">Wikipedia</td>
+<td class="left">The Free Encyclopedia</td>
+<td class="right"><a href="https://wikipedia.org">https://wikipedia.org</a></td>
+</tr>
+</table></div><p>Testing these non separator pipes.</p>
+<div role="region"><table>
+<tr>
+<th>Fancy</th>
+<th>maybe</th>
+<th>hu|glu</th>
+</tr>
+<tr>
+<td><em>a | b</em></td>
+<td><code>code |</code></td>
+<td><a href="https://example.org">bl|a</a></td>
+</tr>
+<tr>
+<td>not | two cols</td>
+<td>\(\sqrt(x^2 - 1)\)</td>
+<td></td>
+</tr>
+</table></div><p>A table with changing labels and alignement:</p>
+<div role="region"><table>
+<tr>
+<th>h1</th>
+<th class="center">h2</th>
+</tr>
+<tr>
+<td>1</td>
+<td class="center">2</td>
+</tr>
+<tr>
+<th class="left">h3</th>
+<th class="right">h4</th>
+</tr>
+<tr>
+<td class="left">3</td>
+<td class="right">4</td>
+</tr>
+</table></div><p>A simple header less table with left and right aligned columns</p>
+<div role="region"><table>
+<tr>
+<td class="left">1</td>
+<td class="right">2</td>
+</tr>
+</table></div><p>The simplest table:</p>
+<div role="region"><table>
+<tr>
+<td>1</td>
+<td>2</td>
+</tr>
+</table></div><p>A header only table:</p>
+<div role="region"><table>
+<tr>
+<th class="center">h1</th>
+<th class="center">h2</th>
+</tr>
+</table></div><p>Maximal number of columns all rows defines number of colums:</p>
+<div role="region"><table>
+<tr>
+<th class="left">h1</th>
+<th class="center">h2</th>
+<th class="right">h3</th>
+<th></th>
+</tr>
+<tr>
+<td class="left">left</td>
+<td class="center">center</td>
+<td class="right">right</td>
+<td></td>
+</tr>
+<tr>
+<td class="left">ha!</td>
+<td class="center">four</td>
+<td class="right">columns</td>
+<td>in fact</td>
+</tr>
+<tr>
+<td class="left"></td>
+<td class="center"></td>
+<td class="right"></td>
+<td></td>
+</tr>
+<tr>
+<td class="left"></td>
+<td class="center"></td>
+<td class="right"></td>
+<td>a</td>
+</tr>
+</table></div><p>Header less table:</p>
+<div role="region"><table>
+<tr>
+<td>header</td>
+<td>less</td>
+</tr>
+<tr>
+<td>this</td>
+<td>is</td>
+</tr>
+</table></div><p>Another quoted header less table with aligement</p>
+<blockquote>
+<div role="region"><table>
+<tr>
+<td class="right">header</td>
+<td class="right">less</td>
+</tr>
+<tr>
+<td class="right">again</td>
+<td class="right">aligned</td>
+</tr>
+</table></div></blockquote>
+<p>This is an empty table with three columns:</p>
+<div role="region"><table>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</table></div><h2>Attributes</h2>
+<h3>Block attributes</h3>
+<p id="my-id">This is a paragraph with the <code>my-id</code> is.</p>
+<p id="your-id">I have <code>your-id</code>, not mine</p>
+<p id="his-id">I have <code>his-id</code>, not mine, not yours</p>
+<h4 class="blue">This is a title with the <code>.blue</code> class</h4>
+<div key=value>
+<ul>
+<li>This is an item where <code>key</code> has value <code>value</code>.</li>
+<li>It is not possible to attach attributes to list items... yet</li>
+</ul>
+</div>
+<p id="my-id" class="my-class" key="value" flag>I'm a paragraph with many attributes</p>
+<p id="my-id" class="my-class2 my-class" key2="value2" flag2 key="value" flag>I have much more attribute than the previous one, since they stack</p>
+<p id="your-id">I have your id</p>
+<p class="class1 class3 class2 class4">I have a lot of class: <code>class1</code>, <code>class2</code>, <code>class3</code> and <code>class4</code></p>
+<p class="class4 class1 class3 class2">Me too!</p>
+<p id="space-do-not-matter">But spaceships matter.</p>
+<p key="a value with a }">Some word</p>
+<div introducing standalone attributes></div>
+<div id="attributes" class="standalone" also="stack"></div>
+<h3>Inline attributes</h3>
+<p><span class="I" am></span> not a block attribute, but a standalone inline attribute, as I have content in the line.</p>
+<p>In the middle of paragraphs, <span id="attributes" class="inline"></span> work.</p>
+<p>Similarly, at the end, they work <span as=well></span></p>
+<p>Without specified delimitations, inline attributes are either <span standalone></span> or attached to the <span word>left-closest</span>.</p>
+<p>Inline attributes can <span words>refer to many</span> including <span class="bold">with <strong>inline</strong></span>.</p>
+<p>Attributes can be nested: <a href="example.com">link <span attrs>with</span></a>, <span attrs>attrs <a href="example.com">with
+link</a></span>, <span attrs2>attrs <span attrs1>within</span></span>.</p>
+<h3>Attributes definition</h3>
+<p>We can provide <span class="important-word">attributes</span> definition to <span class="important-word">avoid</span> <span id="clut">cluttering</span> a <span class="important-word">line with</span> attributes.</p>
+<p>Attributes attached to attribute definition do nothing:</p>
+<p>A <span class="present">b</span> c</p>
+<p>However, for link definition, they are present:</p>
+<p>A <a href="http://example.com" class="present">b</a> c</p>
+<section role="doc-endnotes"><ol>
+<li id="fn-1">
+<p>And it can have
+lazy continuation lines and multiple paragraphs</p>
+<p>If you indent one column after the footnote label start.</p>
+<pre><code>cb
+</code></pre>
+<ul>
+<li>list item
+ablc</li>
+<li>another item</li>
+</ul>
+<span><a href="#ref-1-fn-1" role="doc-backlink" class="fn-label">↩︎︎<sup>1</sup></a><a href="#ref-2-fn-1" role="doc-backlink" class="fn-label">↩︎︎<sup>2</sup></a><a href="#ref-3-fn-1" role="doc-backlink" class="fn-label">↩︎︎<sup>3</sup></a></span></li><li id="fn-2">
+<p>This gets tricky but I guess we could have a footnote<sup><a href="#fn-tricky" id="ref-1-fn-tricky" role="doc-noteref" class="fn-label">[4]</a></sup> in
+a footnote. Also footnote<sup><a href="#fn-1" id="ref-4-fn-1" role="doc-noteref" class="fn-label">[1]</a></sup> in footnotes<sup><a href="#fn-2" id="ref-2-fn-2" role="doc-noteref" class="fn-label">[2]</a></sup> is<sup><a href="#fn-3" id="ref-2-fn-3" role="doc-noteref" class="fn-label">[3]</a></sup> tricky for getting
+all back references rendered correctly.</p>
+<p>Second footnote</p>
+<span><a href="#ref-1-fn-2" role="doc-backlink" class="fn-label">↩︎︎<sup>1</sup></a><a href="#ref-2-fn-2" role="doc-backlink" class="fn-label">↩︎︎<sup>2</sup></a></span></li><li id="fn-3">
+<span><a href="#ref-1-fn-3" role="doc-backlink" class="fn-label">↩︎︎<sup>1</sup></a><a href="#ref-2-fn-3" role="doc-backlink" class="fn-label">↩︎︎<sup>2</sup></a></span></li></ol></section>
+</body>
+</html>

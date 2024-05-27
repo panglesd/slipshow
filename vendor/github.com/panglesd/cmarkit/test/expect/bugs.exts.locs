@@ -1,0 +1,168 @@
+Blocks:
+File "bugs.exts.md", lines 1-26
+  Heading, level 1:
+  File "bugs.exts.md", lines 1-2, characters 0-4
+    Text:
+    File "bugs.exts.md", line 1, characters 0-4
+    Setext underline:
+    File "bugs.exts.md", line 2, characters 0-4
+  Blank line:
+  File "bugs.exts.md", line 3
+  Paragraph:
+  File "bugs.exts.md", lines 4-5, characters 0-8
+    Inlines:
+    File "bugs.exts.md", lines 4-5, characters 0-8
+      Text:
+      File "bugs.exts.md", line 4, characters 0-64
+      Soft break:
+      File "bugs.exts.md", lines 4-5, characters 64-0
+        Layout before:
+        File "bugs.exts.md", line 4, characters 64-65
+        Layout after:
+        File "bugs.exts.md", line 5
+      Text:
+      File "bugs.exts.md", line 5, characters 0-8
+  Blank line:
+  File "bugs.exts.md", line 6
+  Code block:
+  File "bugs.exts.md", lines 7-11, characters 0-3
+    Opening fence:
+    File "bugs.exts.md", line 7, characters 0-3
+    Code line:
+    File "bugs.exts.md", line 8, characters 0-10
+    Code line:
+    File "bugs.exts.md", line 9
+    Code line:
+    File "bugs.exts.md", line 10, characters 0-25
+    Closing fence:
+    File "bugs.exts.md", line 11, characters 0-3
+  Blank line:
+  File "bugs.exts.md", line 12
+  Heading, level 1:
+  File "bugs.exts.md", line 13, characters 0-9
+    Text:
+    File "bugs.exts.md", line 13, characters 2-9
+  Blank line:
+  File "bugs.exts.md", line 14
+  Paragraph:
+  File "bugs.exts.md", lines 15-16, characters 0-12
+    Inlines:
+    File "bugs.exts.md", lines 15-16, characters 0-12
+      Text:
+      File "bugs.exts.md", line 15, characters 0-68
+      Soft break:
+      File "bugs.exts.md", lines 15-16, characters 68-0
+        Layout before:
+        File "bugs.exts.md", line 15, characters 68-68
+        Layout after:
+        File "bugs.exts.md", line 16
+      Text:
+      File "bugs.exts.md", line 16, characters 0-12
+  Blank line:
+  File "bugs.exts.md", line 17
+  Table:
+  File "bugs.exts.md", lines 18-25, characters 0-27
+    Header row:
+    File "bugs.exts.md", line 18, characters 0-27
+      Text:
+      File "bugs.exts.md", line 18, characters 3-6
+    Separator line:
+    File "bugs.exts.md", line 19, characters 0-27
+      Separator:
+      File "bugs.exts.md", line 19, characters 1-26
+    Data row:
+    File "bugs.exts.md", line 20, characters 0-27
+      Inlines:
+      File "bugs.exts.md", line 20, characters 2-12
+        Code span:
+        File "bugs.exts.md", line 20, characters 2-5
+          Code span line:
+          File "bugs.exts.md", line 20, characters 3-4
+        Text:
+        File "bugs.exts.md", line 20, characters 5-9
+        Code span:
+        File "bugs.exts.md", line 20, characters 9-12
+          Code span line:
+          File "bugs.exts.md", line 20, characters 10-11
+    Data row:
+    File "bugs.exts.md", line 21, characters 0-27
+      Inlines:
+      File "bugs.exts.md", line 21, characters 2-25
+        Text:
+        File "bugs.exts.md", line 21, characters 2-9
+        Code span:
+        File "bugs.exts.md", line 21, characters 9-12
+          Code span line:
+          File "bugs.exts.md", line 21, characters 10-11
+        Text:
+        File "bugs.exts.md", line 21, characters 12-16
+        Code span:
+        File "bugs.exts.md", line 21, characters 16-19
+          Code span line:
+          File "bugs.exts.md", line 21, characters 17-18
+        Text:
+        File "bugs.exts.md", line 21, characters 19-25
+    Data row:
+    File "bugs.exts.md", line 22, characters 0-27
+      Inlines:
+      File "bugs.exts.md", line 22, characters 2-24
+        Text:
+        File "bugs.exts.md", line 22, characters 2-9
+        Code span:
+        File "bugs.exts.md", line 22, characters 9-12
+          Code span line:
+          File "bugs.exts.md", line 22, characters 10-11
+        Text:
+        File "bugs.exts.md", line 22, characters 12-16
+        Code span:
+        File "bugs.exts.md", line 22, characters 16-19
+          Code span line:
+          File "bugs.exts.md", line 22, characters 17-18
+        Text:
+        File "bugs.exts.md", line 22, characters 19-24
+    Data row:
+    File "bugs.exts.md", line 23, characters 0-27
+      Inlines:
+      File "bugs.exts.md", line 23, characters 2-21
+        Text:
+        File "bugs.exts.md", line 23, characters 2-8
+        Code span:
+        File "bugs.exts.md", line 23, characters 8-11
+          Code span line:
+          File "bugs.exts.md", line 23, characters 9-10
+        Text:
+        File "bugs.exts.md", line 23, characters 11-13
+        Code span:
+        File "bugs.exts.md", line 23, characters 13-16
+          Code span line:
+          File "bugs.exts.md", line 23, characters 14-15
+        Text:
+        File "bugs.exts.md", line 23, characters 16-21
+    Data row:
+    File "bugs.exts.md", line 24, characters 0-27
+      Inlines:
+      File "bugs.exts.md", line 24, characters 2-8
+        Emphasis:
+        File "bugs.exts.md", line 24, characters 2-5
+          Text:
+          File "bugs.exts.md", line 24, characters 3-4
+        Code span:
+        File "bugs.exts.md", line 24, characters 5-8
+          Code span line:
+          File "bugs.exts.md", line 24, characters 6-7
+    Data row:
+    File "bugs.exts.md", line 25, characters 0-27
+      Inlines:
+      File "bugs.exts.md", line 25, characters 2-12
+        Raw HTML:
+        File "bugs.exts.md", line 25, characters 2-5
+          Raw HTML line:
+          File "bugs.exts.md", line 25, characters 2-5
+        Text:
+        File "bugs.exts.md", line 25, characters 5-8
+        Raw HTML:
+        File "bugs.exts.md", line 25, characters 8-12
+          Raw HTML line:
+          File "bugs.exts.md", line 25, characters 8-12
+  Blank line:
+  File "bugs.exts.md", line 26
