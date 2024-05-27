@@ -28,7 +28,6 @@
    cmdliner
    base64
    bos
-   cmarkit
    lwt
    inotify
    js_of_ocaml-compiler
