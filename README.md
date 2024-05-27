@@ -6,12 +6,11 @@ In a slipshow presentation, the equivalent of a slide is called a _slip_. Each s
 
 ![](slip_scroll.gif)
 
-Here are the goals of slipshow, in no specific orders:
+Here are some properties of slipshow, in no specific orders:
 
-- Lift restrictions from traditional slide-based presentation. In particular, make it closer to a blackboard presentation!
-- Easy to write and readable syntax: markdown with few extensions. No manual placement like in powerpoint. No crazy syntax like in latex.
-- Source of the presentation is plain text: much better for source control, sharing with people, using your favorite editor, readability, compatibility.
-- Open the possibility for a dynamic presentation. Watching scientific popularization video demonstrates how well-chosen animations can make a difficult subject more understandable.
+- Fix some of the issues with slides by bringing back features of a blackboard presentation: keep some content while erasing the rest!
+- Easy to write and readable syntax (markdown with few extensions). What you see is what you mean!
+- Open the possibility for a more dynamic presentation, with annotations and animations.
 
 Slipshow compiles files written in an extension of markdown, to a standalone html file viewable offline in any web browser.
 
