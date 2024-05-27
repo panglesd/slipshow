@@ -13,7 +13,7 @@
 
 (license MIT)
 
-(documentation https://url/to/documentation)
+(documentation https://slipshow.readthedocs.io)
 
 (using directory-targets 0.1)
 

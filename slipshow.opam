@@ -7,7 +7,7 @@ authors: ["Paul-Elliot"]
 license: "MIT"
 tags: ["slipsow" "presentation" "slideshow" "beamer"]
 homepage: "https://github.com/panglesd/slipshow"
-doc: "https://url/to/documentation"
+doc: "https://slipshow.readthedocs.io"
 bug-reports: "https://github.com/panglesd/slipshow/issues"
 depends: [
   "ocaml"
