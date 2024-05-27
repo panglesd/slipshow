@@ -37,4 +37,29 @@ $ # and push tags!
 
 - Do the opam release
 
-TBD!
+Use `dune-release`
+
+- Make a slipshow-gui release
+
+`dune install` the last release of slipshow.
+
+```
+sliphub$ dune build
+sliphub$ cd gui/slipshow-gui
+sliphub$ npm run tauri dev # To test
+```
+
+Git commit and push. This will create a draft release. Finish it and undraft it.
+
+- Make a slipshow-vscode release
+
+Publish on vscode official repo
+
+```
+slipshow-vscode$ dune build
+slipshow-vscode$ vsce package
+slipshow-vscode$ vsce publish patch   # (or minor, major)
+```
+
+Publish on open-vsx: connect to open-vsx, login and manually publish the new vsix.
+
