@@ -1,3 +1,0 @@
-pin-depends: [
-  "cmarkit.dev" "git+https://github.com/panglesd/cmarkit.git#markdown-attributes"
-]

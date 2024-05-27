@@ -43,6 +43,3 @@ build: [
   ]
 ]
 dev-repo: "git+https://github.com/panglesd/slipshow.git"
-pin-depends: [
-  "cmarkit.dev" "git+https://github.com/panglesd/cmarkit.git#markdown-attributes"
-]

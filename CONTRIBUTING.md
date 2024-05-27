@@ -43,6 +43,8 @@ Use `dune-release`
 
 `dune install` the last release of slipshow.
 
+Update the version on `gui/slipshow-gui/src-tauri/tauri.conf.json` (and maybe `gui/slipshow-gui/package.json`)
+
 ```
 sliphub$ dune build
 sliphub$ cd gui/slipshow-gui
@@ -63,3 +65,4 @@ slipshow-vscode$ vsce publish patch   # (or minor, major)
 
 Publish on open-vsx: connect to open-vsx, login and manually publish the new vsix.
 
+- Update sliphub

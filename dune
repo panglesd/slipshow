@@ -6,3 +6,5 @@
   (run yarn build-staged)))
 
 (data_only_dirs node_modules)
+
+(vendored_dirs vendor)
