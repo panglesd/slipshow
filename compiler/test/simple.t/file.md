@@ -15,5 +15,3 @@ Blibli.
 [emph]: {style="color: red"}
 
 And {pause} [standalone][emph] inlines2
-
-And some $(\sqrt{m})_a^t\cdot h$.
