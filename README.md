@@ -18,7 +18,7 @@ If you want to see it in action, go to the [example section](#examples). If you 
 
 ## The issue with traditional slides
 
-When using traditional slides, you are given a rectangle of white space to express your though. When this rectangle is full, you have no other choice than erasing everything, and start again with a new white rectangle.
+When using traditional slides, you are given a rectangle of white space to express your thought. When this rectangle is full, you have no other choice than erasing everything, and start again with a new white rectangle.
 
 This can be a problem both for the viewer and the presenter. If the viewer took some time understanding the beginning of the slide, they might miss the last part of a slide: everything will be erased before they have a chance to read it and catch up. And indeed, there is an obvious asymetry: the last part of a slide will be visible much shorter than the first part!
 
