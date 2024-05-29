@@ -45,10 +45,12 @@ You can find an extensive documentation, with a tutorial at the readthedocs [doc
 
 For a super quick start, just click visit [sliphub.choum.net](https://sliphub.choum.net) to start writing a presentation online.
 
-For using slipshow offline, you'll need to install the slipshow tool. Currently, there are several ways to get it:
+For using slipshow offline, you'll need to install the slipshow tool. Currently, there are several ways to get it. The best is to download the precompiled binary from the [latest release](https://github.com/panglesd/slipshow/releases/latest).
+
+Slipshow is also package in some package manager:
 
 ```shell
-# For opam users. TODO: make it work! Release it to opam!
+# For opam users. TODO: Update once it has been released to opam.
 $ opam pin slipshow git@github.com/panglesd/slipshow.git
 
 # For npm users
