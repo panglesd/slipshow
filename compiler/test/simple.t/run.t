@@ -15,8 +15,8 @@ We can compile the file using the slip_of_mark binary
   <div pause></div>
   <h2 id="subtitle"><a class="anchor" aria-hidden="true" href="#subtitle"></a><span>subtitle</span></h2>
 
-  $ du -h file.html
-  184K	file.html
+$ du -h file.html
+184K	file.html
 
 What happens if the file does not exists? There is an error message...
 
