@@ -50,10 +50,11 @@ let html_source =
            <script>%s</script>
 </body>
 </html>
-  >|html}
+  |html}
     [%blob "compiler/src/bin/native/client/client.bc.js"]
 
 let do_serve input f =
+  let cond = Lwt_condition.create () in
   let do_serve input f =
     match input with
     | `Stdin ->
@@ -67,9 +68,6 @@ let do_serve input f =
         let _watch_descriptor =
           Lwt_inotify.add_watch inotify parent [ Inotify.S_Close_write ]
         in
-        let waiter, resolver = Lwt.wait () in
-        let waiter = ref waiter in
-        let resolver = ref resolver in
         let content = ref "" in
         let new_content =
           match f () with
@@ -88,12 +86,10 @@ let do_serve input f =
                  Dream.get "/" (fun _ ->
                      Dream.log "A browser reloaded";
                      Dream.html html_source);
-                 Dream.get "/getNewDoc" (fun _ ->
-                     Dream.websocket (fun socket ->
-                         (* Dream.log "Sending data: %S" !content; *)
-                         let* () = Dream.send socket !content in
-                         let* () = !waiter in
-                         Dream.close_websocket socket));
+                 Dream.get "/now" (fun _ -> Dream.respond !content);
+                 Dream.get "/onchange" (fun _ ->
+                     let* () = Lwt_condition.wait cond in
+                     Dream.respond !content);
                ]
         in
         let rec loop () =
@@ -111,12 +107,7 @@ let do_serve input f =
                     s
               in
               content := new_content;
-              let old_resolver = !resolver in
-              let nwaiter, nresolver = Lwt.wait () in
-              waiter := nwaiter;
-              resolver := nresolver;
-              Dream.log "Asking browsers to reload";
-              Lwt.wakeup_later old_resolver ();
+              Lwt_condition.broadcast cond ();
               loop ()
           | _ -> loop ()
         in
