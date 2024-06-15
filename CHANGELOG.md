@@ -2,7 +2,14 @@
 
 ## [Unreleased]
 
-## Fixed
+### Fixed
+
+- Fixed `--serve` sometimes not working by using long-polling instead of
+  websockets.
+
+## [v0.0.32] May 27th, 2024.
+
+### Fixed
 
 - Use 127.0.0.1 to avoid problem with `localhost` in musl-based compilation
 - Fix log message in `--serve`
@@ -17,7 +24,7 @@
 
 - Added the "Space" key to advance in the presentation
 
-## Fixed
+### Fixed
 
 - Fix sketchpad being white when going backward
 - Prevent going out of bound in the presentation
@@ -27,13 +34,13 @@
 
 ## [v0.0.30] January 9th, 2024.
 
-## Fixed
+### Fixed
 
 - Fix sketchpad disappearing when going backward
 
 ## [v0.0.29] December 1st, 2023.
 
-### Fixed
+## Fixed
 
 - Use `release` mode for compiler, to save space
 
