@@ -1,4 +1,4 @@
-type asset = Ast.asset =
+type asset =
   | Local of { mime_type : string option; content : string }
   | Remote of string
 
