@@ -122,7 +122,7 @@ A word starting with ``.`` is a class. Classes are used both controlling the lay
 
 A single word is a "flag attribute". In the example above, ``pause`` is a flag attribute. The meaning of all slipshow attributes is given later in this section!
 
-Key-value attributes are defined using an equal sign (``=``). They need a key, and a value. If the value contains spaces or other dubious characters, they should be enclosed in quotes. The quotes are not part of the value of they key attributes! In the example above, the key ``up-at-unpause`` is given value ``title1``, while the key ``exec-at-unpause`` is given the value ``script1 scrip2``.
+Key-value attributes are defined using an equal sign (``=``). They need a key, and a value. If the value contains spaces or other dubious characters, they should be enclosed in quotes. The quotes are not part of the value of they key attributes! In the example above, the key ``up-at-unpause`` is given value ``title1``, while the key ``exec-at-unpause`` is given the value ``script1 script2``.
 
 Some attribute can be used both as a flag attribute and as a key-value attribute.
 
