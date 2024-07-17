@@ -338,7 +338,7 @@ Be able to refer to a part of your presentation
 
 For the first point, slipshow uses a system of ids. An id is just a string
 without space, that must be unique amongst all ids. In order to assign an id to
-a block, one must adds the id prepended with a ``#`` inside the metadata of the
+a block, one must add the id prepended with a ``#`` inside the metadata of the
 block. For instance, let's add the ``prime-def`` id to the definition. The
 source should look like this now:
 
@@ -418,7 +418,7 @@ Writing on the screen
 One of the design goal of slipshow is to make digital presentations "less bad"
 compared to the blackboard ones.
 
-One of the great features of boards is that you can write on them while
+One of the great features of blackboards is that you can write on them while
 explaining, doodle, make arrows all over the place. To try to do something
 similar, the slipshow rendering engine allows you to write on your presentation,
 using the tools present on the top left of your presentation.
