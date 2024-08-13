@@ -39,7 +39,7 @@
    ppx_blob
   (odoc :with-doc)
   (ocamlformat
-   (and :with-dev-setup (= 0.26.1))))
+   (and :with-dev-setup (= 0.26.2))))
  (tags
   (slipsow presentation slideshow beamer)))
 

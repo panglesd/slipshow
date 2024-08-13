@@ -41,8 +41,10 @@
  (mode promote)
  (action
   (run
-    wget --output-document highlight-js.css.crunch https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css
-)))
+   wget
+   --output-document
+   highlight-js.css.crunch
+   https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css)))
 
 (rule
  (target highlight-js.js.crunch)
@@ -51,8 +53,10 @@
  (mode promote)
  (action
   (run
-    wget --output-document highlight-js.js.crunch https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js
-)))
+   wget
+   --output-document
+   highlight-js.js.crunch
+   https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js)))
 
 (rule
  (target highlight-js.ocaml.js.crunch)
@@ -61,11 +65,10 @@
  (mode promote)
  (action
   (run
-    wget --output-document highlight-js.ocaml.js.crunch https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/ocaml.min.js
-)))
-
-	
-	
+   wget
+   --output-document
+   highlight-js.ocaml.js.crunch
+   https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/ocaml.min.js)))
 
 ; (rule
 ;  (target "tailwindcss.js")
@@ -97,19 +100,10 @@
    (setenv
     SOURCE_DATE_EPOCH
     0
-    (run
-     ocaml-crunch
-     .
-     -e
-     crunch
-     -o
-     %{x}.corrected
-     -m
-     plain
-     -s))
+    (run ocaml-crunch . -e crunch -o %{x}.corrected -m plain -s))
    (diff? %{x} %{x}.corrected))))
 
 (library
  (name data_files)
-  (public_name slipshow.datafiles)
+ (public_name slipshow.datafiles)
  (wrapped false))

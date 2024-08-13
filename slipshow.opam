@@ -26,7 +26,7 @@ depends: [
   "brr"
   "ppx_blob"
   "odoc" {with-doc}
-  "ocamlformat" {with-dev-setup & = "0.26.1"}
+  "ocamlformat" {with-dev-setup & = "0.26.2"}
 ]
 build: [
   ["dune" "subst"] {dev}

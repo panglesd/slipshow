@@ -15,8 +15,7 @@
   fmt.tty
   logs.fmt
   serve
-  serve_native
-  ))
+  serve_native))
 
 (rule
  (deps main.ml)
@@ -41,8 +40,7 @@
   fmt.tty
   logs.fmt
   serve
-  serve_js
-  ))
+  serve_js))
 
 (library
  (name serve)
