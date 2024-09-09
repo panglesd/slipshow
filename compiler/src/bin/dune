@@ -46,4 +46,4 @@
  (name serve)
  (virtual_modules serve)
  (modules serve)
- (libraries fpath slipshow))
+ (libraries fpath slipshow lwt))

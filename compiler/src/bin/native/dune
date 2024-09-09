@@ -4,12 +4,6 @@
  (implements serve)
  (preprocess
   (pps ppx_blob))
- (preprocessor_deps client/client.bc.js)
- (libraries
-  slipshow
-  fpath
-  lwt
-  inotify.lwt
-  dream
-  ; bos
-  ))
+ (preprocessor_deps
+  (file client/client.bc.js))
+ (libraries slipshow fpath lwt irmin-watcher dream))

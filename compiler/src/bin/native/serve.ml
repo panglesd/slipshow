@@ -1,3 +1,11 @@
+open Lwt.Syntax
+
+(* A promise that never returns and consumes a file
+   unwatcher *)
+let wait_forever (_unwatch : unit -> unit Lwt.t) =
+  let forever, _ = Lwt.wait () in
+  forever
+
 let do_watch input f =
   match input with
   | `Stdin -> Error (`Msg "--watch is incompatible with stdin input")
@@ -5,26 +13,21 @@ let do_watch input f =
       let parent = Fpath.parent input in
       let parent = Fpath.to_string parent in
       let input_filename = Fpath.filename input in
-      let inotify = Inotify.create () in
-      let _watch_descriptor =
-        Inotify.add_watch inotify parent [ Inotify.S_Close_write ]
+      let callback filename =
+        if String.equal filename input_filename then (
+          Logs.app (fun m -> m "Recompiling");
+          match f () with
+          | Ok _ -> Lwt.return_unit
+          | Error (`Msg s) ->
+              Logs.warn (fun m -> m "%s" s);
+              Lwt.return_unit)
+        else Lwt.return_unit
       in
-      let rec loop () =
-        let events = Inotify.read inotify in
-        List.iter
-          (function
-            | _, _, _, Some filename ->
-                if String.equal filename input_filename then (
-                  Logs.app (fun m -> m "Recompiling");
-                  match f () with
-                  | Ok _ -> ()
-                  | Error (`Msg s) -> Logs.warn (fun m -> m "%s" s))
-                else ()
-            | _ -> ())
-          events;
-        loop ()
+      let main =
+        let* unwatch = Irmin_watcher.hook 0 parent callback in
+        wait_forever unwatch
       in
-      loop ()
+      Lwt_main.run main
 
 let html_source =
   Format.sprintf
@@ -51,7 +54,7 @@ let html_source =
 </body>
 </html>
   |html}
-    [%blob "compiler/src/bin/native/client/client.bc.js"]
+    [%blob "client/client.bc.js"]
 
 let do_serve input f =
   let cond = Lwt_condition.create () in
@@ -64,10 +67,6 @@ let do_serve input f =
         let parent = Fpath.parent input in
         let parent = Fpath.to_string parent in
         let input_filename = Fpath.filename input in
-        let* inotify = Lwt_inotify.create () in
-        let _watch_descriptor =
-          Lwt_inotify.add_watch inotify parent [ Inotify.S_Close_write ]
-        in
         let content = ref "" in
         let new_content =
           match f () with
@@ -92,26 +91,22 @@ let do_serve input f =
                      Dream.respond !content);
                ]
         in
-        let rec loop () =
-          let* _descriptor, _event_kinds, _, filename =
-            Lwt_inotify.read inotify
-          in
-          match filename with
-          | Some filename when String.equal filename input_filename ->
-              Logs.app (fun m -> m "Recompiling");
-              let new_content =
-                match f () with
-                | Ok s -> Slipshow.delayed_to_string s
-                | Error (`Msg s) ->
-                    Logs.warn (fun m -> m "%s" s);
-                    s
-              in
-              content := new_content;
-              Lwt_condition.broadcast cond ();
-              loop ()
-          | _ -> loop ()
+        let callback filename =
+          if String.equal filename input_filename then (
+            Logs.app (fun m -> m "Recompiling");
+            let new_content =
+              match f () with
+              | Ok s -> Slipshow.delayed_to_string s
+              | Error (`Msg s) ->
+                  Logs.warn (fun m -> m "%s" s);
+                  s
+            in
+            content := new_content;
+            Lwt_condition.broadcast cond ());
+          Lwt.return_unit
         in
-        loop ()
+        let* unwatch = Irmin_watcher.hook 0 parent callback in
+        wait_forever unwatch
   in
   Logs.app (fun m ->
       m
