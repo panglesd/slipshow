@@ -29,7 +29,7 @@
    base64
    bos
    lwt
-   inotify
+   irmin-watcher
    js_of_ocaml-compiler
    js_of_ocaml-lwt
    magic-mime
