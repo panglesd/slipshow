@@ -73,9 +73,9 @@ jobs:
 
       - name: upload archives
         # if: startsWith(github.ref, 'refs/tags/')
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: archives
+          name: archives-${{ matrix.platform.name }}-${{ matrix.platform.target_arch }}
           path: new_release/*
 
   mac-build:
@@ -118,9 +118,9 @@ jobs:
 
       - name: upload archives
         # if: startsWith(github.ref, 'refs/tags/')
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: archives
+          name: archives-${{ matrix.os }}
           path: new_release/*
 
   release:
@@ -132,10 +132,11 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Download build artifacts
-        uses: actions/download-artifact@v4.1.7
+        uses: actions/download-artifact@v4
         with:
-          name: archives
+          pattern: archives-*
           path: archives
+          merge-multiple: true
 
       - name: Release
         uses: softprops/action-gh-release@v1
