@@ -75,7 +75,7 @@ jobs:
         # if: startsWith(github.ref, 'refs/tags/')
         uses: actions/upload-artifact@v4
         with:
-          name: archives-${{ matrix.platform.name }}-${{ matrix.platform.target_arch }}
+          name: archives-linux-${{ matrix.platform.target_arch }}
           path: new_release/*
 
   mac-build:
@@ -84,7 +84,7 @@ jobs:
       matrix:
         config:
           - { os: "macos-13", arch: "x86_64" }
-          - { os: "macos-14", arch: "xarm64" }
+          - { os: "macos-14", arch: "arm64" }
         ocaml-compiler:
           - 4.14.x
     runs-on: ${{ matrix.config.os }}
@@ -112,7 +112,7 @@ jobs:
           mkdir -p new_release;
           export OUTPUT=$PWD/new_release;
           export TARGETOS=macos;
-          export TARGETARCH={{ matrix.config.arch }};
+          export TARGETARCH=${{ matrix.config.arch }};
           export VERSION=$GITHUB_REF_NAME;
           opam exec -- bash release/release.sh
 
