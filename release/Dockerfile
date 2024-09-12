@@ -1,5 +1,5 @@
 FROM ocaml/opam:alpine-ocaml-4.14
-RUN sudo apk add libev-dev openssl-dev libffi-dev
+RUN sudo apk add libev-dev openssl-dev libffi-dev gmp-dev
 RUN sudo apk add openssl-libs-static
 WORKDIR slipshow/
 
