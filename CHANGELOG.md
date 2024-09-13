@@ -2,10 +2,13 @@
 
 ## [Unreleased]
 
+## [v0.0.33] September 13th, 2024.
+
 ### Fixed
 
 - Fixed `--serve` sometimes not working by using long-polling instead of
   websockets.
+- Fixed `--serve` not working on MacOS (#65, @patricoferris)
 
 ## [v0.0.32] May 27th, 2024.
 

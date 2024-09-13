@@ -4,6 +4,8 @@
 
 In order to release a new version, you need to:
 
+- Check that the changelog is up to date
+
 - Have an up to date engine, both in the `dist` (?) folder and in the ocaml data files:
 
 ```
