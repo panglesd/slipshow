@@ -4,15 +4,19 @@
 
 In order to release a new version, you need to:
 
-- Check that the changelog is up to date
+### Check that the changelog is up to date
 
-- Have an up to date engine, both in the `dist` (?) folder and in the ocaml data files:
+Do that!
+
+### Have an up to date engine, both in the `dist` (?) folder and in the ocaml data files:
 
 ```
 $ make bundle
 ```
 
-- Have an up to date compiler written in javascript, in release mode:
+This is likely to be updated to something less cumbersome
+
+### Have an up to date compiler written in javascript, in release mode:
 
 ```
 $ dune build
@@ -23,25 +27,31 @@ $ cat _build/default/compiler/src/bin/main_js.bc.js >> bin/slipshow
 $ chmod a+x bin/slipshow
 ```
 
-- Do the npm release
+### Do the npm release
 
 ```
 $ npm version patch         # Or minor or major, let's dream!
 $ npm publish               # Publishing
 ```
 
-- Do the github release
+### Do the github release
 
 ```
 $ git push
 $ # and push tags!
 ```
 
-- Do the opam release
+### Do the opam release
 
-Use `dune-release`
+Use `dune-release`:
+- Checkout the branch which has the tag
+- Call `dune-release distrib`
+- Call `dune-release publish distrib`
+- Call `dune-release opam pkg`
+- Call `dune-release opam submit`
+- Verify that everything is right by comparing the `opam` file for the previous version, with this one!
 
-- Make a slipshow-gui release
+### Make a slipshow-gui release
 
 `dune install` the last release of slipshow.
 
@@ -55,7 +65,7 @@ sliphub$ npm run tauri dev # To test
 
 Git commit and push. This will create a draft release. Finish it and undraft it.
 
-- Make a slipshow-vscode release
+### Make a slipshow-vscode release
 
 Publish on vscode official repo
 
@@ -67,4 +77,4 @@ slipshow-vscode$ vsce publish patch   # (or minor, major)
 
 Publish on open-vsx: connect to open-vsx, login and manually publish the new vsix.
 
-- Update sliphub
+### Update sliphub

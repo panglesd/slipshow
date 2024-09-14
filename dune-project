@@ -20,9 +20,9 @@
 (package
  (name slipshow)
  (synopsis "A compiler from markdown to slipshow")
- (description "A longer description")
+ (description "Slipshow is an engine to write slips, a concept evolved from slides.")
  (depends
-  ocaml
+  (ocaml (>= 4.14))
   dune
   (crunch :with-dev-setup)
    cmdliner
@@ -33,14 +33,14 @@
    js_of_ocaml-compiler
    js_of_ocaml-lwt
    magic-mime
-   dream
+   (dream (>= "1.0.0~alpha5"))
    fpath
-   brr
-   ppx_blob
+   (brr (>= "0.0.6"))
+   (ppx_blob (>= "0.8.0"))
   (odoc :with-doc)
   (ocamlformat
    (and :with-dev-setup (= 0.26.2))))
  (tags
-  (slipsow presentation slideshow beamer)))
+  (slipshow presentation slideshow beamer)))
 
 ; See the complete stanza docs at https://dune.readthedocs.io/en/stable/dune-files.html#dune-project
