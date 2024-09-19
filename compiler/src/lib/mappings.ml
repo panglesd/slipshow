@@ -57,8 +57,8 @@ let of_cmarkit resolve_images =
     | _ -> Mapper.default
   in
   let attrs = function
-    | `Kv (("p", m), v) -> Some (`Kv (("pause", m), v))
     | `Kv (("up", m), v) -> Some (`Kv (("up-at-unpause", m), v))
+    | `Kv (("center", m), v) -> Some (`Kv (("center-at-unpause", m), v))
     | `Kv (("down", m), v) -> Some (`Kv (("down-at-unpause", m), v))
     | `Kv (("exec", m), v) -> Some (`Kv (("exec-at-unpause", m), v))
     | x -> Some x
