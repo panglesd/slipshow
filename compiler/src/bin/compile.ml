@@ -18,9 +18,9 @@ module Io = struct
     try
       match input with
       | `Stdin -> Ok In_channel.(input_all stdin)
-      | `File f ->
-          let ic = In_channel.open_text (Fpath.to_string f) in
-          Ok In_channel.(input_all ic)
+      | `File f -> Bos.OS.File.read f
+      (* let ic = In_channel.open_text (Fpath.to_string f) in *)
+      (* Ok In_channel.(input_all ic) *)
     with exn -> Error (`Msg (Printexc.to_string exn))
 end
 
@@ -70,14 +70,28 @@ let compile ~math_link ~slip_css_link ~theorem_css_link ~slipshow_js_link ~input
         let* () = Io.write output html in
         html
   in
-  let f2 () =
-    let* content = Io.read input in
-    let result =
-      Slipshow.delayed ?math_link ?slip_css_link ?theorem_css_link
-        ?slipshow_js_link ~resolve_images:to_asset content
-    in
-    (* let () = print_endline (Slipshow.add_starting_state result None) in *)
-    result
+  let rec f2 () =
+    let+ content = Io.read input in
+    (* Logs.app (fun m -> *)
+    (*     m "Here is what we have read %s" *)
+    (*       (List.hd @@ String.split_on_char '\n' content)); *)
+    if String.equal content "" then f2 ()
+    else
+      let result =
+        Slipshow.delayed ?math_link ?slip_css_link ?theorem_css_link
+          ?slipshow_js_link ~resolve_images:to_asset content
+      in
+      (* let s = Slipshow.add_starting_state result None in *)
+      (* let s = *)
+      (*   match Astring.String.cut ~sep:"generalized-algebraic" s with *)
+      (*   | None -> "NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO" *)
+      (*   | Some (_, y) -> ( *)
+      (*       match Astring.String.cut ~sep:"quick-intro" y with *)
+      (*       | Some (x, _) -> x *)
+      (*       | None -> "NAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA") *)
+      (* in *)
+      (* let () = print_endline s in *)
+      Ok result
   in
   if serve then Serve.do_serve input f2
   else if watch then Serve.do_watch input f
