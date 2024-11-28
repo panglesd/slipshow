@@ -7,7 +7,8 @@
   (:standard
    (:include static-linking-flags/flags)))
  (libraries
-  slipshow
+   slipshow
+   bos
   cmdliner
   fpath
   logs.cli
@@ -17,30 +18,30 @@
   serve
   serve_native))
 
-(rule
- (deps main.ml)
- (target main_js.ml)
- (action
-  (bash
-   "printf 'module Compile = Compile_js\n' > main_js.ml && cat main.ml >> main_js.ml")))
+; (rule
+;  (deps main.ml)
+;  (target main_js.ml)
+;  (action
+;   (bash
+;    "printf 'module Compile = Compile_js\n' > main_js.ml && cat main.ml >> main_js.ml")))
 
 (rule
  (copy compile.ml compile_js.ml))
 
-(executable
- (name main_js)
- (modes js)
- (modules main_js compile_js)
- (libraries
-  slipshow
-  cmdliner
-  fpath
-  logs.cli
-  fmt.cli
-  fmt.tty
-  logs.fmt
-  serve
-  serve_js))
+; (executable
+;  (name main_js)
+;  (modes js)
+;  (modules main_js compile_js)
+;  (libraries
+;   slipshow
+;   cmdliner
+;   fpath
+;   logs.cli
+;   fmt.cli
+;   fmt.tty
+;   logs.fmt
+;   serve
+;   serve_js))
 
 (library
  (name serve)
