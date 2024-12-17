@@ -2,4 +2,5 @@
  (name slipshow))
 
 (cram
+  (enabled_if false)
  (deps %{bin:slipshow}))

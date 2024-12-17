@@ -21,7 +21,7 @@ $ du -h file.html
 What happens if the file does not exists? There is an error message...
 
   $ slipshow -o file.html non-existing-file.md
-  compile: Sys_error("non-existing-file.md: No such file or directory")
+  compile: non-existing-file.md: No such file or directory
   [123]
 
 If we do not pass an output file, it is infer the output name from the input name
@@ -88,12 +88,12 @@ If we pass a mathjax value, with a remote url:
 
 With a file
 
-  $ echo "dummy" > mathjax.js
+  $ echo "dummyABC" > mathjax.js
   $ slipshow -o m.html --mathjax mathjax-unknown.js with_inline_math.md
-  slipshow: [WARNING] Could not read file: mathjax-unknown.js. Considering it as an URL. (Sys_error("mathjax-unknown.js: No such file or directory"))
+  slipshow: [WARNING] Could not read file: mathjax-unknown.js. Considering it as an URL. (mathjax-unknown.js: No such file or directory)
   $ slipshow -o m.html --mathjax mathjax.js with_inline_math.md
-  $ cat m.html | grep -A 1 dummy
-      <script id="MathJax-script">dummy
+  $ cat m.html | grep -A 1 dummyABC
+      <script id="MathJax-script">dummyABC
   </script>
 
 Images
