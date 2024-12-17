@@ -60,22 +60,31 @@ let embed_in_page content ~has_math ~math_link ~slip_css_link ~theorem_css_link
     %s
   </head>
   <body>
+    <div id="open-window">
+      <div class="format-container">
+        <div class="rotate-container">
+          <div class="scale-container">
+            <div class="universe movable" id="universe">
+              <div width="10000" height="10000" class="fog"></div>
+              <slip-slip immediate-enter>
+                <slip-body>
+                   %s
+                </slip-body>
+              </slip-slip>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-  <!-- This is the presentation -->
-    <slip-slipshow>
-      <slip-slip immediate-enter>
-        <slip-body>
-          %s
-        </slip-body>
-      </slip-slip>
-    </slip-slipshow>
+
 
   <!-- Include the library -->
     %s
     <!-- Start the presentation () -->
      <script>hljs.highlightAll();</script>
     <script>
-      Slipshow.startSlipshow(|}
+//      Slipshow.startSlipshow(|}
       mathjax_element slip_css_element theorem_css_element highlight_css_element
       highlight_js_element highlight_js_ocaml_element content
       slipshow_js_element

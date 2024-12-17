@@ -18,7 +18,7 @@ let string_of_file = function
   | Highlight_js -> "highlight-js.js.crunch"
   | Highlight_js_ocaml -> "highlight-js.ocaml.js.crunch"
 
-let read f =
+let read f =match f with Slipshow_js -> [%blob "engine/slipshow.js"] | _ ->
   Data_contents.read (string_of_file f) |> function
   | Some c -> c
   | None -> assert false

@@ -11,7 +11,7 @@
 
 (maintainers "Paul-Elliot")
 
-(license MIT)
+(license GPLv3)
 
 (documentation https://slipshow.readthedocs.io)
 
