@@ -66,11 +66,14 @@ let embed_in_page content ~has_math ~math_link ~slip_css_link ~theorem_css_link
           <div class="scale-container">
             <div class="universe movable" id="universe">
               <div width="10000" height="10000" class="fog"></div>
-              <slip-slip immediate-enter>
-                <slip-body>
-                   %s
-                </slip-body>
-              </slip-slip>
+                <div class="slip-rescaler">
+                  <div class="slip">
+                    <div class="slip-body">
+                       %s
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
