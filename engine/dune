@@ -1,0 +1,8 @@
+(executable
+ (modes js)
+ (name main)
+ (libraries brr))
+
+(rule
+ (mode promote)
+ (action (copy main.bc.js slipshow.js)))
