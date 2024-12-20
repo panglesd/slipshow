@@ -11,12 +11,15 @@ let setup (window : Window.window) =
     let () =
       match key with
       | "m" -> change_mode ()
-      | "ArrowRight" ->
+      | "ArrowRight" when !mode = Moving ->
           let _ : unit Fut.t =
             Window.move_relative
               ~x:(30. *. 1. /. window.coordinate.scale)
               window ~delay:0.
           in
+          ()
+      | "ArrowRight" ->
+          let _ : unit Fut.t = Next.next () in
           ()
       | "ArrowLeft" ->
           let _ : unit Fut.t =
