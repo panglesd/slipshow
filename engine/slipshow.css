@@ -40,3 +40,10 @@ body {
   margin-left: 110px;
   margin-right: 110px;
 }
+
+.pauseAncestor ~ * {
+  opacity: 0;
+}
+[pause] {
+  opacity: 0;
+}
