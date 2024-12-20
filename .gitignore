@@ -15,3 +15,4 @@ _static
 _templates
 
 .tern-port
+/engine/slipshow.js
