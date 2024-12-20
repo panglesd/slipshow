@@ -6,9 +6,4 @@ let _ : unit Fut.t =
   (* TODO: move out of here *)
   let () = Rescaler.setup_rescalers () in
   let () = Controller.setup window in
-  let* () = Window.move window { x = 0.5; y = 0.5; scale = 1. } ~delay:1. in
-  let* () = Fut.tick ~ms:2000 in
-  let* () = Window.move window { y = 1.; x = 0.75; scale = 1. } ~delay:1. in
-  let* () = Fut.tick ~ms:2000 in
-  Window.move_to window
-    (Brr.El.find_first_by_selector (Jstr.v "#myid") |> Option.get)
+  Next.update_pause_ancestors ()
