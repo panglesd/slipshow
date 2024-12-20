@@ -15,6 +15,8 @@ type property =
   | Top of float
   | Bottom of float
   | TransitionDuration of float
+  | Width of float
+  | Height of float
 
 let style_of_prop = function
   | Scale _ | Rotate _ -> Jstr.v "transform"
@@ -23,6 +25,8 @@ let style_of_prop = function
   | Right _ -> Brr.El.Style.right
   | Bottom _ -> Brr.El.Style.bottom
   | TransitionDuration _ -> Jstr.v "transition-duration"
+  | Width _ -> Jstr.v "width"
+  | Height _ -> Jstr.v "height"
 
 let sof x = Printf.sprintf "%.15f" x
 
@@ -34,10 +38,11 @@ let value_of_prop = function
   | Right r -> sof r ^ "px"
   | Bottom b -> sof b ^ "px"
   | TransitionDuration td -> sof td ^ "s"
+  | Width w -> sof w ^ "px"
+  | Height h -> sof h ^ "px"
 
 let set prop elem =
   let style = style_of_prop prop in
   let value = value_of_prop prop in
-  Brr.Console.(log [ elem; style; value ]);
   Brr.El.set_inline_style style (Jstr.v value) elem;
   Fut.tick ~ms:0
