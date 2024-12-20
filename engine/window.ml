@@ -25,57 +25,36 @@ let pp { scale_container; rotate_container; universe; width; height } =
         ("height", height);
       ])
 
-module Rescaling = struct
-  let place_open_window open_window =
-    let browser_height = Window.inner_height G.window in
-    let browser_width = Window.inner_width G.window in
-    let set attr n = El.set_inline_style attr (Css.Units.px_n n) open_window in
-    if 4 * browser_height < 3 * browser_width then (
-      let openWindowWidth = browser_height * 4 / 3 in
-      let openWindowHeight = browser_height in
-      set El.Style.left ((browser_width - openWindowWidth) / 2);
-      set El.Style.right ((browser_width - openWindowWidth) / 2);
-      set El.Style.width openWindowWidth;
-      set El.Style.top 0;
-      set El.Style.bottom 0;
-      set El.Style.height openWindowHeight)
-    else
-      let openWindowHeight = browser_width * 3 / 4 in
-      let openWindowWidth = browser_width in
-      set El.Style.top ((browser_height - openWindowHeight) / 2);
-      set El.Style.bottom ((browser_height - openWindowHeight) / 2);
-      set El.Style.height openWindowHeight;
-      set El.Style.width openWindowWidth;
-      set El.Style.right 0;
-      set El.Style.left 0
+open Fut.Syntax
+module Rescaling = struct end
 
-  let handle_rescaling open_window =
-    place_open_window open_window;
-    let resize _ = place_open_window open_window in
-    let _listener = Ev.listen Ev.resize resize (Window.as_target G.window) in
-    ()
-end
-
-let setup ?(width = 1440) ?(height = 1080) () =
+let setup ~width ~height =
   let find s = El.find_first_by_selector (Jstr.v s) |> Option.get in
-  let open_window = find "#open-window"
-  and rotate_container = find ".rotate-container"
+  let rotate_container = find ".rotate-container"
   and scale_container = find ".scale-container"
   and universe = find "#universe" in
-  Rescaling.handle_rescaling open_window;
+  let* () = Css.set (Width (float_of_int width)) scale_container in
+  let+ () = Css.set (Height (float_of_int height)) scale_container in
   { rotate_container; scale_container; universe; height; width }
 
-let move { scale_container; rotate_container; universe; width; height } ~x ~y
-    ~scale ~rotate ~delay =
-  let open Fut.Syntax in
-  let foi = float_of_int in
-  let* () = Css.set (Css.TransitionDuration delay) scale_container in
-  let* () = Css.set (Css.TransitionDuration delay) rotate_container in
-  let* () = Css.set (Css.TransitionDuration delay) universe in
-  let left = -.((x *. foi width) -. (foi width /. 2.)) in
-  let top = -.((y *. foi height) -. (foi height /. 2.)) in
-  let* () = Css.set (Css.Left left) universe in
-  let* () = Css.set (Css.Top top) universe in
-  let* () = Css.set (Css.Scale (1. /. scale)) scale_container in
-  let+ () = Css.set (Css.Rotate rotate) rotate_container in
-  ()
+let move { scale_container; rotate_container; universe; width; height }
+    ({ x; y; scale } : Coordinates.window) ~delay =
+  Console.(log [ "moving to"; x; y; scale; delay ]);
+  let* () = Css.set (TransitionDuration delay) scale_container in
+  let* () = Css.set (TransitionDuration delay) rotate_container in
+  let* () = Css.set (TransitionDuration delay) universe in
+  let left = -.x +. (float_of_int width /. 2.) in
+  let top = -.y +. (float_of_int height /. 2.) in
+  let* () = Css.set (Left left) universe in
+  let* () = Css.set (Top top) universe in
+  Css.set (Css.Scale scale) scale_container
+
+let move_to window elem =
+  let coords_e = Coordinates.get elem in
+  let coords_w =
+    Coordinates.Window_of_elem.focus
+      ~win_height:(float_of_int window.height)
+      ~win_width:(float_of_int window.width)
+      coords_e
+  in
+  move window coords_w ~delay:1.

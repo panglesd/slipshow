@@ -1,12 +1,11 @@
-import { myQueryAll } from './util';
-import Controller from './controller';
-import Slip from './slip';
+import { myQueryAll } from "./util";
+import Controller from "./controller";
+import Slip from "./slip";
 
 export default function (root) {
-    function prepareRoot (rootElem) {
-	let container = document.createElement("div");
-	container.innerHTML = 
-	    `	
+  function prepareRoot(rootElem) {
+    let container = document.createElement("div");
+    container.innerHTML = `	
 	<div class="toc-slip" style="display:none;"></div>
         <div id="open-window">
 	  <div class="cpt-slip">0</div>
@@ -54,679 +53,800 @@ export default function (root) {
               </div>
 	    </div>
 	</div>`;
-	rootElem.replaceWith(container);
-	container.querySelector(".placeHolder").replaceWith(rootElem);
-	rootElem.querySelectorAll("slip-slip").forEach((slipElem) => {
-	    setTimeout(() => {
-		var scaleContainer = document.createElement('div');
-		var slipContainer = document.createElement('div');
-		scaleContainer.classList.add("slip-scale-container");
-		slipContainer.classList.add("slip-container");
-		let fChild;
-		while((fChild = slipElem.firstChild)) {
-		    slipContainer.appendChild(fChild);
-		}
-		scaleContainer.appendChild(slipContainer);
-		slipElem.appendChild(scaleContainer);
-		setTimeout(() => {
-		    // let canvas = document.createElement('canvas');
-		    // canvas.height = slipContainer.offsetHeight;
-		    // canvas.width = slipContainer.offsetWidth;
-		    // canvas.classList.add("sketchpad");
-		    // canvas.style.opacity = "1";
-		    // slipContainer.appendChild(canvas);
-		    // let sketchpad = new Atrament(canvas);
-		    // sketchpad.smoothing = 0.2;
-		},0);
-	    },0);
-	});
-	rootElem.style.width = "unset";
-	rootElem.style.height = "unset";
-	// document.querySelectorAll(".background-canvas").forEach((elem)=> {elem.addEventListener("click", (ev) => { console.log("vous avez cliquez aux coordonnées : ", ev.layerX, ev.layerY); });});	
-    }
-    if (typeof(root) == "string") {
-	if(root[0] != "#")
-	    root = "#"+root;
-	root = document.querySelector(root);
-    }
-    else if (typeof(root) == "undefined")
-	root = document.querySelector("slip-slipshow");
-    prepareRoot(root);
-
-    // Constants
-    document.body.style.cursor = "auto";
-    let timeOutIds = [];
-    document.body.addEventListener("mousemove", (ev) => {
-	timeOutIds.forEach((id) => { clearTimeout(id); });
-	document.body.style.cursor = "auto";
-	timeOutIds.push(setTimeout(() => { document.body.style.cursor = "none";}, 5000));
-    });
-    let openWindow = document.querySelector("#open-window");
-    let universe = document.querySelector("#universe");
-    let slips = universe.querySelectorAll("slip-slip:not(slip-slipshow)");
-    let browserHeight, openWindowWidth;
-    let browserWidth, openWindowHeight;
-    this.getOpenWindowHeight = () => openWindowHeight;
-    this.getOpenWindowWidth = () => openWindowWidth;
-
-    let winX, winY;
-    let currentScale, currentRotate;
-    this.getCoord = () => { return {x: winX, y: winY, scale: currentScale};};
-    let doNotMove = false;
-    this.setDoNotMove = m => doNotMove = m;
-    this.getDoNotMove = m => doNotMove;
-    let alwaysMoveFast = false;
-    this.setAlwaysMoveFast = m => {setTimeout(() => {alwaysMoveFast = m}, 0)};
-    this.getAlwaysMoveFast = m => alwaysMoveFast;
-    this.moveWindow = function (x, y, scale, rotate, delay) {
-	if(this.getDoNotMove()) {
-	    return;
-	}
-	let my_delay = delay;
-	if(this.getAlwaysMoveFast()) {
-	    my_delay = "0";
-	}
-	currentScale = scale;
-	currentRotate = rotate;
-	winX = x ;
-	winY = y;
-	setTimeout(() => {
-	    document.querySelector(".scale-container").style.transitionDuration = my_delay+"s";
-	    document.querySelector(".rotate-container").style.transitionDuration = my_delay+"s";
-	    universe.style.transitionDuration = my_delay+"s, "+my_delay+ "s"; 
-	    setTimeout(() => {
-		universe.style.left = -(x*1440 - 1440/2)+"px";
-		universe.style.top = -(y*1080 - 1080/2)+"px";
-		document.querySelector(".scale-container").style.transform = "scale("+(1/scale)+")";
-		document.querySelector(".rotate-container").style.transform = "rotate("+(rotate)+"deg)";
-	    },0);
-	},0);
-	return;
-    };
-    this.moveWindowRelative = function(dx, dy, dscale, drotate, delay) {
-	this.moveWindow(winX+dx, winY+dy, currentScale+dscale, currentRotate+drotate, delay);
-    };
-    this.placeSlip = function(slip) {
-	let scale = parseFloat(slip.getAttribute("scale"));
-	let slipScaleContainer = slip.querySelector(".slip-scale-container");
-	scale = isNaN(scale) ? 1 : scale ;
-	slipScaleContainer.style.transform = "scale("+scale+")";
-	const resizeObserver = new ResizeObserver(entries => {
-	    slip.style.width = (Math.max(slipScaleContainer.offsetWidth, 1440))*scale+"px";
-	    slip.style.height = (Math.max(slipScaleContainer.offsetHeight, 1080))*scale+"px";
-	});
-
-	resizeObserver.observe(slipScaleContainer);
-    };
-    this.placeSlips = function () {
-	let depth = function (elem) {
-	    let subslips = myQueryAll(elem, "slip-slip");
-	    return 1+subslips.map(depth).reduce((a,b) => Math.max(a,b),0);
-	};
-	let rootDepth = depth(document.body);
-	for(let i= 0; i<rootDepth; i++)
-	    slips.forEach(this.placeSlip);	
-    };
-    setTimeout(() => {
-	this.placeSlips();
-    },0);
-    this.placeOpenWindow = function () {
-	browserHeight = window.innerHeight;
-	browserWidth = window.innerWidth;
-	if(browserHeight/3 < browserWidth/4) {
-	    openWindowWidth = Math.floor((browserHeight*4)/3);
-	    openWindowHeight = browserHeight;
-	    openWindow.style.left = ((window.innerWidth - openWindowWidth) /2)+"px";
-	    openWindow.style.right = ((window.innerWidth - openWindowWidth) /2)+"px";
-	    openWindow.style.width = (openWindowWidth)+"px";
-	    openWindow.style.top = "0";
-	    openWindow.style.bottom = "0";
-	    openWindow.style.height = (openWindowHeight)+"px";
-	}
-	else {
-	    openWindowHeight = Math.floor((browserWidth*3)/4);
-	    openWindowWidth = browserWidth;
-	    openWindow.style.top = ((window.innerHeight - openWindowHeight) /2)+"px";
-	    openWindow.style.bottom = ((window.innerHeight - openWindowHeight) /2)+"px";
-	    openWindow.style.height = (openWindowHeight)+"px";
-	    openWindow.style.right = "0";
-	    openWindow.style.left = "0";
-	    openWindow.style.width = openWindowWidth+"px";
-	}
-	document.querySelector(".scale-container").style.transformOrigin = (1440/2)+"px "+(1080/2)+"px";
-	document.querySelector(".rotate-container").style.transformOrigin = (1440/2)+"px "+(1080/2)+"px";
-	document.querySelector(".format-container").style.transform = "scale("+(openWindowWidth/1440)+")";
-	document.querySelector(".cpt-slip").style.right =  (parseInt(openWindow.style.left)) + "px";
-	document.querySelector(".cpt-slip").style.bottom =  "0";
-	document.querySelector(".cpt-slip").style.zIndex =  "10";
-    };
-    this.placeOpenWindow();
-    window.addEventListener("resize", (ev) => {
-	this.placeOpenWindow();
-	this.moveWindow(winX, winY, currentScale, currentRotate, 0);
-    });
-
-    // Taken from https://selftaughtjs.com/algorithm-sundays-converting-roman-numerals
-    // Use in showing roman numbers for slip number
-    function counterToString(num, depth) {
-	if(depth == 1 || depth > 3)
-	    return num.toString();
-	let result = '';
-	let decimal = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
-	let roman;
-	if(depth == 0)
-	    roman = ["M", "CM","D","CD","C", "XC", "L", "XL", "X","IX","V","IV","I"];
-	else
-	    roman = ["m", "cm","d","cd","c", "xc", "l", "xl", "x","ix","v","iv","i"];
-	for (var i = 0;i<=decimal.length;i++) {
-	    while (num%decimal[i] < num) {     
-		result += roman[i];
-		num -= decimal[i];
-	    }
-	}
-	return result;
-    }
-    this.countersToString = (counterList) => {
-	let res = '';
-	res += counterToString(counterList[0]+1, 0);
-	for(let i = 1; i < counterList.length; i++)
-	    res += "." + counterToString(counterList[i]+1, i);
-	return res;	
-    };
-    this.updateCounter = function () {
-	let counters = stack.map((slip) => slip.getActionIndex());
-	let hash = counters.join(',');
-	if(window.parent !== window){
-	    if (this.send_stage)
-		window.parent.postMessage({id: this.id, kind: "state" , data: hash}, "*");
-	}
-	else
- 	    window.history.replaceState(null, null, '#' + hash);
-	document.querySelector(".cpt-slip").innerHTML = this.countersToString(counters);	
-    };
-    this.enter = (n) => {
-	this.gotoSlip(n);
-	this.push(n);
-	this.next();
-    };
-    this.next = () => {
-	if(document.querySelector(".toc-slip").innerHTML == "")
-	    this.showToC();
-	// return true if and only if the stack changed
-	let currentSlip = this.getCurrentSlip();
-	let n = currentSlip.next();
-	this.updateCounter();
-	if(n instanceof Slip) {
-	    this.enter(n);
-	    // this.gotoSlip(n);
-	    // this.push(n);
-	    // this.next();
-	    // this.showToC();
-	    return true;
-	}
-	else if(!n) {
-	    this.pop();
-	    let newCurrentSlip = this.getCurrentSlip();
-	    if(newCurrentSlip.nextStageNeedGoto())
-		this.gotoSlip(newCurrentSlip);
-	    if(stack.length > 1 || newCurrentSlip.getActionIndex() < newCurrentSlip.getMaxNext())
-		this.next();
-	    else
-		this.gotoSlip(newCurrentSlip);
-	    return true;
-	}
-        if (currentSlip.element.tagName == "SLIP-SLIPSHOW" && currentSlip.getActionIndex() >= currentSlip.getMaxNext()) {
-            this.previous();
-            return false
+    rootElem.replaceWith(container);
+    container.querySelector(".placeHolder").replaceWith(rootElem);
+    rootElem.querySelectorAll("slip-slip").forEach((slipElem) => {
+      setTimeout(() => {
+        var scaleContainer = document.createElement("div");
+        var slipContainer = document.createElement("div");
+        scaleContainer.classList.add("slip-scale-container");
+        slipContainer.classList.add("slip-container");
+        let fChild;
+        while ((fChild = slipElem.firstChild)) {
+          slipContainer.appendChild(fChild);
         }
-	return false;
-    };
-    this.nextSlip = function () {
-	// Do this.next() untill the stack change
-	while(!this.next()) {}
-    };
-    this.previous = (options) => {
-	let currentSlip = this.getCurrentSlip();
-	// setDoNotMove(true);
-	// let stage = currentSlip.previous2();
-	// setDoNotMove(false);
-	let n = currentSlip.previous();
-	// if(stage == "")
-	if(n instanceof Slip) {
-	    while(n.getCurrentSubSlip() instanceof Slip) {
-		this.push(n);
-		n = n.getCurrentSubSlip();
-	    }
-	    this.push(n);
-	    
-	    this.gotoSlip(n, options);
-	    // this.gotoSlip(n, {delay: currentSlip.delay});
-		
-	    // this.showToC();
-	    this.updateCounter();
-	    return true;
-	}
-	else if(!n) {
-	    this.pop();
-	    let newCurrentSlip = this.getCurrentSlip();
-	    // newCurrentSlip.incrIndex();
-	    
-	    if(stack.length > 1 || newCurrentSlip.getActionIndex() > -1)
-		this.previous({delay: (currentSlip.currentDelay ? currentSlip.currentDelay : currentSlip.delay )});
-	    else {
-		this.gotoSlip(newCurrentSlip, options);
-	    }
-		// this.gotoSlip(newCurrentSlip, {delay: currentSlip.delay});
-	    // this.showToC();
-	    this.updateCounter();
-            if (currentSlip.element.tagName == "SLIP-SLIPSHOW" && currentSlip.getActionIndex() <= 0) {
-                this.next();
-                return true
-            }
-	    return true;
-	} else if(options){
-	    setTimeout(() => {
-		this.gotoSlip(currentSlip, options);
-	    },0);
-	}
-	// this.showToC();
-	setTimeout(() => {
-	    this.gotoSlip(currentSlip, options);
-	},0);
-	this.updateCounter();
-	return false;
-    };
-    this.previousSlip = function () {
-	// Do this.previous() untill the stack change
-	while(!this.previous()) {}
-    };
-
-    this.getCoordinateInUniverse = function (elem) {
-	let getCoordInParen = (elem) => {
-	    return {x: elem.offsetLeft, y:elem.offsetTop};	    
-	};
-	let globalScale = 1;
-	let parseScale = function(transform) {
-	    if (transform == "none")
-		return 1;
-	    return parseFloat(transform.split("(")[1].split(",")[0]);
-	};
-	let getCoordIter = (elem) => {
-	    let cInParent = getCoordInParen(elem);
-	    if(!elem.offsetParent)
-		return { x: 0,
-			 y: 0,
-			 centerX: 0,
-			 centerY: 0,
-			 width: 0,
-			 height: 0,
-			 scale: 0 };
-	    if(elem.offsetParent.classList.contains("universe"))
-	    {
-		return cInParent;
-	    }
-	    let cParent = getCoordIter(elem.offsetParent);
-	    let style = window.getComputedStyle(elem.offsetParent);
-	    let scale;
-	    // if (style.transform == "none")
-	    // 	scale = 1;
-	    // else
-	    // 	scale = parseFloat(style.transform.split("(")[1].split(",")[0]);
-	    scale = parseScale(style.transform);
-	    globalScale *= scale;
-	    // let scale = 1 ; // Has to parse/compute the scale, for now always 1
-	    return {x:cParent.x+cInParent.x*globalScale, y:cParent.y+cInParent.y*globalScale };
-	};
-	let c = getCoordIter(elem);
-	let style = window.getComputedStyle(elem);
-	let scale = parseScale(style.transform);
-	globalScale *= scale;
-	let ret = { x: c.x/1440,
-		    y: c.y/1080,
-		    centerX:c.x/1440+0.5*elem.offsetWidth/1440*globalScale,
-		    centerY:c.y/1080+0.5*elem.offsetHeight/1080*globalScale,
-		    width: elem.offsetWidth/1440*globalScale,
-		    height: elem.offsetHeight/1080*globalScale,
-		    scale: globalScale };
-	return ret;
-	// return {x:c.x/1440+elem*globalScale*scale, y:c.y/1080+0.5*globalScale*scale, scale: globalScale*scale};
-	// return {x: this.element.offsetLeft/1440+0.5, y:this.element.offsetTop/1080+0.5};
-    };
-    this.moveToElement = function(element, options) {
-	let coord = this.getCoordinateInUniverse(element);
-	let actualSize = {width: element.offsetWidth*coord.scale, height: element.offsetHeight*coord.scale};
-	if(options)
-	    this.moveWindow(coord.centerX, coord.centerY, Math.max(coord.width, coord.height)// coord.scale
-			    , 0, options.delay ? options.delay : 1);
-    };
-    this.gotoSlip = function(slip, options) {
-	// console.log("going to slip", slip, slip.element);
-	options = options ? options : {};
-	if(slip.element.tagName == "SLIP-SLIP")
-	{
-	     setTimeout(() => {
-		let coord = slip.findSlipCoordinate();
-		if(typeof slip.currentX != "undefined" && typeof slip.currentY != "undefined" && typeof slip.currentScale != "undefined") {
-		    this.moveWindow(slip.currentX, slip.currentY, slip.currentScale, slip.rotate, typeof(options.delay)!="undefined" ? options.delay : (typeof(slip.currentDelay)!="undefined" ? slip.currentDelay : slip.delay));
-		} else {
-		    slip.currentX = coord.x; slip.currentY = coord.y; slip.currentDelay = slip.delay;
-		    this.moveWindow(coord.x, coord.y, coord.scale, slip.rotate, typeof(options.delay)!="undefined" ? options.delay : (typeof(slip.currentDelay)!="undefined" ? slip.currentDelay : slip.delay));
-		}
-	     },0);
-	}
-	else {
-	     setTimeout(() => {
-		let coord = this.getCoordinateInUniverse(slip.element);
-		 this.moveWindow(coord.centerX, coord.centerY, Math.max(coord.width, coord.height), 0, typeof(options.delay)!="undefined" ? options.delay : slip.delay);
-	     },0);
-	}
-    };
-    let rootSlip = new Slip(root, "Presentation", [], this, {});
-    let stack = [rootSlip];
-
-    // Stack Management:
-    this.push = function (n) {
-	this.getToC().querySelectorAll(".toc-slip .active-slip").forEach(elem => elem.classList.remove("active-slip"));
-	if(n.tocElem)
-	    n.tocElem.classList.add("active-slip");
-	n.element.classList.add("active-true-slip");
-	if(stack.length>0)
-	    stack[stack.length-1].element.classList.remove("active-true-slip");
-	stack.push(n);
-	return ;
-    };
-    this.pop = function () {
-	this.getToC().querySelectorAll(".toc-slip .active-slip").forEach(elem => elem.classList.remove("active-slip"));
-	let n = stack.pop();
-	n.element.classList.remove("active-true-slip");
-	if(stack.length == 0)
-	    stack.push(n);
-	stack[stack.length-1].element.classList.add("active-true-slip");
-	if(stack[stack.length -1].tocElem)
-	    stack[stack.length -1].tocElem.classList.add("active-slip");
-	return n;
-    };
-    this.getCurrentSlip = function () {
-	return stack[stack.length -1];
-    };
-    this.getSlipTree = function (slip) {
-	slip = slip || rootSlip;
-	if(slip instanceof Slip) 
-	    return {name: slip.name, slip: slip, subslips: slip.getActionList().map((e) => this.getSlipTree(e))};
-	return {function: true};
-    };
-
-    this.goToState = function(state) {
-	let iter = (state) => {
-	    if(state.length == 0)
-		return;
-	    iter(state[0]);
-	    while(state[1].getActionIndex()<state[2])
-		this.next();
-	};
-	stack = [rootSlip];
-	rootSlip.refreshAll();
-	iter(state);
-	this.gotoSlip(state[1]);
-    };
-    let toc;
-    this.getToC = function() {
-	if (toc)
-	    return toc;
-	toc = document.querySelector(".toc-slip");
-	return toc;
-    };
-    this.showToC = function () {
-	let toc = document.querySelector(".toc-slip");
-	// let innerHTML = "";
-	let globalElem = document.createElement("div");
-	let tree = this.getSlipTree();
-	// let before = true;
-	let displayTree = (tree, stackWithNumbers) => {
-	    let containerElement = document.createElement("div");
-	    let nameElement = document.createElement("div");
-	    // if(before)
-	    // 	nameElement.style.color = "blue";
-	    // else
-	    // 	nameElement.style.color = "yellow";
-	    // if(tree.slip == this.getCurrentSlip()) {
-	    // 	nameElement.style.color = "red";
-	    // 	before = false;
-	    // }
-		
-	    nameElement.innerText = tree.slip.fullName; //? tree.slip.fullName : tree.slip.name ; //+ " (" + (tree.slip.getActionIndex()+1) + "/" + (tree.slip.getMaxNext()+1) + ")";
-	    containerElement.appendChild(nameElement);
-	    // innerHTML += "<div>"+tree.name+"</div>";
-	    if(tree.subslips.length > 0) {
-		let ulElement = document.createElement("ul");
-		// innerHTML += "<ul>";
-		tree.subslips.forEach((subtree, index) => {
-		    let newStackWithNumbers = [stackWithNumbers, tree.slip, index];
-		    let liElement = document.createElement("li");
-		    // innerHTML += "<li>";
-		    if(subtree.function) {
-			let toCounter = (c) => {
-			    if(c.length == 0)
-				return [];
-			    return toCounter(c[0]).concat([c[2]]);
-			};
-			liElement.innerText = this.countersToString(toCounter(newStackWithNumbers));
-			//			liElement.innerText = ""+(index+1);
-			liElement.classList.add("toc-function");
-		    } else
-			liElement.appendChild(displayTree(subtree, newStackWithNumbers));
-		    liElement.addEventListener("click", (ev) => {
-		    	if(ev.target == liElement) {
-		    	    this.goToState(newStackWithNumbers);
-		    	}
-		    });
-		    ulElement.appendChild(liElement);
-		    
-		    // innerHTML += "</li>";
-		});
-		containerElement.appendChild(ulElement);
-		tree.slip.setTocElem(containerElement);
-		// innerHTML += "</ul>";
-	    }
-	    return containerElement;
-	};
-	toc.innerHTML = "";
-	// toc.innerHTML = innerHTML;
-	toc.appendChild(displayTree(tree, []));
-    };
-
-    // ******************************
-    // Function for writing and highlighting
-    // ******************************
-
-    this.getTool = () => {
-	return this.getCurrentSlip().getTool();
-    };
-    this.setTool = (tool) => {
-	this.getCurrentSlip().setTool(tool);
-	this.updateToolClasses();
-    };
-    this.getColor = () => {
-	return this.getCurrentSlip().getColor();
-    };
-    this.setColor = (color) => {
-	this.getCurrentSlip().setColor(color);
-	this.updateToolClasses();
-    };
-    this.setLineWidth = (lw) => {
-	this.getCurrentSlip().setLineWidth(lw);
-	this.updateToolClasses();
-    };
-    this.getLineWidth = () => {
-	return this.getCurrentSlip().getLineWidth();
-    };
-    this.reloadCanvas = () => {
-	this.getCurrentSlip().reloadCanvas();
-    };
-    let that = this;
-    function addToolEvents() {
-	document.querySelector(".slip-toolbar-pen").addEventListener("click", function(ev) {
-	    that.setTool("drawing");
-	});
-	document.querySelector(".slip-toolbar-cursor").addEventListener("click", function(ev) {
-	    that.setTool("no-tool");
-	});
-	document.querySelector(".slip-toolbar-eraser").addEventListener("click", function(ev) {
-	    switch(that.getTool()) {
-	    case "drawing-erase":
-		that.setTool("drawing");
-		break;
-	    case "highlighting":
-		that.setTool("highlighting-erase");
-		break;
-	    case "highlighting-erase":
-		that.setTool("highlighting");
-		break;
-	    case "no-tool":
-		that.setTool("no-tool");
-		break;
-	    case "drawing":
-		that.setTool("drawing-erase");
-		break;
-	    }
-	});
-	document.querySelector(".slip-toolbar-highlighter").addEventListener("click", function(ev) {
-	    that.setTool("highlighting");
-	});
-	document.querySelector(".slip-toolbar-black").addEventListener("click", function(ev) {
-	    that.setColor("black");
-	});
-	document.querySelector(".slip-toolbar-blue").addEventListener("click", function(ev) {
-	    that.setColor("blue");
-	});
-	document.querySelector(".slip-toolbar-red").addEventListener("click", function(ev) {
-	    that.setColor("red");
-	});
-	document.querySelector(".slip-toolbar-green").addEventListener("click", function(ev) {
-	    that.setColor("green");
-	});
-	document.querySelector(".slip-toolbar-yellow").addEventListener("click", function(ev) {
-	    that.setColor("yellow");
-	});
-	document.querySelector(".slip-toolbar-small").addEventListener("click", function(ev) {
-	    that.setLineWidth("small");
-	});
-	document.querySelector(".slip-toolbar-medium").addEventListener("click", function(ev) {
-	    that.setLineWidth("medium");
-	});
-	document.querySelector(".slip-toolbar-large").addEventListener("click", function(ev) {
-	    that.setLineWidth("large");
-	});
-	document.querySelector(".slip-toolbar-clear").addEventListener("click", function(ev) {
-	    that.setTool("clear-all");
-	});
-    }
-    this.updateToolClasses = () => {
-	document.querySelector(".slip-toolbar-tool").classList.remove("drawing","highlighting", "drawing-erase", "highlighting-erase", "no-tool");
-	if(this.getTool()=="no-tool" || this.getTool()=="cursor")
-	    document.querySelector(".slip-writing-toolbar").classList.remove("active");
-	else
-	    document.querySelector(".slip-writing-toolbar").classList.add("active");
-	document.querySelector(".slip-toolbar-tool").classList.add(this.getTool());
-	document.querySelector(".slip-toolbar-color").classList.remove("black","blue", "red", "green", "yellow");
-	document.querySelector(".slip-toolbar-color").classList.add(this.getColor());
-	document.querySelector(".slip-toolbar-width").classList.remove("small","medium", "large");
-	document.querySelector(".slip-toolbar-width").classList.add(this.getLineWidth());
-    };
-    setTimeout(addToolEvents, 0);
-
-    // ******************************
-    // 
-    // ******************************
-
-
-    
-    // this.getRootSlip = () => rootSlip;
-    this.setRootSlip = (root) => {
-	rootSlip = root;
-	stack = [rootSlip];
-    };
-    this.getRootSlip = () => rootSlip;
-    this.send_stage = false;
-    this.start = async (startingPoint, id) => {
-	this.id = id;
-	stack = [rootSlip];
-	if(window.location.hash || startingPoint) {
-	    let target_stack;
-	    if(window.location.hash) {
-		target_stack = window.location.hash.slice(1).split(",").map(x => parseInt(x));
-	    }
-	    else {
-		target_stack = startingPoint;
-	    }
-	    this.setAlwaysMoveFast(true);
-	    console.log("alwaysMoveFast", this.getAlwaysMoveFast())
-	    let later = () => {
-		return new Promise(function(resolve) {
-		    setTimeout(resolve, 0);
-		});
-	    };
-	    let unfinished = -1;
-	    let continue_please = 0;
-	    let stop_now = 1;
-	    let not_arrived = function () {
-		let counters = stack.map((slip) => slip.getActionIndex());
-		let return_value = unfinished;
-		target_stack.forEach((target, i) => {
-		    if (return_value != unfinished)
-			return;
-		    if (target < counters[i])
-			return_value = stop_now;
-		    if (target > counters[i])
-			return_value = continue_please;
-		});
-		return return_value;
-	    }
-	    while(not_arrived() == continue_please){
-		await later();
-		await this.next()};
-	    this.setAlwaysMoveFast(false);
-	}
-	else
-	    this.next();
-	this.send_stage = true;
-	if(window.parent !== window){
-	    window.parent.postMessage({id: id, kind: "ready" , data: id}, "*");
-	}
-	return this;
-    };
-    this.restart = () => {
-	stack = [rootSlip];
-	rootSlip.refreshAll();
-	this.next();
-    };
-    let controller = new Controller(this);
-    this.getController = () => controller;
-    // if(window !== window.parent)
-    window.addEventListener("message", (event) => {
-	console.log(event);
-	this.restart();
-	let target_stack = event.data.split(",").map(x => parseInt(x));
-	this.setAlwaysMoveFast(true);
-	console.log("alwaysMoveFast", this.getAlwaysMoveFast())
-	let unfinished = -1;
-	let continue_please = 0;
-	let stop_now = 1;
-	let not_arrived = function () {
-	    let counters = stack.map((slip) => slip.getActionIndex());
-	    let return_value = unfinished;
-	    target_stack.forEach((target, i) => {
-		if (return_value != unfinished)
-		    return;
-		if (target < counters[i])
-		    return_value = stop_now;
-		if (target > counters[i])
-		    return_value = continue_please;
-	    });
-	    return return_value;
-	}
-	while(not_arrived() == continue_please)
-	    this.next();
-	this.setAlwaysMoveFast(false);
+        scaleContainer.appendChild(slipContainer);
+        slipElem.appendChild(scaleContainer);
+        setTimeout(() => {
+          // let canvas = document.createElement('canvas');
+          // canvas.height = slipContainer.offsetHeight;
+          // canvas.width = slipContainer.offsetWidth;
+          // canvas.classList.add("sketchpad");
+          // canvas.style.opacity = "1";
+          // slipContainer.appendChild(canvas);
+          // let sketchpad = new Atrament(canvas);
+          // sketchpad.smoothing = 0.2;
+        }, 0);
+      }, 0);
     });
-};
+    rootElem.style.width = "unset";
+    rootElem.style.height = "unset";
+    // document.querySelectorAll(".background-canvas").forEach((elem)=> {elem.addEventListener("click", (ev) => { console.log("vous avez cliquez aux coordonnées : ", ev.layerX, ev.layerY); });});
+  }
+  if (typeof root == "string") {
+    if (root[0] != "#") root = "#" + root;
+    root = document.querySelector(root);
+  } else if (typeof root == "undefined")
+    root = document.querySelector("slip-slipshow");
+  prepareRoot(root);
+
+  // Constants
+  document.body.style.cursor = "auto";
+  let timeOutIds = [];
+  document.body.addEventListener("mousemove", (ev) => {
+    timeOutIds.forEach((id) => {
+      clearTimeout(id);
+    });
+    document.body.style.cursor = "auto";
+    timeOutIds.push(
+      setTimeout(() => {
+        document.body.style.cursor = "none";
+      }, 5000),
+    );
+  });
+  let openWindow = document.querySelector("#open-window");
+  let universe = document.querySelector("#universe");
+  let slips = universe.querySelectorAll("slip-slip:not(slip-slipshow)");
+  let browserHeight, openWindowWidth;
+  let browserWidth, openWindowHeight;
+  this.getOpenWindowHeight = () => openWindowHeight;
+  this.getOpenWindowWidth = () => openWindowWidth;
+
+  let winX, winY;
+  let currentScale, currentRotate;
+  this.getCoord = () => {
+    return { x: winX, y: winY, scale: currentScale };
+  };
+  let doNotMove = false;
+  this.setDoNotMove = (m) => (doNotMove = m);
+  this.getDoNotMove = (m) => doNotMove;
+  let alwaysMoveFast = false;
+  this.setAlwaysMoveFast = (m) => {
+    setTimeout(() => {
+      alwaysMoveFast = m;
+    }, 0);
+  };
+  this.getAlwaysMoveFast = (m) => alwaysMoveFast;
+  this.moveWindow = function (x, y, scale, rotate, delay) {
+    if (this.getDoNotMove()) {
+      return;
+    }
+    let my_delay = delay;
+    if (this.getAlwaysMoveFast()) {
+      my_delay = "0";
+    }
+    currentScale = scale;
+    currentRotate = rotate;
+    winX = x;
+    winY = y;
+    setTimeout(() => {
+      document.querySelector(".scale-container").style.transitionDuration =
+        my_delay + "s";
+      document.querySelector(".rotate-container").style.transitionDuration =
+        my_delay + "s";
+      universe.style.transitionDuration = my_delay + "s, " + my_delay + "s";
+      setTimeout(() => {
+        universe.style.left = -(x * 1440 - 1440 / 2) + "px";
+        universe.style.top = -(y * 1080 - 1080 / 2) + "px";
+        document.querySelector(".scale-container").style.transform =
+          "scale(" + 1 / scale + ")";
+        document.querySelector(".rotate-container").style.transform =
+          "rotate(" + rotate + "deg)";
+      }, 0);
+    }, 0);
+    return;
+  };
+  this.moveWindowRelative = function (dx, dy, dscale, drotate, delay) {
+    this.moveWindow(
+      winX + dx,
+      winY + dy,
+      currentScale + dscale,
+      currentRotate + drotate,
+      delay,
+    );
+  };
+  this.placeSlip = function (slip) {
+    let scale = parseFloat(slip.getAttribute("scale"));
+    let slipScaleContainer = slip.querySelector(".slip-scale-container");
+    scale = isNaN(scale) ? 1 : scale;
+    slipScaleContainer.style.transform = "scale(" + scale + ")";
+    const resizeObserver = new ResizeObserver((entries) => {
+      slip.style.width =
+        Math.max(slipScaleContainer.offsetWidth, 1440) * scale + "px";
+      slip.style.height =
+        Math.max(slipScaleContainer.offsetHeight, 1080) * scale + "px";
+    });
+
+    resizeObserver.observe(slipScaleContainer);
+  };
+  this.placeSlips = function () {
+    let depth = function (elem) {
+      let subslips = myQueryAll(elem, "slip-slip");
+      return 1 + subslips.map(depth).reduce((a, b) => Math.max(a, b), 0);
+    };
+    let rootDepth = depth(document.body);
+    for (let i = 0; i < rootDepth; i++) slips.forEach(this.placeSlip);
+  };
+  setTimeout(() => {
+    this.placeSlips();
+  }, 0);
+  this.placeOpenWindow = function () {
+    browserHeight = window.innerHeight;
+    browserWidth = window.innerWidth;
+    if (browserHeight / 3 < browserWidth / 4) {
+      openWindowWidth = Math.floor((browserHeight * 4) / 3);
+      openWindowHeight = browserHeight;
+      openWindow.style.left = (window.innerWidth - openWindowWidth) / 2 + "px";
+      openWindow.style.right = (window.innerWidth - openWindowWidth) / 2 + "px";
+      openWindow.style.width = openWindowWidth + "px";
+      openWindow.style.top = "0";
+      openWindow.style.bottom = "0";
+      openWindow.style.height = openWindowHeight + "px";
+    } else {
+      openWindowHeight = Math.floor((browserWidth * 3) / 4);
+      openWindowWidth = browserWidth;
+      openWindow.style.top = (window.innerHeight - openWindowHeight) / 2 + "px";
+      openWindow.style.bottom =
+        (window.innerHeight - openWindowHeight) / 2 + "px";
+      openWindow.style.height = openWindowHeight + "px";
+      openWindow.style.right = "0";
+      openWindow.style.left = "0";
+      openWindow.style.width = openWindowWidth + "px";
+    }
+    document.querySelector(".scale-container").style.transformOrigin =
+      1440 / 2 + "px " + 1080 / 2 + "px";
+    document.querySelector(".rotate-container").style.transformOrigin =
+      1440 / 2 + "px " + 1080 / 2 + "px";
+    document.querySelector(".format-container").style.transform =
+      "scale(" + openWindowWidth / 1440 + ")";
+    document.querySelector(".cpt-slip").style.right =
+      parseInt(openWindow.style.left) + "px";
+    document.querySelector(".cpt-slip").style.bottom = "0";
+    document.querySelector(".cpt-slip").style.zIndex = "10";
+  };
+  this.placeOpenWindow();
+  window.addEventListener("resize", (ev) => {
+    this.placeOpenWindow();
+    this.moveWindow(winX, winY, currentScale, currentRotate, 0);
+  });
+
+  // Taken from https://selftaughtjs.com/algorithm-sundays-converting-roman-numerals
+  // Use in showing roman numbers for slip number
+  function counterToString(num, depth) {
+    if (depth == 1 || depth > 3) return num.toString();
+    let result = "";
+    let decimal = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
+    let roman;
+    if (depth == 0)
+      roman = [
+        "M",
+        "CM",
+        "D",
+        "CD",
+        "C",
+        "XC",
+        "L",
+        "XL",
+        "X",
+        "IX",
+        "V",
+        "IV",
+        "I",
+      ];
+    else
+      roman = [
+        "m",
+        "cm",
+        "d",
+        "cd",
+        "c",
+        "xc",
+        "l",
+        "xl",
+        "x",
+        "ix",
+        "v",
+        "iv",
+        "i",
+      ];
+    for (var i = 0; i <= decimal.length; i++) {
+      while (num % decimal[i] < num) {
+        result += roman[i];
+        num -= decimal[i];
+      }
+    }
+    return result;
+  }
+  this.countersToString = (counterList) => {
+    let res = "";
+    res += counterToString(counterList[0] + 1, 0);
+    for (let i = 1; i < counterList.length; i++)
+      res += "." + counterToString(counterList[i] + 1, i);
+    return res;
+  };
+  this.updateCounter = function () {
+    let counters = stack.map((slip) => slip.getActionIndex());
+    let hash = counters.join(",");
+    if (window.parent !== window) {
+      if (this.send_stage)
+        window.parent.postMessage(
+          { id: this.id, kind: "state", data: hash },
+          "*",
+        );
+    } else window.history.replaceState(null, null, "#" + hash);
+    document.querySelector(".cpt-slip").innerHTML =
+      this.countersToString(counters);
+  };
+  this.enter = (n) => {
+    this.gotoSlip(n);
+    this.push(n);
+    this.next();
+  };
+  this.next = () => {
+    if (document.querySelector(".toc-slip").innerHTML == "") this.showToC();
+    // return true if and only if the stack changed
+    let currentSlip = this.getCurrentSlip();
+    let n = currentSlip.next();
+    this.updateCounter();
+    if (n instanceof Slip) {
+      this.enter(n);
+      // this.gotoSlip(n);
+      // this.push(n);
+      // this.next();
+      // this.showToC();
+      return true;
+    } else if (!n) {
+      this.pop();
+      let newCurrentSlip = this.getCurrentSlip();
+      if (newCurrentSlip.nextStageNeedGoto()) this.gotoSlip(newCurrentSlip);
+      if (
+        stack.length > 1 ||
+        newCurrentSlip.getActionIndex() < newCurrentSlip.getMaxNext()
+      )
+        this.next();
+      else this.gotoSlip(newCurrentSlip);
+      return true;
+    }
+    if (
+      currentSlip.element.tagName == "SLIP-SLIPSHOW" &&
+      currentSlip.getActionIndex() >= currentSlip.getMaxNext()
+    ) {
+      this.previous();
+      return false;
+    }
+    return false;
+  };
+  this.nextSlip = function () {
+    // Do this.next() untill the stack change
+    while (!this.next()) {}
+  };
+  this.previous = (options) => {
+    let currentSlip = this.getCurrentSlip();
+    // setDoNotMove(true);
+    // let stage = currentSlip.previous2();
+    // setDoNotMove(false);
+    let n = currentSlip.previous();
+    // if(stage == "")
+    if (n instanceof Slip) {
+      while (n.getCurrentSubSlip() instanceof Slip) {
+        this.push(n);
+        n = n.getCurrentSubSlip();
+      }
+      this.push(n);
+
+      this.gotoSlip(n, options);
+      // this.gotoSlip(n, {delay: currentSlip.delay});
+
+      // this.showToC();
+      this.updateCounter();
+      return true;
+    } else if (!n) {
+      this.pop();
+      let newCurrentSlip = this.getCurrentSlip();
+      // newCurrentSlip.incrIndex();
+
+      if (stack.length > 1 || newCurrentSlip.getActionIndex() > -1)
+        this.previous({
+          delay: currentSlip.currentDelay
+            ? currentSlip.currentDelay
+            : currentSlip.delay,
+        });
+      else {
+        this.gotoSlip(newCurrentSlip, options);
+      }
+      // this.gotoSlip(newCurrentSlip, {delay: currentSlip.delay});
+      // this.showToC();
+      this.updateCounter();
+      if (
+        currentSlip.element.tagName == "SLIP-SLIPSHOW" &&
+        currentSlip.getActionIndex() <= 0
+      ) {
+        this.next();
+        return true;
+      }
+      return true;
+    } else if (options) {
+      setTimeout(() => {
+        this.gotoSlip(currentSlip, options);
+      }, 0);
+    }
+    // this.showToC();
+    setTimeout(() => {
+      this.gotoSlip(currentSlip, options);
+    }, 0);
+    this.updateCounter();
+    return false;
+  };
+  this.previousSlip = function () {
+    // Do this.previous() untill the stack change
+    while (!this.previous()) {}
+  };
+
+  this.getCoordinateInUniverse = function (elem) {
+    let getCoordInParen = (elem) => {
+      return { x: elem.offsetLeft, y: elem.offsetTop };
+    };
+    let globalScale = 1;
+    let parseScale = function (transform) {
+      if (transform == "none") return 1;
+      return parseFloat(transform.split("(")[1].split(",")[0]);
+    };
+    let getCoordIter = (elem) => {
+      let cInParent = getCoordInParen(elem);
+      if (!elem.offsetParent)
+        return {
+          x: 0,
+          y: 0,
+          centerX: 0,
+          centerY: 0,
+          width: 0,
+          height: 0,
+          scale: 0,
+        };
+      if (elem.offsetParent.classList.contains("universe")) {
+        return cInParent;
+      }
+      let cParent = getCoordIter(elem.offsetParent);
+      let style = window.getComputedStyle(elem.offsetParent);
+      let scale;
+      scale = parseScale(style.transform);
+      globalScale *= scale;
+      return {
+        x: cParent.x + cInParent.x * globalScale,
+        y: cParent.y + cInParent.y * globalScale,
+      };
+    };
+    let c = getCoordIter(elem);
+    let style = window.getComputedStyle(elem);
+    let scale = parseScale(style.transform);
+    globalScale *= scale;
+    let ret = {
+      x: c.x / 1440,
+      y: c.y / 1080,
+      centerX: c.x / 1440 + ((0.5 * elem.offsetWidth) / 1440) * globalScale,
+      centerY: c.y / 1080 + ((0.5 * elem.offsetHeight) / 1080) * globalScale,
+      width: (elem.offsetWidth / 1440) * globalScale,
+      height: (elem.offsetHeight / 1080) * globalScale,
+      scale: globalScale,
+    };
+    return ret;
+  };
+  this.moveToElement = function (element, options) {
+    let coord = this.getCoordinateInUniverse(element);
+    let actualSize = {
+      width: element.offsetWidth * coord.scale,
+      height: element.offsetHeight * coord.scale,
+    };
+    if (options)
+      this.moveWindow(
+        coord.centerX,
+        coord.centerY,
+        Math.max(coord.width, coord.height),
+        0,
+        options.delay ? options.delay : 1,
+      );
+  };
+  this.gotoSlip = function (slip, options) {
+    options = options ? options : {};
+    if (slip.element.tagName == "SLIP-SLIP") {
+      setTimeout(() => {
+        let coord = slip.findSlipCoordinate();
+        if (
+          typeof slip.currentX != "undefined" &&
+          typeof slip.currentY != "undefined" &&
+          typeof slip.currentScale != "undefined"
+        ) {
+          this.moveWindow(
+            slip.currentX,
+            slip.currentY,
+            slip.currentScale,
+            slip.rotate,
+            typeof options.delay != "undefined"
+              ? options.delay
+              : typeof slip.currentDelay != "undefined"
+                ? slip.currentDelay
+                : slip.delay,
+          );
+        } else {
+          slip.currentX = coord.x;
+          slip.currentY = coord.y;
+          slip.currentDelay = slip.delay;
+          this.moveWindow(
+            coord.x,
+            coord.y,
+            coord.scale,
+            slip.rotate,
+            typeof options.delay != "undefined"
+              ? options.delay
+              : typeof slip.currentDelay != "undefined"
+                ? slip.currentDelay
+                : slip.delay,
+          );
+        }
+      }, 0);
+    } else {
+      setTimeout(() => {
+        let coord = this.getCoordinateInUniverse(slip.element);
+        this.moveWindow(
+          coord.centerX,
+          coord.centerY,
+          Math.max(coord.width, coord.height),
+          0,
+          typeof options.delay != "undefined" ? options.delay : slip.delay,
+        );
+      }, 0);
+    }
+  };
+  let rootSlip = new Slip(root, "Presentation", [], this, {});
+  let stack = [rootSlip];
+
+  // Stack Management:
+  this.push = function (n) {
+    this.getToC()
+      .querySelectorAll(".toc-slip .active-slip")
+      .forEach((elem) => elem.classList.remove("active-slip"));
+    if (n.tocElem) n.tocElem.classList.add("active-slip");
+    n.element.classList.add("active-true-slip");
+    if (stack.length > 0)
+      stack[stack.length - 1].element.classList.remove("active-true-slip");
+    stack.push(n);
+    return;
+  };
+  this.pop = function () {
+    this.getToC()
+      .querySelectorAll(".toc-slip .active-slip")
+      .forEach((elem) => elem.classList.remove("active-slip"));
+    let n = stack.pop();
+    n.element.classList.remove("active-true-slip");
+    if (stack.length == 0) stack.push(n);
+    stack[stack.length - 1].element.classList.add("active-true-slip");
+    if (stack[stack.length - 1].tocElem)
+      stack[stack.length - 1].tocElem.classList.add("active-slip");
+    return n;
+  };
+  this.getCurrentSlip = function () {
+    return stack[stack.length - 1];
+  };
+  this.getSlipTree = function (slip) {
+    slip = slip || rootSlip;
+    if (slip instanceof Slip)
+      return {
+        name: slip.name,
+        slip: slip,
+        subslips: slip.getActionList().map((e) => this.getSlipTree(e)),
+      };
+    return { function: true };
+  };
+
+  this.goToState = function (state) {
+    let iter = (state) => {
+      if (state.length == 0) return;
+      iter(state[0]);
+      while (state[1].getActionIndex() < state[2]) this.next();
+    };
+    stack = [rootSlip];
+    rootSlip.refreshAll();
+    iter(state);
+    this.gotoSlip(state[1]);
+  };
+  let toc;
+  this.getToC = function () {
+    if (toc) return toc;
+    toc = document.querySelector(".toc-slip");
+    return toc;
+  };
+  this.showToC = function () {
+    let toc = document.querySelector(".toc-slip");
+    // let innerHTML = "";
+    let globalElem = document.createElement("div");
+    let tree = this.getSlipTree();
+    // let before = true;
+    let displayTree = (tree, stackWithNumbers) => {
+      let containerElement = document.createElement("div");
+      let nameElement = document.createElement("div");
+
+      nameElement.innerText = tree.slip.fullName;
+      containerElement.appendChild(nameElement);
+      if (tree.subslips.length > 0) {
+        let ulElement = document.createElement("ul");
+        tree.subslips.forEach((subtree, index) => {
+          let newStackWithNumbers = [stackWithNumbers, tree.slip, index];
+          let liElement = document.createElement("li");
+          if (subtree.function) {
+            let toCounter = (c) => {
+              if (c.length == 0) return [];
+              return toCounter(c[0]).concat([c[2]]);
+            };
+            liElement.innerText = this.countersToString(
+              toCounter(newStackWithNumbers),
+            );
+            liElement.classList.add("toc-function");
+          } else
+            liElement.appendChild(displayTree(subtree, newStackWithNumbers));
+          liElement.addEventListener("click", (ev) => {
+            if (ev.target == liElement) {
+              this.goToState(newStackWithNumbers);
+            }
+          });
+          ulElement.appendChild(liElement);
+        });
+        containerElement.appendChild(ulElement);
+        tree.slip.setTocElem(containerElement);
+      }
+      return containerElement;
+    };
+    toc.innerHTML = "";
+    toc.appendChild(displayTree(tree, []));
+  };
+
+  // ******************************
+  // Function for writing and highlighting
+  // ******************************
+
+  this.getTool = () => {
+    return this.getCurrentSlip().getTool();
+  };
+  this.setTool = (tool) => {
+    this.getCurrentSlip().setTool(tool);
+    this.updateToolClasses();
+  };
+  this.getColor = () => {
+    return this.getCurrentSlip().getColor();
+  };
+  this.setColor = (color) => {
+    this.getCurrentSlip().setColor(color);
+    this.updateToolClasses();
+  };
+  this.setLineWidth = (lw) => {
+    this.getCurrentSlip().setLineWidth(lw);
+    this.updateToolClasses();
+  };
+  this.getLineWidth = () => {
+    return this.getCurrentSlip().getLineWidth();
+  };
+  this.reloadCanvas = () => {
+    this.getCurrentSlip().reloadCanvas();
+  };
+  let that = this;
+  function addToolEvents() {
+    document
+      .querySelector(".slip-toolbar-pen")
+      .addEventListener("click", function (ev) {
+        that.setTool("drawing");
+      });
+    document
+      .querySelector(".slip-toolbar-cursor")
+      .addEventListener("click", function (ev) {
+        that.setTool("no-tool");
+      });
+    document
+      .querySelector(".slip-toolbar-eraser")
+      .addEventListener("click", function (ev) {
+        switch (that.getTool()) {
+          case "drawing-erase":
+            that.setTool("drawing");
+            break;
+          case "highlighting":
+            that.setTool("highlighting-erase");
+            break;
+          case "highlighting-erase":
+            that.setTool("highlighting");
+            break;
+          case "no-tool":
+            that.setTool("no-tool");
+            break;
+          case "drawing":
+            that.setTool("drawing-erase");
+            break;
+        }
+      });
+    document
+      .querySelector(".slip-toolbar-highlighter")
+      .addEventListener("click", function (ev) {
+        that.setTool("highlighting");
+      });
+    document
+      .querySelector(".slip-toolbar-black")
+      .addEventListener("click", function (ev) {
+        that.setColor("black");
+      });
+    document
+      .querySelector(".slip-toolbar-blue")
+      .addEventListener("click", function (ev) {
+        that.setColor("blue");
+      });
+    document
+      .querySelector(".slip-toolbar-red")
+      .addEventListener("click", function (ev) {
+        that.setColor("red");
+      });
+    document
+      .querySelector(".slip-toolbar-green")
+      .addEventListener("click", function (ev) {
+        that.setColor("green");
+      });
+    document
+      .querySelector(".slip-toolbar-yellow")
+      .addEventListener("click", function (ev) {
+        that.setColor("yellow");
+      });
+    document
+      .querySelector(".slip-toolbar-small")
+      .addEventListener("click", function (ev) {
+        that.setLineWidth("small");
+      });
+    document
+      .querySelector(".slip-toolbar-medium")
+      .addEventListener("click", function (ev) {
+        that.setLineWidth("medium");
+      });
+    document
+      .querySelector(".slip-toolbar-large")
+      .addEventListener("click", function (ev) {
+        that.setLineWidth("large");
+      });
+    document
+      .querySelector(".slip-toolbar-clear")
+      .addEventListener("click", function (ev) {
+        that.setTool("clear-all");
+      });
+  }
+  this.updateToolClasses = () => {
+    document
+      .querySelector(".slip-toolbar-tool")
+      .classList.remove(
+        "drawing",
+        "highlighting",
+        "drawing-erase",
+        "highlighting-erase",
+        "no-tool",
+      );
+    if (this.getTool() == "no-tool" || this.getTool() == "cursor")
+      document
+        .querySelector(".slip-writing-toolbar")
+        .classList.remove("active");
+    else
+      document.querySelector(".slip-writing-toolbar").classList.add("active");
+    document.querySelector(".slip-toolbar-tool").classList.add(this.getTool());
+    document
+      .querySelector(".slip-toolbar-color")
+      .classList.remove("black", "blue", "red", "green", "yellow");
+    document
+      .querySelector(".slip-toolbar-color")
+      .classList.add(this.getColor());
+    document
+      .querySelector(".slip-toolbar-width")
+      .classList.remove("small", "medium", "large");
+    document
+      .querySelector(".slip-toolbar-width")
+      .classList.add(this.getLineWidth());
+  };
+  setTimeout(addToolEvents, 0);
+
+  // ******************************
+  //
+  // ******************************
+
+  // this.getRootSlip = () => rootSlip;
+  this.setRootSlip = (root) => {
+    rootSlip = root;
+    stack = [rootSlip];
+  };
+  this.getRootSlip = () => rootSlip;
+  this.send_stage = false;
+  this.start = async (startingPoint, id) => {
+    this.id = id;
+    stack = [rootSlip];
+    if (window.location.hash || startingPoint) {
+      let target_stack;
+      if (window.location.hash) {
+        target_stack = window.location.hash
+          .slice(1)
+          .split(",")
+          .map((x) => parseInt(x));
+      } else {
+        target_stack = startingPoint;
+      }
+      this.setAlwaysMoveFast(true);
+      console.log("alwaysMoveFast", this.getAlwaysMoveFast());
+      let later = () => {
+        return new Promise(function (resolve) {
+          setTimeout(resolve, 0);
+        });
+      };
+      let unfinished = -1;
+      let continue_please = 0;
+      let stop_now = 1;
+      let not_arrived = function () {
+        let counters = stack.map((slip) => slip.getActionIndex());
+        let return_value = unfinished;
+        target_stack.forEach((target, i) => {
+          if (return_value != unfinished) return;
+          if (target < counters[i]) return_value = stop_now;
+          if (target > counters[i]) return_value = continue_please;
+        });
+        return return_value;
+      };
+      while (not_arrived() == continue_please) {
+        await later();
+        await this.next();
+      }
+      this.setAlwaysMoveFast(false);
+    } else this.next();
+    this.send_stage = true;
+    if (window.parent !== window) {
+      window.parent.postMessage({ id: id, kind: "ready", data: id }, "*");
+    }
+    return this;
+  };
+  this.restart = () => {
+    stack = [rootSlip];
+    rootSlip.refreshAll();
+    this.next();
+  };
+  let controller = new Controller(this);
+  this.getController = () => controller;
+  // if(window !== window.parent)
+  window.addEventListener("message", (event) => {
+    console.log(event);
+    this.restart();
+    let target_stack = event.data.split(",").map((x) => parseInt(x));
+    this.setAlwaysMoveFast(true);
+    console.log("alwaysMoveFast", this.getAlwaysMoveFast());
+    let unfinished = -1;
+    let continue_please = 0;
+    let stop_now = 1;
+    let not_arrived = function () {
+      let counters = stack.map((slip) => slip.getActionIndex());
+      let return_value = unfinished;
+      target_stack.forEach((target, i) => {
+        if (return_value != unfinished) return;
+        if (target < counters[i]) return_value = stop_now;
+        if (target > counters[i]) return_value = continue_please;
+      });
+      return return_value;
+    };
+    while (not_arrived() == continue_please) this.next();
+    this.setAlwaysMoveFast(false);
+  });
+}

@@ -4,28 +4,39 @@
   background-color: white;
 }
 
+.format-container {
+  transform-origin: top left;
+}
+
 html,
 body {
   background-color: black;
 }
 
 .slip {
-    width:1440px;
-    transform-origin: top left;
-    /* Borders make margin of inner elements not leak outside */
-    border: 0.1px solid transparent;
+  width: 1440px;
+  transform-origin: top left;
+  /* Borders make margin of inner elements not leak outside */
+  border: 0.1px solid transparent;
 }
 
 .slip-rescaler {
-    overflow-x: hidden;
-    overflow-y: hidden;
-    width:unset;
-    height: unset;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  width: unset;
+  height: unset;
 }
 
 #universe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    white-space: nowrap
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.slip-body {
+  /* padding:60px; */
+  margin-top: auto;
+  margin-bottom: auto;
+  margin-left: 110px;
+  margin-right: 110px;
 }
