@@ -12,9 +12,18 @@ type window = {
   universe : Brr.El.t;
   width : int;
   height : int;
+  mutable coordinate : Coordinates.window;
 }
 
-let pp { scale_container; rotate_container; universe; width; height } =
+let pp
+    {
+      scale_container;
+      rotate_container;
+      universe;
+      width;
+      height;
+      coordinate = _;
+    } =
   Console.(
     log
       [
@@ -26,7 +35,6 @@ let pp { scale_container; rotate_container; universe; width; height } =
       ])
 
 open Fut.Syntax
-module Rescaling = struct end
 
 let setup ~width ~height =
   let find s = El.find_first_by_selector (Jstr.v s) |> Option.get in
@@ -35,19 +43,30 @@ let setup ~width ~height =
   and universe = find "#universe" in
   let* () = Css.set (Width (float_of_int width)) scale_container in
   let+ () = Css.set (Height (float_of_int height)) scale_container in
-  { rotate_container; scale_container; universe; height; width }
+  let coordinate = { Coordinates.x = 0.; y = 0.; scale = 1. } in
+  { rotate_container; scale_container; universe; height; width; coordinate }
 
-let move { scale_container; rotate_container; universe; width; height }
-    ({ x; y; scale } : Coordinates.window) ~delay =
+let move window ({ x; y; scale } as target : Coordinates.window) ~delay =
   Console.(log [ "moving to"; x; y; scale; delay ]);
-  let* () = Css.set (TransitionDuration delay) scale_container in
-  let* () = Css.set (TransitionDuration delay) rotate_container in
-  let* () = Css.set (TransitionDuration delay) universe in
-  let left = -.x +. (float_of_int width /. 2.) in
-  let top = -.y +. (float_of_int height /. 2.) in
-  let* () = Css.set (Left left) universe in
-  let* () = Css.set (Top top) universe in
-  Css.set (Css.Scale scale) scale_container
+  window.coordinate <- target;
+  let* () = Css.set (TransitionDuration delay) window.scale_container in
+  let* () = Css.set (TransitionDuration delay) window.rotate_container in
+  let* () = Css.set (TransitionDuration delay) window.universe in
+  let left = -.x +. (float_of_int window.width /. 2.) in
+  let top = -.y +. (float_of_int window.height /. 2.) in
+  let* () = Css.set (Left left) window.universe in
+  let* () = Css.set (Top top) window.universe in
+  Css.set (Css.Scale scale) window.scale_container
+
+let move_relative ?(x = 0.) ?(y = 0.) ?(scale = 1.) window ~delay =
+  let dest =
+    {
+      Coordinates.x = window.coordinate.x +. x;
+      y = window.coordinate.y +. y;
+      scale = window.coordinate.scale *. scale;
+    }
+  in
+  move window dest ~delay
 
 let move_to window elem =
   let coords_e = Coordinates.get elem in

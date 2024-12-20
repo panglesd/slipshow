@@ -4,5 +4,5 @@
  (libraries brr))
 
 (rule
- (mode promote)
+ (mode (promote (until-clean)))
  (action (copy main.bc.js slipshow.js)))
