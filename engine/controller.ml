@@ -1,3 +1,5 @@
+open Fut.Syntax
+
 type mode = Normal | Moving
 
 let setup (window : Window.window) =
@@ -6,6 +8,7 @@ let setup (window : Window.window) =
   let change_mode () =
     match !mode with Normal -> mode := Moving | Moving -> mode := Normal
   in
+  let all_undos = Stack.create () in
   let callback ev =
     let key = ev |> Brr.Ev.as_type |> Brr.Ev.Keyboard.key |> Jstr.to_string in
     let () =
@@ -19,15 +22,28 @@ let setup (window : Window.window) =
           in
           ()
       | "ArrowRight" ->
-          let _ : unit Fut.t = Next.next () in
+          let (_, undos) : unit Fut.t UndoMonad.t = Next.next () in
+          Stack.push undos all_undos;
           ()
-      | "ArrowLeft" ->
+      | "ArrowLeft" when !mode = Moving ->
           let _ : unit Fut.t =
             Window.move_relative
               ~x:(-30. *. 1. /. window.coordinate.scale)
               window ~delay:0.
           in
           ()
+      | "ArrowLeft" -> (
+          match Stack.pop_opt all_undos with
+          | None -> ()
+          | Some undos ->
+              let _ : unit Fut.t =
+                List.fold_left
+                  (fun acc f ->
+                    let* () = acc in
+                    f ())
+                  (Fut.return ()) undos
+              in
+              ())
       | "ArrowDown" ->
           let _ : unit Fut.t =
             Window.move_relative
