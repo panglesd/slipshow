@@ -1,14 +1,14 @@
 type undo = unit -> unit Fut.t
-type 'a t = 'a * undo list
+type 'a t = ('a * undo list) Fut.t
 
-let map f (x, undos) = (f x, undos)
+let bind f x =
+  let open Fut.Syntax in
+  let* x, undos = x in
+  let* y, new_undos = f x in
+  Fut.return (y, new_undos @ undos)
 
-let bind f (x, undos) =
-  let res, new_undoes = f x in
-  (res, new_undoes @ undos)
-
-let return x = (x, [])
+let return x = Fut.return (x, [])
 
 module Syntax = struct
-  let ( let> ) f x = bind x f
+  let ( let> ) x f = bind f x
 end
