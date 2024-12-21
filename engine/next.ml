@@ -11,18 +11,20 @@ let update_pause_ancestors () =
         Brr.El.set_class (Jstr.v "pauseAncestor") false elem)
       (Jstr.v ".pauseAncestor") ()
   in
-  let+ () = Fut.tick ~ms:0 in
-  match find_next_pause () with
-  | None -> ()
-  | Some elem ->
-      let rec hide_parent elem =
-        if Brr.El.class' (Jstr.v "universe") elem then ()
-        else Brr.El.set_class (Jstr.v "pauseAncestor") true elem;
-        match Brr.El.parent elem with
-        | None -> ()
-        | Some elem -> hide_parent elem
-      in
-      hide_parent elem
+  let () =
+    match find_next_pause () with
+    | None -> ()
+    | Some elem ->
+        let rec hide_parent elem =
+          if Brr.El.class' (Jstr.v "universe") elem then ()
+          else Brr.El.set_class (Jstr.v "pauseAncestor") true elem;
+          match Brr.El.parent elem with
+          | None -> ()
+          | Some elem -> hide_parent elem
+        in
+        hide_parent elem
+  in
+  Fut.tick ~ms:0
 
 let clear_pause elem =
   Brr.El.set_at (Jstr.v "pause") None elem;
