@@ -2,20 +2,21 @@ let find_next_pause () =
   Brr.El.find_first_by_selector (Jstr.v "[pause], [step]")
 
 open UndoMonad.Syntax
+open Fut.Syntax
 
 let set_class c b elem : unit UndoMonad.t =
   let c = Jstr.v c in
   let old_class = Brr.El.class' c elem in
   let res = Brr.El.set_class c b elem in
   let undo () = Fut.return @@ Brr.El.set_class c old_class elem in
-  (res, [ undo ])
+  Fut.return (res, [ undo ])
 
 let set_at at v elem =
   let at = Jstr.v at in
   let old_at = Brr.El.at at elem in
   let res = Brr.El.set_at at v elem in
   let undo () = Fut.return @@ Brr.El.set_at at old_at elem in
-  (res, [ undo ])
+  Fut.return (res, [ undo ])
 
 let update_pause_ancestors () =
   let> () =
@@ -40,7 +41,8 @@ let update_pause_ancestors () =
         in
         hide_parent elem
   in
-  UndoMonad.return @@ Fut.tick ~ms:0
+  let+ () = Fut.tick ~ms:0 in
+  ((), [])
 
 let clear_pause elem =
   let> () = set_at "pause" None elem in
@@ -49,5 +51,5 @@ let clear_pause elem =
 
 let next () =
   match find_next_pause () with
-  | None -> UndoMonad.return @@ Fut.return ()
+  | None -> UndoMonad.return ()
   | Some pause -> clear_pause pause

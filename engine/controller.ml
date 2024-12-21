@@ -22,8 +22,10 @@ let setup (window : Window.window) =
           in
           ()
       | "ArrowRight" ->
-          let (_, undos) : unit Fut.t UndoMonad.t = Next.next () in
-          Stack.push undos all_undos;
+          let _ : unit Fut.t =
+            let+ (), undos = Next.next () in
+            Stack.push undos all_undos
+          in
           ()
       | "ArrowLeft" when !mode = Moving ->
           let _ : unit Fut.t =
@@ -56,6 +58,26 @@ let setup (window : Window.window) =
             Window.move_relative
               ~y:(-30. *. 1. /. window.coordinate.scale)
               window ~delay:0.
+          in
+          ()
+      | "a" ->
+          let _ : unit Fut.t =
+            let+ (), undos =
+              Window.move_relative_u
+                ~y:(-30. *. 1. /. window.coordinate.scale)
+                window ~delay:0.
+            in
+            Stack.push undos all_undos
+          in
+          ()
+      | "q" ->
+          let _ : unit Fut.t =
+            let+ (), undos =
+              Window.move_relative_u
+                ~y:(30. *. 1. /. window.coordinate.scale)
+                window ~delay:0.
+            in
+            Stack.push undos all_undos
           in
           ()
       | "z" ->

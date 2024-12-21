@@ -41,8 +41,25 @@ let value_of_prop = function
   | Width w -> sof w ^ "px"
   | Height h -> sof h ^ "px"
 
-let set prop elem =
+open Fut.Syntax
+
+let set_u prop elem =
   let style = style_of_prop prop in
   let value = value_of_prop prop in
+  let old_value =
+    let old_value = Brr.El.inline_style style elem in
+    if Jstr.equal old_value Jstr.empty then None else Some old_value
+  in
   Brr.El.set_inline_style style (Jstr.v value) elem;
-  Fut.tick ~ms:0
+  let undo () =
+    (match old_value with
+    | None -> Brr.El.remove_inline_style style elem
+    | Some old_value -> Brr.El.set_inline_style style old_value elem);
+    Fut.tick ~ms:0
+  in
+  let+ () = Fut.tick ~ms:0 in
+  ((), [ undo ])
+
+let set prop elem =
+  let+ r, _ = set_u prop elem in
+  r
