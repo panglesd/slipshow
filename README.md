@@ -34,6 +34,7 @@ You can find several example of slip presentation, from different versions of sl
 
 - [The slips of my thesis](http://choum.net/panglesd/slides/slides-js/slides.html), the very first presentation that used (a very early version of) slipshow,
 - [Some other technical presentation](https://choum.net/panglesd/slides/WDCM-2021-slips/wdcm-ada.html) (that also used an early version of the engine)
+- [A presentation of slipshow](https://choum.net/panglesd/slides/campus_du_libre.html) in French. Source file [here](example/slipshow.md)!
 
 Use the arrows to navigate in the presentation.
 
