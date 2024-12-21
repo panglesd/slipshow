@@ -6,4 +6,5 @@ let _ : unit Fut.t =
   (* TODO: move out of here *)
   let () = Rescaler.setup_rescalers () in
   let () = Controller.setup window in
-  Next.update_pause_ancestors ()
+  let _ = Next.update_pause_ancestors () in
+  Fut.return ()

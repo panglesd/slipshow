@@ -1,37 +1,53 @@
-open Fut.Syntax
-
 let find_next_pause () =
   Brr.El.find_first_by_selector (Jstr.v "[pause], [step]")
 
+open UndoMonad.Syntax
+
+let set_class c b elem : unit UndoMonad.t =
+  let c = Jstr.v c in
+  let old_class = Brr.El.class' c elem in
+  let res = Brr.El.set_class c b elem in
+  let undo () = Fut.return @@ Brr.El.set_class c old_class elem in
+  (res, [ undo ])
+
+let set_at at v elem =
+  let at = Jstr.v at in
+  let old_at = Brr.El.at at elem in
+  let res = Brr.El.set_at at v elem in
+  let undo () = Fut.return @@ Brr.El.set_at at old_at elem in
+  (res, [ undo ])
+
 let update_pause_ancestors () =
-  let () =
+  let> () =
     Brr.El.fold_find_by_selector
-      (fun elem () ->
-        Brr.Console.(log [ "Removing class for"; elem ]);
-        Brr.El.set_class (Jstr.v "pauseAncestor") false elem)
-      (Jstr.v ".pauseAncestor") ()
+      (fun elem undoes ->
+        let> () = undoes in
+        set_class "pauseAncestor" false elem)
+      (Jstr.v ".pauseAncestor") (UndoMonad.return ())
   in
-  let () =
+  let> () =
     match find_next_pause () with
-    | None -> ()
+    | None -> UndoMonad.return ()
     | Some elem ->
         let rec hide_parent elem =
-          if Brr.El.class' (Jstr.v "universe") elem then ()
-          else Brr.El.set_class (Jstr.v "pauseAncestor") true elem;
+          let> () =
+            if Brr.El.class' (Jstr.v "universe") elem then UndoMonad.return ()
+            else set_class "pauseAncestor" true elem
+          in
           match Brr.El.parent elem with
-          | None -> ()
+          | None -> UndoMonad.return ()
           | Some elem -> hide_parent elem
         in
         hide_parent elem
   in
-  Fut.tick ~ms:0
+  UndoMonad.return @@ Fut.tick ~ms:0
 
 let clear_pause elem =
-  Brr.El.set_at (Jstr.v "pause") None elem;
-  Brr.El.set_at (Jstr.v "step") None elem;
+  let> () = set_at "pause" None elem in
+  let> () = set_at "step" None elem in
   update_pause_ancestors ()
 
 let next () =
   match find_next_pause () with
-  | None -> Fut.return ()
+  | None -> UndoMonad.return @@ Fut.return ()
   | Some pause -> clear_pause pause
