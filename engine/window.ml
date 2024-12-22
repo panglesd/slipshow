@@ -100,3 +100,13 @@ let enter window elem =
       coords_e
   in
   move window coords_w ~delay:1.
+
+let up window elem =
+  let coords_e = Coordinates.get elem in
+  let coords_w =
+    Coordinates.Window_of_elem.up
+      ~win_height:(float_of_int window.height)
+      ~win_width:(float_of_int window.width)
+      ~win_scale:window.coordinate.scale coords_e
+  in
+  move window coords_w ~delay:1.

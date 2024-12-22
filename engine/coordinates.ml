@@ -50,4 +50,8 @@ module Window_of_elem = struct
     let scale = win_width /. elem.width in
     let y = elem.y -. (elem.height /. 2.) +. (win_height /. 2. /. scale) in
     { scale; x = elem.x; y }
+
+  let up ~win_width:_ ~win_height ~win_scale elem =
+    let y = elem.y -. (elem.height /. 2.) +. (win_height /. 2. /. win_scale) in
+    { scale = win_scale; x = elem.x; y }
 end
