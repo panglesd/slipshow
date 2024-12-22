@@ -35,7 +35,6 @@ let pp
       ])
 
 open Fut.Syntax
-open UndoMonad.Syntax
 
 let setup ~width ~height =
   let find s = El.find_first_by_selector (Jstr.v s) |> Option.get in
@@ -50,25 +49,22 @@ let setup ~width ~height =
   let coordinate = { Coordinates.x = 720.; y = 540.; scale = 1. } in
   { rotate_container; scale_container; universe; height; width; coordinate }
 
-let ref_update window target =
-  let old_coordinate = window.coordinate in
+let move_pure window ({ x; y; scale } as target : Coordinates.window) ~delay =
   window.coordinate <- target;
-  let undo () = Fut.return @@ (window.coordinate <- old_coordinate) in
-  Fut.return ((), [ undo ])
-
-let move_u window ({ x; y; scale } as target : Coordinates.window) ~delay =
-  let> () = ref_update window target in
-  let> () = Css.set [ TransitionDuration delay ] window.scale_container in
-  let> () = Css.set [ TransitionDuration delay ] window.rotate_container in
-  let> () = Css.set [ TransitionDuration delay ] window.universe in
   let left = -.x +. (float_of_int window.width /. 2.) in
   let top = -.y +. (float_of_int window.height /. 2.) in
-  let> () = Css.set [ Left left; Top top ] window.universe in
-  Css.set [ Css.Scale scale ] window.scale_container
+  let+ () = Css.set_pure [ TransitionDuration delay ] window.scale_container
+  and+ () = Css.set_pure [ TransitionDuration delay ] window.rotate_container
+  and+ () = Css.set_pure [ TransitionDuration delay ] window.universe
+  and+ () = Css.set_pure [ Left left; Top top ] window.universe
+  and+ () = Css.set_pure [ Css.Scale scale ] window.scale_container in
+  ()
 
 let move window target ~delay =
-  let+ r, _ = move_u window target ~delay in
-  r
+  let old_coordinate = window.coordinate in
+  let+ () = move_pure window target ~delay in
+  let undo () = move_pure window old_coordinate ~delay in
+  ((), [ undo ])
 
 let move_relative ?(x = 0.) ?(y = 0.) ?(scale = 1.) window ~delay =
   let dest =
@@ -80,15 +76,8 @@ let move_relative ?(x = 0.) ?(y = 0.) ?(scale = 1.) window ~delay =
   in
   move window dest ~delay
 
-let move_relative_u ?(x = 0.) ?(y = 0.) ?(scale = 1.) window ~delay =
-  let dest =
-    {
-      Coordinates.x = window.coordinate.x +. x;
-      y = window.coordinate.y +. y;
-      scale = window.coordinate.scale *. scale;
-    }
-  in
-  move_u window dest ~delay
+let move_relative_pure ?(x = 0.) ?(y = 0.) ?(scale = 1.) window ~delay =
+  move_relative ~x ~y ~scale window ~delay |> UndoMonad.discard
 
 let move_to window elem =
   let coords_e = Coordinates.get elem in
@@ -100,17 +89,9 @@ let move_to window elem =
   in
   move window coords_w ~delay:1.
 
-let move_to_u window elem =
-  let coords_e = Coordinates.get elem in
-  let coords_w =
-    Coordinates.Window_of_elem.focus
-      ~win_height:(float_of_int window.height)
-      ~win_width:(float_of_int window.width)
-      coords_e
-  in
-  move_u window coords_w ~delay:1.
+let move_to_pure window elem = move_to window elem |> UndoMonad.discard
 
-let enter_u window elem =
+let enter window elem =
   let coords_e = Coordinates.get elem in
   let coords_w =
     Coordinates.Window_of_elem.enter
@@ -118,4 +99,4 @@ let enter_u window elem =
       ~win_width:(float_of_int window.width)
       coords_e
   in
-  move_u window coords_w ~delay:1.
+  move window coords_w ~delay:1.

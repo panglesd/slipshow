@@ -9,13 +9,13 @@ type window = {
 
 val pp : window -> unit
 val setup : width:int -> height:int -> window Fut.t
-val move : window -> Coordinates.window -> delay:float -> unit Fut.t
-val move_u : window -> Coordinates.window -> delay:float -> unit UndoMonad.t
+val move_pure : window -> Coordinates.window -> delay:float -> unit Fut.t
+val move : window -> Coordinates.window -> delay:float -> unit UndoMonad.t
 
-val move_relative :
+val move_relative_pure :
   ?x:float -> ?y:float -> ?scale:float -> window -> delay:float -> unit Fut.t
 
-val move_relative_u :
+val move_relative :
   ?x:float ->
   ?y:float ->
   ?scale:float ->
@@ -23,6 +23,6 @@ val move_relative_u :
   delay:float ->
   unit UndoMonad.t
 
-val move_to : window -> Brr.El.t -> unit Fut.t
-val move_to_u : window -> Brr.El.t -> unit UndoMonad.t
-val enter_u : window -> Brr.El.t -> unit UndoMonad.t
+val move_to_pure : window -> Brr.El.t -> unit Fut.t
+val move_to : window -> Brr.El.t -> unit UndoMonad.t
+val enter : window -> Brr.El.t -> unit UndoMonad.t

@@ -48,7 +48,7 @@ let clear_pause window elem =
   let> () = set_at "pause" None elem in
   let> () = set_at "step" None elem in
   let> () = update_pause_ancestors () in
-  Window.enter_u window elem
+  Window.enter window elem
 
 let next window () =
   match find_next_pause () with
