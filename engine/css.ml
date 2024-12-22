@@ -1,11 +1,11 @@
-module Units = struct
-  let px_n n = Jstr.v (string_of_int n ^ "px")
-  let seconds s = Jstr.v (string_of_int s ^ "s")
-  let px p = Jstr.v (string_of_int (int_of_float p) ^ "px")
-  let css_scale s = Jstr.v ("scale(" ^ string_of_float s ^ ")")
-  let deg d = Jstr.v (string_of_float d ^ "deg")
-  let css_rotate d = Jstr.v ("rotate(" ^ string_of_float d ^ "deg)")
-end
+(* module Units = struct *)
+(* let px_n n = Jstr.v (string_of_int n ^ "px") *)
+(* let seconds s = Jstr.v (string_of_int s ^ "s") *)
+(* let px p = Jstr.v (string_of_int (int_of_float p) ^ "px") *)
+(* let css_scale s = Jstr.v ("scale(" ^ string_of_float s ^ ")") *)
+(* let deg d = Jstr.v (string_of_float d ^ "deg") *)
+(* let css_rotate d = Jstr.v ("rotate(" ^ string_of_float d ^ "deg)") *)
+(* end *)
 
 type property =
   | Scale of float
@@ -43,7 +43,7 @@ let value_of_prop = function
 
 open Fut.Syntax
 
-let set_u prop elem =
+let set prop elem =
   let style = style_of_prop prop in
   let value = value_of_prop prop in
   let old_value =
@@ -52,14 +52,25 @@ let set_u prop elem =
   in
   Brr.El.set_inline_style style (Jstr.v value) elem;
   let undo () =
-    (match old_value with
+    Fut.return
+    @@
+    match old_value with
     | None -> Brr.El.remove_inline_style style elem
-    | Some old_value -> Brr.El.set_inline_style style old_value elem);
-    Fut.tick ~ms:0
+    | Some old_value -> Brr.El.set_inline_style style old_value elem
+  in
+  Fut.return ((), [ undo ])
+
+open UndoMonad.Syntax
+
+let set props elem =
+  let* res =
+    List.fold_left
+      (fun undo prop ->
+        let> () = undo in
+        set prop elem)
+      (UndoMonad.return ()) props
   in
   let+ () = Fut.tick ~ms:0 in
-  ((), [ undo ])
+  res
 
-let set prop elem =
-  let+ r, _ = set_u prop elem in
-  r
+let set_pure props elem = set props elem |> UndoMonad.discard

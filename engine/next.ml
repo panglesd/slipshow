@@ -44,12 +44,13 @@ let update_pause_ancestors () =
   let+ () = Fut.tick ~ms:0 in
   ((), [])
 
-let clear_pause elem =
+let clear_pause window elem =
   let> () = set_at "pause" None elem in
   let> () = set_at "step" None elem in
-  update_pause_ancestors ()
+  let> () = update_pause_ancestors () in
+  Window.enter_u window elem
 
-let next () =
+let next window () =
   match find_next_pause () with
   | None -> UndoMonad.return ()
-  | Some pause -> clear_pause pause
+  | Some pause -> clear_pause window pause
