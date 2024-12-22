@@ -23,7 +23,7 @@ let setup (window : Window.window) =
           ()
       | "ArrowRight" ->
           let _ : unit Fut.t =
-            let+ (), undos = Next.next () in
+            let+ (), undos = Next.next window () in
             Stack.push undos all_undos
           in
           ()

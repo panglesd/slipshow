@@ -18,29 +18,39 @@ let replace_open_window window =
     if window.width * browser_h < window.height * browser_w then
       let window_w = browser_h * window.width / window.height in
       let window_h = browser_h in
-      let* () = Css.set (Left (foi (browser_w - window_w) /. 2.)) open_window in
-      let* () =
-        Css.set (Right (foi (browser_w - window_w) /. 2.)) open_window
+      let+ () =
+        Css.set_pure
+          [
+            Left (foi (browser_w - window_w) /. 2.);
+            Right (foi (browser_w - window_w) /. 2.);
+            Width (foi window_w);
+            Top 0.;
+            Bottom 0.;
+            Height (foi window_h);
+          ]
+          open_window
       in
-      let* () = Css.set (Width (foi window_w)) open_window in
-      let* () = Css.set (Top 0.) open_window in
-      let* () = Css.set (Bottom 0.) open_window in
-      let+ () = Css.set (Height (foi window_h)) open_window in
       (window_w, window_h)
     else
       let window_h = browser_w * window.height / window.width in
       let window_w = browser_w in
-      let* () = Css.set (Top (foi (browser_h - window_h) /. 2.)) open_window in
-      let* () =
-        Css.set (Bottom (foi (browser_h - window_h) /. 2.)) open_window
+      let+ () =
+        Css.set_pure
+          [
+            Top (foi (browser_h - window_h) /. 2.);
+            Bottom (foi (browser_h - window_h) /. 2.);
+            Height (foi window_h);
+            Width (foi window_w);
+            Right 0.;
+            Left 0.;
+          ]
+          open_window
       in
-      let* () = Css.set (Height (foi window_h)) open_window in
-      let* () = Css.set (Width (foi window_w)) open_window in
-      let* () = Css.set (Right 0.) open_window in
-      let+ () = Css.set (Left 0.) open_window in
       (window_w, window_h)
   in
-  Css.set (Scale (foi window_w /. foi window.width)) window.format_container
+  Css.set_pure
+    [ Scale (foi window_w /. foi window.width) ]
+    window.format_container
 
 let create ~width ~height =
   let find s =
