@@ -42,9 +42,12 @@ let setup ~width ~height =
   let rotate_container = find ".rotate-container"
   and scale_container = find ".scale-container"
   and universe = find "#universe" in
-  let* () = Css.set (Width (float_of_int width)) scale_container in
-  let+ () = Css.set (Height (float_of_int height)) scale_container in
-  let coordinate = { Coordinates.x = 0.; y = 0.; scale = 1. } in
+  let+ () =
+    Css.set_pure
+      [ Width (float_of_int width); Height (float_of_int height) ]
+      scale_container
+  in
+  let coordinate = { Coordinates.x = 720.; y = 540.; scale = 1. } in
   { rotate_container; scale_container; universe; height; width; coordinate }
 
 let ref_update window target =
@@ -55,14 +58,13 @@ let ref_update window target =
 
 let move_u window ({ x; y; scale } as target : Coordinates.window) ~delay =
   let> () = ref_update window target in
-  let> () = Css.set_u (TransitionDuration delay) window.scale_container in
-  let> () = Css.set_u (TransitionDuration delay) window.rotate_container in
-  let> () = Css.set_u (TransitionDuration delay) window.universe in
+  let> () = Css.set [ TransitionDuration delay ] window.scale_container in
+  let> () = Css.set [ TransitionDuration delay ] window.rotate_container in
+  let> () = Css.set [ TransitionDuration delay ] window.universe in
   let left = -.x +. (float_of_int window.width /. 2.) in
   let top = -.y +. (float_of_int window.height /. 2.) in
-  let> () = Css.set_u (Left left) window.universe in
-  let> () = Css.set_u (Top top) window.universe in
-  Css.set_u (Css.Scale scale) window.scale_container
+  let> () = Css.set [ Left left; Top top ] window.universe in
+  Css.set [ Css.Scale scale ] window.scale_container
 
 let move window target ~delay =
   let+ r, _ = move_u window target ~delay in
@@ -97,3 +99,23 @@ let move_to window elem =
       coords_e
   in
   move window coords_w ~delay:1.
+
+let move_to_u window elem =
+  let coords_e = Coordinates.get elem in
+  let coords_w =
+    Coordinates.Window_of_elem.focus
+      ~win_height:(float_of_int window.height)
+      ~win_width:(float_of_int window.width)
+      coords_e
+  in
+  move_u window coords_w ~delay:1.
+
+let enter_u window elem =
+  let coords_e = Coordinates.get elem in
+  let coords_w =
+    Coordinates.Window_of_elem.enter
+      ~win_height:(float_of_int window.height)
+      ~win_width:(float_of_int window.width)
+      coords_e
+  in
+  move_u window coords_w ~delay:1.

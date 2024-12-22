@@ -45,4 +45,9 @@ module Window_of_elem = struct
     and scale2 = win_height /. elem.height in
     let scale = Float.min scale1 scale2 in
     { scale; x = elem.x; y = elem.y }
+
+  let enter ~win_width:_ ~win_height elem =
+    let scale = (* win_width /. elem.width *) 1. in
+    let y = elem.y -. (elem.height /. 2.) +. (win_height /. 2.) in
+    { scale; x = elem.x; y }
 end
