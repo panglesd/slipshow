@@ -16,7 +16,7 @@ let setup (window : Window.window) =
       | "m" -> change_mode ()
       | "ArrowRight" when !mode = Moving ->
           let _ : unit Fut.t =
-            Window.move_relative
+            Window.move_relative_pure
               ~x:(30. *. 1. /. window.coordinate.scale)
               window ~delay:0.
           in
@@ -29,7 +29,7 @@ let setup (window : Window.window) =
           ()
       | "ArrowLeft" when !mode = Moving ->
           let _ : unit Fut.t =
-            Window.move_relative
+            Window.move_relative_pure
               ~x:(-30. *. 1. /. window.coordinate.scale)
               window ~delay:0.
           in
@@ -48,14 +48,14 @@ let setup (window : Window.window) =
               ())
       | "ArrowDown" ->
           let _ : unit Fut.t =
-            Window.move_relative
+            Window.move_relative_pure
               ~y:(30. *. 1. /. window.coordinate.scale)
               window ~delay:0.
           in
           ()
       | "ArrowUp" ->
           let _ : unit Fut.t =
-            Window.move_relative
+            Window.move_relative_pure
               ~y:(-30. *. 1. /. window.coordinate.scale)
               window ~delay:0.
           in
@@ -63,7 +63,7 @@ let setup (window : Window.window) =
       | "a" ->
           let _ : unit Fut.t =
             let+ (), undos =
-              Window.move_relative_u
+              Window.move_relative
                 ~y:(-30. *. 1. /. window.coordinate.scale)
                 window ~delay:0.
             in
@@ -73,7 +73,7 @@ let setup (window : Window.window) =
       | "q" ->
           let _ : unit Fut.t =
             let+ (), undos =
-              Window.move_relative_u
+              Window.move_relative
                 ~y:(30. *. 1. /. window.coordinate.scale)
                 window ~delay:0.
             in
@@ -82,12 +82,12 @@ let setup (window : Window.window) =
           ()
       | "z" ->
           let _ : unit Fut.t =
-            Window.move_relative ~scale:1.02 window ~delay:0.
+            Window.move_relative_pure ~scale:1.02 window ~delay:0.
           in
           ()
       | "Z" ->
           let _ : unit Fut.t =
-            Window.move_relative ~scale:(1. /. 1.02) window ~delay:0.
+            Window.move_relative_pure ~scale:(1. /. 1.02) window ~delay:0.
           in
           ()
       | _ -> ()
