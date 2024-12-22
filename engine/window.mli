@@ -26,3 +26,4 @@ val move_relative :
 val move_to_pure : window -> Brr.El.t -> unit Fut.t
 val move_to : window -> Brr.El.t -> unit UndoMonad.t
 val enter : window -> Brr.El.t -> unit UndoMonad.t
+val up : window -> Brr.El.t -> unit UndoMonad.t
