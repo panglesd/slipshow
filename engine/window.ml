@@ -10,10 +10,9 @@ type window = {
   scale_container : Brr.El.t;
   rotate_container : Brr.El.t;
   universe : Brr.El.t;
-  mutable coordinate : Coordinates.window;
 }
 
-let pp { scale_container; rotate_container; universe; coordinate = _ } =
+let pp { scale_container; rotate_container; universe } =
   Console.(
     log
       [
@@ -24,21 +23,20 @@ let pp { scale_container; rotate_container; universe; coordinate = _ } =
 
 open Fut.Syntax
 
-let setup ~width ~height =
+let setup () =
   let find s = El.find_first_by_selector (Jstr.v s) |> Option.get in
   let rotate_container = find ".rotate-container"
   and scale_container = find ".scale-container"
   and universe = find "#universe" in
   let+ () =
     Css.set_pure
-      [ Width (float_of_int width); Height (float_of_int height) ]
+      [ Width Constants.width; Height Constants.height ]
       scale_container
   in
-  let coordinate = { Coordinates.x = 720.; y = 540.; scale = 1. } in
-  { rotate_container; scale_container; universe; coordinate }
+  { rotate_container; scale_container; universe }
 
 let move_pure window ({ x; y; scale } as target : Coordinates.window) ~delay =
-  window.coordinate <- target;
+  State.set_coord target;
   let left = -.x +. (Constants.width /. 2.) in
   let top = -.y +. (Constants.height /. 2.) in
   let+ () = Css.set_pure [ TransitionDuration delay ] window.scale_container
@@ -49,17 +47,18 @@ let move_pure window ({ x; y; scale } as target : Coordinates.window) ~delay =
   ()
 
 let move window target ~delay =
-  let old_coordinate = window.coordinate in
+  let old_coordinate = State.get_coord () in
   let+ () = move_pure window target ~delay in
   let undo () = move_pure window old_coordinate ~delay in
   ((), [ undo ])
 
 let move_relative ?(x = 0.) ?(y = 0.) ?(scale = 1.) window ~delay =
+  let coord = State.get_coord () in
   let dest =
     {
-      Coordinates.x = window.coordinate.x +. x;
-      y = window.coordinate.y +. y;
-      scale = window.coordinate.scale *. scale;
+      Coordinates.x = coord.x +. x;
+      y = coord.y +. y;
+      scale = coord.scale *. scale;
     }
   in
   move window dest ~delay
@@ -81,7 +80,6 @@ let enter window elem =
 
 let up window elem =
   let coords_e = Coordinates.get elem in
-  let coords_w =
-    Coordinates.Window_of_elem.up ~win_scale:window.coordinate.scale coords_e
-  in
+  let scale = (State.get_coord ()).scale in
+  let coords_w = Coordinates.Window_of_elem.up ~scale coords_e in
   move window coords_w ~delay:1.
