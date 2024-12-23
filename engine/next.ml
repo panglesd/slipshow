@@ -18,6 +18,20 @@ let set_at at v elem =
   let undo () = Fut.return @@ Brr.El.set_at at old_at elem in
   UndoMonad.return ~undo res
 
+module AttributeActions = struct
+  let up window elem =
+    match Brr.El.at (Jstr.v "up-at-unpause") elem with
+    | None -> UndoMonad.return ()
+    | Some v when Jstr.equal Jstr.empty v -> Window.up window elem
+    | Some v -> (
+        let id = Jstr.concat [ Jstr.v "#"; v ] in
+        match Brr.El.find_first_by_selector id with
+        | None -> UndoMonad.return ()
+        | Some elem -> Window.up window elem)
+
+  let do_ window elem = up window elem
+end
+
 let update_pause_ancestors () =
   let> () =
     Brr.El.fold_find_by_selector
@@ -48,7 +62,7 @@ let clear_pause window elem =
   let> () = set_at "pause" None elem in
   let> () = set_at "step" None elem in
   let> () = update_pause_ancestors () in
-  Window.up window elem
+  AttributeActions.do_ window elem
 
 let next window () =
   match find_next_pause () with
