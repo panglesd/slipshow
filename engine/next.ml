@@ -29,7 +29,23 @@ module AttributeActions = struct
         | None -> UndoMonad.return ()
         | Some elem -> Window.up window elem)
 
-  let do_ window elem = up window elem
+  let focus window elem =
+    match Brr.El.at (Jstr.v "focus-at-unpause") elem with
+    | None -> UndoMonad.return ()
+    | Some v when Jstr.equal Jstr.empty v ->
+        let> () = State.Focus.push (State.get_coord ()) in
+        Window.focus window elem
+    | Some v -> (
+        let id = Jstr.concat [ Jstr.v "#"; v ] in
+        match Brr.El.find_first_by_selector id with
+        | None -> UndoMonad.return ()
+        | Some elem ->
+            let> () = State.Focus.push (State.get_coord ()) in
+            Window.focus window elem)
+
+  let do_ window elem =
+    let> () = up window elem in
+    focus window elem
 end
 
 let update_pause_ancestors () =
