@@ -11,7 +11,7 @@ let bind f x =
   in
   Fut.return (y, undo)
 
-let return x = Fut.return (x, fun () -> Fut.return ())
+let return ?(undo = fun () -> Fut.return ()) x = Fut.return (x, undo)
 let discard x = Fut.map fst x
 
 module Syntax = struct

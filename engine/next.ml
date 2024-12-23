@@ -9,14 +9,14 @@ let set_class c b elem : unit UndoMonad.t =
   let old_class = Brr.El.class' c elem in
   let res = Brr.El.set_class c b elem in
   let undo () = Fut.return @@ Brr.El.set_class c old_class elem in
-  Fut.return (res, undo)
+  UndoMonad.return ~undo res
 
 let set_at at v elem =
   let at = Jstr.v at in
   let old_at = Brr.El.at at elem in
   let res = Brr.El.set_at at v elem in
   let undo () = Fut.return @@ Brr.El.set_at at old_at elem in
-  Fut.return (res, undo)
+  UndoMonad.return ~undo res
 
 let update_pause_ancestors () =
   let> () =
