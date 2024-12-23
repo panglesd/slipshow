@@ -58,7 +58,7 @@ let set prop elem =
     | None -> Brr.El.remove_inline_style style elem
     | Some old_value -> Brr.El.set_inline_style style old_value elem
   in
-  Fut.return ((), [ undo ])
+  Fut.return ((), undo)
 
 open UndoMonad.Syntax
 
