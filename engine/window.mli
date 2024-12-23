@@ -1,8 +1,4 @@
-type window = {
-  scale_container : Brr.El.t;
-  rotate_container : Brr.El.t;
-  universe : Brr.El.t;
-}
+type window
 
 val pp : window -> unit
 val setup : unit -> window Fut.t
