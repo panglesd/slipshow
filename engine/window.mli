@@ -16,7 +16,7 @@ val move_relative :
   delay:float ->
   unit UndoMonad.t
 
-val move_to_pure : window -> Brr.El.t -> unit Fut.t
-val move_to : window -> Brr.El.t -> unit UndoMonad.t
+val focus_pure : window -> Brr.El.t -> unit Fut.t
+val focus : window -> Brr.El.t -> unit UndoMonad.t
 val enter : window -> Brr.El.t -> unit UndoMonad.t
 val up : window -> Brr.El.t -> unit UndoMonad.t
