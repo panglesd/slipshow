@@ -2,45 +2,40 @@ open Brr
 open Fut.Syntax
 module Window = Brr.Window
 
-type t = {
-  open_window : El.t;
-  format_container : El.t;
-  width : int;
-  height : int;
-}
+type t = { open_window : El.t; format_container : El.t }
 
 let replace_open_window window =
   let open_window = window.open_window in
-  let browser_h = Window.inner_height G.window in
-  let browser_w = Window.inner_width G.window in
   let foi = float_of_int in
+  let browser_h = foi @@ Window.inner_height G.window in
+  let browser_w = foi @@ Window.inner_width G.window in
   let* window_w, _window_h =
-    if window.width * browser_h < window.height * browser_w then
-      let window_w = browser_h * window.width / window.height in
+    if Constants.width *. browser_h < Constants.height *. browser_w then
+      let window_w = browser_h *. Constants.width /. Constants.height in
       let window_h = browser_h in
       let+ () =
         Css.set_pure
           [
-            Left (foi (browser_w - window_w) /. 2.);
-            Right (foi (browser_w - window_w) /. 2.);
-            Width (foi window_w);
+            Left ((browser_w -. window_w) /. 2.);
+            Right ((browser_w -. window_w) /. 2.);
+            Width window_w;
             Top 0.;
             Bottom 0.;
-            Height (foi window_h);
+            Height window_h;
           ]
           open_window
       in
       (window_w, window_h)
     else
-      let window_h = browser_w * window.height / window.width in
+      let window_h = browser_w *. Constants.height /. Constants.width in
       let window_w = browser_w in
       let+ () =
         Css.set_pure
           [
-            Top (foi (browser_h - window_h) /. 2.);
-            Bottom (foi (browser_h - window_h) /. 2.);
-            Height (foi window_h);
-            Width (foi window_w);
+            Top ((browser_h -. window_h) /. 2.);
+            Bottom ((browser_h -. window_h) /. 2.);
+            Height window_h;
+            Width window_w;
             Right 0.;
             Left 0.;
           ]
@@ -48,11 +43,9 @@ let replace_open_window window =
       in
       (window_w, window_h)
   in
-  Css.set_pure
-    [ Scale (foi window_w /. foi window.width) ]
-    window.format_container
+  Css.set_pure [ Scale (window_w /. Constants.width) ] window.format_container
 
-let create ~width ~height =
+let create () =
   let find s =
     match El.find_first_by_selector (Jstr.v s) with
     | Some s -> s
@@ -60,10 +53,10 @@ let create ~width ~height =
   in
   let open_window = find "#open-window"
   and format_container = find ".format-container" in
-  { open_window; format_container; width; height }
+  { open_window; format_container }
 
-let setup ~width ~height =
-  let open_window = create ~width ~height in
+let setup () =
+  let open_window = create () in
   let+ () = replace_open_window open_window in
   let resize _ = ignore @@ replace_open_window open_window in
   let _listener = Ev.listen Ev.resize resize (Window.as_target G.window) in

@@ -8,4 +8,4 @@
     It is important that 2 is not made by moving the window, as otherwise on
     rescaling the window, the scale would change... *)
 
-val setup : width:int -> height:int -> unit Fut.t
+val setup : unit -> unit Fut.t

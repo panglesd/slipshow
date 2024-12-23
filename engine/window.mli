@@ -2,11 +2,10 @@ type window = {
   scale_container : Brr.El.t;
   rotate_container : Brr.El.t;
   universe : Brr.El.t;
-  mutable coordinate : Coordinates.window;
 }
 
 val pp : window -> unit
-val setup : width:int -> height:int -> window Fut.t
+val setup : unit -> window Fut.t
 val move_pure : window -> Coordinates.window -> delay:float -> unit Fut.t
 val move : window -> Coordinates.window -> delay:float -> unit UndoMonad.t
 

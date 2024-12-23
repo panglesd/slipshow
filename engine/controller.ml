@@ -11,13 +11,14 @@ let setup (window : Window.window) =
   let all_undos = Stack.create () in
   let callback ev =
     let key = ev |> Brr.Ev.as_type |> Brr.Ev.Keyboard.key |> Jstr.to_string in
+    let current_coord = State.get_coord () in
     let () =
       match key with
       | "m" -> change_mode ()
       | "ArrowRight" when !mode = Moving ->
           let _ : unit Fut.t =
             Window.move_relative_pure
-              ~x:(30. *. 1. /. window.coordinate.scale)
+              ~x:(30. *. 1. /. current_coord.scale)
               window ~delay:0.
           in
           ()
@@ -30,7 +31,7 @@ let setup (window : Window.window) =
       | "ArrowLeft" when !mode = Moving ->
           let _ : unit Fut.t =
             Window.move_relative_pure
-              ~x:(-30. *. 1. /. window.coordinate.scale)
+              ~x:(-30. *. 1. /. current_coord.scale)
               window ~delay:0.
           in
           ()
@@ -49,14 +50,14 @@ let setup (window : Window.window) =
       | "ArrowDown" ->
           let _ : unit Fut.t =
             Window.move_relative_pure
-              ~y:(30. *. 1. /. window.coordinate.scale)
+              ~y:(30. *. 1. /. current_coord.scale)
               window ~delay:0.
           in
           ()
       | "ArrowUp" ->
           let _ : unit Fut.t =
             Window.move_relative_pure
-              ~y:(-30. *. 1. /. window.coordinate.scale)
+              ~y:(-30. *. 1. /. current_coord.scale)
               window ~delay:0.
           in
           ()
@@ -64,7 +65,7 @@ let setup (window : Window.window) =
           let _ : unit Fut.t =
             let+ (), undos =
               Window.move_relative
-                ~y:(-30. *. 1. /. window.coordinate.scale)
+                ~y:(-30. *. 1. /. current_coord.scale)
                 window ~delay:0.
             in
             Stack.push undos all_undos
@@ -74,7 +75,7 @@ let setup (window : Window.window) =
           let _ : unit Fut.t =
             let+ (), undos =
               Window.move_relative
-                ~y:(30. *. 1. /. window.coordinate.scale)
+                ~y:(30. *. 1. /. current_coord.scale)
                 window ~delay:0.
             in
             Stack.push undos all_undos
