@@ -10,28 +10,16 @@ type window = {
   scale_container : Brr.El.t;
   rotate_container : Brr.El.t;
   universe : Brr.El.t;
-  width : int;
-  height : int;
   mutable coordinate : Coordinates.window;
 }
 
-let pp
-    {
-      scale_container;
-      rotate_container;
-      universe;
-      width;
-      height;
-      coordinate = _;
-    } =
+let pp { scale_container; rotate_container; universe; coordinate = _ } =
   Console.(
     log
       [
         ("scale_container", scale_container);
         ("rotate_container", rotate_container);
         ("universe", universe);
-        ("width", width);
-        ("height", height);
       ])
 
 open Fut.Syntax
@@ -47,12 +35,12 @@ let setup ~width ~height =
       scale_container
   in
   let coordinate = { Coordinates.x = 720.; y = 540.; scale = 1. } in
-  { rotate_container; scale_container; universe; height; width; coordinate }
+  { rotate_container; scale_container; universe; coordinate }
 
 let move_pure window ({ x; y; scale } as target : Coordinates.window) ~delay =
   window.coordinate <- target;
-  let left = -.x +. (float_of_int window.width /. 2.) in
-  let top = -.y +. (float_of_int window.height /. 2.) in
+  let left = -.x +. (Constants.width /. 2.) in
+  let top = -.y +. (Constants.height /. 2.) in
   let+ () = Css.set_pure [ TransitionDuration delay ] window.scale_container
   and+ () = Css.set_pure [ TransitionDuration delay ] window.rotate_container
   and+ () = Css.set_pure [ TransitionDuration delay ] window.universe
@@ -81,32 +69,19 @@ let move_relative_pure ?(x = 0.) ?(y = 0.) ?(scale = 1.) window ~delay =
 
 let move_to window elem =
   let coords_e = Coordinates.get elem in
-  let coords_w =
-    Coordinates.Window_of_elem.focus
-      ~win_height:(float_of_int window.height)
-      ~win_width:(float_of_int window.width)
-      coords_e
-  in
+  let coords_w = Coordinates.Window_of_elem.focus coords_e in
   move window coords_w ~delay:1.
 
 let move_to_pure window elem = move_to window elem |> UndoMonad.discard
 
 let enter window elem =
   let coords_e = Coordinates.get elem in
-  let coords_w =
-    Coordinates.Window_of_elem.enter
-      ~win_height:(float_of_int window.height)
-      ~win_width:(float_of_int window.width)
-      coords_e
-  in
+  let coords_w = Coordinates.Window_of_elem.enter coords_e in
   move window coords_w ~delay:1.
 
 let up window elem =
   let coords_e = Coordinates.get elem in
   let coords_w =
-    Coordinates.Window_of_elem.up
-      ~win_height:(float_of_int window.height)
-      ~win_width:(float_of_int window.width)
-      ~win_scale:window.coordinate.scale coords_e
+    Coordinates.Window_of_elem.up ~win_scale:window.coordinate.scale coords_e
   in
   move window coords_w ~delay:1.
