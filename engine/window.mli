@@ -2,8 +2,6 @@ type window = {
   scale_container : Brr.El.t;
   rotate_container : Brr.El.t;
   universe : Brr.El.t;
-  width : int;
-  height : int;
   mutable coordinate : Coordinates.window;
 }
 

@@ -40,18 +40,22 @@ let get elem =
   { x; y; width; height }
 
 module Window_of_elem = struct
-  let focus ~win_width ~win_height elem =
-    let scale1 = win_width /. elem.width
-    and scale2 = win_height /. elem.height in
+  let focus elem =
+    let scale1 = Constants.width /. elem.width
+    and scale2 = Constants.height /. elem.height in
     let scale = Float.min scale1 scale2 in
     { scale; x = elem.x; y = elem.y }
 
-  let enter ~win_width ~win_height elem =
-    let scale = win_width /. elem.width in
-    let y = elem.y -. (elem.height /. 2.) +. (win_height /. 2. /. scale) in
+  let enter elem =
+    let scale = Constants.width /. elem.width in
+    let y =
+      elem.y -. (elem.height /. 2.) +. (Constants.height /. 2. /. scale)
+    in
     { scale; x = elem.x; y }
 
-  let up ~win_width:_ ~win_height ~win_scale elem =
-    let y = elem.y -. (elem.height /. 2.) +. (win_height /. 2. /. win_scale) in
+  let up ~win_scale elem =
+    let y =
+      elem.y -. (elem.height /. 2.) +. (Constants.height /. 2. /. win_scale)
+    in
     { scale = win_scale; x = elem.x; y }
 end
