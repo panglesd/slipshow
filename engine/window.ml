@@ -66,12 +66,12 @@ let move_relative ?(x = 0.) ?(y = 0.) ?(scale = 1.) window ~delay =
 let move_relative_pure ?(x = 0.) ?(y = 0.) ?(scale = 1.) window ~delay =
   move_relative ~x ~y ~scale window ~delay |> UndoMonad.discard
 
-let move_to window elem =
+let focus window elem =
   let coords_e = Coordinates.get elem in
   let coords_w = Coordinates.Window_of_elem.focus coords_e in
   move window coords_w ~delay:1.
 
-let move_to_pure window elem = move_to window elem |> UndoMonad.discard
+let focus_pure window elem = focus window elem |> UndoMonad.discard
 
 let enter window elem =
   let coords_e = Coordinates.get elem in
