@@ -38,14 +38,8 @@ let setup (window : Window.window) =
       | "ArrowLeft" -> (
           match Stack.pop_opt all_undos with
           | None -> ()
-          | Some undos ->
-              let _ : unit Fut.t =
-                List.fold_left
-                  (fun acc f ->
-                    let* () = acc in
-                    f ())
-                  (Fut.return ()) undos
-              in
+          | Some undo ->
+              let _ : unit Fut.t = undo () in
               ())
       | "ArrowDown" ->
           let _ : unit Fut.t =
