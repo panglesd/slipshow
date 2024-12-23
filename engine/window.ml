@@ -50,7 +50,7 @@ let move window target ~delay =
   let old_coordinate = State.get_coord () in
   let+ () = move_pure window target ~delay in
   let undo () = move_pure window old_coordinate ~delay in
-  ((), [ undo ])
+  ((), undo)
 
 let move_relative ?(x = 0.) ?(y = 0.) ?(scale = 1.) window ~delay =
   let coord = State.get_coord () in
