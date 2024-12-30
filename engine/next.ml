@@ -19,29 +19,24 @@ let set_at at v elem =
   UndoMonad.return ~undo res
 
 module AttributeActions = struct
-  let up window elem =
-    match Brr.El.at (Jstr.v "up-at-unpause") elem with
+  let act_on_elem class_ action elem =
+    match Brr.El.at (Jstr.v class_) elem with
     | None -> UndoMonad.return ()
-    | Some v when Jstr.equal Jstr.empty v -> Window.up window elem
+    | Some v when Jstr.equal Jstr.empty v -> action elem
     | Some v -> (
         let id = Jstr.concat [ Jstr.v "#"; v ] in
         match Brr.El.find_first_by_selector id with
         | None -> UndoMonad.return ()
-        | Some elem -> Window.up window elem)
+        | Some elem -> action elem)
+
+  let up window elem = act_on_elem "up-at-unpause" (Window.up window) elem
 
   let focus window elem =
-    match Brr.El.at (Jstr.v "focus-at-unpause") elem with
-    | None -> UndoMonad.return ()
-    | Some v when Jstr.equal Jstr.empty v ->
-        let> () = State.Focus.push (State.get_coord ()) in
-        Window.focus window elem
-    | Some v -> (
-        let id = Jstr.concat [ Jstr.v "#"; v ] in
-        match Brr.El.find_first_by_selector id with
-        | None -> UndoMonad.return ()
-        | Some elem ->
-            let> () = State.Focus.push (State.get_coord ()) in
-            Window.focus window elem)
+    let action elem =
+      let> () = State.Focus.push (State.get_coord ()) in
+      Window.focus window elem
+    in
+    act_on_elem "focus-at-unpause" action elem
 
   let do_ window elem =
     let> () = up window elem in
