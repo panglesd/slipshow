@@ -9,3 +9,4 @@
     rescaling the window, the scale would change... *)
 
 val setup : unit -> unit Fut.t
+val translate_coords : float * float -> float * float

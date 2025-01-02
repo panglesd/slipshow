@@ -12,6 +12,12 @@ type window = {
   universe : Brr.El.t;
 }
 
+let translate_coords (x0, y0) =
+  let { Coordinates.x; y; scale } = State.get_coord () in
+  let x1 = (x0 /. scale) +. x in
+  let y1 = (y0 /. scale) +. y in
+  (x1, y1)
+
 let pp { scale_container; rotate_container; universe } =
   Console.(
     log

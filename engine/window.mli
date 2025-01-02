@@ -4,6 +4,7 @@ val pp : window -> unit
 val setup : unit -> window Fut.t
 val move_pure : window -> Coordinates.window -> delay:float -> unit Fut.t
 val move : window -> Coordinates.window -> delay:float -> unit UndoMonad.t
+val translate_coords : float * float -> float * float
 
 val move_relative_pure :
   ?x:float -> ?y:float -> ?scale:float -> window -> delay:float -> unit Fut.t
