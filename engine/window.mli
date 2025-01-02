@@ -21,3 +21,5 @@ val focus_pure : window -> Brr.El.t -> unit Fut.t
 val focus : window -> Brr.El.t -> unit UndoMonad.t
 val enter : window -> Brr.El.t -> unit UndoMonad.t
 val up : window -> Brr.El.t -> unit UndoMonad.t
+val center : window -> Brr.El.t -> unit UndoMonad.t
+val down : window -> Brr.El.t -> unit UndoMonad.t

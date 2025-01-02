@@ -47,3 +47,10 @@ body {
 [pause] {
   opacity: 0;
 }
+.unstatic {
+  position: absolute;
+  visibility: hidden;
+}
+.unrevealed {
+  opacity: 0;
+}

@@ -16,5 +16,7 @@ val get : Brr.El.t -> element
 module Window_of_elem : sig
   val focus : element -> window
   val enter : element -> window
-  val up : scale:float -> element -> window
+  val up : current:window -> element -> window
+  val center : current:window -> element -> window
+  val down : current:window -> element -> window
 end

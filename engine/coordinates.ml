@@ -53,9 +53,17 @@ module Window_of_elem = struct
     in
     { scale; x = elem.x; y }
 
-  let up ~scale elem =
+  let up ~current elem =
     let y =
-      elem.y -. (elem.height /. 2.) +. (Constants.height /. 2. /. scale)
+      elem.y -. (elem.height /. 2.) +. (Constants.height /. 2. /. current.scale)
     in
-    { scale; x = elem.x; y }
+    { current with y }
+
+  let down ~current elem =
+    let y =
+      elem.y +. (elem.height /. 2.) -. (Constants.height /. 2. /. current.scale)
+    in
+    { current with y }
+
+  let center ~(current : window) (elem : element) = { current with y = elem.y }
 end

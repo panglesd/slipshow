@@ -30,6 +30,16 @@ module AttributeActions = struct
         | Some elem -> action elem)
 
   let up window elem = act_on_elem "up-at-unpause" (Window.up window) elem
+  let down window elem = act_on_elem "down-at-unpause" (Window.down window) elem
+
+  let center window elem =
+    act_on_elem "center-at-unpause" (Window.center window) elem
+
+  let unstatic _window elem =
+    act_on_elem "unstatic-at-unpause" (set_class "unstatic" true) elem
+
+  let static _window elem =
+    act_on_elem "static-at-unpause" (set_class "unstatic" false) elem
 
   let focus window elem =
     let action elem =
@@ -38,9 +48,29 @@ module AttributeActions = struct
     in
     act_on_elem "focus-at-unpause" action elem
 
+  let unfocus window elem =
+    let action _elem =
+      let> coord = State.Focus.pop () in
+      Window.move window coord ~delay:1.0
+    in
+    act_on_elem "unfocus-at-unpause" action elem
+
+  let reveal _window elem =
+    act_on_elem "reveal-at-unpause" (set_class "unrevealed" false) elem
+
+  let unreveal _window elem =
+    act_on_elem "unreveal-at-unpause" (set_class "unrevealed" true) elem
+
   let do_ window elem =
+    let> () = unstatic window elem in
+    let> () = static window elem in
+    let> () = unreveal window elem in
+    let> () = reveal window elem in
     let> () = up window elem in
-    focus window elem
+    let> () = center window elem in
+    let> () = down window elem in
+    let> () = focus window elem in
+    unfocus window elem
 end
 
 let update_pause_ancestors () =
