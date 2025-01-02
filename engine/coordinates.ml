@@ -53,15 +53,21 @@ module Window_of_elem = struct
     in
     { scale; x = elem.x; y }
 
-  let up ~current elem =
+  let up ?(margin = 13.5) ~current elem =
+    let margin = margin /. current.scale in
     let y =
-      elem.y -. (elem.height /. 2.) +. (Constants.height /. 2. /. current.scale)
+      elem.y -. (elem.height /. 2.)
+      +. (Constants.height /. 2. /. current.scale)
+      -. margin
     in
     { current with y }
 
-  let down ~current elem =
+  let down ?(margin = 13.5) ~current elem =
+    let margin = margin /. current.scale in
     let y =
-      elem.y +. (elem.height /. 2.) -. (Constants.height /. 2. /. current.scale)
+      elem.y +. (elem.height /. 2.)
+      -. (Constants.height /. 2. /. current.scale)
+      +. margin
     in
     { current with y }
 
