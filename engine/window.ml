@@ -86,6 +86,18 @@ let enter window elem =
 
 let up window elem =
   let coords_e = Coordinates.get elem in
-  let scale = (State.get_coord ()).scale in
-  let coords_w = Coordinates.Window_of_elem.up ~scale coords_e in
+  let current = State.get_coord () in
+  let coords_w = Coordinates.Window_of_elem.up ~current coords_e in
+  move window coords_w ~delay:1.
+
+let down window elem =
+  let coords_e = Coordinates.get elem in
+  let current = State.get_coord () in
+  let coords_w = Coordinates.Window_of_elem.down ~current coords_e in
+  move window coords_w ~delay:1.
+
+let center window elem =
+  let coords_e = Coordinates.get elem in
+  let current = State.get_coord () in
+  let coords_w = Coordinates.Window_of_elem.center ~current coords_e in
   move window coords_w ~delay:1.
