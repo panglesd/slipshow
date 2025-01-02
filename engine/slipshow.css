@@ -10,6 +10,8 @@
 
 html,
 body {
+  margin: 0;
+  padding: 0;
   background-color: black;
 }
 
@@ -31,6 +33,9 @@ body {
   position: absolute;
   top: 0;
   left: 0;
+  font:
+    30px "Fira Sans",
+    sans-serif;
 }
 
 .slip-body {
@@ -53,4 +58,8 @@ body {
 }
 .unrevealed {
   opacity: 0;
+}
+
+h1 {
+  text-align: center;
 }
