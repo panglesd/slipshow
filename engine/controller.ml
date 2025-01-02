@@ -1,12 +1,31 @@
 open Fut.Syntax
 
-type mode = Normal | Moving
+type mode = Normal | Moving | Drawing of Drawing.t
+
+let string_of_mode mode =
+  match mode with
+  | Normal -> "Normal"
+  | Moving -> "Moving"
+  | Drawing _ -> "Drawing"
 
 let setup (window : Window.window) =
+  let svg =
+    Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing") |> Option.get
+  in
   let target = Brr.Window.as_target Brr.G.window in
   let mode = ref Normal in
   let change_mode () =
-    match !mode with Normal -> mode := Moving | Moving -> mode := Normal
+    let () =
+      match !mode with
+      | Normal -> mode := Moving
+      | Moving ->
+          let listeners = Drawing.connect svg in
+          mode := Drawing listeners
+      | Drawing l ->
+          Drawing.disconnect l;
+          mode := Normal
+    in
+    Brr.Console.(log [ "mode is"; string_of_mode !mode ])
   in
   let all_undos = Stack.create () in
   let callback ev =
