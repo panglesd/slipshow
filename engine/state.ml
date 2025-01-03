@@ -8,6 +8,13 @@ let coordinates =
 
 let set_coord v = coordinates := v
 let get_coord () = !coordinates
+let step = ref 0
+let get_step () = !step
+
+let incr_step () =
+  let old_step = !step in
+  let undo () = Fut.return (step := old_step) in
+  UndoMonad.return ~undo @@ incr step
 
 module Focus = struct
   let stack = Stack.create ()
