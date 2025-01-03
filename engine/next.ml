@@ -99,11 +99,31 @@ let update_pause_ancestors () =
   let+ () = Fut.tick ~ms:0 in
   ((), fun () -> Fut.return ())
 
+let update_history () =
+  let window = Brr.G.window in
+  let old_uri = Brr.Window.location window in
+  let> () = State.incr_step () in
+  let n = State.get_step () in
+  let uri =
+    let fragment = Jstr.v (string_of_int n) in
+    Brr.Uri.with_uri ~fragment old_uri |> Result.get_ok
+  in
+  let res =
+    Brr.Window.History.replace_state ~uri (Brr.Window.history Brr.G.window)
+  in
+  let undo () =
+    Fut.return
+    @@ Brr.Window.History.replace_state ~uri:old_uri
+         (Brr.Window.history Brr.G.window)
+  in
+  UndoMonad.return ~undo res
+
 let clear_pause window elem =
   let> () = set_at "pause" None elem in
   let> () = set_at "step" None elem in
   let> () = update_pause_ancestors () in
-  AttributeActions.do_ window elem
+  let> () = AttributeActions.do_ window elem in
+  update_history ()
 
 let next window () =
   match find_next_pause () with
