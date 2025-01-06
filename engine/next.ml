@@ -61,16 +61,37 @@ module AttributeActions = struct
   let unreveal _window elem =
     act_on_elem "unreveal-at-unpause" (set_class "unrevealed" true) elem
 
+  let execute _window elem =
+    let action elem =
+      let body = Jv.get (Brr.El.to_jv elem) "innerHTML" |> Jv.to_jstr in
+      Brr.Console.(log [ body ]);
+      let args = Jv.Function.[ ("slip", fun () -> Jv.undefined) ] in
+      let f = Jv.Function.v ~body ~args in
+      let _res = f () in
+      let undo () = Fut.return () in
+      UndoMonad.return ~undo ()
+    in
+    act_on_elem "exec-at-unpause" action elem
+
   let do_ window elem =
-    let> () = unstatic window elem in
-    let> () = static window elem in
-    let> () = unreveal window elem in
-    let> () = reveal window elem in
-    let> () = up window elem in
-    let> () = center window elem in
-    let> () = down window elem in
-    let> () = focus window elem in
-    unfocus window elem
+    let do_ =
+     fun acc f ->
+      let> _acc = acc in
+      f window elem
+    in
+    List.fold_left do_ (UndoMonad.return ())
+      [
+        unstatic;
+        static;
+        unreveal;
+        reveal;
+        up;
+        center;
+        down;
+        focus;
+        unfocus;
+        execute;
+      ]
 end
 
 let update_pause_ancestors () =
@@ -108,7 +129,7 @@ let update_history () =
     let fragment = Jstr.v (string_of_int n) in
     Brr.Uri.with_uri ~fragment old_uri |> Result.get_ok
   in
-  let res =
+  let () =
     Brr.Window.History.replace_state ~uri (Brr.Window.history Brr.G.window)
   in
   let undo () =
@@ -116,7 +137,7 @@ let update_history () =
     @@ Brr.Window.History.replace_state ~uri:old_uri
          (Brr.Window.history Brr.G.window)
   in
-  UndoMonad.return ~undo res
+  UndoMonad.return ~undo ()
 
 let clear_pause window elem =
   let> () = set_at "pause" None elem in
