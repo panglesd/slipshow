@@ -61,6 +61,12 @@ module AttributeActions = struct
   let unreveal _window elem =
     act_on_elem "unreveal-at-unpause" (set_class "unrevealed" true) elem
 
+  let emph _window elem =
+    act_on_elem "emph-at-unpause" (set_class "emphasized" true) elem
+
+  let unemph _window elem =
+    act_on_elem "unemph-at-unpause" (set_class "emphasized" false) elem
+
   let execute _window elem =
     let action elem =
       let body = Jv.get (Brr.El.to_jv elem) "innerHTML" |> Jv.to_jstr in
@@ -90,6 +96,8 @@ module AttributeActions = struct
         down;
         focus;
         unfocus;
+        emph;
+        unemph;
         execute;
       ]
 end
