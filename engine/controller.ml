@@ -8,7 +8,7 @@ let string_of_mode mode =
   | Moving -> "Moving"
   | Drawing _ -> "Drawing"
 
-let setup (window : Window.window) =
+let setup ?initial_step (window : Window.window) =
   let svg =
     Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing") |> Option.get
   in
@@ -28,6 +28,21 @@ let setup (window : Window.window) =
     Brr.Console.(log [ "mode is"; string_of_mode !mode ])
   in
   let all_undos = Stack.create () in
+  let go_next () =
+    let+ (), undos = Next.next window () in
+    Stack.push undos all_undos
+  in
+  let+ () =
+    match initial_step with
+    | None -> Fut.return ()
+    | Some n ->
+        List.fold_left
+          (fun acc () ->
+            let* () = acc in
+            go_next ())
+          (Fut.return ())
+          (List.init n (fun _ -> ()))
+  in
   let callback ev =
     let key = ev |> Brr.Ev.as_type |> Brr.Ev.Keyboard.key |> Jstr.to_string in
     let current_coord = State.get_coord () in
@@ -42,10 +57,7 @@ let setup (window : Window.window) =
           in
           ()
       | "ArrowRight" ->
-          let _ : unit Fut.t =
-            let+ (), undos = Next.next window () in
-            Stack.push undos all_undos
-          in
+          let _ : unit Fut.t = go_next () in
           ()
       | "ArrowLeft" when !mode = Moving ->
           let _ : unit Fut.t =

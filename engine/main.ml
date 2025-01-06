@@ -4,23 +4,20 @@ let _ : unit Fut.t =
   let* window = Window.setup () in
   (* TODO: move out of here *)
   let () = Rescaler.setup_rescalers () in
-  let () = Controller.setup window in
-  let* _ = Next.update_pause_ancestors () in
-  let* () =
-    match
-      Brr.G.window |> Brr.Window.location |> Brr.Uri.fragment |> Jstr.to_string
-      |> int_of_string_opt
-    with
-    | None -> Fut.return ()
-    | Some n ->
-        List.fold_left
-          (fun acc () ->
-            let* () = acc in
-            let+ _ = Next.next window () in
-            ())
-          (Fut.return ())
-          (List.init n (fun _ -> ()))
+  let initial_step =
+    Brr.G.window |> Brr.Window.location |> Brr.Uri.fragment |> Jstr.to_string
+    |> int_of_string_opt
   in
+  let () =
+    let uri =
+      let old_uri = Brr.Window.location Brr.G.window in
+      let fragment = Jstr.v "" in
+      Brr.Uri.with_uri ~fragment old_uri |> Result.get_ok
+    in
+    Brr.Window.History.replace_state ~uri (Brr.Window.history Brr.G.window)
+  in
+  let* _ = Next.update_pause_ancestors () in
+  let* () = Controller.setup ?initial_step window in
   (* let* () = *)
   (*   match Brr.Window.parent Brr.G.window with *)
   (*   | None -> *)
