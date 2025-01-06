@@ -129,23 +129,9 @@ let update_pause_ancestors () =
   ((), fun () -> Fut.return ())
 
 let update_history () =
-  let window = Brr.G.window in
-  let old_uri = Brr.Window.location window in
   let> () = State.incr_step () in
   let n = State.get_step () in
-  let uri =
-    let fragment = Jstr.v (string_of_int n) in
-    Brr.Uri.with_uri ~fragment old_uri |> Result.get_ok
-  in
-  let () =
-    Brr.Window.History.replace_state ~uri (Brr.Window.history Brr.G.window)
-  in
-  let undo () =
-    Fut.return
-    @@ Brr.Window.History.replace_state ~uri:old_uri
-         (Brr.Window.history Brr.G.window)
-  in
-  UndoMonad.return ~undo ()
+  Browser.History.set_hash (string_of_int n)
 
 let clear_pause window elem =
   let> () = set_at "pause" None elem in

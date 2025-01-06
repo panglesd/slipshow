@@ -8,15 +8,8 @@ let _ : unit Fut.t =
     Brr.G.window |> Brr.Window.location |> Brr.Uri.fragment |> Jstr.to_string
     |> int_of_string_opt
   in
-  let () =
-    let uri =
-      let old_uri = Brr.Window.location Brr.G.window in
-      let fragment = Jstr.v "" in
-      Brr.Uri.with_uri ~fragment old_uri |> Result.get_ok
-    in
-    Brr.Window.History.replace_state ~uri (Brr.Window.history Brr.G.window)
-  in
-  let* _ = Next.update_pause_ancestors () in
+  let* () = Browser.History.set_hash "" |> UndoMonad.discard in
+  let* () = Next.update_pause_ancestors () |> UndoMonad.discard in
   let* () = Controller.setup ?initial_step window in
   (* let* () = *)
   (*   match Brr.Window.parent Brr.G.window with *)
