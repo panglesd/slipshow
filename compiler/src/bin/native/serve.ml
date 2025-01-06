@@ -85,10 +85,15 @@ let do_serve input f =
                  Dream.get "/" (fun _ ->
                      Dream.log "A browser reloaded";
                      Dream.html html_source);
-                 Dream.get "/now" (fun _ -> Dream.respond !content);
+                 Dream.get "/now" (fun _ ->
+                     Dream.respond
+                       ~headers:[ ("Content-Type", "text/plain") ]
+                       !content);
                  Dream.get "/onchange" (fun _ ->
                      let* () = Lwt_condition.wait cond in
-                     Dream.respond !content);
+                     Dream.respond
+                       ~headers:[ ("Content-Type", "text/plain") ]
+                       !content);
                ]
         in
         let callback filename =
