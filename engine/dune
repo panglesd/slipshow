@@ -1,7 +1,7 @@
 (executable
  (modes js)
  (name main)
- (libraries brr))
+ (libraries communication brr sexplib))
 
 (rule
  (mode (promote (until-clean)))

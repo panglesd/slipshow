@@ -87,7 +87,7 @@ let embed_in_page content ~has_math ~math_link ~slip_css_link ~theorem_css_link
     <!-- Start the presentation () -->
      <script>hljs.highlightAll();</script>
     <script>
-//      Slipshow.startSlipshow(|}
+      startSlipshow(|}
       mathjax_element slip_css_element theorem_css_element highlight_css_element
       highlight_js_element highlight_js_ocaml_element content
       slipshow_js_element
@@ -98,7 +98,7 @@ let embed_in_page content ~has_math ~math_link ~slip_css_link ~theorem_css_link
                    </html>|} in
   (start, end_)
 
-type starting_state = int list * string
+type starting_state = int * string
 type delayed = string * string
 
 let delayed_to_string s = Marshal.to_string s [] |> Base64.encode_string
@@ -122,10 +122,7 @@ let add_starting_state (start, end_) starting_state =
   let starting_state =
     match starting_state with
     | None -> ""
-    | Some (st, id) ->
-        "["
-        ^ String.concat "," (List.map string_of_int st)
-        ^ "], \"" ^ id ^ "\""
+    | Some (st, id) -> string_of_int st ^ ", \"" ^ id ^ "\""
   in
   start ^ starting_state ^ end_
 
