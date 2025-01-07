@@ -57,7 +57,10 @@ let setup ?initial_step (window : Window.window) =
           in
           ()
       | "ArrowRight" ->
-          let _ : unit Fut.t = go_next () in
+          let _ : unit Fut.t =
+            let+ () = go_next () in
+            Messaging.send_step ()
+          in
           ()
       | "ArrowLeft" when !mode = Moving ->
           let _ : unit Fut.t =
@@ -70,7 +73,10 @@ let setup ?initial_step (window : Window.window) =
           match Stack.pop_opt all_undos with
           | None -> ()
           | Some undo ->
-              let _ : unit Fut.t = undo () in
+              let _ : unit Fut.t =
+                let+ () = undo () in
+                Messaging.send_step ()
+              in
               ())
       | "ArrowDown" ->
           let _ : unit Fut.t =

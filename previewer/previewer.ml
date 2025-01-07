@@ -1,28 +1,16 @@
 module Msg = struct
-  type kind = State_update of int list | Ready
-  type msg = string * kind
+  type msg = Communication.t
 
-  let of_jv m : msg =
-    let id = Jv.get m "id" |> Jv.to_string in
-    let data = Jv.get m "data" in
-    Jv.get m "kind" |> Jv.to_string |> function
-    | "state" ->
-        let data =
-          Jv.to_string data |> String.split_on_char ','
-          |> List.map int_of_string
-        in
-        (id, State_update data)
-    | "ready" -> (id, Ready)
-    | _ -> assert false
+  let of_jv m : msg = m |> Jv.to_string |> Communication.of_string
 end
 
 type previewer = {
-  stage : int list ref;
+  stage : int (* list *) ref;
   index : int ref;
   panels : Brr.El.t array;
 }
 
-let string_of_stage stage = List.map string_of_int stage |> String.concat ", "
+let string_of_stage stage = string_of_int stage
 let ids = [| "p1"; "p2" |]
 
 let create_previewer root =
@@ -34,7 +22,7 @@ let create_previewer root =
   in
   let panels = [| panel1; panel2 |] in
   let index = ref 0 in
-  let stage = ref [ 0 ] in
+  let stage = ref 0 in
   let _ =
     Brr.Ev.listen Brr_io.Message.Ev.message
       (fun event ->
@@ -47,20 +35,19 @@ let create_previewer root =
         if not (Jstr.equal source_name (Jstr.v "frame")) then ()
         else
           let raw_data : Jv.t = Brr_io.Message.Ev.data (Brr.Ev.as_type event) in
-          (* Brr.Console.(log [ raw_data ]); *)
           let msg = Msg.of_jv raw_data in
           match msg with
-          | id, Msg.State_update new_stage when id = ids.(!index) ->
+          | { id; payload = State new_stage } when id = ids.(!index) ->
               print_endline @@ "updating stage from: " ^ string_of_stage !stage
               ^ " to new stage: " ^ string_of_stage new_stage;
               stage := new_stage
-          | "p1", Msg.Ready ->
-              print_endline "p1 is ready";
+          | { id = "p1"; payload = Ready } ->
+              Brr.Console.(log [ "p1 is ready" ]);
               index := 0;
               Brr.El.set_class (Jstr.v "active_panel") true panels.(!index);
               Brr.El.set_class (Jstr.v "active_panel") false panels.(1 - !index)
-          | "p2", Msg.Ready ->
-              print_endline "p2 is ready";
+          | { id = "p2"; payload = Ready } ->
+              Brr.Console.(log [ "p2 is ready" ]);
               index := 1;
               Brr.El.set_class (Jstr.v "active_panel") true panels.(!index);
               Brr.El.set_class (Jstr.v "active_panel") false panels.(1 - !index)
