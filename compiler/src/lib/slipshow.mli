@@ -2,7 +2,7 @@ type asset =
   | Local of { mime_type : string option; content : string }
   | Remote of string
 
-type starting_state = int list * string
+type starting_state = int * string
 type delayed
 
 val delayed_to_string : delayed -> string

@@ -138,7 +138,8 @@ let clear_pause window elem =
   let> () = set_at "step" None elem in
   let> () = update_pause_ancestors () in
   let> () = AttributeActions.do_ window elem in
-  update_history ()
+  let> () = update_history () in
+  UndoMonad.return ()
 
 let next window () =
   match find_next_pause () with
