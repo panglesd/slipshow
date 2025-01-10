@@ -57,6 +57,10 @@ let html_source =
     [%blob "client/client.bc.js"]
 
 let do_serve input f =
+  let () = if Sys.unix then Sys.(set_signal sigpipe Signal_ignore) in
+  (* We need this, otherwise the program is killed when sending a long string to
+     a closed connection... See https://github.com/aantron/dream/issues/378 *)
+
   let cond = Lwt_condition.create () in
   let do_serve input f =
     match input with
@@ -80,6 +84,7 @@ let do_serve input f =
           (* We serve on [127.0.0.1] since in musl libc library, localhost would
              trigger a DNS request (which might not resolve) *)
           Dream.serve ~interface:"127.0.0.1"
+          @@ Dream.logger
           @@ Dream.router
                [
                  Dream.get "/" (fun _ ->
