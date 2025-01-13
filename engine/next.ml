@@ -73,8 +73,10 @@ module AttributeActions = struct
       Brr.Console.(log [ body ]);
       let args = Jv.Function.[ ("slip", fun () -> Jv.undefined) ] in
       let f = Jv.Function.v ~body ~args in
-      let _res = f () in
-      let undo () = Fut.return () in
+      let u = f () in
+      let undo () =
+        Fut.return @@ try ignore @@ Jv.call u "undo" [||] with _ -> ()
+      in
       UndoMonad.return ~undo ()
     in
     act_on_elem "exec-at-unpause" action elem
