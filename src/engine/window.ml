@@ -29,11 +29,21 @@ let pp { scale_container; rotate_container; universe } =
 
 open Fut.Syntax
 
-let setup () =
-  let find s = El.find_first_by_selector (Jstr.v s) |> Option.get in
-  let rotate_container = find ".rotate-container"
-  and scale_container = find ".scale-container"
-  and universe = find "#universe" in
+let setup el =
+  let open Brr in
+  let universe =
+    El.div
+      ~at:[ At.class' (Jstr.v "universe movable"); At.id (Jstr.v "universe") ]
+      []
+  in
+  let scale_container =
+    El.div ~at:[ At.class' (Jstr.v "scale-container") ] [ universe ]
+  in
+  let rotate_container =
+    El.div ~at:[ At.class' (Jstr.v "rotate-container") ] [ scale_container ]
+  in
+  Brr.El.insert_siblings `Replace el [ rotate_container ];
+  Brr.El.append_children universe [ el ];
   let+ () =
     Css.set_pure
       [ Width Constants.width; Height Constants.height ]
