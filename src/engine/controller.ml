@@ -29,8 +29,11 @@ let setup ?initial_step (window : Window.window) =
   in
   let all_undos = Stack.create () in
   let go_next () =
-    let+ (), undos = Next.next window () in
-    Stack.push undos all_undos
+    match Next.next window () with
+    | None -> Fut.return ()
+    | Some undos ->
+        let+ (), undos = undos in
+        Stack.push undos all_undos
   in
   let+ () =
     match initial_step with

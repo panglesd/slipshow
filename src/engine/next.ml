@@ -154,5 +154,5 @@ let clear_pause window elem =
 
 let next window () =
   match find_next_pause () with
-  | None -> UndoMonad.return ()
-  | Some pause -> clear_pause window pause
+  | None -> None
+  | Some pause -> Some (clear_pause window pause)
