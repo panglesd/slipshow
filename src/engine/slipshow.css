@@ -63,3 +63,11 @@ body {
 h1 {
   text-align: center;
 }
+
+#slip-counter {
+    position:fixed;
+    bottom: 0;
+    right: 0;
+    background-color: white;
+    padding:5px;
+}
