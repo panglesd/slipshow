@@ -117,13 +117,12 @@ let update_pause_ancestors () =
     | None -> UndoMonad.return ()
     | Some elem ->
         let rec hide_parent elem =
-          let> () =
-            if Brr.El.class' (Jstr.v "universe") elem then UndoMonad.return ()
-            else set_class "pauseAncestor" true elem
-          in
-          match Brr.El.parent elem with
-          | None -> UndoMonad.return ()
-          | Some elem -> hide_parent elem
+          if Brr.El.class' (Jstr.v "universe") elem then UndoMonad.return ()
+          else
+            let> () = set_class "pauseAncestor" true elem in
+            match Brr.El.parent elem with
+            | None -> UndoMonad.return ()
+            | Some elem -> hide_parent elem
         in
         hide_parent elem
   in
@@ -131,8 +130,18 @@ let update_pause_ancestors () =
   ((), fun () -> Fut.return ())
 
 let update_history () =
+  let prev_step = State.get_step () in
   let> () = State.incr_step () in
   let n = State.get_step () in
+  let> () =
+    let counter =
+      Brr.El.find_first_by_selector (Jstr.v "#slip-counter") |> Option.get
+    in
+    UndoMonad.return ~undo:(fun () ->
+        Fut.return
+        @@ Brr.El.set_children counter [ Brr.El.txt' (string_of_int prev_step) ])
+    @@ Brr.El.set_children counter [ Brr.El.txt' (string_of_int n) ]
+  in
   Browser.History.set_hash (string_of_int n)
 
 let clear_pause window elem =
