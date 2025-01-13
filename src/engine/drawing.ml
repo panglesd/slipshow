@@ -17,6 +17,11 @@ module Width = struct
   type t = Small | Medium | Large
 
   let to_string = function Small -> "1" | Medium -> "3" | Large -> "5"
+
+  let to_string' = function
+    | Small -> "small"
+    | Medium -> "medium"
+    | Large -> "large"
 end
 
 module State : sig
@@ -36,11 +41,33 @@ end = struct
   let tool = ref Pointer
   let get_state () = { color = !color; width = !width; tool = !tool }
 
+  let select_color s =
+    let color =
+      Brr.El.find_first_by_selector (Jstr.v (".slip-toolbar-" ^ s))
+      |> Option.get
+    in
+    Brr.El.fold_find_by_selector
+      (fun e () -> Brr.El.set_class (Jstr.v "slip-set-color") false e)
+      (Jstr.v ".slip-set-color") ();
+    Brr.El.set_class (Jstr.v "slip-set-color") true color
+
   let set_color c =
-    Brr.Console.(log [ "yyyyyyyyyyyyyyyyyyyyyyyyy"; Color.to_string c ]);
+    select_color (Color.to_string c);
     color := c
 
-  let set_width w = width := w
+  let select_width s =
+    let color =
+      Brr.El.find_first_by_selector (Jstr.v (".slip-toolbar-" ^ s))
+      |> Option.get
+    in
+    Brr.El.fold_find_by_selector
+      (fun e () -> Brr.El.set_class (Jstr.v "slip-set-width") false e)
+      (Jstr.v ".slip-set-width") ();
+    Brr.El.set_class (Jstr.v "slip-set-width") true color
+
+  let set_width w =
+    select_width (Width.to_string' w);
+    width := w
 
   let make_active () =
     let open_windows =
@@ -281,6 +308,11 @@ let setup el =
     add_listener State.set_width Small small;
     add_listener State.set_width Medium medium;
     add_listener State.set_width Large large
+  in
+  let () =
+    State.set_width Medium;
+    State.set_color Blue;
+    State.set_tool Pointer
   in
   let _listeners = connect svg in
   ()
