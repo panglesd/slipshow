@@ -1,32 +1,10 @@
 open Fut.Syntax
 
-type mode = Normal | Moving | Drawing of Drawing.t
-
-let string_of_mode mode =
-  match mode with
-  | Normal -> "Normal"
-  | Moving -> "Moving"
-  | Drawing _ -> "Drawing"
-
 let setup ?initial_step (window : Window.window) =
-  let svg =
-    Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing") |> Option.get
-  in
+  (* let svg = *)
+  (*   Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing") |> Option.get *)
+  (* in *)
   let target = Brr.Window.as_target Brr.G.window in
-  let mode = ref Normal in
-  let change_mode () =
-    let () =
-      match !mode with
-      | Normal -> mode := Moving
-      | Moving ->
-          let listeners = Drawing.connect svg in
-          mode := Drawing listeners
-      | Drawing l ->
-          Drawing.disconnect l;
-          mode := Normal
-    in
-    Brr.Console.(log [ "mode is"; string_of_mode !mode ])
-  in
   let all_undos = Stack.create () in
   let go_next () =
     match Next.next window () with
@@ -51,28 +29,41 @@ let setup ?initial_step (window : Window.window) =
     let current_coord = State.get_coord () in
     let () =
       match key with
-      | "m" -> change_mode ()
-      | "ArrowRight" when !mode = Moving ->
+      | "l" ->
           let _ : unit Fut.t =
             Window.move_relative_pure
               ~x:(30. *. 1. /. current_coord.scale)
               window ~delay:0.
           in
           ()
-      | "ArrowRight" ->
-          let _ : unit Fut.t =
-            let+ () = go_next () in
-            Messaging.send_step ()
-          in
-          ()
-      | "ArrowLeft" when !mode = Moving ->
+      | "j" ->
           let _ : unit Fut.t =
             Window.move_relative_pure
               ~x:(-30. *. 1. /. current_coord.scale)
               window ~delay:0.
           in
           ()
-      | "ArrowLeft" -> (
+      | "k" ->
+          let _ : unit Fut.t =
+            Window.move_relative_pure
+              ~y:(30. *. 1. /. current_coord.scale)
+              window ~delay:0.
+          in
+          ()
+      | "i" ->
+          let _ : unit Fut.t =
+            Window.move_relative_pure
+              ~y:(-30. *. 1. /. current_coord.scale)
+              window ~delay:0.
+          in
+          ()
+      | "ArrowRight" | "ArrowDown" | " " ->
+          let _ : unit Fut.t =
+            let+ () = go_next () in
+            Messaging.send_step ()
+          in
+          ()
+      | "ArrowLeft" | "ArrowUp" -> (
           match Stack.pop_opt all_undos with
           | None -> ()
           | Some undo ->
@@ -81,20 +72,6 @@ let setup ?initial_step (window : Window.window) =
                 Messaging.send_step ()
               in
               ())
-      | "ArrowDown" ->
-          let _ : unit Fut.t =
-            Window.move_relative_pure
-              ~y:(30. *. 1. /. current_coord.scale)
-              window ~delay:0.
-          in
-          ()
-      | "ArrowUp" ->
-          let _ : unit Fut.t =
-            Window.move_relative_pure
-              ~y:(-30. *. 1. /. current_coord.scale)
-              window ~delay:0.
-          in
-          ()
       | "a" ->
           let _ : unit Fut.t =
             let+ (), undos =
