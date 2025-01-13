@@ -79,6 +79,7 @@ let embed_in_page content ~has_math ~math_link ~slip_css_link ~theorem_css_link
         </div>
       </div>
     </div>
+    <div id="slip-counter">0</div>
 
 
 
