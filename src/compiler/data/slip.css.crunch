@@ -1,0 +1,358 @@
+.pauseAncestor ~ * {
+    opacity: 0;
+}
+[pause] {
+    opacity: 0;    
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    background-color: black;
+}
+body {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+}
+
+.toc-slip {
+    position: fixed;
+    overflow: scroll;
+    z-index:1000000;
+    top: 0;
+    left: 20%;
+    bottom: 0;
+    right: 20%;
+    display: none;
+    color: grey;
+    background-color: rgba(0,0,0,0.75);
+    font-size: 1.3em;
+}
+.toc-slip * {
+    list-style: none;
+}
+.toc-slip .before{
+    color: lightgreen;
+}
+.toc-slip .current{
+    color: lightgreen;
+}
+.toc-slip .toc-function {
+    display: inline-block;
+    transition: font-size 1s;
+    font-size: 0.1em;
+}
+.toc-slip .active-slip > ul > .toc-function {
+    font-size: 1em;
+}
+.toc-slip li{
+    border: solid 1px;
+    margin: 5px;
+    padding: 5px;
+}
+.toc-slip .after{
+    color: lightgrey;
+}
+
+
+*[exec-at] {
+    display: none;
+}
+
+/* Classes for transitions */
+.invisible {
+    visibility: hidden;
+}
+.unrevealed {
+    opacity: 0;
+}
+
+.movable {
+    transform-origin: 0 0;
+    transition-property: left, top ;
+    transition-duration: 1s, 1s;
+    transition-timing-function: ease, ease;
+    /* will-change: transform; */
+}
+.scale-container {
+    transform-origin: 0 0;
+    transition-property: transform;
+    transition-duration: 1s;
+    transition-timing-function: ease;
+    /* will-change: transform; */
+}
+.rotate-container {
+    transform-origin: 0 0;
+    transition-property: transform;
+    transition-duration: 1s;
+    transition-timing-function: ease;
+    /* will-change: transform; */
+}
+.slip-scale-container {
+    position: relative;
+    top: 0;
+    /* bottom: 0; */
+    left: 0;
+    /* right: 0; */
+    transform-origin: 0 0;
+    transition-property: transform;
+    transition-duration: 1s;
+    transition-timing-function: ease;
+    width:1440px;
+    /* min-height:1080px; */
+    /* will-change: transform; */
+}
+.slip-rotate-container {
+    transform-origin: 0 0;
+    transition-property: transform;
+    transition-duration: 1s;
+    transition-timing-function: ease;
+    /* will-change: transform; */
+    /* display: flex; */
+    /* flex-flow: column; */
+}
+.slip-container {
+    position:relative;
+    top:0;
+    /* bottom:0; */
+    left:0;right:0;
+    width: 1440px;
+    min-height: 1080px;
+    display: flex;
+    flex-flow: column;
+}
+#universe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    white-space: nowrap
+}
+.fog {
+    position:absolute;
+    background-color: white;
+    z-index: -10;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+#open-window {
+    position:fixed;
+    top: 0;
+    bottom: 0;
+    background-color: white;
+    overflow: hidden;
+}
+.slip-slipshow.slip {
+    flex-direction: row;
+}
+.slip-slipshow {
+    font: 30px "Fira Sans", sans-serif;
+}
+slip-slip {
+    /* pointer-event:none; */
+    font: 30px "Fira Sans", sans-serif;
+    box-sizing: border-box;
+    /* position: absolute; */
+    position: relative;
+    display: inline-flex;
+    white-space: normal;
+    flex-flow: column;
+    width: 1440px;
+    /* height: 1080px; */
+}
+slip-slip slip-title {
+    flex: 0 1 auto;
+    -webkit-box-shadow: 0px 5px 18px 5px rgba(0,0,0,0.42); 
+    box-shadow: 0px 5px 18px 5px rgba(0,0,0,0.42);
+    font: 1.8em "Fira Sans", sans-serif;
+    background: linear-gradient(to right, #004dc9, #001e63);
+    margin-bottom: 20px;
+    color: white;
+    padding: 10px;
+    padding-left:60px;
+}
+slip-slip slip-body {
+    /* padding:60px; */
+    margin-top: auto;
+    margin-bottom: auto;
+    margin-left: 110px;
+    margin-right: 110px;
+}
+.format-container {
+    transform-origin: 0 0;
+    
+}
+slip-slip .emphasize {
+    background-color: yellow;
+}
+
+.main-title {
+    font-size: 62px;
+    font-weight: 800;
+    line-height: 72px;
+}
+
+slip-slip.no-flex .slip-container {
+    display: block;
+}
+h1 {
+    text-align: center;
+}
+.cpt-slip {
+    position:fixed;
+    bottom: 0;
+    background-color: white;
+    padding:5px;
+}
+.sketchpad {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+}
+.active-true-slip > * > * > .sketchpad {
+    pointer-events: none;
+}
+.active-true-slip.no-writing > * > * > .sketchpad {
+    pointer-events: none;
+}
+
+.active-true-slip.drawing > * > * > .sketchpad.drawing {
+    pointer-events: initial;
+}
+.active-true-slip.highlighting > * > * > .sketchpad.sketchpad-highlighting {
+    pointer-events: initial;
+}
+
+.slip-writing-toolbar:hover, .slip-writing-toolbar.active {
+    width: 32px;
+    height: 640px;
+    /* height: 32px; */
+}
+.slip-writing-toolbar {
+    background-color: white;
+    overflow: hidden;
+    transition: width 0.5s, height 0.5s;
+    /* transition: height 1s; */
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    /* top: 0; */
+    left: 0;
+    /* height:8px; */
+    width:32px;
+    height:32px;
+    z-index: 10;
+    border-radius: 0px 0px 16px 16px;
+}
+
+.slip-writing-toolbar > * {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 10px;
+    /* margin-left: 10px; */
+}
+/* .slip-writing-toolbar > .slip-toolbar-color { */
+/*     display: flex; */
+    
+/* } */
+/* .slip-writing-toolbar > .slip-toolbar-tool { */
+/*     display: flex; */
+    
+/* } */
+.slip-writing-toolbar > * > * {
+    width: 30px;
+    height: 30px;
+    border: 1px solid black;
+    border-radius: 30px;
+    transition: border-radius 0.5s;
+}
+/* .slip-writing-toolbar > .slip-toolbar-color > * { */
+/*     width: 40px; */
+/*     height: 40px; */
+/*     border: 1px solid black; */
+/*     border-radius: 80px; */
+/* } */
+/* .slip-writing-toolbar > .slip-toolbar-tool > * { */
+/*     width: 40px; */
+/*     height: 40px; */
+/*     border: 1px solid black; */
+/*     border-radius: 80px; */
+/* } */
+.slip-writing-toolbar > .slip-toolbar-color > .slip-toolbar-red {
+    background-color: red;
+}
+.slip-writing-toolbar > .slip-toolbar-color > .slip-toolbar-black {
+    background-color: black;
+}
+.slip-writing-toolbar > .slip-toolbar-color > .slip-toolbar-blue {
+    background-color: blue;
+}
+.slip-writing-toolbar > .slip-toolbar-color > .slip-toolbar-green {
+    background-color: green;
+}
+.slip-writing-toolbar > .slip-toolbar-color > .slip-toolbar-yellow {
+    background-color: yellow;
+}
+.slip-writing-toolbar > .slip-toolbar-tool {
+    
+}
+.slip-writing-toolbar > * > * {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+/* .slip-writing-toolbar > .slip-toolbar-tool > .slip-toolbar-highlighter { */
+/*     background: url('highlighter.svg') no-repeat center center / 70%; */
+/* } */
+/* .slip-writing-toolbar > .slip-toolbar-tool > .slip-toolbar-pen { */
+/*     background: url('https://api.iconify.design/cil:pencil.svg') no-repeat center center / 70%; */
+/* } */
+/* .slip-writing-toolbar > .slip-toolbar-tool > .slip-toolbar-eraser { */
+/*     background: url('https://api.iconify.design/cil:eraser.svg') no-repeat center center / 70%; */
+/* } */
+.slip-writing-toolbar > .slip-toolbar-width > * > * {
+    width: 14px;
+    border-radius: 16px;
+}
+
+.slip-writing-toolbar > .slip-toolbar-width > .slip-toolbar-small > * {
+    border: 1px solid black;
+}
+.slip-writing-toolbar > .slip-toolbar-width > .slip-toolbar-medium > * {
+    border: 2px solid black;
+}
+.slip-writing-toolbar > .slip-toolbar-width > .slip-toolbar-large > * {
+    border: 4px solid black;
+}
+.slip-writing-toolbar > .slip-toolbar-tool.drawing > .slip-toolbar-pen,
+.slip-writing-toolbar > .slip-toolbar-tool.drawing-erase > .slip-toolbar-pen,
+.slip-writing-toolbar > .slip-toolbar-tool.drawing-erase > .slip-toolbar-eraser,
+.slip-writing-toolbar > .slip-toolbar-tool.highlighting-erase > .slip-toolbar-eraser,
+.slip-writing-toolbar > .slip-toolbar-tool.highlighting-erase > .slip-toolbar-highlighter,
+.slip-writing-toolbar > .slip-toolbar-tool.no-tool > .slip-toolbar-cursor,
+.slip-writing-toolbar > .slip-toolbar-tool.highlighting > .slip-toolbar-highlighter,
+.slip-writing-toolbar > .slip-toolbar-width.small > .slip-toolbar-small,
+.slip-writing-toolbar > .slip-toolbar-width.medium > .slip-toolbar-medium,
+.slip-writing-toolbar > .slip-toolbar-width.large > .slip-toolbar-large
+
+{
+    background-color: lightsteelblue;
+    border-radius: 5px;
+}
+
+.slip-writing-toolbar > .slip-toolbar-color.black > .slip-toolbar-black,
+.slip-writing-toolbar > .slip-toolbar-color.blue > .slip-toolbar-blue,
+.slip-writing-toolbar > .slip-toolbar-color.red > .slip-toolbar-red,
+.slip-writing-toolbar > .slip-toolbar-color.green > .slip-toolbar-green,
+.slip-writing-toolbar > .slip-toolbar-color.yellow > .slip-toolbar-yellow
+{
+    height: 25px;
+    width: 25px;
+    border: 3px solid steelblue;
+    border-radius: 5px;
+}

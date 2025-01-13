@@ -1,0 +1,4 @@
+(rule
+ (with-stdout-to
+  flags
+  (run ocaml %{dep:static_linking_flags.ml} %{ocaml-config:target})))
