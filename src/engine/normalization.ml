@@ -64,19 +64,20 @@ let replace_open_window window =
   state := { !state with scale = window_w /. Constants.width };
   Css.set_pure [ Scale (window_w /. Constants.width) ] window.format_container
 
-let create () =
-  let find s =
-    match El.find_first_by_selector (Jstr.v s) with
-    | Some s -> s
-    | None -> failwith ("No element with '" ^ s ^ "' id. Cannot continue.")
+let create el =
+  let format_container =
+    Brr.El.div ~at:[ Brr.At.class' (Jstr.v "format-container") ] []
   in
-  let open_window = find "#open-window"
-  and format_container = find ".format-container" in
+  let open_window =
+    Brr.El.div ~at:[ Brr.At.id (Jstr.v "open-window") ] [ format_container ]
+  in
+  Brr.El.insert_siblings `Replace el [ open_window ];
+  Brr.El.append_children format_container [ el ];
   { open_window; format_container }
 
-let setup () =
-  let open_window = create () in
-  let+ () = replace_open_window open_window in
+let setup el =
+  let open_window = create el in
+  let* () = replace_open_window open_window in
   let resize _ = ignore @@ replace_open_window open_window in
   let _listener = Ev.listen Ev.resize resize (Window.as_target G.window) in
-  ()
+  Fut.tick ~ms:0
