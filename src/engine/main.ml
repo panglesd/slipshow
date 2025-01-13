@@ -1,6 +1,9 @@
 let start id step =
   let open Fut.Syntax in
-  let* () = Normalization.setup () in
+  let el =
+    Brr.El.find_first_by_selector (Jstr.v "#slipshow-content") |> Option.get
+  in
+  let* () = Normalization.setup el in
   let* window = Window.setup () in
   (* TODO: move out of here *)
   let () = Rescaler.setup_rescalers () in

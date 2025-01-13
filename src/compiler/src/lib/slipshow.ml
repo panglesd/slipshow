@@ -60,18 +60,16 @@ let embed_in_page content ~has_math ~math_link ~slip_css_link ~theorem_css_link
     %s
   </head>
   <body>
-    <div id="open-window">
-      <div class="format-container">
-        <div class="rotate-container">
-          <div class="scale-container">
-            <div class="universe movable" id="universe">
-              <div width="10000" height="10000" class="fog"></div>
-              <svg id="slipshow-drawing" style="overflow:visible; position: absolute; z-index:1000"></svg>
-              <div class="slip-rescaler">
-                <div class="slip">
-                  <div class="slip-body">
-                     %s
-                  </div>
+    <div id="slipshow-content">
+      <div class="rotate-container">
+        <div class="scale-container">
+          <div class="universe movable" id="universe">
+            <div width="10000" height="10000" class="fog"></div>
+            <svg id="slipshow-drawing" style="overflow:visible; position: absolute; z-index:1000"></svg>
+            <div class="slip-rescaler">
+              <div class="slip">
+                <div class="slip-body">
+                   %s
                 </div>
               </div>
             </div>
@@ -83,10 +81,10 @@ let embed_in_page content ~has_math ~math_link ~slip_css_link ~theorem_css_link
 
 
 
-  <!-- Include the library -->
+    <!-- Include the library -->
     %s
     <!-- Start the presentation () -->
-     <script>hljs.highlightAll();</script>
+    <script>hljs.highlightAll();</script>
     <script>
       startSlipshow(|}
       mathjax_element slip_css_element theorem_css_element highlight_css_element

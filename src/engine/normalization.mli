@@ -8,5 +8,5 @@
     It is important that 2 is not made by moving the window, as otherwise on
     rescaling the window, the scale would change... *)
 
-val setup : unit -> unit Fut.t
+val setup : Brr.El.t -> unit Fut.t
 val translate_coords : float * float -> float * float
