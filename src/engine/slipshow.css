@@ -1,0 +1,65 @@
+#open-window {
+  position: fixed;
+  overflow: hidden;
+  background-color: white;
+}
+
+.format-container {
+  transform-origin: top left;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background-color: black;
+}
+
+.slip {
+  width: 1440px;
+  transform-origin: top left;
+  /* Borders make margin of inner elements not leak outside */
+  border: 0.00001px solid transparent;
+}
+
+.slip-rescaler {
+  overflow-x: hidden;
+  overflow-y: hidden;
+  width: unset;
+  height: unset;
+}
+
+#universe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font:
+    30px "Fira Sans",
+    sans-serif;
+}
+
+.slip-body {
+  /* padding:60px; */
+  margin-top: auto;
+  margin-bottom: auto;
+  margin-left: 110px;
+  margin-right: 110px;
+}
+
+.pauseAncestor ~ * {
+  opacity: 0;
+}
+[pause] {
+  opacity: 0;
+}
+.unstatic {
+  position: absolute;
+  visibility: hidden;
+}
+.unrevealed {
+  opacity: 0;
+}
+
+h1 {
+  text-align: center;
+}
