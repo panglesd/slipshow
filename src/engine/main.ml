@@ -4,7 +4,7 @@ let start id step =
     Brr.El.find_first_by_selector (Jstr.v "#slipshow-content") |> Option.get
   in
   let* () = Normalization.setup el in
-  let* window = Window.setup () in
+  let* window = Window.setup el in
   (* TODO: move out of here *)
   let () = Rescaler.setup_rescalers () in
   let initial_step =
