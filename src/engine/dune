@@ -4,5 +4,4 @@
  (libraries communication brr sexplib))
 
 (rule
- (mode (promote (until-clean)))
  (action (copy main.bc.js slipshow.js)))
