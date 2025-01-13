@@ -1,7 +1,7 @@
 type window
 
 val pp : window -> unit
-val setup : unit -> window Fut.t
+val setup : Brr.El.t -> window Fut.t
 val move_pure : window -> Coordinates.window -> delay:float -> unit Fut.t
 val move : window -> Coordinates.window -> delay:float -> unit UndoMonad.t
 val translate_coords : float * float -> float * float
