@@ -17,3 +17,4 @@ module State : sig
 end
 
 val setup : Brr.El.t -> unit
+val clear : unit -> unit
