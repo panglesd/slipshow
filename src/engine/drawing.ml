@@ -146,13 +146,22 @@ type t = {
 }
 
 let start_shape svg =
-  do_if_drawing @@ fun { color; width; tool = _ } ->
+  do_if_drawing @@ fun { color; width; tool } ->
   let p = Brr.El.v ~ns:`SVG (Jstr.v "path") [] in
-  Brr.El.set_at (Jstr.v "stroke") (Some (Jstr.v (Color.to_string color))) p;
-  Brr.El.set_at (Jstr.v "stroke-width")
-    (Some (Jstr.v (Width.to_string width)))
-    p;
-  Brr.El.set_at (Jstr.v "fill") (Some (Jstr.v "none")) p;
+  let set_at at v = Brr.El.set_at (Jstr.v at) (Some (Jstr.v v)) p in
+  (match tool with
+  | Tool.Pen ->
+      set_at "stroke" (Color.to_string color);
+      set_at "stroke-width" (Width.to_string width);
+      set_at "fill" "none"
+  | Highlighter ->
+      set_at "stroke" (Color.to_string color);
+      set_at "stroke-linecap" "round";
+      set_at "stroke-width" (Width.to_string width ^ "0");
+      set_at "opacity" (string_of_float 0.4);
+      set_at "fill" "none"
+  | Eraser -> ()
+  | Pointer -> ());
   current_el := Some p;
   current_path := [];
   Brr.El.append_children svg [ p ]
