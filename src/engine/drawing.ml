@@ -139,12 +139,6 @@ let handle_mouse_move ev =
   | Some el ->
       Brr.El.set_at (Jstr.v "d") (Some (Jstr.v (svg_path !current_path))) el
 
-type t = {
-  mousemove : Brr.Ev.listener;
-  mousedown : Brr.Ev.listener;
-  mouseup : Brr.Ev.listener;
-}
-
 let start_shape svg =
   do_if_drawing @@ fun { color; width; tool } ->
   let p = Brr.El.v ~ns:`SVG (Jstr.v "path") [] in
@@ -158,7 +152,7 @@ let start_shape svg =
       set_at "stroke" (Color.to_string color);
       set_at "stroke-linecap" "round";
       set_at "stroke-width" (Width.to_string width ^ "0");
-      set_at "opacity" (string_of_float 0.4);
+      set_at "opacity" (string_of_float 0.33);
       set_at "fill" "none"
   | Eraser -> ()
   | Pointer -> ());
@@ -172,26 +166,21 @@ let end_shape () =
   current_path := []
 
 let connect svg =
-  let mousemove =
+  let _mousemove =
     Brr.Ev.listen Brr.Ev.mousemove handle_mouse_move
       (Brr.Document.as_target Brr.G.document)
   in
-  let mousedown =
+  let _mousedown =
     Brr.Ev.listen Brr.Ev.mousedown
       (fun _x -> start_shape svg)
       (Brr.Document.as_target Brr.G.document)
   in
-  let mouseup =
+  let _mouseup =
     Brr.Ev.listen Brr.Ev.mouseup
       (fun _x -> end_shape ())
       (Brr.Document.as_target Brr.G.document)
   in
-  { mousemove; mousedown; mouseup }
-
-let disconnect { mousemove; mousedown; mouseup } =
-  Brr.Ev.unlisten mousemove;
-  Brr.Ev.unlisten mousedown;
-  Brr.Ev.unlisten mouseup
+  ()
 
 let setup el =
   let content =

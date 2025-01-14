@@ -29,6 +29,9 @@ let setup ?initial_step (window : Window.window) =
     let current_coord = State.get_coord () in
     let () =
       match key with
+      | "w" -> Drawing.State.set_tool Pen
+      | "h" -> Drawing.State.set_tool Highlighter
+      | "x" -> Drawing.State.set_tool Pointer
       | "l" ->
           let _ : unit Fut.t =
             Window.move_relative_pure
