@@ -17,57 +17,78 @@ module Width = struct
   type t = Small | Medium | Large
 
   let to_string = function Small -> "1" | Medium -> "3" | Large -> "5"
+end
 
-  let to_string' = function
-    | Small -> "small"
-    | Medium -> "medium"
-    | Large -> "large"
+module Tool = struct
+  type t = Pen | Highlighter | Eraser | Pointer
+
+  let to_string = function
+    | Pen -> "pen"
+    | Highlighter -> "highlighter"
+    | Eraser -> "eraser"
+    | Pointer -> "cursor"
+end
+
+module Button = struct
+  let get suffix =
+    Brr.El.find_first_by_selector (Jstr.v (".slip-toolbar-" ^ suffix))
+    |> Option.get
+
+  let tool t = get (Tool.to_string t)
+  let color c = get (Color.to_string c)
+
+  let width (w : Width.t) =
+    let s = function
+      | Width.Small -> "small"
+      | Medium -> "medium"
+      | Large -> "large"
+    in
+    get (s w)
 end
 
 module State : sig
-  type tool = Pen | Highlighter | Eraser | Pointer
-  type t = { color : Color.t; width : Width.t; tool : tool }
+  type t = { color : Color.t; width : Width.t; tool : Tool.t }
 
   val get_state : unit -> t
   val set_color : Color.t -> unit
   val set_width : Width.t -> unit
-  val set_tool : tool -> unit
+  val set_tool : Tool.t -> unit
 end = struct
-  type tool = Pen | Highlighter | Eraser | Pointer
-  type t = { color : Color.t; width : Width.t; tool : tool }
+  type t = { color : Color.t; width : Width.t; tool : Tool.t }
 
   let color = ref Color.Blue
   let width = ref Width.Medium
-  let tool = ref Pointer
+  let tool = ref Tool.Pointer
   let get_state () = { color = !color; width = !width; tool = !tool }
 
-  let select_color s =
-    let color =
-      Brr.El.find_first_by_selector (Jstr.v (".slip-toolbar-" ^ s))
-      |> Option.get
-    in
-    Brr.El.fold_find_by_selector
-      (fun e () -> Brr.El.set_class (Jstr.v "slip-set-color") false e)
-      (Jstr.v ".slip-set-color") ();
-    Brr.El.set_class (Jstr.v "slip-set-color") true color
+  type 'a kind =
+    | Tool : Tool.t kind
+    | Color : Color.t kind
+    | Width : Width.t kind
 
-  let set_color c =
-    select_color (Color.to_string c);
-    color := c
+  let selected_class (type a) = function
+    | (Tool : a kind) -> "slip-set-tool"
+    | Width -> "slip-set-width"
+    | Color -> "slip-set-color"
 
-  let select_width s =
-    let color =
-      Brr.El.find_first_by_selector (Jstr.v (".slip-toolbar-" ^ s))
-      |> Option.get
-    in
-    Brr.El.fold_find_by_selector
-      (fun e () -> Brr.El.set_class (Jstr.v "slip-set-width") false e)
-      (Jstr.v ".slip-set-width") ();
-    Brr.El.set_class (Jstr.v "slip-set-width") true color
+  let button : type a. a kind -> a -> Brr.El.t = function
+    | (Tool : a kind) -> Button.tool
+    | Width -> Button.width
+    | Color -> Button.color
 
-  let set_width w =
-    select_width (Width.to_string' w);
-    width := w
+  let state_ref : type a. a kind -> a ref = function
+    | (Tool : a kind) -> tool
+    | Width -> width
+    | Color -> color
+
+  let set_current kind e =
+    let class_ = Jstr.v (selected_class kind) in
+    Brr.El.find_by_class class_ |> List.iter (Brr.El.set_class class_ false);
+    Brr.El.set_class class_ true (button kind e);
+    state_ref kind := e
+
+  let set_color c = set_current Color c
+  let set_width w = set_current Width w
 
   let make_active () =
     let open_windows =
@@ -92,30 +113,13 @@ end = struct
     Brr.El.set_class (Jstr.v "active") false toolbar;
     Brr.El.set_inline_style (Jstr.v "pointer-events") (Jstr.v "") open_window
 
-  let select s =
-    let tool =
-      Brr.El.find_first_by_selector (Jstr.v (".slip-toolbar-" ^ s))
-      |> Option.get
-    in
-    Brr.El.fold_find_by_selector
-      (fun e () -> Brr.El.set_class (Jstr.v "slip-set-tool") false e)
-      (Jstr.v ".slip-set-tool") ();
-    Brr.El.set_class (Jstr.v "slip-set-tool") true tool
-
   let set_tool t =
     let () =
       match t with
-      | Pen | Highlighter | Eraser -> make_active ()
+      | Tool.Pen | Highlighter | Eraser -> make_active ()
       | Pointer -> make_inactive ()
     in
-    let () =
-      match t with
-      | Pen -> select "pen"
-      | Highlighter -> select "highlighter"
-      | Eraser -> select "eraser"
-      | Pointer -> select "cursor"
-    in
-    tool := t
+    set_current Tool t
 end
 
 let svg_path path =
@@ -143,7 +147,6 @@ let do_if_drawing f =
 
 let handle_mouse_move ev =
   do_if_drawing @@ fun _ ->
-  Brr.Console.(log [ coord_of_event ev ]);
   check_is_pressed ev @@ fun () ->
   extend_shape (coord_of_event ev);
   match !current_el with
@@ -159,7 +162,6 @@ type t = {
 
 let start_shape svg =
   do_if_drawing @@ fun { color; width; tool = _ } ->
-  Brr.Console.(log [ "coolor is "; Color.to_string color ]);
   let p = Brr.El.v ~ns:`SVG (Jstr.v "path") [] in
   Brr.El.set_at (Jstr.v "stroke") (Some (Jstr.v (Color.to_string color))) p;
   Brr.El.set_at (Jstr.v "stroke-width")
@@ -182,16 +184,12 @@ let connect svg =
   in
   let mousedown =
     Brr.Ev.listen Brr.Ev.mousedown
-      (fun _x ->
-        Brr.Console.(log [ "mouse down" ]);
-        start_shape svg)
+      (fun _x -> start_shape svg)
       (Brr.Document.as_target Brr.G.document)
   in
   let mouseup =
     Brr.Ev.listen Brr.Ev.mouseup
-      (fun _x ->
-        Brr.Console.(log [ "mouse up" ]);
-        end_shape ())
+      (fun _x -> end_shape ())
       (Brr.Document.as_target Brr.G.document)
   in
   { mousemove; mousedown; mouseup }
@@ -243,71 +241,27 @@ let setup el =
   let svg =
     Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing") |> Option.get
   in
-  (* let universe = *)
-  (*   Brr.El.find_first_by_selector (Jstr.v "#universe") |> Option.get *)
-  (* in *)
   let _ : unit Fut.t =
     let open Fut.Syntax in
     let+ () = Fut.tick ~ms:0 in
-    let pen =
-      Brr.El.find_first_by_selector (Jstr.v ".slip-toolbar-pen") |> Option.get
-    in
-    let cursor =
-      Brr.El.find_first_by_selector (Jstr.v ".slip-toolbar-cursor")
-      |> Option.get
-    in
-    let highlighter =
-      Brr.El.find_first_by_selector (Jstr.v ".slip-toolbar-highlighter")
-      |> Option.get
-    in
-    let eraser =
-      Brr.El.find_first_by_selector (Jstr.v ".slip-toolbar-eraser")
-      |> Option.get
-    in
-    let black =
-      Brr.El.find_first_by_selector (Jstr.v ".slip-toolbar-black") |> Option.get
-    in
-    let blue =
-      Brr.El.find_first_by_selector (Jstr.v ".slip-toolbar-blue") |> Option.get
-    in
-    let red =
-      Brr.El.find_first_by_selector (Jstr.v ".slip-toolbar-red") |> Option.get
-    in
-    let green =
-      Brr.El.find_first_by_selector (Jstr.v ".slip-toolbar-green") |> Option.get
-    in
-    let yellow =
-      Brr.El.find_first_by_selector (Jstr.v ".slip-toolbar-yellow")
-      |> Option.get
-    in
-    let small =
-      Brr.El.find_first_by_selector (Jstr.v ".slip-toolbar-small") |> Option.get
-    in
-    let medium =
-      Brr.El.find_first_by_selector (Jstr.v ".slip-toolbar-medium")
-      |> Option.get
-    in
-    let large =
-      Brr.El.find_first_by_selector (Jstr.v ".slip-toolbar-large") |> Option.get
-    in
-    let add_listener setter value elem =
+    let add_listener setter button value =
       ignore
       @@ Brr.Ev.listen Brr.Ev.click
            (fun _ -> setter value)
-           (Brr.El.as_target elem)
+           (Brr.El.as_target (button value))
     in
-    add_listener State.set_tool Pen pen;
-    add_listener State.set_tool Highlighter highlighter;
-    add_listener State.set_tool Eraser eraser;
-    add_listener State.set_tool Pointer cursor;
-    add_listener State.set_color Black black;
-    add_listener State.set_color Blue blue;
-    add_listener State.set_color Red red;
-    add_listener State.set_color Green green;
-    add_listener State.set_color Yellow yellow;
-    add_listener State.set_width Small small;
-    add_listener State.set_width Medium medium;
-    add_listener State.set_width Large large
+    add_listener State.set_tool Button.tool Pen;
+    add_listener State.set_tool Button.tool Highlighter;
+    add_listener State.set_tool Button.tool Eraser;
+    add_listener State.set_tool Button.tool Pointer;
+    add_listener State.set_color Button.color Black;
+    add_listener State.set_color Button.color Blue;
+    add_listener State.set_color Button.color Red;
+    add_listener State.set_color Button.color Green;
+    add_listener State.set_color Button.color Yellow;
+    add_listener State.set_width Button.width Small;
+    add_listener State.set_width Button.width Medium;
+    add_listener State.set_width Button.width Large
   in
   let () =
     State.set_width Medium;
