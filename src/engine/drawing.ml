@@ -91,27 +91,12 @@ end = struct
   let set_width w = set_current Width w
 
   let make_active () =
-    let open_windows =
-      Brr.El.find_first_by_selector (Jstr.v "#open-window") |> Option.get
-    in
-    let toolbar =
-      Brr.El.find_first_by_selector (Jstr.v ".slip-writing-toolbar")
-      |> Option.get
-    in
-    Brr.El.set_class (Jstr.v "active") true toolbar;
-    Brr.El.set_inline_style (Jstr.v "pointer-events") (Jstr.v "none")
-      open_windows
+    let body = Brr.Document.body Brr.G.document in
+    Brr.El.set_class (Jstr.v "drawing") true body
 
   let make_inactive () =
-    let open_window =
-      Brr.El.find_first_by_selector (Jstr.v "#open-window") |> Option.get
-    in
-    let toolbar =
-      Brr.El.find_first_by_selector (Jstr.v ".slip-writing-toolbar")
-      |> Option.get
-    in
-    Brr.El.set_class (Jstr.v "active") false toolbar;
-    Brr.El.set_inline_style (Jstr.v "pointer-events") (Jstr.v "") open_window
+    let body = Brr.Document.body Brr.G.document in
+    Brr.El.set_class (Jstr.v "drawing") false body
 
   let set_tool t =
     let () =
