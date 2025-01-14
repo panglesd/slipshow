@@ -1,9 +1,9 @@
-let all_paths = ref []
+let all_paths = Hashtbl.create 10
 let is_pressed = ( != ) 0
 
 type drawing_state =
   | Drawing of (float * float) list * Brr.El.t
-  | Erasing of float * float
+  | Erasing of (float * float)
   | Pointing
 
 let current_drawing_state = ref Pointing
@@ -134,7 +134,47 @@ let check_is_pressed ev f =
 let do_if_drawing f =
   match State.get_state () with { tool = Pointer; _ } -> () | state -> f state
 
-let handle_mouse_move ev =
+let intersect (p1, p2) (q1, q2) =
+  (* https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/ *)
+  let orientation (x1, y1) (x2, y2) (x3, y3) =
+    let value = ((y2 -. y1) *. (x3 -. x2)) -. ((x2 -. x1) *. (y3 -. y2)) in
+    if value > 0. then `Counter_clockwise
+    else if value < 0. then `Clockwise
+    else `Collinear
+  in
+  let on_segment (x1, y1) (x2, y2) (x3, y3) =
+    x2 >= Float.min x1 x3
+    && x2 <= Float.max x1 x3
+    && y2 >= Float.min y1 y3
+    && y2 <= Float.max y1 y3
+  in
+  let o1 = orientation p1 p2 q1 in
+  let o2 = orientation p1 p2 q2 in
+  let o3 = orientation q1 q2 p1 in
+  let o4 = orientation q1 q2 p2 in
+  if o1 <> o2 && o3 <> o4 then true
+    (* Special case: collinear points lying on each other's segments *)
+  else if o1 = `Colinear && on_segment p1 q1 p2 then true
+  else if o2 = `Colinear && on_segment p1 q2 p2 then true
+  else if o3 = `Colinear && on_segment q1 p1 q2 then true
+  else if o4 = `Colinear && on_segment q1 p2 q2 then true
+  else false
+
+let intersect_poly p segment =
+  match p with
+  | [] -> false
+  | first :: rest -> (
+      try
+        let _last_point =
+          List.fold_left
+            (fun p1 p2 ->
+              if intersect (p1, p2) segment then raise Not_found else p2)
+            first rest
+        in
+        false
+      with Not_found -> true)
+
+let continue_shape ev =
   check_is_pressed ev @@ fun () ->
   do_if_drawing @@ fun { tool = _; _ } ->
   match !current_drawing_state with
@@ -142,10 +182,19 @@ let handle_mouse_move ev =
       let path = coord_of_event ev :: path in
       current_drawing_state := Drawing (path, el);
       Brr.El.set_at (Jstr.v "d") (Some (Jstr.v (svg_path path))) el
-  | Erasing _ -> ()
+  | Erasing last_point ->
+      let current_point = coord_of_event ev in
+      Hashtbl.iter
+        (fun elem path ->
+          if intersect_poly path (current_point, last_point) then (
+            Hashtbl.remove all_paths elem;
+            Brr.El.remove elem))
+        all_paths;
+      current_drawing_state := Erasing current_point;
+      ()
   | Pointing -> ()
 
-let start_shape svg =
+let start_shape svg ev =
   do_if_drawing @@ fun { color; width; tool } ->
   let p = Brr.El.v ~ns:`SVG (Jstr.v "path") [] in
   let set_at at v = Brr.El.set_at (Jstr.v at) (Some (Jstr.v v)) p in
@@ -162,25 +211,24 @@ let start_shape svg =
       set_at "opacity" (string_of_float 0.33);
       set_at "fill" "none";
       current_drawing_state := Drawing ([], p)
-  | Eraser -> ()
+  | Eraser -> current_drawing_state := Erasing (coord_of_event ev)
   | Pointer -> ());
   Brr.El.append_children svg [ p ]
 
 let end_shape () =
   do_if_drawing @@ fun _ ->
   (match !current_drawing_state with
-  | Drawing (path, _) -> all_paths := path :: !all_paths
+  | Drawing (path, el) -> Hashtbl.add all_paths el path
   | _ -> ());
   current_drawing_state := Pointing
 
 let connect svg =
   let _mousemove =
-    Brr.Ev.listen Brr.Ev.mousemove handle_mouse_move
+    Brr.Ev.listen Brr.Ev.mousemove continue_shape
       (Brr.Document.as_target Brr.G.document)
   in
   let _mousedown =
-    Brr.Ev.listen Brr.Ev.mousedown
-      (fun _x -> start_shape svg)
+    Brr.Ev.listen Brr.Ev.mousedown (start_shape svg)
       (Brr.Document.as_target Brr.G.document)
   in
   let _mouseup =
