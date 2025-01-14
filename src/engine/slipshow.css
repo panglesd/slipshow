@@ -65,86 +65,93 @@ h1 {
 }
 
 #slip-counter {
-    position:fixed;
-    bottom: 0;
-    right: 0;
-    background-color: white;
-    padding:5px;
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  background-color: white;
+  padding: 5px;
 }
 
-.slip-writing-toolbar:hover, .slip-writing-toolbar.active {
-    width: 32px;
-    height: 640px;
+.drawing #open-window {
+  pointer-events: none;
+}
+
+.slip-writing-toolbar:hover,
+.drawing .slip-writing-toolbar {
+  width: 32px;
+  height: 640px;
 }
 .slip-writing-toolbar {
-    background-color: white;
-    overflow: hidden;
-    transition: width 0.5s, height 0.5s;
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    left: 0;
-    width:32px;
-    height:32px;
-    z-index: 10;
-    border-radius: 0px 0px 16px 16px;
+  background-color: white;
+  overflow: hidden;
+  transition:
+    width 0.5s,
+    height 0.5s;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0;
+  width: 32px;
+  height: 32px;
+  z-index: 10;
+  border-radius: 0px 0px 16px 16px;
 }
 
 .slip-writing-toolbar > * {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
 }
 .slip-writing-toolbar > * > * {
-    width: 30px;
-    height: 30px;
-    border: 1px solid black;
-    border-radius: 30px;
-    transition: border-radius 0.5s;
+  width: 30px;
+  height: 30px;
+  border: 1px solid black;
+  border-radius: 30px;
+  transition: border-radius 0.5s;
 }
 .slip-writing-toolbar > .slip-toolbar-color > .slip-toolbar-red {
-    background-color: red;
+  background-color: red;
 }
 .slip-writing-toolbar > .slip-toolbar-color > .slip-toolbar-black {
-    background-color: black;
+  background-color: black;
 }
 .slip-writing-toolbar > .slip-toolbar-color > .slip-toolbar-blue {
-    background-color: blue;
+  background-color: blue;
 }
 .slip-writing-toolbar > .slip-toolbar-color > .slip-toolbar-green {
-    background-color: green;
+  background-color: green;
 }
 .slip-writing-toolbar > .slip-toolbar-color > .slip-toolbar-yellow {
-    background-color: yellow;
+  background-color: yellow;
 }
 .slip-writing-toolbar > * > * {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .slip-writing-toolbar > .slip-toolbar-width > * > * {
-    width: 14px;
-    border-radius: 16px;
+  width: 14px;
+  border-radius: 16px;
 }
 
 .slip-writing-toolbar > .slip-toolbar-width > .slip-toolbar-small > * {
-    border: 1px solid black;
+  border: 1px solid black;
 }
 .slip-writing-toolbar > .slip-toolbar-width > .slip-toolbar-medium > * {
-    border: 2px solid black;
+  border: 2px solid black;
 }
 .slip-writing-toolbar > .slip-toolbar-width > .slip-toolbar-large > * {
-    border: 4px solid black;
+  border: 4px solid black;
 }
-.slip-set-tool, .slip-set-width {
-    background-color: lightsteelblue;
-    border-radius: 5px;
+.slip-set-tool,
+.slip-set-width {
+  background-color: lightsteelblue;
+  border-radius: 5px;
 }
 
-.slip-set-color
-{
-    height: 25px;
-    width: 25px;
-    border: 3px solid steelblue;
-    border-radius: 5px;
+.slip-set-color {
+  height: 25px;
+  width: 25px;
+  border: 3px solid steelblue;
+  border-radius: 5px;
 }
