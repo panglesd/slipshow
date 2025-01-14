@@ -1,6 +1,12 @@
-let current_path = ref []
-let current_el = ref None
+let all_paths = ref []
 let is_pressed = ( != ) 0
+
+type drawing_state =
+  | Drawing of (float * float) list * Brr.El.t
+  | Erasing of float * float
+  | Pointing
+
+let current_drawing_state = ref Pointing
 
 module Color = struct
   type t = Red | Blue | Green | Black | Yellow
@@ -122,8 +128,6 @@ let coord_of_event ev =
   let x = Brr.Ev.Mouse.client_x mouse and y = Brr.Ev.Mouse.client_y mouse in
   (x, y) |> Normalization.translate_coords |> Window.translate_coords
 
-let extend_shape x = current_path := x :: !current_path
-
 let check_is_pressed ev f =
   if is_pressed (ev |> Brr.Ev.as_type |> Brr.Ev.Mouse.buttons) then f () else ()
 
@@ -131,13 +135,15 @@ let do_if_drawing f =
   match State.get_state () with { tool = Pointer; _ } -> () | state -> f state
 
 let handle_mouse_move ev =
-  do_if_drawing @@ fun _ ->
   check_is_pressed ev @@ fun () ->
-  extend_shape (coord_of_event ev);
-  match !current_el with
-  | None -> ()
-  | Some el ->
-      Brr.El.set_at (Jstr.v "d") (Some (Jstr.v (svg_path !current_path))) el
+  do_if_drawing @@ fun { tool = _; _ } ->
+  match !current_drawing_state with
+  | Drawing (path, el) ->
+      let path = coord_of_event ev :: path in
+      current_drawing_state := Drawing (path, el);
+      Brr.El.set_at (Jstr.v "d") (Some (Jstr.v (svg_path path))) el
+  | Erasing _ -> ()
+  | Pointing -> ()
 
 let start_shape svg =
   do_if_drawing @@ fun { color; width; tool } ->
@@ -147,23 +153,25 @@ let start_shape svg =
   | Tool.Pen ->
       set_at "stroke" (Color.to_string color);
       set_at "stroke-width" (Width.to_string width);
-      set_at "fill" "none"
+      set_at "fill" "none";
+      current_drawing_state := Drawing ([], p)
   | Highlighter ->
       set_at "stroke" (Color.to_string color);
       set_at "stroke-linecap" "round";
       set_at "stroke-width" (Width.to_string width ^ "0");
       set_at "opacity" (string_of_float 0.33);
-      set_at "fill" "none"
+      set_at "fill" "none";
+      current_drawing_state := Drawing ([], p)
   | Eraser -> ()
   | Pointer -> ());
-  current_el := Some p;
-  current_path := [];
   Brr.El.append_children svg [ p ]
 
 let end_shape () =
   do_if_drawing @@ fun _ ->
-  current_el := None;
-  current_path := []
+  (match !current_drawing_state with
+  | Drawing (path, _) -> all_paths := path :: !all_paths
+  | _ -> ());
+  current_drawing_state := Pointing
 
 let connect svg =
   let _mousemove =
