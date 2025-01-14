@@ -1,4 +1,9 @@
 let all_paths = Hashtbl.create 10
+
+let remove elem =
+  Hashtbl.remove all_paths elem;
+  Brr.El.remove elem
+
 let is_pressed = ( != ) 0
 
 type drawing_state =
@@ -50,6 +55,8 @@ module Button = struct
       | Large -> "large"
     in
     get (s w)
+
+  let clear () = get "clear"
 end
 
 module State : sig
@@ -186,9 +193,7 @@ let continue_shape ev =
       let current_point = coord_of_event ev in
       Hashtbl.iter
         (fun elem path ->
-          if intersect_poly path (current_point, last_point) then (
-            Hashtbl.remove all_paths elem;
-            Brr.El.remove elem))
+          if intersect_poly path (current_point, last_point) then remove elem)
         all_paths;
       current_drawing_state := Erasing current_point;
       ()
@@ -237,6 +242,8 @@ let connect svg =
       (Brr.Document.as_target Brr.G.document)
   in
   ()
+
+let clear () = Hashtbl.iter (fun elem _ -> remove elem) all_paths
 
 let setup el =
   let content =
@@ -300,7 +307,8 @@ let setup el =
     add_listener State.set_color Button.color Yellow;
     add_listener State.set_width Button.width Small;
     add_listener State.set_width Button.width Medium;
-    add_listener State.set_width Button.width Large
+    add_listener State.set_width Button.width Large;
+    add_listener clear Button.clear ()
   in
   let () =
     State.set_width Medium;

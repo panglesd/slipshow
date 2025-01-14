@@ -33,6 +33,7 @@ let setup ?initial_step (window : Window.window) =
       | "h" -> Drawing.State.set_tool Highlighter
       | "x" -> Drawing.State.set_tool Pointer
       | "e" -> Drawing.State.set_tool Eraser
+      | "X" -> Drawing.clear ()
       | "l" ->
           let _ : unit Fut.t =
             Window.move_relative_pure
