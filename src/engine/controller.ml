@@ -1,9 +1,30 @@
 open Fut.Syntax
 
+let in_queue =
+  let running = ref false in
+  let queue = Queue.create () in
+  let wait_in_queue () =
+    if !running then (
+      let fut, cont = Fut.create () in
+      Queue.add cont queue;
+      fut)
+    else (
+      running := true;
+      Fut.return ())
+  in
+  let next_in_queue () =
+    match Queue.take_opt queue with
+    | None ->
+        running := false;
+        ()
+    | Some cont -> cont ()
+  in
+  fun f ->
+    let* () = wait_in_queue () in
+    let+ () = f () in
+    next_in_queue ()
+
 let setup ?initial_step (window : Window.window) =
-  (* let svg = *)
-  (*   Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing") |> Option.get *)
-  (* in *)
   let target = Brr.Window.as_target Brr.G.window in
   let all_undos = Stack.create () in
   let go_next () =
@@ -64,19 +85,21 @@ let setup ?initial_step (window : Window.window) =
           ()
       | "ArrowRight" | "ArrowDown" | " " ->
           let _ : unit Fut.t =
+            in_queue @@ fun () ->
             let+ () = go_next () in
             Messaging.send_step ()
           in
           ()
-      | "ArrowLeft" | "ArrowUp" -> (
-          match Stack.pop_opt all_undos with
-          | None -> ()
-          | Some undo ->
-              let _ : unit Fut.t =
+      | "ArrowLeft" | "ArrowUp" ->
+          let _ : unit Fut.t =
+            in_queue @@ fun () ->
+            match Stack.pop_opt all_undos with
+            | None -> Fut.return ()
+            | Some undo ->
                 let+ () = undo () in
                 Messaging.send_step ()
-              in
-              ())
+          in
+          ()
       | "a" ->
           let _ : unit Fut.t =
             let+ (), undos =
