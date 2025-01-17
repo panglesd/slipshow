@@ -281,7 +281,7 @@ let setup el =
               </div>
           </div> |}
   in
-  let d = Brr.El.div [] in
+  let d = Brr.El.div ~at:[ Brr.At.id (Jstr.v "slip-drawing-toolbar") ] [] in
   Jv.set (Brr.El.to_jv d) "innerHTML" (Jv.of_string content);
   Brr.El.append_children el [ d ];
   let svg =
