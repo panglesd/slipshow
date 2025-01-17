@@ -6,6 +6,7 @@ let start id step =
   let body = Brr.El.find_first_by_selector (Jstr.v "body") |> Option.get in
   let* () = Normalization.setup el in
   let* window = Window.setup el in
+  let () = Table_of_content.generate window el in
   (* TODO: move out of here *)
   let () = Rescaler.setup_rescalers () in
   let () = Drawing.setup body in
@@ -16,9 +17,14 @@ let start id step =
         Brr.G.window |> Brr.Window.location |> Brr.Uri.fragment
         |> Jstr.to_string |> int_of_string_opt
   in
+  let* () =
+    match initial_step with
+    | None -> Fut.return ()
+    | Some step -> Next.goto step window
+  in
   let* () = Browser.History.set_hash "" |> UndoMonad.discard in
-  let* () = Next.update_pause_ancestors () |> UndoMonad.discard in
-  let* () = Controller.setup ?initial_step window in
+  let* () = Actions.update_pause_ancestors () |> UndoMonad.discard in
+  let () = Controller.setup window in
   let () = Messaging.set_id id in
   let () = Messaging.send_ready () in
   Fut.return ()

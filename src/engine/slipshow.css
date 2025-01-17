@@ -60,7 +60,7 @@ body {
   opacity: 0;
 }
 
-h1 {
+h1:not(#slip-toc h1) {
   text-align: center;
 }
 
@@ -74,6 +74,12 @@ h1 {
 
 .drawing #open-window {
   pointer-events: none;
+}
+
+#slip-drawing-toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
 }
 
 .slip-writing-toolbar:hover,
@@ -156,4 +162,42 @@ h1 {
   width: 25px;
   border: 3px solid steelblue;
   border-radius: 5px;
+}
+
+.slip-toc-mode #slip-toc {
+  display: block;
+}
+
+#slip-toc {
+  position: fixed;
+  overflow: scroll;
+  opacity: 0.98;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  min-width: 30%;
+  padding: 30px;
+  background: rosybrown;
+  display: none;
+  z-index: 100;
+}
+
+.slip-step {
+  display: inline-block;
+  border: 1px solid black;
+  border-radius: 3px;
+  padding: 5px;
+  padding-bottom: 0px;
+  margin: 5px;
+  margin-left: 0;
+  margin-right: 10px;
+}
+
+.slip-only-step,
+.slip-toc-content {
+  display: inline-block;
+}
+
+.slip-toc-entry {
+  cursor: pointer;
 }
