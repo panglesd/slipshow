@@ -22,7 +22,7 @@ let start id step =
   let* () =
     match initial_step with
     | None -> Fut.return @@ Next.actualize ()
-    | Some step -> Next.goto step window
+    | Some step -> Window.with_fast_moving @@ fun () -> Next.goto step window
   in
   let () = Controller.setup window in
   let () = Messaging.set_id id in
