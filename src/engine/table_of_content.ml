@@ -1,7 +1,7 @@
 let ( !! ) = Jstr.v
 let inner_text = Brr.El.Prop.jstr !!"innerText"
 
-let entry window step tag_name content =
+let entry window step ~tag_name ~content =
   let step_elem =
     match step with
     | None -> []
@@ -30,6 +30,7 @@ let entry window step tag_name content =
     | None -> ()
     | Some step ->
         Brr.El.set_class !!"slip-toc-entry" true el;
+        Brr.El.set_class !!("slip-step-" ^ string_of_int step) true el;
         let _unistener =
           Brr.Ev.listen Brr.Ev.click
             (fun _ ->
@@ -53,7 +54,7 @@ let categorize window step el =
         let content = Brr.El.prop inner_text el in
         (content, Brr.El.tag_name el)
     | _ ->
-        let cap = 100 in
+        let cap = 80 in
         let content = Jstr.slice ~stop:cap (Brr.El.prop inner_text el) in
         let content =
           if Jstr.length (Brr.El.prop inner_text el) > cap then
@@ -62,7 +63,7 @@ let categorize window step el =
         in
         (content, !!"div")
   in
-  let el = entry window step tag_name content in
+  let el = entry window step ~tag_name ~content in
   (el, step)
 
 let generate window root =
@@ -76,5 +77,6 @@ let generate window root =
       (0, [])
     |> snd |> List.rev
   in
+  let els = entry window (Some 0) ~tag_name:!!"div" ~content:!!"" :: els in
   let toc_el = Brr.El.div ~at:[ Brr.At.id !!"slip-toc" ] els in
   Brr.El.append_children (Brr.Document.body Brr.G.document) [ toc_el ]
