@@ -10,6 +10,8 @@ type previewer
     When you have a previewer, you can preview a source. For the moment, it has
     to be a {e source}: you cannot pass it a compiled file. *)
 
-val create_previewer : Brr.El.t -> previewer
+val create_previewer :
+  ?initial_stage:int -> ?callback:(int -> unit) -> Brr.El.t -> previewer
+
 val preview : previewer -> string -> unit
 val preview_compiled : previewer -> Slipshow.delayed -> unit
