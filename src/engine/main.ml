@@ -17,13 +17,13 @@ let start id step =
         Brr.G.window |> Brr.Window.location |> Brr.Uri.fragment
         |> Jstr.to_string |> int_of_string_opt
   in
-  let* () =
-    match initial_step with
-    | None -> Fut.return ()
-    | Some step -> Next.goto step window
-  in
   let* () = Browser.History.set_hash "" |> UndoMonad.discard in
   let* () = Actions.update_pause_ancestors () |> UndoMonad.discard in
+  let* () =
+    match initial_step with
+    | None -> Fut.return @@ Next.actualize ()
+    | Some step -> Next.goto step window
+  in
   let () = Controller.setup window in
   let () = Messaging.set_id id in
   let () = Messaging.send_ready () in
