@@ -51,7 +51,15 @@ let setup el =
   in
   { rotate_container; scale_container; universe }
 
+let fast_move = ref false
+
+let with_fast_moving f =
+  fast_move := true;
+  let+ () = f () in
+  fast_move := false
+
 let move_pure window ({ x; y; scale } as target : Coordinates.window) ~delay =
+  let delay = if !fast_move then 0. else delay in
   State.set_coord target;
   let left = -.x +. (Constants.width /. 2.) in
   let top = -.y +. (Constants.height /. 2.) in
