@@ -175,7 +175,7 @@ h1:not(#slip-toc h1) {
   top: 0;
   left: 0;
   bottom: 0;
-  min-width: 30%;
+  min-width: 25%;
   padding: 30px;
   background: rosybrown;
   display: none;
@@ -200,4 +200,8 @@ h1:not(#slip-toc h1) {
 
 .slip-toc-entry {
   cursor: pointer;
+}
+
+.slip-current-step .slip-step {
+  background-color: red;
 }

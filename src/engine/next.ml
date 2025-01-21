@@ -25,6 +25,25 @@ let in_queue =
     next_in_queue ()
 
 let all_undos = Stack.create ()
+let ( !! ) = Jstr.v
+
+let actualize () =
+  let () =
+    Brr.El.fold_find_by_selector
+      (fun el () -> Brr.El.set_class !!"slip-current-step" false el)
+      !!".slip-current-step" ()
+  in
+  let () =
+    match
+      Brr.El.find_first_by_selector
+        !!(".slip-step-" ^ string_of_int (State.get_step ()))
+    with
+    | None -> ()
+    | Some el ->
+        Brr.El.scroll_into_view ~align_v:`Nearest ~behavior:`Smooth el;
+        Brr.El.set_class !!"slip-current-step" true el
+  in
+  Messaging.send_step ()
 
 let go_next window n =
   in_queue @@ fun () ->
@@ -39,7 +58,7 @@ let go_next window n =
           loop (n - 1)
   in
   let+ () = loop n in
-  Messaging.send_step ()
+  actualize ()
 
 let go_prev _window n =
   in_queue @@ fun () ->
@@ -53,7 +72,7 @@ let go_prev _window n =
           loop (n - 1)
   in
   let+ () = loop n in
-  Messaging.send_step ()
+  actualize ()
 
 let goto step window =
   let current_step = State.get_step () in

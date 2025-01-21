@@ -1,5 +1,5 @@
 (library
  (name communication)
+ (public_name slipshow.communication)
  (libraries brr sexplib)
- (package slipshow)
  (preprocess (pps ppx_sexp_conv)))
