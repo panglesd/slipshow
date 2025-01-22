@@ -64,4 +64,12 @@ let setup (window : Window.window) =
     ()
   in
   let _listener = Brr.Ev.listen Brr.Ev.keydown callback target in
+  let mobile_callback (ev : Brr.Ev.Pointer.t Brr.Ev.t) =
+    let type_ = Brr.Ev.Pointer.type' (Brr.Ev.as_type ev) |> Jstr.to_string in
+    if String.equal "touch" type_ then
+      let _ : unit Fut.t = Next.go_next window 1 in
+      ()
+    else ()
+  in
+  let _listener = Brr.Ev.listen Brr.Ev.pointerup mobile_callback target in
   ()
