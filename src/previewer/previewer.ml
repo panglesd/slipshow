@@ -6,7 +6,6 @@ end
 
 type previewer = { stage : int ref; index : int ref; panels : Brr.El.t array }
 
-let string_of_stage stage = string_of_int stage
 let ids = [| "p1"; "p2" |]
 
 let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ()) root =
