@@ -14,6 +14,7 @@ module State : sig
   val set_color : Color.t -> unit
   val set_width : Width.t -> unit
   val set_tool : Tool.t -> unit
+  val get_tool : unit -> Tool.t
 end
 
 val setup : Brr.El.t -> unit
