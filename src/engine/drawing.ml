@@ -66,6 +66,7 @@ module State : sig
   val set_color : Color.t -> unit
   val set_width : Width.t -> unit
   val set_tool : Tool.t -> unit
+  val get_tool : unit -> Tool.t
 end = struct
   type t = { color : Color.t; width : Width.t; tool : Tool.t }
 
@@ -118,6 +119,8 @@ end = struct
       | Pointer -> make_inactive ()
     in
     set_current Tool t
+
+  let get_tool () = !tool
 end
 
 let svg_path path =
@@ -131,12 +134,16 @@ let svg_path path =
   String.concat " " res
 
 let coord_of_event ev =
-  let mouse = Brr.Ev.as_type ev in
+  let mouse = Brr.Ev.as_type ev |> Brr.Ev.Pointer.as_mouse in
   let x = Brr.Ev.Mouse.client_x mouse and y = Brr.Ev.Mouse.client_y mouse in
   (x, y) |> Normalization.translate_coords |> Window.translate_coords
 
 let check_is_pressed ev f =
-  if is_pressed (ev |> Brr.Ev.as_type |> Brr.Ev.Mouse.buttons) then f () else ()
+  if
+    is_pressed
+      (ev |> Brr.Ev.as_type |> Brr.Ev.Pointer.as_mouse |> Brr.Ev.Mouse.buttons)
+  then f ()
+  else ()
 
 let do_if_drawing f =
   match State.get_state () with { tool = Pointer; _ } -> () | state -> f state
@@ -229,15 +236,15 @@ let end_shape () =
 
 let connect svg =
   let _mousemove =
-    Brr.Ev.listen Brr.Ev.mousemove continue_shape
+    Brr.Ev.listen Brr.Ev.pointermove continue_shape
       (Brr.Document.as_target Brr.G.document)
   in
-  let _mousedown =
-    Brr.Ev.listen Brr.Ev.mousedown (start_shape svg)
+  let _pointerdown =
+    Brr.Ev.listen Brr.Ev.pointerdown (start_shape svg)
       (Brr.Document.as_target Brr.G.document)
   in
-  let _mouseup =
-    Brr.Ev.listen Brr.Ev.mouseup
+  let _pointerup =
+    Brr.Ev.listen Brr.Ev.pointerup
       (fun _x -> end_shape ())
       (Brr.Document.as_target Brr.G.document)
   in
