@@ -205,3 +205,8 @@ h1:not(#slip-toc h1) {
 .slip-current-step .slip-step {
   background-color: red;
 }
+
+body {
+  touch-action: pinch-zoom;
+}
+
