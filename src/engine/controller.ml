@@ -67,7 +67,7 @@ let keyboard_setup (window : Window.window) =
   ()
 
 let touch_setup (window : Window.window) =
-  let target = Brr.Window.as_target Brr.G.window in
+  let target = Brr.G.document |> Brr.Document.body |> Brr.El.as_target in
   let start = ref None in
   let coord_of_event ev =
     let mouse = Brr.Ev.as_type ev |> Brr.Ev.Pointer.as_mouse in
@@ -83,9 +83,13 @@ let touch_setup (window : Window.window) =
     else ()
   in
   let touchstart (ev : Brr.Ev.Pointer.t Brr.Ev.t) =
+    Brr.Ev.prevent_default ev;
+    Brr.Ev.stop_immediate_propagation ev;
+    Brr.Ev.stop_propagation ev;
     check_condition ev @@ fun () -> start := Some (coord_of_event ev)
   in
-  let _listener = Brr.Ev.listen Brr.Ev.pointerdown touchstart target in
+  let opts = Brr.Ev.listen_opts ~passive:false () in
+  let _listener = Brr.Ev.listen ~opts Brr.Ev.pointerdown touchstart target in
   let take_decision start (end_x, end_y) =
     match start with
     | None -> `None
@@ -98,10 +102,13 @@ let touch_setup (window : Window.window) =
           if abs_x > abs_y then (mov_x, abs_x, win_x) else (mov_y, abs_y, win_y)
         in
         if abs /. win < 0.1 then `None
-        else if mov <= 0. then `Backward
-        else `Forward
+        else if mov <= 0. then `Forward
+        else `Backward
   in
   let touchend (ev : Brr.Ev.Pointer.t Brr.Ev.t) =
+    Brr.Ev.prevent_default ev;
+    Brr.Ev.stop_immediate_propagation ev;
+    Brr.Ev.stop_propagation ev;
     check_condition ev @@ fun () ->
     let end_ = coord_of_event ev in
     let () =
@@ -116,7 +123,7 @@ let touch_setup (window : Window.window) =
     in
     start := None
   in
-  let _listener = Brr.Ev.listen Brr.Ev.pointerup touchend target in
+  let _listener = Brr.Ev.listen ~opts Brr.Ev.pointerup touchend target in
 
   ()
 
