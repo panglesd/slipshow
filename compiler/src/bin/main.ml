@@ -43,24 +43,24 @@ let compile =
   let slipshow_js_link =
     let doc =
       "Where to find the slipshow javascript file. Optional. When absent, use \
-       slipshow.0.0.26, embedded in this binary. If URL is an absolute URL, \
-       links to it, otherwise the content is embedded in the html file."
+       slipshow.%%VERSION%%, embedded in this binary. If URL is an absolute \
+       URL, links to it, otherwise the content is embedded in the html file."
     in
     Arg.(value & opt (some string) None & info ~docv:"URL" ~doc [ "slipshow" ])
   in
   let slip_css_link =
     let doc =
       "Where to find the slipshow javascript file. Optional. When absent, use \
-       slipshow.0.0.26, embedded in this binary. If URL is an absolute URL, \
-       links to it, otherwise the content is embedded in the html file."
+       slipshow.%%VERSION%%, embedded in this binary. If URL is an absolute \
+       URL, links to it, otherwise the content is embedded in the html file."
     in
     Arg.(value & opt (some string) None & info ~docv:"URL" ~doc [ "slip-css" ])
   in
   let theorem_css_link =
     let doc =
       "Where to find the slipshow javascript file. Optional. When absent, use \
-       slipshow.0.0.26, embedded in this binary. If URL is an absolute URL, \
-       links to it, otherwise the content is embedded in the html file."
+       slipshow.%%VERSION%%, embedded in this binary. If URL is an absolute \
+       URL, links to it, otherwise the content is embedded in the html file."
     in
     Arg.(
       value & opt (some string) None & info ~docv:"URL" ~doc [ "theorem-css" ])
