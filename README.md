@@ -83,5 +83,5 @@ The NLNet Foundation is [sponsoring](https://nlnet.nl/project/Slipshow/) the dev
 
 ## License
 
-MIT
+GPLv3
 
