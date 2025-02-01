@@ -7,8 +7,8 @@
   (:standard
    (:include static-linking-flags/flags)))
  (libraries
-   slipshow
-   bos
+  slipshow
+  bos
   cmdliner
   fpath
   logs.cli
