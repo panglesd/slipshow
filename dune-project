@@ -36,7 +36,9 @@
    (dream (>= "1.0.0~alpha5"))
    fpath
    (brr (>= "0.0.6"))
-   (ppx_blob (>= "0.8.0"))
+  (ppx_blob (>= "0.8.0"))
+   sexplib
+   ppx_sexp_conv
   (odoc :with-doc)
   (ocamlformat
    (and :with-dev-setup (= 0.26.2))))
