@@ -71,9 +71,29 @@ module AttributeActions = struct
     let action elem =
       let body = Jv.get (Brr.El.to_jv elem) "innerHTML" |> Jv.to_jstr in
       Brr.Console.(log [ body ]);
-      let args = Jv.Function.[ ("slip", fun () -> Jv.undefined) ] in
+      let args = Jv.Function.[ ("slip", Fun.id) ] in
       let f = Jv.Function.v ~body ~args in
-      let u = f () in
+      let arg =
+        Jv.obj
+          [|
+            ( "set_class",
+              Jv.callback ~arity:3 @@ fun elem style value ->
+              let old_value =
+                let old_value = Brr.El.inline_style style elem in
+                if Jstr.equal old_value Jstr.empty then None else Some old_value
+              in
+              Brr.El.set_inline_style style value elem;
+              let undo _ =
+                Fut.return
+                @@
+                match old_value with
+                | None -> Brr.El.remove_inline_style style elem
+                | Some old_value -> Brr.El.set_inline_style style old_value elem
+              in
+              Jv.callback ~arity:1 undo );
+          |]
+      in
+      let u = f arg in
       let undo () =
         Fut.return @@ try ignore @@ Jv.call u "undo" [||] with _ -> ()
       in
