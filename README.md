@@ -79,5 +79,5 @@ You can issue a Pull Request of any kind, report a bug, ask for a new feature, s
 
 ## License
 
-MIT
+GPLv3
 
