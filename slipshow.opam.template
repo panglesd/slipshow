@@ -1,0 +1,3 @@
+pin-depends: [
+  "brr.dev" "git+https://github.com/panglesd/brr.git#bindings-window-inner-size"
+]
