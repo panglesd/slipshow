@@ -1,0 +1,8 @@
+(executable
+ (modes js)
+ (name main)
+ (libraries communication brr sexplib))
+
+(rule
+ (action
+  (copy main.bc.js slipshow.js)))

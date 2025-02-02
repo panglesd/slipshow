@@ -1,5 +1,0 @@
-(test
- (name slipshow))
-
-(cram
- (deps %{bin:slipshow}))
