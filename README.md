@@ -77,6 +77,10 @@ You're ready to go! Have a look at the syntax, or the full tutorial for a more g
 
 You can issue a Pull Request of any kind, report a bug, ask for a new feature, suggest an enhancement on the documentation (or make a Pull Request)... You can also [write a theme](https://slipshow.readthedocs.io/en/latest/themes.html#writing-a-theme).
 
+## Support
+
+The NLNet Foundation is [sponsoring](https://nlnet.nl/project/Slipshow/) the development in 2025 through the [NGI Commons Fund](https://nlnet.nl/commonsfund/) with funds from the European Commission. Thanks a lot!
+
 ## License
 
 MIT
