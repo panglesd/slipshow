@@ -27,7 +27,7 @@ depends: [
   "fpath"
   "brr" {>= "0.0.6"}
   "ppx_blob" {>= "0.8.0"}
-  "odoc" {with-doc}
+  "odoc" {with-doc & <= "2.4.4"}
   "ocamlformat" {with-dev-setup & = "0.26.2"}
 ]
 build: [
