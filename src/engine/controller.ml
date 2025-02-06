@@ -113,9 +113,16 @@ let touch_setup (window : Window.window) =
         else `Backward
   in
   let touchend (ev : Brr.Ev.Pointer.t Brr.Ev.t) =
-    Brr.Ev.prevent_default ev;
-    Brr.Ev.stop_immediate_propagation ev;
-    Brr.Ev.stop_propagation ev;
+    let type_ = Brr.Ev.Pointer.type' (Brr.Ev.as_type ev) |> Jstr.to_string in
+    let stop_here () =
+      Brr.Ev.prevent_default ev;
+      Brr.Ev.stop_immediate_propagation ev;
+      Brr.Ev.stop_propagation ev
+    in
+    if
+      String.equal "touch" type_
+      && Drawing.State.get_tool () = Drawing.Tool.Pointer
+    then stop_here ();
     check_condition ev @@ fun () ->
     let end_ = coord_of_event ev in
     let () =
