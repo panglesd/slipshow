@@ -26,6 +26,7 @@
   dune
   (crunch :with-dev-setup)
    cmdliner
+   (conf-pkg-config (= "3"))
    base64
    bos
    lwt
