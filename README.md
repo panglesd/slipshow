@@ -1,6 +1,6 @@
 # slipshow
 
-![](full_logo.png)
+![](full_logo_big.svg)
 
 **Slipshow is a tool specifically designed for technical presentations where traditional slides are not enough.**
 
