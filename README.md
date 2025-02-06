@@ -1,5 +1,7 @@
 # slipshow
 
+![](full_logo.png)
+
 **Slipshow is a tool specifically designed for technical presentations where traditional slides are not enough.**
 
 In a slipshow presentation, the equivalent of a slide is called a _slip_. Each slip is like a slide, but with no bottom limit. That is, the content can be arbitrarily long! During the presentation, the camera will "scroll" down to reveal the hidden content, following a script given by the presenter!
