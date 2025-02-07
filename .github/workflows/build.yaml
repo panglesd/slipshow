@@ -19,7 +19,7 @@ jobs:
         #   - platform: { name: "linux/arm64", filename_suffix: "linux-arm64", target_arch: "arm64"  }
         #     runAllTests: false
       fail-fast: false
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
 
     env:
       SLIPSHOW_PLATFORM: ${{ matrix.platform.name }}
