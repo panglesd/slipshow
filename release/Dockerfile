@@ -4,9 +4,6 @@ RUN sudo apk add openssl-libs-static
 WORKDIR slipshow/
 
 COPY --chown=opam *.opam .
-
-ENV PTHREAD_STACK_MIN 2097152
-
 RUN opam install -y --deps-only --with-test --with-doc .
 
 COPY --chown=opam . .
