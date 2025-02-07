@@ -38,7 +38,7 @@
    fpath
    (brr (>= "0.0.6"))
    (ppx_blob (>= "0.8.0"))
-  (odoc (and :with-doc (<= 2.4.4 )))
+  (odoc :with-doc)
   (ocamlformat
    (and :with-dev-setup (= 0.26.2))))
  (tags
