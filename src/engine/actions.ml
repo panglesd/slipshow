@@ -67,6 +67,20 @@ module AttributeActions = struct
   let unemph _window elem =
     act_on_elem "unemph-at-unpause" (set_class "emphasized" false) elem
 
+  let enter window elem =
+    let action elem =
+      let> () = State.Focus.push (State.get_coord ()) in
+      Window.enter window elem
+    in
+    act_on_elem "enter" action elem
+
+  let exit window elem =
+    let action _elem =
+      let> coord = State.Focus.pop () in
+      Window.move window coord ~delay:1.0
+    in
+    act_on_elem "exit" action elem
+
   let execute _window elem =
     let action elem =
       let body = Jv.get (Brr.El.to_jv elem) "innerHTML" |> Jv.to_jstr in
@@ -121,6 +135,8 @@ module AttributeActions = struct
         emph;
         unemph;
         execute;
+        enter;
+        exit;
       ]
 end
 

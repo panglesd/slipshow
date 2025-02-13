@@ -19,7 +19,7 @@ body {
   width: 1440px;
   transform-origin: top left;
   /* Borders make margin of inner elements not leak outside */
-  border: 0.00001px solid transparent;
+  border: 0.01px solid transparent;
 }
 
 .slip-rescaler {
