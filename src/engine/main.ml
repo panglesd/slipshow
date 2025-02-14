@@ -7,7 +7,7 @@ let start id step =
   let* () = Normalization.setup el in
   let* window = Window.setup el in
   let () = Table_of_content.generate window el in
-  (* TODO: move out of here *)
+  (* TODO: move out of here (Later: Why?) *)
   let () = Rescaler.setup_rescalers () in
   let () = Drawing.setup body in
   let initial_step =

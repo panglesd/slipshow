@@ -1,7 +1,7 @@
 (executable
  (modes js)
  (name main)
- (libraries communication brr sexplib))
+ (libraries communication brr))
 
 (rule
  (action
