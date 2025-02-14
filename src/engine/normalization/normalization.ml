@@ -28,7 +28,7 @@ let replace_open_window window =
   let open_window = window.open_window in
   let set_state ~left ~right ~top ~bottom ~width ~height =
     state := { left; (* right; *) top; (* bottom; *) scale = !state.scale };
-    Css.set
+    Browser.Css.set
       [
         Left left;
         Right right;
@@ -65,7 +65,7 @@ let replace_open_window window =
       (window_w, window_h)
   in
   state := { !state with scale = window_w /. width };
-  Css.set [ Scale (window_w /. width) ] window.format_container
+  Browser.Css.set [ Scale (window_w /. width) ] window.format_container
 
 let create el =
   let format_container =

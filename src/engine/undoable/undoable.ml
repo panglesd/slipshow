@@ -17,3 +17,5 @@ let discard x = Fut.map fst x
 module Syntax = struct
   let ( let> ) x f = bind f x
 end
+
+module Browser = Browser_

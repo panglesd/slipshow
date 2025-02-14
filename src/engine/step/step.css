@@ -1,0 +1,24 @@
+.pauseAncestor ~ * {
+  opacity: 0;
+}
+
+[pause] {
+  opacity: 0;
+}
+
+.unstatic {
+  position: absolute;
+  visibility: hidden;
+}
+
+.unrevealed {
+  opacity: 0;
+}
+
+#slip-counter {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  background-color: white;
+  padding: 5px;
+}

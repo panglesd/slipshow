@@ -8,3 +8,5 @@ val discard : 'a t -> 'a Fut.t
 module Syntax : sig
   val ( let> ) : 'a t -> ('a -> 'b t) -> 'b t
 end
+
+module Browser = Browser_

@@ -1,0 +1,41 @@
+.slip-toc-mode #slip-toc {
+  display: block;
+}
+
+#slip-toc {
+  position: fixed;
+  overflow: scroll;
+  opacity: 0.98;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  min-width: 25%;
+  padding: 30px;
+  background: rosybrown;
+  display: none;
+  z-index: 100;
+}
+
+.slip-step {
+  display: inline-block;
+  border: 1px solid black;
+  border-radius: 3px;
+  padding: 5px;
+  padding-bottom: 0px;
+  margin: 5px;
+  margin-left: 0;
+  margin-right: 10px;
+}
+
+.slip-only-step,
+.slip-toc-content {
+  display: inline-block;
+}
+
+.slip-toc-entry {
+  cursor: pointer;
+}
+
+.slip-current-step .slip-step {
+  background-color: red;
+}

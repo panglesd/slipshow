@@ -1,8 +1,8 @@
-let keyboard_setup (window : Window.window) =
+let keyboard_setup (window : Universe.Window.window) =
   let target = Brr.Window.as_target Brr.G.window in
   let callback ev =
     let key = ev |> Brr.Ev.as_type |> Brr.Ev.Keyboard.key |> Jstr.to_string in
-    let current_coord = State.get_coord () in
+    let current_coord = Universe.State.get_coord () in
     let () =
       match key with
       | "t" ->
@@ -16,46 +16,47 @@ let keyboard_setup (window : Window.window) =
       | "X" -> Drawing.clear ()
       | "l" ->
           let _ : unit Fut.t =
-            Window.move_relative_pure
+            Universe.Window.move_relative_pure
               ~x:(30. *. 1. /. current_coord.scale)
               window ~delay:0.
           in
           ()
       | "j" ->
           let _ : unit Fut.t =
-            Window.move_relative_pure
+            Universe.Window.move_relative_pure
               ~x:(-30. *. 1. /. current_coord.scale)
               window ~delay:0.
           in
           ()
       | "k" ->
           let _ : unit Fut.t =
-            Window.move_relative_pure
+            Universe.Window.move_relative_pure
               ~y:(30. *. 1. /. current_coord.scale)
               window ~delay:0.
           in
           ()
       | "i" ->
           let _ : unit Fut.t =
-            Window.move_relative_pure
+            Universe.Window.move_relative_pure
               ~y:(-30. *. 1. /. current_coord.scale)
               window ~delay:0.
           in
           ()
       | "ArrowRight" | "ArrowDown" | " " ->
-          let _ : unit Fut.t = Next.go_next window 1 in
+          let _ : unit Fut.t = Step.Next.go_next window 1 in
           ()
       | "ArrowLeft" | "ArrowUp" ->
-          let _ : unit Fut.t = Next.go_prev window 1 in
+          let _ : unit Fut.t = Step.Next.go_prev window 1 in
           ()
       | "z" ->
           let _ : unit Fut.t =
-            Window.move_relative_pure ~scale:1.02 window ~delay:0.
+            Universe.Window.move_relative_pure ~scale:1.02 window ~delay:0.
           in
           ()
       | "Z" ->
           let _ : unit Fut.t =
-            Window.move_relative_pure ~scale:(1. /. 1.02) window ~delay:0.
+            Universe.Window.move_relative_pure ~scale:(1. /. 1.02) window
+              ~delay:0.
           in
           ()
       | _ -> ()
@@ -66,7 +67,7 @@ let keyboard_setup (window : Window.window) =
   let _listener = Brr.Ev.listen Brr.Ev.keydown callback target in
   ()
 
-let touch_setup (window : Window.window) =
+let touch_setup (window : Universe.Window.window) =
   let target = Brr.G.document |> Brr.Document.body |> Brr.El.as_target in
   let start = ref None in
   let coord_of_event ev =
@@ -129,10 +130,10 @@ let touch_setup (window : Window.window) =
       match take_decision !start end_ with
       | `None -> ()
       | `Forward ->
-          let _ : unit Fut.t = Next.go_next window 1 in
+          let _ : unit Fut.t = Step.Next.go_next window 1 in
           ()
       | `Backward ->
-          let _ : unit Fut.t = Next.go_prev window 1 in
+          let _ : unit Fut.t = Step.Next.go_prev window 1 in
           ()
     in
     start := None
@@ -141,6 +142,6 @@ let touch_setup (window : Window.window) =
 
   ()
 
-let setup (window : Window.window) =
+let setup (window : Universe.Window.window) =
   keyboard_setup window;
   touch_setup window

@@ -5,10 +5,10 @@ let start id step =
   in
   let body = Brr.El.find_first_by_selector (Jstr.v "body") |> Option.get in
   let* () = Normalization.setup el in
-  let* window = Window.setup el in
+  let* window = Universe.Window.setup el in
   let () = Table_of_content.generate window el in
   (* TODO: move out of here (Later: Why?) *)
-  let () = Rescaler.setup_rescalers () in
+  let () = Rescale.setup_rescalers () in
   let () = Drawing.setup body in
   let initial_step =
     match step with
@@ -17,16 +17,17 @@ let start id step =
         Brr.G.window |> Brr.Window.location |> Brr.Uri.fragment
         |> Jstr.to_string |> int_of_string_opt
   in
-  let* () = Browser.History.set_hash "" |> UndoMonad.discard in
-  let* () = Actions.update_pause_ancestors () |> UndoMonad.discard in
+  let _history = Browser.History.set_hash "" in
+  let* () = Step.Actions.update_pause_ancestors () |> Undoable.discard in
   let* () =
     match initial_step with
-    | None -> Fut.return @@ Next.actualize ()
-    | Some step -> Window.with_fast_moving @@ fun () -> Next.goto step window
+    | None -> Fut.return @@ Step.Next.actualize ()
+    | Some step ->
+        Universe.Window.with_fast_moving @@ fun () -> Step.Next.goto step window
   in
   let () = Controller.setup window in
-  let () = Messaging.set_id id in
-  let () = Messaging.send_ready () in
+  let () = Step.Messaging.set_id id in
+  let () = Step.Messaging.send_ready () in
   Fut.return ()
 
 let () =

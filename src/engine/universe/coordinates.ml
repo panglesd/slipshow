@@ -1,7 +1,8 @@
+open Brr
+open Constants
+
 type window = { x : float; y : float; scale : float }
 type element = { x : float; y : float; width : float; height : float }
-
-open Brr
 
 let get elem =
   let get_coord_in_parent elem =
@@ -41,33 +42,26 @@ let get elem =
 
 module Window_of_elem = struct
   let focus elem =
-    let scale1 = Constants.width /. elem.width
-    and scale2 = Constants.height /. elem.height in
+    let scale1 = width /. elem.width and scale2 = height /. elem.height in
     let scale = Float.min scale1 scale2 in
     { scale; x = elem.x; y = elem.y }
 
   let enter elem =
-    let scale = Constants.width /. elem.width in
-    let y =
-      elem.y -. (elem.height /. 2.) +. (Constants.height /. 2. /. scale)
-    in
+    let scale = width /. elem.width in
+    let y = elem.y -. (elem.height /. 2.) +. (height /. 2. /. scale) in
     { scale; x = elem.x; y }
 
   let up ?(margin = 13.5) ~current elem =
     let margin = margin /. current.scale in
     let y =
-      elem.y -. (elem.height /. 2.)
-      +. (Constants.height /. 2. /. current.scale)
-      -. margin
+      elem.y -. (elem.height /. 2.) +. (height /. 2. /. current.scale) -. margin
     in
     { current with y }
 
   let down ?(margin = 13.5) ~current elem =
     let margin = margin /. current.scale in
     let y =
-      elem.y +. (elem.height /. 2.)
-      -. (Constants.height /. 2. /. current.scale)
-      +. margin
+      elem.y +. (elem.height /. 2.) -. (height /. 2. /. current.scale) +. margin
     in
     { current with y }
 

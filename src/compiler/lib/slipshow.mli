@@ -11,7 +11,6 @@ val string_to_delayed : string -> delayed
 val delayed :
   ?math_link:asset ->
   ?slip_css_link:asset ->
-  ?theorem_css_link:asset ->
   ?slipshow_js_link:asset ->
   ?resolve_images:(string -> asset) ->
   string ->
@@ -26,7 +25,6 @@ val convert :
   ?starting_state:starting_state ->
   ?math_link:asset ->
   ?slip_css_link:asset ->
-  ?theorem_css_link:asset ->
   ?slipshow_js_link:asset ->
   ?resolve_images:(string -> asset) ->
   string ->
