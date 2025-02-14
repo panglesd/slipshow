@@ -25,7 +25,9 @@ module Focus = struct
     UndoMonad.return ~undo (Stack.push c stack)
 
   let pop () =
-    let value = Stack.pop stack in
-    let undo () = Fut.return @@ Stack.push value stack in
+    let value = Stack.pop_opt stack in
+    let undo () =
+      Fut.return @@ Option.iter (fun v -> Stack.push v stack) value
+    in
     UndoMonad.return ~undo value
 end
