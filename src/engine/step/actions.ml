@@ -172,9 +172,12 @@ let update_history () =
   Undoable.Browser.History.set_hash (string_of_int n)
 
 let clear_pause window elem =
-  let> () = set_at "pause" None elem in
-  let> () = set_at "step" None elem in
-  let> () = update_pause_ancestors () in
+  let> () =
+    if Option.is_some @@ Brr.El.at (Jstr.v "pause") elem then
+      let> () = set_at "pause" None elem in
+      update_pause_ancestors ()
+    else set_at "step" None elem
+  in
   let> () = AttributeActions.do_ window elem in
   let> () = update_history () in
   Undoable.return ()
