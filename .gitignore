@@ -1,18 +1,6 @@
-# NPM / YARN
+# NPM / YARN (just in case)
 node_modules
 yarn-error.log
 
-# BUILD ARTEFACTS
-dist
-staged_dist
-/bin/
-.cache
-.parcel-cache
-
-# DOC BUILD ARTEFACTS
+# dune
 _build
-_static
-_templates
-
-.tern-port
-/engine/slipshow.js
