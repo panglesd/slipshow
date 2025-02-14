@@ -5,5 +5,5 @@ val incr_step : unit -> unit UndoMonad.t
 
 module Focus : sig
   val push : Coordinates.window -> unit UndoMonad.t
-  val pop : unit -> Coordinates.window UndoMonad.t
+  val pop : unit -> Coordinates.window option UndoMonad.t
 end
