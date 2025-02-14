@@ -77,7 +77,9 @@ module AttributeActions = struct
   let exit window elem =
     let action _elem =
       let> coord = State.Focus.pop () in
-      Window.move window coord ~delay:1.0
+      match coord with
+      | None -> UndoMonad.return ()
+      | Some coord -> Window.move window coord ~delay:1.0
     in
     act_on_elem "exit" action elem
 
@@ -135,8 +137,8 @@ module AttributeActions = struct
         emph;
         unemph;
         execute;
-        enter;
         exit;
+        enter;
       ]
 end
 
