@@ -1,5 +1,14 @@
 Salut !
 
+{pause up}
+One
+
+{step up}
+Two
+
+{pause up}
+Three
+
 <style>
 .red { background-color: red }
 </style>
