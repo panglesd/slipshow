@@ -1,4 +1,6 @@
-let find_next_pause () =
+let find_next_pause () = Brr.El.find_first_by_selector (Jstr.v "[pause]")
+
+let find_next_pause_or_step () =
   Brr.El.find_first_by_selector (Jstr.v "[pause], [step]")
 
 open UndoMonad.Syntax
@@ -173,6 +175,6 @@ let clear_pause window elem =
   UndoMonad.return ()
 
 let next window () =
-  match find_next_pause () with
+  match find_next_pause_or_step () with
   | None -> None
   | Some pause -> Some (clear_pause window pause)
