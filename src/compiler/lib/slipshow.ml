@@ -19,22 +19,16 @@ let slip_css_element = function
   | Some (Remote r) -> Format.sprintf {|<link href="%s" rel="stylesheet" />|} r
   | None -> Format.sprintf "<style>%s</style>" Data_files.(read Slip_css)
 
-let theorem_css_element = function
-  | Some (Local { content = t; _ }) -> Format.sprintf "<style>%s</style>" t
-  | Some (Remote r) -> Format.sprintf {|<link href="%s" rel="stylesheet" />|} r
-  | None -> Format.sprintf "<style>%s</style>" Data_files.(read Theorem_css)
-
 let slipshow_js_element slipshow_link =
   match slipshow_link with
   | Some (Local { content = t; _ }) -> Format.sprintf "<script>%s</script>" t
   | Some (Remote r) -> Format.sprintf "<script src=\"%s\"></script>" r
   | None -> Format.sprintf "<script>%s</script>" Data_files.(read Slipshow_js)
 
-let embed_in_page content ~has_math ~math_link ~slip_css_link ~theorem_css_link
-    ~slipshow_js_link =
+let embed_in_page content ~has_math ~math_link ~slip_css_link ~slipshow_js_link
+    =
   let mathjax_element = mathjax_element has_math math_link in
   let slip_css_element = slip_css_element slip_css_link in
-  let theorem_css_element = theorem_css_element theorem_css_link in
   let slipshow_js_element = slipshow_js_element slipshow_js_link in
   let highlight_css_element =
     "<style>" ^ Data_files.(read Highlight_css) ^ "</style>"
@@ -52,7 +46,6 @@ let embed_in_page content ~has_math ~math_link ~slip_css_link ~theorem_css_link
 <html>
   <head>
     <meta charset="utf-8" />
-    %s
     %s
     %s
     %s
@@ -80,7 +73,7 @@ let embed_in_page content ~has_math ~math_link ~slip_css_link ~theorem_css_link
     <script>hljs.highlightAll();</script>
     <script>
       startSlipshow(|}
-      mathjax_element slip_css_element theorem_css_element highlight_css_element
+      mathjax_element slip_css_element highlight_css_element
       highlight_js_element highlight_js_ocaml_element content
       slipshow_js_element
   in
@@ -99,7 +92,7 @@ let string_to_delayed s =
   let s = s |> Base64.decode |> Result.get_ok in
   Marshal.from_string s 0
 
-let delayed ?math_link ?slip_css_link ?theorem_css_link ?slipshow_js_link
+let delayed ?math_link ?slip_css_link ?slipshow_js_link
     ?(resolve_images = fun x -> Remote x) s =
   let md = Cmarkit.Doc.of_string ~heading_auto_ids:true ~strict:false s in
   let md = Cmarkit.Mapper.map_doc (Mappings.of_cmarkit resolve_images) md in
@@ -107,8 +100,7 @@ let delayed ?math_link ?slip_css_link ?theorem_css_link ?slipshow_js_link
     Cmarkit_renderer.doc_to_string Renderers.custom_html_renderer md
   in
   let has_math = Folders.has_math md in
-  embed_in_page ~has_math ~math_link ~slip_css_link ~theorem_css_link
-    ~slipshow_js_link content
+  embed_in_page ~has_math ~math_link ~slip_css_link ~slipshow_js_link content
 
 let add_starting_state (start, end_) starting_state =
   let starting_state =
@@ -118,10 +110,9 @@ let add_starting_state (start, end_) starting_state =
   in
   start ^ starting_state ^ end_
 
-let convert ?starting_state ?math_link ?slip_css_link ?theorem_css_link
-    ?slipshow_js_link ?(resolve_images = fun x -> Remote x) s =
+let convert ?starting_state ?math_link ?slip_css_link ?slipshow_js_link
+    ?(resolve_images = fun x -> Remote x) s =
   let delayed =
-    delayed ?math_link ?slip_css_link ?theorem_css_link ?slipshow_js_link
-      ~resolve_images s
+    delayed ?math_link ?slip_css_link ?slipshow_js_link ~resolve_images s
   in
   add_starting_state delayed starting_state

@@ -3,39 +3,42 @@ let find_next_pause () = Brr.El.find_first_by_selector (Jstr.v "[pause]")
 let find_next_pause_or_step () =
   Brr.El.find_first_by_selector (Jstr.v "[pause], [step]")
 
-open UndoMonad.Syntax
+open Undoable.Syntax
 open Fut.Syntax
 
-let set_class c b elem : unit UndoMonad.t =
+let set_class c b elem : unit Undoable.t =
   let c = Jstr.v c in
   let old_class = Brr.El.class' c elem in
   let res = Brr.El.set_class c b elem in
   let undo () = Fut.return @@ Brr.El.set_class c old_class elem in
-  UndoMonad.return ~undo res
+  Undoable.return ~undo res
 
 let set_at at v elem =
   let at = Jstr.v at in
   let old_at = Brr.El.at at elem in
   let res = Brr.El.set_at at v elem in
   let undo () = Fut.return @@ Brr.El.set_at at old_at elem in
-  UndoMonad.return ~undo res
+  Undoable.return ~undo res
 
 module AttributeActions = struct
   let act_on_elem class_ action elem =
     match Brr.El.at (Jstr.v class_) elem with
-    | None -> UndoMonad.return ()
+    | None -> Undoable.return ()
     | Some v when Jstr.equal Jstr.empty v -> action elem
     | Some v -> (
         let id = Jstr.concat [ Jstr.v "#"; v ] in
         match Brr.El.find_first_by_selector id with
-        | None -> UndoMonad.return ()
+        | None -> Undoable.return ()
         | Some elem -> action elem)
 
-  let up window elem = act_on_elem "up-at-unpause" (Window.up window) elem
-  let down window elem = act_on_elem "down-at-unpause" (Window.down window) elem
+  let up window elem =
+    act_on_elem "up-at-unpause" (Universe.Window.up window) elem
+
+  let down window elem =
+    act_on_elem "down-at-unpause" (Universe.Window.down window) elem
 
   let center window elem =
-    act_on_elem "center-at-unpause" (Window.center window) elem
+    act_on_elem "center-at-unpause" (Universe.Window.center window) elem
 
   let unstatic _window elem =
     act_on_elem "unstatic-at-unpause" (set_class "unstatic" true) elem
@@ -45,8 +48,8 @@ module AttributeActions = struct
 
   let focus window elem =
     let action elem =
-      let> () = State.Focus.push (State.get_coord ()) in
-      Window.focus window elem
+      let> () = State.Focus.push (Universe.State.get_coord ()) in
+      Universe.Window.focus window elem
     in
     act_on_elem "focus-at-unpause" action elem
 
@@ -54,8 +57,8 @@ module AttributeActions = struct
     let action _elem =
       let> coord = State.Focus.pop () in
       match coord with
-      | None -> UndoMonad.return ()
-      | Some coord -> Window.move window coord ~delay:1.0
+      | None -> Undoable.return ()
+      | Some coord -> Universe.Window.move window coord ~delay:1.0
     in
     act_on_elem "unfocus-at-unpause" action elem
 
@@ -101,7 +104,7 @@ module AttributeActions = struct
       let undo () =
         Fut.return @@ try ignore @@ Jv.call u "undo" [||] with _ -> ()
       in
-      UndoMonad.return ~undo ()
+      Undoable.return ~undo ()
     in
     act_on_elem "exec-at-unpause" action elem
 
@@ -111,17 +114,17 @@ module AttributeActions = struct
       let> _acc = acc in
       f window elem
     in
-    List.fold_left do_ (UndoMonad.return ())
+    List.fold_left do_ (Undoable.return ())
       [
         unstatic;
         static;
         unreveal;
         reveal;
-        up;
+        unfocus;
         center;
         down;
         focus;
-        unfocus;
+        up;
         emph;
         unemph;
         execute;
@@ -134,18 +137,18 @@ let update_pause_ancestors () =
       (fun elem undoes ->
         let> () = undoes in
         set_class "pauseAncestor" false elem)
-      (Jstr.v ".pauseAncestor") (UndoMonad.return ())
+      (Jstr.v ".pauseAncestor") (Undoable.return ())
   in
   let> () =
     match find_next_pause () with
-    | None -> UndoMonad.return ()
+    | None -> Undoable.return ()
     | Some elem ->
         let rec hide_parent elem =
-          if Brr.El.class' (Jstr.v "universe") elem then UndoMonad.return ()
+          if Brr.El.class' (Jstr.v "universe") elem then Undoable.return ()
           else
             let> () = set_class "pauseAncestor" true elem in
             match Brr.El.parent elem with
-            | None -> UndoMonad.return ()
+            | None -> Undoable.return ()
             | Some elem -> hide_parent elem
         in
         hide_parent elem
@@ -161,12 +164,12 @@ let update_history () =
     let counter =
       Brr.El.find_first_by_selector (Jstr.v "#slip-counter") |> Option.get
     in
-    UndoMonad.return ~undo:(fun () ->
+    Undoable.return ~undo:(fun () ->
         Fut.return
         @@ Brr.El.set_children counter [ Brr.El.txt' (string_of_int prev_step) ])
     @@ Brr.El.set_children counter [ Brr.El.txt' (string_of_int n) ]
   in
-  Browser.History.set_hash (string_of_int n)
+  Undoable.Browser.History.set_hash (string_of_int n)
 
 let clear_pause window elem =
   let> () = set_at "pause" None elem in
@@ -174,7 +177,7 @@ let clear_pause window elem =
   let> () = update_pause_ancestors () in
   let> () = AttributeActions.do_ window elem in
   let> () = update_history () in
-  UndoMonad.return ()
+  Undoable.return ()
 
 let next window () =
   match find_next_pause_or_step () with

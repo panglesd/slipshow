@@ -1,7 +1,7 @@
 (executable
  (modes js)
  (name main)
- (libraries communication brr normalization css))
+ (libraries communication brr normalization browser rescale table_of_content undoable step universe drawing))
 
 (rule
  (action
@@ -12,4 +12,10 @@
   (with-stdout-to slipshow.css
    (progn
     (cat normalization/normalization.css)
-    (cat slip.css)))))
+    (cat rescale/rescale.css)
+    (cat themes/default.css)
+    (cat universe/universe.css)
+    (cat step/step.css)
+    (cat drawing/drawing.css)
+    (cat table_of_content/table_of_content.css)
+))))

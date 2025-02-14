@@ -1,0 +1,12 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background-color: black;
+}
+
+#universe {
+  position: absolute;
+  top: 0;
+  left: 0;
+}

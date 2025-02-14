@@ -10,8 +10,8 @@ let setup_log =
   Term.(const setup_log $ Fmt_cli.style_renderer () $ Logs_cli.level ())
 
 let compile =
-  let compile input output math_link slip_css_link theorem_css_link
-      slipshow_js_link watch serve () =
+  let compile input output math_link slip_css_link slipshow_js_link watch serve
+      () =
     let input = match input with "-" -> `Stdin | s -> `File (Fpath.v s) in
     let output_of_input input =
       match input with
@@ -26,7 +26,7 @@ let compile =
     in
     match
       Compile.compile ~input ~output ~math_link ~slip_css_link ~slipshow_js_link
-        ~theorem_css_link ~watch ~serve
+        ~watch ~serve
     with
     | Ok () -> Ok ()
     | Error (`Msg s) -> Error s
@@ -56,15 +56,6 @@ let compile =
     in
     Arg.(value & opt (some string) None & info ~docv:"URL" ~doc [ "slip-css" ])
   in
-  let theorem_css_link =
-    let doc =
-      "Where to find the slipshow javascript file. Optional. When absent, use \
-       slipshow.%%VERSION%%, embedded in this binary. If URL is an absolute \
-       URL, links to it, otherwise the content is embedded in the html file."
-    in
-    Arg.(
-      value & opt (some string) None & info ~docv:"URL" ~doc [ "theorem-css" ])
-  in
   let output =
     let doc =
       "Output file path. When absent, generate a filename based on the input \
@@ -90,7 +81,7 @@ let compile =
   in
   Term.(
     const compile $ input $ output $ math_link $ slip_css_link
-    $ theorem_css_link $ slipshow_js_link $ watch $ serve $ setup_log)
+    $ slipshow_js_link $ watch $ serve $ setup_log)
 
 let compile_cmd =
   let doc = "Compile a markdown file into a slipshow presentation" in

@@ -50,17 +50,16 @@ let to_asset s =
             f "Could not read file: %s. Considering it as an URL. (%s)" s e);
         Remote s
 
-let compile ~math_link ~slip_css_link ~theorem_css_link ~slipshow_js_link ~input
-    ~output ~watch ~serve =
+let compile ~math_link ~slip_css_link ~slipshow_js_link ~input ~output ~watch
+    ~serve =
   let math_link = Option.map to_asset math_link in
   let slip_css_link = Option.map to_asset slip_css_link in
-  let theorem_css_link = Option.map to_asset theorem_css_link in
   let slipshow_js_link = Option.map to_asset slipshow_js_link in
   let f () =
     let+ content = Io.read input in
     let html =
-      Slipshow.convert ?math_link ?slip_css_link ?theorem_css_link
-        ?slipshow_js_link ~resolve_images:to_asset content
+      Slipshow.convert ?math_link ?slip_css_link ?slipshow_js_link
+        ~resolve_images:to_asset content
     in
     match output with
     | `Stdout ->
@@ -78,8 +77,8 @@ let compile ~math_link ~slip_css_link ~theorem_css_link ~slipshow_js_link ~input
     if String.equal content "" then f2 ()
     else
       let result =
-        Slipshow.delayed ?math_link ?slip_css_link ?theorem_css_link
-          ?slipshow_js_link ~resolve_images:to_asset content
+        Slipshow.delayed ?math_link ?slip_css_link ?slipshow_js_link
+          ~resolve_images:to_asset content
       in
       (* let s = Slipshow.add_starting_state result None in *)
       (* let s = *)

@@ -1,0 +1,13 @@
+.slip {
+  width: 1440px;
+  transform-origin: top left;
+  /* Borders make margin of inner elements not leak outside */
+  border: 1px solid transparent;
+}
+
+.slip-rescaler {
+  overflow-x: hidden;
+  overflow-y: hidden;
+  width: unset;
+  height: unset;
+}

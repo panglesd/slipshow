@@ -136,7 +136,7 @@ let svg_path path =
 let coord_of_event ev =
   let mouse = Brr.Ev.as_type ev |> Brr.Ev.Pointer.as_mouse in
   let x = Brr.Ev.Mouse.client_x mouse and y = Brr.Ev.Mouse.client_y mouse in
-  (x, y) |> Normalization.translate_coords |> Window.translate_coords
+  (x, y) |> Normalization.translate_coords |> Universe.Window.translate_coords
 
 let check_is_pressed ev f =
   if

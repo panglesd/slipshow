@@ -1,3 +1,3 @@
 (library
- (name css)
+ (name rescale)
  (libraries brr))

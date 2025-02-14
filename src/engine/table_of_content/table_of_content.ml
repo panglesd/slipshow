@@ -34,7 +34,7 @@ let entry window step ~tag_name ~content =
         let _unistener =
           Brr.Ev.listen Brr.Ev.click
             (fun _ ->
-              let _ : unit Fut.t = Next.goto step window in
+              let _ : unit Fut.t = Step.Next.goto step window in
               ())
             (Brr.El.as_target el)
         in
