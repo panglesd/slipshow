@@ -45,9 +45,7 @@ let setup el =
   Brr.El.insert_siblings `Replace el [ rotate_container ];
   Brr.El.append_children universe [ el ];
   let+ () =
-    Css.set_pure
-      [ Width Constants.width; Height Constants.height ]
-      scale_container
+    Css.set [ Width Constants.width; Height Constants.height ] scale_container
   in
   { rotate_container; scale_container; universe }
 
@@ -63,11 +61,11 @@ let move_pure window ({ x; y; scale } as target : Coordinates.window) ~delay =
   State.set_coord target;
   let left = -.x +. (Constants.width /. 2.) in
   let top = -.y +. (Constants.height /. 2.) in
-  let+ () = Css.set_pure [ TransitionDuration delay ] window.scale_container
-  and+ () = Css.set_pure [ TransitionDuration delay ] window.rotate_container
-  and+ () = Css.set_pure [ TransitionDuration delay ] window.universe
-  and+ () = Css.set_pure [ Left left; Top top ] window.universe
-  and+ () = Css.set_pure [ Css.Scale scale ] window.scale_container in
+  let+ () = Css.set [ TransitionDuration delay ] window.scale_container
+  and+ () = Css.set [ TransitionDuration delay ] window.rotate_container
+  and+ () = Css.set [ TransitionDuration delay ] window.universe
+  and+ () = Css.set [ Left left; Top top ] window.universe
+  and+ () = Css.set [ Css.Scale scale ] window.scale_container in
   ()
 
 let move window target ~delay =

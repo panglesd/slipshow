@@ -1,0 +1,9 @@
+#open-window {
+  position: fixed;
+  overflow: hidden;
+  background-color: white;
+}
+
+.format-container {
+  transform-origin: top left;
+}
