@@ -2,6 +2,9 @@ open Brr
 open Fut.Syntax
 module Window = Brr.Window
 
+let width = 1440.
+let height = 1080.
+
 type t = { open_window : El.t; format_container : El.t }
 
 type state = {
@@ -18,14 +21,14 @@ let state =
 let translate_coords (x, y) =
   let x = (x -. !state.left) /. !state.scale
   and y = (y -. !state.top) /. !state.scale in
-  let x = x -. (Constants.width /. 2.) and y = y -. (Constants.height /. 2.) in
+  let x = x -. (width /. 2.) and y = y -. (height /. 2.) in
   (x, y)
 
 let replace_open_window window =
   let open_window = window.open_window in
   let set_state ~left ~right ~top ~bottom ~width ~height =
     state := { left; (* right; *) top; (* bottom; *) scale = !state.scale };
-    Css.set_pure
+    Css.set
       [
         Left left;
         Right right;
@@ -40,8 +43,8 @@ let replace_open_window window =
   let browser_h = foi @@ Window.inner_height G.window in
   let browser_w = foi @@ Window.inner_width G.window in
   let* window_w, _window_h =
-    if Constants.width *. browser_h < Constants.height *. browser_w then
-      let window_w = browser_h *. Constants.width /. Constants.height in
+    if width *. browser_h < height *. browser_w then
+      let window_w = browser_h *. width /. height in
       let window_h = browser_h in
       let+ () =
         set_state
@@ -51,7 +54,7 @@ let replace_open_window window =
       in
       (window_w, window_h)
     else
-      let window_h = browser_w *. Constants.height /. Constants.width in
+      let window_h = browser_w *. height /. width in
       let window_w = browser_w in
       let+ () =
         set_state
@@ -61,8 +64,8 @@ let replace_open_window window =
       in
       (window_w, window_h)
   in
-  state := { !state with scale = window_w /. Constants.width };
-  Css.set_pure [ Scale (window_w /. Constants.width) ] window.format_container
+  state := { !state with scale = window_w /. width };
+  Css.set [ Scale (window_w /. width) ] window.format_container
 
 let create el =
   let format_container =

@@ -1,8 +1,15 @@
 (executable
  (modes js)
  (name main)
- (libraries communication brr))
+ (libraries communication brr normalization css))
 
 (rule
  (action
   (copy main.bc.js slipshow.js)))
+
+(rule
+ (action
+  (with-stdout-to slipshow.css
+   (progn
+    (cat normalization/normalization.css)
+    (cat slip.css)))))
