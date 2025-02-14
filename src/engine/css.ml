@@ -1,12 +1,3 @@
-(* module Units = struct *)
-(* let px_n n = Jstr.v (string_of_int n ^ "px") *)
-(* let seconds s = Jstr.v (string_of_int s ^ "s") *)
-(* let px p = Jstr.v (string_of_int (int_of_float p) ^ "px") *)
-(* let css_scale s = Jstr.v ("scale(" ^ string_of_float s ^ ")") *)
-(* let deg d = Jstr.v (string_of_float d ^ "deg") *)
-(* let css_rotate d = Jstr.v ("rotate(" ^ string_of_float d ^ "deg)") *)
-(* end *)
-
 type property =
   | Scale of float
   | Rotate of float
