@@ -1,5 +1,5 @@
 
 
   $ slipshow cdl.md
-  $ cp cdl.html /tmp/
+$ cp cdl.html /tmp/
 
