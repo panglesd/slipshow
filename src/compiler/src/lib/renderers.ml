@@ -50,9 +50,9 @@ module RenderAttrs = struct
     f ();
     close_block ~with_newline c tag
 
-  let with_attrs c ?(with_newline = true) attrs f =
+  let with_attrs c ?(tag_name = "div") ?(with_newline = true) attrs f =
     if Attributes.is_empty attrs then f ()
-    else in_block c ~with_newline "div" attrs f
+    else in_block c ~with_newline tag_name attrs f
 
   let with_attrs_span c ?(with_newline = true) attrs f =
     if Attributes.is_empty attrs then f ()
@@ -88,6 +88,20 @@ let custom_html_renderer =
       | _ -> false (* let the default HTML renderer handle that *)
     in
     let block c = function
+      | Ast.Subslip ((b, (attrs, _)), _) ->
+          let attrs = Attributes.add_class attrs ("slip-rescaler", Meta.none) in
+          let attrs_slip =
+            Attributes.add_class Attributes.empty ("slip", Meta.none)
+          in
+          let attrs_body =
+            Attributes.add_class Attributes.empty ("slip-body", Meta.none)
+          in
+          let () =
+            RenderAttrs.with_attrs c attrs @@ fun () ->
+            RenderAttrs.with_attrs c attrs_slip @@ fun () ->
+            RenderAttrs.with_attrs c attrs_body @@ fun () -> Context.block c b
+          in
+          true
       | Ast.Div ((b, (attrs, _)), _) ->
           RenderAttrs.with_attrs c attrs (fun () -> Context.block c b);
           true
