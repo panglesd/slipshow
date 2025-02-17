@@ -1,7 +1,7 @@
 (executable
  (modes js)
  (name main)
- (libraries communication brr normalization browser rescale table_of_content undoable step universe drawing))
+ (libraries communication brr normalization browser rescale table_of_content undoable step universe drawing mouse_disappearing))
 
 (rule
  (action

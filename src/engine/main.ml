@@ -10,6 +10,7 @@ let start id step =
   (* TODO: move out of here (Later: Why?) *)
   let () = Rescale.setup_rescalers () in
   let () = Drawing.setup body in
+  let () = Mouse_disappearing.setup () in
   let initial_step =
     match step with
     | Some _ as step -> step
