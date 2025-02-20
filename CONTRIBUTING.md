@@ -78,3 +78,10 @@ slipshow-vscode$ vsce publish patch   # (or minor, major)
 Publish on open-vsx: connect to open-vsx, login and manually publish the new vsix.
 
 ### Update sliphub
+
+TODO
+
+## Vendoring
+
+Slipshow vendors a few modified dependencies. Currently it uses
+[git-vendor](https://github.com/brettlangdon/git-vendor).
