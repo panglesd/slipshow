@@ -244,6 +244,14 @@ link](example.com)]{attrs}, [attrs [within]{attrs1}]{attrs2}.
 Attributes can be attached without squares, for instance this{#idee} has an
 id. This `codeblock`{#too}! This ![image](as){#well}. [Links](work){#the .same}.
 
+{#id}
+## Title with an id
+
+{#id}
+Title with an id
+================
+
+
 ### Attributes definition
 
 We can provide [attributes][a] definition to [avoid][a] [cluttering] a [line with][a] attributes.

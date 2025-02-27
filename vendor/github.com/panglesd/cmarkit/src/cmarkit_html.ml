@@ -133,7 +133,7 @@ let add_attr c (key, value) = match value with
   | Some value -> C.string c (" " ^ key ^ "=" ^ value);
   | None -> C.string c (" " ^ key)
 
-let add_attrs c ?(include_id = true) attrs =
+let add_attrs c attrs =
   let kv_attrs =
     let kv_attrs = Cmarkit.Attributes.kv_attributes attrs in
     List.map
@@ -152,8 +152,8 @@ let add_attrs c ?(include_id = true) attrs =
   let id =
     let id = Cmarkit.Attributes.id attrs in
     match id with
-    | Some (id, _) when include_id -> ["id", Some ("\""^id^"\"") ]
-    | _ -> []
+    | Some (id, _) -> ["id", Some ("\""^id^"\"") ]
+    | None -> []
   in
   let attrs = id @ class' @ kv_attrs in
   List.iter (add_attr c) attrs
@@ -306,14 +306,7 @@ let link c l attrs = match Inline.Link.reference_definition (C.get_defs c) l wit
     let link, title = link_dest_and_title c ld in
     C.string c "<a href=\""; pct_encoded_string c link;
     C.string c "\"";
-    add_attrs c ~include_id:false attributes;
-    let id = Attributes.id attributes in
-    (match id with
-       None -> ()
-     | Some (id, _) ->
-        C.string c " id=\"";
-        html_escaped_string c id;
-        C.string c "\"";);
+    add_attrs c attributes;
     if title <> "" then
       (C.string c " title=\""; html_escaped_string c title; C.string c "\"");
     C.string c ">"; C.inline c (Inline.Link.text l); C.string c "</a>"
@@ -415,14 +408,22 @@ let code_block c attrs cb =
 let heading c attrs h =
   let level = string_of_int (Block.Heading.level h) in
   C.string c "<h"; C.string c level;
-  add_attrs c ~include_id:false attrs;
-  begin match Block.Heading.id h with
-  | None -> C.byte c '>';
-  | Some (`Auto id | `Id id) ->
-      let id = unique_id c id in
-      let id = match Cmarkit.Attributes.id attrs with None -> id | Some (id, _) -> id in
-      C.string c " id=\""; C.string c id;
-      C.string c "\"><a class=\"anchor\" aria-hidden=\"true\" href=\"#";
+  let attrs =
+    match Block.Heading.id h with
+    | None -> attrs
+    | Some (`Auto id | `Id id) ->
+       match Attributes.id attrs with
+         None ->
+          let id = unique_id c id in
+          Attributes.set_id attrs (id, Meta.none)
+       | Some id -> attrs
+  in
+  add_attrs c attrs;
+  C.byte c '>';
+  begin match Attributes.id attrs with
+  | None -> ()
+  | Some (id, _) ->
+      C.string c "<a class=\"anchor\" aria-hidden=\"true\" href=\"#";
       C.string c id; C.string c "\"></a>";
   end;
   C.inline c (Block.Heading.inline h);

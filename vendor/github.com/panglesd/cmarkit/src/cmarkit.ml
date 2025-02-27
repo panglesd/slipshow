@@ -664,7 +664,7 @@ module Block = struct
         underline_blanks : Layout.blanks; }
 
     type layout = [ `Atx of atx_layout | `Setext of setext_layout ]
-    type id = [ `Auto of string | `Id of string ]
+    type id = [ `Auto of string | `Id of string ] (* TODO: fix this. Id should be in attribute ? or here *)
     type t = { layout : layout; level : int; inline : Inline.t; id : id option }
 
     let make ?id ?(layout = `Atx default_atx_layout) ~level inline =

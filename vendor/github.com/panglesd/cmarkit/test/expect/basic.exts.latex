@@ -451,6 +451,12 @@ Attributes can be nested: \href{example.com}{link % Attributes omitted
 
 Attributes can be attached without squares, for instance this has an
 id. This \texttt{codeblock}! This \protect\includegraphics{as}. \href{work}{Links}.
+% Attributes cannot be rendered in latex
+
+\subsection{Title with an id}
+% Attributes cannot be rendered in latex
+
+\section{Title with an id}
 
 \subsubsection{Attributes definition}
 

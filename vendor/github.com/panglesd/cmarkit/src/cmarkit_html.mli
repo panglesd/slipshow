@@ -66,6 +66,8 @@ val xhtml_renderer :
 
     Only useful if you extend the renderer. *)
 
+val add_attrs : Cmarkit_renderer.context -> Cmarkit.Attributes.t -> unit
+
 val safe : Cmarkit_renderer.context -> bool
 (** [safe c] is [true] if a safe rendering is requested.
     See {!renderer} for more information. *)
