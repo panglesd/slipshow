@@ -77,9 +77,11 @@ let custom_html_renderer =
   let default = renderer ~safe:false () in
   let custom_html =
     let inline c = function
-      | Inline.Text (t, _) ->
+      | Inline.Text ((t, (attrs, _)), _) ->
           (* Put text inside spans to be able to apply styles on them *)
-          Context.string c "<span>";
+          Context.string c "<span";
+          add_attrs c attrs;
+          Context.byte c '>';
           html_escaped_string c t;
           Context.string c "</span>";
           true
