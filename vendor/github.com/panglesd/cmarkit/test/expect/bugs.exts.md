@@ -23,3 +23,9 @@ get dropped.
 | before`a`or`b`after     |
 | *a*`a`                  |
 | <p>foo</p>              |
+
+# Bug #15 
+
+Invalid markup generated for cancelled task.
+
+* [~] This has been cancelled

@@ -1,6 +1,6 @@
 (*---------------------------------------------------------------------------
    Copyright (c) 2023 The cmarkit programmers. All rights reserved.
-   Distributed under the ISC license, see terms at the end of the file.
+   SPDX-License-Identifier: ISC
   ---------------------------------------------------------------------------*)
 
 open Std
@@ -21,7 +21,7 @@ let buffer_add_inline_preambles b files =
   in
   List.iter (add_file b) files
 
-let text_inline t = Inline.Text (t, Meta.none)
+let text_inline t = Inline.Text ((t, (Attributes.empty, Meta.none)), Meta.none)
 let untilted_inline = text_inline "Untilted"
 
 let lift_headings_map ~extract_title doc =
@@ -112,9 +112,10 @@ Buffer.add_string (if files <> [] then "\n" else "")
 let latex
     files quiet accumulate_defs strict heading_auto_ids backend_blocks
     lift_headings docu title author inline_preambles keep_built_in_preambles
+    first_heading_level
   =
   let resolver = Label_resolver.v ~quiet in
-  let r = Cmarkit_latex.renderer ~backend_blocks () in
+  let r = Cmarkit_latex.renderer ~backend_blocks ~first_heading_level () in
   let parse ~extract_title ~file ~defs md =
     let doc =
       Cmarkit.Doc.of_string ~resolver ~defs ~heading_auto_ids ~file ~strict md
@@ -178,6 +179,19 @@ let lift_headings =
   in
   Arg.(value & flag & info ["l"; "lift-headings"] ~doc)
 
+let first_level_heading =
+  let level_enum =
+    [ "part", Cmarkit_latex.Part; "chapter", Chapter;
+      "section", Section; "subsection", Subsection ]
+  in
+  let doc =
+    Printf.sprintf
+      "Use LaTeX heading level $(docv) for the first CommonMark heading level. \
+       $(docv) must be %s." (Arg.doc_alts_enum level_enum)
+  in
+  Arg.(value & opt (Arg.enum level_enum) Cmarkit_latex.Section &
+       Arg.info ["first-heading-level"] ~doc ~docv:"LEVEL")
+
 let v =
   let doc = "Render CommonMark to LaTeX" in
   let man = [
@@ -193,7 +207,7 @@ let v =
   Term.(const latex $ Cli.files $ Cli.quiet $ Cli.accumulate_defs $ Cli.strict $
         Cli.heading_auto_ids $ backend_blocks $ lift_headings $
         Cli.docu $ Cli.title $ author $ inline_preambles $
-        keep_built_in_preamble)
+        keep_built_in_preamble $ first_level_heading)
 
 (* Built-in LaTeX preamable, defined that way to avoid source clutter *)
 
@@ -222,20 +236,3 @@ let () = built_in_preamble :=
 
 \renewcommand{\arraystretch}{1.3}
 |}
-
-
-(*---------------------------------------------------------------------------
-   Copyright (c) 2023 The cmarkit programmers
-
-   Permission to use, copy, modify, and/or distribute this software for any
-   purpose with or without fee is hereby granted, provided that the above
-   copyright notice and this permission notice appear in all copies.
-
-   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-   WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-   MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-   ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-   WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-   ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  ---------------------------------------------------------------------------*)

@@ -1,6 +1,6 @@
 (*---------------------------------------------------------------------------
    Copyright (c) 2021 The cmarkit programmers. All rights reserved.
-   Distributed under the ISC license, see terms at the end of the file.
+   SPDX-License-Identifier: ISC
   ---------------------------------------------------------------------------*)
 
 (** Low-level internal tools. *)
@@ -209,9 +209,6 @@ val first_non_blank : string -> last:byte_pos -> start:byte_pos -> byte_pos
     range \[[start];[last]\] that is not blank and [last + 1] if there
     is none. *)
 
-val rightmost_blank : string -> line_span -> byte_pos
-(** TODO. *)
-
 val first_non_blank_in_span : string -> line_span -> byte_pos
 (** [first_non_blank_in_span s span] is
     [first_non_blank s ~last:span.last ~start:span.first]. *)
@@ -220,6 +217,11 @@ val last_non_blank : string -> first:byte_pos -> start:byte_pos -> byte_pos
 (** [last_non_blank s ~first ~start] is the last position in the
     range \[[first];[start]\] that is non blank and [first - 1] if
     there is none. *)
+
+val last_blank : string -> first:byte_pos -> start:byte_pos -> byte_pos
+(** [last_blank s ~first ~start] is the last byte position in the
+    range \[[start];[last]\] that is blank and [first - 1] if there
+    is none. *)
 
 val rev_drop_spaces : string -> first:byte_pos -> start:byte_pos -> byte_pos
 (** [rev_drop_spaces s ~first ~start] is the last position in the
@@ -418,19 +420,3 @@ val ext_task_marker :
   string -> last:byte_pos -> start:byte_pos -> (Uchar.t * last) option
 (** [ext_task_marker s ~last ~start] is a list task item marker in the
     range \[[start];[last]\]. *)
-
-(*---------------------------------------------------------------------------
-   Copyright (c) 2021 The cmarkit programmers
-
-   Permission to use, copy, modify, and/or distribute this software for any
-   purpose with or without fee is hereby granted, provided that the above
-   copyright notice and this permission notice appear in all copies.
-
-   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-   WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-   MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-   ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-   WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-   ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  ---------------------------------------------------------------------------*)

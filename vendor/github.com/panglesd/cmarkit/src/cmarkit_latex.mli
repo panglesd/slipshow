@@ -1,6 +1,6 @@
 (*---------------------------------------------------------------------------
    Copyright (c) 2021 The cmarkit programmers. All rights reserved.
-   Distributed under the ISC license, see terms at the end of the file.
+   SPDX-License-Identifier: ISC
   ---------------------------------------------------------------------------*)
 
 (** Rendering CommonMark to L{^A}T{_E}X.
@@ -15,13 +15,24 @@
 
 (** {1:rendering Rendering} *)
 
-val of_doc : ?backend_blocks:bool -> Cmarkit.Doc.t -> string
+type heading_level =
+| Part
+| Chapter
+| Section
+| Subsection (** *)
+(** The type for main L{^A}T{_E}X headings levels. *)
+
+val of_doc :
+  ?backend_blocks:bool -> ?first_heading_level:heading_level ->
+  Cmarkit.Doc.t -> string
 (** [of_doc d] is a L{^A}T{_E}X fragment for [d]. See {!val-renderer}
     for more details and documentation about rendering options. *)
 
 (** {1:renderer Renderer} *)
 
-val renderer : ?backend_blocks:bool -> unit -> Cmarkit_renderer.t
+val renderer :
+  ?backend_blocks:bool -> ?first_heading_level:heading_level -> unit ->
+  Cmarkit_renderer.t
 (** [renderer] is a default L{^A}T{_E}X renderer. This renders
     the strict CommonMark abstract syntax tree and the supported
     Cmarkit {{!Cmarkit.extensions}extensions}.
@@ -35,7 +46,9 @@ val renderer : ?backend_blocks:bool -> unit -> Cmarkit_renderer.t
     {ul
     {- [backend_blocks], if [true], code blocks with language [=latex]
        are written verbatim in the output and any other code block whose
-       langage starts with [=] is dropped. Defaults to [false].}}
+       langage starts with [=] is dropped. Defaults to [false].}
+    {- [first_heading_level], the L{^A}T{_E}X heading level to use
+       for the first CommonMark heading level. Defaults to [Section].}}
 
     See {{!Cmarkit_renderer.example}this example} to extend or
     selectively override the renderer. *)
@@ -208,19 +221,3 @@ let latex_doc_of_md ?(title = "") md =
 
 Ignore this: ".
 *)
-
-(*---------------------------------------------------------------------------
-   Copyright (c) 2021 The cmarkit programmers
-
-   Permission to use, copy, modify, and/or distribute this software for any
-   purpose with or without fee is hereby granted, provided that the above
-   copyright notice and this permission notice appear in all copies.
-
-   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-   WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-   MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-   ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-   WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-   ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  ---------------------------------------------------------------------------*)

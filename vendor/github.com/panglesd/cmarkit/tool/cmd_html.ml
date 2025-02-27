@@ -1,6 +1,6 @@
 (*---------------------------------------------------------------------------
    Copyright (c) 2023 The cmarkit programmers. All rights reserved.
-   Distributed under the ISC license, see terms at the end of the file.
+   SPDX-License-Identifier: ISC
   ---------------------------------------------------------------------------*)
 
 open Std
@@ -107,9 +107,17 @@ buffer_add_docs files
 let html
     files quiet accumulate_defs strict heading_auto_ids backend_blocks locs
     layout safe docu lang title author csss inline_csss keep_built_in_css jss
-    inline_jss
+    inline_jss full_featured
   =
   let resolver = Label_resolver.v ~quiet in
+  let safe = safe && not full_featured in
+  let strict = strict && not full_featured in
+  let heading_auto_ids = heading_auto_ids || full_featured in
+  let docu = docu || full_featured in
+  let jss =
+    if not full_featured then jss else
+    "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" :: jss
+  in
   let r = Cmarkit_html.renderer ~backend_blocks ~safe () in
   let parse ~defs ~file md =
     Cmarkit.Doc.of_string ~resolver ~defs ~heading_auto_ids ~layout ~locs
@@ -153,6 +161,13 @@ let csss =
              this option is specified). Repeatable."
   in
   Arg.(value & opt_all string [] & info ["css"] ~doc ~docv:"URL")
+
+let full_featured =
+  let doc = "Full-featured document. This is a synonym for options \
+             $(b,--unsafe -e -c -h) and adds a JavaScript script from \
+             a CDN to render math."
+  in
+  Arg.(value & flag & info ["f"; "full-featured"] ~doc)
 
 let inline_csss =
   let doc = "Add the content of CSS file $(docv) to the document when \
@@ -203,13 +218,15 @@ let v =
           mathjax@3/es5/tex-svg.js') $(b,\\\\)";
     `Noblank;
     `Pre "  $(b,--unsafe -e -c -h README.md > README.html)";
+    `P "The $(b,-f) option can be used instead of the previous invocation:";
+    `Pre "$(mname) $(tname) $(b,-f README.md > README.html";
     `Blocks Cli.common_man; ]
   in
   Cmd.v (Cmd.info "html" ~doc ~man) @@
   Term.(const html $ Cli.files $ Cli.quiet $ Cli.accumulate_defs $ Cli.strict $
         Cli.heading_auto_ids $ backend_blocks $ locs $ layout $ Cli.safe $
         Cli.docu $ Cli.lang $ Cli.title $ author $ csss $ inline_csss $
-        keep_built_in_css $ jss $ inline_jss)
+        keep_built_in_css $ jss $ inline_jss $ full_featured)
 
 (* Built-in CSS, defined that way to avoid source clutter *)
 
@@ -411,18 +428,3 @@ let () = built_in_css :=
     [role="doc-endnotes"] > ol > li:target::marker
     { font-weight:900; /* Can't set background */ }
 |}
-(*---------------------------------------------------------------------------
-   Copyright (c) 2023 The cmarkit programmers
-
-   Permission to use, copy, modify, and/or distribute this software for any
-   purpose with or without fee is hereby granted, provided that the above
-   copyright notice and this permission notice appear in all copies.
-
-   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-   WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-   MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-   ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-   WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-   ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  ---------------------------------------------------------------------------*)

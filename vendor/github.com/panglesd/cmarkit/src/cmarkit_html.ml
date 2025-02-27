@@ -1,6 +1,6 @@
 (*---------------------------------------------------------------------------
    Copyright (c) 2021 The cmarkit programmers. All rights reserved.
-   Distributed under the ISC license, see terms at the end of the file.
+   SPDX-License-Identifier: ISC
   ---------------------------------------------------------------------------*)
 
 open Cmarkit
@@ -209,11 +209,13 @@ let block_lines c = function (* newlines only between lines *)
 
 (* Inline rendering *)
 
-let autolink c a =
+let autolink c a attrs =
   let pre = if Inline.Autolink.is_email a then "mailto:" else "" in
   let url = pre ^ (fst (Inline.Autolink.link a)) in
   let url = if Inline.Link.is_unsafe url then "" else url in
-  C.string c "<a href=\""; pct_encoded_string c url; C.string c "\">";
+  C.string c "<a href=\""; pct_encoded_string c url;
+  add_attrs c attrs;
+  C.string c "\">";
   html_escaped_string c (fst (Inline.Autolink.link a));
   C.string c "</a>"
 
@@ -221,16 +223,23 @@ let break c b = match Inline.Break.type' b with
 | `Hard -> C.string c "<br>\n"
 | `Soft -> C.byte c '\n'
 
-let code_span c cs =
-  C.string c "<code>";
+let code_span c cs attrs =
+  C.string c "<code";
+  add_attrs c attrs;
+  C.string c ">";
   html_escaped_string c (Inline.Code_span.code cs);
   C.string c "</code>"
 
-let emphasis c e =
-  C.string c "<em>"; C.inline c (Inline.Emphasis.inline e); C.string c "</em>"
+let emphasis c e attrs =
+  C.string c "<em";
+  add_attrs c attrs;
+  C.string c ">";
+  C.inline c (Inline.Emphasis.inline e); C.string c "</em>"
 
-let strong_emphasis c e =
-  C.string c "<strong>";
+let strong_emphasis c e attrs =
+  C.string c "<strong";
+  add_attrs c attrs;
+  C.string c ">";
   C.inline c (Inline.Emphasis.inline e);
   C.string c "</strong>"
 
@@ -246,9 +255,10 @@ let link_dest_and_title c ld =
   in
   dest, title
 
-let image ?(close = " >") c i =
+let image ?(close = " >") c i attrs =
   match Inline.Link.reference_definition (C.get_defs c) i with
   | Some (Link_definition.Def ((ld, (attributes, _)), _)) ->
+     let attributes = Attributes.merge ~base:attributes ~new_attrs:attrs in
       let plain_text c i =
         let lines = Inline.to_plain_text ~break_on_soft:false i in
         String.concat "\n" (List.map (String.concat "") lines)
@@ -290,8 +300,9 @@ let link_footnote c l fn =
     C.string c text; C.string c "</a></sup>"
   end
 
-let link c l = match Inline.Link.reference_definition (C.get_defs c) l with
+let link c l attrs = match Inline.Link.reference_definition (C.get_defs c) l with
 | Some (Link_definition.Def ((ld, (attributes, _)), _)) ->
+    let attributes = Attributes.merge ~base:attributes ~new_attrs:attrs in
     let link, title = link_dest_and_title c ld in
     C.string c "<a href=\""; pct_encoded_string c link;
     C.string c "\"";
@@ -324,8 +335,10 @@ let raw_html c h =
   if h <> []
   then (C.string c (fst (snd (List.hd h))); List.iter (line c) (List.tl h))
 
-let strikethrough c s =
-  C.string c "<del>";
+let strikethrough c s attrs =
+  C.string c "<del";
+  add_attrs c attrs;
+  C.string c ">";
   C.inline c (Inline.Strikethrough.inline s);
   C.string c "</del>"
 
@@ -349,19 +362,23 @@ let attribute_span c as' =
   C.inline c content
 
 let inline c = function
-| Inline.Autolink (a, _) -> autolink c a; true
+| Inline.Autolink ((a, (attrs, _)), _) -> autolink c a attrs; true
 | Inline.Break (b, _) -> break c b; true
-| Inline.Code_span (cs, _) -> code_span c cs; true
-| Inline.Emphasis (e, _) -> emphasis c e; true
-| Inline.Image (i, _) -> image c i; true
+| Inline.Code_span ((cs, (attrs, _)), _) -> code_span c cs attrs; true
+| Inline.Emphasis ((e, (attrs, _)), _) -> emphasis c e attrs; true
+| Inline.Image ((i, (attrs, _)), _) -> image c i attrs; true
 | Inline.Inlines (is, _) -> List.iter (C.inline c) is; true
-| Inline.Link (l, _) -> link c l; true
+| Inline.Link ((l, (attrs, _)), _) -> link c l attrs; true
 | Inline.Raw_html (html, _) -> raw_html c html; true
-| Inline.Strong_emphasis (e, _) -> strong_emphasis c e; true
-| Inline.Text (t, _) -> html_escaped_string c t; true
-| Inline.Ext_strikethrough (s, _) -> strikethrough c s; true
+| Inline.Strong_emphasis ((e, (attrs, _)), _) -> strong_emphasis c e attrs; true
+| Inline.Text ((t, (attrs, _)), _) ->
+   (with_attrs_span ~with_newline:false c attrs @@ fun () -> html_escaped_string c t);
+   true
+| Inline.Ext_strikethrough ((s, (attrs, _)), _) -> strikethrough c s attrs; true
 | Inline.Ext_attrs (as', _) -> attribute_span c as'; true
-| Inline.Ext_math_span (ms, _) -> math_span c ms; true
+| Inline.Ext_math_span ((ms, (attrs, _)), _) ->
+   (with_attrs_span ~with_newline:false c attrs @@ fun () -> math_span c ms);
+   true
 | _ -> comment c "<!-- Unknown Cmarkit inline -->"; true
 
 (* Block rendering *)
@@ -449,7 +466,7 @@ let list_item ~tight c (i, _) = match Block.List_item.ext_task_marker i with
     | `Cancelled ->
         C.string c
           "<div class=\"task\"><input type=\"checkbox\" disabled><del>";
-        "<del></div></li>\n"
+        "</del></div></li>\n"
     in
     item_block ~tight c (Block.List_item.block i);
     C.string c close
@@ -561,8 +578,8 @@ let xhtml_block c = function
 let xhtml_inline c = function
 | Inline.Break (b, _) when Inline.Break.type' b = `Hard ->
     C.string c "<br />\n"; true
-| Inline.Image (i, _) ->
-    image ~close:" />" c i; true
+| Inline.Image ((i, (attrs, _)), _) ->
+    image ~close:" />" c i attrs; true
 | i -> inline c i
 
 (* Document rendering *)
@@ -609,19 +626,3 @@ let xhtml_renderer ?backend_blocks ~safe () =
 
 let of_doc ?backend_blocks ~safe d =
   Cmarkit_renderer.doc_to_string (renderer ~safe ()) d
-
-(*---------------------------------------------------------------------------
-   Copyright (c) 2021 The cmarkit programmers
-
-   Permission to use, copy, modify, and/or distribute this software for any
-   purpose with or without fee is hereby granted, provided that the above
-   copyright notice and this permission notice appear in all copies.
-
-   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-   WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-   MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-   ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-   WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-   ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  ---------------------------------------------------------------------------*)
