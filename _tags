@@ -1,6 +1,6 @@
 true : bin_annot, safe_string
 <_b0> : -traverse
 <src> : include
-<test/test*> : package(b0.std b0.b00.kit)
-<test/spec*> : package(b0.std b0.b00.kit)
+<test/test*> : package(b0.std b0.kit)
+<test/spec*> : package(b0.std b0.kit)
 <tool/*> : package(cmdliner)

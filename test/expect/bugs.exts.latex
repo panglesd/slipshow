@@ -36,3 +36,12 @@ foo% Raw CommonMark HTML omitted
 \hline
 \end{tabular}
 \bigskip
+
+\section{Bug \#15}
+
+Invalid markup generated for cancelled task.
+
+\begin{itemize}
+\item{} \lbrack ~\rbrack \enspace
+This has been cancelled
+\end{itemize}

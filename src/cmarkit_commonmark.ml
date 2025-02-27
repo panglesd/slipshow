@@ -1,6 +1,6 @@
 (*---------------------------------------------------------------------------
    Copyright (c) 2023 The cmarkit programmers. All rights reserved.
-   Distributed under the ISC license, see terms at the end of the file.
+   SPDX-License-Identifier: ISC
   ---------------------------------------------------------------------------*)
 
 open Cmarkit
@@ -71,10 +71,10 @@ let buffer_add_escaped_text b s =
   let esc_tilde s max prev next =
     not (Char.equal prev '~') && next <= max && s.[next] = '~'
   in
-  let esc_item_marker s i prev =
-    if prev <> '1' then false else
-    let k = ref (i - 2) in
-    while !k >= 0 && s.[!k] = '0' do decr k done;
+  let esc_item_marker s i =
+    if i = 0 || i > 9 (* marker has from 1-9 digits *) then false else
+    let k = ref (i - 1) in
+    while !k >= 0 && Cmarkit_base.Ascii.is_digit s.[!k] do decr k done;
     !k < 0
   in
   let flush b max start i =
@@ -95,7 +95,7 @@ let buffer_add_escaped_text b s =
         flush b max start i; buffer_add_bslash_esc b c; loop b s max next c next
     | '!' when i = max ->
         flush b max start i; buffer_add_bslash_esc b c; loop b s max next c next
-    | '.' | ')' when esc_item_marker s i prev ->
+    | '.' | ')' when esc_item_marker s i ->
         flush b max start i; buffer_add_bslash_esc b c; loop b s max next c next
     | '\\' | '<' | '>' | '[' | ']' | '*' | '_' | '$' | '|' ->
         flush b max start i; buffer_add_bslash_esc b c; loop b s max next c next
@@ -299,18 +299,18 @@ let math_span c ms =
   C.string c sep
 
 let inline c = function
-| Inline.Autolink (a, _) -> autolink c a; true
+| Inline.Autolink ((a, _TODO), _) -> autolink c a; true
 | Inline.Break (b, _) -> break c b; true
-| Inline.Code_span (cs, _) -> code_span c cs; true
-| Inline.Emphasis (e, _) -> emphasis c e; true
-| Inline.Image (i, _) -> image c i; true
+| Inline.Code_span ((cs, _TODO), _) -> code_span c cs; true
+| Inline.Emphasis ((e, _TODO), _) -> emphasis c e; true
+| Inline.Image ((i, _TODO), _) -> image c i; true
 | Inline.Inlines (is, _) -> inlines c is; true
-| Inline.Link (l, _) -> link c l; true
+| Inline.Link ((l, _TODO), _) -> link c l; true
 | Inline.Raw_html (html, _) -> raw_html c html; true
-| Inline.Strong_emphasis (e, _) -> strong_emphasis c e; true
-| Inline.Text (t, _) -> text c t; true
-| Inline.Ext_strikethrough (s, _) -> strikethrough c s; true
-| Inline.Ext_math_span (m, _) -> math_span c m; true
+| Inline.Strong_emphasis ((e, _TODO), _) -> strong_emphasis c e; true
+| Inline.Text ((t, _TODO), _) -> text c t; true
+| Inline.Ext_strikethrough ((s, _TODO), _) -> strikethrough c s; true
+| Inline.Ext_math_span ((m, _TODO), _) -> math_span c m; true
 | Inline.Ext_attrs (span, _) -> attrs_span c span; true
 | _ -> C.string c "<!-- Unknown Cmarkit inline -->"; true
 
@@ -489,19 +489,3 @@ let doc c d = C.block c (Doc.block d); true
 
 let renderer () = Cmarkit_renderer.make ~init_context ~inline ~block ~doc ()
 let of_doc d = Cmarkit_renderer.doc_to_string (renderer ()) d
-
-(*---------------------------------------------------------------------------
-   Copyright (c) 2023 The cmarkit programmers
-
-   Permission to use, copy, modify, and/or distribute this software for any
-   purpose with or without fee is hereby granted, provided that the above
-   copyright notice and this permission notice appear in all copies.
-
-   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-   WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-   MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-   ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-   WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-   ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  ---------------------------------------------------------------------------*)

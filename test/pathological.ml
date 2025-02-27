@@ -1,6 +1,6 @@
 (*---------------------------------------------------------------------------
    Copyright (c) 2023 The cmarkit programmers. All rights reserved.
-   Distributed under the ISC license, see terms at the end of the file.
+   SPDX-License-Identifier: ISC
   ---------------------------------------------------------------------------*)
 
 open B0_std
@@ -125,8 +125,8 @@ let deadline_run ~timeout ?env ?cwd ?stdin ?stdout ?stderr cmd =
 
 type test_exit = [ deadline_exit | `Unexpected of string * string ]
 
-let pp_ok = Fmt.tty' [`Fg `Green]
-let pp_err = Fmt.tty' [`Fg `Red]
+let pp_ok = Fmt.st [`Fg `Green]
+let pp_err = Fmt.st [`Fg `Red]
 let pp_test_exit ppf = function
 | `Exited 0 -> Fmt.pf ppf "%a" pp_ok "ok"
 | `Exited n -> Fmt.pf ppf "%a with %d" pp_err "exited" n
@@ -171,9 +171,9 @@ let run_tests ~timeout cmd =
   Log.if_error ~use:2 @@
   let* cmd = Os.Cmd.get cmd in
   let init = Mtime.Span.zero, 0, 1 in
-  Log.app (fun m -> m "%a" pp_tests_params (timeout, cmd));
+  Log.stdout (fun m -> m "%a" pp_tests_params (timeout, cmd));
   let* dur, fail, i = List.fold_stop_on_error do_test tests init in
-  Log.app (fun m -> m "%a" pp_tests_summary (i - 1, fail, dur));
+  Log.stdout (fun m -> m "%a" pp_tests_summary (i - 1, fail, dur));
   Ok (Int.min fail 1)
 
 let dump_tests dir =
@@ -204,7 +204,6 @@ let main () =
       "--", Arg.Rest add_arg, "TOOL ARG…  Executable to test."; ]
   in
   Arg.parse args add_arg usage;
-  Fmt.set_tty_cap ();
   match !dump_dir with
   | Some dir -> dump_tests dir
   | None ->
@@ -215,19 +214,3 @@ let main () =
       else run_tests ~timeout cmd
 
 let () = if !Sys.interactive then () else exit (main ())
-
-(*---------------------------------------------------------------------------
-   Copyright (c) 2023 The cmarkit programmers
-
-   Permission to use, copy, modify, and/or distribute this software for any
-   purpose with or without fee is hereby granted, provided that the above
-   copyright notice and this permission notice appear in all copies.
-
-   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-   WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-   MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-   ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-   WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-   ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  ---------------------------------------------------------------------------*)

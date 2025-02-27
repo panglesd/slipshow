@@ -208,9 +208,17 @@
 <h1>Bugs</h1>
 <p>Add a section for the bug and the CommonMark that triggers it as
 follows:</p>
-<pre><code># Bug #NUM
+<pre><code># Issue #NUM
 
 The triggering CommonMark
 </code></pre>
+<h1>Issue #11</h1>
+<p>Escape ordered item markers at the beginning of paragraphs correctly.
+These should be paragraphs when rendered to markdown not list items.</p>
+<p>1.</p>
+<p>2.</p>
+<p>23.</p>
+<p>24)</p>
+<p>1234567890. This is not a list marker no need to escape it.</p>
 </body>
 </html>

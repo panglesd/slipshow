@@ -1,6 +1,6 @@
 (*---------------------------------------------------------------------------
    Copyright (c) 2023 The cmarkit programmers. All rights reserved.
-   Distributed under the ISC license, see terms at the end of the file.
+   SPDX-License-Identifier: ISC
   ---------------------------------------------------------------------------*)
 
 open Std
@@ -64,7 +64,7 @@ and link kind ~indent:n ppf ((l, _), m) =
     (link_reference ~indent:(n + 2)) (Inline.Link.reference l)
 
 and inline ~indent:n ppf = function
-| Inline.Autolink (a, m) ->
+| Inline.Autolink ((a, _TODO), m) ->
     let is_email = Inline.Autolink.is_email a in
     let link = Inline.Autolink.link a in
     let autolink = strf "Autolink (email:%b)" is_email in
@@ -80,33 +80,33 @@ and inline ~indent:n ppf = function
       (loc label ~indent:n) m
       (loc "Layout before" ~indent:(n + 2)) (snd layout_before)
       (loc "Layout after" ~indent:(n + 2)) (snd layout_after)
-| Inline.Code_span (c, m) ->
+| Inline.Code_span ((c, _TODO), m) ->
     let line = tight_block_line "Code span line" ~indent:(n + 2) in
     pf ppf "@[<v>%a@,%a@]"
       (loc "Code span" ~indent:n) m
       (Format.pp_print_list line) (Inline.Code_span.code_layout c)
-| Inline.Emphasis (e, m) ->
+| Inline.Emphasis ((e, _TODO), m) ->
     let i = Inline.Emphasis.inline e in
       pf ppf "@[<v>%a@,%a@]"
         (loc "Emphasis" ~indent:n) m (inline ~indent:(n + 2)) i
-| Inline.Image (i, m) ->
+| Inline.Image ((i, _TODO), m) ->
     link "Image" ~indent:n ppf ((i, Attributes.empty), m)
 | Inline.Inlines (is, m) ->
     pf ppf "@[<v>%a%a@]"
       (loc "Inlines" ~indent:n) m (inlines ~indent:(n + 2)) is
-| Inline.Link (l, m) ->
+| Inline.Link ((l, _TODO), m) ->
       link "Link" ~indent:n ppf ((l, Attributes.empty), m)
 | Inline.Raw_html (r, m) ->
     let line = tight_block_line "Raw HTML line" ~indent:(n + 2) in
     pf ppf "@[<v>%a@,%a@]"
       (loc "Raw HTML" ~indent:n) m (Format.pp_print_list line) r
-| Inline.Strong_emphasis (e, m) ->
+| Inline.Strong_emphasis ((e, _TODO), m) ->
     let i = Inline.Emphasis.inline e in
     pf ppf "@[<v>%a@,%a@]"
       (loc "Strong emphasis" ~indent:n) m (inline ~indent:(n + 2)) i
-| Inline.Text (t, m) ->
+| Inline.Text ((t, _TODO), m) ->
     loc "Text" ~indent:n ppf m
-| Inline.Ext_strikethrough (s, m) ->
+| Inline.Ext_strikethrough ((s, _TODO), m) ->
     let i = Inline.Strikethrough.inline s in
     pf ppf "@[<v>%a@,%a@]"
       (loc "Strikethrough" ~indent:n) m (inline ~indent:(n + 2)) i
@@ -114,7 +114,7 @@ and inline ~indent:n ppf = function
     let i = Inline.Attributes_span.content s in
     pf ppf "@[<v>%a@,%a@]"
       (loc "Attributes" ~indent:n) m (inline ~indent:(n + 2)) i
-| Inline.Ext_math_span (ms, m) ->
+| Inline.Ext_math_span ((ms, _TODO), m) ->
     let display = Inline.Math_span.display ms in
     let line = tight_block_line "Math span line" ~indent:(n + 2) in
     pf ppf "@[<v>%a@,%a@]"
@@ -266,19 +266,3 @@ let v =
   in
   Cmd.v (Cmd.info "locs" ~doc ~exits ~man) @@
   Term.(const locs $ Cli.files $ Cli.strict $ Cli.no_layout)
-
-(*---------------------------------------------------------------------------
-   Copyright (c) 2023 The cmarkit programmers
-
-   Permission to use, copy, modify, and/or distribute this software for any
-   purpose with or without fee is hereby granted, provided that the above
-   copyright notice and this permission notice appear in all copies.
-
-   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-   WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-   MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-   ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-   WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-   ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  ---------------------------------------------------------------------------*)

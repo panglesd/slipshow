@@ -13,6 +13,4 @@ let () =
   in
   Ok [ Pkg.mllib ~api "src/cmarkit.mllib";
        Pkg.doc "doc/index.mld" ~dst:"odoc-pages/index.mld";
-       Pkg.bin ~cond:cmdliner "tool/cmd_main" ~dst:"cmarkit";
-       Pkg.test "test/bench";
-       Pkg.test "test/test_spec"; ]
+       Pkg.bin ~cond:cmdliner "tool/cmd_main" ~dst:"cmarkit" ]

@@ -1,5 +1,5 @@
 Blocks:
-File "bugs.md", lines 1-17
+File "bugs.md", lines 1-33
   Heading, level 1:
   File "bugs.md", lines 1-2, characters 0-4
     Text:
@@ -29,7 +29,7 @@ File "bugs.md", lines 1-17
     Opening fence:
     File "-"
     Code line:
-    File "bugs.md", line 8, characters 0-10
+    File "bugs.md", line 8, characters 0-12
     Code line:
     File "bugs.md", line 9
     Code line:
@@ -38,13 +38,67 @@ File "bugs.md", lines 1-17
     File "-"
   Blank line:
   File "bugs.md", line 12
-  Blank line:
-  File "bugs.md", line 13
+  Heading, level 1:
+  File "bugs.md", line 13, characters 0-11
+    Text:
+    File "bugs.md", line 13, characters 2-11
   Blank line:
   File "bugs.md", line 14
-  Blank line:
-  File "bugs.md", line 15
-  Blank line:
-  File "bugs.md", line 16
+  Paragraph:
+  File "bugs.md", lines 15-16, characters 0-68
+    Inlines:
+    File "bugs.md", lines 15-16, characters 0-68
+      Text:
+      File "bugs.md", line 15, characters 0-69
+      Soft break:
+      File "bugs.md", lines 15-16, characters 69-0
+        Layout before:
+        File "-"
+        Layout after:
+        File "-"
+      Text:
+      File "bugs.md", line 16, characters 0-68
   Blank line:
   File "bugs.md", line 17
+  Paragraph:
+  File "bugs.md", line 18, characters 0-3
+    Text:
+    File "bugs.md", line 18, characters 0-3
+  Blank line:
+  File "bugs.md", line 19
+  Paragraph:
+  File "bugs.md", line 20, characters 0-3
+    Text:
+    File "bugs.md", line 20, characters 0-3
+  Blank line:
+  File "bugs.md", line 21
+  Paragraph:
+  File "bugs.md", line 22, characters 0-4
+    Text:
+    File "bugs.md", line 22, characters 0-4
+  Blank line:
+  File "bugs.md", line 23
+  Blank line:
+  File "bugs.md", line 24
+  Paragraph:
+  File "bugs.md", line 25, characters 0-4
+    Text:
+    File "bugs.md", line 25, characters 0-4
+  Blank line:
+  File "bugs.md", line 26
+  Paragraph:
+  File "bugs.md", line 27, characters 0-59
+    Text:
+    File "bugs.md", line 27, characters 0-59
+  Blank line:
+  File "bugs.md", line 28
+  Blank line:
+  File "bugs.md", line 29
+  Blank line:
+  File "bugs.md", line 30
+  Blank line:
+  File "bugs.md", line 31
+  Blank line:
+  File "bugs.md", line 32
+  Blank line:
+  File "bugs.md", line 33

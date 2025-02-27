@@ -1,6 +1,6 @@
 (*---------------------------------------------------------------------------
    Copyright (c) 2021 The cmarkit programmers. All rights reserved.
-   Distributed under the ISC license, see terms at the end of the file.
+   SPDX-License-Identifier: ISC
   ---------------------------------------------------------------------------*)
 
 (* N.B. The doc strings of the .mli can help understanding these internal
@@ -607,13 +607,10 @@ let accept_upto ~char ~next_line s lines ~line acc ~after =
   let start = after + 1 in
   loop ~char ~next_line s lines line ~prev_bslash:false start acc start
 
-let rec rightmost_blank s ~min ~start =
-  if start < min then min - 1 else match s.[start] with
+let rec last_blank s ~first ~start =
+  if start < first then first - 1 else match s.[start] with
   | ' ' | '\t' -> start
-  | _ -> rightmost_blank s ~min ~start:(start - 1)
-
-let rightmost_blank s (line : line_span) =
-  rightmost_blank s ~min:line.first ~start:line.last
+  | _ -> last_blank s ~first ~start:(start - 1)
 
 let first_non_blank_over_nl ~next_line s lines ~line ~start =
   let nb = first_non_blank s ~last:line.last ~start in
@@ -1469,19 +1466,3 @@ let ext_task_marker s ~last ~start =
   then Some (Uchar.utf_decode_uchar u, last)
   else if s.[next] <> ' ' then None else
   Some (Uchar.utf_decode_uchar u, next)
-
-(*---------------------------------------------------------------------------
-   Copyright (c) 2021 The cmarkit programmers
-
-   Permission to use, copy, modify, and/or distribute this software for any
-   purpose with or without fee is hereby granted, provided that the above
-   copyright notice and this permission notice appear in all copies.
-
-   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-   WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-   MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-   ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-   WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-   ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  ---------------------------------------------------------------------------*)
