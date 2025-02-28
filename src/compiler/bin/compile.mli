@@ -1,4 +1,5 @@
 val compile :
+  markdown_mode:bool ->
   math_link:string option ->
   slip_css_link:string option ->
   slipshow_js_link:string option ->

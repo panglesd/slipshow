@@ -11,12 +11,13 @@ let setup_log =
 
 let compile =
   let compile input output math_link slip_css_link slipshow_js_link watch serve
-      () =
+      markdown_mode () =
     let input = match input with "-" -> `Stdin | s -> `File (Fpath.v s) in
     let output_of_input input =
-      match input with
-      | `File input -> `File (Fpath.set_ext "html" input)
-      | `Stdin -> `Stdout
+      match (input, markdown_mode) with
+      | `File input, false -> `File (Fpath.set_ext "html" input)
+      | `File input, true -> `File (Fpath.set_ext "noattrs.md" input)
+      | `Stdin, _ -> `Stdout
     in
     let output =
       match output with
@@ -26,7 +27,7 @@ let compile =
     in
     match
       Compile.compile ~input ~output ~math_link ~slip_css_link ~slipshow_js_link
-        ~watch ~serve
+        ~watch ~serve ~markdown_mode
     with
     | Ok () -> Ok ()
     | Error (`Msg s) -> Error s
@@ -50,7 +51,7 @@ let compile =
   in
   let slip_css_link =
     let doc =
-      "Where to find the slipshow javascript file. Optional. When absent, use \
+      "Where to find the slipshow css file. Optional. When absent, use \
        slipshow.%%VERSION%%, embedded in this binary. If URL is an absolute \
        URL, links to it, otherwise the content is embedded in the html file."
     in
@@ -71,6 +72,13 @@ let compile =
     in
     Arg.(value & pos 0 string "-" & info [] ~doc ~docv:"FILE.md")
   in
+  let markdown_output =
+    let doc =
+      "Outputs a markdown file with valid (GFM) syntax, by stripping the \
+       attributes. Useful for printing for instance."
+    in
+    Arg.(value & flag & info [ "markdown-output" ] ~doc ~docv:"FILE.md")
+  in
   let watch =
     let doc = "Watch" in
     Arg.(value & flag & info [ "watch" ] ~doc ~docv:"")
@@ -81,7 +89,7 @@ let compile =
   in
   Term.(
     const compile $ input $ output $ math_link $ slip_css_link
-    $ slipshow_js_link $ watch $ serve $ setup_log)
+    $ slipshow_js_link $ watch $ serve $ markdown_output $ setup_log)
 
 let compile_cmd =
   let doc = "Compile a markdown file into a slipshow presentation" in
