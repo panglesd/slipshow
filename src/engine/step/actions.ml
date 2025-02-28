@@ -21,15 +21,24 @@ let set_at at v elem =
   Undoable.return ~undo res
 
 module AttributeActions = struct
+  let act_on_id action id =
+    let id = Jstr.concat [ Jstr.v "#"; id ] in
+    match Brr.El.find_first_by_selector id with
+    | None -> Undoable.return ()
+    | Some elem -> action elem
+
   let act_on_elem class_ action elem =
     match Brr.El.at (Jstr.v class_) elem with
     | None -> Undoable.return ()
     | Some v when Jstr.equal Jstr.empty v -> action elem
-    | Some v -> (
-        let id = Jstr.concat [ Jstr.v "#"; v ] in
-        match Brr.El.find_first_by_selector id with
-        | None -> Undoable.return ()
-        | Some elem -> action elem)
+    | Some id -> act_on_id action id
+
+  let act_on_elems class_ action elem =
+    match Brr.El.at (Jstr.v class_) elem with
+    | None -> Undoable.return ()
+    | Some v when Jstr.equal Jstr.empty v -> action elem
+    | Some v ->
+        Jstr.cuts ~sep:(Jstr.v " ") v |> Undoable.List.iter (act_on_id action)
 
   let up window elem =
     act_on_elem "up-at-unpause" (Universe.Window.up window) elem
@@ -41,10 +50,10 @@ module AttributeActions = struct
     act_on_elem "center-at-unpause" (Universe.Window.center window) elem
 
   let unstatic _window elem =
-    act_on_elem "unstatic-at-unpause" (set_class "unstatic" true) elem
+    act_on_elems "unstatic-at-unpause" (set_class "unstatic" true) elem
 
   let static _window elem =
-    act_on_elem "static-at-unpause" (set_class "unstatic" false) elem
+    act_on_elems "static-at-unpause" (set_class "unstatic" false) elem
 
   let focus window elem =
     let action elem =
@@ -63,16 +72,16 @@ module AttributeActions = struct
     act_on_elem "unfocus-at-unpause" action elem
 
   let reveal _window elem =
-    act_on_elem "reveal-at-unpause" (set_class "unrevealed" false) elem
+    act_on_elems "reveal-at-unpause" (set_class "unrevealed" false) elem
 
   let unreveal _window elem =
-    act_on_elem "unreveal-at-unpause" (set_class "unrevealed" true) elem
+    act_on_elems "unreveal-at-unpause" (set_class "unrevealed" true) elem
 
   let emph _window elem =
-    act_on_elem "emph-at-unpause" (set_class "emphasized" true) elem
+    act_on_elems "emph-at-unpause" (set_class "emphasized" true) elem
 
   let unemph _window elem =
-    act_on_elem "unemph-at-unpause" (set_class "emphasized" false) elem
+    act_on_elems "unemph-at-unpause" (set_class "emphasized" false) elem
 
   let execute _window elem =
     let action elem =
@@ -106,7 +115,7 @@ module AttributeActions = struct
       in
       Undoable.return ~undo ()
     in
-    act_on_elem "exec-at-unpause" action elem
+    act_on_elems "exec-at-unpause" action elem
 
   let do_ window elem =
     let do_ =

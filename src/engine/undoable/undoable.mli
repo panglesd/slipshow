@@ -10,3 +10,7 @@ module Syntax : sig
 end
 
 module Browser = Browser_
+
+module List : sig
+  val iter : ('a -> unit t) -> 'a list -> unit t
+end

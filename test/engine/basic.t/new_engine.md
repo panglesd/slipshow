@@ -1,5 +1,16 @@
 Salut !
 
+{#a .unstatic}
+a
+
+{#b .unstatic}
+b
+
+{#c .unstatic}
+c
+
+{pause static-at-unpause="a b c"}
+
 {pause up}
 One
 
