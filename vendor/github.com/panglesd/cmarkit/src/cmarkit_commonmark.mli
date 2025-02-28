@@ -17,13 +17,13 @@
 
 (** {1:rendering Rendering} *)
 
-val of_doc : Cmarkit.Doc.t -> string
+val of_doc : ?include_attributes:bool -> Cmarkit.Doc.t -> string
 (** [of_doc d] is a CommonMark document for [d]. See {!val-renderer} for
     more details. *)
 
 (** {1:renderer Renderer} *)
 
-val renderer : unit -> Cmarkit_renderer.t
+val renderer : ?include_attributes:bool -> unit -> Cmarkit_renderer.t
 (** [renderer ()] is the default CommonMark renderer. This renders
     the strict CommonMark abstract syntax tree and the supported
     Cmarkit {{!Cmarkit.extensions}extensions}.
