@@ -15,7 +15,12 @@ fun ~strict md ->
 let cmark_to_commonmark : strict:bool -> string -> string =
 fun ~strict md ->
   let doc = Cmarkit.Doc.of_string ~layout:true ~strict md in
-  Cmarkit_commonmark.of_doc doc
+  Cmarkit_commonmark.of_doc ~include_attributes:false doc
+
+let cmark_to_commonmark_attrs : strict:bool -> string -> string =
+fun ~strict md ->
+  let doc = Cmarkit.Doc.of_string ~layout:true ~strict md in
+  Cmarkit_commonmark.of_doc ~include_attributes:true doc
 
 (* Cmarkit_renderer *)
 
