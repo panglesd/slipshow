@@ -85,3 +85,4 @@ TODO
 
 Slipshow vendors a few modified dependencies. Currently it uses
 [git-vendor](https://github.com/brettlangdon/git-vendor).
+
