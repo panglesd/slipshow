@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bugs.exts</title>
+  <title>Bug-18</title>
   <style type="text/css">
     *, *::before, *::after { box-sizing: border-box }
     body { min-height: 100vh; min-height: 100svh; }
@@ -205,42 +205,12 @@
   </style>
 </head>
 <body>
-<h1>Bugs</h1>
-<p>Add a section for the bug and the CommonMark that triggers it as
-follows:</p>
-<pre><code># Bug #NUM
-
-The triggering CommonMark
-</code></pre>
-<h1>Bug #10</h1>
-<p>In cells toplevel text nodes not at the beginning or end of the cell
-get dropped.</p>
-<div role="region"><table>
-<tr>
-<th>Foo</th>
-</tr>
-<tr>
-<td><code>a</code> or <code>b</code></td>
-</tr>
-<tr>
-<td>before <code>a</code> or <code>b</code> after</td>
-</tr>
-<tr>
-<td>before <code>a</code> or <code>b</code>after</td>
-</tr>
-<tr>
-<td>before<code>a</code>or<code>b</code>after</td>
-</tr>
-<tr>
-<td><em>a</em><code>a</code></td>
-</tr>
-<tr>
-<td><p>foo</p></td>
-</tr>
-</table></div><h1>Bug #15</h1>
-<p>Invalid markup generated for cancelled task.</p>
+<h1>Issue #18</h1>
+<p>When a list marker is followed by end of file, we crash.</p>
 <ul>
-<li><div class="task"><input type="checkbox" disabled><del>This has been cancelled</del></div></li>
+<li>Item 1</li>
+<li>Item 2</li>
+<li></li>
 </ul>
 </body>
 </html>

@@ -1,0 +1,38 @@
+Blocks:
+File "bug-18.md", lines 1-7, characters 0-2
+  Heading, level 1:
+  File "bug-18.md", line 1, characters 0-11
+    Text:
+    File "bug-18.md", line 1, characters 2-11
+  Blank line:
+  File "bug-18.md", line 2
+  Paragraph:
+  File "bug-18.md", line 3, characters 0-56
+    Text:
+    File "bug-18.md", line 3, characters 0-56
+  Blank line:
+  File "bug-18.md", line 4
+  List (tight:true):
+  File "bug-18.md", lines 5-7, characters 1-2
+    List item:
+    File "bug-18.md", line 5, characters 1-9
+      List marker:
+      File "bug-18.md", line 5, characters 1-2
+      Paragraph:
+      File "bug-18.md", line 5, characters 3-9
+        Text:
+        File "bug-18.md", line 5, characters 3-9
+    List item:
+    File "bug-18.md", line 6, characters 1-9
+      List marker:
+      File "bug-18.md", line 6, characters 1-2
+      Paragraph:
+      File "bug-18.md", line 6, characters 3-9
+        Text:
+        File "bug-18.md", line 6, characters 3-9
+    List item:
+    File "bug-18.md", line 7, characters 1-2
+      List marker:
+      File "bug-18.md", line 7, characters 1-2
+      Blank line:
+      File "bug-18.md", line 7, characters 2-2

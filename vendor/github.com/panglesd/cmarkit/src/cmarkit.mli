@@ -1,6 +1,6 @@
 (*---------------------------------------------------------------------------
    Copyright (c) 2021 The cmarkit programmers. All rights reserved.
-   Distributed under the ISC license, see terms at the end of the file.
+   SPDX-License-Identifier: ISC
   ---------------------------------------------------------------------------*)
 
 (** CommonMark parser and abstract syntax tree.
@@ -329,6 +329,8 @@ module Attributes : sig
      | `Kv of (key node) * value node option ]
        option) ->
     t -> t
+
+  val merge : base:t -> new_attrs:t -> t
 end
 
 type 'a attributed = 'a * Attributes.t node
@@ -883,16 +885,16 @@ module Inline : sig
   end
 
   type t +=
-  | Autolink of Autolink.t node
+  | Autolink of Autolink.t attributed node
   | Break of Break.t node
-  | Code_span of Code_span.t node
-  | Emphasis of Emphasis.t node
-  | Image of Link.t node
+  | Code_span of Code_span.t attributed node
+  | Emphasis of Emphasis.t attributed node
+  | Image of Link.t attributed node
   | Inlines of t list node (** Splicing *)
-  | Link of Link.t node
+  | Link of Link.t attributed node
   | Raw_html of Raw_html.t node
-  | Strong_emphasis of Emphasis.t node
-  | Text of Text.t node (** *)
+  | Strong_emphasis of Emphasis.t attributed node
+  | Text of Text.t attributed node (** *)
   (** The
       CommonMark {{:https://spec.commonmark.org/0.30/#inlines}inlines}. *)
 
@@ -951,8 +953,8 @@ module Inline : sig
   end
 
   type t +=
-  | Ext_strikethrough of Strikethrough.t node
-  | Ext_math_span of Math_span.t node
+  | Ext_strikethrough of Strikethrough.t attributed node
+  | Ext_math_span of Math_span.t attributed node
   | Ext_attrs of Attributes_span.t node (** *)
   (** The supported inline extensions. These inlines are only parsed when
       {!Doc.of_string} is called with [strict:false]. *)
@@ -1982,19 +1984,3 @@ v}
     label. Linking text on footnotes is allowed. Shortcut and
     collapsed references to footnotes are rendered specially by
     {!Cmarkit_html}. *)
-
-(*---------------------------------------------------------------------------
-   Copyright (c) 2021 The cmarkit programmers
-
-   Permission to use, copy, modify, and/or distribute this software for any
-   purpose with or without fee is hereby granted, provided that the above
-   copyright notice and this permission notice appear in all copies.
-
-   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-   WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-   MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-   ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-   WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-   ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  ---------------------------------------------------------------------------*)

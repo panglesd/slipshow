@@ -1,6 +1,6 @@
 (*---------------------------------------------------------------------------
    Copyright (c) 2023 The cmarkit programmers. All rights reserved.
-   Distributed under the ISC license, see terms at the end of the file.
+   SPDX-License-Identifier: ISC
   ---------------------------------------------------------------------------*)
 
 open B0_std
@@ -69,6 +69,7 @@ let notrip_reasons =
     290, unlazy (* and indented_blanks *);
     291, unlazy; 292, unlazy; 293, unlazy;
     (* Lists *)
+    304, eager_escape;
     306, indented_blanks; 307, indented_blanks; 309, indented_blanks;
     311, indented_blanks; 312, indented_blanks; 313, indented_blanks;
     314, indented_blanks; 315, empty_item; 316, indented_blanks;
@@ -131,7 +132,7 @@ let notrip_reasons =
   ]
 
 let status st ex_num =
-  Log.app @@ fun m ->
+  Log.stdout @@ fun m ->
   let pp_ex ppf n =
     Fmt.pf ppf "https://spec.commonmark.org/%s/#example-%d" Spec.version n
   in
@@ -140,7 +141,7 @@ let status st ex_num =
   | `Ok -> Spec.ok, " OK "
   | `Fail -> Spec.fail, "FAIL"
   in
-  m "[%a] %a" pp_st st Fmt.(code pp_ex) ex_num
+  m "[%a] %a" pp_st st Fmt.(code' pp_ex) ex_num
 
 let renderer =
   (* Specification tests render empty elements as XHTML. *)
@@ -171,7 +172,7 @@ let test (t : Spec.test) ~show_diff =
       if show_diff || not has_notrip_reason then begin
         let diff = Spec.diff ~spec:t.markdown md in
         status `Ok t.example;
-        Log.app (fun m -> m "@[<v>%a%s@]" pp_reason () diff)
+        Log.stdout (fun m -> m "@[<v>%a%s@]" pp_reason () diff)
       end;
       `Ok
   | false ->
@@ -182,7 +183,7 @@ let test (t : Spec.test) ~show_diff =
       if has_notrip_reason then begin
         Log.warn (fun m -> m "Example fails but should be correct.")
       end;
-      Log.app (fun m -> m "@[<v>%a%s@]" pp_reason () diff); `Fail
+      Log.stdout (fun m -> m "@[<v>%a%s@]" pp_reason () diff); `Fail
 
 let test_no_layout (t : Spec.test) =
   (* Parse without layout, render commonmark, reparse, render to HTML *)
@@ -196,27 +197,28 @@ let test_no_layout (t : Spec.test) =
   let d = [t.markdown; "Markdown render:"; md_diff; "HTML render:"; html_diff]in
   let diff = String.concat "\n" d in
   status `Fail t.example;
-  Log.app (fun m -> m "@[<v>Parse without layout render:@,%s@]" diff);
+  Log.stdout (fun m -> m "@[<v>Parse without layout render:@,%s@]" diff);
   Error ()
 
 let log_result n valid fail no_layout_fail =
   let trip = n - valid - fail in
   if fail <> 0 then
-    (Log.app @@ fun m -> m "[%a] %d out of %d fail." Spec.fail "FAIL" fail n);
+    (Log.stdout
+     @@ fun m -> m "[%a] %d out of %d fail." Spec.fail "FAIL" fail n);
   if valid <> 0 then
-    (Log.app @@ fun m ->
+    (Log.stdout @@ fun m ->
      m "[%a] %d out of %d are correct."
        Spec.ok " OK " valid n);
   if trip <> 0 then
-    (Log.app @@ fun m ->
+    (Log.stdout @@ fun m ->
      let count = if n = trip then "All" else Fmt.str "%d out of" trip in
      m "[%a] %s %d round trip." Spec.ok "TRIP" count n);
-  Log.app @@ fun m ->
+  Log.stdout @@ fun m ->
   let count, pp, st = match no_layout_fail with
   | 0 -> "All", Spec.ok, " OK "
   | f -> Fmt.str "%d out of" f, Spec.fail, "FAIL"
   in
-  Log.app @@ fun m ->
+  Log.stdout @@ fun m ->
   m "[%a] %s %d on parse without layout." pp st count n
 
 let run_tests test_file examples show_diff =
@@ -240,23 +242,6 @@ let run_tests test_file examples show_diff =
 
 let main () =
   let show_diff, file, examples = Spec.cli ~exe:"trip_spec" () in
-  Fmt.set_tty_cap ();
   run_tests file examples show_diff
 
 let () = if !Sys.interactive then () else exit (main ())
-
-(*---------------------------------------------------------------------------
-   Copyright (c) 2023 The cmarkit programmers
-
-   Permission to use, copy, modify, and/or distribute this software for any
-   purpose with or without fee is hereby granted, provided that the above
-   copyright notice and this permission notice appear in all copies.
-
-   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-   WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-   MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-   ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-   WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-   ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  ---------------------------------------------------------------------------*)

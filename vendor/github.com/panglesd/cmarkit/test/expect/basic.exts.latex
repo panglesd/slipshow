@@ -112,6 +112,12 @@ Task done
 \item{} \lbrack ~\rbrack \enspace
 Task cancelled
 Paragraphy
+\item{} \lbrack ~\rbrack \enspace
+Task canceled
+
+\begin{verbatim}
+we have a code block here too.
+\end{verbatim}
 \item{}
 [x]Not a task
 \item{}
@@ -432,8 +438,7 @@ Similarly, at the end, they work % Attributes omitted
 
 
 Without specified delimitations, inline attributes are either % Attributes omitted
- or attached to the % Attributes omitted
-.
+ or attached to the left-closest.
 
 Inline attributes can % Attributes omitted
  including % Attributes omitted
@@ -443,6 +448,15 @@ Attributes can be nested: \href{example.com}{link % Attributes omitted
 }, % Attributes omitted
 , % Attributes omitted
 .
+
+Attributes can be attached without squares, for instance this has an
+id. This \texttt{codeblock}! This \protect\includegraphics{as}. \href{work}{Links}.
+% Attributes cannot be rendered in latex
+
+\subsection{Title with an id}
+% Attributes cannot be rendered in latex
+
+\section{Title with an id}
 
 \subsubsection{Attributes definition}
 

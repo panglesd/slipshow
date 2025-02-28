@@ -26,8 +26,8 @@ let of_cmarkit resolve_images =
         ret
     | _ -> Mapper.default
   in
-  let inline _ = function
-    | Inline.Image (l, meta) ->
+  let inline i = function
+    | Inline.Image ((l, (attrs, meta2)), meta) ->
         let text = Inline.Link.text l in
         let reference =
           match Inline.Link.reference l with
@@ -53,7 +53,8 @@ let of_cmarkit resolve_images =
               `Inline ((ld, attrs), meta)
         in
         let l = Inline.Link.make text reference in
-        Mapper.ret (Inline.Image (l, meta))
+        let attrs = Mapper.map_attrs i attrs in
+        Mapper.ret (Inline.Image ((l, (attrs, meta2)), meta))
     | _ -> Mapper.default
   in
   let attrs = function

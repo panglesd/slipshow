@@ -1,6 +1,6 @@
 (*---------------------------------------------------------------------------
    Copyright (c) 2021 The cmarkit programmers. All rights reserved.
-   Distributed under the ISC license, see terms at the end of the file.
+   SPDX-License-Identifier: ISC
   ---------------------------------------------------------------------------*)
 
 open Cmarkit
@@ -9,8 +9,15 @@ module String_set = Set.Make (String)
 
 (* State *)
 
+type heading_level =
+| Part
+| Chapter
+| Section
+| Subsection
+
 type state =
   { backend_blocks : bool;
+    first_heading_level : heading_level;
     mutable sot : bool; (* start of text *)
     mutable labels : String_set.t;
     mutable footnote_labels : string Label.Map.t; }
@@ -18,9 +25,14 @@ type state =
 let state : state C.State.t = C.State.make ()
 let get_state c = C.State.get c state
 let backend_blocks c = (get_state c).backend_blocks
-let init_context ?(backend_blocks = false) c _ =
+let first_heading_level c = (get_state c).first_heading_level
+let init_context
+    ?(backend_blocks = false) ?(first_heading_level = Section) c _
+  =
   let labels = String_set.empty and footnote_labels = Label.Map.empty in
-  let st = { backend_blocks; sot = true; labels; footnote_labels } in
+  let st =
+    { backend_blocks; first_heading_level; sot = true; labels; footnote_labels }
+  in
   C.State.set c state (Some st)
 
 let unique_label c l =
@@ -210,22 +222,41 @@ let math_span c ms =
   C.string c (if Inline.Math_span.display ms then "\\]" else "\\)")
 
 let inline c = function
-| Inline.Autolink (a, _) -> autolink c a; true
+| Inline.Autolink ((a, _TODO), _) -> autolink c a; true
 | Inline.Break (b, _) -> break c b; true
-| Inline.Code_span (cs, _) -> code_span c cs; true
-| Inline.Emphasis (e, _) -> emphasis c e; true
-| Inline.Image (i, _) -> image c i; true
+| Inline.Code_span ((cs, _TODO), _) -> code_span c cs; true
+| Inline.Emphasis ((e, _TODO), _) -> emphasis c e; true
+| Inline.Image ((i, _TODO), _) -> image c i; true
 | Inline.Inlines (is, _) -> List.iter (C.inline c) is; true
-| Inline.Link (l, _) -> link c l; true
+| Inline.Link ((l, _TODO), _) -> link c l; true
 | Inline.Raw_html (_, _) -> comment c "Raw CommonMark HTML omitted"; true
-| Inline.Strong_emphasis (e, _) -> strong_emphasis c e; true
-| Inline.Text (t, _) -> text c t; true
-| Inline.Ext_strikethrough (s, _) -> strikethrough c s; true
-| Inline.Ext_math_span (ms, _) -> math_span c ms; true
+| Inline.Strong_emphasis ((e, _TODO), _) -> strong_emphasis c e; true
+| Inline.Text ((t, _TODO), _) -> text c t; true
+| Inline.Ext_strikethrough ((s, _TODO), _) -> strikethrough c s; true
+| Inline.Ext_math_span ((ms, _TODO), _) -> math_span c ms; true
 | Inline.Ext_attrs _ -> comment c "Attributes omitted"; true
 | _ -> comment c "Unknown Cmarkit inline"; true
 
 (* Block rendering *)
+
+type heading =
+  | Part
+  | Chapter
+  | Section
+  | Subsection
+
+let heading_of_string = function
+  | "part" -> Some Part
+  | "chapter" -> Some Chapter
+  | "section" -> Some Section
+  | "subsection" -> Some Subsection
+  | _s -> None
+
+let pp_heading fmt = function
+  | Part -> Format.pp_print_string fmt "part"
+  | Chapter -> Format.pp_print_string fmt "chapter"
+  | Section -> Format.pp_print_string fmt "section"
+  | Subsection -> Format.pp_print_string fmt "subsection"
 
 let attributes c attrs =
   if Attributes.is_empty attrs then () else
@@ -266,10 +297,13 @@ let code_block c attrs cb =
 
 let heading c attrs h =
   attributes c attrs;
-  let cmd = match Block.Heading.level h with
-  | 1 -> "section{" | 2 -> "subsection{" | 3 -> "subsubsection{"
-  | 4 -> "paragraph{" | 5 -> "subparagraph{" | 6 -> "subparagraph{"
-  | _ -> "subparagraph{"
+  let first = match first_heading_level c with
+  | Part -> 0 | Chapter -> 1 | Section -> 2 | Subsection -> 3
+  in
+  let cmd = match first + Block.Heading.level h with
+  | 1 -> "part{" | 2 -> "chapter{" | 3 -> "section{" | 4 -> "subsection{"
+  | 5 -> "subsubsection{" | 6 -> "paragraph{" | 7 -> "subparagraph{"
+  | 8 -> "subparagraph{" | _ -> "subparagraph{"
   in
   let i = Block.Heading.inline h in
   newline c;
@@ -413,25 +447,10 @@ let doc c d = C.block c (Doc.block d); true
 
 (* Renderer *)
 
-let renderer ?backend_blocks () =
-  let init_context = init_context ?backend_blocks in
+let renderer ?backend_blocks ?first_heading_level () =
+  let init_context = init_context ?backend_blocks ?first_heading_level in
   Cmarkit_renderer.make ~init_context ~inline ~block ~doc ()
 
-let of_doc ?backend_blocks d =
-  Cmarkit_renderer.doc_to_string (renderer ?backend_blocks ()) d
-
-(*---------------------------------------------------------------------------
-   Copyright (c) 2021 The cmarkit programmers
-
-   Permission to use, copy, modify, and/or distribute this software for any
-   purpose with or without fee is hereby granted, provided that the above
-   copyright notice and this permission notice appear in all copies.
-
-   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-   WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-   MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-   ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-   WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-   ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  ---------------------------------------------------------------------------*)
+let of_doc ?backend_blocks ?first_heading_level d =
+  Cmarkit_renderer.doc_to_string
+    (renderer ?backend_blocks ?first_heading_level ()) d

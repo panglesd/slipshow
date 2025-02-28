@@ -92,6 +92,9 @@ But it can also be in $$ \left( \sum_{k=1}^n
   * [x] Task done
   * [~] Task cancelled
         Paragraphy
+  * [~] Task canceled 
+  
+            we have a code block here too.
   * [x]Not a task
   * \[x] Not a task
 
@@ -238,6 +241,17 @@ Inline attributes can [refer to many]{words} including [with **inline**]{.bold}.
 Attributes can be nested: [link [with]{attrs}](example.com), [attrs [with
 link](example.com)]{attrs}, [attrs [within]{attrs1}]{attrs2}.
 
+Attributes can be attached without squares, for instance this{#idee} has an
+id. This `codeblock`{#too}! This ![image](as){#well}. [Links](work){#the .same}.
+
+{#id}
+## Title with an id
+
+{#id}
+Title with an id
+================
+
+
 ### Attributes definition
 
 We can provide [attributes][a] definition to [avoid][a] [cluttering] a [line with][a] attributes.
@@ -258,3 +272,4 @@ A [b][link-def-with-attrs] c
 
 {.present}
 [link-def-with-attrs]: http://example.com
+

@@ -47,7 +47,7 @@ let media_link c l =
 
 let custom_html =
   let inline c = function
-  | Cmarkit.Inline.Image (l, _) -> media_link c l
+  | Cmarkit.Inline.Image ((l, _TODO), _) -> media_link c l
   | _ -> false (* let the default HTML renderer handle that *)
   in
   let block c = function

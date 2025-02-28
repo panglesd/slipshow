@@ -1,5 +1,5 @@
 Blocks:
-File "bugs.exts.md", lines 1-26
+File "bugs.exts.md", lines 1-32
   Heading, level 1:
   File "bugs.exts.md", lines 1-2, characters 0-4
     Text:
@@ -166,3 +166,29 @@ File "bugs.exts.md", lines 1-26
           File "bugs.exts.md", line 25, characters 8-12
   Blank line:
   File "bugs.exts.md", line 26
+  Heading, level 1:
+  File "bugs.exts.md", line 27, characters 0-9
+    Text:
+    File "bugs.exts.md", line 27, characters 2-9
+  Blank line:
+  File "bugs.exts.md", line 28
+  Paragraph:
+  File "bugs.exts.md", line 29, characters 0-44
+    Text:
+    File "bugs.exts.md", line 29, characters 0-44
+  Blank line:
+  File "bugs.exts.md", line 30
+  List (tight:true):
+  File "bugs.exts.md", line 31, characters 0-29
+    List item:
+    File "bugs.exts.md", line 31, characters 0-29
+      List marker:
+      File "bugs.exts.md", line 31, characters 0-1
+      Task marker:
+      File "bugs.exts.md", line 31, characters 2-5
+      Paragraph:
+      File "bugs.exts.md", line 31, characters 6-29
+        Text:
+        File "bugs.exts.md", line 31, characters 6-29
+  Blank line:
+  File "bugs.exts.md", line 32

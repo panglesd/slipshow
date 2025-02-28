@@ -1,0 +1,10 @@
+\section{Issue \#18}
+
+When a list marker is followed by end of file, we crash.
+
+\begin{itemize}
+\item{}
+Item 1
+\item{}
+Item 2
+\item{}\end{itemize}
