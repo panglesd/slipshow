@@ -93,7 +93,7 @@ module AttributeActions = struct
       let arg =
         Jv.obj
           [|
-            ( "set_class",
+            ( "set_style",
               Jv.callback ~arity:3 @@ fun elem style value ->
               let old_value =
                 let old_value = Brr.El.inline_style style elem in
@@ -106,6 +106,17 @@ module AttributeActions = struct
                 match old_value with
                 | None -> Brr.El.remove_inline_style style elem
                 | Some old_value -> Brr.El.set_inline_style style old_value elem
+              in
+              undos_ref := undo :: !undos_ref;
+              Jv.callback ~arity:1 undo );
+            ( "set_class",
+              Jv.callback ~arity:3 @@ fun elem class_ bool ->
+              let bool = Jv.to_bool bool in
+              Brr.Console.(log [ "set_class called with"; elem; class_; bool ]);
+              let old_value = Brr.El.class' class_ elem in
+              Brr.El.set_class class_ bool elem;
+              let undo _ =
+                Fut.return @@ Brr.El.set_class class_ old_value elem
               in
               undos_ref := undo :: !undos_ref;
               Jv.callback ~arity:1 undo );
