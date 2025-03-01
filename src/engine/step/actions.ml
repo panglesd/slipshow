@@ -89,6 +89,7 @@ module AttributeActions = struct
       Brr.Console.(log [ body ]);
       let args = Jv.Function.[ ("slip", Fun.id) ] in
       let f = Jv.Function.v ~body ~args in
+      let undos_ref = ref [] in
       let arg =
         Jv.obj
           [|
@@ -106,12 +107,19 @@ module AttributeActions = struct
                 | None -> Brr.El.remove_inline_style style elem
                 | Some old_value -> Brr.El.set_inline_style style old_value elem
               in
+              undos_ref := undo :: !undos_ref;
               Jv.callback ~arity:1 undo );
           |]
       in
       let u = f arg in
       let undo () =
-        Fut.return @@ try ignore @@ Jv.call u "undo" [||] with _ -> ()
+        try Fut.return (ignore @@ Jv.call u "undo" [||])
+        with _ ->
+          List.fold_left
+            (fun acc f ->
+              let* () = acc in
+              f ())
+            (Fut.return ()) !undos_ref
       in
       Undoable.return ~undo ()
     in
