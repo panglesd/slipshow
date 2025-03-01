@@ -115,7 +115,12 @@ module AttributeActions = struct
       in
       Undoable.return ~undo ()
     in
-    act_on_elems "exec-at-unpause" action elem
+    try act_on_elems "exec-at-unpause" action elem
+    with e ->
+      Brr.Console.(
+        log
+          [ "An exception occurred when trying to execute a custom script:"; e ]);
+      Undoable.return ()
 
   let do_ window elem =
     let do_ =
