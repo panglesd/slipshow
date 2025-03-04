@@ -50,11 +50,27 @@ let to_asset s =
             f "Could not read file: %s. Considering it as an URL. (%s)" s e);
         Remote s
 
-let compile ~math_link ~slip_css_link ~slipshow_js_link ~input ~output ~watch
-    ~serve =
+let compile ~markdown_mode ~math_link ~slip_css_link ~slipshow_js_link ~input
+    ~output ~watch ~serve =
   let math_link = Option.map to_asset math_link in
   let slip_css_link = Option.map to_asset slip_css_link in
   let slipshow_js_link = Option.map to_asset slipshow_js_link in
+  let markdown_compile () =
+    let+ content = Io.read input in
+    let md =
+      let md =
+        Cmarkit.Doc.of_string ~heading_auto_ids:true ~strict:false content
+      in
+      Cmarkit_commonmark.of_doc ~include_attributes:false md
+    in
+    match output with
+    | `Stdout ->
+        print_string md;
+        Ok ()
+    | `File output ->
+        let* () = Io.write output md in
+        ()
+  in
   let f () =
     let+ content = Io.read input in
     let html =
@@ -92,7 +108,8 @@ let compile ~math_link ~slip_css_link ~slipshow_js_link ~input ~output ~watch
       (* let () = print_endline s in *)
       Ok result
   in
-  if serve then Serve.do_serve input f2
+  if markdown_mode then markdown_compile ()
+  else if serve then Serve.do_serve input f2
   else if watch then Serve.do_watch input f
   else
     let+ _html = f () in

@@ -181,71 +181,55 @@ This is an empty table with three columns:
 
 ### Block attributes
 
-{#my-id}
 This is a paragraph with the `my-id` is.
 
-{#your-id}
 I have `your-id`, not mine
 
-{#his-id}
 I have `his-id`, not mine, not yours
 
-{.blue}
 #### This is a title with the `.blue` class
 
-{key=value}
 - This is an item where `key` has value `value`.
 - It is not possible to attach attributes to list items... yet
 
-{#my-id .my-class key="value" flag}
 I'm a paragraph with many attributes
 
-{#my-id .my-class2 .my-class key2="value2" flag2 key="value" flag}
 I have much more attribute than the previous one, since they stack
 
-{#your-id}
 I have your id
 
-{.class1 .class3 .class2 .class4}
 I have a lot of class: `class1`, `class2`, `class3` and `class4`
 
-{.class4 .class1 .class3 .class2}
 Me too\!
 
-{#space-do-not-matter}
 But spaceships matter.
 
-{key="a value with a }"}
 Some word
 
-{introducing standalone attributes}
 
-{#attributes .standalone also="stack"}
 
 ### Inline attributes
 
-[]{.I am} not a block attribute, but a standalone inline attribute, as I have content in the line.
+ not a block attribute, but a standalone inline attribute, as I have content in the line.
 
-In the middle of paragraphs, []{#attributes .inline} work.
+In the middle of paragraphs,  work.
 
-Similarly, at the end, they work []{as=well}
+Similarly, at the end, they work 
 
-Without specified delimitations, inline attributes are either []{standalone} or attached to the left-closest{word}.
+Without specified delimitations, inline attributes are either  or attached to the left-closest.
 
-Inline attributes can [refer to many]{words} including [with **inline**]{.bold}.
+Inline attributes can refer to many including with **inline**.
 
-Attributes can be nested: [link [with]{attrs}](example.com), [attrs [with
-link](example.com)]{attrs}, [attrs [within]{attrs1}]{attrs2}.
+Attributes can be nested: [link with](example.com), attrs [with
+link](example.com), attrs within.
 
-Attributes can be attached without squares, for instance this{#idee} has an
-id. This `codeblock`{#too}! This ![image](as){#well}. [Links](work){#the .same}. **Emphasis**{and} and *italic1*{and} _italic2_{too}\!
+Attributes can be attached without squares, for instance this has an
+id. This `codeblock`! This ![image](as). [Links](work). **Emphasis** and *italic1* _italic2_\!
 
-Testing ~~strikethrough~~{text}.
+Testing ~~strikethrough~~.
 
-{#id}
 ## Title with an id
 
-{#id}
 Title with an id
 ================
 
@@ -267,6 +251,5 @@ However, for link definition, they are present:
 
 A [b][link-def-with-attrs] c
 
-{.present}
 [link-def-with-attrs]: http://example.com
 

@@ -151,7 +151,7 @@ let test (t : Spec.test) ~show_diff =
   (* Parse with layout, render commonmark, if not equal reparse the render
      and render it to HTML, if that succeeds it's a correct rendering. *)
   let doc = Cmarkit.Doc.of_string ~layout:true t.markdown in
-  let md = Cmarkit_commonmark.of_doc doc in
+  let md = Cmarkit_commonmark.of_doc ~include_attributes:true doc in
   let has_notrip_reason =
     Option.is_some (List.assoc_opt t.example notrip_reasons)
   in
@@ -188,7 +188,7 @@ let test (t : Spec.test) ~show_diff =
 let test_no_layout (t : Spec.test) =
   (* Parse without layout, render commonmark, reparse, render to HTML *)
   let doc = Cmarkit.Doc.of_string ~layout:false t.markdown in
-  let md = Cmarkit_commonmark.of_doc doc in
+  let md = Cmarkit_commonmark.of_doc ~include_attributes:true doc in
   let doc' = Cmarkit.Doc.of_string md in
   let html = Cmarkit_renderer.doc_to_string renderer doc' in
   if String.equal html t.html then Ok () else

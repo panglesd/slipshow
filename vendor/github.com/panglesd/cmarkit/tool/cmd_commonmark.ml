@@ -21,14 +21,14 @@ let diff src render =
   let* () = Os.write_file render_file render in
   Ok (Sys.command cmd)
 
-let commonmark files strict no_layout dodiff html_diff =
+let commonmark files strict no_layout dodiff html_diff include_attributes =
   let op = match html_diff, dodiff with
   | true, _ -> `Html_diff | false, true -> `Diff | false, false -> `Render
   in
   let layout = not no_layout in
   let commonmark ~file contents =
     let doc = Cmarkit.Doc.of_string ~file ~layout ~strict contents in
-    Cmarkit_commonmark.of_doc doc
+    Cmarkit_commonmark.of_doc ~include_attributes doc
   in
   match op with
   | `Render ->
@@ -49,7 +49,7 @@ let commonmark files strict no_layout dodiff html_diff =
       let add ~file src =
         let doc = Cmarkit.Doc.of_string ~file ~layout ~strict src in
         let doc_html = Cmarkit_html.of_doc ~safe:false doc in
-        let md = Cmarkit_commonmark.of_doc doc in
+        let md = Cmarkit_commonmark.of_doc ~include_attributes doc in
         let doc' = Cmarkit.Doc.of_string ~layout ~strict md in
         let doc_html' = Cmarkit_html.of_doc ~safe:false doc' in
         htmls := (doc_html, doc_html') :: !htmls
@@ -73,6 +73,11 @@ let diff =
              option $(b,--html-diff)."
   in
   Arg.(value & flag & info ["diff"] ~doc)
+
+let include_attributes =
+  let doc = "Include attributes in the output."
+  in
+  Arg.(value & flag & info ["include-attributes"] ~doc)
 
 let html_diff =
   let doc = "Output difference between the source HTML rendering \
@@ -104,4 +109,4 @@ let v =
   in
   Cmd.v (Cmd.info "commonmark" ~doc ~exits ~man) @@
   Term.(const commonmark $ Cli.files $ Cli.strict $ Cli.no_layout $
-        diff $ html_diff)
+        diff $ html_diff $ include_attributes)
