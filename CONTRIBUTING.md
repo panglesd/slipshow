@@ -27,13 +27,6 @@ $ cat _build/default/compiler/src/bin/main_js.bc.js >> bin/slipshow
 $ chmod a+x bin/slipshow
 ```
 
-### Do the npm release
-
-```
-$ npm version patch         # Or minor or major, let's dream!
-$ npm publish               # Publishing
-```
-
 ### Do the github release
 
 ```
