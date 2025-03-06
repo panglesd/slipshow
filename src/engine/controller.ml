@@ -7,7 +7,7 @@ let keyboard_setup (window : Universe.Window.window) =
       match key with
       | "t" ->
           let body = Brr.Document.body Brr.G.document in
-          let c = Jstr.v "slip-toc-mode" in
+          let c = Jstr.v "slipshow-toc-mode" in
           Brr.El.set_class c (not @@ Brr.El.class' c body) body
       | "w" -> Drawing.State.set_tool Pen
       | "h" -> Drawing.State.set_tool Highlighter

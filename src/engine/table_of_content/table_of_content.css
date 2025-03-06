@@ -1,8 +1,8 @@
-.slip-toc-mode #slip-toc {
+.slipshow-toc-mode #slipshow-toc {
   display: block;
 }
 
-#slip-toc {
+#slipshow-toc {
   position: fixed;
   overflow: scroll;
   opacity: 0.98;
@@ -16,7 +16,7 @@
   z-index: 100;
 }
 
-.slip-step {
+.slipshow-toc-step {
   display: inline-block;
   border: 1px solid black;
   border-radius: 3px;
@@ -27,15 +27,15 @@
   margin-right: 10px;
 }
 
-.slip-only-step,
-.slip-toc-content {
+.slipshow-toc-only-step,
+.slipshow-toc-content {
   display: inline-block;
 }
 
-.slip-toc-entry {
+.slipshow-toc-entry {
   cursor: pointer;
 }
 
-.slip-current-step .slip-step {
+.slipshow-toc-current-step .slipshow-toc-step {
   background-color: red;
 }
