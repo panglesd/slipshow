@@ -195,7 +195,7 @@ let update_history () =
   let n = State.get_step () in
   let> () =
     let counter =
-      Brr.El.find_first_by_selector (Jstr.v "#slip-counter") |> Option.get
+      Brr.El.find_first_by_selector (Jstr.v "#slipshow-counter") |> Option.get
     in
     Undoable.return ~undo:(fun () ->
         Fut.return
