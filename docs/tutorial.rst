@@ -423,8 +423,8 @@ using the tools present on the top left of your presentation.
 The best is still to use the shortcuts:
 
 - ``w`` to write,
-- ``W`` to erase,
-- ``H`` to erase the highlighted parts,
+- ``h`` to highlight,
+- ``e`` to erase,
 - ``x`` to go back to a normal cursor,
 - ``X`` to clear all annotations.
 
@@ -459,7 +459,7 @@ allows you to embed a video, or use any javascript library. For a scripted start
 and stepping of your animation, you can use the ``exec-at-unpause`` attribute,
 combined with the special ``slip-script`` codeblock!
 
-Here is a minimal example of an Eratosthenes animation. It is very dably written,
+Here is a minimal example of an Eratosthenes animation. It is very badly written,
 in JS/CSS/HTML, so you need some basic skills on these to understand it, but you
 can use libraries to make it less tedious.
 
@@ -514,4 +514,4 @@ Moving freely
 
 During a presentation, it is important to not be too tied to the original
 program. You can move the window freely, using the ``i``, ``j``, ``k`` and ``l``
-keys. Change the "fastness" using the ``f`` key.
+keys. Change the "zoom" factor using the ``z`` and ``Z`` keys.
