@@ -133,7 +133,8 @@ let expect_cmarkit_renders ctx =
   let renderers = (* command, output suffix *)
     [ Cmd.(arg "html" % "-c" % "--unsafe"), ".html";
       Cmd.(arg "latex"), ".latex";
-      Cmd.(arg "commonmark"), ".trip.md";
+      Cmd.(arg "commonmark"), ".strip-attributes.md";
+      Cmd.(arg "commonmark" % "--include-attributes"), ".trip.md";
       Cmd.(arg "locs"), ".locs";
       Cmd.(arg "locs" % "--no-layout"), ".nolayout.locs"; ]
   in
@@ -148,7 +149,7 @@ let expect_cmarkit_renders ctx =
   in
   let test_files =
     let base_files = B0_expect.base_files ctx ~rel:true ~recurse:false in
-    let input f = Fpath.has_ext ".md" f && not (Fpath.has_ext ".trip.md" f) in
+    let input f = Fpath.has_ext ".md" f && not (Fpath.has_ext ".trip.md" f) && not (Fpath.has_ext ".strip-attributes.md" f) in
     List.filter input base_files
   in
   List.iter (test_file ctx cmarkit) test_files

@@ -65,3 +65,23 @@ let of_cmarkit resolve_images =
     | x -> Some x
   in
   Ast.Mapper.make ~block ~inline ~attrs ()
+
+let to_cmarkit =
+  let block m = function
+    | Ast.Div ((bq, _), meta) ->
+        let b =
+          match Mapper.map_block m bq with None -> Block.empty | Some b -> b
+        in
+        Mapper.ret (Block.Blocks ([ b ], meta))
+    | Ast.SlipScript _ -> Mapper.delete
+    | _ -> Mapper.default
+  in
+  let inline _i = function _ -> Mapper.default in
+  let attrs = function
+    | `Kv (("up", m), v) -> Some (`Kv (("up-at-unpause", m), v))
+    | `Kv (("center", m), v) -> Some (`Kv (("center-at-unpause", m), v))
+    | `Kv (("down", m), v) -> Some (`Kv (("down-at-unpause", m), v))
+    | `Kv (("exec", m), v) -> Some (`Kv (("exec-at-unpause", m), v))
+    | x -> Some x
+  in
+  Ast.Mapper.make ~block ~inline ~attrs ()

@@ -13,14 +13,24 @@ type indent =
 | `Fn of int * Label.t ]
 
 type state =
-  { nl : string; (* newline to output. *)
+  { include_attributes : bool;
+    nl : string; (* newline to output. *)
     mutable sot : bool; (* start of text *)
     mutable indents : indent list; (* indentation stack. *) }
 
 let state : state C.State.t = C.State.make ()
 let get_state c = C.State.get c state
-let init_context c d =
-  C.State.set c state (Some { nl = Cmarkit.Doc.nl d; sot = true; indents = [] })
+let init_context ~include_attributes c d =
+  C.State.set c state
+    (Some
+       { include_attributes ;
+         nl = Cmarkit.Doc.nl d;
+         sot = true;
+         indents = [] })
+
+let include_attributes c =
+  let state = get_state c in
+  state.include_attributes
 
 (* Escaping *)
 
@@ -169,7 +179,8 @@ let tight_block_lines c = function
 
 (* Inline rendering *)
 
-let attributes c attrs =
+let attributes ?(inline = false) c attrs =
+  if not (include_attributes c) then () else begin
   let kv_attrs =
     let kv_attrs = Cmarkit.Attributes.kv_attributes attrs in
     List.map
@@ -191,8 +202,8 @@ let attributes c attrs =
   let attrs = id @ class' @ kv_attrs in
   if attrs = [] then () else
     begin
-      newline c;
-      indent c;
+      if not inline then
+        (newline c; indent c);
       let attrs =
         List.map
           (function
@@ -207,8 +218,9 @@ let attributes c attrs =
       C.string c s;
       C.string c "}"
     end
+  end
 
-let autolink c a =
+let autolink c a _TODO =
   C.byte c '<'; C.string c (fst (Inline.Autolink.link a)); C.byte c '>'
 
 let break c b =
@@ -220,20 +232,23 @@ let break c b =
   in
   C.string c before; newline c; indent c; C.string c after
 
-let code_span c cs =
+let code_span c cs attrs =
   nchars c (Inline.Code_span.backtick_count cs) '`';
   tight_block_lines c (Inline.Code_span.code_layout cs);
-  nchars c (Inline.Code_span.backtick_count cs) '`'
+  nchars c (Inline.Code_span.backtick_count cs) '`';
+  attributes ~inline:true c attrs
 
-let emphasis c e =
+let emphasis c e attrs =
   let delim = Inline.Emphasis.delim e and i = Inline.Emphasis.inline e in
   let delim = if not (delim = '*' || delim = '_') then '*' else delim in
-  C.byte c delim; C.inline c i; C.byte c delim
+  C.byte c delim; C.inline c i; C.byte c delim;
+  attributes ~inline:true c attrs
 
-let strong_emphasis c e =
+let strong_emphasis c e attrs =
   let delim = Inline.Emphasis.delim e and i = Inline.Emphasis.inline e in
   let delim = if not (delim = '*' || delim = '_') then '*' else delim in
-  C.byte c delim;  C.byte c delim; C.inline c i; C.byte c delim; C.byte c delim
+  C.byte c delim;  C.byte c delim; C.inline c i; C.byte c delim; C.byte c delim;
+  attributes ~inline:true c attrs
 
 let link_title c open_delim title = match title with
 | None -> ()
@@ -264,7 +279,7 @@ let link_definition c ld =
   link_title c layout.title_open_delim (Link_definition.title ld);
   block_lines c layout.after_title
 
-let link c l = match Inline.Link.reference l with
+let link c l attrs = (match Inline.Link.reference l with
 | `Inline ((ld, _), _) ->
     C.byte c '['; C.inline c (Inline.Link.text l); C.byte c ']';
     C.byte c '('; link_definition c ld; C.byte c ')'
@@ -275,42 +290,49 @@ let link c l = match Inline.Link.reference l with
     C.string c "[]"
 | `Ref (`Full, label, _)  ->
     C.byte c '['; C.inline c (Inline.Link.text l); C.byte c ']';
-    C.byte c '['; link_label_lines c (Label.text label); C.byte c ']'
+    C.byte c '['; link_label_lines c (Label.text label); C.byte c ']');
+  attributes ~inline:true c attrs
 
 let attrs_span c span =
   let content = Inline.Attributes_span.content span
   and (attrs, _) = Inline.Attributes_span.attrs span in
-  C.byte c '['; C.inline c content; C.byte c ']';
-  attributes c attrs
+  if not (include_attributes c) then C.inline c content else begin
+    C.byte c '['; C.inline c content; C.byte c ']';
+    attributes ~inline:true c attrs
+  end
 
 let inlines c is = List.iter (C.inline c) is
-let image c l = C.byte c '!'; link c l
+let image c l attrs = C.byte c '!'; link c l attrs
 let raw_html c h = tight_block_lines c h
-let text c t = escaped_text c t
+let text c t attrs =
+  escaped_text c t;
+  attributes ~inline:true c attrs
 
-let strikethrough c s =
+let strikethrough c s attrs =
   let i = Inline.Strikethrough.inline s in
-  C.string c "~~"; C.inline c i; C.string c "~~"
+  C.string c "~~"; C.inline c i; C.string c "~~";
+  attributes ~inline:true c attrs
 
-let math_span c ms =
+let math_span c ms attrs =
   let sep = if Inline.Math_span.display ms then "$$" else "$" in
   C.string c sep;
   tight_block_lines c (Inline.Math_span.tex_layout ms);
-  C.string c sep
+  C.string c sep;
+  attributes ~inline:true c attrs
 
 let inline c = function
-| Inline.Autolink ((a, _TODO), _) -> autolink c a; true
+| Inline.Autolink ((a, (attrs, _)), _) -> autolink c a attrs; true
 | Inline.Break (b, _) -> break c b; true
-| Inline.Code_span ((cs, _TODO), _) -> code_span c cs; true
-| Inline.Emphasis ((e, _TODO), _) -> emphasis c e; true
-| Inline.Image ((i, _TODO), _) -> image c i; true
+| Inline.Code_span ((cs, (attrs, _)), _) -> code_span c cs attrs; true
+| Inline.Emphasis ((e, (attrs, _)), _) -> emphasis c e attrs; true
+| Inline.Image ((i, (attrs, _)), _) -> image c i attrs; true
 | Inline.Inlines (is, _) -> inlines c is; true
-| Inline.Link ((l, _TODO), _) -> link c l; true
+| Inline.Link ((l, (attrs, _)), _) -> link c l attrs; true
 | Inline.Raw_html (html, _) -> raw_html c html; true
-| Inline.Strong_emphasis ((e, _TODO), _) -> strong_emphasis c e; true
-| Inline.Text ((t, _TODO), _) -> text c t; true
-| Inline.Ext_strikethrough ((s, _TODO), _) -> strikethrough c s; true
-| Inline.Ext_math_span ((m, _TODO), _) -> math_span c m; true
+| Inline.Strong_emphasis ((e, (attrs, _)), _) -> strong_emphasis c e attrs; true
+| Inline.Text ((t, (attrs, _)), _) -> text c t attrs; true
+| Inline.Ext_strikethrough ((s, (attrs, _)), _) -> strikethrough c s attrs; true
+| Inline.Ext_math_span ((m, (attrs, _)), _) -> math_span c m attrs; true
 | Inline.Ext_attrs (span, _) -> attrs_span c span; true
 | _ -> C.string c "<!-- Unknown Cmarkit inline -->"; true
 
@@ -463,6 +485,14 @@ let footnote c fn attrs =
 
 let standalone_attributes c attrs = attributes c attrs
 
+let attribute_def c ad attrs =
+  attributes c attrs;
+  push_indent c (`Fn (Block.Attribute_definition.indent ad,
+                      Block.Attribute_definition.label ad));
+  let (attrs, _) = Block.Attribute_definition.attrs ad in
+  standalone_attributes c attrs;
+  pop_indent c
+
 let block c = function
 | Block.Blank_line (l, _) -> blank_line c l; true
 | Block.Block_quote ((b, (attrs, _)), _) -> block_quote c b attrs; true
@@ -479,6 +509,7 @@ let block c = function
 | Block.Ext_table ((t, (attrs, _)), _) -> table c t attrs; true
 | Block.Ext_footnote_definition ((t, (attrs, _)), _) -> footnote c t attrs; true
 | Block.Ext_standalone_attributes (attrs, _) -> standalone_attributes c attrs; true
+| Block.Ext_attribute_definition ((attr_def, (attrs, _)), _) -> attribute_def c attr_def attrs; true
 | _ -> newline c; indent c; C.string c "<!-- Unknown Cmarkit block -->"; true
 
 (* Document rendering *)
@@ -487,5 +518,8 @@ let doc c d = C.block c (Doc.block d); true
 
 (* Renderer *)
 
-let renderer () = Cmarkit_renderer.make ~init_context ~inline ~block ~doc ()
-let of_doc d = Cmarkit_renderer.doc_to_string (renderer ()) d
+let renderer ?(include_attributes = false) () =
+  let init_context = init_context ~include_attributes in
+  Cmarkit_renderer.make ~init_context ~inline ~block ~doc ()
+let of_doc ?(include_attributes = false) d =
+  Cmarkit_renderer.doc_to_string (renderer ~include_attributes ()) d
