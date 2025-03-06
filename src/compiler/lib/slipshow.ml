@@ -63,7 +63,7 @@ let embed_in_page content ~has_math ~math_link ~slip_css_link ~slipshow_js_link
         </div>
       </div>
     </div>
-    <div id="slip-counter">0</div>
+    <div id="slipshow-counter">0</div>
 
 
 
