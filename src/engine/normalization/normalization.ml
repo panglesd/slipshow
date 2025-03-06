@@ -6,17 +6,9 @@ let width = 1440.
 let height = 1080.
 
 type t = { open_window : El.t; format_container : El.t }
+type state = { left : float; top : float; scale : float }
 
-type state = {
-  left : float;
-  (* right : float; *)
-  top : float;
-  (* bottom : float; *)
-  scale : float;
-}
-
-let state =
-  ref { left = 0.; (* right = 0.; *) top = 0. (* ; bottom = 0. *); scale = 1. }
+let state = ref { left = 0.; top = 0.; scale = 1. }
 
 let translate_coords (x, y) =
   let x = (x -. !state.left) /. !state.scale
@@ -40,8 +32,9 @@ let replace_open_window window =
       open_window
   in
   let foi = float_of_int in
-  let browser_h = foi @@ Window.inner_height G.window in
-  let browser_w = foi @@ Window.inner_width G.window in
+  let parent = Brr.El.parent open_window |> Option.get in
+  let browser_h = foi @@ Brr.El.offset_h parent in
+  let browser_w = foi @@ Brr.El.offset_w parent in
   let* window_w, _window_h =
     if width *. browser_h < height *. browser_w then
       let window_w = browser_h *. width /. height in
@@ -83,6 +76,10 @@ let create el =
 let setup el =
   let open_window = create el in
   let* () = replace_open_window open_window in
-  let resize _ = ignore @@ replace_open_window open_window in
-  let _listener = Ev.listen Ev.resize resize (Window.as_target G.window) in
+  let resize_observer =
+    Brr.ResizeObserver.create (fun _ _ ->
+        ignore @@ replace_open_window open_window)
+  in
+  let parent = Brr.El.parent open_window.open_window |> Option.get in
+  let _unobser = Brr.ResizeObserver.observe resize_observer parent in
   Fut.tick ~ms:0
