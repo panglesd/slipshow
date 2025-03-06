@@ -1,16 +1,16 @@
 
-.drawing #open-window {
+.slipshow-drawing-mode #open-window {
   pointer-events: none;
 }
 
-#slip-drawing-toolbar {
+#slipshow-drawing-toolbar {
   position: fixed;
   top: 0;
   left: 0;
 }
 
 .slip-writing-toolbar:hover,
-.drawing .slip-writing-toolbar {
+.slipshow-drawing-mode .slip-writing-toolbar {
   width: 32px;
   height: 640px;
 }

@@ -54,7 +54,7 @@ let embed_in_page content ~has_math ~math_link ~slip_css_link ~slipshow_js_link
   </head>
   <body>
     <div id="slipshow-content">
-      <svg id="slipshow-drawing" style="overflow:visible; position: absolute; z-index:1000"></svg>
+      <svg id="slipshow-drawing-elem" style="overflow:visible; position: absolute; z-index:1000"></svg>
       <div class="slip-rescaler">
         <div class="slip">
           <div class="slip-body">
