@@ -106,11 +106,11 @@ end = struct
 
   let make_active () =
     let body = Brr.Document.body Brr.G.document in
-    Brr.El.set_class (Jstr.v "drawing") true body
+    Brr.El.set_class (Jstr.v "slipshow-drawing-mode") true body
 
   let make_inactive () =
     let body = Brr.Document.body Brr.G.document in
-    Brr.El.set_class (Jstr.v "drawing") false body
+    Brr.El.set_class (Jstr.v "slipshow-drawing-mode") false body
 
   let set_tool t =
     let () =
@@ -288,11 +288,12 @@ let setup el =
               </div>
           </div> |}
   in
-  let d = Brr.El.div ~at:[ Brr.At.id (Jstr.v "slip-drawing-toolbar") ] [] in
+  let d = Brr.El.div ~at:[ Brr.At.id (Jstr.v "slipshow-drawing-toolbar") ] [] in
   Jv.set (Brr.El.to_jv d) "innerHTML" (Jv.of_string content);
   Brr.El.append_children el [ d ];
   let svg =
-    Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing") |> Option.get
+    Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing-elem")
+    |> Option.get
   in
   let _ : unit Fut.t =
     let open Fut.Syntax in
