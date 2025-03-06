@@ -22,7 +22,7 @@ let get elem =
   let rec compute elem =
     match El.offset_parent elem with
     | None -> ((0., 0.), 1.)
-    | Some parent when El.class' (Jstr.v "universe") parent ->
+    | Some parent when El.class' (Jstr.v "slipshow-universe") parent ->
         (get_coord_in_parent elem, 1.)
     | Some parent ->
         let (cx, cy), parent_scale = compute parent in

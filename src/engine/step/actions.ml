@@ -153,7 +153,8 @@ let update_pause_ancestors () =
     | None -> Undoable.return ()
     | Some elem ->
         let rec hide_parent elem =
-          if Brr.El.class' (Jstr.v "universe") elem then Undoable.return ()
+          if Brr.El.class' (Jstr.v "slipshow-universe") elem then
+            Undoable.return ()
           else
             let> () = set_class "pauseAncestor" true elem in
             match Brr.El.parent elem with

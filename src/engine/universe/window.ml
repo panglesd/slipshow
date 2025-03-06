@@ -35,14 +35,20 @@ let setup el =
   let open Brr in
   let universe =
     El.div
-      ~at:[ At.class' (Jstr.v "universe movable"); At.id (Jstr.v "universe") ]
+      ~at:
+        [
+          At.class' (Jstr.v "slipshow-universe movable");
+          At.id (Jstr.v "slipshow-universe");
+        ]
       []
   in
   let scale_container =
-    El.div ~at:[ At.class' (Jstr.v "scale-container") ] [ universe ]
+    El.div ~at:[ At.class' (Jstr.v "slipshow-scale-container") ] [ universe ]
   in
   let rotate_container =
-    El.div ~at:[ At.class' (Jstr.v "rotate-container") ] [ scale_container ]
+    El.div
+      ~at:[ At.class' (Jstr.v "slipshow-rotate-container") ]
+      [ scale_container ]
   in
   Brr.El.insert_siblings `Replace el [ rotate_container ];
   Brr.El.append_children universe [ el ];
