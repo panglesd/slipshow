@@ -18,6 +18,5 @@ We can compile the file using the slip_of_mark binary
   > Some other content
   
   
-  <!-- Unknown Cmarkit block -->
   
   And  [standalone][emph] inlines2
