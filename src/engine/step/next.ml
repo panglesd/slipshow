@@ -30,18 +30,19 @@ let ( !! ) = Jstr.v
 let actualize () =
   let () =
     Brr.El.fold_find_by_selector
-      (fun el () -> Brr.El.set_class !!"slip-current-step" false el)
-      !!".slip-current-step" ()
+      (fun el () -> Brr.El.set_class !!"slipshow-toc-current-step" false el)
+      !!".slipshow-toc-current-step"
+      ()
   in
   let () =
     match
       Brr.El.find_first_by_selector
-        !!(".slip-step-" ^ string_of_int (State.get_step ()))
+        !!(".slipshow-toc-step-" ^ string_of_int (State.get_step ()))
     with
     | None -> ()
     | Some el ->
         Brr.El.scroll_into_view ~align_v:`Nearest ~behavior:`Smooth el;
-        Brr.El.set_class !!"slip-current-step" true el
+        Brr.El.set_class !!"slipshow-toc-current-step" true el
   in
   Messaging.send_step ()
 

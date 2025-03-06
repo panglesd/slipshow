@@ -8,7 +8,7 @@ let entry window step ~tag_name ~content =
     | Some step ->
         [
           Brr.El.div
-            ~at:[ Brr.At.class' !!"slip-step" ]
+            ~at:[ Brr.At.class' !!"slipshow-toc-step" ]
             [ Brr.El.txt Jstr.(of_int step + !!".") ];
         ]
   in
@@ -17,20 +17,21 @@ let entry window step ~tag_name ~content =
     else
       [
         Brr.El.v tag_name
-          ~at:[ Brr.At.class' !!"slip-toc-content" ]
+          ~at:[ Brr.At.class' !!"slipshow-toc-content" ]
           [ Brr.El.txt content ];
       ]
   in
   let at =
-    if Jstr.is_empty content then [ Brr.At.class' !!"slip-only-step" ] else []
+    if Jstr.is_empty content then [ Brr.At.class' !!"slipshow-toc-only-step" ]
+    else []
   in
   let el = Brr.El.div ~at (step_elem @ content_elem) in
   let () =
     match step with
     | None -> ()
     | Some step ->
-        Brr.El.set_class !!"slip-toc-entry" true el;
-        Brr.El.set_class !!("slip-step-" ^ string_of_int step) true el;
+        Brr.El.set_class !!"slipshow-toc-entry" true el;
+        Brr.El.set_class !!("slipshow-toc-step-" ^ string_of_int step) true el;
         let _unistener =
           Brr.Ev.listen Brr.Ev.click
             (fun _ ->
@@ -78,5 +79,5 @@ let generate window root =
     |> snd |> List.rev
   in
   let els = entry window (Some 0) ~tag_name:!!"div" ~content:!!"" :: els in
-  let toc_el = Brr.El.div ~at:[ Brr.At.id !!"slip-toc" ] els in
+  let toc_el = Brr.El.div ~at:[ Brr.At.id !!"slipshow-toc" ] els in
   Brr.El.append_children (Brr.Document.body Brr.G.document) [ toc_el ]

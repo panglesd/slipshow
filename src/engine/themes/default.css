@@ -12,7 +12,7 @@
     sans-serif;
 }
 
-h1:not(#slip-toc h1) {
+h1:not(#slipshow-toc h1) {
   text-align: center;
 }
 
