@@ -69,10 +69,12 @@ let replace_open_window window =
 
 let create el =
   let format_container =
-    Brr.El.div ~at:[ Brr.At.class' (Jstr.v "format-container") ] []
+    Brr.El.div ~at:[ Brr.At.class' (Jstr.v "slipshow-format-container") ] []
   in
   let open_window =
-    Brr.El.div ~at:[ Brr.At.id (Jstr.v "open-window") ] [ format_container ]
+    Brr.El.div
+      ~at:[ Brr.At.id (Jstr.v "slipshow-open-window") ]
+      [ format_container ]
   in
   Brr.El.insert_siblings `Replace el [ open_window ];
   Brr.El.append_children format_container [ el ];
