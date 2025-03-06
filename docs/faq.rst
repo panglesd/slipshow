@@ -91,9 +91,10 @@ For reference and fun, here is the old answer to this question:
 Can I export to PDF?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  Yes! Slipshow's syntax is mostly compatible with pandoc's markdown, so you can
-  export a presentation to latex and compile the produced latex. It is useful to
-  send as notes, rather than sending the slipshow presentation!
+  Yes! Slipshow offers a ``--markdown-output`` which allows to strip any
+  slipshow-specific syntax. Then, there are multiple ways to turn markdown into
+  PDF: for instance, using pandoc. It is useful to send as notes, rather than
+  sending the slipshow presentation!
 
 Can I include a PDF in a presentation?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -102,11 +103,12 @@ Can I include a PDF in a presentation?
 
 Will it look the same on all screens?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  Mostly yes. Browser do what they can to render exactly the same. A low resolution might make your presentation blurry, but things will be at the same place.
+
+  Mostly yes. Browser do what they can to render exactly the same. A low resolution might make your presentation blurry, but things will be at the same place. Sometimes font differs, but I'm trying to fix this.
 
 Can I see my presentation on a smartphone or similar device?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  Yes, but you won't be able to navigate (unless you have a way to force the keyboard to appear). I just need to integrate the gestures, which is not difficult but takes some time. You can make a pull request if you want!
+  Slipshow offers basic gesture to trigger steps in the presentation. But this is a work in progress. PRs or ideas welcome!
 
 I don't like your system, what can I do?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
