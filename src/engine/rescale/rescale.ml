@@ -1,9 +1,12 @@
 open Brr
 
-(* We need to listen on resize for both slip-rescalers (the containers) as well as their only child. *)
+(* We need to listen on resize for both slipshow-rescalers (the containers) as well as their only child. *)
 let setup_rescalers () =
   let slip_rescalers =
-    El.fold_find_by_selector (fun x a -> x :: a) (Jstr.v ".slip-rescaler") []
+    El.fold_find_by_selector
+      (fun x a -> x :: a)
+      (Jstr.v ".slipshow-rescaler")
+      []
   in
   let slips =
     List.filter_map
@@ -26,7 +29,8 @@ let setup_rescalers () =
     | [] | _ :: _ :: _ -> fun () -> Console.(log [ "problem!" ])
   in
   let rescale entry =
-    if Brr.El.class' (Jstr.v "slip-rescaler") entry then rescaled_rescaler entry
+    if Brr.El.class' (Jstr.v "slipshow-rescaler") entry then
+      rescaled_rescaler entry
     else
       match Brr.El.parent entry with
       | None -> fun () -> ()
