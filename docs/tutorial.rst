@@ -44,9 +44,6 @@ complete overview of each of these, you should refer to the reference: the
 ..
    The easiest way is to include the library using a CDN, this is the option we choose to use in this tutorial for its simplicity. However, in this case you will not be able to display your slips without internet access. To use a local version, see :ref:`getting-started`.
 
-..
-   You can also install slip-js it using npm.
-
 A minimal example
 -----------------
 

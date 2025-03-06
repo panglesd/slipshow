@@ -53,9 +53,6 @@ Slipshow is also package in some package manager:
 ```shell
 # For opam users. TODO: Update once it has been released to opam.
 $ opam pin slipshow git@github.com/panglesd/slipshow.git
-
-# For npm users
-$ npm install -g slipshow
 ```
 
 Then, you can use the `slipshow` binary to compile a `.md` file to a slipshow presentation:
