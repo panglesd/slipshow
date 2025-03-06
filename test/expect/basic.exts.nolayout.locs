@@ -1,5 +1,5 @@
 Blocks:
-File "basic.exts.md", lines 1-278
+File "basic.exts.md", lines 1-282
   Heading, level 1:
   File "basic.exts.md", line 1, characters 0-12
     Text:
@@ -1733,5 +1733,15 @@ Unknown Cmarkit block
     File "basic.exts.md", line 276, characters 23-41
   Blank line:
   File "basic.exts.md", line 277
+  Footnote definition:
+  File "basic.exts.md", lines 279-280, characters 0-7
+    Label:
+    File "basic.exts.md", line 279, characters 1-15
+    Paragraph:
+    File "basic.exts.md", line 280, characters 2-7
+      Text:
+      File "basic.exts.md", line 280, characters 2-7
   Blank line:
-  File "basic.exts.md", line 278
+  File "basic.exts.md", line 281
+  Blank line:
+  File "basic.exts.md", line 282

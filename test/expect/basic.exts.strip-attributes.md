@@ -238,18 +238,17 @@ Title with an id
 
 We can provide [attributes][a] definition to [avoid][a] [cluttering] a [line with][a] attributes.
 
-<!-- Unknown Cmarkit block -->
-<!-- Unknown Cmarkit block -->
 
 Attributes attached to attribute definition do nothing:
 
 A [b][attr-attached-def] c
 
-<!-- Unknown Cmarkit block -->
 
 However, for link definition, they are present:
 
 A [b][link-def-with-attrs] c
 
 [link-def-with-attrs]: http://example.com
+
+[^link-def-with]: Hello
 

@@ -275,3 +275,7 @@ A [b][link-def-with-attrs] c
 {.present}
 [link-def-with-attrs]: http://example.com
 
+{.present}
+[^link-def-with]:{#ID}
+  Hello
+
