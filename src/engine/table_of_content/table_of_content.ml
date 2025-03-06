@@ -55,7 +55,7 @@ let categorize window step el =
         let content = Brr.El.prop inner_text el in
         (content, Brr.El.tag_name el)
     | _ ->
-        let cap = 80 in
+        let cap = 100 in
         let content = Jstr.slice ~stop:cap (Brr.El.prop inner_text el) in
         let content =
           if Jstr.length (Brr.El.prop inner_text el) > cap then

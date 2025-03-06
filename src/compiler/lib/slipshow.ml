@@ -53,19 +53,19 @@ let embed_in_page content ~has_math ~math_link ~slip_css_link ~slipshow_js_link
     %s
   </head>
   <body>
-    <div id="slipshow-content">
-      <svg id="slipshow-drawing-elem" style="overflow:visible; position: absolute; z-index:1000"></svg>
-      <div class="slipshow-rescaler">
-        <div class="slip">
-          <div class="slip-body">
-            %s
+    <div id="slipshow-main">
+      <div id="slipshow-content">
+        <svg id="slipshow-drawing-elem" style="overflow:visible; position: absolute; z-index:1000"></svg>
+        <div class="slipshow-rescaler">
+          <div class="slip">
+            <div class="slip-body">
+              %s
+            </div>
           </div>
         </div>
       </div>
+      <div id="slipshow-counter">0</div>
     </div>
-    <div id="slipshow-counter">0</div>
-
-
 
     <!-- Include the library -->
     %s

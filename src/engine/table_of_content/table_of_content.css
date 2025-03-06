@@ -3,13 +3,13 @@
 }
 
 #slipshow-toc {
-  position: fixed;
   overflow: scroll;
   opacity: 0.98;
   top: 0;
   left: 0;
   bottom: 0;
   min-width: 25%;
+  max-width: 30%;
   padding: 30px;
   background: rosybrown;
   display: none;
@@ -27,9 +27,12 @@
   margin-right: 10px;
 }
 
-.slipshow-toc-only-step,
-.slipshow-toc-content {
+.slipshow-toc-only-step {
   display: inline-block;
+}
+
+.slipshow-toc-content {
+  display: inline;
 }
 
 .slipshow-toc-entry {
