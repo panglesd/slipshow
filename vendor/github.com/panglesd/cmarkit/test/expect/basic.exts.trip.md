@@ -254,14 +254,15 @@ Title with an id
 
 We can provide [attributes][a] definition to [avoid][a] [cluttering] a [line with][a] attributes.
 
-<!-- Unknown Cmarkit block -->
-<!-- Unknown Cmarkit block -->
+[cluttering]:{#clut}
+[a]:{.important-word}
 
 Attributes attached to attribute definition do nothing:
 
 A [b][attr-attached-def] c
 
-<!-- Unknown Cmarkit block -->
+{.not-present}
+[attr-attached-def]:{.present}
 
 However, for link definition, they are present:
 
@@ -269,4 +270,8 @@ A [b][link-def-with-attrs] c
 
 {.present}
 [link-def-with-attrs]: http://example.com
+
+{.present}
+[^link-def-with]:{#ID}
+  Hello
 

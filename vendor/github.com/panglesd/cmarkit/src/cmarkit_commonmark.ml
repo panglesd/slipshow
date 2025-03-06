@@ -485,6 +485,14 @@ let footnote c fn attrs =
 
 let standalone_attributes c attrs = attributes c attrs
 
+let attribute_def c ad attrs =
+  attributes c attrs;
+  push_indent c (`Fn (Block.Attribute_definition.indent ad,
+                      Block.Attribute_definition.label ad));
+  let (attrs, _) = Block.Attribute_definition.attrs ad in
+  standalone_attributes c attrs;
+  pop_indent c
+
 let block c = function
 | Block.Blank_line (l, _) -> blank_line c l; true
 | Block.Block_quote ((b, (attrs, _)), _) -> block_quote c b attrs; true
@@ -501,6 +509,7 @@ let block c = function
 | Block.Ext_table ((t, (attrs, _)), _) -> table c t attrs; true
 | Block.Ext_footnote_definition ((t, (attrs, _)), _) -> footnote c t attrs; true
 | Block.Ext_standalone_attributes (attrs, _) -> standalone_attributes c attrs; true
+| Block.Ext_attribute_definition ((attr_def, (attrs, _)), _) -> attribute_def c attr_def attrs; true
 | _ -> newline c; indent c; C.string c "<!-- Unknown Cmarkit block -->"; true
 
 (* Document rendering *)
