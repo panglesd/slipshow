@@ -57,12 +57,7 @@ let compile ~markdown_mode ~math_link ~slip_css_link ~slipshow_js_link ~input
   let slipshow_js_link = Option.map to_asset slipshow_js_link in
   let markdown_compile () =
     let+ content = Io.read input in
-    let md =
-      let md =
-        Cmarkit.Doc.of_string ~heading_auto_ids:true ~strict:false content
-      in
-      Cmarkit_commonmark.of_doc ~include_attributes:false md
-    in
+    let md = Slipshow.convert_to_md content in
     match output with
     | `Stdout ->
         print_string md;

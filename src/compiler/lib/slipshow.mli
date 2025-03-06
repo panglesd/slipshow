@@ -29,3 +29,5 @@ val convert :
   ?resolve_images:(string -> asset) ->
   string ->
   string
+
+val convert_to_md : string -> string
