@@ -1,9 +1,9 @@
-#open-window {
+#slipshow-open-window {
   position: fixed;
   overflow: hidden;
   background-color: white;
 }
 
-.format-container {
+.slipshow-format-container {
   transform-origin: top left;
 }
