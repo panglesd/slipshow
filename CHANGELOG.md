@@ -2,6 +2,135 @@
 
 ## [Unreleased]
 
+> [!NOTE]
+> TLDR:
+> - Engine rewritten in OCaml
+>   - Fewer bugs when navigating back
+>   - Stronger foundation (eg, for subslips)
+>   - Custom scripts requires minor adjustments
+>   - Breaking change in subslip HTML
+> - Drawing now in SVG
+>   - No more zoom issues
+>   - Erasing works "per-stroke"
+> - Revamped table of content
+>   - Now based on title structure rather than subslips
+> - New `--markdown-output` flag for converting to GFM
+> - Parser bugfixes
+> - License change: Now GPLv3 (previously MIT)
+> - npm distribution discontinued.
+> - Special thanks to NLNet for their [sponsorship](https://nlnet.nl/project/Slipshow/)!
+
+Dear readers,
+
+I am thrilled to announce the 0.1 release of Slipshow, the slip-based
+presentation tool!
+
+This is a _major_ minor release. While versions `0.0.1` to `0.0.33` have served well
+to experiment, this release marks a fresh start, aimed at being a solid
+foundation for a project with a clear direction. A huge thank you to NLNet for
+[sponsoring](https://nlnet.nl/project/Slipshow/) this milestone!
+
+So, what is new? Quite a lot, the main change being that the engine has been
+_fully rewritten_.
+
+### The engine
+
+Started as a single file javascript project, the old engine evolved presentation
+by presentation -- leading to numerous bugs, maintenance challenge or
+extensibility issue. (In other word, I did all I could not to touch it despite
+all the bugs)
+
+This release introduces a complete rewrite of the engine in OCaml, with new
+design choices that improve reliability and expandability. Let's go over the key
+benefits and breaking changes.
+
+#### Navigating Forward... and Backward
+
+One of the greatest weakness of the old engine was handling backward
+navigation. Since it started as a simple "script scheduler", going back wasn't straightforward. The workaround involved taking a snapshot
+of... everything (the DOM, the state, ...), to be able to go back in time.
+
+This had many bugs, in animations (such as the "focus" action), and in its
+iteraction with other features (such as drawing).
+
+So, what is new in this engine? The engine now records an undo function for each
+step of the presentation.
+While this may not sound much, it is a ton better in terms of development. It's
+a much stronger foundation to build new features from. It's also much more
+efficient for long presentations.
+
+In most cases, your old presentations will work without modification in the new
+engine. However, there is one case where it needs modification: when you include
+the execution of a custom script in your presentation. In this case, you need to
+return the function undo to undo the executed step: see the
+[documentation](https://slipshow.readthedocs.io/en/stable/syntax.html#custom-scripts)!
+(This is not ideal and better solutions are being experimented)
+
+#### Writing
+
+Previously, live annotations used the excellent
+[atrament](https://github.com/jakubfiala/atrament) library. While great in many
+cases, its bitmap-based approach caused blurriness when zooming.
+
+This release introduces a custom SVG-based annotation system, which eliminates
+zoom issues. Another change: erasing now works stroke-by-stroke instead of
+pixel-by-pixel.
+
+#### Table of content
+
+The old table of contents was based on the slip structure, which didn’t work
+well for presentations that primarily used a single slip (as is often the case
+with compiled presentations).
+
+The new sidebar-style table of contents is now generated from headers, making it
+more intuitive and aligned with the presentation’s structure—resulting in a much
+smoother navigation experience!
+
+#### Breaking change: Subslips
+
+The HTML structure for subslips has evolved, in particuler to avoid having to
+provide the scale of your subslips.
+
+Support for subslip in the new engine is not mature and will be announced in the
+next release, but bear in mind that if your presentation relies on them, you
+might want to wait a bit before migrating to the new engine!
+
+### Compiler
+
+While this release focuses on the engine, the compiler has also seen improvements, including bug fixes (particularly in the parser) and a new feature:
+
+#### `--markdown-output` for markdown exports
+
+If you want to print your presentation or host it as a static webpage, the
+default format can be cluttered with annotations. The new `--markdown-output` flag
+lets you generate a clean, GitHub Flavored Markdown (GFM) file without
+annotations.
+
+### Other
+
+Beyond technical improvements, there are some important project-wide updates:
+
+- License Change: The project has transitioned from MIT to GPLv3, aligning
+  better with its values.
+- npm Distribution Discontinued: Maintaining an npm package added unnecessary
+  complexity with minimal benefit. Please use binary releases — or better yet,
+  contribute to getting Slipshow packaged in distributions!
+
+### Looking ahead
+
+Several improvements did not make it in this release, but are already quite
+advanced. So here is a little peek into the future:
+
+- Subslip returns! After having been a little left over since the introduction
+  of the compiler, are coming back, with a better though implementation!
+- Full mobile support is on its way! It has already been improved, but is not
+  yet mature enough to be announced in this release.
+
+### Conclusion
+
+Looking forward to your bug reports!
+
+
 ## [v0.0.33] September 13th, 2024.
 
 ### Fixed
