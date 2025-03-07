@@ -6,33 +6,7 @@ In order to release a new version, you need to:
 
 ### Check that the changelog is up to date
 
-Do that!
-
-### Have an up to date engine, both in the `dist` (?) folder and in the ocaml data files:
-
-```
-$ make bundle
-```
-
-This is likely to be updated to something less cumbersome
-
-### Have an up to date compiler written in javascript, in release mode:
-
-```
-$ dune build
-$ dune build --profile=release
-$ rm bin/slipshow
-$ echo "#\!/usr/bin/env node" > bin/slipshow
-$ cat _build/default/compiler/src/bin/main_js.bc.js >> bin/slipshow
-$ chmod a+x bin/slipshow
-```
-
-### Do the github release
-
-```
-$ git push
-$ # and push tags!
-```
+Do that! And write the tag in the changelog!
 
 ### Do the opam release
 

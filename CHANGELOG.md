@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [v0.1.0] Friday 7th, 2025. Lyon.
 
 > [!NOTE]
 > TLDR:
