@@ -5,7 +5,7 @@ description:
   "Slipshow is an engine to write slips, a concept evolved from slides."
 maintainer: ["Paul-Elliot"]
 authors: ["Paul-Elliot"]
-license: "GPLv3"
+license: "GPL-3.0-or-later"
 tags: ["slipshow" "presentation" "slideshow" "beamer"]
 homepage: "https://github.com/panglesd/slipshow"
 doc: "https://slipshow.readthedocs.io"

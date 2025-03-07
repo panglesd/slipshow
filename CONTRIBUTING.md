@@ -6,17 +6,22 @@ In order to release a new version, you need to:
 
 ### Check that the changelog is up to date
 
-Do that! And write the tag in the changelog!
+Do that! And write the tag in the changelog! And commit and push!
 
 ### Do the opam release
 
 Use `dune-release`:
+- Call `dune-release tag --dry-run` to check
+- Call `dune-release tag` to do
+- Push the tag
 - Checkout the branch which has the tag
 - Call `dune-release distrib`
 - Call `dune-release publish distrib`
 - Call `dune-release opam pkg`
 - Call `dune-release opam submit`
 - Verify that everything is right by comparing the `opam` file for the previous version, with this one!
+
+- Rewrite the binary release announcement
 
 ### Make a slipshow-gui release
 
