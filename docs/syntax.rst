@@ -188,12 +188,15 @@ These attributes are actions that will be executed when a ``pause`` or ``step`` 
 Custom scripts
 --------------
 
-Use a slipscript code block to add a script, and ``exec-at-unpause`` to execute it:
+Use a slipscript code block to add a script, and ``exec-at-unpause`` to execute it. The script should return the function to undo the change.
 
 .. code-block:: markdown
 
 		{exec-at-unpause}
 		```slip-script
-		console.log("test")
+                let elem = document.querySelector("#id")
+		let old_value = elem.style.opacity;
+                elem.style.opacity = "1";
+                return {undo : () => { elem.style.opacity = old_value }}
 		```
 
