@@ -8,20 +8,30 @@ In order to release a new version, you need to:
 
 Do that! And write the tag in the changelog! And commit and push!
 
+### Do the binary release
+
+First, fix https://github.com/panglesd/slipshow/issues/91
+Then, update softprops/action-gh-release@v1 to create a draft release instead of directly a release.
+
+- Write the binary release announcement (in the changelog)
+- Call `dune-release tag --dry-run` to check
+- Call `dune-release tag` to do the tag
+- Push the tag
+- Rewrite the binary release announcement if needed
+- Check that readthedocs has picked up the new tag on stable
+
 ### Do the opam release
 
-Use `dune-release`:
-- Call `dune-release tag --dry-run` to check
-- Call `dune-release tag` to do
-- Push the tag
 - Checkout the branch which has the tag
 - Call `dune-release distrib`
-- Call `dune-release publish distrib`
+- Call `dune-release publish distrib --draft` // A release already has been created. I don't know if this command allows a tag to have already been pushed/a release already been created.
+  An alternative is to add using the GUI the asset (eg `_build/slipshow-0.1.0.tbz`).
+  Use the `--dry-run` flag to be sure
 - Call `dune-release opam pkg`
+  It seems that there is some discrepencies between the release created by the CI (which has a leading `v`) and the one dune release expect to have been created (by itself).
+  So, there might be a need to update the url.
 - Call `dune-release opam submit`
 - Verify that everything is right by comparing the `opam` file for the previous version, with this one!
-
-- Rewrite the binary release announcement
 
 ### Make a slipshow-gui release
 
