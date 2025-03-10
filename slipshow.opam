@@ -29,7 +29,7 @@ depends: [
   "sexplib"
   "ppx_sexp_conv"
   "odoc" {with-doc}
-  "ocamlformat" {with-dev-setup & = "0.26.2"}
+  "ocamlformat" {with-dev-setup & = "0.27.0"}
 ]
 build: [
   ["dune" "subst"] {dev}

@@ -41,7 +41,7 @@
    ppx_sexp_conv
   (odoc :with-doc)
   (ocamlformat
-   (and :with-dev-setup (= 0.26.2))))
+   (and :with-dev-setup (= 0.27.0))))
  (tags
   (slipshow presentation slideshow beamer)))
 
