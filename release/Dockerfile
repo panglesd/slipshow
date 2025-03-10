@@ -8,5 +8,3 @@ RUN opam install -y --deps-only --with-test --with-doc .
 
 COPY --chown=opam . .
 
-RUN sed -i 's/"()"/"(-cclib -static -cclib -no-pie)"/g' src/compiler/bin/static-linking-flags/static_linking_flags.ml
-
