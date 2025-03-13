@@ -36,9 +36,12 @@ module AttributeActions = struct
   let act_on_elems class_ action elem =
     match Brr.El.at (Jstr.v class_) elem with
     | None -> Undoable.return ()
-    | Some v when Jstr.equal Jstr.empty v -> action elem
+    | Some v when Jstr.equal Jstr.empty v -> action [ elem ]
     | Some v ->
-        Jstr.cuts ~sep:(Jstr.v " ") v |> Undoable.List.iter (act_on_id action)
+        Jstr.cuts ~sep:(Jstr.v " ") v
+        |> List.filter_map (fun id ->
+               Brr.El.find_first_by_selector (Jstr.concat [ Jstr.v "#"; id ]))
+        |> action
 
   let up window elem =
     act_on_elem "up-at-unpause" (Universe.Window.up window) elem
@@ -50,17 +53,21 @@ module AttributeActions = struct
     act_on_elem "center-at-unpause" (Universe.Window.center window) elem
 
   let unstatic _window elem =
-    act_on_elems "unstatic-at-unpause" (set_class "unstatic" true) elem
+    act_on_elems "unstatic-at-unpause"
+      (Undoable.List.iter (set_class "unstatic" true))
+      elem
 
   let static _window elem =
-    act_on_elems "static-at-unpause" (set_class "unstatic" false) elem
+    act_on_elems "static-at-unpause"
+      (Undoable.List.iter (set_class "unstatic" false))
+      elem
 
   let focus window elem =
-    let action elem =
+    let action elems =
       let> () = State.Focus.push (Universe.State.get_coord ()) in
-      Universe.Window.focus window elem
+      Universe.Window.focus window elems
     in
-    act_on_elem "focus-at-unpause" action elem
+    act_on_elems "focus-at-unpause" action elem
 
   let unfocus window elem =
     let action _elem =
@@ -72,16 +79,24 @@ module AttributeActions = struct
     act_on_elem "unfocus-at-unpause" action elem
 
   let reveal _window elem =
-    act_on_elems "reveal-at-unpause" (set_class "unrevealed" false) elem
+    act_on_elems "reveal-at-unpause"
+      (Undoable.List.iter (set_class "unrevealed" false))
+      elem
 
   let unreveal _window elem =
-    act_on_elems "unreveal-at-unpause" (set_class "unrevealed" true) elem
+    act_on_elems "unreveal-at-unpause"
+      (Undoable.List.iter (set_class "unrevealed" true))
+      elem
 
   let emph _window elem =
-    act_on_elems "emph-at-unpause" (set_class "emphasized" true) elem
+    act_on_elems "emph-at-unpause"
+      (Undoable.List.iter (set_class "emphasized" true))
+      elem
 
   let unemph _window elem =
-    act_on_elems "unemph-at-unpause" (set_class "emphasized" false) elem
+    act_on_elems "unemph-at-unpause"
+      (Undoable.List.iter (set_class "emphasized" false))
+      elem
 
   let execute _window elem =
     let action elem =
@@ -134,7 +149,7 @@ module AttributeActions = struct
       in
       Undoable.return ~undo ()
     in
-    try act_on_elems "exec-at-unpause" action elem
+    try act_on_elems "exec-at-unpause" (Undoable.List.iter action) elem
     with e ->
       Brr.Console.(
         log

@@ -41,10 +41,34 @@ let get elem =
   { x; y; width; height }
 
 module Window_of_elem = struct
-  let focus elem =
-    let scale1 = width /. elem.width and scale2 = height /. elem.height in
-    let scale = Float.min scale1 scale2 in
-    { scale; x = elem.x; y = elem.y }
+  let focus ~current elems =
+    let box (b1 : element) (b2 : element) =
+      let left_x =
+        Float.min (b1.x -. (b1.width /. 2.)) (b2.x -. (b2.width /. 2.))
+      in
+      let right_x =
+        Float.max (b1.x +. (b1.width /. 2.)) (b2.x +. (b2.width /. 2.))
+      in
+      let top_y =
+        Float.min (b1.y -. (b1.height /. 2.)) (b2.y -. (b2.height /. 2.))
+      in
+      let bottom_y =
+        Float.max (b1.y +. (b1.height /. 2.)) (b2.y +. (b2.height /. 2.))
+      in
+      {
+        width = right_x -. left_x;
+        height = bottom_y -. top_y;
+        x = (right_x +. left_x) /. 2.;
+        y = (bottom_y +. top_y) /. 2.;
+      }
+    in
+    match elems with
+    | [] -> current
+    | elem :: elems ->
+        let box = List.fold_left box elem elems in
+        let scale1 = width /. box.width and scale2 = height /. box.height in
+        let scale = Float.min scale1 scale2 in
+        { scale; x = box.x; y = box.y }
 
   let enter elem =
     let scale = width /. elem.width in
