@@ -1,0 +1,145 @@
+@charset "UTF-8";
+
+/* Copyright (c) 2020 The brr programmers. All rights reserved.
+   SPDX-License-Identifier: ISC */
+
+/* Can't we get the basic styling from the the devtools itself ?
+   It a bit annoying to have to define all these colors ourselves.
+   Crickets https://stackoverflow.com/questions/63543060 */
+
+:root
+{
+  --ocaml-font-mono: SFMono-Regular,Consolas,Liberation Mono,Menlo,monospace;
+  --ocaml-size-font: 11px;
+  --ocaml-size-font-small: 10px;
+  --ocaml-size-line: 15px;
+  --ocaml-size-fourth-line: calc(0.25 * var(--ocaml-size-line));
+  --ocaml-size-half-line: calc(0.5 * var(--ocaml-size-line));
+  --ocaml-left-margin: 1.5ch;
+  --ocaml-cell-margin: var(--ocaml-size-half-line);
+
+  --ocaml-color-bg: white;
+  --ocaml-color-fg: #303942;
+  --ocaml-color-fg-light: #6d767f;
+  --ocaml-color-prompt: #005EE3;
+  --ocaml-color-past-prompt: #959595;
+  --ocaml-color-warning: #5c3c00;
+  --ocaml-color-error: red;
+  --ocaml-color-border-cell: #DDD7;
+
+  --ocaml-color-code-comment: #747679;
+  --ocaml-color-code-keyword: #874aa9;
+  --ocaml-color-code-type-id: #a9874a;
+  --ocaml-color-code-string: #4aa987;
+
+  color: var(--ocaml-color-fg);
+  background-color: var(--ocaml-color-bg);
+}
+
+:root[theme='dark'] {
+  --ocaml-color-bg: #242424;
+  --ocaml-color-fg: #bdc6cf;
+  --ocaml-color-fg-light: #777;
+  --ocaml-color-prompt: #367BEE;
+  --ocaml-color-past-prompt: #919191;
+  --ocaml-color-warning: #ffdd9e;
+  --ocaml-color-error: #ff8080;
+  --ocaml-color-border-cell: #3337;
+
+  --ocaml-color-code-comment: #747679;
+  --ocaml-color-code-keyword: #856FB6;
+  --ocaml-color-code-type-id: #8D7F66;
+  --ocaml-color-code-string: #668d7f;
+}
+
+/* Local reset and basic layout setup */
+
+.ocaml-ui *
+{ margin:0; padding:0; border: none; outline: none; resize:none;
+  color: inherit; box-sizing: border-box; line-height: inherit;
+  font-size: inherit; font: inherit; font-weight: inherit;
+  vertical-align: baseline; text-align: inherit; }
+
+.ocaml-ui
+{ margin:0; line-height: var(--ocaml-size-line);
+  font-family: var(--ocaml-font-mono); font-size: var(--ocaml-size-font);
+  position: relative; /* For positioning the buttons */
+  color: var(--ocaml-color-fg); background-color: var(--ocaml-color-bg); }
+
+/* Spinner */
+
+.ocaml-ui .spinner
+{ padding-left: var(--ocaml-left-margin);
+  padding-bottom: var(--ocaml-size-line); }
+
+/* Syntax highlighting */
+
+.ocaml-ui .hljs-keyword { color : var(--ocaml-color-code-keyword); }
+.ocaml-ui .hljs-type { color : var(--ocaml-color-code-type-id); }
+.ocaml-ui .hljs-string { color : var(--ocaml-color-code-string); }
+.ocaml-ui .hljs-comment
+{ color : var(--ocaml-color-code-comment); font-style: italic; }
+
+/* Text input */
+
+.ocaml-ui .text-input { position: relative }
+.ocaml-ui textarea
+{ resize: none; overflow-y:hidden; /* Needed for programmatic autoresize */
+  margin-bottom: var(--ocaml-size-line); width: 100%;
+  background-color: var(--ocaml-color-bg);
+  color: transparent; /* The .highlight overlay handles the rendering */
+  caret-color: var(--ocaml-color-fg); }
+
+.ocaml-ui .highlight
+{ pointer-events: none;
+  position: absolute;
+  top: 0; left:0; width: 100%; height: 100%; }
+
+.ocaml-ui .input,
+.ocaml-ui .past-input
+{ display:grid; grid-template-columns:auto 1fr;
+  grid-column-gap: 1ch;
+  padding-left: var(--ocaml-left-margin);
+  padding-bottom: 0;
+  border-bottom: none; }
+
+.ocaml-ui .input .prompt { color: var(--ocaml-color-prompt) }
+.ocaml-ui .past-input .prompt { color: var(--ocaml-color-past-prompt) }
+
+/* Output */
+
+.ocaml-ui ol { list-style-type: none }
+.ocaml-ui li
+{ padding-top: var(--ocaml-cell-margin);
+  padding-bottom: var(--ocaml-cell-margin);
+  padding-left: var(--ocaml-left-margin);
+  border-bottom: solid 1px var(--ocaml-color-border-cell); }
+
+.ocaml-ui .announce .jsoo
+{ font-size: var(--ocaml-size-font-small); color: var(--ocaml-color-fg-light);
+  margin-left: 1ch; }
+
+.ocaml-ui .reply { padding-top: var(--ocaml-size-fourth-line) }
+.ocaml-ui .reply:empty { padding-top: 0; }
+.ocaml-ui .input { padding-top: var(--ocaml-cell-margin); }
+.ocaml-ui .error { color: var(--ocaml-color-error); }
+.ocaml-ui .warning { color: var(--ocaml-color-warning); }
+
+/* Buttons */
+
+.ocaml-ui button:active { background-color: var(--ocaml-color-fg-light); }
+.ocaml-ui button
+{ background-color: var(--ocaml-color-bg);
+  padding: 0.12rem .4rem;
+  border: solid 1px var(--ocaml-color-fg-light);
+  border-radius: 0.15rem;
+  cursor: pointer;
+  user-select: none; }
+
+.ocaml-ui .buttons button { text-align: center; width: 100%; }
+.ocaml-ui .buttons
+{ z-index:1; position: fixed; right: 0; top: 0;
+  display: grid; grid-columns: auto;
+  grid-row-gap: 1ex;
+  padding: 2ex;
+  background-color: var(--ocaml-color-bg); }

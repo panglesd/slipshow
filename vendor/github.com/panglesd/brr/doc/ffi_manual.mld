@@ -1,0 +1,384 @@
+{0 Brr FFI manual}
+
+This manual describes how OCaml and JavaScript values are represented
+by [js_of_ocaml] and Brr. The companion {{!page-ffi_cookbook}FFI
+cookbook} has a few tips and off-the-shelf design answers for common
+JavaScript bindings scenarios.
+
+An OCaml value compiled by [js_of_ocaml] is encoded as a JavaScript
+value (see {{:http://doi.org/10.1002/spe.2187}this paper} for outdated
+yet interesting details). JavaScript does not understand this
+encoding, conversly OCaml does not understand JavaScript values
+directly.  The {e foreign function interface} (FFI) reconciles these
+views.
+
+{1:foreword Foreword}
+
+The official [js_of_ocaml] JavaScript foreign function interface
+encodes and structurally types JavaScript objects as OCaml object
+phantom types. This is a very neat trick and topped with the custom
+syntax offered by [js_of_ocaml-ppx] this means that you can write
+perfectly typed and idiomatic JavaScript code in OCaml with
+unscrutable type error messages.
+
+We are not keen to program in JavaCamlScript. We are not keen to have
+to use the round corner of the OCaml language. We are not keen to use
+an ad-hoc syntax powered by the horrific and brittle [ppx] system. We
+want to tap into the browser APIs for the functionality they provide,
+not for the programming idioms they propose.
+
+In particular we are not attached to the JavaScript object system and
+do not feel the need to model it into OCaml types. In Brr we simply
+hide JavaScript objects behind abstract OCaml types which are acted
+upon using regular OCaml functions. JavaScript being quite sane about
+its object-orientation, the occasional mixin or inheritance
+relationship can be handled with explicit coercions functions.
+
+This approach exposes the browser APIs in a simple way for both
+newcomers and working OCaml programmers who can harness the power of
+the excellent work that went into the [js_of_ocaml] compiler and its
+runtime without the need to submit to [ppx] and less travelled parts
+of the language.
+
+{1:js_values JavaScript values}
+
+JavaScript values are represented in OCaml programs by the {!Jv.t}
+type. A value of this type represents any
+{{:https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Data_and_Structure_types}JavaScript
+value}: [null], [undefined], a boolean, a number, a string, an array,
+an object, a function, etc.
+
+Except for JavaScript strings which are represented by values of type
+{!Jstr.t} nothing is done to type JavaScript values beyond this
+universal type. JavaScript bindings glue is in charge of manipulating
+{!Jv.t} values of specific object types and expose them as type safe
+interfaces by using OCaml abstract types.
+
+The {!Jv.repr} function returns the JavaScript representation of any
+OCaml value, it is the moral equivalent of {!Obj.repr} for the
+JavaScript encoding of OCaml values made by [js_of_ocaml] compilation.
+
+{1:equality Equality}
+
+The {!Jv} module provides access to JavaScript equality operators
+on {!Jv.t} values:
+{ul
+{- {!Jv.equal} is JavaScript's {{:https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Equality}[==]}, which tries
+   to convert operands of different types to assess equality.}
+{- {!Jv.strict_equal} is JavaScript's strict equality {{:https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Strict_equality}[===]}
+   which always considers operands of different types to be different}}
+
+The OCaml [( = )] structural equality is implemented as per OCaml
+semantics on OCaml values. What it does on JavaScript values does not
+seem to be properly documented (get in touch if you know any better) –
+you will have to make sense of
+{{:https://github.com/ocsigen/js_of_ocaml/blob/master/runtime/compare.js}
+the source}.
+
+The OCaml [( == )] physical equality is compiled to JavaScript's
+strict equality [===].
+
+To sum up we have:
+
+{v
+OCaml             Compiled JavaScript
+---------------------------------------
+Jv.equal          ==
+Jv.strict_equal   ===
+( = )             caml_equal
+( == )            ===
+v}
+
+{1:null_undefined Null and undefined}
+
+Values of type {!Jv.t} can {e always} be [null] or [undefined]. In
+what follows we call {e safe} a value that is guaranteed not be [null]
+or [undefined] and {e unsafe} one that may be.
+
+OCaml got rid of null pointer errors so don't let these values go back
+haunt your stack traces. Make sure to always handle them immediately
+in the context where they occur – otherwise they will propagate and
+blow up in your face at unrelated points in your code.
+
+[null] is represented by {!Jv.null} and [undefined] by
+{!Jv.undefined}. You can test for them with the {!Jv.is_null} and
+{!Jv.is_undefined} predicates which make sure to use the correct
+JavaScript equality function.
+
+{[
+let is_null = Jv.is_null jv            (* true iff [jv] is null *)
+let is_undefined = Jv.is_undefined jv  (* true iff [jv] is undefined *)
+]}
+
+In general it's a good idea to defensively test for both; the
+functions {!Jv.is_none} and {!Jv.is_some} do that directly.
+
+{[
+let is_none = Jv.is_none jv  (* true iff null or undefined *)
+let is_some = Jv.is_some jv  (* false iff null or undefined *)
+]}
+
+For APIs that use these values to denote absence of values, use the
+{!Jv.to_option} function when you convert {!Jv.t} values to OCaml
+types. It handles [null] and [undefined] by mapping them to [None].
+
+{[
+let safe_int : int option = Jv.to_option Jv.to_int jv
+let safe_jv : Jv.t option = Jv.to_option Fun.id jv
+]}
+
+If you are on the way from OCaml to JavaScript you have to choose to
+map [None] values to one of [null], [undefined] or something else. The
+[none] argument of {!Jv.of_option} specifies this:
+
+{[
+let jv = Jv.of_option ~none:Jv.null Fun.id v         (* None is null *)
+let jv = Jv.of_option ~none:Jv.undefined Fun.id v    (* None is undefined *)
+let jv = Jv.of_option ~none:Jstr.empty Jv.of_jstr v  (* None is empty *)
+]}
+
+{1:bools Booleans}
+
+Values of type {!Jv.t} can represent JavaScript booleans.
+
+{!Jv.of_bool} and {!Jv.to_bool} convert them with OCaml [bool]s.
+{!Jv.to_bool} is unsafe, it does not check for [null] or
+[undefined]. If needed combine with {!Jv.is_none}:
+
+{[
+let safe_bool : bool = if Jv.is_none jv then false else Jv.to_bool jv
+]}
+
+OCaml [bool] values are not represented by JavaScript booleans. Make
+sure not to directly give a JavaScript boolean to an OCaml function
+expecting a [bool] value and vice-versa; always go through the
+conversion functions.
+
+{1:nums numbers}
+
+Values of type {!Jv.t} can represent JavaScript numbers.
+
+{!Jv.of_int} and {!Jv.to_int} convert them with OCaml [int]s.
+{!Jv.of_float} and {!Jv.to_float} convert them with OCaml [float]s.
+Both {!Jv.to_int} and {!Jv.to_float} are unsafe, they do not
+check for [null] or [undefined]. If needed combine them
+with {!Jv.of_option}:
+
+{[
+let i : int option = Jv.to_option Jv.to_int jv
+]}
+
+The conversions are lossless, except if you convert a non-integral
+JavaScript number with {!Jv.to_int}.
+
+OCaml [int] and [float] values are directly represented by JavaScript
+numbers. This means the conversion are nops. Nevertheless use the
+conversion functions to insulate yourself of changes [js_of_ocaml]
+might make in the future.
+
+{1:strings Strings}
+
+Values of type {!Jv.t} can represent JavaScript strings.
+
+JavaScript strings are immutable sequences of UTF-16 encoded Unicode
+text. OCaml [string]s are immutable sequences of bytes and nowadays
+assumed to be UTF-8 encoded text {e when interpreted as textual
+content}.
+
+Because of this difference we use a dedicated data type {!Jstr.t} for
+JavaScript strings. Values of this type directly represent a
+JavaScript [String] object. Use {!Jstr.t} values to represent the
+strings returned to you by JavaScript APIs, not OCaml [string]s. This
+avoids constantly converting representations between UTF-16 and UTF-8.
+
+The {!Jstr.v} function takes an UTF-8 encoded OCaml string and
+translates it to an UTF-16 encoded JavaScript string. By UTF-8
+encoding OCaml sources this almosts gives us a literal notation for
+JavaScript strings:
+
+{[
+let s : Jstr.t = Jstr.v "A JavaScript string"
+]}
+
+If the OCaml string is only made of US-ASCII characters like above the
+[js_of_ocaml] compiler compiles the call and OCaml string literal {e
+directly} to a JavaScript string literal. However if the literal has
+non US-ASCII Unicode characters, a runtime conversion occurs for now
+(see {{:https://github.com/ocsigen/js_of_ocaml/issues/1034}this
+issue}):
+
+{[
+let s : Jstr.t = Jstr.v "🐫" (* UTF-8 to UTF-16 conversion at runtime *)
+]}
+
+To convert a JavaScript string to an UTF-8 encoded OCaml string use
+{!Jstr.to_string}.
+
+Conversion between {!Jv.t} values and {!Jstr.t} are nops, but do use the
+{!Jv.of_jstr} and {!Jv.to_jstr} functions.
+
+{1:arrays Arrays}
+
+Values of type {!Jv.t} can represent JavaScript arrays.
+
+The {!Jv.Jarray} module provides functions to directly manipulate
+them. In general you will want to convert them to OCaml arrays or
+lists, the functions {!Jv.to_array}, {!Jv.of_array}, {!Jv.to_list},
+{!Jv.of_list} do this aswell as a few {{!Jv.array_special}specialized}
+conversion functions.
+
+JavaScript arrays and OCaml [list]s and [array]s are represented
+differently, these conversions are not free.
+
+{1:objs Objects}
+
+Values of type {!Jv.t} can represent JavaScript objects.
+
+{2:global The [global] object}
+
+The
+{{:https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/globalThis}global
+object} is represented by the {!Jv.global} value. This object is used
+to access the global scope in window and non-window contexts. For
+example to look for functions, object constructors or global
+values.
+
+{2:props Properties}
+
+Functions {!Jv.find}, {!Jv.get}, {!Jv.set} and {!Jv.delete} operate on
+object properties of {!Jv.t} values. {!Jv.get} returns [undefined] if
+the property is undefined and [null] if it is defined but [null]; use
+{!Jv.find} to safely map these cases to [None].
+
+{[
+let get_prop o = Jv.get o "prop"
+let set_prop o v = Jv.set o "prop" v
+let delete_prop o = Jv.delete o "prop"
+let find_prop o = Jv.find o "prop" (* handles [null] and [undefined] *)
+]}
+
+These property functions return and take {!Jv.t} values. In practice
+you have to further convert these values to the types they represent.
+For example for an [int] property:
+
+{[
+let length o = Jv.to_int (Jv.get o "length")
+let set_length o l = Jv.set o "length" (Jv.of_int l)
+]}
+
+To make these conversions more streamlined for basic types, {!Jv}
+provides the {!Jv.Bool}, {!Jv.Int}, {!Jv.Float} and {!Jv.Jstr}
+submodules which have property functions converting directly with the
+corresponding OCaml types. Using {!Jv.Int} the example above rewrites
+to:
+
+{[
+let length o = Jv.Int.get o "length"
+let set_length l = Jv.Int.set o "length" l
+]}
+
+An few other example:
+
+{[
+let name o = Jv.Jstr.get o "name"
+let set_name o s = Jv.Jstr.set o "name" s
+let pi = Jv.Float.get (Jv.get Jv.global "Math") "PI"
+]}
+
+{2:uprop Unicode property names}
+
+Most object property names in APIs are made only of US-ASCII
+characters. For these properties the functions seen so far work
+perfectly.
+
+However if you do hit property names that have arbitrary Unicode
+characters you {e cannot} use these. You need to use these primed
+primitives: {!Jv.get'}, {!Jv.set'} and {!Jv.delete'}. These functions
+take a {!Jstr.t} for the property name:
+
+{[
+let pi2_prop = Jstr.v "π²" (* make sure we don't convert on each call *)
+let pi2 o = Jv.to_float (Jv.get' o pi2_prop)
+]}
+
+{2:create_obj Creating}
+
+A new object can be created via {!Jv.obj} which simply takes an array
+of name/value pairs:
+
+{[
+let o = Jv.obj Jv.[| "length", of_int 3; "name", of_jstr (Jstr.v "Ha!") |]
+]}
+
+If you need to handle full Unicode names use {!Jv.obj'}:
+
+{[
+let pi2_prop = Jstr.v "π²" (* make sure we don't convert on each call *)
+let o = Jv.obj' Jv.[| pi2_prop, of_float (pi *. pi) |]
+]}
+
+{2:create Creating with constructors}
+
+A new object is created with a constructor by first looking the
+constructor function in the global object and then call it with
+{!Jv.new'}:
+
+{[
+let date = Jv.get Jv.global "Date"
+let date_of_ptime_ms ms = Jv.new' date [| Jv.of_float ms |]
+]}
+
+{2:method Calling methods}
+
+To call a method on a object, construct an OCaml array of {!Jv.t} values
+representing the method arguments and use {!Jv.call} on the object
+
+{[
+let to_jstr o = Jv.to_jstr (Jv.call o "toString" [||])
+]}
+
+{1:funcs Functions}
+
+Values of type {!Jv.t} can represent JavaScript functions and closures.
+
+To call a function, look it up in the global object, construct an OCaml
+array of {!Jv.t} values representing the arguments and invoke
+{!Jv.apply}.
+
+{[
+let atob = Jv.get Jv.global "atob"
+let base64 s = Jv.to_jstr @@ Jv.apply atob Jv.[| of_jstr s |]
+]}
+
+For information about calling back from JavaScript to OCaml
+see the {{!page-ffi_cookbook.callback}cookbook}.
+
+{1:errors Errors and exceptions}
+
+Values of type {!Jv.t} can represent JavaScript [Error] objects.
+
+The {!module:Jv.Error} module has a dedicated type and functions to
+handle them. Use the {!Jv.of_error} and {!Jv.to_error} functions to
+convert them with {!Jv.t} objects.
+
+JavaScript exceptions are thrown in your face as the OCaml
+{!Jv.exception-Error} which holds a {!Jv.Error.t} value. So handling
+JavaScript exceptions is just a matter of catching that exception:
+
+{[
+let result_of_raising f v = match f v with
+| exception (Jv.Error e) -> Error (Jv.Error.message e)
+| v -> Ok v
+]}
+
+If you want to throw a JavaScript exception yourself from OCaml code
+use {!Jv.throw}.
+
+{1:promises Promises}
+
+Values of type {!Jv.t} can represent JavaScript promise objects.
+
+The {!Jv.Promise} module has a type and few functions to handle them
+directly. However {!Brr} uses {!Fut} values to safely type them. This
+is the module you should use to interact with JavaScript promises, see
+the {{!page-ffi_cookbook.promises}cookbook} for explanations.

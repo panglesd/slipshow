@@ -1,0 +1,154 @@
+{0 OCaml console}
+
+The OCaml console
+{{:https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions}
+WebExtension} is like the browser JavaScript console but for OCaml. It
+provides an OCaml toplevel (REPL) to directly interact with the OCaml
+code that lives in the web page. Follow the {{!ext_install}install
+instructions}.
+
+The extension itself is totally dumb: it inputs OCaml phrases, [eval]s
+them in your web page via an {{!ocaml_poke}[ocaml_poke]} global
+JavaScript object and writes the result to the OCaml console
+panel. The burden of providing the poke object and the associated
+toplevel machinery is on the web page, see
+{{!web_page_instructions}these instructions}.
+
+{b Note.} If you write to the {!Brr.Console} from the OCaml console
+the output appears in the JavaScript console which has support to
+inspect the JavaScript values that underpin many of the OCaml values
+you manipulate with Brr. Hence it's a good idea to have both open as
+can be seen in the image below.
+
+{%html: <img src="_assets/ocaml_console.png" style="width:400px;"/> %}
+
+{1:ext_install Extension installation}
+
+The extension is distributed with [brr] not via the browser specific
+app stores. It is installed in:
+{v
+$(opam var share)/brr/ocaml_console
+v}
+and can be added to your browser from there.
+
+{2:firefox Firefox}
+
+The easiest at the moment is to install the extension temporarily –
+this means however that it will vanish if you restart your browser.
+
+{ol
+{- Navigate to [about:debugging]}
+{- Click the button “This Firefox”}
+{- Click the button “Load Temporary Add-on”}
+{- Open the extension directory and select [manifest.json]. On macOS type
+   [shift]-[/] and paste the path to the extension directory; this allows
+   you to access hidden folders (namely [.opam]) from the file selector.}}
+
+These steps are taken from
+{{:https://extensionworkshop.com/documentation/develop/temporary-installation-in-firefox/}here}.
+
+{2:chrome Google Chrome}
+
+{ol
+{- Navigate to [chrome://extensions].}
+{- Enable “Developer mode” by clicking the toggle switch.}
+{- Click on the “Load unpacked” button. Select the extension
+   directory and click “Select”. On macOS type [shift]-[/] and
+   paste the path to the extension directory; this allows you to
+   access hidden folders (namely [.opam]) from the file selector.}}
+
+The {{:https://developer.chrome.com/extensions/getstarted}Chrome extension
+tutorial} may also help with a few images.
+
+{2:edge Microsoft Edge}
+
+Navigate to [edge://extensions] and follow the steps of {!chrome}.
+
+{2:safari Safari}
+
+The WebExtension API is not supported by Safari yet. But it seems
+support is on its way for Safari 14.
+
+{1:web_page_instructions Web page instructions}
+
+You need to compile a JavaScript file that has the [js_of_ocaml]
+toplevel machinery in your page and exposes it via the
+{{!ocaml_poke}poke} object.
+
+One way of doing this to link with the [brr.poke] library and
+add this line:
+{[
+let () = Brr_poke.define ()
+]}
+somewhere in your code. Alternatively linking against the
+[brr.poked] with [-linkall] adds the above line to your program
+without having to modify it.
+
+To be able to access all your program libraries and modules you need
+to compile the bytecode executable with [-linkall] and invoke
+[js_of_ocaml] with the [--toplevel] option, [-I] options to lookup to
+cmis of the modules you want to access and link with [js_of_ocaml]'s
+support the toplevel and dynlinking. Here is
+{{!page-web_page_howto.quick}a minimal example} and
+{{!page-web_page_howto.ocaml_console}instructions} to poke it.
+
+In practice adding the poke object will result in a insane blowup of
+your page size budget. This is totally unfit for production. Keep in
+mind that the whole bytecode OCaml compiler, the [js_of_ocaml]
+compiler, the toplevel machinery and the [cmi] files of the modules
+you want to access get embedded in the page.
+
+{2:current_limitations Current limitations}
+
+It would be nice to be able to separately compile the poke object and
+needed machinery as its own [ocaml_poke.js] script and link it
+separately via the HTML file. However this is not possible at the
+moment as separate toplevel compilation is not supported – this means
+excessively long build times are needed for now to use the console on
+your programs.
+
+{1:ocaml_poke The [ocaml_poke] object}
+
+The JavaScript object must be named [ocaml_poke] and live in the
+global object ([globalThis]) of the web page. It must expose the
+following object members and types (in OCaml record notation) :
+
+{[
+{ version : int; (* current version is 0 *)
+  ocaml_version : Jstr.t;
+  jsoo_version : Jstr.t;
+  init : unit -> unit;
+  eval : Jstr.t -> Brr.Json.t;
+  use : Jstr.t -> Brr.Json.t; }
+]}
+
+[init], [eval] and [use] should raise {!Jv.exception-Error} in case of problem
+(the right interface would be to return a promise but we cannot
+because of WebExtension API constraints). For now [eval] should
+always return a {!Jstr.t}.
+
+Note that this is the only thing the extension needs. If you don't
+want to use the Brr libraries to define the [ocaml_poke] object you
+can perfectly define the object your own way.
+
+If you want to access an [ocaml_poke] object yourself use the
+{!Brr_ocaml_poke} module.
+
+{2:poke_current_limitations Current limitations}
+
+This API is very crude we can do much better than that. A few things
+that would be nice:
+
+{ul
+{- A function to ask for completions from the [cmis]. The implementation
+   should likely be done in OCaml's [Toplevel] upstream, as it would
+   benefit everyone.}
+{- A more structured [eval] return type to prettify error reports and
+   location highlights. Nothing is done at the moment. (Oddly
+   we get nice user error message when we use the [#use] button).}}
+
+The only hard constraint we have is that eval should return JSON since it's
+the only thing we can get back in the panel via
+{{:https://developer.chrome.com/extensions/devtools_inspectedWindow#method-eval}
+chrome.devtools.inspectedWindow.eval} /
+{{:https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/devtools.inspectedWindow/eval}devtools.inspectedWindow.eval}.

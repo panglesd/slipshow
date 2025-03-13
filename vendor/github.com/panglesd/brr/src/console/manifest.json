@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "OCaml console",
+  "version": "0.0.6",
+  "author": "The brr programmers",
+  "description":
+  "OCaml console developer tools panel. Connects to an OCaml toplevel (REPL) provided by the inspected web page.",
+  "homepage_url": "https://erratique.ch/software/brr",
+  "icons": { "128": "ocaml.png" },
+  "permissions": ["storage", "management"],
+  "host_permissions": ["<all_urls>"],
+  "devtools_page": "devtools.html"
+}

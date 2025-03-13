@@ -1,0 +1,6 @@
+(library
+ (name brr_ocaml_poke)
+ (public_name brr.ocaml_poke)
+ (modules brr_ocaml_poke)
+ (libraries brr)
+ (wrapped false))
