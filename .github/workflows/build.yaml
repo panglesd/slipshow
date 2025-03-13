@@ -60,7 +60,7 @@ jobs:
         run: |
           mkdir -p new_release; chmod a+rw new_release;
           docker buildx build --platform ${{ matrix.platform.name }} --load \
-            --cache-to type=gha \
+            --cache-to type=gha,mode=max \
             --cache-from type=gha \
             -f release/Dockerfile \
             -t slipshow-release-${{ matrix.platform.name }} .
