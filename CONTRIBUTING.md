@@ -68,3 +68,16 @@ TODO
 Slipshow vendors a few modified dependencies. Currently it uses
 [git-vendor](https://github.com/brettlangdon/git-vendor).
 
+- To add a new dependency, use `git vendor add <name> <repo> <ref>`. For instance:
+  ```
+  git vendor add brr git@github.com:panglesd/brr.git slipshow-vendor
+  ```
+- To update a dependency, use `git vendor update <name> <ref>`. For instance:
+
+  ```
+  git vendor update cmarkit markdown-attributes
+  ```
+- To upstream local changes to a dependency, use `git vendor upstream <name> <ref>`. For instance:
+  ```
+  git vendor upstream cmarkit markdown-attributes
+  ```
