@@ -1,8 +1,14 @@
 # Changelog
 
-## [Unreleased]
+## [v0.1.1] Thursday 13th march, 2025. Lyon.
 
-## [v0.1.0] Friday 7th, 2025. Lyon.
+Quick release mostly to allow publishing on opam!
+
+- Vendor modified Brr, instead of pinning.
+- Build released binaries in release mode, without QEMU.
+- Fix `-dirty` suffix on `slipshow --version`.
+
+## [v0.1.0] Friday 7th March, 2025. Lyon.
 
 > [!NOTE]
 > TLDR:
