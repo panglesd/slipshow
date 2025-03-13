@@ -24,7 +24,6 @@ depends: [
   "magic-mime"
   "dream" {>= "1.0.0~alpha5"}
   "fpath"
-  "brr" {>= "0.0.6"}
   "ppx_blob" {>= "0.8.0"}
   "sexplib"
   "ppx_sexp_conv"
@@ -46,6 +45,3 @@ build: [
   ]
 ]
 dev-repo: "git+https://github.com/panglesd/slipshow.git"
-pin-depends: [
-  "brr.dev" "git+https://github.com/panglesd/brr.git#bindings-window-inner-size"
-]

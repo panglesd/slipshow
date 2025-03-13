@@ -35,7 +35,6 @@
    magic-mime
    (dream (>= "1.0.0~alpha5"))
    fpath
-   (brr (>= "0.0.6"))
   (ppx_blob (>= "0.8.0"))
    sexplib
    ppx_sexp_conv

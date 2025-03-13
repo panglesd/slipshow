@@ -1,0 +1,5 @@
+(executable
+ (name ocaml_console)
+ (modules ocaml_console)
+ (libraries brr brr.ocaml_poke_ui)
+ (modes js))

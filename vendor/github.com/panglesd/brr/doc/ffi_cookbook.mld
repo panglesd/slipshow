@@ -1,0 +1,436 @@
+{0 Brr FFI cookbook}
+
+This cookbook has a few tips and off-the-shelf design answers to
+common JavaScript binding scenarios. You are likely in a hurry but if
+you haven't read the {{!page-ffi_manual}FFI manual} yet, it's a good
+idea to do it before.
+
+Most of the examples in this manual can be cut and pasted directly into the
+{{!page-ocaml_console}OCaml console}.
+
+{1:ressources JavaScript and Web APIs documentation}
+
+These are useful references for browser programming:
+
+{ul
+{- {{:https://eloquentjavascript.net/index.html}Eloquent JavaScript}
+   is a good book to teach yourself JavaScript.}
+{- {{:https://developer.mozilla.org/}MDN web docs} has documentation
+   and further pointers for JavaScript and Web APIs. Sometimes
+  incomplete but a good substitute for the dryness of standards.}
+{- MDN also has implementation API status and quirks information but
+   {{:https://caniuse.com/}caniuse.com} has it in a way that
+   is easier to search.}}
+
+{1:names OCaml identifier convention}
+
+Oddly (but luckily) idiomatic OCaml code uses the [snake_case] identifier
+convention, not the [CamlCase] one.
+
+To map JavaScript identifiers to OCaml ones, introduce a [_] in front
+of non initial upper case letters and down case these. If an
+identifier name clashes with an OCaml keyword, simply prime' it. A few
+examples:
+
+{v
+JavaScript        OCaml
+----------------------------------
+maxTouchPoints    max_touch_points
+parseInt          parse_int
+FetchEvent        Fetch_event
+new               new'
+class             class'
+type              type'
+for               for'
+v}
+
+{1:doc_strings Documentation strings}
+
+Make your APIs productive to use: devise a proper doc string and have
+direct links to the {e exact} functionality you bind to. What you find
+painful to do now will result in incomensurate time savings in the
+future, for yourself and anyone using your binding.
+
+For standard APIs link either on
+{{:https://developer.mozilla.org/}MDN} which is sometimes incomplete
+or, if unavailable, on the appropriate standards which are sometimes a
+bit dry – but better than nothing.
+
+{1:recipe Recipes}
+
+{2:full_api Give me a complete example! }
+
+A reasonably sized complete example is the binding to
+{{:https://developer.mozilla.org/en-US/docs/Web/API/Blob}[Blob]
+objects} via {!Brr.Blob}. It shows how to deal with
+{{!enums}enums}, {{!init_dicts}initalization dictionaries},
+{{!call_meth}method calls} and {{!promises}promises}.
+
+{2:iface_class Bindings classes or mixin APIs}
+
+The basic pattern to expose an API exposed by a JavaScript class
+or mixin is to create a module with an abstract type equal to {!Jv.t}
+and expose its properties and methods in this module.
+
+Since these abstract values may need to be used by other APIs, always
+provide hidden conversion function to {!Jv.t}. One way of quickly
+doing this is to use {!Jv.CONV} and {!Jv.Id} as follows:
+
+{[
+(** [Object_kind] objects. *)
+module Object_kind : sig
+  type t
+  (** The type for {{:https://example.org/doc/ObjectKind}[ObjectKind]s}. *)
+  (**/**)
+  include Jv.CONV with type t := t
+  (**/**)
+end = struct
+  type t = Jv.t
+  include (Jv.Id : Jv.CONV with type t := t)
+end
+]}
+
+For each property [p] of the object have a function named [p] modulo
+{{!names}the naming convention} to get the property. If the
+property is mutable have another function [set_p] to set it – that may
+seem painful but in practice, at least on web APIs, most object
+properties are read only.
+
+For each method [m] of the object have a function of the same name
+modulo {{!names}the naming convention} to call the method on the
+object.
+
+See also {!obj_class}, {!init_dicts} and {!call_meth}.
+
+{2:fun Call a JavaScript function}
+
+Look for the function name in the global object (or any another
+object), construct an array of {!Jv.t} values for the function
+arguments and call {!Jv.apply}.
+
+The following is a binding to the
+{{:https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/parseInt}parseInt}
+JavaScript function. We handle JavaScript exceptions and map them on
+the OCaml [result] type (in practice [parseInt] never raises, this
+is for demonstration purpose only).
+
+{[
+let parse_int' = Jv.get Jv.global "parseInt"
+let parse_int ?radix s =
+  let r = Jv.of_option ~none:Jv.undefined Jv.of_int radix in
+  match Jv.apply parse_int' Jv.[| of_jstr s; r |] with
+  | exception Jv.Error e -> Error e
+  | v -> Ok (Jv.to_int v)
+]}
+
+Use {!Jv.get'} if you have to deal with full Unicode identifiers:
+
+{[
+(* function nπ (n) { return n * Math.PI; } *)
+let npi' = Jv.get' Jv.global (Jstr.v "nπ")
+let npi n = Jv.to_float @@ Jv.apply npi' Jv.[| of_float n |]
+]}
+
+Note that [js_of_ocaml] dead codes away these toplevel gets on the
+{!Jv.global} object if you end up not using these.
+
+{2:obj Create an object}
+
+See {{!page-ffi_manual.create_obj}this section} of the FFI manual.
+
+{2:obj_class Create an object of a given class}
+
+Lookup the constructor in the global {!Jv.global} object (or any other
+object) and call {!Jv.new'} with the constructor and its arguments.
+{[
+let url = Jv.get Jv.global "URL" (* the URL JavaScript constructor *)
+let url_of_jstr s =              (* 'new URL(s);' and handle error *)
+  match Jv.new' url Jv.[| of_jstr s |] with
+  | exception Jv.Error e -> Error e
+  | v -> Ok v
+]}
+
+{2:call_meth Call a method}
+
+Construct an array of {!Jv.t} values for the method arguments an
+invoke {!Jv.call} on the object with the method name:
+
+{[
+let to_string o = Jv.to_jstr @@ Jv.call o "toString" [||]
+let set_length o l = ignore @@ Jv.call o "setLength" Jv.[| of_int l |]
+]}
+
+If you hit a Unicode method name, use {!Jv.call'}.
+
+See also {!unit_return}
+
+{2:unit_return How to return [unit] ?}
+
+JavaScript's [unit] is [undefined], when you call functions and
+methods for side effects they return the {!Jv.undefined} value.
+Simply use OCaml's [ignore] to ignore the value:
+
+{[
+let log s =
+  ignore @@ Jv.call (Jv.get Jv.global "console") "log" Jv.[| of_jstr s |]
+]}
+
+{2:class_membership How to test for class membership ?}
+
+Get a hand on the class constructor and test using {!Jv.instanceof}.
+
+{[
+let array = Jv.get Jv.global "Array"
+let is_array_class a = Jv.instanceof (Jv.repr a) array
+]}
+
+{2:init_dicts Deal with initialisation dictionaries}
+
+Lots of JavaScript constructors take an optional initialisation dictionary
+to specify parameters for the resulting object.
+
+To deal with this pattern:
+
+{ol
+{- Create an abstract data type for the dictionary. Call that
+   type [init] or [opts] according to the terminology used by the constructor.}
+{- Make a function of the same name with optional arguments for each of
+   the dictionary field and that returns a dictionary.}
+{- In the constructor have an optional parameter with the same name
+   for the dictionary.}}
+
+Sample code:
+
+{[
+module Jobj : sig
+ type opts
+ (** The the type for [Jobj] options. *)
+
+ val opts : ?param1:int -> ?param2:Jstr.t -> unit -> opts
+ (** [opts ()] are options for [Jojb] with given parameters. *)
+
+ type t
+ (** The type for [Jobj] objects. *)
+
+ val create : ?opts:opts -> unit -> t
+ (** [create () ~opts] is a [Jobj] with options [opts]. *)
+
+end = struct
+  type opts = Jv.t
+  let opts ?param1 ?param2 () =
+    let o = Jv.obj [||] in
+    Jv.Int.set_if_some o "param1" param1;
+    Jv.Jstr.set_if_some o "param2" param2;
+    o
+
+  type t = Jv.t
+  let jobj = Jv.get Jv.global "Jobj" (* constructor *)
+  let create ?(opts = Jv.undefined) () = Jv.new' jobj [| opts |]
+end
+]}
+
+{2:iterators Deal with the iterator protocol}
+
+APIs returning sequences of values via the
+{{:https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#The_iterator_protocol}iterator
+protocol} can be dealt with using the functions provided in
+{!Jv.It}. Convenience functions are provided to turn them directly
+into folds.
+
+The following folds over the Unicode characters of strings returned as
+strings. The function {!Jv.It.iterator} accesses the
+{{:https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/@@iterator}JavaScript string
+iterator} (formally the symbolic property [Symbol.iterator]). The
+{!Jv.It.fold} combinator takes care of folding over the values it
+produces.
+
+{[
+let fold_uchar_jstrs f s acc =
+  Jv.It.fold Jv.to_jstr f (Jv.It.iterator (Jv.of_jstr s)) acc
+]}
+
+{2:enums Deal with enums}
+
+In browser APIs enums are strings most of the time used to specify
+options. Pattern matching is of little use in this case so do not
+bother to translate them to OCaml variants.
+
+Use the {{!names}naming convention} to define a dedicated module for
+the enum with:
+
+{ol
+{- A type [t] equal to {!Jstr.t}.}
+{- Constants for each value.}
+{- At least one link in a {{!doc_strings}doc string} that explains
+   the semantics of values.}}
+
+For example for this [Blob] object
+{{:https://w3c.github.io/FileAPI/#enumdef-endingtype}[EndingType]}
+enum:
+
+{[
+(** The line ending type enum. *)
+module Ending_type : sig
+  type t = Jstr.t
+  (** The type for line
+    {{:https://w3c.github.io/FileAPI/#dom-blobpropertybag-endings}
+    [EndingType] values}. *)
+
+  val native : Jstr.t
+  val transparent : Jstr.t
+end = struct
+  type t = Jstr.t
+  let native = Jstr.v "native"
+  let transparent = Jstr.v "transparent"
+end
+]}
+
+[js_of_ocaml] dead codes away these constants if they are not used
+by your program.
+
+{2:arrays Deal with JavaScript arrays}
+
+JavaScript APIs arrays are often used for lists (indexability does not
+really matter). In this case make the OCaml programmer happy and
+expose them as such. Use {!Jv.to_list} and {!Jv.of_list} to convert
+JavaScript arrays, there are also a few
+{{!Jv.array_special}specialized conversion} functions which may be
+faster.
+
+{[
+let navigator_languages : Navigator.t -> Jstr.t list =
+fun n -> Jv.to_jstr_list @@ Jv.get (Navigator.to_jv n) "languages"
+]}
+
+{2:exns Deal with exceptions}
+
+JavaScript exceptions/errors are thrown in your face as the OCaml
+{!Jv.exception-Error} exception. To handle it simply pattern match on
+it like you do with any other OCaml exception:
+
+{[
+let atob : Jstr.t -> (Jstr.t, Jv.Error.t) result =
+fun a ->
+  match Jv.apply (Jv.get Jv.global "atob") Jv.[| of_jstr a |] with
+  | exception Jv.Error e -> Error e
+  | v -> Ok (Jv.to_jstr v)
+]}
+
+To throw your own JavaScript exception use {!Jv.throw}.
+
+When a function or method throws exceptions distinguish between:
+{ul
+{- The exception is thrown because of an exceptional {e programming error}.
+   The programmer did not respect an expected invariant, like
+   {!Invalid_argument} in OCaml.}
+{- The exception is thrown beause of an unexceptional error that
+   can naturally occur at runtime. For example a codec decoding
+   error, a network failure etc.}}
+
+In the first case simply bind the function and mention in the
+documentation that it may raise. In the second case catch the
+JavaScript exception and turn it into a {!Stdlib.result} type, see the
+example above.
+
+See also {!promises}.
+
+{2:promises Deal with promises}
+
+Brr represents JavaScript promises as {!Fut.result} values which are
+{!Fut.t} values that determine to a standard OCaml {!Stdlib.result}
+type using the [Error] case for rejections.
+
+In JavaScript APIs most promises reject by returning a JavaScript
+error object {!Jv.Error.t} and the {!Fut.or_error} type abbreviation
+represents exactly that. The {!Fut.of_promise} function converts a
+promise directly to this type.
+
+{[
+let read_text c = Fut.of_promise ~ok:Jv.to_jstr @@ Jv.call c "readText" [||]
+let fullscreen () =
+  Fut.of_promise ~ok:ignore @@
+  Jv.call (El.to_jv (Document.body G.document)) "requestFullscreen" [||]
+]}
+
+{2:buffer_sources Deal with [BufferSource]s}
+
+Some APIs deal with
+{{:https://heycam.github.io/webidl/#common-BufferSource}[BufferSource]s}
+which makes things a bit more complicated than they could be.
+
+Any {!Brr.Tarray.Buffer.t} can be turned into into a {!Brr.Tarray.t}
+if needed so:
+{ul
+{- When a [BufferSource] is specified as an input argument.
+   Use the {!Brr.Tarray.t} type. Users who want to use a direct
+   {!Brr.Tarray.Buffer.t} can use {!Brr.Tarray.uint8_of_buffer}.}
+{- Usually [BufferSource] are not the result of functions. No
+   infrastructure is provided by Brr for now, but an ad-hoc variant
+   could be introduced for these.}}
+
+{2:callback Deal with callbacks to OCaml}
+
+You need to convert the callback to a JavaScript [Jv.t] value with the
+{!Jv.callback} function.
+
+{[
+let set_timeout : ms:int -> (unit -> unit) -> unit =
+  let set_timeout = Jv.get Jv.global "setTimeout" in
+  fun ~ms f ->
+    let f = Jv.callback ~arity:1 f in
+    ignore @@ Jv.apply set_timeout Jv.[| f; of_int ms |]
+
+let () =
+  let alert = Jv.get Jv.global "alert" in
+  let alert v = ignore @@ Jv.apply alert Jv.[| of_string v |] in
+  set_timeout ~ms:1000 @@ fun () -> alert "Iiiiiik!"
+]}
+
+You need to make sure the representations of the function arguments
+and the result type are compatible with those JavaScript expect. See
+{{!export}here for more discussion}.
+
+{2:export Exposing an OCaml function to JavaScript}
+
+Just name its JavaScript representation in the {!Jv.global} object (or
+any other object). You need to make sure the representations of the
+function arguments and the result type are compatible with those
+JavaScript expect, see the {{!page-ffi_manual}FFI manual} for discussions
+on this.  So for example to expose an OCaml factorial function in the
+global object as [fact] you could write:
+
+{[
+let rec fact n = if n <= 0 then 1 else n * fact (n - 1)
+let fact' n = Jv.of_int (fact (Jv.to_int n))
+let () = Jv.set Jv.global "fact" (Jv.callback ~arity:1 fact')
+]}
+
+The JavaScript code or console can now call:
+
+{[
+fact (3);
+]}
+
+Note that technically since {{!page-ffi_manual.nums}number}
+conversions are nops you could write:
+
+{[
+(* Do not do this *)
+let () = Jv.set Jv.global "fact" (Jv.callback ~arity:1 fact)
+]}
+
+But it's not advised to do and may break if [js_of_ocaml] changes the
+representation of OCaml values in the future.
+
+{2:testing Testing for features}
+
+Browser discrepancies do still exist. To quickly test for features
+{!Jv.has} takes a value of any type and checks whether it has the
+given property or method name:
+
+{[
+let has_text_method : Blob.t -> bool = fun b -> Jv.has "text" b
+]}
+
+{!Jv.defined}[ v] tests that [v] is neither [null] nor [undefined]
+– this is simply a shortcut for the longer [Jv.is_some (J.repr v)].
