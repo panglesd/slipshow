@@ -1,0 +1,56 @@
+description = "Browser programming toolkit for OCaml"
+version = "%%VERSION_NUM%%"
+requires = "js_of_ocaml-compiler.runtime"
+archive(byte) = "brr.cma"
+archive(native) = "brr.cmxa"
+plugin(byte) = "brr.cma"
+plugin(native) = "brr.cmxs"
+exists_if = "brr.cma brr.cmxa"
+
+package "ocaml_poke" (
+  directory = "ocaml_poke"
+  description = "OCaml poke objects interaction"
+  version = "%%VERSION_NUM%%"
+  requires = "brr"
+  archive(byte) = "brr_ocaml_poke.cma"
+  archive(native) = "brr_ocaml_poke.cmxa"
+  plugin(byte) = "brr_ocaml_poke.cma"
+  plugin(native) = "brr_ocaml_poke.cmxs"
+  exists_if = "brr_ocaml_poke.cma brr_ocaml_poke.cmxa"
+)
+
+package "ocaml_poke_ui" (
+  directory = "ocaml_poke_ui"
+  description = "OCaml poke user interface (toplevel)"
+  version = "%%VERSION_NUM%%"
+  requires = "brr brr.ocaml_poke"
+  archive(byte) = "brr_ocaml_poke_ui.cma"
+  archive(native) = "brr_ocaml_poke_ui.cmxa"
+  plugin(byte) = "brr_ocaml_poke_ui.cma"
+  plugin(native) = "brr_ocaml_poke_ui.cmxs"
+  exists_if = "brr_ocaml_poke_ui.cma brr_ocaml_poke_ui.cmxa"
+)
+
+package "poke" (
+  directory = "poke"
+  description = "Poke explicitely"
+  version = "%%VERSION_NUM%%"
+  requires = "js_of_ocaml-compiler.runtime js_of_ocaml-toplevel brr"
+  archive(byte) = "brr_poke.cma"
+  archive(native) = "brr_poke.cmxa"
+  plugin(byte) = "brr_poke.cma"
+  plugin(native) = "brr_poke.cmxs"
+  exists_if = "brr_poke.cma brr_poke.cmxa"
+)
+
+package "poked" (
+  directory = "poked"
+  description = "Poke by side effect"
+  version = "%%VERSION_NUM%%"
+  requires = "brr.poke"
+  archive(byte) = "brr_poked.cma"
+  archive(native) = "brr_poked.cmxa"
+  plugin(byte) = "brr_poked.cma"
+  plugin(native) = "brr_poked.cmxs"
+  exists_if = "brr_poked.cma brr_poked.cmxa"
+)

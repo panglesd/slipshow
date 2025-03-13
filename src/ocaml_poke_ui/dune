@@ -1,0 +1,6 @@
+(library
+ (name brr_ocaml_poke_ui)
+ (public_name brr.ocaml_poke_ui)
+ (modules brr_ocaml_poke_ui)
+ (libraries brr brr.ocaml_poke)
+ (wrapped false))
