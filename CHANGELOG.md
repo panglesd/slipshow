@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+- Allow to focus on multiple elements. Zooms as much as possible
+  so everything is visible, and center. Backward compatible, focusing
+  on a single element.
+
 ## [v0.1.1] Thursday 13th march, 2025. Lyon.
 
 Quick release mostly to allow publishing on opam!
