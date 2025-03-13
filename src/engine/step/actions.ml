@@ -108,7 +108,7 @@ module AttributeActions = struct
       let arg =
         Jv.obj
           [|
-            ( "set_style",
+            ( "setStyle",
               Jv.callback ~arity:3 @@ fun elem style value ->
               let old_value =
                 let old_value = Brr.El.inline_style style elem in
@@ -124,7 +124,7 @@ module AttributeActions = struct
               in
               undos_ref := undo :: !undos_ref;
               Jv.callback ~arity:1 undo );
-            ( "set_class",
+            ( "setClass",
               Jv.callback ~arity:3 @@ fun elem class_ bool ->
               let bool = Jv.to_bool bool in
               Brr.Console.(log [ "set_class called with"; elem; class_; bool ]);
