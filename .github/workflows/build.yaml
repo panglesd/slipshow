@@ -2,24 +2,24 @@ name: CI
 
 on:
   push:
-#    branches: [ master ]
+#    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   linux-build:
     strategy:
       matrix:
         platform:
-          - { name: "linux/amd64", filename_suffix: "linux-amd64", target_arch: "x86_64" }
-          - { name: "linux/arm64", filename_suffix: "linux-arm64", target_arch: "arm64" }
+          - { name: "linux/amd64", filename_suffix: "linux-amd64", target_arch: "x86_64", runner: "ubuntu-22.04" }
+          - { name: "linux/arm64", filename_suffix: "linux-arm64", target_arch: "arm64", runner: "ubuntu-22.04-arm" }
         runAllTests:
           - ${{ startsWith(github.ref, 'refs/tags/') }}
         # exclude:
         #   - platform: { name: "linux/arm64", filename_suffix: "linux-arm64", target_arch: "arm64"  }
         #     runAllTests: false
       fail-fast: false
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.platform.runner }}
 
     env:
       SLIPSHOW_PLATFORM: ${{ matrix.platform.name }}
@@ -35,10 +35,6 @@ jobs:
       # https://github.com/actions/checkout/issues/882
       - name: Fetch tags
         run: git fetch --tags --force origin
-
-      - name: Debug
-        run: |
-          echo "GitHub Ref: ${{ github.ref }}"
 
       - name: Set up QEMU
         id: qemu
