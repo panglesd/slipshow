@@ -48,11 +48,11 @@ For a super quick start, just click visit [sliphub.choum.net](https://sliphub.ch
 
 For using slipshow offline, you'll need to install the slipshow tool. Currently, there are several ways to get it. The best is to download the precompiled binary from the [latest release](https://github.com/panglesd/slipshow/releases/latest).
 
-Slipshow is also package in some package manager:
+Slipshow is also packaged as an `opam` package:
 
 ```shell
-# For opam users. TODO: Update once it has been released to opam.
-$ opam pin slipshow git@github.com/panglesd/slipshow.git
+# For opam users.
+$ opam install slipshow
 ```
 
 Then, you can use the `slipshow` binary to compile a `.md` file to a slipshow presentation:
