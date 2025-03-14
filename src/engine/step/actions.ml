@@ -6,20 +6,6 @@ let find_next_pause_or_step () =
 open Undoable.Syntax
 open Fut.Syntax
 
-let set_class c b elem : unit Undoable.t =
-  let c = Jstr.v c in
-  let old_class = Brr.El.class' c elem in
-  let res = Brr.El.set_class c b elem in
-  let undo () = Fut.return @@ Brr.El.set_class c old_class elem in
-  Undoable.return ~undo res
-
-let set_at at v elem =
-  let at = Jstr.v at in
-  let old_at = Brr.El.at at elem in
-  let res = Brr.El.set_at at v elem in
-  let undo () = Fut.return @@ Brr.El.set_at at old_at elem in
-  Undoable.return ~undo res
-
 module AttributeActions = struct
   let act_on_id action id =
     let id = Jstr.concat [ Jstr.v "#"; id ] in
@@ -54,12 +40,12 @@ module AttributeActions = struct
 
   let unstatic _window elem =
     act_on_elems "unstatic-at-unpause"
-      (Undoable.List.iter (set_class "unstatic" true))
+      (Undoable.List.iter (Undoable.Browser.set_class "unstatic" true))
       elem
 
   let static _window elem =
     act_on_elems "static-at-unpause"
-      (Undoable.List.iter (set_class "unstatic" false))
+      (Undoable.List.iter (Undoable.Browser.set_class "unstatic" false))
       elem
 
   let focus window elem =
@@ -80,22 +66,22 @@ module AttributeActions = struct
 
   let reveal _window elem =
     act_on_elems "reveal-at-unpause"
-      (Undoable.List.iter (set_class "unrevealed" false))
+      (Undoable.List.iter (Undoable.Browser.set_class "unrevealed" false))
       elem
 
   let unreveal _window elem =
     act_on_elems "unreveal-at-unpause"
-      (Undoable.List.iter (set_class "unrevealed" true))
+      (Undoable.List.iter (Undoable.Browser.set_class "unrevealed" true))
       elem
 
   let emph _window elem =
     act_on_elems "emph-at-unpause"
-      (Undoable.List.iter (set_class "emphasized" true))
+      (Undoable.List.iter (Undoable.Browser.set_class "emphasized" true))
       elem
 
   let unemph _window elem =
     act_on_elems "unemph-at-unpause"
-      (Undoable.List.iter (set_class "emphasized" false))
+      (Undoable.List.iter (Undoable.Browser.set_class "emphasized" false))
       elem
 
   let execute _window elem =
@@ -159,7 +145,7 @@ let update_pause_ancestors () =
     Brr.El.fold_find_by_selector
       (fun elem undoes ->
         let> () = undoes in
-        set_class "pauseAncestor" false elem)
+        Undoable.Browser.set_class "pauseAncestor" false elem)
       (Jstr.v ".pauseAncestor") (Undoable.return ())
   in
   let> () =
@@ -170,7 +156,7 @@ let update_pause_ancestors () =
           if Brr.El.class' (Jstr.v "slipshow-universe") elem then
             Undoable.return ()
           else
-            let> () = set_class "pauseAncestor" true elem in
+            let> () = Undoable.Browser.set_class "pauseAncestor" true elem in
             match Brr.El.parent elem with
             | None -> Undoable.return ()
             | Some elem -> hide_parent elem
@@ -198,9 +184,9 @@ let update_history () =
 let clear_pause window elem =
   let> () =
     if Option.is_some @@ Brr.El.at (Jstr.v "pause") elem then
-      let> () = set_at "pause" None elem in
+      let> () = Undoable.Browser.set_at "pause" None elem in
       update_pause_ancestors ()
-    else set_at "step" None elem
+    else Undoable.Browser.set_at "step" None elem
   in
   let> () = AttributeActions.do_ window elem in
   let> () = update_history () in
