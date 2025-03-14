@@ -6,6 +6,7 @@
   is visible, and center. Backward compatible, focusing on a single
   element. (#103)
 - Pass all actions to slip-scripts, accesible via the `slip` object. (#104)
+- Introduce `slip.onUndo`, `slip.setProp` and `slip.state`. (#97)
 
 ## [v0.1.1] Thursday 13th march, 2025. Lyon.
 
