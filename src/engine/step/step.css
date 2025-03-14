@@ -21,4 +21,8 @@
   right: 0;
   background-color: white;
   padding: 5px;
+  font-size: 2em;
+  border: 1px solid black;
+  border-radius: 5px;
+  cursor: pointer;
 }

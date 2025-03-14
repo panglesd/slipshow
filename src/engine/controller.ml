@@ -5,10 +5,7 @@ let keyboard_setup (window : Universe.Window.window) =
     let current_coord = Universe.State.get_coord () in
     let () =
       match key with
-      | "t" ->
-          let body = Brr.Document.body Brr.G.document in
-          let c = Jstr.v "slipshow-toc-mode" in
-          Brr.El.set_class c (not @@ Brr.El.class' c body) body
+      | "t" -> Table_of_content.toggle_visibility ()
       | "w" -> Drawing.State.set_tool Pen
       | "h" -> Drawing.State.set_tool Highlighter
       | "x" -> Drawing.State.set_tool Pointer
@@ -68,23 +65,57 @@ let keyboard_setup (window : Universe.Window.window) =
   ()
 
 let touch_setup (window : Universe.Window.window) =
+  let () =
+    let next =
+      Brr.El.find_first_by_selector (Jstr.v "#slip-touch-controls .slip-next")
+      |> Option.get
+    in
+    let _unlisten =
+      Brr.Ev.listen Brr.Ev.click
+        (fun _ ->
+          let _ : unit Fut.t = Step.Next.go_next window 1 in
+          ())
+        (Brr.El.as_target next)
+    in
+    ()
+  in
+  let () =
+    let prev =
+      Brr.El.find_first_by_selector
+        (Jstr.v "#slip-touch-controls .slip-previous")
+      |> Option.get
+    in
+    let _unlisten =
+      Brr.Ev.listen Brr.Ev.click
+        (fun _ ->
+          let _ : unit Fut.t = Step.Next.go_prev window 1 in
+          ())
+        (Brr.El.as_target prev)
+    in
+    ()
+  in
+  let () =
+    let fullscreen =
+      Brr.El.find_first_by_selector
+        (Jstr.v "#slip-touch-controls .slip-fullscreen")
+      |> Option.get
+    in
+    let _unlisten =
+      Brr.Ev.listen Brr.Ev.click
+        (fun _ ->
+          let body = Brr.Document.body Brr.G.document in
+          let _ = Brr.El.request_fullscreen body in
+          ())
+        (Brr.El.as_target fullscreen)
+    in
+    ()
+  in
   let target = Brr.G.document |> Brr.Document.body |> Brr.El.as_target in
-  let start = ref None in
-  let coord_of_event ev =
-    let mouse = Brr.Ev.as_type ev |> Brr.Ev.Pointer.as_mouse in
-    let x = Brr.Ev.Mouse.client_x mouse and y = Brr.Ev.Mouse.client_y mouse in
-    (x, y)
-  in
-  let check_condition ev f =
-    let type_ = Brr.Ev.Pointer.type' (Brr.Ev.as_type ev) |> Jstr.to_string in
-    if
-      String.equal "touch" type_
-      && Drawing.State.get_tool () = Drawing.Tool.Pointer
-    then f ()
-    else ()
-  in
   let touchstart (ev : Brr.Ev.Pointer.t Brr.Ev.t) =
     let type_ = Brr.Ev.Pointer.type' (Brr.Ev.as_type ev) |> Jstr.to_string in
+    let body = Brr.Document.body Brr.G.document in
+    if String.equal "touch" type_ then
+      Brr.El.set_class (Jstr.v "mobile") true body;
     let stop_here () =
       Brr.Ev.prevent_default ev;
       Brr.Ev.stop_immediate_propagation ev;
@@ -93,26 +124,10 @@ let touch_setup (window : Universe.Window.window) =
     if
       String.equal "touch" type_
       && Drawing.State.get_tool () = Drawing.Tool.Pointer
-    then stop_here ();
-    check_condition ev @@ fun () -> start := Some (coord_of_event ev)
+    then stop_here ()
   in
   let opts = Brr.Ev.listen_opts ~passive:false () in
   let _listener = Brr.Ev.listen ~opts Brr.Ev.pointerdown touchstart target in
-  let take_decision start (end_x, end_y) =
-    match start with
-    | None -> `None
-    | Some (start_x, start_y) ->
-        let mov_x, mov_y = (end_x -. start_x, end_y -. start_y) in
-        let mov, abs, win =
-          let abs_x = Float.abs mov_x and abs_y = Float.abs mov_y in
-          let win_x = Brr.Window.inner_width Brr.G.window |> float_of_int in
-          let win_y = Brr.Window.inner_height Brr.G.window |> float_of_int in
-          if abs_x > abs_y then (mov_x, abs_x, win_x) else (mov_y, abs_y, win_y)
-        in
-        if abs /. win < 0.1 then `None
-        else if mov <= 0. then `Forward
-        else `Backward
-  in
   let touchend (ev : Brr.Ev.Pointer.t Brr.Ev.t) =
     let type_ = Brr.Ev.Pointer.type' (Brr.Ev.as_type ev) |> Jstr.to_string in
     let stop_here () =
@@ -123,20 +138,7 @@ let touch_setup (window : Universe.Window.window) =
     if
       String.equal "touch" type_
       && Drawing.State.get_tool () = Drawing.Tool.Pointer
-    then stop_here ();
-    check_condition ev @@ fun () ->
-    let end_ = coord_of_event ev in
-    let () =
-      match take_decision !start end_ with
-      | `None -> ()
-      | `Forward ->
-          let _ : unit Fut.t = Step.Next.go_next window 1 in
-          ()
-      | `Backward ->
-          let _ : unit Fut.t = Step.Next.go_prev window 1 in
-          ()
-    in
-    start := None
+    then stop_here ()
   in
   let _listener = Brr.Ev.listen ~opts Brr.Ev.pointerup touchend target in
 
