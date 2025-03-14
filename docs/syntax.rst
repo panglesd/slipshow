@@ -168,22 +168,25 @@ These attributes are actions that will be executed when a ``pause`` or ``step`` 
   Moves the screen untils the element is centered.
 
 ``focus`` or ``focus-at-unpause``
-  Focus on the element by zooming on it.
+  Focus on the element by zooming on it. Possible to specify multiple ids.
 
 ``unfocus`` or ``unfocus-at-unpause``
   Unfocus by going back to the last position before a focus.
 
 ``static-at-unpause``
-  Make the element ``static``. By "static" we mean the css styling ``position:static; visibility:visible`` will be applied.
+  Make the element ``static``. By "static" we mean the css styling ``position:static; visibility:visible`` will be applied. Possible to specify multiple ids.
 
 ``unstatic-at-unpause``
-  Make the element ``unstatic``. By "unstatic" we mean the css styling ``position:absolute; visibility:hidden`` will be applied.
+  Make the element ``unstatic``. By "unstatic" we mean the css styling ``position:absolute; visibility:hidden`` will be applied. Possible to specify multiple ids.
 
 ``reveal-at-unpause``
-  Reveal the element. By "revealing" we mean the css styling ``opacity:1`` will be applied.
+  Reveal the element. By "revealing" we mean the css styling ``opacity:1`` will be applied.  Possible to specify multiple ids.
+
+``unreveal-at-unpause``
+  Hide the element. By "unrevealing" we mean the css styling ``opacity:0`` will be applied.  Possible to specify multiple ids.
 
 ``exec-at-unpause``
-  Execute the slipscript.
+  Execute the slipscript. Possible to specify multiple ids.
 
 Custom scripts
 --------------
@@ -200,3 +203,24 @@ Use a slipscript code block to add a script, and ``exec-at-unpause`` to execute 
                 return {undo : () => { elem.style.opacity = old_value }}
 		```
 
+Beware: experimental! Slip-scripts have access to a ``slip`` object, which they can use to programmatically call the functions above. Using such API registers an undo callback, and it is not needed to return an undo function.
+
+.. code-block:: markdown
+
+		{exec-at-unpause}
+		```slip-script
+                let elem = document.querySelector("#id")
+                slip.up(elem);
+		```
+
+Note that if a function above accepts multiple IDs (as ``unstatic-at-unpause`` for instance), then the function expects a list of elements:
+
+.. code-block:: markdown
+
+		{exec-at-unpause}
+		```slip-script
+                let elems = document.querySelectorAll(".class")
+                slip.unstatic(elems);
+		```
+
+In addition to the function above, you can use ``slip.setStyle(elem, style, value)`` where ``elem`` is an element, and ``style`` and ``value`` a string to set a style and register an undo callback. You can also use ``slip.setClass(elem, className, bool)`` where ``elem`` is an element, ``style`` is a string and ``bool`` a boolean to add or remove a class and register an undo callback.
