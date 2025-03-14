@@ -36,7 +36,12 @@ let replace_open_window window =
   let browser_h = foi @@ Brr.El.offset_h parent in
   let browser_w = foi @@ Brr.El.offset_w parent in
   let* window_w, _window_h =
+    let body = Brr.Document.body Brr.G.document in
     if width *. browser_h < height *. browser_w then
+      let () =
+        Brr.El.set_class (Jstr.v "horizontal") false body;
+        Brr.El.set_class (Jstr.v "vertical") true body
+      in
       let window_w = browser_h *. width /. height in
       let window_h = browser_h in
       let+ () =
@@ -47,6 +52,10 @@ let replace_open_window window =
       in
       (window_w, window_h)
     else
+      let () =
+        Brr.El.set_class (Jstr.v "horizontal") true body;
+        Brr.El.set_class (Jstr.v "vertical") false body
+      in
       let window_h = browser_w *. height /. width in
       let window_w = browser_w in
       let+ () =

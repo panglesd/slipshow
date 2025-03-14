@@ -67,6 +67,11 @@ let categorize window step el =
   let el = entry window step ~tag_name ~content in
   (el, step)
 
+let toggle_visibility () =
+  let body = Brr.Document.body Brr.G.document in
+  let c = Jstr.v "slipshow-toc-mode" in
+  Brr.El.set_class c (not @@ Brr.El.class' c body) body
+
 let generate window root =
   let els =
     Brr.El.fold_find_by_selector ~root
@@ -80,4 +85,11 @@ let generate window root =
   in
   let els = entry window (Some 0) ~tag_name:!!"div" ~content:!!"" :: els in
   let toc_el = Brr.El.div ~at:[ Brr.At.id !!"slipshow-toc" ] els in
-  Brr.El.append_children (Brr.Document.body Brr.G.document) [ toc_el ]
+  Brr.El.append_children (Brr.Document.body Brr.G.document) [ toc_el ];
+  let _unlisten =
+    Brr.Ev.listen Brr.Ev.click
+      (fun _ -> toggle_visibility ())
+      (Brr.El.find_first_by_selector (Jstr.v "#slipshow-counter")
+      |> Option.get |> Brr.El.as_target)
+  in
+  ()

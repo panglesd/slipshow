@@ -12,7 +12,8 @@
 .slip-writing-toolbar:hover,
 .slipshow-drawing-mode .slip-writing-toolbar {
   width: 32px;
-  height: 640px;
+  height: min(640px, 100vh);
+  overflow: scroll;
 }
 .slip-writing-toolbar {
   background-color: white;
