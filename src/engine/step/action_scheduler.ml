@@ -55,20 +55,14 @@ module AttributeActions = struct
   let emph = act ~on:"emph-at-unpause" ~payload:as_ids Actions.emph
   let unemph = act ~on:"unemph-at-unpause" ~payload:as_ids Actions.unemph
 
-  let execute _window elem =
+  let execute window elem =
     let action elem =
       let body = Jv.get (Brr.El.to_jv elem) "innerHTML" |> Jv.to_jstr in
       Brr.Console.(log [ body ]);
       let args = Jv.Function.[ ("slip", Fun.id) ] in
       let f = Jv.Function.v ~body ~args in
       let undos_ref = ref [] in
-      let arg =
-        Jv.obj
-          [|
-            ("setStyle", Javascript_api.set_style undos_ref);
-            ("setClass", Javascript_api.set_class undos_ref);
-          |]
-      in
+      let arg = Javascript_api.slip window undos_ref in
       let u = f arg in
       let undo () =
         try Fut.return (ignore @@ Jv.call u "undo" [||])
