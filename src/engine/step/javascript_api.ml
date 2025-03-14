@@ -41,6 +41,11 @@ let unreveal = one_elem_list Actions.unreveal
 let emph = one_elem_list Actions.emph
 let unemph = one_elem_list Actions.unemph
 
+let on_undo =
+  one_arg Fun.id @@ fun callback ->
+  let undo _ = Fut.return @@ ignore @@ Jv.apply callback [||] in
+  Undoable.return ~undo ()
+
 let slip window undos_ref =
   Jv.obj
     [|
@@ -57,4 +62,5 @@ let slip window undos_ref =
       ("unreveal", unreveal undos_ref);
       ("emph", emph undos_ref);
       ("unemph", unemph undos_ref);
+      ("onUndo", on_undo undos_ref);
     |]
