@@ -2,6 +2,23 @@ Salut !
 
 {pause exec-at-unpause}
 ```slip-script
+log = function (slip, x) { // slip needs to be passed
+  console.log(x)
+  slip.onUndo(() => {console.log(x)})
+}
+log(slip, slip.state.x);
+slip.setProp(slip.state, "x", 1);
+log(slip, slip.state.x);
+```
+
+{pause exec-at-unpause}
+```slip-script
+log(slip, slip.state.x); // 1
+```
+
+
+{pause exec-at-unpause}
+```slip-script
 let i = 0
 let incr = () => {
   slip.onUndo(() => { console.log(--i)})
