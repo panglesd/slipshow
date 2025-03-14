@@ -1,5 +1,11 @@
 open Monad
 
+let set_prop obj prop value =
+  let old_value = Jv.get' obj prop in
+  Jv.set' obj prop value;
+  let undo () = Fut.return @@ Jv.set' obj prop old_value in
+  return ~undo ()
+
 let set_class c b elem : unit t =
   let c = Jstr.v c in
   let old_class = Brr.El.class' c elem in
