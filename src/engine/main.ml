@@ -19,7 +19,9 @@ let start id step =
         |> Jstr.to_string |> int_of_string_opt
   in
   let _history = Browser.History.set_hash "" in
-  let* () = Step.Actions.update_pause_ancestors () |> Undoable.discard in
+  let* () =
+    Step.Action_scheduler.update_pause_ancestors () |> Undoable.discard
+  in
   let* () =
     match initial_step with
     | None -> Fut.return @@ Step.Next.actualize ()

@@ -51,7 +51,7 @@ let go_next window n =
   let rec loop n =
     if n <= 0 then Fut.return ()
     else
-      match Actions.next window () with
+      match Action_scheduler.next window () with
       | None -> Fut.return ()
       | Some undos ->
           let* (), undos = undos in
