@@ -2,9 +2,10 @@
 
 ## [Unreleased]
 
-- Allow to focus on multiple elements. Zooms as much as possible
-  so everything is visible, and center. Backward compatible, focusing
-  on a single element.
+- Allow to focus on multiple elements. Zooms as much as possible so everything
+  is visible, and center. Backward compatible, focusing on a single
+  element. (#103)
+- Pass all actions to slip-scripts, accesible via the `slip` object. (#104)
 
 ## [v0.1.1] Thursday 13th march, 2025. Lyon.
 
