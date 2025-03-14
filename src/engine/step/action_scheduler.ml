@@ -46,7 +46,7 @@ module AttributeActions = struct
     act ~on:"focus-at-unpause" ~payload:as_ids (Actions.focus window)
 
   let unfocus window =
-    act ~on:"focus-at-unpause"
+    act ~on:"unfocus-at-unpause"
       ~payload:(fun _ _ -> Some ())
       (Actions.unfocus window)
 
