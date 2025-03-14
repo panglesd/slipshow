@@ -1,5 +1,18 @@
 Salut !
 
+{pause exec-at-unpause}
+```slip-script
+let i = 0
+let incr = () => {
+  slip.onUndo(() => { console.log(--i)})
+  console.log(i++);
+}
+incr();
+incr();
+incr();
+```
+
+
 {#a .unstatic}
 [a]{#box1 .boxes}
 

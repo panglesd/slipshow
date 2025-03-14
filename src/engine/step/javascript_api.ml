@@ -8,20 +8,6 @@ let register_undo undos_ref f =
   in
   Fut.to_promise ~ok:Fun.id res
 
-let set_style undos_ref =
-  Jv.callback ~arity:3 @@ fun elem style value ->
-  let elem = Brr.El.of_jv elem
-  and style = Jv.to_jstr style
-  and value = Jv.to_jstr value in
-  register_undo undos_ref @@ fun () ->
-  Undoable.Browser.set_style style value elem
-
-let set_class undos_ref =
-  Jv.callback ~arity:3 @@ fun elem class_ bool ->
-  let bool = Jv.to_bool bool in
-  register_undo undos_ref @@ fun () ->
-  Undoable.Browser.set_class class_ bool elem
-
 let one_arg conv action undos_ref =
   Jv.callback ~arity:1 @@ fun elem ->
   let elem = conv elem in
@@ -43,14 +29,34 @@ let unemph = one_elem_list Actions.unemph
 
 let on_undo =
   one_arg Fun.id @@ fun callback ->
-  let undo _ = Fut.return @@ ignore @@ Jv.apply callback [||] in
+  let undo () = Fut.return @@ ignore @@ Jv.apply callback [||] in
   Undoable.return ~undo ()
+
+let state = Jv.obj [||]
+
+let set_style undos_ref =
+  Jv.callback ~arity:3 @@ fun elem style value ->
+  let elem = Brr.El.of_jv elem
+  and style = Jv.to_jstr style
+  and value = Jv.to_jstr value in
+  register_undo undos_ref @@ fun () ->
+  Undoable.Browser.set_style style value elem
+
+let set_class undos_ref =
+  Jv.callback ~arity:3 @@ fun elem class_ bool ->
+  let bool = Jv.to_bool bool in
+  register_undo undos_ref @@ fun () ->
+  Undoable.Browser.set_class class_ bool elem
+
+let set_prop undos_ref =
+  Jv.callback ~arity:3 @@ fun obj prop value ->
+  let prop = Jv.to_jstr prop in
+  register_undo undos_ref @@ fun () -> Undoable.Browser.set_prop obj prop value
 
 let slip window undos_ref =
   Jv.obj
     [|
-      ("setStyle", set_style undos_ref);
-      ("setClass", set_class undos_ref);
+      (* Actions *)
       ("up", up window undos_ref);
       ("center", center window undos_ref);
       ("down", down window undos_ref);
@@ -63,4 +69,9 @@ let slip window undos_ref =
       ("emph", emph undos_ref);
       ("unemph", unemph undos_ref);
       ("onUndo", on_undo undos_ref);
+      (* Scripting utilities *)
+      ("state", state);
+      ("setStyle", set_style undos_ref);
+      ("setClass", set_class undos_ref);
+      ("setProp", set_prop undos_ref);
     |]
