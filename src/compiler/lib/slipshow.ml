@@ -64,6 +64,11 @@ let embed_in_page content ~has_math ~math_link ~slip_css_link ~slipshow_js_link
           </div>
         </div>
       </div>
+      <div id="slip-touch-controls">
+        <div class="slip-previous">←</div>
+        <div class="slip-fullscreen">⇱</div>
+        <div class="slip-next">→</div>
+      </div>
       <div id="slipshow-counter">0</div>
     </div>
 
