@@ -113,14 +113,18 @@ let string_to_delayed s =
 let convert_to_md content =
   let md = Cmarkit.Doc.of_string ~heading_auto_ids:true ~strict:false content in
   let resolve_images = fun x -> Remote x in
-  let sd = Cmarkit.Mapper.map_doc (Mappings.of_cmarkit resolve_images) md in
+  let sd =
+    Cmarkit.Mapper.map_doc (Mappings.of_cmarkit resolve_images None) md
+  in
   let sd = Cmarkit.Mapper.map_doc Mappings.to_cmarkit sd in
   Cmarkit_commonmark.of_doc ~include_attributes:false sd
 
 let delayed ?math_link ?(css_links = []) ?(theme = `Builtin Themes.Default)
-    ?slipshow_js_link ?(resolve_images = fun x -> Remote x) s =
+    ?slipshow_js_link ?read_file ?(resolve_images = fun x -> Remote x) s =
   let md = Cmarkit.Doc.of_string ~heading_auto_ids:true ~strict:false s in
-  let md = Cmarkit.Mapper.map_doc (Mappings.of_cmarkit resolve_images) md in
+  let md =
+    Cmarkit.Mapper.map_doc (Mappings.of_cmarkit resolve_images read_file) md
+  in
   let content =
     Cmarkit_renderer.doc_to_string Renderers.custom_html_renderer md
   in
@@ -136,8 +140,9 @@ let add_starting_state (start, end_) starting_state =
   start ^ starting_state ^ end_
 
 let convert ?starting_state ?math_link ?theme ?css_links ?slipshow_js_link
-    ?(resolve_images = fun x -> Remote x) s =
+    ?read_file ?(resolve_images = fun x -> Remote x) s =
   let delayed =
-    delayed ?math_link ?css_links ?theme ?slipshow_js_link ~resolve_images s
+    delayed ?math_link ?css_links ?theme ?slipshow_js_link ~resolve_images
+      ?read_file s
   in
   add_starting_state delayed starting_state

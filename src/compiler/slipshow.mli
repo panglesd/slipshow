@@ -13,6 +13,7 @@ val delayed :
   ?css_links:asset list ->
   ?theme:[ `Builtin of Themes.t | `External of asset ] ->
   ?slipshow_js_link:asset ->
+  ?read_file:(string -> (string, [< `Msg of string ]) result) ->
   ?resolve_images:(string -> asset) ->
   string ->
   delayed
@@ -28,6 +29,7 @@ val convert :
   ?theme:[ `Builtin of Themes.t | `External of asset ] ->
   ?css_links:asset list ->
   ?slipshow_js_link:asset ->
+  ?read_file:(string -> (string, [< `Msg of string ]) result) ->
   ?resolve_images:(string -> asset) ->
   string ->
   string
