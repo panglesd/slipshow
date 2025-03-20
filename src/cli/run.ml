@@ -19,8 +19,6 @@ module Io = struct
       match input with
       | `Stdin -> Ok In_channel.(input_all stdin)
       | `File f -> Bos.OS.File.read f
-      (* let ic = In_channel.open_text (Fpath.to_string f) in *)
-      (* Ok In_channel.(input_all ic) *)
     with exn -> Error (`Msg (Printexc.to_string exn))
 end
 
@@ -50,8 +48,8 @@ let to_asset s =
             f "Could not read file: %s. Considering it as an URL. (%s)" s e);
         Remote s
 
-let compile ~markdown_mode ~math_link ~slip_css_link ~slipshow_js_link ~input
-    ~output ~watch ~serve =
+let go ~markdown_mode ~math_link ~slip_css_link ~slipshow_js_link ~input ~output
+    ~watch ~serve =
   let math_link = Option.map to_asset math_link in
   let slip_css_link = Option.map to_asset slip_css_link in
   let slipshow_js_link = Option.map to_asset slipshow_js_link in
@@ -82,30 +80,17 @@ let compile ~markdown_mode ~math_link ~slip_css_link ~slipshow_js_link ~input
   in
   let rec f2 () =
     let+ content = Io.read input in
-    (* Logs.app (fun m -> *)
-    (*     m "Here is what we have read %s" *)
-    (*       (List.hd @@ String.split_on_char '\n' content)); *)
     if String.equal content "" then f2 ()
     else
       let result =
         Slipshow.delayed ?math_link ?slip_css_link ?slipshow_js_link
           ~resolve_images:to_asset content
       in
-      (* let s = Slipshow.add_starting_state result None in *)
-      (* let s = *)
-      (*   match Astring.String.cut ~sep:"generalized-algebraic" s with *)
-      (*   | None -> "NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO" *)
-      (*   | Some (_, y) -> ( *)
-      (*       match Astring.String.cut ~sep:"quick-intro" y with *)
-      (*       | Some (x, _) -> x *)
-      (*       | None -> "NAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA") *)
-      (* in *)
-      (* let () = print_endline s in *)
       Ok result
   in
   if markdown_mode then markdown_compile ()
-  else if serve then Serve.do_serve input f2
-  else if watch then Serve.do_watch input f
+  else if serve then Slipshow_server.do_serve input f2
+  else if watch then Slipshow_server.do_watch input f
   else
     let+ _html = f () in
     Ok ()

@@ -10,5 +10,5 @@ COPY --chown=opam . .
 
 RUN opam exec -- dune subst
 
-RUN sed -i 's/"()"/"(-cclib -static -cclib -no-pie)"/g' src/compiler/bin/static-linking-flags/static_linking_flags.ml
+RUN sed -i 's/"()"/"(-cclib -static -cclib -no-pie)"/g' src/cli/static-linking-flags/static_linking_flags.ml
 

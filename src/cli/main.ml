@@ -26,8 +26,8 @@ let compile =
       | None -> output_of_input input
     in
     match
-      Compile.compile ~input ~output ~math_link ~slip_css_link ~slipshow_js_link
-        ~watch ~serve ~markdown_mode
+      Run.go ~input ~output ~math_link ~slip_css_link ~slipshow_js_link ~watch
+        ~serve ~markdown_mode
     with
     | Ok () -> Ok ()
     | Error (`Msg s) -> Error s
@@ -97,12 +97,13 @@ let compile_cmd =
   let info = Cmd.info "compile" ~version:"%%VERSION%%" ~doc ~man in
   Cmd.v info compile
 
-let cmd = compile_cmd
-(* Currently, it seems to not possible to have positioned arguments for a default group command. *)
-(* let doc = "Compile a markdown file into a slipshow presentation" in *)
-(* let man = [] in *)
-(* let info = Cmd.info "slip_of_mark" ~version:"%%VERSION%%" ~doc ~man in *)
-(* Cmd.group ~default:compile info [ compile_cmd ] *)
+(* Currently, it seems to not possible to have positioned arguments for a default group command.
+   Would have been good!
 
+   let doc = "Compile a markdown file into a slipshow presentation" in
+   let man = [] in
+   let info = Cmd.info "slip_of_mark" ~version:"%%VERSION%%" ~doc ~man in
+   Cmd.group ~default:compile info [ compile_cmd ] *)
+let cmd = compile_cmd
 let main () = exit (Cmd.eval_result cmd)
 let () = main ()
