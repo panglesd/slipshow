@@ -1,0 +1,7 @@
+(executable
+ (public_name slipshow)
+ (name main)
+ (flags
+  (:standard
+   (:include static-linking-flags/flags)))
+ (libraries slipshow_server cmdliner fpath logs.cli fmt.cli fmt.tty logs.fmt))

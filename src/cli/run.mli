@@ -1,4 +1,4 @@
-val compile :
+val go :
   markdown_mode:bool ->
   math_link:string option ->
   slip_css_link:string option ->
