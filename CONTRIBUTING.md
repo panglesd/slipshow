@@ -1,5 +1,54 @@
 # Contributing
 
+If you are willing to contribute, thanks!
+
+## Getting started
+
+This project is written in OCaml, so you need to be able to compile such programs. The official website ocaml.org provides explanation on getting started with OCaml.
+
+Once you have opam, and a switch ready, install the dependencies with:
+
+```shell
+opam install . --deps-only --with-dev-setup --with-test
+```
+
+Then, build with
+
+```shell
+dune build
+```
+
+You can run the version you just built with
+
+```shell
+dune exec slipshow -- <other options>
+```
+
+## Directory structure
+
+The directory structure is the following:
+- `docs/` for the readthedocs documentation
+  - `docs/odoc/` for the doc build by `odoc` and served on ocaml.org
+- `example/` for ... examples (to be kept up to date?! Is that going to make the repo big? TODO: add a dune rule for that)
+- `release/` for scripts used in the release process
+- `test/` for tests
+- `vendor/` for vendored library, see the vendoring section of this document
+- `src/` for the source:
+  - `src/engine/` contains the code for the engine, the part translated to
+    javascript that is run during a presentation, and that is responsible for
+    reacting to the user's input etc.
+    - `src/engine/themes/` contains the CSS themes.
+  - `src/cli/` contains the code for the CLI parsing (using cmdliner) and calling
+    the right entry point (preview server, compiler, ...)
+  - `src/static_data/` contains static data such as highlightjs code to embed in a
+    presentation.
+  - `src/server/` contains the code for the preview server
+    - `src/server/client/` contains the code for the client-side javascript of the preview server
+  - `src/communication/` contains the types and utilities to serialize and
+    deserialize data exchanged between server and client.
+  - `src/previewer/` contains the code for the previewer panel (used by
+    slipshow's preview mode but also sliphub, the VSCode extension, ...)
+
 ## Releasing
 
 In order to release a new version, you need to:
