@@ -90,7 +90,7 @@ let custom_html_renderer =
       | _ -> false (* let the default HTML renderer handle that *)
     in
     let block c = function
-      | Ast.Div ((b, (attrs, _)), _) ->
+      | Ast.Included ((b, (attrs, _)), _) | Ast.Div ((b, (attrs, _)), _) ->
           RenderAttrs.with_attrs c attrs (fun () -> Context.block c b);
           true
       | Ast.SlipScript ((cb, (attrs, _)), _) ->
