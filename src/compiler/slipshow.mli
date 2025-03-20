@@ -12,6 +12,7 @@ val delayed :
   ?math_link:asset ->
   ?slip_css_link:asset ->
   ?slipshow_js_link:asset ->
+  ?read_file:(string -> (string, [< `Msg of string ]) result) ->
   ?resolve_images:(string -> asset) ->
   string ->
   delayed
@@ -26,6 +27,7 @@ val convert :
   ?math_link:asset ->
   ?slip_css_link:asset ->
   ?slipshow_js_link:asset ->
+  ?read_file:(string -> (string, [< `Msg of string ]) result) ->
   ?resolve_images:(string -> asset) ->
   string ->
   string

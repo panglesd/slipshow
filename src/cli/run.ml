@@ -68,6 +68,7 @@ let go ~markdown_mode ~math_link ~slip_css_link ~slipshow_js_link ~input ~output
     let+ content = Io.read input in
     let html =
       Slipshow.convert ?math_link ?slip_css_link ?slipshow_js_link
+        ~read_file:(fun s -> Io.read (`File (Fpath.v s)))
         ~resolve_images:to_asset content
     in
     match output with
@@ -84,7 +85,9 @@ let go ~markdown_mode ~math_link ~slip_css_link ~slipshow_js_link ~input ~output
     else
       let result =
         Slipshow.delayed ?math_link ?slip_css_link ?slipshow_js_link
-          ~resolve_images:to_asset content
+          ~resolve_images:to_asset
+          ~read_file:(fun s -> Io.read (`File (Fpath.v s)))
+          content
       in
       Ok result
   in

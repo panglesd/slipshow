@@ -7,12 +7,13 @@ type asset =
 open Cmarkit
 
 type Block.t +=
+  | Included of Block.t attributed node
   | Div of Block.t attributed node
   | SlipScript of Block.Code_block.t attributed node
 
 module Folder = struct
   let block_ext_default f acc = function
-    | Div ((b, _), _) -> Folder.fold_block f acc b
+    | Div ((b, _), _) | Included ((b, _), _) -> Folder.fold_block f acc b
     | SlipScript _ -> acc
     | _ -> assert false
 
