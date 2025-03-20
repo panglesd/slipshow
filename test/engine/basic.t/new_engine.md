@@ -1,4 +1,99 @@
+{#first-salut}
 Salut !
+
+
+
+{pause scroll}
+AAAAAAAAAAAAAA A
+
+{pause scroll}
+AAAAAAAAAAAAAA A
+
+{pause scroll}
+AAAAAAAAAAAAAA A
+
+{pause scroll}
+AAAAAAAAAAAAAA A
+
+{pause scroll}
+AAAAAAAAAAAAAA A
+
+{pause scroll}
+AAAAAAAAAAAAAA A
+
+{pause scroll}
+AAAAAAAAAAAAAA A
+
+{pause scroll}
+AAAAAAAAAAAAAA A
+
+{pause scroll}
+AAAAAAAAAAAAAA A
+
+{pause scroll}
+AAAAAAAAAAAAAA A
+
+{pause scroll}
+AAAAAAAAAAAAAA A
+
+{pause scroll}
+AAAAAAAAAAAAAA A
+
+{pause scroll}
+AAAAAAAAAAAAAA A
+
+{pause scroll}
+AAAAAAAAAAAAAA A
+
+{pause scroll}
+AAAAAAAAAAAAAA A
+
+{pause scroll}
+AAAAAAAAAAAAAA A
+
+{pause scroll}
+AAAAAAAAAAAAAA A
+
+{pause scroll}
+AAAAAAAAAAAAAA A
+
+{pause scroll}
+AAAAAAAAAAAAAA A
+
+{pause scroll}
+AAAAAAAAAAAAAA A
+
+{pause scroll}
+AAAAAAAAAAAAAA A
+
+{pause scroll}
+AAAAAAAAAAAAAA A
+
+{pause scroll}
+AAAAAAAAAAAAAA A
+
+{pause scroll}
+AAAAAAAAAAAAAA A
+
+{pause scroll}
+AAAAAAAAAAAAAA A
+
+{pause scroll}
+AAAAAAAAAAAAAA A
+
+{pause scroll}
+AAAAAAAAAAAAAA A
+
+{pause scroll}
+AAAAAAAAAAAAAA A
+
+
+{pause scroll=first-salut}
+
+
+
+
+
 
 {pause exec-at-unpause}
 ```slip-script

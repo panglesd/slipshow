@@ -23,6 +23,7 @@ val enter : window -> Brr.El.t -> unit Undoable.t
 val up : window -> Brr.El.t -> unit Undoable.t
 val center : window -> Brr.El.t -> unit Undoable.t
 val down : window -> Brr.El.t -> unit Undoable.t
+val scroll : window -> Brr.El.t -> unit Undoable.t
 
 val with_fast_moving : (unit -> unit Fut.t) -> unit Fut.t
 (** Inside this scope, window movement are immediate no matter the initial delay

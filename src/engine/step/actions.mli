@@ -9,3 +9,4 @@ val reveal : Brr.El.t list -> unit Undoable.t
 val unreveal : Brr.El.t list -> unit Undoable.t
 val emph : Brr.El.t list -> unit Undoable.t
 val unemph : Brr.El.t list -> unit Undoable.t
+val scroll : Universe.Window.window -> Brr.El.t -> unit Undoable.t

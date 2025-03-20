@@ -62,6 +62,7 @@ let of_cmarkit resolve_images =
     | `Kv (("center", m), v) -> Some (`Kv (("center-at-unpause", m), v))
     | `Kv (("down", m), v) -> Some (`Kv (("down-at-unpause", m), v))
     | `Kv (("exec", m), v) -> Some (`Kv (("exec-at-unpause", m), v))
+    | `Kv (("scroll", m), v) -> Some (`Kv (("scroll-at-unpause", m), v))
     | x -> Some x
   in
   Ast.Mapper.make ~block ~inline ~attrs ()
@@ -82,6 +83,7 @@ let to_cmarkit =
     | `Kv (("center", m), v) -> Some (`Kv (("center-at-unpause", m), v))
     | `Kv (("down", m), v) -> Some (`Kv (("down-at-unpause", m), v))
     | `Kv (("exec", m), v) -> Some (`Kv (("exec-at-unpause", m), v))
+    | `Kv (("scroll", m), v) -> Some (`Kv (("scroll-at-unpause", m), v))
     | x -> Some x
   in
   Ast.Mapper.make ~block ~inline ~attrs ()

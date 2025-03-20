@@ -39,6 +39,9 @@ module AttributeActions = struct
   let center window =
     act ~on:"center-at-unpause" ~payload:as_id (Actions.center window)
 
+  let scroll window =
+    act ~on:"scroll-at-unpause" ~payload:as_id (Actions.scroll window)
+
   let unstatic = act ~on:"unstatic-at-unpause" ~payload:as_ids Actions.unstatic
   let static = act ~on:"static-at-unpause" ~payload:as_ids Actions.static
 
@@ -100,6 +103,7 @@ module AttributeActions = struct
         down window;
         focus window;
         up window;
+        scroll window;
         emph;
         unemph;
         execute window;
