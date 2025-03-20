@@ -11,6 +11,8 @@ type element = { x : float; y : float; width : float; height : float }
 (** Represent the position of an element in the universe. To ease interaction
     with the window coordinates, x and y are the center of the element. *)
 
+val log_window : window -> unit
+val log_element : element -> unit
 val get : Brr.El.t -> element
 
 module Window_of_elem : sig

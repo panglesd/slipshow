@@ -124,3 +124,16 @@ let center window elem =
   let current = State.get_coord () in
   let coords_w = Coordinates.Window_of_elem.center ~current coords_e in
   move window coords_w ~delay:1.
+
+let scroll window elem =
+  let coords_e = Coordinates.get elem in
+  let current = State.get_coord () in
+  if
+    coords_e.y -. (coords_e.height /. 2.)
+    < current.y -. (Constants.height /. 2. *. current.scale)
+  then up window elem
+  else if
+    coords_e.y +. (coords_e.height /. 2.)
+    > current.y +. (Constants.height /. 2. *. current.scale)
+  then down window elem
+  else Undoable.return ()

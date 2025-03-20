@@ -18,6 +18,7 @@ let one_elem_list action = one_arg (Jv.to_list Brr.El.of_jv) action
 let up window = one_elem (Actions.up window)
 let center window = one_elem (Actions.center window)
 let down window = one_elem (Actions.down window)
+let scroll window = one_elem (Actions.scroll window)
 let focus window = one_elem_list (Actions.focus window)
 let unfocus window = one_arg (fun _ -> ()) (Actions.unfocus window)
 let static = one_elem_list Actions.static
@@ -60,6 +61,7 @@ let slip window undos_ref =
       ("up", up window undos_ref);
       ("center", center window undos_ref);
       ("down", down window undos_ref);
+      ("scroll", scroll window undos_ref);
       ("focus", focus window undos_ref);
       ("unfocus", unfocus window undos_ref);
       ("static", static undos_ref);

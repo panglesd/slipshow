@@ -31,3 +31,5 @@ let emph elems =
 
 let unemph elems =
   Undoable.List.iter (Undoable.Browser.set_class "emphasized" false) elems
+
+let scroll window elem = Universe.Window.scroll window elem
