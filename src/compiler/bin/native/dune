@@ -1,8 +1,0 @@
-(library
- (name serve_native)
- (implements serve)
- (preprocess
-  (pps ppx_blob))
- (preprocessor_deps
-  (file client/client.bc.js))
- (libraries slipshow fpath lwt irmin-watcher dream))
