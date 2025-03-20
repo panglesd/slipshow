@@ -9,6 +9,7 @@
 - Introduce `slip.onUndo`, `slip.setProp` and `slip.state`. (#97)
 - Improve mobile support, with buttons to navigate and open the table of content
   (#106)
+- Add `scroll` action to scroll up or down, if needed (#107)
 
 ## [v0.1.1] Thursday 13th march, 2025. Lyon.
 
