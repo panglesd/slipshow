@@ -44,32 +44,46 @@ let to_asset s =
             f "Could not read file: %s. Considering it as an URL. (%s)" s e);
         Remote s
 
-let compile ~input ~output ~math_link =
+let compile ~input ~output ~math_link ~css_links ~theme =
   let math_link = Option.map to_asset math_link in
+  let css_links = List.map to_asset css_links in
+  let theme =
+    match theme with
+    | (`Default | `None) as theme -> theme
+    | `Other s -> `Other (to_asset s)
+  in
   let* content = Io.read input in
-  let html = Slipshow.convert ?math_link ~resolve_images:to_asset content in
+  let html =
+    Slipshow.convert ?math_link ~resolve_images:to_asset ~css_links ~theme
+      content
+  in
   match output with
   | `Stdout ->
       print_string html;
       Ok ()
   | `File output -> Io.write output html
 
-let watch ~input ~output ~math_link =
+let watch ~input ~output ~math_link ~css_links ~theme =
   let input = `File input and output = `File output in
-  let f () = compile ~input ~output ~math_link in
+  let f () = compile ~input ~output ~math_link ~css_links ~theme in
   Slipshow_server.do_watch input f
 
-let serve ~input ~output ~math_link =
+let serve ~input ~output ~math_link ~css_links ~theme =
   let input = `File input and output = `File output in
   let math_link_asset = Option.map to_asset math_link in
   let rec f () : (Slipshow.delayed, [ `Msg of string ]) result =
     let* content = Io.read input in
     if String.equal content "" then f ()
     else
-      let* () = compile ~input ~output ~math_link in
+      let* () = compile ~input ~output ~math_link ~css_links ~theme in
+      let theme =
+        match theme with
+        | (`Default | `None) as theme -> theme
+        | `Other s -> `Other (to_asset s)
+      in
       let result =
-        Slipshow.delayed ?math_link:math_link_asset ~resolve_images:to_asset
-          content
+        Slipshow.delayed ?math_link:math_link_asset ~theme
+          ~resolve_images:to_asset content
       in
       Ok result
   in

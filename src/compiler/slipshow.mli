@@ -10,7 +10,8 @@ val string_to_delayed : string -> delayed
 
 val delayed :
   ?math_link:asset ->
-  ?slip_css_link:asset ->
+  ?css_links:asset list ->
+  ?theme:[ `Default | `None | `Other of asset ] ->
   ?slipshow_js_link:asset ->
   ?resolve_images:(string -> asset) ->
   string ->
@@ -24,7 +25,8 @@ val add_starting_state : delayed -> starting_state option -> string
 val convert :
   ?starting_state:starting_state ->
   ?math_link:asset ->
-  ?slip_css_link:asset ->
+  ?theme:[ `Default | `None | `Other of asset ] ->
+  ?css_links:asset list ->
   ?slipshow_js_link:asset ->
   ?resolve_images:(string -> asset) ->
   string ->
