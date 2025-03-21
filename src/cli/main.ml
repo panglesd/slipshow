@@ -9,6 +9,8 @@ let setup_log style_renderer level =
 let setup_log =
   Term.(const setup_log $ Fmt_cli.style_renderer () $ Logs_cli.level ())
 
+let handle_error = function Ok _ as x -> x | Error (`Msg msg) -> Error msg
+
 module Conv = struct
   let io std =
     let parser_ s =
@@ -25,6 +27,20 @@ module Conv = struct
 end
 
 module Common_args = struct
+  let css_links =
+    let doc =
+      "CSS files to add to the presentation. Can be a local file or a remote \
+       URL"
+    in
+    Arg.(value & opt_all string [] & info ~docv:"URL" ~doc [ "css" ])
+
+  let theme =
+    let doc =
+      "Slipshow theme to use in the presentation. Can be \"default\" for the \
+       default theme, \"none\" for no theme, a local file or a remote URL."
+    in
+    Arg.(value & opt (some string) None & info ~docv:"URL" ~doc [ "theme" ])
+
   let math_link =
     let doc =
       "Where to find the mathjax javascript file. Optional. When absent, use \
@@ -74,17 +90,20 @@ module Compile = struct
     | `File o -> Ok (input, o)
     | `Stdout -> Error "Standard output cannot be used in serve nor watch mode"
 
-  let compile ~watch ~input ~output ~math_link =
+  let compile ~watch ~input ~output ~math_link ~theme ~css_links =
     let output =
       match output with Some o -> o | None -> output_of_input input
     in
+    let theme =
+      match theme with
+      | None | Some "default" -> `Default
+      | Some "none" -> `None
+      | Some s -> `Other s
+    in
     if watch then
       let* input, output = force_file_io input output in
-      Run.watch ~input ~output ~math_link
-      |> Result.map_error @@ fun (`Msg s) -> s
-    else
-      Run.compile ~input ~output ~math_link
-      |> Result.map_error @@ fun (`Msg s) -> s
+      Run.watch ~input ~output ~math_link ~theme ~css_links |> handle_error
+    else Run.compile ~input ~output ~math_link ~theme ~css_links |> handle_error
 
   let term =
     let open Common_args in
@@ -93,8 +112,10 @@ module Compile = struct
     and+ output = output
     and+ math_link = math_link
     and+ watch = watch
+    and+ theme = theme
+    and+ css_links = css_links
     and+ () = setup_log in
-    compile ~input ~output ~math_link ~watch
+    compile ~input ~output ~math_link ~watch ~theme ~css_links
 
   let cmd =
     let doc =
@@ -108,14 +129,18 @@ end
 module Serve = struct
   let ( let* ) = Result.bind
 
-  let serve ~input ~output ~math_link =
+  let serve ~input ~output ~math_link ~theme ~css_links =
     let output =
       match output with Some o -> o | None -> Compile.output_of_input input
     in
+    let theme =
+      match theme with
+      | None | Some "default" -> `Default
+      | Some "none" -> `None
+      | Some s -> `Other s
+    in
     let* input, output = Compile.force_file_io input output in
-    match Run.serve ~input ~output ~math_link with
-    | Ok () -> Ok ()
-    | Error (`Msg s) -> Error s
+    Run.serve ~input ~output ~math_link ~theme ~css_links |> handle_error
 
   let term =
     let open Common_args in
@@ -123,8 +148,10 @@ module Serve = struct
     let+ input = input
     and+ output = output
     and+ math_link = math_link
+    and+ theme = theme
+    and+ css_links = css_links
     and+ () = setup_log in
-    serve ~input ~output ~math_link
+    serve ~input ~output ~math_link ~theme ~css_links
 
   let cmd =
     let doc =
@@ -144,9 +171,7 @@ module Markdownify = struct
     let output =
       match output with Some o -> o | None -> output_of_input input
     in
-    match Run.markdown_compile ~input ~output with
-    | Ok () -> Ok ()
-    | Error (`Msg s) -> Error s
+    Run.markdown_compile ~input ~output |> handle_error
 
   let term =
     let open Common_args in
