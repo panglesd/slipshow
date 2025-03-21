@@ -108,5 +108,9 @@
  (public_name slipshow.datafiles)
  (preprocess
   (pps ppx_blob))
- (preprocessor_deps ../engine/slipshow.js ../engine/slipshow.css)
+ (preprocessor_deps
+  ../engine/slipshow.js
+  ../engine/slipshow-theme.css
+  ../engine/slipshow-internal.css
+  ../engine/slipshow-system.css)
  (wrapped false))

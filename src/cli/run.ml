@@ -48,11 +48,16 @@ let to_asset s =
             f "Could not read file: %s. Considering it as an URL. (%s)" s e);
         Remote s
 
-let go ~markdown_mode ~math_link ~slip_css_link ~slipshow_js_link ~input ~output
-    ~watch ~serve =
+let go ~markdown_mode ~math_link ~css_links ~theme ~slipshow_js_link ~input
+    ~output ~watch ~serve =
   let math_link = Option.map to_asset math_link in
-  let slip_css_link = Option.map to_asset slip_css_link in
+  let css_links = List.map to_asset css_links in
   let slipshow_js_link = Option.map to_asset slipshow_js_link in
+  let theme =
+    match theme with
+    | (`Default | `None) as theme -> theme
+    | `Other s -> `Other (to_asset s)
+  in
   let markdown_compile () =
     let+ content = Io.read input in
     let md = Slipshow.convert_to_md content in
@@ -67,7 +72,7 @@ let go ~markdown_mode ~math_link ~slip_css_link ~slipshow_js_link ~input ~output
   let f () =
     let+ content = Io.read input in
     let html =
-      Slipshow.convert ?math_link ?slip_css_link ?slipshow_js_link
+      Slipshow.convert ?math_link ~css_links ~theme ?slipshow_js_link
         ~resolve_images:to_asset content
     in
     match output with
@@ -83,7 +88,7 @@ let go ~markdown_mode ~math_link ~slip_css_link ~slipshow_js_link ~input ~output
     if String.equal content "" then f2 ()
     else
       let result =
-        Slipshow.delayed ?math_link ?slip_css_link ?slipshow_js_link
+        Slipshow.delayed ?math_link ~css_links ~theme ?slipshow_js_link
           ~resolve_images:to_asset content
       in
       Ok result
