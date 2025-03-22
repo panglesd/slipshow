@@ -9,10 +9,18 @@ let setup_log style_renderer level =
 let setup_log =
   Term.(const setup_log $ Fmt_cli.style_renderer () $ Logs_cli.level ())
 
+let handle_error = function Ok _ as x -> x | Error (`Msg msg) -> Error msg
+
 let compile =
-  let compile input output math_link slip_css_link slipshow_js_link watch serve
-      markdown_mode () =
+  let compile input output math_link css_links theme slipshow_js_link watch
+      serve markdown_mode () =
     let input = match input with "-" -> `Stdin | s -> `File (Fpath.v s) in
+    let theme =
+      match theme with
+      | None | Some "default" -> `Default
+      | Some "none" -> `None
+      | Some s -> `Other s
+    in
     let output_of_input input =
       match (input, markdown_mode) with
       | `File input, false -> `File (Fpath.set_ext "html" input)
@@ -25,12 +33,8 @@ let compile =
       | Some output -> `File (Fpath.v output)
       | None -> output_of_input input
     in
-    match
-      Run.go ~input ~output ~math_link ~slip_css_link ~slipshow_js_link ~watch
-        ~serve ~markdown_mode
-    with
-    | Ok () -> Ok ()
-    | Error (`Msg s) -> Error s
+    Run.go ~input ~output ~math_link ~css_links ~slipshow_js_link ~theme ~watch
+      ~serve ~markdown_mode
   in
   let math_link =
     let doc =
@@ -49,13 +53,19 @@ let compile =
     in
     Arg.(value & opt (some string) None & info ~docv:"URL" ~doc [ "slipshow" ])
   in
-  let slip_css_link =
+  let theme =
     let doc =
-      "Where to find the slipshow css file. Optional. When absent, use \
-       slipshow.%%VERSION%%, embedded in this binary. If URL is an absolute \
-       URL, links to it, otherwise the content is embedded in the html file."
+      "Slipshow theme to use in the presentation. Can be \"default\" for the \
+       default theme, \"none\" for no theme, a local file or a remote URL."
     in
-    Arg.(value & opt (some string) None & info ~docv:"URL" ~doc [ "slip-css" ])
+    Arg.(value & opt (some string) None & info ~docv:"URL" ~doc [ "theme" ])
+  in
+  let slip_css_links =
+    let doc =
+      "CSS files to add to the presentation. Can be a local file or a remote \
+       URL"
+    in
+    Arg.(value & opt_all string [] & info ~docv:"URL" ~doc [ "css" ])
   in
   let output =
     let doc =
@@ -80,16 +90,17 @@ let compile =
     Arg.(value & flag & info [ "markdown-output" ] ~doc ~docv:"FILE.md")
   in
   let watch =
-    let doc = "Watch" in
+    let doc = "Watch the input for changes, and recompile on edits." in
     Arg.(value & flag & info [ "watch" ] ~doc ~docv:"")
   in
   let serve =
-    let doc = "Serve" in
+    let doc = "Serve the compiled file on a preview server." in
     Arg.(value & flag & info [ "serve" ] ~doc ~docv:"")
   in
   Term.(
-    const compile $ input $ output $ math_link $ slip_css_link
-    $ slipshow_js_link $ watch $ serve $ markdown_output $ setup_log)
+    const handle_error
+    $ (const compile $ input $ output $ math_link $ slip_css_links $ theme
+     $ slipshow_js_link $ watch $ serve $ markdown_output $ setup_log))
 
 let compile_cmd =
   let doc = "Compile a markdown file into a slipshow presentation" in
