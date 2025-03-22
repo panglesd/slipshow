@@ -50,11 +50,11 @@ If you want to change the font, make sure to have a self-contained css file, by 
 
                 @font-face {
                   font-family: 'Dosis';
-                  src: url(data:font/truetype;charset=utf-8;base64,AAEAAA...WggBEAAA=) format('truetype-variations');
+                  src: url(data:font/truetype;charset=utf-8;base64,AAEAAA[...]WggBEAAA=) format('truetype-variations');
                   font-weight: 500;
                 }
 
-where the ``AAEAA...WggBEAAA=`` string can be found with the base64 utility, for instance:
+where the ``AAEAA[...]WggBEAAA=`` string can be found with the base64 utility, for instance:
 
 .. code-block:: console
 
