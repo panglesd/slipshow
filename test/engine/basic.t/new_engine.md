@@ -3,25 +3,25 @@ Salut !
 
 
 
-{pause scroll}
+{pause scroll .theorem title="Hello"}
 AAAAAAAAAAAAAA A
 
-{pause scroll}
+{pause scroll .definition}
 AAAAAAAAAAAAAA A
 
-{pause scroll}
+{pause scroll .definition title="Yoyo"}
 AAAAAAAAAAAAAA A
 
-{pause scroll}
+{pause scroll .corollary}
 AAAAAAAAAAAAAA A
 
-{pause scroll}
+{pause scroll .corollary title="Coco"}
 AAAAAAAAAAAAAA A
 
-{pause scroll}
+{pause scroll .remark}
 AAAAAAAAAAAAAA A
 
-{pause scroll}
+{pause scroll .remark title="Rere"}
 AAAAAAAAAAAAAA A
 
 {pause scroll}

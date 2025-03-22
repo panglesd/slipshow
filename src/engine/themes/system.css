@@ -51,3 +51,8 @@
   vertical-align: middle;
   line-height: 10vh;
 }
+
+
+body.slipshow-drawing-mode {
+  touch-action: pinch-zoom;
+}
