@@ -16,10 +16,6 @@ h1:not(#slipshow-toc h1) {
   text-align: center;
 }
 
-body.slipshow-drawing-mode {
-  touch-action: pinch-zoom;
-}
-
 /*************************************/
 /*    Blocks                         */
 /*************************************/
