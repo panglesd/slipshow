@@ -19,10 +19,8 @@ let css_element = function
   | Remote r -> Format.sprintf {|<link href="%s" rel="stylesheet" />|} r
 
 let theme_css = function
-  | `None -> ""
-  | `Default ->
-      Format.sprintf "<style>%s</style>" Data_files.(read Slip_theme_css)
-  | `Other asset -> css_element asset
+  | `Builtin theme -> Format.sprintf "<style>%s</style>" (Themes.content theme)
+  | `External asset -> css_element asset
 
 let internal_css =
   Format.sprintf "<style>%s</style>" Data_files.(read Slip_internal_css)
@@ -119,8 +117,8 @@ let convert_to_md content =
   let sd = Cmarkit.Mapper.map_doc Mappings.to_cmarkit sd in
   Cmarkit_commonmark.of_doc ~include_attributes:false sd
 
-let delayed ?math_link ?(css_links = []) ?(theme = `Default) ?slipshow_js_link
-    ?(resolve_images = fun x -> Remote x) s =
+let delayed ?math_link ?(css_links = []) ?(theme = `Builtin Themes.Default)
+    ?slipshow_js_link ?(resolve_images = fun x -> Remote x) s =
   let md = Cmarkit.Doc.of_string ~heading_auto_ids:true ~strict:false s in
   let md = Cmarkit.Mapper.map_doc (Mappings.of_cmarkit resolve_images) md in
   let content =

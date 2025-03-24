@@ -1,0 +1,7 @@
+(library
+ (name themes)
+ (package slipshow)
+ (preprocess (pps ppx_blob))
+ (preprocessor_deps
+  vanier.css
+  default.css))

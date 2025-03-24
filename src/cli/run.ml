@@ -44,17 +44,18 @@ let to_asset s =
             f "Could not read file: %s. Considering it as an URL. (%s)" s e);
         Remote s
 
+let parse_theme theme =
+  match Themes.of_string theme with
+  | Some theme -> `Builtin theme
+  | None -> `External (to_asset theme)
+
 let compile ~input ~output ~math_link ~css_links ~theme =
   let math_link = Option.map to_asset math_link in
   let css_links = List.map to_asset css_links in
-  let theme =
-    match theme with
-    | (`Default | `None) as theme -> theme
-    | `Other s -> `Other (to_asset s)
-  in
+  let theme = Option.map parse_theme theme in
   let* content = Io.read input in
   let html =
-    Slipshow.convert ?math_link ~resolve_images:to_asset ~css_links ~theme
+    Slipshow.convert ?math_link ~resolve_images:to_asset ~css_links ?theme
       content
   in
   match output with
@@ -76,13 +77,9 @@ let serve ~input ~output ~math_link ~css_links ~theme =
     if String.equal content "" then f ()
     else
       let* () = compile ~input ~output ~math_link ~css_links ~theme in
-      let theme =
-        match theme with
-        | (`Default | `None) as theme -> theme
-        | `Other s -> `Other (to_asset s)
-      in
+      let theme = Option.map parse_theme theme in
       let result =
-        Slipshow.delayed ?math_link:math_link_asset ~theme
+        Slipshow.delayed ?math_link:math_link_asset ?theme
           ~resolve_images:to_asset content
       in
       Ok result

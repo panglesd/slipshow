@@ -94,12 +94,6 @@ module Compile = struct
     let output =
       match output with Some o -> o | None -> output_of_input input
     in
-    let theme =
-      match theme with
-      | None | Some "default" -> `Default
-      | Some "none" -> `None
-      | Some s -> `Other s
-    in
     if watch then
       let* input, output = force_file_io input output in
       Run.watch ~input ~output ~math_link ~theme ~css_links |> handle_error
@@ -132,12 +126,6 @@ module Serve = struct
   let serve ~input ~output ~math_link ~theme ~css_links =
     let output =
       match output with Some o -> o | None -> Compile.output_of_input input
-    in
-    let theme =
-      match theme with
-      | None | Some "default" -> `Default
-      | Some "none" -> `None
-      | Some s -> `Other s
     in
     let* input, output = Compile.force_file_io input output in
     Run.serve ~input ~output ~math_link ~theme ~css_links |> handle_error
