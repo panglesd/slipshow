@@ -3,7 +3,7 @@ val compile :
   output:[ `File of Fpath.t | `Stdout ] ->
   math_link:string option ->
   css_links:string list ->
-  theme:[ `Default | `None | `Other of string ] ->
+  theme:string option ->
   (unit, [ `Msg of string ]) result
 
 val watch :
@@ -11,7 +11,7 @@ val watch :
   output:Fpath.t ->
   math_link:string option ->
   css_links:string list ->
-  theme:[ `Default | `None | `Other of string ] ->
+  theme:string option ->
   (unit, [ `Msg of string ]) result
 
 val serve :
@@ -19,7 +19,7 @@ val serve :
   output:Fpath.t ->
   math_link:string option ->
   css_links:string list ->
-  theme:[ `Default | `None | `Other of string ] ->
+  theme:string option ->
   (unit, [ `Msg of string ]) result
 
 val markdown_compile :

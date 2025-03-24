@@ -1,6 +1,5 @@
 type file =
   | Slipshow_js
-  | Slip_theme_css
   | Slip_internal_css
   | Slip_system_css
   | Mathjax_js
@@ -18,7 +17,6 @@ let string_of_file = function
 
 let read f =match f with
   | Slipshow_js -> [%blob "src/engine/slipshow.js"]
-  | Slip_theme_css -> [%blob "src/engine/slipshow-theme.css"]
   | Slip_internal_css -> [%blob "src/engine/slipshow-internal.css"]
   | Slip_system_css -> [%blob "src/engine/slipshow-system.css"]
   | _ ->

@@ -1,6 +1,5 @@
 type file =
   | Slipshow_js
-  | Slip_theme_css
   | Slip_internal_css
   | Slip_system_css
   | Mathjax_js

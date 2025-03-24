@@ -21,13 +21,6 @@
 (rule
  (action
   (with-stdout-to
-   slipshow-theme.css
-   (progn
-    (cat themes/default.css)))))
-
-(rule
- (action
-  (with-stdout-to
    slipshow-internal.css
    (progn
     (cat normalization/normalization.css)
@@ -42,4 +35,4 @@
    (progn
     (cat drawing/drawing.css)
     (cat table_of_content/table_of_content.css)
-    (cat themes/system.css)))))
+    (cat system.css)))))
