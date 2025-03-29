@@ -1,10 +1,6 @@
-let ( let* ) a b = Result.map b a
-let ( let+ ) a b = Result.bind a b
-let ( let$ ) a b = Option.map b a
-let ( let& ) a b = Option.bind a b
-let _ = ( let* )
-let _ = ( let& )
-let _ = ( let$ )
+let ( let+ ) a b = Result.map b a
+let ( let* ) a b = Result.bind a b
+let _ = ( let+ )
 
 module Io = struct
   let write filename content =
@@ -48,50 +44,42 @@ let to_asset s =
             f "Could not read file: %s. Considering it as an URL. (%s)" s e);
         Remote s
 
-let go ~markdown_mode ~math_link ~slip_css_link ~slipshow_js_link ~input ~output
-    ~watch ~serve =
+let compile ~input ~output ~math_link =
   let math_link = Option.map to_asset math_link in
-  let slip_css_link = Option.map to_asset slip_css_link in
-  let slipshow_js_link = Option.map to_asset slipshow_js_link in
-  let markdown_compile () =
-    let+ content = Io.read input in
-    let md = Slipshow.convert_to_md content in
-    match output with
-    | `Stdout ->
-        print_string md;
-        Ok ()
-    | `File output ->
-        let* () = Io.write output md in
-        ()
-  in
-  let f () =
-    let+ content = Io.read input in
-    let html =
-      Slipshow.convert ?math_link ?slip_css_link ?slipshow_js_link
-        ~resolve_images:to_asset content
-    in
-    match output with
-    | `Stdout ->
-        print_string html;
-        Ok html
-    | `File output ->
-        let* () = Io.write output html in
-        html
-  in
-  let rec f2 () =
-    let+ content = Io.read input in
-    if String.equal content "" then f2 ()
+  let* content = Io.read input in
+  let html = Slipshow.convert ?math_link ~resolve_images:to_asset content in
+  match output with
+  | `Stdout ->
+      print_string html;
+      Ok ()
+  | `File output -> Io.write output html
+
+let watch ~input ~output ~math_link =
+  let input = `File input and output = `File output in
+  let f () = compile ~input ~output ~math_link in
+  Slipshow_server.do_watch input f
+
+let serve ~input ~output ~math_link =
+  let input = `File input and output = `File output in
+  let math_link_asset = Option.map to_asset math_link in
+  let rec f () : (Slipshow.delayed, [ `Msg of string ]) result =
+    let* content = Io.read input in
+    if String.equal content "" then f ()
     else
+      let* () = compile ~input ~output ~math_link in
       let result =
-        Slipshow.delayed ?math_link ?slip_css_link ?slipshow_js_link
-          ~resolve_images:to_asset content
+        Slipshow.delayed ?math_link:math_link_asset ~resolve_images:to_asset
+          content
       in
       Ok result
   in
-  if markdown_mode then markdown_compile ()
-  else if serve then Slipshow_server.do_serve input f2
-  else if watch then Slipshow_server.do_watch input f
-  else
-    let+ _html = f () in
-    Ok ()
-(* do_serve *)
+  Slipshow_server.do_serve input f
+
+let markdown_compile ~input ~output =
+  let* content = Io.read input in
+  let md = Slipshow.convert_to_md content in
+  match output with
+  | `Stdout ->
+      print_string md;
+      Ok ()
+  | `File output -> Io.write output md
