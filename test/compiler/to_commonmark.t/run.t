@@ -1,6 +1,6 @@
 We can compile the file using the slip_of_mark binary
 
-  $ slipshow --markdown-output file.md
+  $ slipshow markdown file.md
 
   $ cat file.noattrs.md
   # A title
