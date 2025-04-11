@@ -2,6 +2,10 @@
 
 If you are willing to contribute, thanks!
 
+## Writing a theme
+
+To write a theme, see [this page](https://slipshow.readthedocs.io/en/stable/themes.html). If you'd like it to be included in the set of builtin themes, the best is to open a PR with your theme added to the `src/themes/` directory. I can then help on the rest of the OCaml plumbing so you don't have to!
+
 ## Getting started
 
 This project is written in OCaml, so you need to be able to compile such programs. The official website ocaml.org provides explanation on getting started with OCaml.
