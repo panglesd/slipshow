@@ -187,11 +187,34 @@ module Markdownify = struct
     Cmd.v info term
 end
 
+module Theme = struct
+  let term_all =
+    let open Term.Syntax in
+    let+ () = Term.const () in
+    Themes.all
+    |> List.iter (fun t ->
+           Format.printf "%s\n  %s\n" (Themes.to_string t)
+             (Themes.description t));
+    Ok ()
+
+  let all =
+    let doc = "List all builtin themes. Default command." in
+    let man = [] in
+    let info = Cmd.info "list" ~version:"%%VERSION%%" ~doc ~man in
+    Cmd.v info term_all
+
+  let cmd =
+    let doc = "Manages themes for slipshow presentations" in
+    let man = [] in
+    let info = Cmd.info "themes" ~version:"%%VERSION%%" ~doc ~man in
+    Cmd.group ~default:term_all info [ all ]
+end
+
 let group =
   let doc = "A tool to compile and preview slipshow presentation" in
   let man = [] in
   let info = Cmd.info "slipshow" ~version:"%%VERSION%%" ~doc ~man in
-  Cmd.group info [ Compile.cmd; Serve.cmd; Markdownify.cmd ]
+  Cmd.group info [ Compile.cmd; Serve.cmd; Markdownify.cmd; Theme.cmd ]
 
 let main () = exit (Cmd.eval_result group)
 let () = main ()
