@@ -8,6 +8,8 @@
   - `slipshow file.md` becomes `slipshow compile file.md`
   - `slipshow --serve file.md` becomes `slipshow serve file.md`
   - `slipshow --markdown-output file.md` becomes `slipshow markdown file.md`
+- Add a `--theme` argument and a command to list the themes: `slipshow themes
+  list` (#109)
 
 ### Engine
 
@@ -19,6 +21,10 @@
 - Improve mobile support, with buttons to navigate and open the table of content
   (#106)
 - Add `scroll` action to scroll up or down, if needed (#107)
+
+### Themes
+
+- Add the "vanier" theme from the pre-OCaml era (#109)
 
 ## [v0.1.1] Thursday 13th march, 2025. Lyon.
 
