@@ -14,13 +14,21 @@ Example:
 
 .. code-block:: console
 
-                $ slipshow pres.md                  # Use the default theme
-                $ slipshow --theme default pres.md  # Use the default theme, explicitely
-                $ slipshow --theme none pres.md     # Do not include any theme
-                $ slipshow --theme file.css pres.md # Use file.css as the theme
+                $ slipshow themes list                      # List all themes
+                default
+                  The default theme, inspired from Beamer's Warsaw theme.
+                vanier
+                  Another Warsaw inspired theme.
+                none
+                  Include no theme.
+                $ slipshow compile pres.md                  # Use the default theme
+                $ slipshow compile --theme default pres.md  # Use the default theme, explicitely
+                $ slipshow compile --theme vanier pres.md   # Use the vanier theme
+                $ slipshow compile --theme none pres.md     # Do not include any theme
+                $ slipshow compile --theme file.css pres.md # Use file.css as the theme
                 $ # Use the linked file as the theme:
-                $ slipshow --theme https://example.org/my-theme.css pres.md
-                $ # /!\ Needs internet connection to view the presentation!
+                $ slipshow compile --theme https://example.org/my-theme.css pres.md
+                $ # /!\ Last example needs internet connection to view the presentation!
 
 If you do not want to change the theme, but to extend it, use the ``--css`` argument instead.
 
