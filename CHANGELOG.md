@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### CLI
+
+- Split commands in groups (#112). Examples:
+  - `slipshow file.md` becomes `slipshow compile file.md`
+  - `slipshow --serve file.md` becomes `slipshow serve file.md`
+  - `slipshow --markdown-output file.md` becomes `slipshow markdown file.md`
+
+### Engine
+
 - Allow to focus on multiple elements. Zooms as much as possible so everything
   is visible, and center. Backward compatible, focusing on a single
   element. (#103)
