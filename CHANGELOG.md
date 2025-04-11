@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [v0.2.0] Friday 11th April, 2025. Lyon.
 
 ### CLI
 
