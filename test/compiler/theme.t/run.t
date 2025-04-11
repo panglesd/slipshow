@@ -18,6 +18,32 @@ In those cases, the default theme is included
     margin-top: auto;
     margin-bottom: auto;
 
+slipshow theme list outputs the list of themes
+
+  $ slipshow themes
+  default
+    The default theme, inspired from Beamer's Warsaw theme.
+  vanier
+    Another Warsaw inspired theme.
+  none
+    Include no theme.
+  $ slipshow themes list
+  default
+    The default theme, inspired from Beamer's Warsaw theme.
+  vanier
+    Another Warsaw inspired theme.
+  none
+    Include no theme.
+
+You can set a builtin theme
+
+  $ slipshow compile --theme vanier file.md -o vanier_theme.html
+  $ grep "Dosis" vanier_theme.html
+   font-family: 'Dosis';
+  	font-family: "Dosis";
+  		font-family: "Dosis";
+  	font-family: "Dosis";
+
 "--theme none" adds no theme
 
   $ slipshow compile --theme none file.md -o no_theme.html
