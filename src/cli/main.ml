@@ -26,7 +26,7 @@ module Conv = struct
   let output = io `Stdout
 end
 
-module Common_args = struct
+module Compile_args = struct
   let css_links =
     let doc =
       "CSS files to add to the presentation. Can be a local file or a remote \
@@ -53,7 +53,7 @@ module Common_args = struct
   let output =
     let doc =
       "Output file path. When absent, generate a filename based on the input \
-       name."
+       name. Use - for stdout."
     in
     Arg.(
       value
@@ -65,8 +65,24 @@ module Common_args = struct
       "$(docv) is the CommonMark file to process. Reads from $(b,stdin) if \
        $(b,-) is specified."
     in
-
     Arg.(value & pos 0 Conv.input `Stdin & info [] ~doc ~docv:"FILE.md")
+
+  type compile_args = {
+    math_link : string option;
+    theme : string option;
+    css_links : string list;
+    input : [ `File of Fpath.t | `Stdin ];
+    output : [ `File of Fpath.t | `Stdout ] option;
+  }
+
+  let term =
+    let open Term.Syntax in
+    let+ math_link = math_link
+    and+ theme = theme
+    and+ css_links = css_links
+    and+ input = input
+    and+ output = output in
+    { math_link; theme; css_links; input; output }
 end
 
 module Compile = struct
@@ -90,7 +106,9 @@ module Compile = struct
     | `File o -> Ok (input, o)
     | `Stdout -> Error "Standard output cannot be used in serve nor watch mode"
 
-  let compile ~watch ~input ~output ~math_link ~theme ~css_links =
+  let compile ~watch
+      ~compile_args:{ Compile_args.input; output; math_link; theme; css_links }
+      =
     let output =
       match output with Some o -> o | None -> output_of_input input
     in
@@ -100,16 +118,11 @@ module Compile = struct
     else Run.compile ~input ~output ~math_link ~theme ~css_links |> handle_error
 
   let term =
-    let open Common_args in
     let open Term.Syntax in
-    let+ input = input
-    and+ output = output
-    and+ math_link = math_link
-    and+ watch = watch
-    and+ theme = theme
-    and+ css_links = css_links
+    let+ watch = watch
+    and+ compile_args = Compile_args.term
     and+ () = setup_log in
-    compile ~input ~output ~math_link ~watch ~theme ~css_links
+    compile ~compile_args ~watch
 
   let cmd =
     let doc =
@@ -123,7 +136,9 @@ end
 module Serve = struct
   let ( let* ) = Result.bind
 
-  let serve ~input ~output ~math_link ~theme ~css_links =
+  let serve
+      ~compile_args:{ Compile_args.input; output; math_link; theme; css_links }
+      =
     let output =
       match output with Some o -> o | None -> Compile.output_of_input input
     in
@@ -131,15 +146,9 @@ module Serve = struct
     Run.serve ~input ~output ~math_link ~theme ~css_links |> handle_error
 
   let term =
-    let open Common_args in
     let open Term.Syntax in
-    let+ input = input
-    and+ output = output
-    and+ math_link = math_link
-    and+ theme = theme
-    and+ css_links = css_links
-    and+ () = setup_log in
-    serve ~input ~output ~math_link ~theme ~css_links
+    let+ compile_args = Compile_args.term and+ () = setup_log in
+    serve ~compile_args
 
   let cmd =
     let doc =
@@ -162,9 +171,10 @@ module Markdownify = struct
     Run.markdown_compile ~input ~output |> handle_error
 
   let term =
-    let open Common_args in
     let open Term.Syntax in
-    let+ input = input and+ output = output and+ () = setup_log in
+    let+ input = Compile_args.input
+    and+ output = Compile_args.output
+    and+ () = setup_log in
     do_ ~input ~output
 
   let cmd =
