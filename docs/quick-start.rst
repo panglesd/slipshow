@@ -60,8 +60,8 @@ Then, you can use ``slipshow`` to compile your documents:
 
 .. code-block:: shell
 
-   $ slipshow presentation.md            # Compiles to `presentation.html`
-   $ slipshow --serve presentation.md    # Compiles to `presentation.html` and serves a live-preview on 127.0.0.1:8080
+   $ slipshow compile presentation.md    # Compiles to `presentation.html`
+   $ slipshow serve presentation.md      # Compiles to `presentation.html` and serves a live-preview on 127.0.0.1:8080
 
 
 The sliphub online editor
@@ -128,7 +128,7 @@ Now, compile the file:
 
 .. code-block:: shell
 
-		$ slipshow my-first-slipshow.md
+		$ slipshow compile my-first-slipshow.md
 
 Your presentation has been compiled to a standalone file named ``my-first-slipshow.html``! You can open it in your favorite browser to see the result. You can send the file to anyone, they can open it and it will work, even without internet connection!
 

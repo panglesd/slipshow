@@ -98,7 +98,7 @@ This step depends on the way you have access to the slipshow compiler.
 
       .. code-block:: shell
 
-		$ slipshow prime-numbers.md --serve
+		$ slipshow serve prime-numbers.md
 		Visit http://localhost:8080 to view your presentation, with auto-reloading on file changes.
 
       This command (which do not return due to the ``--serve`` flag) creates a file
