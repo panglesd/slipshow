@@ -7,27 +7,24 @@ let wait_forever (_unwatch : unit -> unit Lwt.t) =
   forever
 
 let do_watch input f =
-  match input with
-  | `Stdin -> Error (`Msg "--watch is incompatible with stdin input")
-  | `File input ->
-      let parent = Fpath.parent input in
-      let parent = Fpath.to_string parent in
-      let input_filename = Fpath.filename input in
-      let callback filename =
-        if String.equal filename input_filename then (
-          Logs.app (fun m -> m "Recompiling");
-          match f () with
-          | Ok _ -> Lwt.return_unit
-          | Error (`Msg s) ->
-              Logs.warn (fun m -> m "%s" s);
-              Lwt.return_unit)
-        else Lwt.return_unit
-      in
-      let main =
-        let* unwatch = Irmin_watcher.hook 0 parent callback in
-        wait_forever unwatch
-      in
-      Lwt_main.run main
+  let parent = Fpath.parent input in
+  let parent = Fpath.to_string parent in
+  let input_filename = Fpath.filename input in
+  let callback filename =
+    if String.equal filename input_filename then (
+      Logs.app (fun m -> m "Recompiling");
+      match f () with
+      | Ok _ -> Lwt.return_unit
+      | Error (`Msg s) ->
+          Logs.warn (fun m -> m "%s" s);
+          Lwt.return_unit)
+    else Lwt.return_unit
+  in
+  let main =
+    let* unwatch = Irmin_watcher.hook 0 parent callback in
+    wait_forever unwatch
+  in
+  Lwt_main.run main
 
 let html_source =
   Format.sprintf

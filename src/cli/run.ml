@@ -65,8 +65,10 @@ let compile ~input ~output ~math_link ~css_links ~theme =
   | `File output -> Io.write output html
 
 let watch ~input ~output ~math_link ~css_links ~theme =
-  let input = `File input and output = `File output in
-  let f () = compile ~input ~output ~math_link ~css_links ~theme in
+  let input = input and output = `File output in
+  let f () =
+    compile ~input:(`File input) ~output ~math_link ~css_links ~theme
+  in
   Slipshow_server.do_watch input f
 
 let serve ~input ~output ~math_link ~css_links ~theme =

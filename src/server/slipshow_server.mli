@@ -4,6 +4,6 @@ val do_serve :
   (unit, [ `Msg of string ]) result
 
 val do_watch :
-  [< `File of Fpath.t | `Stdin ] ->
+  Fpath.t ->
   (unit -> (unit, [ `Msg of string ]) result) ->
   (unit, [ `Msg of string ]) result
