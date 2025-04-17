@@ -25,7 +25,7 @@
   (ocaml (>= 4.14))
   dune
   (crunch :with-dev-setup)
-   cmdliner
+  (cmdliner (>= 1.3.0))
    base64
    bos
    lwt
