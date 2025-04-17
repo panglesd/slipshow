@@ -1,0 +1,9 @@
+(executable
+ (name test)
+ (libraries alcotest logs.fmt irmin-watcher mtime mtime.clock.os))
+
+(rule
+ (alias runtest)
+ (deps test.exe)
+ (action
+  (run ./test.exe -q --color=always)))
