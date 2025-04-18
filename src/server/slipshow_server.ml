@@ -6,32 +6,96 @@ let wait_forever (_unwatch : unit -> unit Lwt.t) =
   let forever, _ = Lwt.wait () in
   forever
 
+(* We need:
+   - A list of directories we are watching
+   - A list of files we depend on
+
+   We need to keep those lists in sync:
+   - If we do not depend on any files in a directory, we should stop watching it
+   - When we start depending on a file, we should listen its parent directory if not already the case
+
+   When we compile the presentation, we should record a list of the files we depend on.
+   We should then update the list of directories we watch,
+   start listening new directories
+   stop listening some of them
+   ...
+ *)
+
+(* A single function should be run in several cases. We don't want the function
+   to be run twice at the same time. So we make it wait on a condition and each
+   callback just signal that condition. *)
+
 let do_watch input f =
+  let input = Fpath.normalize input in
+  let depending_on_files = Fpath.Set.singleton input in
   let parent = Fpath.parent input in
-  let parent = Fpath.to_string parent in
-  let input_filename = Fpath.filename input in
-  let callback filename =
-    if String.equal filename input_filename then (
+  let cond = Lwt_condition.create () in
+  let state_depending_on_files = ref depending_on_files in
+  let callback prefix filename =
+    let full_name = Fpath.normalize @@ Fpath.( / ) prefix filename in
+    Logs.app (fun m -> m "Testing if %a is watched" Fpath.pp full_name);
+    if Fpath.Set.mem full_name !state_depending_on_files then (
       Logs.app (fun m -> m "Recompiling");
+      Lwt_condition.signal cond ());
+    Lwt.return_unit
+  in
+  let watch dir =
+    Logs.app (fun m -> m "Watch directory %a" Fpath.pp dir);
+    let poll_watch =
+      if false then
+        Irmin_watcher__.Core.hook (Lazy.force Irmin_watcher__Polling.v)
+      else Irmin_watcher.hook
+    in
+    let+ unwatch =
+      poll_watch 0 (Fpath.to_string dir) (callback (Fpath.v "./"))
+    in
+    fun () ->
+      Logs.app (fun m -> m "Unwatching %a" Fpath.pp dir);
+      unwatch ()
+  in
+  let listened_directories = Fpath.Map.singleton parent (watch parent) in
+  let rec main listened_directories depending_on_files =
+    let update return listened_directories _depending_on_files =
+      let depending_on_files = Fpath.Set.of_list return in
+      Logs.app (fun m ->
+          m "Now depending on files: %a" (Fmt.list Fpath.pp) return);
+      let new_listened_directories =
+        Fpath.Set.fold
+          (fun file map ->
+            let parent = Fpath.parent file in
+            match Fpath.Map.find_opt parent listened_directories with
+            | None ->
+                let u = watch parent in
+                Fpath.Map.add parent u map
+            | Some u -> Fpath.Map.add parent u map)
+          depending_on_files Fpath.Map.empty
+      in
+      let () =
+        Fpath.Map.iter
+          (fun dir unwatch ->
+            let _ =
+              if not (Fpath.Map.mem dir new_listened_directories) then
+                let* unwatch = unwatch in
+                unwatch ()
+              else Lwt.return ()
+            in
+            ())
+          listened_directories
+      in
+      (new_listened_directories, depending_on_files)
+    in
+    let listened_directories, depending_on_files =
       match f () with
-      | Ok _ -> Lwt.return_unit
+      | Ok return -> update return listened_directories depending_on_files
       | Error (`Msg s) ->
           Logs.warn (fun m -> m "%s" s);
-          Lwt.return_unit)
-    else Lwt.return_unit
-  in
-  let main =
-    let* unwatch =
-      let poll_watch =
-        if false then
-          Irmin_watcher__.Core.hook (Lazy.force Irmin_watcher__Polling.v)
-        else Irmin_watcher.hook
-      in
-      poll_watch 0 parent callback
+          (listened_directories, depending_on_files)
     in
-    wait_forever unwatch
+    state_depending_on_files := depending_on_files;
+    let* () = Lwt_condition.wait cond in
+    main listened_directories depending_on_files
   in
-  Lwt_main.run main
+  Lwt_main.run (main listened_directories depending_on_files)
 
 let html_source =
   Format.sprintf

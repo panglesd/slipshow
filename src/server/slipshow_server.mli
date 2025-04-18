@@ -5,5 +5,5 @@ val do_serve :
 
 val do_watch :
   Fpath.t ->
-  (unit -> (unit, [ `Msg of string ]) result) ->
+  (unit -> (Fpath.t list, [ `Msg of string ]) result) ->
   (unit, [ `Msg of string ]) result
