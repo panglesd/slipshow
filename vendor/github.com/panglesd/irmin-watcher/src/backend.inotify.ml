@@ -23,7 +23,7 @@ let start_watch dir =
   if not (Sys.file_exists dir) then mkdir dir;
   Lwt_inotify.create () >>= fun i ->
   Lwt_inotify.add_watch i dir
-    [ Inotify.S_Create; Inotify.S_Modify; Inotify.S_Move; Inotify.S_Delete ]
+    [ Inotify.S_Create; Inotify.S_Close_write; Inotify.S_Move; Inotify.S_Delete ]
   >|= fun u ->
   let stop () = Lwt_inotify.rm_watch i u >>= fun () -> Lwt_inotify.close i in
   (i, stop)

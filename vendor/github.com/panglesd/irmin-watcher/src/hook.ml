@@ -24,20 +24,10 @@ let list_files kind dir =
     Lwt.return d
   else Lwt.return_nil
 
-let directories dir =
-  list_files (fun f -> try Sys.is_directory f with Sys_error _ -> false) dir
-
 let files dir =
   list_files
     (fun f -> try not (Sys.is_directory f) with Sys_error _ -> false)
     dir
-
-let rec_files dir =
-  let rec aux accu dir =
-    directories dir >>= fun ds ->
-    files dir >>= fun fs -> Lwt_list.fold_left_s aux (fs @ accu) ds
-  in
-  aux [] dir
 
 let read_file ~prefix f =
   try
@@ -50,7 +40,7 @@ let read_file ~prefix f =
     None
 
 let read_files dir =
-  rec_files dir >|= fun new_files ->
+  files dir >|= fun new_files ->
   let prefix = dir / "" in
   List.fold_left
     (fun acc f ->
@@ -89,9 +79,11 @@ let id = ref 0
 let v ~wait_for_changes ~dir callback =
   let n = !id in
   incr id;
-  read_files dir >|= fun files ->
+  wait_for_changes () >>= fun event ->
+  (match event with `Unknown -> read_files dir | `File f -> Lwt.return Digests.empty)
+  >|= fun files ->
   Core.stoppable (fun () ->
-      poll n ~callback ~wait_for_changes dir files `Unknown)
+      poll n ~callback ~wait_for_changes dir files event)
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2016 Thomas Gazagnaire

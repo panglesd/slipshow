@@ -21,7 +21,14 @@ let do_watch input f =
     else Lwt.return_unit
   in
   let main =
-    let* unwatch = Irmin_watcher.hook 0 parent callback in
+    let* unwatch =
+      let poll_watch =
+        if false then
+          Irmin_watcher__.Core.hook (Lazy.force Irmin_watcher__Polling.v)
+        else Irmin_watcher.hook
+      in
+      poll_watch 0 parent callback
+    in
     wait_forever unwatch
   in
   Lwt_main.run main
