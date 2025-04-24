@@ -46,9 +46,7 @@ let do_watch input f =
         Irmin_watcher__.Core.hook (Lazy.force Irmin_watcher__Polling.v)
       else Irmin_watcher.hook
     in
-    let+ unwatch =
-      poll_watch 0 (Fpath.to_string dir) (callback (Fpath.v "./"))
-    in
+    let+ unwatch = poll_watch 0 (Fpath.to_string dir) (callback dir) in
     fun () ->
       Logs.app (fun m -> m "Unwatching %a" Fpath.pp dir);
       unwatch ()

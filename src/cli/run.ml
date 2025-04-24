@@ -30,8 +30,9 @@ let mime_of_ext = function
   | "webp" -> Some "image/webp" (* Web Picture format (WEBP) *)
   | _ -> None
 
-let to_asset () =
+let to_asset input () =
   let l = ref [] in
+  let parent = Fpath.parent input in
   ( l,
     fun s ->
       if
@@ -39,7 +40,7 @@ let to_asset () =
         || String.starts_with ~prefix:"//" s
       then Slipshow.Remote s
       else
-        let fp = Fpath.v s in
+        let fp = Fpath.normalize @@ Fpath.( // ) parent @@ Fpath.v s in
         l := fp :: !l;
         match Io.read (`File fp) with
         | Ok content ->
@@ -56,7 +57,9 @@ let parse_theme to_asset theme =
   | None -> `External (to_asset theme)
 
 let compile ~input ~output ~math_link ~css_links ~theme =
-  let used_files, to_asset = to_asset () in
+  let used_files, to_asset =
+    to_asset (match input with `Stdin -> Fpath.v "./" | `File f -> f) ()
+  in
   let math_link = Option.map to_asset math_link in
   let css_links = List.map to_asset css_links in
   let theme = Option.map (parse_theme to_asset) theme in
@@ -81,7 +84,7 @@ let watch ~input ~output ~math_link ~css_links ~theme =
   Slipshow_server.do_watch input f
 
 let serve ~input ~output ~math_link ~css_links ~theme =
-  let _recorded_assets, to_asset = to_asset () in
+  let _recorded_assets, to_asset = to_asset input () in
   let input = `File input and output = `File output in
   let math_link_asset = Option.map to_asset math_link in
   let f () : (Slipshow.delayed, [ `Msg of string ]) result =
