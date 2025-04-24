@@ -25,75 +25,77 @@ let wait_forever (_unwatch : unit -> unit Lwt.t) =
    to be run twice at the same time. So we make it wait on a condition and each
    callback just signal that condition. *)
 
-let do_watch input f =
-  let input = Fpath.normalize input in
-  let depending_on_files = Fpath.Set.singleton input in
-  let parent = Fpath.parent input in
+let watch_and_compile compile k =
+  let depending_on_files = ref Fpath.Set.empty in
+  let listened_directories = ref Fpath.Map.empty in
   let cond = Lwt_condition.create () in
-  let state_depending_on_files = ref depending_on_files in
-  let callback prefix filename =
-    let full_name = Fpath.normalize @@ Fpath.( / ) prefix filename in
-    Logs.app (fun m -> m "Testing if %a is watched" Fpath.pp full_name);
-    if Fpath.Set.mem full_name !state_depending_on_files then (
-      Logs.app (fun m -> m "Recompiling");
-      Lwt_condition.signal cond ());
-    Lwt.return_unit
-  in
-  let watch dir =
-    Logs.app (fun m -> m "Watch directory %a" Fpath.pp dir);
-    let poll_watch =
-      if false then
-        Irmin_watcher__.Core.hook (Lazy.force Irmin_watcher__Polling.v)
-      else Irmin_watcher.hook
+  let rec compile_and_call_k () =
+    match compile () with
+    | Ok (result, new_dependencies) ->
+        let+ () = update new_dependencies listened_directories in
+        Lwt_condition.signal cond result
+    | Error (`Msg s) ->
+        Logs.warn (fun m -> m "%s" s);
+        Lwt.return_unit
+  and watch =
+    let callback prefix filename =
+      let full_name = Fpath.normalize @@ Fpath.( / ) prefix filename in
+      if Fpath.Set.mem full_name !depending_on_files then compile_and_call_k ()
+      else Lwt.return_unit
     in
-    let+ unwatch = poll_watch 0 (Fpath.to_string dir) (callback dir) in
-    fun () ->
-      Logs.app (fun m -> m "Unwatching %a" Fpath.pp dir);
-      unwatch ()
-  in
-  let listened_directories = Fpath.Map.singleton parent (watch parent) in
-  let rec main listened_directories depending_on_files =
-    let update return listened_directories _depending_on_files =
-      let depending_on_files = Fpath.Set.of_list return in
-      Logs.app (fun m ->
-          m "Now depending on files: %a" (Fmt.list Fpath.pp) return);
-      let new_listened_directories =
-        Fpath.Set.fold
-          (fun file map ->
-            let parent = Fpath.parent file in
-            match Fpath.Map.find_opt parent listened_directories with
-            | None ->
-                let u = watch parent in
-                Fpath.Map.add parent u map
-            | Some u -> Fpath.Map.add parent u map)
-          depending_on_files Fpath.Map.empty
-      in
-      let () =
-        Fpath.Map.iter
-          (fun dir unwatch ->
-            let _ =
-              if not (Fpath.Map.mem dir new_listened_directories) then
-                let* unwatch = unwatch in
-                unwatch ()
-              else Lwt.return ()
-            in
-            ())
-          listened_directories
-      in
-      (new_listened_directories, depending_on_files)
+    fun dir ->
+      Logs.info (fun m -> m "Watching %a" Fpath.pp dir);
+      Irmin_watcher.hook 0 (Fpath.to_string dir) (callback dir)
+  and update new_dependencies listened_directories =
+    let* new_listened_directories =
+      (* Some new dependencies may require new directories to be watched *)
+      Fpath.Set.fold
+        (fun dir map ->
+          match Fpath.Map.find_opt dir !listened_directories with
+          | Some u ->
+              let+ map = map in
+              Fpath.Map.add dir u map
+          | None ->
+              let+ u = watch dir and+ map = map in
+              Fpath.Map.add dir u map)
+        (Fpath.Set.map
+           (* Fold on the parent's set to avoid duplication on file's parent dir *)
+           (fun file -> file |> Fpath.parent |> Fpath.normalize)
+           new_dependencies)
+        (Lwt.return Fpath.Map.empty)
     in
-    let listened_directories, depending_on_files =
-      match f () with
-      | Ok return -> update return listened_directories depending_on_files
-      | Error (`Msg s) ->
-          Logs.warn (fun m -> m "%s" s);
-          (listened_directories, depending_on_files)
+    Logs.info (fun m ->
+        m "updating file dependencies to %a"
+          (Fmt.list ~sep:Fmt.sp Fpath.pp)
+          (Fpath.Set.to_list new_dependencies));
+    let+ () =
+      (* The new set of file dependencies may NOT need some directories to be
+         watched anymore *)
+      Fpath.Map.fold
+        (fun dir unwatch acc ->
+          let* () = acc in
+          if not (Fpath.Map.mem dir new_listened_directories) then unwatch ()
+          else Lwt.return ())
+        !listened_directories Lwt.return_unit
     in
-    state_depending_on_files := depending_on_files;
-    let* () = Lwt_condition.wait cond in
-    main listened_directories depending_on_files
+    depending_on_files := new_dependencies;
+    listened_directories := new_listened_directories
   in
-  Lwt_main.run (main listened_directories depending_on_files)
+  let rec main () =
+    let* res = Lwt_condition.wait cond in
+    let _ = k res in
+    main ()
+  in
+  let p_main = main () in
+  let* () = compile_and_call_k () in
+  p_main
+
+let do_watch compile =
+  let compile () = compile () |> Result.map (fun res -> ((), res)) in
+  Lwt_main.run
+  @@ watch_and_compile compile (fun () ->
+         Logs.app (fun m -> m "Recompiled!");
+         Lwt.return ())
 
 let html_source =
   Format.sprintf
@@ -129,60 +131,56 @@ let do_serve input f =
 
   let cond = Lwt_condition.create () in
   let do_serve input f =
-    match input with
-    | `Stdin ->
-        Lwt.return @@ Error (`Msg "--serve is incompatible with stdin input")
-    | `File input ->
-        let open Lwt.Syntax in
-        let parent = Fpath.parent input in
-        let parent = Fpath.to_string parent in
-        let input_filename = Fpath.filename input in
-        let content = ref "" in
+    let open Lwt.Syntax in
+    let parent = Fpath.parent input in
+    let parent = Fpath.to_string parent in
+    let input_filename = Fpath.filename input in
+    let content = ref "" in
+    let new_content =
+      match f () with
+      | Ok (s, _) -> Slipshow.delayed_to_string s
+      | Error (`Msg s) ->
+          Logs.warn (fun m -> m "%s" s);
+          s
+    in
+    content := new_content;
+    let _ =
+      (* We serve on [127.0.0.1] since in musl libc library, localhost would
+             trigger a DNS request (which might not resolve) *)
+      Dream.serve ~interface:"127.0.0.1"
+      @@ Dream.logger
+      @@ Dream.router
+           [
+             Dream.get "/" (fun _ ->
+                 Dream.log "A browser reloaded";
+                 Dream.html html_source);
+             Dream.get "/now" (fun _ ->
+                 Dream.respond
+                   ~headers:[ ("Content-Type", "text/plain") ]
+                   !content);
+             Dream.get "/onchange" (fun _ ->
+                 let* () = Lwt_condition.wait cond in
+                 Dream.respond
+                   ~headers:[ ("Content-Type", "text/plain") ]
+                   !content);
+           ]
+    in
+    let callback filename =
+      if String.equal filename input_filename then (
+        Logs.app (fun m -> m "Recompiling");
         let new_content =
           match f () with
-          | Ok s -> Slipshow.delayed_to_string s
+          | Ok (s, _) -> Slipshow.delayed_to_string s
           | Error (`Msg s) ->
               Logs.warn (fun m -> m "%s" s);
               s
         in
         content := new_content;
-        let _ =
-          (* We serve on [127.0.0.1] since in musl libc library, localhost would
-             trigger a DNS request (which might not resolve) *)
-          Dream.serve ~interface:"127.0.0.1"
-          @@ Dream.logger
-          @@ Dream.router
-               [
-                 Dream.get "/" (fun _ ->
-                     Dream.log "A browser reloaded";
-                     Dream.html html_source);
-                 Dream.get "/now" (fun _ ->
-                     Dream.respond
-                       ~headers:[ ("Content-Type", "text/plain") ]
-                       !content);
-                 Dream.get "/onchange" (fun _ ->
-                     let* () = Lwt_condition.wait cond in
-                     Dream.respond
-                       ~headers:[ ("Content-Type", "text/plain") ]
-                       !content);
-               ]
-        in
-        let callback filename =
-          if String.equal filename input_filename then (
-            Logs.app (fun m -> m "Recompiling");
-            let new_content =
-              match f () with
-              | Ok s -> Slipshow.delayed_to_string s
-              | Error (`Msg s) ->
-                  Logs.warn (fun m -> m "%s" s);
-                  s
-            in
-            content := new_content;
-            Lwt_condition.broadcast cond ());
-          Lwt.return_unit
-        in
-        let* unwatch = Irmin_watcher.hook 0 parent callback in
-        wait_forever unwatch
+        Lwt_condition.broadcast cond ());
+      Lwt.return_unit
+    in
+    let* unwatch = Irmin_watcher.hook 0 parent callback in
+    wait_forever unwatch
   in
   Logs.app (fun m ->
       m

@@ -4,7 +4,7 @@ val compile :
   math_link:string option ->
   css_links:string list ->
   theme:string option ->
-  (Fpath.t list, [ `Msg of string ]) result
+  (Fpath.Set.t, [ `Msg of string ]) result
 
 val watch :
   input:Fpath.t ->

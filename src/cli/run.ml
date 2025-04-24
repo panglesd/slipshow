@@ -31,7 +31,7 @@ let mime_of_ext = function
   | _ -> None
 
 let to_asset input () =
-  let l = ref [] in
+  let l = ref Fpath.Set.empty in
   let parent = Fpath.parent input in
   ( l,
     fun s ->
@@ -41,9 +41,9 @@ let to_asset input () =
       then Slipshow.Remote s
       else
         let fp = Fpath.normalize @@ Fpath.( // ) parent @@ Fpath.v s in
-        l := fp :: !l;
         match Io.read (`File fp) with
         | Ok content ->
+            l := Fpath.Set.add fp !l;
             let mime_type = mime_of_ext (Fpath.get_ext fp) in
             Local { mime_type; content }
         | Error (`Msg e) ->
@@ -74,28 +74,33 @@ let compile ~input ~output ~math_link ~css_links ~theme =
       Ok !used_files
   | `File output -> (
       let+ () = Io.write output html in
-      match input with `Stdin -> !used_files | `File f -> f :: !used_files)
+      match input with
+      | `Stdin -> !used_files
+      | `File f -> Fpath.Set.add f !used_files)
 
 let watch ~input ~output ~math_link ~css_links ~theme =
-  let input = input and output = `File output in
-  let f () =
-    compile ~input:(`File input) ~output ~math_link ~css_links ~theme
+  let input = `File input and output = `File output in
+  let compile () =
+    Logs.app (fun m -> m "Compiling...");
+    compile ~input ~output ~math_link ~css_links ~theme
   in
-  Slipshow_server.do_watch input f
+  Slipshow_server.do_watch compile
 
 let serve ~input ~output ~math_link ~css_links ~theme =
   let _recorded_assets, to_asset = to_asset input () in
-  let input = `File input and output = `File output in
+  let input_f = `File input and output = `File output in
   let math_link_asset = Option.map to_asset math_link in
-  let f () : (Slipshow.delayed, [ `Msg of string ]) result =
-    let* content = Io.read input in
-    let* _used_files = compile ~input ~output ~math_link ~css_links ~theme in
+  let f () =
+    let* content = Io.read input_f in
+    let* used_files =
+      compile ~input:input_f ~output ~math_link ~css_links ~theme
+    in
     let theme = Option.map (parse_theme to_asset) theme in
     let result =
       Slipshow.delayed ?math_link:math_link_asset ?theme
         ~resolve_images:to_asset content
     in
-    Ok result
+    Ok (result, used_files)
   in
   Slipshow_server.do_serve input f
 
