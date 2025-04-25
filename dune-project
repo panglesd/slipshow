@@ -29,7 +29,12 @@
    base64
    bos
    lwt
-   irmin-watcher
+   (inotify (= :os "linux"))
+   (cf-lwt (>="0.4"))
+   astring
+   fmt
+   logs
+   fsevents-lwt
    js_of_ocaml-compiler
    js_of_ocaml-lwt
    magic-mime
