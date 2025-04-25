@@ -115,7 +115,9 @@ module Compile = struct
     if watch then
       let* input, output = force_file_io input output in
       Run.watch ~input ~output ~math_link ~theme ~css_links |> handle_error
-    else Run.compile ~input ~output ~math_link ~theme ~css_links |> handle_error
+    else
+      Run.compile ~input ~output ~math_link ~theme ~css_links
+      |> Result.map ignore |> handle_error
 
   let term =
     let open Term.Syntax in
