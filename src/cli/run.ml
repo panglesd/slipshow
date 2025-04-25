@@ -18,14 +18,14 @@ module Io = struct
     with exn -> Error (`Msg (Printexc.to_string exn))
 end
 
-let read_file input () =
+let read_file parent () =
   let l = ref Fpath.Set.empty in
-  let parent = Fpath.parent input in
   ( l,
     fun s ->
       let ( // ) = Fpath.( // ) in
-      let fp = Fpath.normalize @@ (Fpath.v (Sys.getcwd ()) // parent // s) in
-      l := Fpath.Set.add fp !l;
+      let fp = Fpath.normalize @@ (parent // s) in
+      let normalized = Fpath.normalize @@ (Fpath.v (Sys.getcwd ()) // fp) in
+      l := Fpath.Set.add normalized !l;
       let+ res = Io.read (`File fp) in
       Some res )
 
@@ -44,7 +44,9 @@ let compile ~input ~output ~math_link ~css_links ~theme =
   let theme = Option.map (parse_theme to_asset) theme in
   let* content = Io.read input in
   let used_files, read_file =
-    read_file (match input with `Stdin -> Fpath.v "./" | `File f -> f) ()
+    read_file
+      (match input with `Stdin -> Fpath.v "./" | `File f -> Fpath.parent f)
+      ()
   in
   let html = Slipshow.convert ?math_link ~css_links ?theme ~read_file content in
   let all_used_files = Fpath.Set.union !asset_files !used_files in
@@ -79,7 +81,7 @@ let serve ~input ~output ~math_link ~css_links ~theme =
     let css_links = List.map to_asset css_links in
     let* content = Io.read (`File input) in
     let theme = Option.map (parse_theme to_asset) theme in
-    let used_files, read_file = read_file input () in
+    let used_files, read_file = read_file (Fpath.parent input) () in
     let result =
       Slipshow.delayed ~css_links ?math_link:math_link_asset ?theme ~read_file
         content
