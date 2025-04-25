@@ -1,9 +1,5 @@
 (** Extensions to the Cmarkit AST *)
 
-type asset =
-  | Local of { mime_type : string option; content : string }
-  | Remote of string
-
 open Cmarkit
 
 type Block.t +=

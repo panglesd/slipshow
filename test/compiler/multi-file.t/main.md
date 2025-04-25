@@ -7,4 +7,4 @@
 {pause}
 ## Chapter 2
 
-{include src="chapter2.md" pause}
+{include src="chapter2/chapter2.md" pause}

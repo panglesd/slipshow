@@ -1,12 +1,10 @@
-type asset = Ast.asset =
-  | Local of { mime_type : string option; content : string }
-  | Remote of string
+module Asset = Asset
 
 let mathjax_element has_math math_link =
   if not has_math then ""
   else
     match math_link with
-    | Some (Local { content = t; _ }) ->
+    | Some (Asset.Local { content = t; _ }) ->
         Format.sprintf "<script id=\"MathJax-script\">%s</script>" t
     | Some (Remote r) ->
         Format.sprintf "<script id=\"MathJax-script\" src=\"%s\"></script>" r
@@ -15,7 +13,7 @@ let mathjax_element has_math math_link =
           Data_files.(read Mathjax_js)
 
 let css_element = function
-  | Local { content = t; _ } -> Format.sprintf "<style>%s</style>" t
+  | Asset.Local { content = t; _ } -> Format.sprintf "<style>%s</style>" t
   | Remote r -> Format.sprintf {|<link href="%s" rel="stylesheet" />|} r
 
 let theme_css = function
@@ -30,7 +28,8 @@ let system_css =
 
 let slipshow_js_element slipshow_link =
   match slipshow_link with
-  | Some (Local { content = t; _ }) -> Format.sprintf "<script>%s</script>" t
+  | Some (Asset.Local { content = t; _ }) ->
+      Format.sprintf "<script>%s</script>" t
   | Some (Remote r) -> Format.sprintf "<script src=\"%s\"></script>" r
   | None -> Format.sprintf "<script>%s</script>" Data_files.(read Slipshow_js)
 
@@ -112,19 +111,14 @@ let string_to_delayed s =
 
 let convert_to_md content =
   let md = Cmarkit.Doc.of_string ~heading_auto_ids:true ~strict:false content in
-  let resolve_images = fun x -> Remote x in
-  let sd =
-    Cmarkit.Mapper.map_doc (Mappings.of_cmarkit resolve_images None) md
-  in
+  let sd = Cmarkit.Mapper.map_doc (Mappings.of_cmarkit (fun _ -> Ok None)) md in
   let sd = Cmarkit.Mapper.map_doc Mappings.to_cmarkit sd in
   Cmarkit_commonmark.of_doc ~include_attributes:false sd
 
 let delayed ?math_link ?(css_links = []) ?(theme = `Builtin Themes.Default)
-    ?slipshow_js_link ?read_file ?(resolve_images = fun x -> Remote x) s =
+    ?slipshow_js_link ?(read_file = fun _ -> Ok None) s =
   let md = Cmarkit.Doc.of_string ~heading_auto_ids:true ~strict:false s in
-  let md =
-    Cmarkit.Mapper.map_doc (Mappings.of_cmarkit resolve_images read_file) md
-  in
+  let md = Cmarkit.Mapper.map_doc (Mappings.of_cmarkit read_file) md in
   let content =
     Cmarkit_renderer.doc_to_string Renderers.custom_html_renderer md
   in
@@ -140,9 +134,8 @@ let add_starting_state (start, end_) starting_state =
   start ^ starting_state ^ end_
 
 let convert ?starting_state ?math_link ?theme ?css_links ?slipshow_js_link
-    ?read_file ?(resolve_images = fun x -> Remote x) s =
+    ?(read_file = fun _ -> Ok None) s =
   let delayed =
-    delayed ?math_link ?css_links ?theme ?slipshow_js_link ~resolve_images
-      ?read_file s
+    delayed ?math_link ?css_links ?theme ?slipshow_js_link ~read_file s
   in
   add_starting_state delayed starting_state
