@@ -11,6 +11,11 @@
 - Add a `--theme` argument and a command to list the themes: `slipshow themes
   list` (#109)
 
+### Compile
+
+- Fix file watching issues by vendoring a (modified) irmin-watcher, and watching
+  all files the presentation depends on (images, themes, ...) (#113)
+
 ### Engine
 
 - Allow to focus on multiple elements. Zooms as much as possible so everything
