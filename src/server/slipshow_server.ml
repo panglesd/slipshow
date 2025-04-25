@@ -61,7 +61,7 @@ let watch_and_compile compile k =
     Logs.info (fun m ->
         m "updating file dependencies to %a"
           (Fmt.list ~sep:Fmt.sp Fpath.pp)
-          (Fpath.Set.to_list new_dependencies));
+          (Fpath.Set.fold (fun a x -> a :: x) new_dependencies []));
     let+ () =
       (* The new set of file dependencies may NOT need some directories to be
          watched anymore *)
