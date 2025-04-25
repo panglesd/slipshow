@@ -90,7 +90,7 @@ let serve ~input ~output ~math_link ~css_links ~theme =
   let _recorded_assets, to_asset = to_asset input () in
   let input_f = `File input and output = `File output in
   let math_link_asset = Option.map to_asset math_link in
-  let f () =
+  let compile () =
     let* content = Io.read input_f in
     let* used_files =
       compile ~input:input_f ~output ~math_link ~css_links ~theme
@@ -102,7 +102,7 @@ let serve ~input ~output ~math_link ~css_links ~theme =
     in
     Ok (result, used_files)
   in
-  Slipshow_server.do_serve input f
+  Slipshow_server.do_serve compile
 
 let markdown_compile ~input ~output =
   let* content = Io.read input in

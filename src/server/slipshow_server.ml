@@ -1,11 +1,5 @@
 open Lwt.Syntax
 
-(* A promise that never returns and consumes a file
-   unwatcher *)
-let wait_forever (_unwatch : unit -> unit Lwt.t) =
-  let forever, _ = Lwt.wait () in
-  forever
-
 (* We need:
    - A list of directories we are watching
    - A list of files we depend on
@@ -124,66 +118,45 @@ let html_source =
   |html}
     [%blob "client/client.bc.js"]
 
-let do_serve input f =
+let do_serve compile =
   let () = if Sys.unix then Sys.(set_signal sigpipe Signal_ignore) in
   (* We need this, otherwise the program is killed when sending a long string to
      a closed connection... See https://github.com/aantron/dream/issues/378 *)
 
   let cond = Lwt_condition.create () in
-  let do_serve input f =
-    let open Lwt.Syntax in
-    let parent = Fpath.parent input in
-    let parent = Fpath.to_string parent in
-    let input_filename = Fpath.filename input in
-    let content = ref "" in
-    let new_content =
-      match f () with
-      | Ok (s, _) -> Slipshow.delayed_to_string s
-      | Error (`Msg s) ->
-          Logs.warn (fun m -> m "%s" s);
-          s
-    in
-    content := new_content;
-    let _ =
-      (* We serve on [127.0.0.1] since in musl libc library, localhost would
+  Lwt_main.run
+    (Logs.app (fun m ->
+         m
+           "Visit http://127.0.0.1:8080 to view your presentation, with \
+            auto-reloading on file changes.");
+     let open Lwt.Syntax in
+     let content = ref "" in
+     let k s =
+       let new_content = Slipshow.delayed_to_string s in
+       content := new_content;
+       Lwt_condition.broadcast cond ()
+     in
+     let wac = watch_and_compile compile k in
+     let dream =
+       (* We serve on [127.0.0.1] since in musl libc library, localhost would
              trigger a DNS request (which might not resolve) *)
-      Dream.serve ~interface:"127.0.0.1"
-      @@ Dream.logger
-      @@ Dream.router
-           [
-             Dream.get "/" (fun _ ->
-                 Dream.log "A browser reloaded";
-                 Dream.html html_source);
-             Dream.get "/now" (fun _ ->
-                 Dream.respond
-                   ~headers:[ ("Content-Type", "text/plain") ]
-                   !content);
-             Dream.get "/onchange" (fun _ ->
-                 let* () = Lwt_condition.wait cond in
-                 Dream.respond
-                   ~headers:[ ("Content-Type", "text/plain") ]
-                   !content);
-           ]
-    in
-    let callback filename =
-      if String.equal filename input_filename then (
-        Logs.app (fun m -> m "Recompiling");
-        let new_content =
-          match f () with
-          | Ok (s, _) -> Slipshow.delayed_to_string s
-          | Error (`Msg s) ->
-              Logs.warn (fun m -> m "%s" s);
-              s
-        in
-        content := new_content;
-        Lwt_condition.broadcast cond ());
-      Lwt.return_unit
-    in
-    let* unwatch = Irmin_watcher.hook 0 parent callback in
-    wait_forever unwatch
-  in
-  Logs.app (fun m ->
-      m
-        "Visit http://127.0.0.1:8080 to view your presentation, with \
-         auto-reloading on file changes.");
-  Lwt_main.run @@ do_serve input f
+       Dream.serve ~interface:"127.0.0.1"
+       @@ Dream.logger
+       @@ Dream.router
+            [
+              Dream.get "/" (fun _ ->
+                  Dream.log "A browser reloaded";
+                  Dream.html html_source);
+              Dream.get "/now" (fun _ ->
+                  Dream.respond
+                    ~headers:[ ("Content-Type", "text/plain") ]
+                    !content);
+              Dream.get "/onchange" (fun _ ->
+                  let* () = Lwt_condition.wait cond in
+                  Dream.respond
+                    ~headers:[ ("Content-Type", "text/plain") ]
+                    !content);
+            ]
+     in
+     Lwt.both dream wac)
+  |> snd

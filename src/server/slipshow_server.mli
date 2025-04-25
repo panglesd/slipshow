@@ -1,5 +1,4 @@
 val do_serve :
-  Fpath.t ->
   (unit -> (Slipshow.delayed * Fpath.Set.t, [ `Msg of string ]) result) ->
   (unit, [ `Msg of string ]) result
 
