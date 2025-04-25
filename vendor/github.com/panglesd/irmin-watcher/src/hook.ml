@@ -79,10 +79,10 @@ let id = ref 0
 let v ~wait_for_changes ~dir callback =
   let n = !id in
   incr id;
-  wait_for_changes () >>= fun event ->
-  (match event with `Unknown -> read_files dir | `File f -> Lwt.return Digests.empty)
-  >|= fun files ->
-  Core.stoppable (fun () ->
+  Lwt.return @@ Core.stoppable (fun () ->
+      wait_for_changes () >>= fun event ->
+      (match event with `Unknown -> read_files dir | `File f -> Lwt.return Digests.empty)
+      >>= fun files ->
       poll n ~callback ~wait_for_changes dir files event)
 
 (*---------------------------------------------------------------------------
