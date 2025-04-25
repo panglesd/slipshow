@@ -1,6 +1,45 @@
 open Cmarkit
 
-let of_cmarkit resolve_images read_file =
+module Path_entering : sig
+  (** Path are relative to the file we are reading. When we include a file we
+      need to interpret the path as relative to it.
+
+      Since we only have access to fold and maps, but not to "lift maps", we use
+      some state. *)
+
+  type t
+
+  val make : unit -> t
+  val in_path : t -> Fpath.t -> (unit -> 'a) -> 'a
+  val relativize : t -> Fpath.t -> Fpath.t
+end = struct
+  type t = Fpath.t Stack.t
+
+  let make = Stack.create
+
+  let in_path path_stack p f =
+    Stack.push p path_stack;
+    let res = f () in
+    ignore @@ Stack.pop path_stack;
+    res
+
+  let relativize path_stack p =
+    let rec do_ l acc =
+      match l with [] -> acc | p :: q -> do_ q (Fpath.( // ) p acc)
+    in
+    do_ (path_stack |> Stack.to_seq |> List.of_seq) p
+end
+
+let resolve_image ps ~read_file s =
+  let uri =
+    match Asset.Uri.of_string s with
+    | Link s -> Asset.Uri.Link s
+    | Path p -> Path (Path_entering.relativize ps p)
+  in
+  Asset.of_uri ~read_file uri
+
+let of_cmarkit read_file =
+  let current_path = Path_entering.make () in
   let block m = function
     | Block.Block_quote ((bq, (attrs, meta2)), meta) ->
         if Attributes.mem "blockquote" attrs then Mapper.default
@@ -26,11 +65,9 @@ let of_cmarkit resolve_images read_file =
         ret
     | Block.Ext_standalone_attributes (attrs, meta) -> (
         match
-          ( Attributes.find "include" attrs,
-            Attributes.find "src" attrs,
-            read_file )
+          (Attributes.find "include" attrs, Attributes.find "src" attrs)
         with
-        | Some (_, None), Some (_, Some (src, _)), Some read_file -> (
+        | Some (_, None), Some (_, Some (src, _)) -> (
             (* This is a horrible hack due to the fact that our current attribute
                parsing leaves the quotes...
 
@@ -44,16 +81,22 @@ let of_cmarkit resolve_images read_file =
                 String.sub src 1 (String.length src - 2)
               else src
             in
-            (* TODO: needs to be from the current files dir *)
-            match read_file src with
+            let relativized_path =
+              Path_entering.relativize current_path (Fpath.v src)
+            in
+            match read_file relativized_path with
             | Error (`Msg err) ->
-                print_endline err;
+                Logs.warn (fun m ->
+                    m "Could not read %a: %s" Fpath.pp relativized_path err);
                 Mapper.default
-            | Ok contents -> (
+            | Ok None -> Mapper.default
+            | Ok (Some contents) -> (
                 let md =
                   Cmarkit.Doc.of_string ~heading_auto_ids:true ~strict:false
                     contents
                 in
+                Path_entering.in_path current_path (Fpath.parent (Fpath.v src))
+                @@ fun () ->
                 match Mapper.map_block m (Doc.block md) with
                 | None -> Mapper.default
                 | Some mapped_blocks ->
@@ -76,9 +119,9 @@ let of_cmarkit resolve_images read_file =
                   (label ld, layout ld, defined_label ld, dest ld, title ld)
               in
               let dest =
-                match resolve_images dest with
-                | Ast.Remote s -> s
-                | Local { mime_type; content } ->
+                match resolve_image current_path ~read_file dest with
+                | Asset.Remote s -> s
+                | Asset.Local { mime_type; content } ->
                     let mime_type = Option.value ~default:"" mime_type in
                     let base64 = Base64.encode_string content in
                     Format.sprintf "data:%s;base64,%s" mime_type base64

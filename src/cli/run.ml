@@ -18,38 +18,16 @@ module Io = struct
     with exn -> Error (`Msg (Printexc.to_string exn))
 end
 
-(* https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types#image_types *)
-let mime_of_ext = function
-  | "apng" -> Some "image/apng" (* Animated Portable Network Graphics (APNG) *)
-  | "avif" -> Some "image/avif" (*  AV1 Image File Format (AVIF) *)
-  | "gif" -> Some "image/gif" (* Graphics Interchange Format (GIF) *)
-  | "jpeg" ->
-      Some "image/jpeg" (* Joint Photographic Expert Group image (JPEG) *)
-  | "png" -> Some "image/png" (* Portable Network Graphics (PNG) *)
-  | "svg+xml" -> Some "image/svg+xml" (* Scalable Vector Graphics (SVG) *)
-  | "webp" -> Some "image/webp" (* Web Picture format (WEBP) *)
-  | _ -> None
-
-let to_asset input () =
+let read_file input () =
   let l = ref Fpath.Set.empty in
   let parent = Fpath.parent input in
   ( l,
     fun s ->
-      if
-        Astring.String.is_infix ~affix:"://" s
-        || String.starts_with ~prefix:"//" s
-      then Slipshow.Remote s
-      else
-        let fp = Fpath.normalize @@ Fpath.( // ) parent @@ Fpath.v s in
-        l := Fpath.Set.add fp !l;
-        match Io.read (`File fp) with
-        | Ok content ->
-            let mime_type = mime_of_ext (Fpath.get_ext fp) in
-            Local { mime_type; content }
-        | Error (`Msg e) ->
-            Logs.warn (fun f ->
-                f "Could not read file: %s. Considering it as an URL. (%s)" s e);
-            Remote s )
+      let ( // ) = Fpath.( // ) in
+      let fp = Fpath.normalize @@ (Fpath.v (Sys.getcwd ()) // parent // s) in
+      l := Fpath.Set.add fp !l;
+      let+ res = Io.read (`File fp) in
+      Some res )
 
 let parse_theme to_asset theme =
   match Themes.of_string theme with
@@ -57,26 +35,31 @@ let parse_theme to_asset theme =
   | None -> `External (to_asset theme)
 
 let compile ~input ~output ~math_link ~css_links ~theme =
-  let used_files, to_asset =
-    to_asset (match input with `Stdin -> Fpath.v "./" | `File f -> f) ()
+  let asset_files, to_asset =
+    let used_files, read_file = read_file (Fpath.v "./") () in
+    (used_files, Slipshow.Asset.of_string ~read_file)
   in
   let math_link = Option.map to_asset math_link in
   let css_links = List.map to_asset css_links in
   let theme = Option.map (parse_theme to_asset) theme in
   let* content = Io.read input in
-  let html =
-    Slipshow.convert ?math_link ~resolve_images:to_asset ~css_links ?theme
-      content
+  let used_files, read_file =
+    read_file (match input with `Stdin -> Fpath.v "./" | `File f -> f) ()
   in
+  let html = Slipshow.convert ?math_link ~css_links ?theme ~read_file content in
+  let all_used_files = Fpath.Set.union !asset_files !used_files in
   match output with
   | `Stdout ->
       print_string html;
-      Ok !used_files
+      Ok all_used_files
   | `File output -> (
       let+ () = Io.write output html in
       match input with
       | `Stdin -> !used_files
-      | `File f -> Fpath.Set.add f !used_files)
+      | `File f ->
+          Fpath.Set.add
+            (Fpath.normalize (Fpath.( // ) (Fpath.v (Sys.getcwd ())) f))
+            all_used_files)
 
 let watch ~input ~output ~math_link ~css_links ~theme =
   let input = `File input and output = `File output in
@@ -88,18 +71,26 @@ let watch ~input ~output ~math_link ~css_links ~theme =
 
 let serve ~input ~output ~math_link ~css_links ~theme =
   let compile () =
-    let used_files, to_asset = to_asset input () in
+    let asset_files, to_asset =
+      let used_files, read_file = read_file (Fpath.v "./") () in
+      (used_files, Slipshow.Asset.of_string ~read_file)
+    in
     let math_link_asset = Option.map to_asset math_link in
     let css_links = List.map to_asset css_links in
     let* content = Io.read (`File input) in
     let theme = Option.map (parse_theme to_asset) theme in
+    let used_files, read_file = read_file input () in
     let result =
-      Slipshow.delayed ~css_links ?math_link:math_link_asset ?theme
-        ~resolve_images:to_asset content
+      Slipshow.delayed ~css_links ?math_link:math_link_asset ?theme ~read_file
+        content
     in
+    let all_used_files = Fpath.Set.union !asset_files !used_files in
     let html = Slipshow.add_starting_state result None in
     let+ () = Io.write output html in
-    (result, Fpath.Set.add input !used_files)
+    ( result,
+      Fpath.Set.add
+        (Fpath.normalize (Fpath.( // ) (Fpath.v (Sys.getcwd ())) input))
+        all_used_files )
   in
   Slipshow_server.do_serve compile
 
