@@ -41,9 +41,9 @@ let to_asset input () =
       then Slipshow.Remote s
       else
         let fp = Fpath.normalize @@ Fpath.( // ) parent @@ Fpath.v s in
+        l := Fpath.Set.add fp !l;
         match Io.read (`File fp) with
         | Ok content ->
-            l := Fpath.Set.add fp !l;
             let mime_type = mime_of_ext (Fpath.get_ext fp) in
             Local { mime_type; content }
         | Error (`Msg e) ->
@@ -87,20 +87,19 @@ let watch ~input ~output ~math_link ~css_links ~theme =
   Slipshow_server.do_watch compile
 
 let serve ~input ~output ~math_link ~css_links ~theme =
-  let _recorded_assets, to_asset = to_asset input () in
-  let input_f = `File input and output = `File output in
-  let math_link_asset = Option.map to_asset math_link in
   let compile () =
-    let* content = Io.read input_f in
-    let* used_files =
-      compile ~input:input_f ~output ~math_link ~css_links ~theme
-    in
+    let used_files, to_asset = to_asset input () in
+    let math_link_asset = Option.map to_asset math_link in
+    let css_links = List.map to_asset css_links in
+    let* content = Io.read (`File input) in
     let theme = Option.map (parse_theme to_asset) theme in
     let result =
-      Slipshow.delayed ?math_link:math_link_asset ?theme
+      Slipshow.delayed ~css_links ?math_link:math_link_asset ?theme
         ~resolve_images:to_asset content
     in
-    Ok (result, used_files)
+    let html = Slipshow.add_starting_state result None in
+    let+ () = Io.write output html in
+    (result, Fpath.Set.add input !used_files)
   in
   Slipshow_server.do_serve compile
 

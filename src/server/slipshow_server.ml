@@ -50,8 +50,13 @@ let watch_and_compile compile k =
               let+ map = map in
               Fpath.Map.add dir u map
           | None ->
-              let+ u = watch dir and+ map = map in
-              Fpath.Map.add dir u map)
+              if
+                try Sys.is_directory (Fpath.to_string dir)
+                with Sys_error _ -> false
+              then
+                let+ u = watch dir and+ map = map in
+                Fpath.Map.add dir u map
+              else map)
         (Fpath.Set.map
            (* Fold on the parent's set to avoid duplication on file's parent dir *)
            (fun file -> file |> Fpath.parent |> Fpath.normalize)
@@ -68,7 +73,9 @@ let watch_and_compile compile k =
       Fpath.Map.fold
         (fun dir unwatch acc ->
           let* () = acc in
-          if not (Fpath.Map.mem dir new_listened_directories) then unwatch ()
+          if not (Fpath.Map.mem dir new_listened_directories) then (
+            Logs.info (fun m -> m "Unwatching: %a" Fpath.pp dir);
+            unwatch ())
           else Lwt.return ())
         !listened_directories Lwt.return_unit
     in
