@@ -16,6 +16,10 @@
 - Fix file watching issues by vendoring a (modified) irmin-watcher, and watching
   all files the presentation depends on (images, themes, ...) (#113)
 
+### Language
+
+- Add `{include src="path/to/file.md"}` to include a file in another (#114)
+
 ### Engine
 
 - Allow to focus on multiple elements. Zooms as much as possible so everything
