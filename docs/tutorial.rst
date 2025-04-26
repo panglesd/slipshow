@@ -1,11 +1,9 @@
-.. _tutorial:
-
 Tutorial
 ========
 
 This tutorial assumes you have access to the slipshow compiler. If you are only
 interested in trying out slipshow before deciding to install it (or not), you
-can use the `sliphub editor<sliphub.choum.net/new>`_: it requires no installation
+can use the `sliphub editor <https://sliphub.choum.net/new>`_: it requires no installation
 on your computer, nor to create any account!
 
 If you do want to use slipshow, we recommand completing the
@@ -37,7 +35,7 @@ In this tutorial, you will create your first slipshow presentation. It is
 entirely self-contained, and introduces both the usage, the syntax and the
 different features of slipshow. Once you are familiar with the basics, for a
 complete overview of each of these, you should refer to the reference: the
-:ref:`syntax`, and :ref:`API`.
+:ref:`Syntax reference`.
 
 ..
    Writing slips should not differ too much from writing beamer presentation, when not using any of the advanced functionalities: there an delimiters for . The syntax is different, and there are 
@@ -146,7 +144,7 @@ Fortunately, Markdown is very simple! And is already widely used. So instead of 
 
 The `Learn Markdown in 60 seconds <https://commonmark.org/help/>`_ is from CommonMark, the organization that proposed a well-defined specification for Markdown. They also have a 10-minute tutorial to learn but also train!
 
-The slipshow syntax is defined in  :ref:`syntax`. In this tutorial, let's only focus on the syntax used in the example.
+The slipshow syntax is defined in :ref:`Syntax reference`. In this tutorial, let's only focus on the syntax used in the example.
 
 Pauses
 """"""
