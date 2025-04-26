@@ -1,0 +1,2 @@
+available: arch != "arm32" & arch != "x86_32"
+x-maintenance-intent: [ "(latest)" ]
