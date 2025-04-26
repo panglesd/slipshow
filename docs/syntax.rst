@@ -1,5 +1,5 @@
 ==================
- Syntax reference
+Syntax reference
 ==================
 
 The slipshow syntax can be described in several parts.
@@ -14,9 +14,9 @@ Defining a document
 The slipshow syntax is based on CommonMark, whose syntax is well `specified <https://spec.commonmark.org>`_. The "`60 second to learn Markdown <https://commonmark.org/help/>`_" is a good and quick way to learn the syntax.
 
 Some extensions to CommonMarkd are quite common, and available in the slipshow syntax:
-- The table extension, as specified `here <https://github.github.com/gfm/#tables-extension->`_.
-- The math extension, as specified `here <https://erratique.ch/software/cmarkit/doc/Cmarkit/index.html#ext_math>`_.
-- The strikethrough extension, as specified `here <https://erratique.ch/software/cmarkit/doc/Cmarkit/index.html#ext_strikethrough>`_.
+- The table extension, as specified `here <https://github.github.com/gfm/#tables-extension->`__.
+- The math extension, as specified `here <https://erratique.ch/software/cmarkit/doc/Cmarkit/index.html#ext_math>`__.
+- The strikethrough extension, as specified `here <https://erratique.ch/software/cmarkit/doc/Cmarkit/index.html#ext_strikethrough>`__.
 
 
 .. warning::
@@ -58,7 +58,7 @@ See the next section for the content on the attributes. If you want to add an at
 
 An attribute cannot have line breaks. However, if two lines of attributes are in a row, they are merged.
 
-An attribute that is followed by an empty line is a _standalone attribute_. They are useful in the context of slipshow, to give an instruction (such as a pause) in the flow of the presentation, without being tied to a specific element!
+An attribute that is followed by an empty line is a *standalone attribute*. They are useful in the context of slipshow, to give an instruction (such as a pause) in the flow of the presentation, without being tied to a specific element!
 
 .. code-block:: markdown
 
@@ -127,7 +127,7 @@ Key-value attributes are defined using an equal sign (``=``). They need a key, a
 Some attribute can be used both as a flag attribute and as a key-value attribute.
 
 List of classes
----------------
+===============
 
 The following classes are meant to be added to a block element, and will display the element as a presentation block. They all accept a ``title=...`` attributes.
 
@@ -140,10 +140,10 @@ The following classes are meant to be added to a block element, and will display
 - ``remark`` to display a remark.
 
 List of attributes
-------------------
+==================
 
 Pause attributes
-~~~~~~~~~~~~~~~~
+----------------
 
 ``pause``
   The pause attribute tells the slipshow engine that there is going to be a pause at this element. This element and every element after that in the document will be hidden.
@@ -154,7 +154,7 @@ Pause attributes
   Same as ``pause``, but no elements is hidden. Only used to activate effects when consumed.
 
 Action attributes
-~~~~~~~~~~~~~~~~~
+-----------------
 
 These attributes are actions that will be executed when a ``pause`` or ``step`` attribute attached to the same element is consumed. All of them accepts a value, consisting of the ``id`` of an element to apply the action to.
 
@@ -189,7 +189,7 @@ These attributes are actions that will be executed when a ``pause`` or ``step`` 
   Execute the slipscript. Possible to specify multiple ids.
 
 Custom scripts
---------------
+==============
 
 Use a slipscript code block to add a script, and ``exec-at-unpause`` to execute it.
 
@@ -207,6 +207,7 @@ one (but not the preferred one) is return an undo function:
 .. code-block:: markdown
 
 		{pause exec-at-unpause}
+
 		```slip-script
                 let elem = document.querySelector("#id")
 		let old_value = elem.style.opacity;
@@ -217,7 +218,10 @@ one (but not the preferred one) is return an undo function:
 However this is not always easy to compose. The other option is to use
 the ``slip.onUndo`` function to register callbacks to be run on undo.
 
+.. code-block:: markdown
+
 		{pause exec-at-unpause}
+
 		```slip-script
                 let i = 0
                 let incr = () => {
@@ -264,6 +268,7 @@ Finally, the ``slip.state`` object is persisted between scripts. (Other function
 Use it with ``slip.setProp`` to not forget undoing the changes!
 
 .. code-block:: markdown
+
 		{pause exec-at-unpause}
 		```slip-script
                 log = function (slip, x) { // slip needs to be passed
