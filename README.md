@@ -1,6 +1,10 @@
-# slipshow
+<div align="center"><img alt="Slipshow" width="20%" src=https://choum.net/panglesd/logo-slipshow.svg> 
+  
+ [Introduction](#slipshow-and-scrolling-presentations) [Documentation](#tutorial-api-and-documentation) [Examples](#examples) [Quickstart](#quick-start)</div>
 
-**Slipshow is a tool specifically designed for technical presentations where traditional slides are not enough.**
+---
+
+## **Slipshow and scrolling presentations.**
 
 In a slipshow presentation, the equivalent of a slide is called a _slip_. Each slip is like a slide, but with no bottom limit. That is, the content can be arbitrarily long! During the presentation, the camera will "scroll" down to reveal the hidden content, following a script given by the presenter!
 
