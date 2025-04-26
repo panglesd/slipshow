@@ -142,6 +142,28 @@ The following classes are meant to be added to a block element, and will display
 List of attributes
 ==================
 
+Special attributes
+------------------
+
+Those are attributes that are interpreted by the compiler in a special way
+
+``include`` and ``src="path/to/file.md"``
+  The ``include`` and ``src`` attributes allow to include a file in another. They have to be used together. Te result is the same as if the file at the path was inlined in the file containing the include, with relative path inside the inlined file updated.
+
+  This allows to split the input file in multiple parts:
+
+  .. code-block:: markdown
+
+     # My presentation
+
+     ## Part 1
+
+     {include src=part1/index.md}
+
+     ## Part 2
+
+     {include src=part2/index.md}
+
 Pause attributes
 ----------------
 
