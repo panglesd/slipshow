@@ -5,6 +5,14 @@
   border: 1px solid transparent;
 }
 
+.slide {
+  width: 1440px;
+  height: 1080px;
+  transform-origin: top left;
+  /* Borders make margin of inner elements not leak outside */
+  border: 1px solid transparent;
+}
+
 .slipshow-rescaler {
   overflow-x: hidden;
   overflow-y: hidden;
