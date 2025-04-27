@@ -11,10 +11,11 @@
 - Add a `--theme` argument and a command to list the themes: `slipshow themes
   list` (#109)
 
-### Compile
+### Compiler
 
 - Fix file watching issues by vendoring a (modified) irmin-watcher, and watching
   all files the presentation depends on (images, themes, ...) (#113)
+- Adds a favicon to the presentation file (#115)
 
 ### Language
 
