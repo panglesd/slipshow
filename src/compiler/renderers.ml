@@ -93,6 +93,16 @@ let custom_html_renderer =
       | Ast.Included ((b, (attrs, _)), _) | Ast.Div ((b, (attrs, _)), _) ->
           RenderAttrs.with_attrs c attrs (fun () -> Context.block c b);
           true
+      | Ast.Slide ((slide, (attrs, _)), _) ->
+          let () =
+            RenderAttrs.in_block c "div"
+              (Attributes.make ~class':[ ("slipshow-rescaler", Meta.none) ] ())
+            @@ fun () ->
+            RenderAttrs.in_block c "div"
+              (Attributes.add_class attrs ("slide", Meta.none))
+            @@ fun () -> Context.block c slide
+          in
+          true
       | Ast.SlipScript ((cb, (attrs, _)), _) ->
           let attrs =
             Attributes.add ("type", Meta.none)

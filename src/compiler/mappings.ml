@@ -43,6 +43,13 @@ let of_cmarkit read_file =
   let block m = function
     | Block.Block_quote ((bq, (attrs, meta2)), meta) ->
         if Attributes.mem "blockquote" attrs then Mapper.default
+        else if Attributes.mem "slide" attrs then
+          let b = Block.Block_quote.block bq in
+          let b =
+            match Mapper.map_block m b with None -> Block.empty | Some b -> b
+          in
+          let attrs = Mapper.map_attrs m attrs in
+          Mapper.ret (Ast.Slide ((b, (attrs, meta2)), meta))
         else
           let b = Block.Block_quote.block bq in
           let b =
