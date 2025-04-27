@@ -1,4 +1,4 @@
-<div align="center"><img alt="Slipshow" width="20%" src=https://choum.net/panglesd/logo-slipshow.svg> 
+<div align="center"><img alt="Slipshow" width="20%" src=logo/logo-slipshow.svg> 
   
  [Introduction](#slipshow-and-scrolling-presentations) [Documentation](#tutorial-api-and-documentation) [Examples](#examples) [Quickstart](#quick-start)</div>
 
