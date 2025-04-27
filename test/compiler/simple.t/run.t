@@ -99,5 +99,5 @@ With a file
 Images
 
   $ slipshow compile file_with_image.md
-  $ cat file_with_image.html | grep image | grep base64
+  $ cat file_with_image.html | grep "alt=\"image\"" | grep base64
                 <p><span>A paragraph with an </span><img src="data:;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAABg2lDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9bpaIVB4OIOGSoTnZREcdahSJUCLVCqw4ml35Bk4YkxcVRcC04+LFYdXBx1tXBVRAEP0BcXZwUXaTE/yWFFjEeHPfj3b3H3Tsg2KgwzeqKA5pum+lkQszmVsXwK/ogIIIhCDKzjDlJSsF3fN0jwNe7GM/yP/fn6FfzFgMCInGcGaZNvEE8s2kbnPeJBVaSVeJz4gmTLkj8yHXF4zfORZeDPFMwM+l5YoFYLHaw0sGsZGrE08RRVdMpP5j1WOW8xVmr1FjrnvyFkby+ssx1mqNIYhFLkCBCQQ1lVGAjRqtOioU07Sd8/COuXyKXQq4yGDkWUIUG2fWD/8Hvbq3C1KSXFEkA3S+O8zEGhHeBZt1xvo8dp3kChJ6BK73trzaA2U/S620tegQMbAMX121N2QMud4DhJ0M2ZVcK0QwWCsD7GX1TDhi8BXrXvN5a+zh9ADLUVeoGODgExouUve7z7p7O3v490+rvB2/RcqXOpP/kAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH5wsUDBghqFYBIAAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAACeSURBVBjTbY4xCoQwFEQny1aWCVFPkEKTK4SAeATv5wE8gjew+wpewV/aB9xC1Cz4qhkeDIPjYhzHruuGYTgScCciUkp571P9wYVzLsYopUTCd55nAHmen31dV2YuigIAM6OqKmPM6YQQAO4KQEzTtO87AGttWZZZlvV9T0QhhKZpnmvbthlj6rp+v/bKo5dlYea2bf98Oq61JqJ0/AfIKIeErZAqOwAAAABJRU5ErkJggg==" alt="image" ></p>
