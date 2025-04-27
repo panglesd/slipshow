@@ -48,6 +48,14 @@ let embed_in_page content ~has_math ~math_link ~css_links ~theme
   let highlight_js_ocaml_element =
     "<script>" ^ Data_files.(read Highlight_js_ocaml) ^ "</script>"
   in
+  let favicon_element =
+    let href =
+      let mime_type = "image/x-icon" in
+      let base64 = Base64.encode_string Data_files.(read Favicon) in
+      Format.sprintf "data:%s;base64,%s" mime_type base64
+    in
+    Format.sprintf {|<link rel="icon" type="image/x-icon" href="%s">|} href
+  in
   let start =
     Format.sprintf
       {|
@@ -55,6 +63,7 @@ let embed_in_page content ~has_math ~math_link ~css_links ~theme
 <html>
   <head>
     <meta charset="utf-8" />
+    %s
     %s
     %s
     %s
@@ -90,7 +99,7 @@ let embed_in_page content ~has_math ~math_link ~css_links ~theme
     <script>hljs.highlightAll();</script>
     <script>
       startSlipshow(|}
-      mathjax_element internal_css system_css theme css_elements
+      favicon_element mathjax_element internal_css system_css theme css_elements
       highlight_css_element highlight_js_element highlight_js_ocaml_element
       content slipshow_js_element
   in

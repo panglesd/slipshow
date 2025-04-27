@@ -2,6 +2,7 @@ type file =
   | Slipshow_js
   | Slip_internal_css
   | Slip_system_css
+  | Favicon
   | Mathjax_js
   | Highlight_js
   | Highlight_css
@@ -19,6 +20,7 @@ let read f =match f with
   | Slipshow_js -> [%blob "src/engine/slipshow.js"]
   | Slip_internal_css -> [%blob "src/engine/slipshow-internal.css"]
   | Slip_system_css -> [%blob "src/engine/slipshow-system.css"]
+  | Favicon -> [%blob "logo/favicon.ico"]
   | _ ->
      Data_contents.read (string_of_file f)
      |> function
