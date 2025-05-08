@@ -12,7 +12,8 @@ let static elem =
 
 let focus window elems =
   let> () = State.Focus.push (Universe.State.get_coord ()) in
-  Universe.Window.focus window elems
+  (* We focus 1px more in order to avoid off-by-one error due to round errors *)
+  Universe.Window.focus ~margin:(-1.) window elems
 
 let unfocus window () =
   let> coord = State.Focus.pop () in
