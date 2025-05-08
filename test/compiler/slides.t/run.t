@@ -10,14 +10,14 @@ We can compile the file using the slip_of_mark binary
           <div class="slipshow-rescaler">
   <div class="slip">
   <div class="slip-body">
-  <div class="slipshow-rescaler">
-  <div id="idslide" class="slide" slide>
-  <p><span>Hello this is a slide</span></p>
-  <div class="slipshow-rescaler">
-  <div class="slide" slide>
-  <p><span>Hello !</span></p>
-  <div class="slipshow-rescaler">
-  <div class="slide" slide>
-  <p><span>Hello !</span></p>
+  <div style="display: flex">
+  <div id="slide1" class="slipshow-rescaler" style="flex: 1 1 auto;" slide>
+  <div class="slide">
+  <div class="slide-body">
+  <p><span>Aren’t you just bored with all those slides-based presentations?</span></p>
+  </div>
+  </div>
+  </div>
+  <div id="slide2" class="slipshow-rescaler" style="flex: 1 1 auto;" slide>
 
   $ cp slides.html /tmp/
