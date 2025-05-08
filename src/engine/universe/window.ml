@@ -94,13 +94,20 @@ let move_relative ?(x = 0.) ?(y = 0.) ?(scale = 1.) window ~delay =
 let move_relative_pure ?(x = 0.) ?(y = 0.) ?(scale = 1.) window ~delay =
   move_relative ~x ~y ~scale window ~delay |> Undoable.discard
 
-let focus window elems =
+let focus ?(margin = 0.) window elems =
   let coords_e = List.map Coordinates.get elems in
+  let coords_e =
+    List.map
+      (fun (c : Coordinates.element) ->
+        { c with width = c.width +. margin; height = c.height +. margin })
+      coords_e
+  in
   let current = State.get_coord () in
   let coords_w = Coordinates.Window_of_elem.focus ~current coords_e in
   move window coords_w ~delay:1.
 
-let focus_pure window elem = focus window elem |> Undoable.discard
+let focus_pure ?margin window elem =
+  focus ?margin window elem |> Undoable.discard
 
 let enter window elem =
   let coords_e = Coordinates.get elem in
