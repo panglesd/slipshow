@@ -6,9 +6,8 @@
 }
 
 .slide {
-    height: calc(1080px - 60px - 2px);
-    width: calc(1440px - 60px - 2px);
-    padding: 30px
+    height: calc(1080px - 2px);
+    width: calc(1440px - 2px);
 }
 
 .slipshow-rescaler {
