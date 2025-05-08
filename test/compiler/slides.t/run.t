@@ -8,9 +8,9 @@ We can compile the file using the slip_of_mark binary
         <div id="slipshow-content">
           <svg id="slipshow-drawing-elem" style="overflow:visible; position: absolute; z-index:1000"></svg>
           <div class="slipshow-rescaler">
-            <div class="slip">
-              <div class="slip-body">
-                <div class="slipshow-rescaler">
+  <div class="slip">
+  <div class="slip-body">
+  <div class="slipshow-rescaler">
   <div id="idslide" class="slide" slide>
   <p><span>Hello this is a slide</span></p>
   <div class="slipshow-rescaler">
