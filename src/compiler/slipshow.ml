@@ -33,11 +33,7 @@ let slipshow_js_element slipshow_link =
   | Some (Remote r) -> Format.sprintf "<script src=\"%s\"></script>" r
   | None -> Format.sprintf "<script>%s</script>" Data_files.(read Slipshow_js)
 
-let embed_in_page content ~has_math ~math_link ~css_links ~theme
-    ~slipshow_js_link =
-  let mathjax_element = mathjax_element has_math math_link in
-  let css_elements = List.map css_element css_links |> String.concat "" in
-  let slipshow_js_element = slipshow_js_element slipshow_js_link in
+let head ~theme ~has_math ~math_link ~css_links =
   let theme = theme_css theme in
   let highlight_css_element =
     "<style>" ^ Data_files.(read Highlight_css) ^ "</style>"
@@ -56,6 +52,25 @@ let embed_in_page content ~has_math ~math_link ~css_links ~theme
     in
     Format.sprintf {|<link rel="icon" type="image/x-icon" href="%s">|} href
   in
+  let mathjax_element = mathjax_element has_math math_link in
+  let css_elements = List.map css_element css_links |> String.concat "" in
+  String.concat "\n"
+    [
+      favicon_element;
+      mathjax_element;
+      internal_css;
+      system_css;
+      theme;
+      css_elements;
+      highlight_css_element;
+      highlight_js_element;
+      highlight_js_ocaml_element;
+    ]
+
+let embed_in_page content ~has_math ~math_link ~css_links ~theme
+    ~slipshow_js_link =
+  let head = head ~has_math ~math_link ~css_links ~theme in
+  let slipshow_js_element = slipshow_js_element slipshow_js_link in
   let start =
     Format.sprintf
       {|
@@ -63,14 +78,6 @@ let embed_in_page content ~has_math ~math_link ~css_links ~theme
 <html>
   <head>
     <meta charset="utf-8" />
-    %s
-    %s
-    %s
-    %s
-    %s
-    %s
-    %s
-    %s
     %s
   </head>
   <body>
@@ -93,9 +100,7 @@ let embed_in_page content ~has_math ~math_link ~css_links ~theme
     <script>hljs.highlightAll();</script>
     <script>
       startSlipshow(|}
-      favicon_element mathjax_element internal_css system_css theme css_elements
-      highlight_css_element highlight_js_element highlight_js_ocaml_element
-      content slipshow_js_element
+      head content slipshow_js_element
   in
   let end_ = {|);
     </script>
