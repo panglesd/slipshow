@@ -96,20 +96,20 @@ let custom_html_renderer =
       | Ast.Slide ((slide, (attrs, _)), _) ->
           let () =
             RenderAttrs.in_block c "div"
-              (Attributes.make ~class':[ ("slipshow-rescaler", Meta.none) ] ())
+              (Attributes.add_class attrs ("slipshow-rescaler", Meta.none))
             @@ fun () ->
             RenderAttrs.in_block c "div"
-              (Attributes.add_class attrs ("slide", Meta.none))
+              (Attributes.make ~class':[ ("slide", Meta.none) ] ())
             @@ fun () -> Context.block c slide
           in
           true
       | Ast.Slip ((slip, (attrs, _)), _) ->
           let () =
             RenderAttrs.in_block c "div"
-              (Attributes.make ~class':[ ("slipshow-rescaler", Meta.none) ] ())
+              (Attributes.add_class attrs ("slipshow-rescaler", Meta.none))
             @@ fun () ->
             RenderAttrs.in_block c "div"
-              (Attributes.add_class attrs ("slip", Meta.none))
+              (Attributes.make ~class':[ ("slip", Meta.none) ] ())
             @@ fun () ->
             RenderAttrs.in_block c "div"
               (Attributes.make ~class':[ ("slip-body", Meta.none) ] ())
