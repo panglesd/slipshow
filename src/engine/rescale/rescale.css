@@ -1,18 +1,20 @@
 .slip, .slide {
   width: 1438px;
-  padding: -1px;
   transform-origin: top left;
   /* Borders make margin of inner elements not leak outside */
   border: 1px solid transparent;
 }
 
 .slide {
-  height: 1078px;
+    height: calc(1080px - 60px - 2px);
+    width: calc(1440px - 60px - 2px);
+    padding: 30px
 }
 
 .slipshow-rescaler {
-  overflow-x: hidden;
-  overflow-y: hidden;
+  /* overflow-x: hidden; */
+  /* overflow-y: hidden; */
+  /* Whether or not to hide what's outside of rescalers is not clear. */
   width: unset;
   height: unset;
 }
