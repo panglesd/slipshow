@@ -1,8 +1,8 @@
 We can compile the file using the slip_of_mark binary
 
-  $ slipshow compile file.md
+  $ slipshow compile slides.md
 
-  $ cat file.html | grep "<body>" -A 15
+  $ cat slides.html | grep "<body>" -A 15
     <body>
       <div id="slipshow-main">
         <div id="slipshow-content">
@@ -13,11 +13,11 @@ We can compile the file using the slip_of_mark binary
                 <div class="slipshow-rescaler">
   <div id="idslide" class="slide" slide>
   <p><span>Hello this is a slide</span></p>
-  </div>
-  </div>
-  <p><span>Hello</span></p>
-  <p focus-at-unpause=idslide pause><span>yo</span></p>
-  <style>
-    #idslide {
+  <div class="slipshow-rescaler">
+  <div class="slide" slide>
+  <p><span>Hello !</span></p>
+  <div class="slipshow-rescaler">
+  <div class="slide" slide>
+  <p><span>Hello !</span></p>
 
-  $ cp file.html /tmp/
+  $ cp slides.html /tmp/

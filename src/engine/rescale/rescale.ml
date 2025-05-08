@@ -17,8 +17,10 @@ let setup_rescalers () =
   let rescaled_rescaler entry =
     match El.children ~only_els:true entry with
     | [ c ] ->
-        let scale = El.inner_w entry /. El.inner_w c in
-        let height = El.inner_h c *. scale in
+        let scale =
+          El.inner_w entry /. (El.inner_w c +. 2. (* The borders *))
+        in
+        let height = (El.inner_h c +. 2. (* The borders *)) *. scale in
         fun () ->
           let string_of_float x =
             (* [string_of_int] outputs floats with not decimal part with a trailing
