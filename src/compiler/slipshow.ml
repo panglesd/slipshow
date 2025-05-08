@@ -77,13 +77,7 @@ let embed_in_page content ~has_math ~math_link ~css_links ~theme
     <div id="slipshow-main">
       <div id="slipshow-content">
         <svg id="slipshow-drawing-elem" style="overflow:visible; position: absolute; z-index:1000"></svg>
-        <div class="slipshow-rescaler">
-          <div class="slip">
-            <div class="slip-body">
-              %s
-            </div>
-          </div>
-        </div>
+        %s
       </div>
       <div id="slip-touch-controls">
         <div class="slip-previous">←</div>
@@ -128,6 +122,12 @@ let delayed ?math_link ?(css_links = []) ?(theme = `Builtin Themes.Default)
     ?slipshow_js_link ?(read_file = fun _ -> Ok None) s =
   let md = Cmarkit.Doc.of_string ~heading_auto_ids:true ~strict:false s in
   let md = Cmarkit.Mapper.map_doc (Mappings.of_cmarkit read_file) md in
+  let md =
+    Cmarkit.Doc.make
+    @@ Ast.Slip
+         ( (Cmarkit.Doc.block md, (Cmarkit.Attributes.empty, Cmarkit.Meta.none)),
+           Cmarkit.Meta.none )
+  in
   let content =
     Cmarkit_renderer.doc_to_string Renderers.custom_html_renderer md
   in
