@@ -80,9 +80,9 @@ If we pass a mathjax value, with a remote url:
   $ slipshow compile -o m3.html --mathjax https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js without_math.md
 
   $ cat m1.html | grep mathjax
-      <script id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   $ cat m2.html | grep mathjax
-      <script id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   $ cat m3.html | grep mathjax
   [1]
 
@@ -93,7 +93,7 @@ With a file
   slipshow: [WARNING] Could not read file: mathjax-unknown.js. Considering it as an URL. (mathjax-unknown.js: No such file or directory)
   $ slipshow compile -o m.html --mathjax mathjax.js with_inline_math.md
   $ cat m.html | grep -A 1 dummyABC
-      <script id="MathJax-script">dummyABC
+  <script id="MathJax-script">dummyABC
   </script>
 
 Images
