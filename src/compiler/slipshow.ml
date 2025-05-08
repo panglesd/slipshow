@@ -123,16 +123,17 @@ let convert_to_md ~read_file content =
   let sd = Cmarkit.Mapper.map_doc Mappings.to_cmarkit sd in
   Cmarkit_commonmark.of_doc ~include_attributes:false sd
 
-let delayed ?math_link ?(css_links = []) ?(theme = `Builtin Themes.Default)
-    ?slipshow_js_link ?(read_file = fun _ -> Ok None) s =
+let compile ?(read_file = fun _ -> Ok None) s =
   let md = Cmarkit.Doc.of_string ~heading_auto_ids:true ~strict:false s in
   let md = Cmarkit.Mapper.map_doc (Mappings.of_cmarkit read_file) md in
-  let md =
-    Cmarkit.Doc.make
-    @@ Ast.Slip
-         ( (Cmarkit.Doc.block md, (Cmarkit.Attributes.empty, Cmarkit.Meta.none)),
-           Cmarkit.Meta.none )
-  in
+  Cmarkit.Doc.make
+  @@ Ast.Slip
+       ( (Cmarkit.Doc.block md, (Cmarkit.Attributes.empty, Cmarkit.Meta.none)),
+         Cmarkit.Meta.none )
+
+let delayed ?math_link ?(css_links = []) ?(theme = `Builtin Themes.Default)
+    ?slipshow_js_link ?read_file s =
+  let md = compile ?read_file s in
   let content =
     Cmarkit_renderer.doc_to_string Renderers.custom_html_renderer md
   in

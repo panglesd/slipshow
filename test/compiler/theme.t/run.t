@@ -13,7 +13,7 @@ No theme provided or "--theme default" is the same
 In those cases, the default theme is included
 
   $ grep ".slip-body " default_theme1.html -A 3
-      <style>.slip-body {
+  <style>.slip-body {
     /* padding:60px; */
     margin-top: auto;
     margin-bottom: auto;
@@ -60,22 +60,22 @@ You can set a builtin theme
   [1]
  But local theme included:
   $ grep YOYO -A 1 local_theme.html
-      <style>YOYO
+  <style>YOYO
   </style>
 
 Remote themes also replace the default theme but are included with a link:
 
   $ slipshow compile --theme https://example.org file.md -o remote_theme.html
   $ grep example.org remote_theme.html
-      <link href="https://example.org" rel="stylesheet" />
+  <link href="https://example.org" rel="stylesheet" />
 
 Independently, an arbitrary number of css files can be included with "--css", without changing the theme:
 
   $ slipshow compile --css https://example.org file.md --css my_theme.css -o additional_css.html
   $ grep example.org additional_css.html
-      <link href="https://example.org" rel="stylesheet" /><style>YOYO
+  <link href="https://example.org" rel="stylesheet" /><style>YOYO
   $ grep YOYO -A 1 additional_css.html
-      <link href="https://example.org" rel="stylesheet" /><style>YOYO
+  <link href="https://example.org" rel="stylesheet" /><style>YOYO
   </style>
   $ grep ".slip-body " additional_css.html
-      <style>.slip-body {
+  <style>.slip-body {
