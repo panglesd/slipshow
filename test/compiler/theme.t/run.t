@@ -12,8 +12,8 @@ No theme provided or "--theme default" is the same
 
 In those cases, the default theme is included
 
-  $ grep ".slip-body " default_theme1.html -A 3
-  <style>.slip-body {
+  $ grep ".slip-body, " default_theme1.html -A 3
+  <style>.slip-body, .slide-body {
     /* padding:60px; */
     margin-top: auto;
     margin-bottom: auto;
@@ -77,5 +77,5 @@ Independently, an arbitrary number of css files can be included with "--css", wi
   $ grep YOYO -A 1 additional_css.html
   <link href="https://example.org" rel="stylesheet" /><style>YOYO
   </style>
-  $ grep ".slip-body " additional_css.html
-  <style>.slip-body {
+  $ grep ".slip-body, " additional_css.html
+  <style>.slip-body, .slide-body {
