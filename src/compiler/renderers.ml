@@ -100,6 +100,9 @@ let custom_html_renderer =
             @@ fun () ->
             RenderAttrs.in_block c "div"
               (Attributes.make ~class':[ ("slide", Meta.none) ] ())
+            @@ fun () ->
+            RenderAttrs.in_block c "div"
+              (Attributes.make ~class':[ ("slide-body", Meta.none) ] ())
             @@ fun () -> Context.block c slide
           in
           true
