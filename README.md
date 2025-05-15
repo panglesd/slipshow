@@ -64,13 +64,13 @@ Then, you can use the `slipshow` binary to compile a `.md` file to a slipshow pr
 
 ```shell
 # Compile file.md into file.html:
-$ slipshow compile -o file.html file.md
+$ slipshow compile file.md
 
 # Watch for changes in the file, automatically recompiling:
-$ slipshow compile -o file.html file.md --watch
+$ slipshow watch file.md
 
 # Watch for changes in the file, automatically recompiling and hot-reloadind the opened presentation:
-$ slipshow serve -o file.html file.md
+$ slipshow serve file.md
 ```
 
 You're ready to go! Have a look at the syntax, or the full tutorial for a more gentle introduction.

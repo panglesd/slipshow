@@ -99,16 +99,18 @@ This step depends on the way you have access to the slipshow compiler.
 		$ slipshow serve prime-numbers.md
 		Visit http://localhost:8080 to view your presentation, with auto-reloading on file changes.
 
-      This command (which do not return due to the ``--serve`` flag) creates a file
-      with the same name as the input name, but a different extension:
-      ``prime-numbers.html``. The ``.md`` file is the one you'll use to modify the
-      presentation, and the one you'll share with another author of the
-      presentation. The ``.html`` file is the one you'll use to view or do your
-      presentation, or to share with someone interested in viewing the presentation.
+      This ``serve`` command creates a file with the same name as the input
+      name, but a different extension: ``prime-numbers.html``. The ``.md`` file
+      is the one you'll use to modify the presentation, and the one you'll share
+      with another author of the presentation. The ``.html`` file is the one
+      you'll use to view or do your presentation, or to share with someone
+      interested in viewing the presentation.
 
-      The ``--serve`` flag is very useful when writing your presentation. It will
-      propagate any saved changes in the input file, and "live-reload" the
-      presentation served at the address ``http://localhost:8080``.
+      Moreover, the ``flag`` command will propagate any saved changes in the
+      input file, and "live-reload" the presentation served at the address
+      ``http://localhost:8080``. It is very useful when writing your
+      presentation. When you only want to generate the html file once, use
+      ``compile`` instead.
 
    .. tab:: In the slipshow editor
 
