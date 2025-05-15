@@ -50,4 +50,7 @@ val convert :
   string ->
   string
 
-val convert_to_md : string -> string
+val convert_to_md :
+  read_file:(Fpath.t -> (string option, [< `Msg of string ]) result) ->
+  string ->
+  string

@@ -24,6 +24,9 @@ module Mapper = struct
         let* b = Mapper.map_block m b in
         Some (Div ((b, attrs), meta))
     | SlipScript _ as b -> Some b
+    | Included ((b, attrs), meta) ->
+        let* b = Mapper.map_block m b in
+        Some (Included ((b, attrs), meta))
     | _ -> assert false
 
   let make = Mapper.make ~block_ext_default
