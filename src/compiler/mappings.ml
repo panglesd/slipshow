@@ -67,34 +67,29 @@ let get_attribute =
   | Block.Ext_footnote_definition _ -> None
   | Block.Ext_standalone_attributes _ -> None
   | Block.Ext_attribute_definition _ -> None
+  (* Slipshow nodes *)
+  | Ast.Included ((inc, attrs), meta) ->
+      Some (Ast.Included ((inc, no_attrs), meta), attrs)
+  | Ast.Div ((div, attrs), meta) -> Some (Ast.Div ((div, no_attrs), meta), attrs)
+  | Ast.Slide ((slide, attrs), meta) ->
+      Logs.err (fun m ->
+          m
+            "Slides should not appear here, this is an error on slipshow's \
+             side. Please report!");
+      Some (Ast.Slide ((slide, no_attrs), meta), attrs)
+  | Ast.Slip ((slip, attrs), meta) ->
+      Logs.err (fun m ->
+          m
+            "Slips should not appear here, this is an error on slipshow's \
+             side. Please report!");
+      Some (Ast.Slip ((slip, no_attrs), meta), attrs)
+  | Ast.SlipScript ((slscr, attrs), meta) ->
+      Some (Ast.SlipScript ((slscr, no_attrs), meta), attrs)
   | _ -> None
 
-let handle_special_function m c f =
-  let map block (attrs, meta2) =
-    let b =
-      match Mapper.map_block m block with None -> Block.empty | Some b -> b
-    in
-    let attrs = Mapper.map_attrs m attrs in
-    (b, (attrs, meta2))
-  in
-  match get_attribute c with
-  | None -> f c
-  | Some (block, (attrs, meta2)) when Attributes.mem "blockquote" attrs ->
-      let block, attrs = map block (attrs, meta2) in
-      let block = Block.Block_quote.make block in
-      Mapper.ret @@ Block.Block_quote ((block, attrs), Meta.none)
-  | Some (block, (attrs, meta2)) when Attributes.mem "slide" attrs ->
-      let block, attrs = map block (attrs, meta2) in
-      Mapper.ret @@ Ast.Slide ((block, attrs), Meta.none)
-  | Some (block, (attrs, meta2)) when Attributes.mem "slip" attrs ->
-      let block, attrs = map block (attrs, meta2) in
-      Mapper.ret @@ Ast.Slip ((block, attrs), Meta.none)
-  | Some _ -> f c
-
-let of_cmarkit read_file =
+let of_cmarkit_stage1 read_file =
   let current_path = Path_entering.make () in
-  let block m c =
-    handle_special_function m c @@ function
+  let block m = function
     | Block.Block_quote ((bq, (attrs, meta2)), meta) ->
         let b = Block.Block_quote.block bq in
         let b =
@@ -200,9 +195,41 @@ let of_cmarkit read_file =
   in
   Ast.Mapper.make ~block ~inline ~attrs ()
 
+let of_cmarkit_stage2 =
+  let block m c =
+    let map block (attrs, meta2) =
+      let b =
+        match Mapper.map_block m block with None -> Block.empty | Some b -> b
+      in
+      let attrs = Mapper.map_attrs m attrs in
+      (b, (attrs, meta2))
+    in
+    match get_attribute c with
+    | None -> Mapper.default
+    | Some (block, (attrs, meta2)) when Attributes.mem "blockquote" attrs ->
+        let block, attrs = map block (attrs, meta2) in
+        let block = Block.Block_quote.make block in
+        Mapper.ret @@ Block.Block_quote ((block, attrs), Meta.none)
+    | Some (block, (attrs, meta2)) when Attributes.mem "slide" attrs ->
+        let block, attrs = map block (attrs, meta2) in
+        Mapper.ret @@ Ast.Slide ((block, attrs), Meta.none)
+    | Some (block, (attrs, meta2)) when Attributes.mem "slip" attrs ->
+        let block, attrs = map block (attrs, meta2) in
+        Mapper.ret @@ Ast.Slip ((block, attrs), Meta.none)
+    | Some _ -> Mapper.default
+  in
+  Ast.Mapper.make ~block ()
+
+let of_cmarkit read_file md =
+  let md1 = Cmarkit.Mapper.map_doc (of_cmarkit_stage1 read_file) md in
+  Cmarkit.Mapper.map_doc of_cmarkit_stage2 md1
+
 let to_cmarkit =
   let block m = function
-    | Ast.Div ((bq, _), meta) | Ast.Included ((bq, _), meta) ->
+    | Ast.Div ((bq, _), meta)
+    | Ast.Slide ((bq, _), meta)
+    | Ast.Slip ((bq, _), meta)
+    | Ast.Included ((bq, _), meta) ->
         let b =
           match Mapper.map_block m bq with None -> Block.empty | Some b -> b
         in
@@ -220,3 +247,5 @@ let to_cmarkit =
     | x -> Some x
   in
   Ast.Mapper.make ~block ~inline ~attrs ()
+
+let to_cmarkit sd = Cmarkit.Mapper.map_doc to_cmarkit sd
