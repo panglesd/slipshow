@@ -3,6 +3,7 @@ open Undoable.Syntax
 let up window elem = Universe.Window.up window elem
 let down window elem = Universe.Window.down window elem
 let center window elem = Universe.Window.center window elem
+let enter window elem = Universe.Window.enter window elem
 
 let unstatic elems =
   Undoable.List.iter (Undoable.Browser.set_class "unstatic" true) elems

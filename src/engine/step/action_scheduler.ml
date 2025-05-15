@@ -39,6 +39,9 @@ module AttributeActions = struct
   let center window =
     act ~on:"center-at-unpause" ~payload:as_id (Actions.center window)
 
+  let enter window =
+    act ~on:"enter-at-unpause" ~payload:as_id (Actions.enter window)
+
   let scroll window =
     act ~on:"scroll-at-unpause" ~payload:as_id (Actions.scroll window)
 
@@ -100,6 +103,7 @@ module AttributeActions = struct
         reveal;
         unfocus window;
         center window;
+        enter window;
         down window;
         focus window;
         up window;
