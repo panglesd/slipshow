@@ -1,6 +1,7 @@
 val up : Universe.Window.window -> Brr.El.t -> unit Undoable.t
 val down : Universe.Window.window -> Brr.El.t -> unit Undoable.t
 val center : Universe.Window.window -> Brr.El.t -> unit Undoable.t
+val enter : Universe.Window.window -> Brr.El.t -> unit Undoable.t
 val unstatic : Brr.El.t list -> unit Undoable.t
 val static : Brr.El.t list -> unit Undoable.t
 val focus : Universe.Window.window -> Brr.El.t list -> unit Undoable.t
