@@ -118,9 +118,9 @@ let string_to_delayed s =
   let s = s |> Base64.decode |> Result.get_ok in
   Marshal.from_string s 0
 
-let convert_to_md content =
+let convert_to_md ~read_file content =
   let md = Cmarkit.Doc.of_string ~heading_auto_ids:true ~strict:false content in
-  let sd = Cmarkit.Mapper.map_doc (Mappings.of_cmarkit (fun _ -> Ok None)) md in
+  let sd = Cmarkit.Mapper.map_doc (Mappings.of_cmarkit read_file) md in
   let sd = Cmarkit.Mapper.map_doc Mappings.to_cmarkit sd in
   Cmarkit_commonmark.of_doc ~include_attributes:false sd
 

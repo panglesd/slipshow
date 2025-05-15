@@ -150,7 +150,7 @@ let of_cmarkit read_file =
 
 let to_cmarkit =
   let block m = function
-    | Ast.Div ((bq, _), meta) ->
+    | Ast.Div ((bq, _), meta) | Ast.Included ((bq, _), meta) ->
         let b =
           match Mapper.map_block m bq with None -> Block.empty | Some b -> b
         in
