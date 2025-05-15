@@ -3,7 +3,17 @@ open Undoable.Syntax
 let up window elem = Universe.Window.up window elem
 let down window elem = Universe.Window.down window elem
 let center window elem = Universe.Window.center window elem
-let enter window elem = Universe.Window.enter window elem
+let enter_stack = Stack.create ()
+
+let enter window elem =
+  let> () = Undoable.Stack.push (Universe.State.get_coord ()) enter_stack in
+  Universe.Window.enter window elem
+
+let exit window () =
+  let> coord = Undoable.Stack.pop_opt enter_stack in
+  match coord with
+  | None -> Undoable.return ()
+  | Some coord -> Universe.Window.move window coord ~delay:1.0
 
 let unstatic elems =
   Undoable.List.iter (Undoable.Browser.set_class "unstatic" true) elems

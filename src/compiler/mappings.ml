@@ -192,6 +192,7 @@ let of_cmarkit_stage1 read_file =
     | `Kv (("exec", m), v) -> Some (`Kv (("exec-at-unpause", m), v))
     | `Kv (("scroll", m), v) -> Some (`Kv (("scroll-at-unpause", m), v))
     | `Kv (("enter", m), v) -> Some (`Kv (("enter-at-unpause", m), v))
+    | `Kv (("exit", m), v) -> Some (`Kv (("exit-at-unpause", m), v))
     | x -> Some x
   in
   Ast.Mapper.make ~block ~inline ~attrs ()

@@ -1,7 +1,8 @@
-let find_next_pause () = Brr.El.find_first_by_selector (Jstr.v "[pause]")
+let find_next_pause ?root () =
+  Brr.El.find_first_by_selector ?root (Jstr.v "[pause]")
 
-let find_next_pause_or_step () =
-  Brr.El.find_first_by_selector (Jstr.v "[pause], [step]")
+let find_next_pause_or_step ?root () =
+  Brr.El.find_first_by_selector ?root (Jstr.v "[pause], [step]")
 
 open Undoable.Syntax
 open Fut.Syntax
@@ -41,6 +42,11 @@ module AttributeActions = struct
 
   let enter window =
     act ~on:"enter-at-unpause" ~payload:as_id (Actions.enter window)
+
+  let exit window =
+    act ~on:"exit-at-unpause"
+      ~payload:(fun _ _ -> Some ())
+      (Actions.exit window)
 
   let scroll window =
     act ~on:"scroll-at-unpause" ~payload:as_id (Actions.scroll window)
@@ -103,6 +109,7 @@ module AttributeActions = struct
         reveal;
         unfocus window;
         center window;
+        exit window;
         enter window;
         down window;
         focus window;
@@ -114,28 +121,38 @@ module AttributeActions = struct
       ]
 end
 
-let update_pause_ancestors () =
-  let> () =
-    Brr.El.fold_find_by_selector
-      (fun elem undoes ->
-        let> () = undoes in
-        Undoable.Browser.set_class "pauseAncestor" false elem)
-      (Jstr.v ".pauseAncestor") (Undoable.return ())
+let setup_pause_ancestors root =
+  match find_next_pause ~root () with
+  | None -> Undoable.return ()
+  | Some elem ->
+      let rec hide_parent elem =
+        if Brr.El.class' (Jstr.v "slip") elem then Undoable.return ()
+        else
+          let> () = Undoable.Browser.set_class "pauseAncestor" true elem in
+          match Brr.El.parent elem with
+          | None -> Undoable.return ()
+          | Some elem -> hide_parent elem
+      in
+      hide_parent elem
+
+let update_pause_ancestors p =
+  let do_to_root elem f =
+    let rec do_rec elem =
+      if Brr.El.class' (Jstr.v "slip") elem then Undoable.return ()
+      else
+        let> () = f elem in
+        match Brr.El.parent elem with
+        | None -> Undoable.return ()
+        | Some elem -> do_rec elem
+    in
+    do_rec elem
   in
+  let> () = do_to_root p @@ Undoable.Browser.set_class "pauseAncestor" false in
   let> () =
     match find_next_pause () with
     | None -> Undoable.return ()
     | Some elem ->
-        let rec hide_parent elem =
-          if Brr.El.class' (Jstr.v "slipshow-universe") elem then
-            Undoable.return ()
-          else
-            let> () = Undoable.Browser.set_class "pauseAncestor" true elem in
-            match Brr.El.parent elem with
-            | None -> Undoable.return ()
-            | Some elem -> hide_parent elem
-        in
-        hide_parent elem
+        do_to_root elem @@ Undoable.Browser.set_class "pauseAncestor" true
   in
   let+ () = Fut.tick ~ms:0 in
   ((), fun () -> Fut.return ())
@@ -157,10 +174,11 @@ let update_history () =
 
 let clear_pause window elem =
   let> () =
-    if Option.is_some @@ Brr.El.at (Jstr.v "pause") elem then
-      let> () = Undoable.Browser.set_at "pause" None elem in
-      update_pause_ancestors ()
-    else Undoable.Browser.set_at "step" None elem
+    match Brr.El.at (Jstr.v "pause") elem with
+    | Some _ ->
+        let> () = Undoable.Browser.set_at "pause" None elem in
+        update_pause_ancestors elem
+    | None -> Undoable.Browser.set_at "step" None elem
   in
   let> () = AttributeActions.do_ window elem in
   let> () = update_history () in
