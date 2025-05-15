@@ -16,6 +16,7 @@
 - Fix file watching issues by vendoring a (modified) irmin-watcher, and watching
   all files the presentation depends on (images, themes, ...) (#113)
 - Adds a favicon to the presentation file (#115)
+- Fix missing attributes on images (#117)
 
 ### Language
 
