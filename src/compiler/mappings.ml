@@ -38,32 +38,70 @@ let resolve_image ps ~read_file s =
   in
   Asset.of_uri ~read_file uri
 
+let get_attribute =
+  let no_attrs = (Attributes.empty, Meta.none) in
+  function
+  (* Standard Cmarkit nodes *)
+  | Block.Blank_line _ -> None
+  | Block.Block_quote ((bq, attrs), meta) ->
+      Some (Block.Block_quote ((bq, no_attrs), meta), attrs)
+  | Block.Blocks _ -> None
+  | Block.Code_block ((cb, attrs), meta) ->
+      Some (Block.Code_block ((cb, no_attrs), meta), attrs)
+  | Block.Heading ((h, attrs), meta) ->
+      Some (Block.Heading ((h, no_attrs), meta), attrs)
+  | Block.Html_block ((hb, attrs), meta) ->
+      Some (Block.Html_block ((hb, no_attrs), meta), attrs)
+  | Block.Link_reference_definition _ -> None
+  | Block.List ((l, attrs), meta) ->
+      Some (Block.List ((l, no_attrs), meta), attrs)
+  | Block.Paragraph ((p, attrs), meta) ->
+      Some (Block.Paragraph ((p, no_attrs), meta), attrs)
+  | Block.Thematic_break ((tb, attrs), meta) ->
+      Some (Block.Thematic_break ((tb, no_attrs), meta), attrs)
+  (* Extension Cmarkit nodes *)
+  | Block.Ext_math_block ((mb, attrs), meta) ->
+      Some (Block.Ext_math_block ((mb, no_attrs), meta), attrs)
+  | Block.Ext_table ((table, attrs), meta) ->
+      Some (Block.Ext_table ((table, no_attrs), meta), attrs)
+  | Block.Ext_footnote_definition _ -> None
+  | Block.Ext_standalone_attributes _ -> None
+  | Block.Ext_attribute_definition _ -> None
+  | _ -> None
+
+let handle_special_function m c f =
+  let map block (attrs, meta2) =
+    let b =
+      match Mapper.map_block m block with None -> Block.empty | Some b -> b
+    in
+    let attrs = Mapper.map_attrs m attrs in
+    (b, (attrs, meta2))
+  in
+  match get_attribute c with
+  | None -> f c
+  | Some (block, (attrs, meta2)) when Attributes.mem "blockquote" attrs ->
+      let block, attrs = map block (attrs, meta2) in
+      let block = Block.Block_quote.make block in
+      Mapper.ret @@ Block.Block_quote ((block, attrs), Meta.none)
+  | Some (block, (attrs, meta2)) when Attributes.mem "slide" attrs ->
+      let block, attrs = map block (attrs, meta2) in
+      Mapper.ret @@ Ast.Slide ((block, attrs), Meta.none)
+  | Some (block, (attrs, meta2)) when Attributes.mem "slip" attrs ->
+      let block, attrs = map block (attrs, meta2) in
+      Mapper.ret @@ Ast.Slip ((block, attrs), Meta.none)
+  | Some _ -> f c
+
 let of_cmarkit read_file =
   let current_path = Path_entering.make () in
-  let block m = function
+  let block m c =
+    handle_special_function m c @@ function
     | Block.Block_quote ((bq, (attrs, meta2)), meta) ->
-        if Attributes.mem "blockquote" attrs then Mapper.default
-        else if Attributes.mem "slip" attrs then
-          let b = Block.Block_quote.block bq in
-          let b =
-            match Mapper.map_block m b with None -> Block.empty | Some b -> b
-          in
-          let attrs = Mapper.map_attrs m attrs in
-          Mapper.ret (Ast.Slip ((b, (attrs, meta2)), meta))
-        else if Attributes.mem "slide" attrs then
-          let b = Block.Block_quote.block bq in
-          let b =
-            match Mapper.map_block m b with None -> Block.empty | Some b -> b
-          in
-          let attrs = Mapper.map_attrs m attrs in
-          Mapper.ret (Ast.Slide ((b, (attrs, meta2)), meta))
-        else
-          let b = Block.Block_quote.block bq in
-          let b =
-            match Mapper.map_block m b with None -> Block.empty | Some b -> b
-          in
-          let attrs = Mapper.map_attrs m attrs in
-          Mapper.ret (Ast.Div ((b, (attrs, meta2)), meta))
+        let b = Block.Block_quote.block bq in
+        let b =
+          match Mapper.map_block m b with None -> Block.empty | Some b -> b
+        in
+        let attrs = Mapper.map_attrs m attrs in
+        Mapper.ret (Ast.Div ((b, (attrs, meta2)), meta))
     | Block.Code_block ((cb, (attrs, meta)), meta2) ->
         let ret =
           match Block.Code_block.info_string cb with
