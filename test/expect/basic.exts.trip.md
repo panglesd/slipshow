@@ -240,6 +240,8 @@ link](example.com)]{attrs}, [attrs [within]{attrs1}]{attrs2}.
 Attributes can be attached without squares, for instance this{#idee} has an
 id. This `codeblock`{#too}! This ![image](as){#well}. [Links](work){#the .same}. **Emphasis**{and} and *italic1*{and} _italic2_{too}\!
 
+![images](work_with){#ids .classes and=kv}
+
 Testing ~~strikethrough~~{text}.
 
 {#id}
