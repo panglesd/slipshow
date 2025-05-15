@@ -4,6 +4,8 @@
 
 {include src=chapter1.md}
 
+{include src=chapter1.md slip}
+
 {pause}
 ## Chapter 2
 

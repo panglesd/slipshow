@@ -11,13 +11,13 @@ We can compile the file using the slip_of_mark binary
   <div class="slip">
   <div class="slip-body">
   <div style="display: flex">
-  <div id="slide1" class="slipshow-rescaler" style="flex: 1 1 auto;" slide>
+  <div id="slide1" class="slipshow-rescaler" slide style="flex: 1 1 auto;">
   <div class="slide">
   <div class="slide-body">
   <p><span>Aren’t you just bored with all those slides-based presentations?</span></p>
   </div>
   </div>
   </div>
-  <div id="slide2" class="slipshow-rescaler" style="flex: 1 1 auto;" slide>
+  <div id="slide2" class="slipshow-rescaler" slide style="flex: 1 1 auto;">
 
   $ cp slides.html /tmp/

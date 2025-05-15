@@ -119,13 +119,13 @@ let string_to_delayed s =
 
 let convert_to_md ~read_file content =
   let md = Cmarkit.Doc.of_string ~heading_auto_ids:true ~strict:false content in
-  let sd = Cmarkit.Mapper.map_doc (Mappings.of_cmarkit read_file) md in
-  let sd = Cmarkit.Mapper.map_doc Mappings.to_cmarkit sd in
+  let sd = Mappings.of_cmarkit read_file md in
+  let sd = Mappings.to_cmarkit sd in
   Cmarkit_commonmark.of_doc ~include_attributes:false sd
 
 let compile ?(read_file = fun _ -> Ok None) s =
   let md = Cmarkit.Doc.of_string ~heading_auto_ids:true ~strict:false s in
-  let md = Cmarkit.Mapper.map_doc (Mappings.of_cmarkit read_file) md in
+  let md = (Mappings.of_cmarkit read_file) md in
   Cmarkit.Doc.make
   @@ Ast.Slip
        ( (Cmarkit.Doc.block md, (Cmarkit.Attributes.empty, Cmarkit.Meta.none)),
