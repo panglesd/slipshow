@@ -265,17 +265,12 @@ let image ?(close = " >") c i attrs =
       in
       let link, title = link_dest_and_title c ld in
       C.string c "<img src=\""; pct_encoded_string c link;
-      let id = Attributes.id attributes in
-      (match id with
-         None -> ()
-       | Some (id, _) ->
-          C.string c "\" id=\"";
-          html_escaped_string c id);
       C.string c "\" alt=\"";
       html_escaped_string c (plain_text c (Inline.Link.text i));
       C.byte c '\"';
       if title <> ""
       then (C.string c " title=\""; html_escaped_string c title; C.byte c '\"');
+      add_attrs c attributes;
       C.string c close
   | Some (Block.Footnote.Def _) -> comment_foonote_image c i
   | Some (Block.Attribute_definition.Def _) -> comment_foonote_image c i
