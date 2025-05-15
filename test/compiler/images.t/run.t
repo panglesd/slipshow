@@ -15,6 +15,6 @@ We can compile the file using the slip_of_mark binary
               <div class="slip-body">
                 <p><span>A paragraph with an </span><img src="img.png" alt="image" ></p>
   <p id="id" class="class" key=value><img src="img.png" alt="" ></p>
-  <p><img src="img.png" id="id2" alt="" ></p>
+  <p><img src="img.png" alt="" id="id2" class="class2" key2=value2 ></p>
   
 
