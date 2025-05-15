@@ -226,6 +226,8 @@ link](example.com), attrs within.
 Attributes can be attached without squares, for instance this has an
 id. This `codeblock`! This ![image](as). [Links](work). **Emphasis** and *italic1* _italic2_\!
 
+![images](work_with)
+
 Testing ~~strikethrough~~.
 
 ## Title with an id
