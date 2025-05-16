@@ -1,4 +1,4 @@
-.pauseAncestor ~ *, [pause] {
+.pauseAncestor ~ *, .pauseTarget {
   opacity: 0;
 }
 

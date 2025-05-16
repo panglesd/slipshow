@@ -1,3 +1,5 @@
+val setup_pause : Brr.El.t -> unit Undoable.t
+val pause : Brr.El.t -> unit Undoable.t
 val up : Universe.Window.window -> Brr.El.t -> unit Undoable.t
 val down : Universe.Window.window -> Brr.El.t -> unit Undoable.t
 val center : Universe.Window.window -> Brr.El.t -> unit Undoable.t
