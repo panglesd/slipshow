@@ -1,5 +1,63 @@
 open Undoable.Syntax
 
+let do_to_root elem f =
+  let rec do_rec elem =
+    if Brr.El.class' (Jstr.v "slip") elem then Undoable.return ()
+    else
+      let> () = f elem in
+      match Brr.El.parent elem with
+      | None -> Undoable.return ()
+      | Some elem -> do_rec elem
+  in
+  do_rec elem
+
+let setup_pause elem =
+  let> () = Undoable.Browser.set_class "pauseTarget" true elem in
+  do_to_root elem @@ fun elem ->
+  match Brr.El.at (Jstr.v "pauseAncestorMultiplicity") elem with
+  | None ->
+      let> () = Undoable.Browser.set_class "pauseAncestor" true elem in
+      Undoable.Browser.set_at "pauseAncestorMultiplicity"
+        (Some (Jstr.of_int 1))
+        elem
+  | Some i -> (
+      match Jstr.to_int i with
+      | None ->
+          Brr.Console.(
+            log [ "Error: wrong value to pauseAncestorMultiplicity:"; i ]);
+          Undoable.Browser.set_class "pauseAncestor" true elem
+      | Some i ->
+          let> () =
+            Undoable.Browser.set_at "pauseAncestorMultiplicity"
+              (Some (Jstr.of_int (i + 1)))
+              elem
+          in
+          Undoable.Browser.set_class "pauseAncestor" true elem)
+
+let pause elem =
+  let> () = Undoable.Browser.set_class "pauseTarget" false elem in
+  do_to_root elem @@ fun elem ->
+  match Brr.El.at (Jstr.v "pauseAncestorMultiplicity") elem with
+  | None ->
+      Brr.Console.(
+        log [ "Error: pauseAncestorMultiplicity was supposed to be some"; elem ]);
+      Undoable.Browser.set_class "pauseAncestor" false elem
+  | Some i -> (
+      match Jstr.to_int i with
+      | None ->
+          Brr.Console.(
+            log [ "Error: wrong value to pauseAncestorMultiplicity:"; i ]);
+          Undoable.Browser.set_class "pauseAncestor" false elem
+      | Some i when i <= 1 ->
+          let> () =
+            Undoable.Browser.set_at "pauseAncestorMultiplicity" None elem
+          in
+          Undoable.Browser.set_class "pauseAncestor" false elem
+      | Some i ->
+          Undoable.Browser.set_at "pauseAncestorMultiplicity"
+            (Some (Jstr.of_int (i - 1)))
+            elem)
+
 let up window elem = Universe.Window.up window elem
 let down window elem = Universe.Window.down window elem
 let center window elem = Universe.Window.center window elem

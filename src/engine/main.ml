@@ -20,10 +20,7 @@ let start id step =
   in
   let _history = Browser.History.set_hash "" in
   let* () =
-    Brr.El.fold_find_by_selector
-      (fun root _ -> Step.Action_scheduler.setup_pause_ancestors root)
-      (Jstr.v ".slip") (Undoable.return ())
-    |> Undoable.discard
+    Step.Action_scheduler.setup_pause_ancestors () |> Undoable.discard
   in
   let* () =
     match initial_step with
