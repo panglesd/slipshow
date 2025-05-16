@@ -11,7 +11,6 @@ module Focus = struct
 
   let push c =
     let undo () = Fut.return @@ ignore @@ Stack.pop stack in
-
     Undoable.return ~undo (Stack.push c stack)
 
   let pop () =

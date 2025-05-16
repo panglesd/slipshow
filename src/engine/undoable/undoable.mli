@@ -14,3 +14,12 @@ module Browser = Browser_
 module List : sig
   val iter : ('a -> unit t) -> 'a list -> unit t
 end
+
+module Stack : sig
+  val push : 'a -> 'a Stack.t -> unit t
+  (** [push x s] adds the element [x] at the top of stack [s]. *)
+
+  val pop_opt : 'a Stack.t -> 'a option t
+  (** [pop s] removes and returns the topmost element in stack [s], or raises
+      {!Empty} if the stack is empty. *)
+end

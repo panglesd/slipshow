@@ -33,11 +33,7 @@ let slipshow_js_element slipshow_link =
   | Some (Remote r) -> Format.sprintf "<script src=\"%s\"></script>" r
   | None -> Format.sprintf "<script>%s</script>" Data_files.(read Slipshow_js)
 
-let embed_in_page content ~has_math ~math_link ~css_links ~theme
-    ~slipshow_js_link =
-  let mathjax_element = mathjax_element has_math math_link in
-  let css_elements = List.map css_element css_links |> String.concat "" in
-  let slipshow_js_element = slipshow_js_element slipshow_js_link in
+let head ~theme ~has_math ~math_link ~css_links =
   let theme = theme_css theme in
   let highlight_css_element =
     "<style>" ^ Data_files.(read Highlight_css) ^ "</style>"
@@ -56,6 +52,25 @@ let embed_in_page content ~has_math ~math_link ~css_links ~theme
     in
     Format.sprintf {|<link rel="icon" type="image/x-icon" href="%s">|} href
   in
+  let mathjax_element = mathjax_element has_math math_link in
+  let css_elements = List.map css_element css_links |> String.concat "" in
+  String.concat "\n"
+    [
+      favicon_element;
+      mathjax_element;
+      internal_css;
+      system_css;
+      theme;
+      css_elements;
+      highlight_css_element;
+      highlight_js_element;
+      highlight_js_ocaml_element;
+    ]
+
+let embed_in_page content ~has_math ~math_link ~css_links ~theme
+    ~slipshow_js_link =
+  let head = head ~has_math ~math_link ~css_links ~theme in
+  let slipshow_js_element = slipshow_js_element slipshow_js_link in
   let start =
     Format.sprintf
       {|
@@ -64,26 +79,12 @@ let embed_in_page content ~has_math ~math_link ~css_links ~theme
   <head>
     <meta charset="utf-8" />
     %s
-    %s
-    %s
-    %s
-    %s
-    %s
-    %s
-    %s
-    %s
   </head>
   <body>
     <div id="slipshow-main">
       <div id="slipshow-content">
         <svg id="slipshow-drawing-elem" style="overflow:visible; position: absolute; z-index:1000"></svg>
-        <div class="slipshow-rescaler">
-          <div class="slip">
-            <div class="slip-body">
-              %s
-            </div>
-          </div>
-        </div>
+        %s
       </div>
       <div id="slip-touch-controls">
         <div class="slip-previous">←</div>
@@ -99,9 +100,7 @@ let embed_in_page content ~has_math ~math_link ~css_links ~theme
     <script>hljs.highlightAll();</script>
     <script>
       startSlipshow(|}
-      favicon_element mathjax_element internal_css system_css theme css_elements
-      highlight_css_element highlight_js_element highlight_js_ocaml_element
-      content slipshow_js_element
+      head content slipshow_js_element
   in
   let end_ = {|);
     </script>
@@ -118,16 +117,23 @@ let string_to_delayed s =
   let s = s |> Base64.decode |> Result.get_ok in
   Marshal.from_string s 0
 
-let convert_to_md content =
+let convert_to_md ~read_file content =
   let md = Cmarkit.Doc.of_string ~heading_auto_ids:true ~strict:false content in
-  let sd = Cmarkit.Mapper.map_doc (Mappings.of_cmarkit (fun _ -> Ok None)) md in
-  let sd = Cmarkit.Mapper.map_doc Mappings.to_cmarkit sd in
+  let sd = Mappings.of_cmarkit read_file md in
+  let sd = Mappings.to_cmarkit sd in
   Cmarkit_commonmark.of_doc ~include_attributes:false sd
 
-let delayed ?math_link ?(css_links = []) ?(theme = `Builtin Themes.Default)
-    ?slipshow_js_link ?(read_file = fun _ -> Ok None) s =
+let compile ?(read_file = fun _ -> Ok None) s =
   let md = Cmarkit.Doc.of_string ~heading_auto_ids:true ~strict:false s in
-  let md = Cmarkit.Mapper.map_doc (Mappings.of_cmarkit read_file) md in
+  let md = (Mappings.of_cmarkit read_file) md in
+  Cmarkit.Doc.make
+  @@ Ast.Slip
+       ( (Cmarkit.Doc.block md, (Cmarkit.Attributes.empty, Cmarkit.Meta.none)),
+         Cmarkit.Meta.none )
+
+let delayed ?math_link ?(css_links = []) ?(theme = `Builtin Themes.Default)
+    ?slipshow_js_link ?read_file s =
+  let md = compile ?read_file s in
   let content =
     Cmarkit_renderer.doc_to_string Renderers.custom_html_renderer md
   in

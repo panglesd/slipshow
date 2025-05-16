@@ -20,7 +20,7 @@ let start id step =
   in
   let _history = Browser.History.set_hash "" in
   let* () =
-    Step.Action_scheduler.update_pause_ancestors () |> Undoable.discard
+    Step.Action_scheduler.setup_pause_ancestors () |> Undoable.discard
   in
   let* () =
     match initial_step with

@@ -1,9 +1,13 @@
-.slip-body {
+.slip-body, .slide-body {
   /* padding:60px; */
   margin-top: auto;
   margin-bottom: auto;
   margin-left: 110px;
   margin-right: 110px;
+}
+
+.slide {
+    display: flex;
 }
 
 body {

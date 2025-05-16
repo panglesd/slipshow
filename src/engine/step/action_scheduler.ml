@@ -1,7 +1,5 @@
-let find_next_pause () = Brr.El.find_first_by_selector (Jstr.v "[pause]")
-
-let find_next_pause_or_step () =
-  Brr.El.find_first_by_selector (Jstr.v "[pause], [step]")
+let find_next_pause_or_step ?root () =
+  Brr.El.find_first_by_selector ?root (Jstr.v "[pause], [step]")
 
 open Undoable.Syntax
 open Fut.Syntax
@@ -39,6 +37,14 @@ module AttributeActions = struct
   let center window =
     act ~on:"center-at-unpause" ~payload:as_id (Actions.center window)
 
+  let enter window =
+    act ~on:"enter-at-unpause" ~payload:as_id (Actions.enter window)
+
+  let exit window =
+    act ~on:"exit-at-unpause"
+      ~payload:(fun _ _ -> Some ())
+      (Actions.exit window)
+
   let scroll window =
     act ~on:"scroll-at-unpause" ~payload:as_id (Actions.scroll window)
 
@@ -57,6 +63,20 @@ module AttributeActions = struct
   let unreveal = act ~on:"unreveal-at-unpause" ~payload:as_ids Actions.unreveal
   let emph = act ~on:"emph-at-unpause" ~payload:as_ids Actions.emph
   let unemph = act ~on:"unemph-at-unpause" ~payload:as_ids Actions.unemph
+
+  let pause elem =
+    act ~on:"pause" ~payload:as_id
+      (fun target ->
+        let> () = Undoable.Browser.set_at "pause" None elem in
+        Actions.pause target)
+      elem
+
+  let step elem =
+    act ~on:"step" ~payload:as_id
+      (fun target ->
+        let> () = Undoable.Browser.set_at "step" None elem in
+        Actions.pause target)
+      elem
 
   let execute window elem =
     let action elem =
@@ -94,12 +114,16 @@ module AttributeActions = struct
     in
     List.fold_left do_ (Undoable.return ())
       [
+        pause;
+        step;
         unstatic;
         static;
         unreveal;
         reveal;
         unfocus window;
         center window;
+        exit window;
+        enter window;
         down window;
         focus window;
         up window;
@@ -110,31 +134,13 @@ module AttributeActions = struct
       ]
 end
 
-let update_pause_ancestors () =
-  let> () =
-    Brr.El.fold_find_by_selector
-      (fun elem undoes ->
-        let> () = undoes in
-        Undoable.Browser.set_class "pauseAncestor" false elem)
-      (Jstr.v ".pauseAncestor") (Undoable.return ())
-  in
-  let> () =
-    match find_next_pause () with
-    | None -> Undoable.return ()
-    | Some elem ->
-        let rec hide_parent elem =
-          if Brr.El.class' (Jstr.v "slipshow-universe") elem then
-            Undoable.return ()
-          else
-            let> () = Undoable.Browser.set_class "pauseAncestor" true elem in
-            match Brr.El.parent elem with
-            | None -> Undoable.return ()
-            | Some elem -> hide_parent elem
-        in
-        hide_parent elem
-  in
-  let+ () = Fut.tick ~ms:0 in
-  ((), fun () -> Fut.return ())
+let setup_pause_ancestors () =
+  Brr.El.fold_find_by_selector
+    (fun elem acc ->
+      let> () = acc in
+      let open AttributeActions in
+      act ~on:"pause" ~payload:as_id Actions.setup_pause elem)
+    (Jstr.v "[pause]") (Undoable.return ())
 
 let update_history () =
   let prev_step = State.get_step () in
@@ -151,18 +157,13 @@ let update_history () =
   in
   Undoable.Browser.History.set_hash (string_of_int n)
 
-let clear_pause window elem =
-  let> () =
-    if Option.is_some @@ Brr.El.at (Jstr.v "pause") elem then
-      let> () = Undoable.Browser.set_at "pause" None elem in
-      update_pause_ancestors ()
-    else Undoable.Browser.set_at "step" None elem
-  in
-  let> () = AttributeActions.do_ window elem in
-  let> () = update_history () in
-  Undoable.return ()
-
 let next window () =
   match find_next_pause_or_step () with
   | None -> None
-  | Some pause -> Some (clear_pause window pause)
+  | Some pause ->
+      let res =
+        let> () = AttributeActions.do_ window pause in
+        let> () = update_history () in
+        Undoable.return ()
+      in
+      Some res

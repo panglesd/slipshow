@@ -40,16 +40,28 @@ let get elem =
         let (cx, cy), parent_scale = compute parent in
         let x, y = get_coord_in_parent elem in
         let scale = compute_scale parent *. parent_scale in
-        let x = cx +. (x *. scale) in
-        let y = cy +. (y *. scale) in
+        let x =
+          cx +. (x *. scale)
+          +. (1. (* The (hardcoded) slip border *) *. parent_scale)
+        in
+        let y =
+          cy +. (y *. scale)
+          +. (1. (* The (hardcoded) slip border *) *. parent_scale)
+        in
         ((x, y), scale)
   in
   let (x, y), scale = compute elem in
   let scale = compute_scale elem *. scale in
   let width = float_of_int (El.offset_w elem) *. scale in
   let height = float_of_int (El.offset_h elem) *. scale in
-  let x = x +. (width /. 2.) in
-  let y = y +. (height /. 2.) in
+  let x =
+    x +. (width /. 2.)
+    (* No need to add the borders: offset_w has them *)
+  in
+  let y =
+    y +. (height /. 2.)
+    (* No need to add the borders: offset_h has them *)
+  in
   { x; y; width; height }
 
 module Window_of_elem = struct

@@ -98,7 +98,12 @@ let serve ~input ~output ~math_link ~css_links ~theme =
 
 let markdown_compile ~input ~output =
   let* content = Io.read input in
-  let md = Slipshow.convert_to_md content in
+  let _used_files, read_file =
+    read_file
+      (match input with `Stdin -> Fpath.v "./" | `File f -> Fpath.parent f)
+      ()
+  in
+  let md = Slipshow.convert_to_md ~read_file content in
   match output with
   | `Stdout ->
       print_string md;

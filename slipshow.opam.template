@@ -1,2 +1,4 @@
+# We avoid 32 bits arcitecture because our usage of ppx_blob generates strings
+# whose size exceed the maximum size in 32 bits OCaml...
 available: arch != "arm32" & arch != "x86_32"
 x-maintenance-intent: [ "(latest)" ]

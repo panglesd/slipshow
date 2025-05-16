@@ -17,9 +17,20 @@ let setup_rescalers () =
   let rescaled_rescaler entry =
     match El.children ~only_els:true entry with
     | [ c ] ->
-        let scale = El.inner_w entry /. El.inner_w c in
-        let height = El.inner_h c *. scale in
+        let scale =
+          El.inner_w entry /. (El.inner_w c +. 2. (* The borders *))
+        in
+        let height = (El.inner_h c +. 2. (* The borders *)) *. scale in
         fun () ->
+          let string_of_float x =
+            (* [string_of_int] outputs floats with not decimal part with a trailing
+             ".". But CSS properties consider this way of writing floats as
+             erroneous and ignores them. As a consequence, we add a trailing 0 to
+             avoid this:
+             - 12.  -> 12.0
+             - 12.5 -> 12.50 *)
+            string_of_float x ^ "0"
+          in
           El.set_inline_style (Jstr.v "transform")
             (scale |> fun x -> "scale(" ^ string_of_float x ^ ")" |> Jstr.v)
             c;
@@ -40,7 +51,7 @@ let setup_rescalers () =
     entries
     |> List.map (fun entry -> rescale (ResizeObserver.Entry.target entry))
     (* We need to do all the size computations at once, and then execute them,
-         otherwise they influence each others *)
+         otherwise they'll influence each others *)
     |> List.iter (fun f -> f ())
   in
   let observer = ResizeObserver.create callback in
