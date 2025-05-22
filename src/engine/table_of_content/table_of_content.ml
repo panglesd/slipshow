@@ -79,7 +79,7 @@ let generate window root =
         let el, new_step = categorize window step el in
         let step = Option.value ~default:step new_step in
         (step, el :: acc))
-      !!"[pause], [step], h1, h2, h3, h4, h5"
+      !!(Step.Action_scheduler.all_action_selector ^ ", h1, h2, h3, h4, h5")
       (0, [])
     |> snd |> List.rev
   in

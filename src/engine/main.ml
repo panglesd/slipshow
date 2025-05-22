@@ -23,6 +23,11 @@ let start id step =
     Step.Action_scheduler.setup_pause_ancestors () |> Undoable.discard
   in
   let* () =
+    match Brr.El.find_first_by_selector (Jstr.v "[slipshow-entry-point]") with
+    | None -> Fut.return ()
+    | Some elem -> Step.Actions.enter window elem |> Undoable.discard
+  in
+  let* () =
     match initial_step with
     | None -> Fut.return @@ Step.Next.actualize ()
     | Some step ->
