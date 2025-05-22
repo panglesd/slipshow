@@ -258,80 +258,89 @@ Avec du [contenu special]{style="color:red"}.
 
   **Exemple** `{pause reveal-at-unpause=youhou}` {pause reveal-at-unpause=youhou}
 
-{pause up}
-# Slipshow
-
-- Slipshow est un logiciel libre pour faire des présentations améliorées. {pause}
-
-- Avec slipshow, pas besoin de gérer l'alignement du texte ! {pause}
-
-- Une présentation slipshow prend la forme d'un fichier texte.
-
-{pause}
-
-{.example #example-file}
-  ```markdown
-  # Ceci est un titre
-
-  Et ceci est un paragraphe.
-
-  - Et ceci est une liste à points
-  - Avec plusieurs points
-
-  On peut aussi mettre du texte **en gras**, ou en *italique*.
-  ```
-
-{pause}
-
-Mais le truc **VRAIMENT** cool, avec slipshow, c'est :
-
-...
-
-{.block title="Le truc vraiment cool" pause}
-> Supsense, suspense...
+{.flex up}
+> {slip}
+> > # Rendu
+> >
+> > {up pause}
+> > # Slipshow
+> >
+> > - Slipshow est un logiciel libre pour faire des présentations améliorées. {pause}
+> >
+> > - Avec slipshow, pas besoin de gérer l'alignement du texte ! {pause}
+> >
+> > - Une présentation slipshow prend la forme d'un fichier texte.
+> >
+> > {pause}
+> >
+> > {.example #example-file}
+> >   ```markdown
+> >   # Ceci est un titre
+> >
+> >   Et ceci est un paragraphe.
+> >
+> >   - Et ceci est une liste à points
+> >   - Avec plusieurs points
+> >
+> >   On peut aussi mettre du texte **en gras**, ou en *italique*.
+> >   ```
+> >
+> > {pause}
+> >
+> > Mais le truc **VRAIMENT** cool, avec slipshow, c'est :
+> >
+> > ...
+> >
+> > {.block title="Le truc vraiment cool" pause}
+> > > Supsense, suspense...
+> > >
+> > > ## **On peut faire dérouler un slide! {pause up=example-file}
+> >
+> > <style>
+> > .max-size > code { font-size:0.85em; }
+> > </style>
 >
-> ## **On peut faire dérouler un slide! {pause up=example-file}
-
-<style>
-.max-size > code { font-size:0.85em; }
-</style>
-
-{pause down .max-size}
-````markdown
-# Slipshow
-
-- Slipshow est un logiciel libre pour faire des présentations
-  améliorées. {pause}
-
-- Avec slipshow, pas besoin de gérer l'alignement du texte ! {pause}
-
-- Une présentation slipshow prend la forme d'un fichier texte.
-
-{pause}
-
-{.example #example-file}
-```markdown
-# Ceci est un titre
-
-Et ceci est un paragraphe.
-
-- Et ceci est une liste à points
-- Avec plusieurs points
-
-On peut aussi mettre du texte **en gras**, ou en *italique*.
-```
-
-{pause}
-
-Mais le truc **VRAIMENT** cool, avec slipshow, c'est :
-
-...
-
-{.block title="Le truc vraiment cool" pause}
-> Supsense, suspense...
+> {step exit}
 >
-> ## **On peut faire dérouler un slide! {pause up=example-file}
-````
+> {slip down=src-of-this pause=src-of-this}
+> > # Source
+> >
+> > {#src-of-this .max-size}
+> > ````markdown
+> > # Slipshow
+> >
+> > - Slipshow est un logiciel libre pour faire des présentations
+> >   améliorées. {pause}
+> >
+> > - Avec slipshow, pas besoin de gérer l'alignement du texte ! {pause}
+> >
+> > - Une présentation slipshow prend la forme d'un fichier texte.
+> >
+> > {pause}
+> >
+> > {.example #example-file}
+> > ```markdown
+> > # Ceci est un titre
+> >
+> > Et ceci est un paragraphe.
+> >
+> > - Et ceci est une liste à points
+> > - Avec plusieurs points
+> >
+> > On peut aussi mettre du texte **en gras**, ou en *italique*.
+> > ```
+> >
+> > {pause}
+> >
+> > Mais le truc **VRAIMENT** cool, avec slipshow, c'est :
+> >
+> > ...
+> >
+> > {.block title="Le truc vraiment cool" pause}
+> > > Supsense, suspense...
+> > >
+> > > ## **On peut faire dérouler un slide! {pause up=example-file}
+> > ````
 
-{pause down}
+{pause exit down}
 # [Tutoriel](https://slipshow.readthedocs.io/en/latest/tutorial.html) et [référence](https://slipshow.readthedocs.io/en/latest/syntax.html)!
