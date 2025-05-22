@@ -53,13 +53,17 @@ let categorize window step el =
         let content = Brr.El.prop inner_text el in
         (content, Brr.El.tag_name el)
     | _ ->
-        let cap = 100 in
-        let content = Jstr.slice ~stop:cap (Brr.El.prop inner_text el) in
-        let content =
+        let _content () =
+          (* This is the old content, the toc looks better without the
+             preview. Maybe the preview should be used in the title attribute,
+             so I keep the code easily available here *)
+          let cap = 100 in
+          let content = Jstr.slice ~stop:cap (Brr.El.prop inner_text el) in
           if Jstr.length (Brr.El.prop inner_text el) > cap then
             Jstr.append content !!"..."
           else content
         in
+        let content = !!"" in
         (content, !!"div")
   in
   let el = entry window step ~tag_name ~content in
