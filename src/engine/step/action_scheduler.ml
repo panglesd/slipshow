@@ -5,7 +5,6 @@ let all_actions =
     "emph-at-unpause";
     "enter-at-unpause";
     "exec-at-unpause";
-    "exit-at-unpause";
     "focus-at-unpause";
     "pause";
     "reveal-at-unpause";
@@ -69,11 +68,6 @@ module AttributeActions = struct
 
   let enter window =
     act ~on:"enter-at-unpause" ~payload:as_id (Actions.enter window)
-
-  let exit window =
-    act ~on:"exit-at-unpause"
-      ~payload:(fun _ _ -> Some ())
-      (Actions.exit window)
 
   let scroll window =
     act ~on:"scroll-at-unpause" ~payload:as_id (Actions.scroll window)
@@ -152,7 +146,6 @@ module AttributeActions = struct
         reveal;
         unfocus window;
         center window;
-        exit window;
         enter window;
         down window;
         focus window;
@@ -193,6 +186,7 @@ let next window () =
   | None -> None
   | Some pause ->
       let res =
+        let> () = Actions.exit window pause in
         let> () = AttributeActions.do_ window pause in
         let> () = update_history () in
         Undoable.return ()
