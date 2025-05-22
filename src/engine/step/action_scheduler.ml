@@ -89,18 +89,10 @@ module AttributeActions = struct
   let unemph = act ~on:"unemph-at-unpause" ~payload:as_ids Actions.unemph
 
   let pause elem =
-    act ~on:"pause" ~payload:as_id
-      (fun target ->
-        let> () = Undoable.Browser.set_at "pause" None elem in
-        Actions.pause target)
-      elem
+    act ~on:"pause" ~payload:as_id (fun target -> Actions.pause target) elem
 
   let step elem =
-    act ~on:"step" ~payload:as_id
-      (fun target ->
-        let> () = Undoable.Browser.set_at "step" None elem in
-        Actions.pause target)
-      elem
+    act ~on:"step" ~payload:as_id (fun _ -> Undoable.return ()) elem
 
   let execute window elem =
     let action elem =
