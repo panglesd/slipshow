@@ -61,17 +61,35 @@ let pause elem =
 let up window elem = Universe.Window.up window elem
 let down window elem = Universe.Window.down window elem
 let center window elem = Universe.Window.center window elem
-let enter_stack = Stack.create ()
+
+module Enter = struct
+  type t = { elem : Brr.El.t; coord : Universe.Coordinates.window }
+
+  let stack = Stack.create ()
+
+  let in_ elem =
+    Undoable.Stack.push { elem; coord = Universe.State.get_coord () } stack
+end
 
 let enter window elem =
-  let> () = Undoable.Stack.push (Universe.State.get_coord ()) enter_stack in
+  let> () = Enter.in_ elem in
   Universe.Window.enter window elem
 
-let exit window () =
-  let> coord = Undoable.Stack.pop_opt enter_stack in
-  match coord with
-  | None -> Undoable.return ()
-  | Some coord -> Universe.Window.move window coord ~delay:1.0
+let exit window to_elem =
+  let rec exit () =
+    let> coord = Undoable.Stack.pop_opt Enter.stack in
+    match coord with
+    | None -> Undoable.return ()
+    | Some { coord; _ } -> (
+        match Undoable.Stack.peek Enter.stack with
+        | None ->
+            Brr.Console.(log [ "Action element outside of the main slip" ]);
+            Universe.Window.move window coord ~delay:1.0
+        | Some { Enter.elem; _ } when Brr.El.contains elem ~child:to_elem ->
+            Universe.Window.move window coord ~delay:1.0
+        | Some _ -> exit ())
+  in
+  exit ()
 
 let unstatic elems =
   Undoable.List.iter (Undoable.Browser.set_class "unstatic" true) elems

@@ -23,4 +23,11 @@ module Stack = struct
       Fut.return @@ Option.iter (fun v -> Stack.push v stack) value
     in
     return ~undo value
+
+  let peek stack =
+    match Stack.pop_opt stack with
+    | None -> None
+    | Some x as s ->
+        Stack.push x stack;
+        s
 end

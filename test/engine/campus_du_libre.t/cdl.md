@@ -36,12 +36,12 @@ Mais le truc **VRAIMENT** cool, avec slipshow, c'est :
 
 Cette présentation se fera en **trois parties** :
 
-{pause up=vrai-sommaire style="text-align:center" #comment-presenter}
+{pause style="text-align:center" #comment-presenter}
 
 {style="display: flex; position:relative"}
 > {#part1 slip include src="what-is-a-presentation.md"}
 >
-> {step exit}
+> {step exit up=vrai-sommaire}
 >
 > {#part3 include src=how-to-write.md slip enter}
 >

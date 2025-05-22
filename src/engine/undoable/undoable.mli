@@ -20,6 +20,10 @@ module Stack : sig
   (** [push x s] adds the element [x] at the top of stack [s]. *)
 
   val pop_opt : 'a Stack.t -> 'a option t
-  (** [pop s] removes and returns the topmost element in stack [s], or raises
-      {!Empty} if the stack is empty. *)
+  (** [pop s] removes and returns the topmost element in stack [s], or returns
+      [None] if the stack is empty. *)
+
+  val peek : 'a Stack.t -> 'a option
+  (** [pop s] returns the topmost element in stack [s], or returns [None] if the
+      stack is empty. *)
 end
