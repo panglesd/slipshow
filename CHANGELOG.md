@@ -21,6 +21,9 @@
 ### Language
 
 - Add `{include src="path/to/file.md"}` to include a file in another (#114)
+- Allow `pause` to have a target (#118)
+- Remove the need for `step` to execute actions (#118)
+- Added support for subslips and slides (#118)
 
 ### Engine
 
@@ -32,6 +35,8 @@
 - Improve mobile support, with buttons to navigate and open the table of content
   (#106)
 - Add `scroll` action to scroll up or down, if needed (#107)
+- Simplify table of content by removing preview (#118)
+- Fix wrong computation of location (#118)
 
 ### Themes
 
