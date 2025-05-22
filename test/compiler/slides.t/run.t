@@ -10,14 +10,14 @@ We can compile the file using the slip_of_mark binary
           <div class="slipshow-rescaler" slipshow-entry-point>
   <div class="slip">
   <div class="slip-body">
-  <div id="slide1" class="slipshow-rescaler" step enter-at-unpause slide enter-at-unpause>
+  <div style="display: flex">
+  <div id="slide1" class="slipshow-rescaler" slide enter-at-unpause>
   <div class="slide">
   <div class="slide-body">
+  <h1 id="first-title"><a class="anchor" aria-hidden="true" href="#first-title"></a><span>First title</span></h1>
   <p><span>Aren’t you just bored with all those slides-based presentations?</span></p>
   </div>
   </div>
   </div>
-  <div id="slide2" class="slipshow-rescaler" step enter-at-unpause slide enter-at-unpause>
-  <div class="slide">
 
   $ cp slides.html /tmp/
