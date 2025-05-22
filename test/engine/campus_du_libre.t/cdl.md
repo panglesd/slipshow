@@ -36,8 +36,7 @@ Mais le truc **VRAIMENT** cool, avec slipshow, c'est :
 
 Cette présentation se fera en **trois parties** :
 
-{#sommaire}
-{pause up=sommaire style="text-align:center" #comment-presenter}
+{pause up=vrai-sommaire style="text-align:center" #comment-presenter}
 
 {style="display: flex; position:relative"}
 > {#part1 slip enter step include src="what-is-a-presentation.md"}
@@ -72,7 +71,7 @@ Cette présentation se fera en **trois parties** :
   padding-top: 50px;
   padding-bottom: 50px;
   background-color: yellowgreen;
-  top: -233px;
+  top: 303px;
   border-radius: 30px;
 }
 #merci-2 {
