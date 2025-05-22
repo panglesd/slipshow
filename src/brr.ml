@@ -1291,6 +1291,9 @@ module El = struct
   | true -> el_list_of_node_list (Jv.get e "children")
   | false -> el_list_of_node_list (Jv.get e "childNodes")
 
+  let contains parent ~child =
+    Jv.call parent "contains" [|child|] |> Jv.to_bool
+
   let set_children e l = delete_children e; List.iter (append_child e) l
   let _append_child e c = ignore @@ Jv.call e "appendChild" [| c |]
 

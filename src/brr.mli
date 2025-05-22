@@ -2143,6 +2143,15 @@ module El : sig
       is [true] (defaults to [false]) not all returned elements will
       satisfy {!is_el} here. *)
 
+  val contains : t -> child:t -> bool
+  (** [contains p ~child] indicates whether a node is a descendant of a given
+      node, that is the node itself, one of its direct children, one of the
+      children's direct children, and so on.
+
+      It uses the
+      {{:https://developer.mozilla.org/en-US/docs/Web/API/Node/contains}contains}
+      method of the parent.  *)
+
   val set_children : t -> t list -> unit
   (** [set_children e l] sets the children of [e] to [l]. *)
 
