@@ -39,15 +39,15 @@ Cette présentation se fera en **trois parties** :
 {pause up=vrai-sommaire style="text-align:center" #comment-presenter}
 
 {style="display: flex; position:relative"}
-> {#part1 slip enter step include src="what-is-a-presentation.md"}
+> {#part1 slip include src="what-is-a-presentation.md"}
 >
 > {step exit}
 >
-> {#part3 include step src=how-to-write.md slip enter}
+> {#part3 include src=how-to-write.md slip enter}
 >
 > {step exit}
 >
-> {enter #part4 include src="access-slipshow.md" slip step}
+> {enter #part4 include src="access-slipshow.md" slip}
 >
 > {pause exit}
 >

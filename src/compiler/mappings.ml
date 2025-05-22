@@ -203,6 +203,10 @@ let of_cmarkit_stage2 =
       let b =
         match Mapper.map_block m block with None -> Block.empty | Some b -> b
       in
+      let attrs =
+        if Attributes.mem "no-enter" attrs then attrs
+        else Attributes.add ("enter-at-unpause", Meta.none) None attrs
+      in
       let attrs = Mapper.map_attrs m attrs in
       (b, (attrs, meta2))
     in
@@ -216,8 +220,8 @@ let of_cmarkit_stage2 =
         let block, attrs = map block (attrs, meta2) in
         Mapper.ret @@ Ast.Slide ((block, attrs), Meta.none)
     | Some (block, (attrs, meta2)) when Attributes.mem "slip" attrs ->
-        let block, attrs = map block (attrs, meta2) in
-        Mapper.ret @@ Ast.Slip ((block, attrs), Meta.none)
+        let block, (attrs, meta) = map block (attrs, meta2) in
+        Mapper.ret @@ Ast.Slip ((block, (attrs, meta)), Meta.none)
     | Some _ -> Mapper.default
   in
   Ast.Mapper.make ~block ()
@@ -243,6 +247,7 @@ let to_cmarkit =
   let attrs = function
     | `Kv (("up-at-unpause", m), v) -> Some (`Kv (("up", m), v))
     | `Kv (("center-at-unpause", m), v) -> Some (`Kv (("center", m), v))
+    | `Kv (("enter-at-unpause", m), v) -> Some (`Kv (("enter", m), v))
     | `Kv (("down-at-unpause", m), v) -> Some (`Kv (("down", m), v))
     | `Kv (("exec-at-unpause", m), v) -> Some (`Kv (("exec", m), v))
     | `Kv (("scroll-at-unpause", m), v) -> Some (`Kv (("scroll", m), v))
