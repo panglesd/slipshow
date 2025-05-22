@@ -126,6 +126,25 @@ Key-value attributes are defined using an equal sign (``=``). They need a key, a
 
 Some attribute can be used both as a flag attribute and as a key-value attribute.
 
+Adding hierarchy to your presentation
+==========================================
+
+Slipshow allows you to use subslips in your presentation. Just create an element and give it a ``slip`` attribute:
+
+.. code-block:: markdown
+
+		{slip}
+		> This is a subslip
+                >
+                > {pause}
+                > It will be entered and exited automatically
+
+                {slip}
+                > Subslips could contains subsubslips
+
+It is often useful to have them in multiple files, in flex containers and with ``step``s in between. See the `"campus du libre" example <https://github.com/panglesd/slipshow/tree/main/example/campus-du-libre>`_ in the example folder.
+
+
 List of classes
 ===============
 
@@ -164,16 +183,20 @@ Those are attributes that are interpreted by the compiler in a special way
 
      {include src=part2/index.md}
 
+
+``slip`` and ``slide``
+  ``slip`` introduces a subslip. The subslip is entered in the flow of the presentation, and executed when the element triggered is outside of it.
+
+  The size of a subslip can be anything, it's content will adapt to be rendered the same way.
+
 Pause attributes
 ----------------
 
 ``pause``
   The pause attribute tells the slipshow engine that there is going to be a pause at this element. This element and every element after that in the document will be hidden.
 
-  Each time the user advances in the presentation (e.g by pressing the ``Down`` key), the first ``pause`` or ``step`` is consumed, possibly triggering some effects.
-
 ``step``
-  Same as ``pause``, but no elements is hidden. Only used to activate effects when consumed.
+  Introduces a no-op step in the slip it's in. Useful to exit entered slips.
 
 Action attributes
 -----------------
