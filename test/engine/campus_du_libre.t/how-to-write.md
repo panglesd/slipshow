@@ -300,7 +300,7 @@ Avec du [contenu special]{style="color:red"}.
 > > .max-size > code { font-size:0.85em; }
 > > </style>
 >
-> {step exit}
+> {step}
 >
 > {slip down=src-of-this pause=src-of-this}
 > > # Source
@@ -342,5 +342,5 @@ Avec du [contenu special]{style="color:red"}.
 > > > ## **On peut faire dérouler un slide! {pause up=example-file}
 > > ````
 
-{pause exit down}
+{pause down}
 # [Tutoriel](https://slipshow.readthedocs.io/en/latest/tutorial.html) et [référence](https://slipshow.readthedocs.io/en/latest/syntax.html)!

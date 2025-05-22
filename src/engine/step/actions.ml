@@ -77,14 +77,15 @@ let enter window elem =
 
 let exit window to_elem =
   let rec exit () =
-    let> coord = Undoable.Stack.pop_opt Enter.stack in
+    let coord = Undoable.Stack.peek Enter.stack in
     match coord with
     | None -> Undoable.return ()
+    | Some { Enter.elem; _ } when Brr.El.contains elem ~child:to_elem ->
+        Undoable.return ()
     | Some { coord; _ } -> (
+        let> _ = Undoable.Stack.pop_opt Enter.stack in
         match Undoable.Stack.peek Enter.stack with
-        | None ->
-            Brr.Console.(log [ "Action element outside of the main slip" ]);
-            Universe.Window.move window coord ~delay:1.0
+        | None -> Universe.Window.move window coord ~delay:1.0
         | Some { Enter.elem; _ } when Brr.El.contains elem ~child:to_elem ->
             Universe.Window.move window coord ~delay:1.0
         | Some _ -> exit ())
