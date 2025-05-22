@@ -12,9 +12,6 @@ $ cp main.html /tmp/
   Hello! How are you?
   
   
-  Hello! How are you?
-  
-  
   ## Chapter 2
   
   I am the chapter 2  and I consist of two parts:
@@ -36,16 +33,8 @@ $ cp main.html /tmp/
   <div include src=chapter1.md>
   <p><span>Hello! How are you?</span></p>
   </div>
-  <div class="slipshow-rescaler" include src=chapter1.md slip>
-  <div class="slip">
-  <div class="slip-body">
-  <p><span>Hello! How are you?</span></p>
-  </div>
-  </div>
-  </div>
   <h2 id="chapter-2" pause><a class="anchor" aria-hidden="true" href="#chapter-2"></a><span>Chapter 2</span></h2>
   <div include src="chapter2/chapter2.md" pause>
   <p><span>I am the chapter 2 </span><span pause></span><span> and I consist of two parts:</span></p>
   <h3 id="part-1"><a class="anchor" aria-hidden="true" href="#part-1"></a><span>Part 1</span></h3>
   <div include src="parts/part1.md">
-  <p><span>This is Part 1</span></p>
