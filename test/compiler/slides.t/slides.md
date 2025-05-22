@@ -1,12 +1,14 @@
 
-{#slide1 step enter slide}
-Aren’t you just bored with all those slides-based presentations?
-
-{#slide2 step enter slide}
-Don’t you think that presentations given in modern browsers shouldn’t copy the limits of ‘classic’ slide decks?
-
-{#slide3 step enter slide}
-Would you like to impress your audience with stunning visualization of your talk?
+{style="display: flex"}
+> {#slide1 slide}
+> > # First title
+> > Aren’t you just bored with all those slides-based presentations?
+>
+> {#slide2 slide}
+> Don’t you think that presentations given in modern browsers shouldn’t copy the limits of ‘classic’ slide decks?
+>
+> {#slide3 slide}
+> Would you like to impress your audience with stunning visualization of your talk?
 
 {slide #idslide}
 > Hello this is a slide

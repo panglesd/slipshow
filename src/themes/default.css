@@ -7,7 +7,29 @@
 }
 
 .slide {
-    display: flex;
+  display: flex;
+}
+
+.slide-body {
+    flex-grow: 1;
+    padding-top: 100px;
+}
+
+.slide-body > h1:first-child:not(#slipshow-toc h1) {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  margin-top: 0;
+  padding-top: 20px;
+  padding-left: 60px;
+  color: white;
+  right: -2px;
+  text-align: left;
+  box-shadow: 0px 5px 18px 5px rgba(0,0,0,0.42);
+  background: linear-gradient(to right, #004dc9, #001e63);
+  font: 51.84px "Fira Sans", sans-serif;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
 }
 
 body {
