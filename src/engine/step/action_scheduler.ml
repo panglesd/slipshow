@@ -18,6 +18,11 @@ let all_actions =
     "up-at-unpause";
   ]
 
+let is_action elem =
+  List.exists
+    (fun action -> Option.is_some @@ Brr.El.at (Jstr.v action) elem)
+    all_actions
+
 let all_action_selector =
   all_actions
   |> List.map (fun s -> Format.sprintf "[%s]" s)

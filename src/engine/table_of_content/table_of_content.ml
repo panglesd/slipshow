@@ -45,9 +45,7 @@ let entry window step ~tag_name ~content =
 
 let categorize window step el =
   let step =
-    match (Brr.El.at !!"step" el, Brr.El.at !!"pause" el) with
-    | None, None -> None
-    | _ -> Some (step + 1)
+    if Step.Action_scheduler.is_action el then Some (step + 1) else None
   in
   let content, tag_name =
     match Brr.El.tag_name el |> Jstr.to_string with
