@@ -1,21 +1,12 @@
 
-{style="display: flex"}
-> {#slide1 slide style="flex: 1 1 auto;"}
-> Aren’t you just bored with all those slides-based presentations?
->
-> {#slide2 slide style="flex: 1 1 auto;"}
-> Don’t you think that presentations given in modern browsers shouldn’t copy the limits of ‘classic’ slide decks?
->
-> {#slide3 slide style="flex: 1 1 auto;"}
-> > Would you like to impress your audience with stunning visualization of your talk?
+{#slide1 step enter slide}
+Aren’t you just bored with all those slides-based presentations?
 
-{pause focus-at-unpause=slide1}
+{#slide2 step enter slide}
+Don’t you think that presentations given in modern browsers shouldn’t copy the limits of ‘classic’ slide decks?
 
-{pause unfocus-at-unpause focus-at-unpause=slide2}
-
-{pause unfocus-at-unpause focus-at-unpause=slide3}
-
-{pause unfocus-at-unpause}
+{#slide3 step enter slide}
+Would you like to impress your audience with stunning visualization of your talk?
 
 {slide #idslide}
 > Hello this is a slide
@@ -45,12 +36,10 @@
 
 Hello
 
-{pause focus-at-unpause=idslide}
+{pause enter=idslide}
 yo
 
-{pause unfocus-at-unpause}
-
-{pause focus-at-unpause=idslide2}
+{pause enter=idslide2}
 yo
 
 {pause unfocus-at-unpause}

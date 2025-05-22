@@ -1,5 +1,31 @@
-let find_next_pause_or_step ?root () =
-  Brr.El.find_first_by_selector ?root (Jstr.v "[pause], [step]")
+let all_actions =
+  [
+    "center-at-unpause";
+    "down-at-unpause";
+    "emph-at-unpause";
+    "enter-at-unpause";
+    "exec-at-unpause";
+    "exit-at-unpause";
+    "focus-at-unpause";
+    "pause";
+    "reveal-at-unpause";
+    "scroll-at-unpause";
+    "static-at-unpause";
+    "step";
+    "unemph-at-unpause";
+    "unfocus-at-unpause";
+    "unreveal-at-unpause";
+    "unstatic-at-unpause";
+    "up-at-unpause";
+  ]
+
+let all_action_selector =
+  all_actions
+  |> List.map (fun s -> Format.sprintf "[%s]" s)
+  |> String.concat ", "
+
+let find_next_pause_or_step () =
+  Brr.El.find_first_by_selector (Jstr.v all_action_selector)
 
 open Undoable.Syntax
 open Fut.Syntax
@@ -21,11 +47,15 @@ module AttributeActions = struct
         |> List.filter_map (fun id ->
                Brr.El.find_first_by_selector (Jstr.concat [ Jstr.v "#"; id ])))
 
-  let act ~on:class_ ~payload action elem =
+  let act ?(remove_class = true) ~on:class_ ~payload action elem =
     let ( let$ ) x f =
       match x with None -> Undoable.return () | Some x -> f x
     in
     let$ v = Brr.El.at (Jstr.v class_) elem in
+    let> () =
+      if remove_class then Undoable.Browser.set_at class_ None elem
+      else Undoable.return ()
+    in
     let$ payload = payload elem v in
     action payload
 
@@ -139,7 +169,8 @@ let setup_pause_ancestors () =
     (fun elem acc ->
       let> () = acc in
       let open AttributeActions in
-      act ~on:"pause" ~payload:as_id Actions.setup_pause elem)
+      act ~remove_class:false ~on:"pause" ~payload:as_id Actions.setup_pause
+        elem)
     (Jstr.v "[pause]") (Undoable.return ())
 
 let update_history () =
