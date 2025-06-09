@@ -1,15 +1,6 @@
 # Changelog
 
-## [v0.2.0] Friday 11th April, 2025. Lyon.
-
-### CLI
-
-- Split commands in groups (#112). Examples:
-  - `slipshow file.md` becomes `slipshow compile file.md`
-  - `slipshow --serve file.md` becomes `slipshow serve file.md`
-  - `slipshow --markdown-output file.md` becomes `slipshow markdown file.md`
-- Add a `--theme` argument and a command to list the themes: `slipshow themes
-  list` (#109)
+## [Unreleased]
 
 ### Compiler
 
@@ -27,6 +18,22 @@
 
 ### Engine
 
+- Simplify table of content by removing preview (#118)
+- Fix wrong computation of location (#118)
+
+## [v0.2.0] Friday 11th April, 2025. Lyon.
+
+### CLI
+
+- Split commands in groups (#112). Examples:
+  - `slipshow file.md` becomes `slipshow compile file.md`
+  - `slipshow --serve file.md` becomes `slipshow serve file.md`
+  - `slipshow --markdown-output file.md` becomes `slipshow markdown file.md`
+- Add a `--theme` argument and a command to list the themes: `slipshow themes
+  list` (#109)
+
+### Engine
+
 - Allow to focus on multiple elements. Zooms as much as possible so everything
   is visible, and center. Backward compatible, focusing on a single
   element. (#103)
@@ -35,8 +42,6 @@
 - Improve mobile support, with buttons to navigate and open the table of content
   (#106)
 - Add `scroll` action to scroll up or down, if needed (#107)
-- Simplify table of content by removing preview (#118)
-- Fix wrong computation of location (#118)
 
 ### Themes
 
