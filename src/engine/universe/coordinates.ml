@@ -42,11 +42,13 @@ let get elem =
         let scale = compute_scale parent *. parent_scale in
         let x =
           cx +. (x *. scale)
-          +. (1. (* The (hardcoded) slip border *) *. parent_scale)
+          +. 0.5 (* The (hardcoded) slip border (divided by 2?) *)
+             *. parent_scale
         in
         let y =
           cy +. (y *. scale)
-          +. (1. (* The (hardcoded) slip border *) *. parent_scale)
+          +. 0.5 (* The (hardcoded) slip border (divided by 2?) *)
+             *. parent_scale
         in
         ((x, y), scale)
   in
