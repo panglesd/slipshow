@@ -19,7 +19,7 @@
 ### Engine
 
 - Simplify table of content by removing preview (#118)
-- Fix wrong computation of location (#118)
+- Fix wrong computation of location (#118, #119)
 
 ## [v0.2.0] Friday 11th April, 2025. Lyon.
 
