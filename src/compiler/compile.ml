@@ -3,6 +3,23 @@ open Cmarkit
 type t = Doc.t
 type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
 
+(** The compilation from "pure" markdown cmarkit values to compiled slipshow
+    values (as extended cmarkit values) is done in several stages. The reason is
+    that otherwise, the order in which we do thing on a specific node is quite
+    tricky to get right...
+
+    The first stage is doing the following:
+    - Block quotes are turned into Divs,
+    - [slip-script] code blocks are turned into slip scripts,
+    - [includes] are included, with the first stage runned on them,
+    - Images are inlined.
+    - Attributes are suffixed with [-at-unpause]
+
+    The second stage is doing the following:
+    - [blockquote] attributed elements are turned into block quotes
+    - [slip] attributed elements are turned into block quotes
+    - [slide] attributed elements are turned into block quotes *)
+
 module Path_entering : sig
   (** Path are relative to the file we are reading. When we include a file we
       need to interpret the path as relative to it.
