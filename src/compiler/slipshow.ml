@@ -119,24 +119,13 @@ let string_to_delayed s =
 
 let convert_to_md ~read_file content =
   let md = Cmarkit.Doc.of_string ~heading_auto_ids:true ~strict:false content in
-  let sd = Compile.of_cmarkit read_file md in
+  let sd = Compile.of_cmarkit ~read_file md in
   let sd = Compile.to_cmarkit sd in
   Cmarkit_commonmark.of_doc ~include_attributes:false sd
 
-let compile ?(read_file = fun _ -> Ok None) s =
-  let md = Cmarkit.Doc.of_string ~heading_auto_ids:true ~strict:false s in
-  let md = Compile.of_cmarkit read_file md in
-  let open Cmarkit in
-  Doc.make
-  @@ Ast.Slip
-       ( ( Doc.block md,
-           ( Attributes.(empty |> add ("slipshow-entry-point", Meta.none) None),
-             Meta.none ) ),
-         Meta.none )
-
 let delayed ?math_link ?(css_links = []) ?(theme = `Builtin Themes.Default)
     ?slipshow_js_link ?read_file s =
-  let md = compile ?read_file s in
+  let md = Compile.compile ?read_file s in
   let content =
     Cmarkit_renderer.doc_to_string Renderers.custom_html_renderer md
   in

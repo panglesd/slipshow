@@ -31,7 +31,7 @@ val delayed :
   ?css_links:Asset.t list ->
   ?theme:[ `Builtin of Themes.t | `External of Asset.t ] ->
   ?slipshow_js_link:Asset.t ->
-  ?read_file:(Fpath.t -> (string option, [< `Msg of string ]) result) ->
+  ?read_file:Compile.file_reader ->
   string ->
   delayed
 (** This function is used to delay the decision on the starting state. It allows
@@ -46,11 +46,8 @@ val convert :
   ?theme:[ `Builtin of Themes.t | `External of Asset.t ] ->
   ?css_links:Asset.t list ->
   ?slipshow_js_link:Asset.t ->
-  ?read_file:(Fpath.t -> (string option, [< `Msg of string ]) result) ->
+  ?read_file:Compile.file_reader ->
   string ->
   string
 
-val convert_to_md :
-  read_file:(Fpath.t -> (string option, [< `Msg of string ]) result) ->
-  string ->
-  string
+val convert_to_md : read_file:Compile.file_reader -> string -> string
