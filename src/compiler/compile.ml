@@ -167,7 +167,10 @@ module Stage1 = struct
     let rec collect_until_dash ?separator (acc_attrs, acc1) global_acc blocks =
       match blocks with
       | Block.Thematic_break ((tb, tb_attrs), _tb_meta) :: rest
-        when separator = None ->
+        when separator = None
+             && String.for_all
+                  (fun c -> c = '-')
+                  (Block.Thematic_break.layout tb) ->
           let global_acc = (acc_attrs, List.rev acc1) :: global_acc in
           let separator = Block.Thematic_break.layout tb in
           collect_until_dash ~separator (tb_attrs, []) global_acc rest
