@@ -1,6 +1,6 @@
-val of_cmarkit :
-  (Fpath.t -> (string option, [< `Msg of string ]) result) ->
-  Cmarkit.Doc.t ->
-  Cmarkit.Doc.t
+type t = Cmarkit.Doc.t
+type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
 
-val to_cmarkit : Cmarkit.Doc.t -> Cmarkit.Doc.t
+val of_cmarkit : read_file:file_reader -> Cmarkit.Doc.t -> t
+val to_cmarkit : t -> Cmarkit.Doc.t
+val compile : ?read_file:file_reader -> string -> t
