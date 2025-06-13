@@ -50,10 +50,6 @@ module RenderAttrs = struct
     f ();
     close_block ~with_newline c tag
 
-  let with_attrs c ?(with_newline = true) attrs f =
-    if Attributes.is_empty attrs then f ()
-    else in_block c ~with_newline "div" attrs f
-
   let with_attrs_span c ?(with_newline = true) attrs f =
     if Attributes.is_empty attrs then f ()
     else in_block c ~with_newline "span" attrs f
@@ -91,7 +87,16 @@ let custom_html_renderer =
     in
     let block c = function
       | Ast.Included ((b, (attrs, _)), _) | Ast.Div ((b, (attrs, _)), _) ->
-          RenderAttrs.with_attrs c attrs (fun () -> Context.block c b);
+          let should_include_div =
+            let attrs_is_not_empty = not @@ Attributes.is_empty attrs in
+            let contains_multiple_blocks =
+              match b with Block.Blocks _ -> true | _ -> false
+            in
+            attrs_is_not_empty || contains_multiple_blocks
+          in
+          if should_include_div then
+            RenderAttrs.in_block c "div" attrs (fun () -> Context.block c b)
+          else Context.block c b;
           true
       | Ast.Slide ((slide, (attrs, _)), _) ->
           let () =
