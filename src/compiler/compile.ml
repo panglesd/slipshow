@@ -1,5 +1,8 @@
 open Cmarkit
 
+type t = Doc.t
+type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
+
 module Path_entering : sig
   (** Path are relative to the file we are reading. When we include a file we
       need to interpret the path as relative to it.
@@ -225,9 +228,20 @@ let of_cmarkit_stage2 =
   in
   Ast.Mapper.make ~block ()
 
-let of_cmarkit read_file md =
+let of_cmarkit ~read_file md =
   let md1 = Cmarkit.Mapper.map_doc (of_cmarkit_stage1 read_file) md in
   Cmarkit.Mapper.map_doc of_cmarkit_stage2 md1
+
+let compile ?(read_file = fun _ -> Ok None) s =
+  let md = Cmarkit.Doc.of_string ~heading_auto_ids:true ~strict:false s in
+  let md = of_cmarkit ~read_file md in
+  let open Cmarkit in
+  Doc.make
+  @@ Ast.Slip
+       ( ( Doc.block md,
+           ( Attributes.(empty |> add ("slipshow-entry-point", Meta.none) None),
+             Meta.none ) ),
+         Meta.none )
 
 let to_cmarkit =
   let block m = function
