@@ -8,6 +8,7 @@
   all files the presentation depends on (images, themes, ...) (#113)
 - Adds a favicon to the presentation file (#115)
 - Fix missing attributes on images (#117)
+- Fix missing mime type on images that made svg undisplayable (#120)
 
 ### Language
 
