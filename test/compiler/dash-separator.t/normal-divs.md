@@ -13,20 +13,12 @@ Asterisks still allow horizontal lines:
 For instance this one
 
 {.show-border}
-> aa
+> > aa
 >
-> ---
+> > > bbb
+> >
+> > > ccc
+> >
+> > > ddd
 >
-> bbb
->
-> ----
->
-> ccc
->
-> ----
->
-> ddd
->
-> ---
->
-> ee
+> > ee

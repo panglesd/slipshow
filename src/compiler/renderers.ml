@@ -66,6 +66,32 @@ module RenderAttrs = struct
         List.iter (line c) ls
 end
 
+let to_string = function
+  (* Standard Cmarkit nodes *)
+  | Cmarkit.Block.Blank_line _ -> "Blank line"
+  | Cmarkit.Block.Block_quote _ -> "Block_quote"
+  | Cmarkit.Block.Blocks _ -> "Blocks"
+  | Cmarkit.Block.Code_block _ -> "Code_block"
+  | Cmarkit.Block.Heading _ -> "Heading"
+  | Cmarkit.Block.Html_block _ -> "Html_block"
+  | Cmarkit.Block.Link_reference_definition _ -> "Link_reference_definition"
+  | Cmarkit.Block.List _ -> "List"
+  | Cmarkit.Block.Paragraph _ -> "Paragraph"
+  | Cmarkit.Block.Thematic_break _ -> "Thematic_break"
+  (* Extension Cmarkit nodes *)
+  | Cmarkit.Block.Ext_math_block _ -> "Ext_math_block"
+  | Cmarkit.Block.Ext_table _ -> "Ext_table"
+  | Cmarkit.Block.Ext_footnote_definition _ -> "Ext_footnote_definition"
+  | Cmarkit.Block.Ext_standalone_attributes _ -> "Ext_standalone_attributes"
+  | Cmarkit.Block.Ext_attribute_definition _ -> "Ext_attribute_definition"
+  (* Slipshow nodes *)
+  | Ast.Included _ -> "Included"
+  | Ast.Div _ -> "Div"
+  | Ast.Slide _ -> "Slide"
+  | Ast.Slip _ -> "Slip"
+  | Ast.SlipScript _ -> "SlipScript"
+  | _ -> "other"
+
 let custom_html_renderer =
   let open Cmarkit_renderer in
   let open Cmarkit in
@@ -90,7 +116,16 @@ let custom_html_renderer =
           let should_include_div =
             let attrs_is_not_empty = not @@ Attributes.is_empty attrs in
             let contains_multiple_blocks =
-              match b with Block.Blocks _ -> true | _ -> false
+              let is_multiple l =
+                l
+                |> List.filter_map (function
+                     | Block.Blank_line _ -> None
+                     | x -> Some x)
+                |> List.length |> ( <= ) 2
+              in
+              match b with
+              | Block.Blocks (l, _) when is_multiple l -> true
+              | _ -> false
             in
             attrs_is_not_empty || contains_multiple_blocks
           in
