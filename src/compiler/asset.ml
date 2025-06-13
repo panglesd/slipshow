@@ -15,14 +15,14 @@ type t =
 
 (* https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types#image_types *)
 let mime_of_ext = function
-  | "apng" -> Some "image/apng" (* Animated Portable Network Graphics (APNG) *)
-  | "avif" -> Some "image/avif" (*  AV1 Image File Format (AVIF) *)
-  | "gif" -> Some "image/gif" (* Graphics Interchange Format (GIF) *)
-  | "jpeg" ->
+  | ".apng" -> Some "image/apng" (* Animated Portable Network Graphics (APNG) *)
+  | ".avif" -> Some "image/avif" (*  AV1 Image File Format (AVIF) *)
+  | ".gif" -> Some "image/gif" (* Graphics Interchange Format (GIF) *)
+  | ".jpeg" | ".jpg" | ".jpe" | ".jig" | ".jfif" ->
       Some "image/jpeg" (* Joint Photographic Expert Group image (JPEG) *)
-  | "png" -> Some "image/png" (* Portable Network Graphics (PNG) *)
-  | "svg+xml" -> Some "image/svg+xml" (* Scalable Vector Graphics (SVG) *)
-  | "webp" -> Some "image/webp" (* Web Picture format (WEBP) *)
+  | ".png" -> Some "image/png" (* Portable Network Graphics (PNG) *)
+  | ".svg" -> Some "image/svg+xml" (* Scalable Vector Graphics (SVG) *)
+  | ".webp" -> Some "image/webp" (* Web Picture format (WEBP) *)
   | _ -> None
 
 let of_uri ~read_file s =
