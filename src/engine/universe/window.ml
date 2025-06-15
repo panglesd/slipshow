@@ -64,13 +64,31 @@ let with_fast_moving f =
 
 let move_pure window ({ x; y; scale } as target : Coordinates.window) ~delay =
   let delay = if !fast_move then 0. else delay in
+  let { Coordinates.scale = old_scale; _ } = State.get_coord () in
+  let (scale_function, scale_delay), (universe_function, universe_delay) =
+    if scale > old_scale then
+      ( (Browser.Css.TransitionTiming "ease-in", Browser.Css.TransitionDelay 0.5),
+        (Browser.Css.TransitionTiming "ease-out", Browser.Css.TransitionDelay 0.)
+      )
+    else if scale < old_scale then
+      ( (TransitionTiming "ease-out", TransitionDelay 0.),
+        (TransitionTiming "ease-in", TransitionDelay 0.5) )
+    else (
+      Brr.Console.(log [ "linear: from"; old_scale; "to"; scale ]);
+      ( (TransitionTiming "", TransitionDelay 0.),
+        (TransitionTiming "", TransitionDelay 0.) ))
+  in
   State.set_coord target;
-  let left = -.x +. (width /. 2.) in
-  let top = -.y +. (height /. 2.) in
+  let x = -.x +. (width /. 2.) in
+  let y = -.y +. (height /. 2.) in
   let+ () = Browser.Css.set [ TransitionDuration delay ] window.scale_container
+  and+ () = Browser.Css.set [ scale_function ] window.scale_container
+  and+ () = Browser.Css.set [ scale_delay ] window.scale_container
   and+ () = Browser.Css.set [ TransitionDuration delay ] window.rotate_container
   and+ () = Browser.Css.set [ TransitionDuration delay ] window.universe
-  and+ () = Browser.Css.set [ Left left; Top top ] window.universe
+  and+ () = Browser.Css.set [ universe_function ] window.universe
+  and+ () = Browser.Css.set [ universe_delay ] window.universe
+  and+ () = Browser.Css.set [ Translate { x; y } ] window.universe
   and+ () = Browser.Css.set [ Scale scale ] window.scale_container in
   ()
 
