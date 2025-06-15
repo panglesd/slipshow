@@ -6,6 +6,7 @@ type property =
   | Top of float
   | Bottom of float
   | TransitionDuration of float
+  | TransitionTiming of string
   | Width of float
   | Height of float
 
@@ -16,6 +17,7 @@ let style_of_prop = function
   | Right _ -> Brr.El.Style.right
   | Bottom _ -> Brr.El.Style.bottom
   | TransitionDuration _ -> Jstr.v "transition-duration"
+  | TransitionTiming _ -> Jstr.v "transition-timing-function"
   | Width _ -> Jstr.v "width"
   | Height _ -> Jstr.v "height"
 
@@ -29,6 +31,7 @@ let value_of_prop = function
   | Right r -> sof r ^ "px"
   | Bottom b -> sof b ^ "px"
   | TransitionDuration td -> sof td ^ "s"
+  | TransitionTiming t -> t
   | Width w -> sof w ^ "px"
   | Height h -> sof h ^ "px"
 
