@@ -9,4 +9,9 @@ body {
   position: absolute;
   top: 0;
   left: 0;
+  contain: layout;
+}
+
+.slipshow-scale-container {
+  contain: paint layout;
 }
