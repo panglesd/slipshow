@@ -45,6 +45,29 @@ let setup el =
   let scale_container =
     El.div ~at:[ At.class' (Jstr.v "slipshow-scale-container") ] [ universe ]
   in
+  (* let _transitionEnd = *)
+  (*   Brr.Ev.listen *)
+  (*     (Brr.Ev.Type.create (Jstr.v "transitionstart")) *)
+  (*     (fun _ -> *)
+  (*       (\* Only do if scale has changed (or changed a lot) *\) *)
+  (*       (\* "Blink" "contain" style from "" to "paint" to ""  *\) *)
+  (*       let _ = *)
+  (*         (\* let+ () = Fut.tick ~ms:600 in *\) *)
+  (*         Brr.G.request_animation_frame (fun _ -> *)
+  (*             Brr.El.set_inline_style (Jstr.v "contain") (Jstr.v "paint layout") *)
+  (*               scale_container; *)
+  (*             let _ = *)
+  (*               (\* let+ () = Fut.tick ~ms:100 in *\) *)
+  (*               Brr.G.request_animation_frame (fun _ -> *)
+  (*                   Brr.El.set_inline_style (Jstr.v "contain") (Jstr.v "") *)
+  (*                     scale_container) *)
+  (*             in *)
+  (*             Brr.Console.(log [ "YAAAAAAUUUUUUUUUUUU" ]); *)
+  (*             ()) *)
+  (*       in *)
+  (*       ()) *)
+  (*     (Brr.El.as_target scale_container) *)
+  (* in *)
   let rotate_container =
     El.div
       ~at:[ At.class' (Jstr.v "slipshow-rotate-container") ]
@@ -67,12 +90,13 @@ let move_pure window ({ x; y; scale } as target : Coordinates.window) ~delay =
   let { Coordinates.scale = old_scale; _ } = State.get_coord () in
   let (scale_function, scale_delay), (universe_function, universe_delay) =
     if scale > old_scale then
-      ( (Browser.Css.TransitionTiming "ease-in", Browser.Css.TransitionDelay 0.5),
+      ( ( Browser.Css.TransitionTiming "ease-in",
+          Browser.Css.TransitionDelay (0.5 *. delay) ),
         (Browser.Css.TransitionTiming "ease-out", Browser.Css.TransitionDelay 0.)
       )
     else if scale < old_scale then
       ( (TransitionTiming "ease-out", TransitionDelay 0.),
-        (TransitionTiming "ease-in", TransitionDelay 0.5) )
+        (TransitionTiming "ease-in", TransitionDelay (0.5 *. delay)) )
     else (
       Brr.Console.(log [ "linear: from"; old_scale; "to"; scale ]);
       ( (TransitionTiming "", TransitionDelay 0.),
@@ -88,6 +112,7 @@ let move_pure window ({ x; y; scale } as target : Coordinates.window) ~delay =
   and+ () = Browser.Css.set [ TransitionDuration delay ] window.universe
   and+ () = Browser.Css.set [ universe_function ] window.universe
   and+ () = Browser.Css.set [ universe_delay ] window.universe
+  (* and+ () = Browser.Css.set [ Top y; Left x ] window.universe *)
   and+ () = Browser.Css.set [ Translate { x; y } ] window.universe
   and+ () = Browser.Css.set [ Scale scale ] window.scale_container in
   ()

@@ -27,8 +27,10 @@ let style_of_prop = function
 let sof x = Printf.sprintf "%.15f" x
 
 let value_of_prop = function
+  (* | Scale x -> "scale(" ^ sof x ^ ")" *)
   | Scale x -> "scale3d(" ^ sof x ^ ", " ^ sof x ^ ", 1)"
   | Rotate r -> "rotate( " ^ sof r ^ "deg)"
+  (* | Translate { x; y } -> "translate( " ^ sof x ^ "px, " ^ sof y ^ "px)" *)
   | Translate { x; y } -> "translate3d( " ^ sof x ^ "px, " ^ sof y ^ "px, 0)"
   | Left l -> sof l ^ "px"
   | Top t -> sof t ^ "px"

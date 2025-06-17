@@ -32,7 +32,9 @@ let setup_rescalers () =
             string_of_float x ^ "0"
           in
           El.set_inline_style (Jstr.v "transform")
-            (scale |> fun x -> "scale(" ^ string_of_float x ^ ")" |> Jstr.v)
+            ( scale |> fun x ->
+              "scale3d(" ^ string_of_float x ^ ", " ^ string_of_float x ^ ", 1)"
+              |> Jstr.v )
             c;
           El.set_inline_style El.Style.height
             (height |> fun x -> string_of_float x ^ "px" |> Jstr.v)
