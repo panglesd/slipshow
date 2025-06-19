@@ -225,9 +225,22 @@ let of_cmarkit_stage2 =
   in
   Ast.Mapper.make ~block ()
 
+let of_cmarkit_stage3 collect =
+  let block _m c =
+    match get_attribute c with
+    | Some (_, (attrs, _)) when Attributes.mem "slipshow-ui" attrs ->
+        collect := c :: !collect;
+        Mapper.delete
+    | _ -> Mapper.default
+  in
+  Ast.Mapper.make ~block ()
+
 let of_cmarkit read_file md =
   let md1 = Cmarkit.Mapper.map_doc (of_cmarkit_stage1 read_file) md in
-  Cmarkit.Mapper.map_doc of_cmarkit_stage2 md1
+  let md2 = Cmarkit.Mapper.map_doc of_cmarkit_stage2 md1 in
+  let collect = ref [] in
+  let md3 = Cmarkit.Mapper.map_doc (of_cmarkit_stage3 collect) md2 in
+  (md3, Cmarkit.Doc.make (Cmarkit.Block.Blocks (!collect, Meta.none)))
 
 let to_cmarkit =
   let block m = function

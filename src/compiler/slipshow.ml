@@ -67,7 +67,7 @@ let head ~theme ~has_math ~math_link ~css_links =
       highlight_js_ocaml_element;
     ]
 
-let embed_in_page content ~has_math ~math_link ~css_links ~theme
+let embed_in_page (content, ui_content) ~has_math ~math_link ~css_links ~theme
     ~slipshow_js_link =
   let head = head ~has_math ~math_link ~css_links ~theme in
   let slipshow_js_element = slipshow_js_element slipshow_js_link in
@@ -86,6 +86,9 @@ let embed_in_page content ~has_math ~math_link ~css_links ~theme
         <svg id="slipshow-drawing-elem" style="overflow:visible; position: absolute; z-index:1000"></svg>
         %s
       </div>
+      <div id="slipshow-custom-ui">
+        %s
+      </div>
       <div id="slip-touch-controls">
         <div class="slip-previous">←</div>
         <div class="slip-fullscreen">⇱</div>
@@ -100,7 +103,7 @@ let embed_in_page content ~has_math ~math_link ~css_links ~theme
     <script>hljs.highlightAll();</script>
     <script>
       startSlipshow(|}
-      head content slipshow_js_element
+      head content ui_content slipshow_js_element
   in
   let end_ = {|);
     </script>
@@ -119,29 +122,34 @@ let string_to_delayed s =
 
 let convert_to_md ~read_file content =
   let md = Cmarkit.Doc.of_string ~heading_auto_ids:true ~strict:false content in
-  let sd = Mappings.of_cmarkit read_file md in
+  let sd, _ = Mappings.of_cmarkit read_file md in
   let sd = Mappings.to_cmarkit sd in
   Cmarkit_commonmark.of_doc ~include_attributes:false sd
 
 let compile ?(read_file = fun _ -> Ok None) s =
   let md = Cmarkit.Doc.of_string ~heading_auto_ids:true ~strict:false s in
-  let md = (Mappings.of_cmarkit read_file) md in
+  let md, md_ui = Mappings.of_cmarkit read_file md in
   let open Cmarkit in
-  Doc.make
-  @@ Ast.Slip
-       ( ( Doc.block md,
-           ( Attributes.(empty |> add ("slipshow-entry-point", Meta.none) None),
-             Meta.none ) ),
-         Meta.none )
+  ( Doc.make
+    @@ Ast.Slip
+         ( ( Doc.block md,
+             ( Attributes.(empty |> add ("slipshow-entry-point", Meta.none) None),
+               Meta.none ) ),
+           Meta.none ),
+    md_ui )
 
 let delayed ?math_link ?(css_links = []) ?(theme = `Builtin Themes.Default)
     ?slipshow_js_link ?read_file s =
-  let md = compile ?read_file s in
+  let md, md_ui = compile ?read_file s in
   let content =
     Cmarkit_renderer.doc_to_string Renderers.custom_html_renderer md
   in
+  let ui_content =
+    Cmarkit_renderer.doc_to_string Renderers.custom_html_renderer md_ui
+  in
   let has_math = Folders.has_math md in
-  embed_in_page ~has_math ~math_link ~theme ~css_links ~slipshow_js_link content
+  embed_in_page ~has_math ~math_link ~theme ~css_links ~slipshow_js_link
+    (content, ui_content)
 
 let add_starting_state (start, end_) starting_state =
   let starting_state =
