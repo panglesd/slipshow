@@ -22,3 +22,8 @@ module Window_of_elem : sig
   val center : current:window -> element -> window
   val down : ?margin:float -> current:window -> element -> window
 end
+
+module State : sig
+  val set_coord : window -> unit
+  val get_coord : unit -> window
+end

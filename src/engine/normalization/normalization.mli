@@ -10,3 +10,4 @@
 
 val setup : Brr.El.t -> unit Fut.t
 val translate_coords : float * float -> float * float
+val get_scale : unit -> float

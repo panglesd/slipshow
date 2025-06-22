@@ -15,7 +15,7 @@ type window = {
 }
 
 let translate_coords (x0, y0) =
-  let { Coordinates.x; y; scale } = State.get_coord () in
+  let { Coordinates.x; y; scale } = Coordinates.State.get_coord () in
   let x1 = (x0 /. scale) +. x in
   let y1 = (y0 /. scale) +. y in
   (x1, y1)
@@ -87,7 +87,7 @@ let with_fast_moving f =
 
 let move_pure window ({ x; y; scale } as target : Coordinates.window) ~delay =
   let delay = if !fast_move then 0. else delay in
-  let { Coordinates.scale = old_scale; _ } = State.get_coord () in
+  let { Coordinates.scale = old_scale; _ } = Coordinates.State.get_coord () in
   let (scale_function, scale_delay), (universe_function, universe_delay) =
     if scale > old_scale then
       ( ( Browser.Css.TransitionTiming "ease-in",
@@ -102,7 +102,7 @@ let move_pure window ({ x; y; scale } as target : Coordinates.window) ~delay =
       ( (TransitionTiming "", TransitionDelay 0.),
         (TransitionTiming "", TransitionDelay 0.) ))
   in
-  State.set_coord target;
+  Coordinates.State.set_coord target;
   let x = -.x +. (width /. 2.) in
   let y = -.y +. (height /. 2.) in
   let+ () = Browser.Css.set [ TransitionDuration delay ] window.scale_container
@@ -118,13 +118,13 @@ let move_pure window ({ x; y; scale } as target : Coordinates.window) ~delay =
   ()
 
 let move window target ~delay =
-  let old_coordinate = State.get_coord () in
+  let old_coordinate = Coordinates.State.get_coord () in
   let+ () = move_pure window target ~delay in
   let undo () = move_pure window old_coordinate ~delay in
   ((), undo)
 
 let move_relative ?(x = 0.) ?(y = 0.) ?(scale = 1.) window ~delay =
-  let coord = State.get_coord () in
+  let coord = Coordinates.State.get_coord () in
   let dest =
     {
       Coordinates.x = coord.x +. x;
@@ -145,7 +145,7 @@ let focus ?(margin = 0.) window elems =
         { c with width = c.width +. margin; height = c.height +. margin })
       coords_e
   in
-  let current = State.get_coord () in
+  let current = Coordinates.State.get_coord () in
   let coords_w = Coordinates.Window_of_elem.focus ~current coords_e in
   move window coords_w ~delay:1.
 
@@ -159,25 +159,25 @@ let enter window elem =
 
 let up window elem =
   let coords_e = Coordinates.get elem in
-  let current = State.get_coord () in
+  let current = Coordinates.State.get_coord () in
   let coords_w = Coordinates.Window_of_elem.up ~current coords_e in
   move window coords_w ~delay:1.
 
 let down window elem =
   let coords_e = Coordinates.get elem in
-  let current = State.get_coord () in
+  let current = Coordinates.State.get_coord () in
   let coords_w = Coordinates.Window_of_elem.down ~current coords_e in
   move window coords_w ~delay:1.
 
 let center window elem =
   let coords_e = Coordinates.get elem in
-  let current = State.get_coord () in
+  let current = Coordinates.State.get_coord () in
   let coords_w = Coordinates.Window_of_elem.center ~current coords_e in
   move window coords_w ~delay:1.
 
 let scroll window elem =
   let coords_e = Coordinates.get elem in
-  let current = State.get_coord () in
+  let current = Coordinates.State.get_coord () in
   if
     coords_e.y -. (coords_e.height /. 2.)
     < current.y -. (Constants.height /. 2. *. current.scale)

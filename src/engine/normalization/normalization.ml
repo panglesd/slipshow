@@ -16,6 +16,8 @@ let translate_coords (x, y) =
   let x = x -. (width /. 2.) and y = y -. (height /. 2.) in
   (x, y)
 
+let get_scale () = !state.scale
+
 let replace_open_window window =
   let open_window = window.open_window in
   let set_state ~left ~right ~top ~bottom ~width ~height =

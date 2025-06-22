@@ -16,11 +16,35 @@ let log_element { x; y; width; height } =
   in
   Brr.Console.(log [ s ])
 
+module State = struct
+  let coordinates = ref { x = width /. 2.; y = height /. 2.; scale = 1. }
+  let set_coord v = coordinates := v
+  let get_coord () = !coordinates
+end
+
 let get elem =
-  let get_coord_in_parent elem =
-    let x = Brr.El.offset_left elem and y = Brr.El.offset_top elem in
-    (float_of_int x, float_of_int y)
+  let univ =
+    Brr.El.find_first_by_selector (Jstr.v "#slipshow-universe") |> Option.get
   in
+  let scale_container =
+    Brr.El.find_first_by_selector (Jstr.v ".slipshow-scale-container")
+    |> Option.get
+  in
+  let get_coord elem =
+    let scale = Normalization.get_scale () in
+    let x = Brr.El.bound_x elem /. scale and y = Brr.El.bound_y elem /. scale in
+    let x = x -. (Brr.El.bound_x univ /. scale)
+    and y = y -. (Brr.El.bound_y univ /. scale) in
+    let width, height =
+      (Brr.El.bound_w elem /. scale, Brr.El.bound_h elem /. scale)
+    in
+    let x = x +. (width /. 2.) in
+    let y = y +. (height /. 2.) in
+    { x; y; width; height }
+  in
+  (* We cannot rely on "state" since computation for the zoom factor in the
+     computation, since when the computation happen during a transition, the end
+     state is used (instead of the intermediatory one) *)
   let compute_scale elem =
     let comp = El.computed_style (Jstr.v "transform") elem |> Jstr.to_string in
     let b = String.index_opt comp '(' in
@@ -31,40 +55,14 @@ let get elem =
         |> float_of_string_opt |> Option.value ~default:1.
     | _ -> 1.
   in
-  let rec compute elem =
-    match El.offset_parent elem with
-    | None -> ((0., 0.), 1.)
-    | Some parent when El.class' (Jstr.v "slipshow-universe") parent ->
-        (get_coord_in_parent elem, 1.)
-    | Some parent ->
-        let (cx, cy), parent_scale = compute parent in
-        let x, y = get_coord_in_parent elem in
-        let scale = compute_scale parent *. parent_scale in
-        let x =
-          cx +. (x *. scale)
-          +. 0.5 (* The (hardcoded) slip border (divided by 2?) *)
-             *. parent_scale
-        in
-        let y =
-          cy +. (y *. scale)
-          +. 0.5 (* The (hardcoded) slip border (divided by 2?) *)
-             *. parent_scale
-        in
-        ((x, y), scale)
-  in
-  let (x, y), scale = compute elem in
-  let scale = compute_scale elem *. scale in
-  let width = float_of_int (El.offset_w elem) *. scale in
-  let height = float_of_int (El.offset_h elem) *. scale in
-  let x =
-    x +. (width /. 2.)
-    (* No need to add the borders: offset_w has them *)
-  in
-  let y =
-    y +. (height /. 2.)
-    (* No need to add the borders: offset_h has them *)
-  in
-  { x; y; width; height }
+  let final_coord = get_coord elem in
+  let scale = compute_scale scale_container in
+  {
+    x = final_coord.x /. scale;
+    y = final_coord.y /. scale;
+    height = final_coord.height /. scale;
+    width = final_coord.width /. scale;
+  }
 
 module Window_of_elem = struct
   let focus ~current elems =

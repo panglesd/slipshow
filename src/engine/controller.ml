@@ -2,7 +2,7 @@ let keyboard_setup (window : Universe.Window.window) =
   let target = Brr.Window.as_target Brr.G.window in
   let callback ev =
     let key = ev |> Brr.Ev.as_type |> Brr.Ev.Keyboard.key |> Jstr.to_string in
-    let current_coord = Universe.State.get_coord () in
+    let current_coord = Universe.Coordinates.State.get_coord () in
     let () =
       match key with
       | "t" -> Table_of_content.toggle_visibility ()

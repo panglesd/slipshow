@@ -72,7 +72,8 @@ module Enter = struct
   let stack = Stack.create ()
 
   let in_ elem =
-    Undoable.Stack.push { elem; coord = Universe.State.get_coord () } stack
+    let coord = Universe.Coordinates.State.get_coord () in
+    Undoable.Stack.push { elem; coord } stack
 end
 
 let enter window elem =
@@ -103,7 +104,7 @@ let static elem =
   Undoable.List.iter (Undoable.Browser.set_class "unstatic" false) elem
 
 let focus window elems =
-  let> () = State.Focus.push (Universe.State.get_coord ()) in
+  let> () = State.Focus.push (Universe.Coordinates.State.get_coord ()) in
   (* We focus 1px more in order to avoid off-by-one error due to round errors *)
   Universe.Window.focus ~margin:(-1.) window elems
 
