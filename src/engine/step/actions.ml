@@ -1,8 +1,12 @@
 open Undoable.Syntax
 
 let do_to_root elem f =
+  let is_root elem =
+    Brr.El.class' (Jstr.v "slip") elem
+    || (Option.is_some @@ Brr.El.at (Jstr.v "pause-block") elem)
+  in
   let rec do_rec elem =
-    if Brr.El.class' (Jstr.v "slip") elem then Undoable.return ()
+    if is_root elem then Undoable.return ()
     else
       let> () = f elem in
       match Brr.El.parent elem with
