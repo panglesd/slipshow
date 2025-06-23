@@ -59,7 +59,7 @@ Cette présentation se fera en **trois parties** :
 > > >
 > > > - Documentation : <https://slipshow.readthedocs.io/>
 > > >
-> > > - Source de ces slides : <https://choum.net/panglesd/slides/campus_du_libre.md>
+> > > - Source de ces slides : <https://github.com/panglesd/slipshow/tree/main/example/campus-du-libre>
 > > >
 > > > - Sliphub : <https://sliphub.choum.net/>
 
