@@ -1,5 +1,0 @@
-EXT js
-PKG b0.kit js_of_ocaml js_of_ocaml-toplevel
-S src/**
-S test/**
-B _b0/**

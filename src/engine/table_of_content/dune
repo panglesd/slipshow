@@ -1,3 +1,0 @@
-(library
- (name table_of_content)
- (libraries brr step))

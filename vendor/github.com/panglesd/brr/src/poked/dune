@@ -1,6 +1,0 @@
-(library
- (name brr_poked)
- (public_name brr.poked)
- (modules brr_poked)
- (libraries brr brr.poke)
- (wrapped false))
