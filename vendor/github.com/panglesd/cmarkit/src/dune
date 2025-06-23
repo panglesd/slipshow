@@ -1,1 +1,1 @@
-(library (name cmarkit) (package slipshow) (wrapped false) (flags -w -26-27))
+(library (public_name cmarkit) (wrapped false) (flags -w -26-27))
