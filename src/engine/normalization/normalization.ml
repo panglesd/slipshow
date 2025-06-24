@@ -2,7 +2,7 @@ open Brr
 open Fut.Syntax
 module Window = Brr.Window
 
-let width = 1440.
+let width = 1920.
 let height = 1080.
 
 type t = { open_window : El.t; format_container : El.t }

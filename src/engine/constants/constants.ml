@@ -1,2 +1,2 @@
-let width = 1440.
+let width = 1920.
 let height = 1080.
