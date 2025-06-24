@@ -3692,8 +3692,9 @@ module Folder = struct
       let open Inline in
       match i with
       | Autolink _ | Break _ | Code_span _ | Raw_html _ | Text _
-      | Ext_math_span _ | Ext_attrs _ -> acc
+      | Ext_math_span _ -> acc
       | Image ((l, _), _) | Link ((l, _), _) -> fold_inline f acc l.text
+      | Ext_attrs (({content = inline; _}), _)  -> fold_inline f acc inline
       | Emphasis (({ inline }, _), _) -> fold_inline f acc inline
       | Strong_emphasis (({ inline }, _), _) -> fold_inline f acc inline
       | Inlines (is, _) -> List.fold_left (fold_inline f) acc is

@@ -9,6 +9,7 @@
 - Adds a favicon to the presentation file (#115)
 - Fix missing attributes on images (#117)
 - Fix missing mime type on images that made svg undisplayable (#120)
+- Fix detection of math inside inline attributes (#124)
 
 ### Language
 
