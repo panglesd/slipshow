@@ -4,6 +4,10 @@ let keyboard_setup (window : Universe.Window.window) =
     let key = ev |> Brr.Ev.as_type |> Brr.Ev.Keyboard.key |> Jstr.to_string in
     let current_coord = Universe.State.get_coord () in
     let () =
+      let check_ctrl_key f =
+        if ev |> Brr.Ev.as_type |> Brr.Ev.Keyboard.ctrl_key then () else f ()
+      in
+      check_ctrl_key @@ fun () ->
       match key with
       | "t" -> Table_of_content.toggle_visibility ()
       | "w" -> Drawing.State.set_tool Pen
@@ -39,10 +43,10 @@ let keyboard_setup (window : Universe.Window.window) =
               window ~delay:0.
           in
           ()
-      | "ArrowRight" | "ArrowDown" | " " ->
+      | "ArrowRight" | "ArrowDown" | "PageDown" | " " ->
           let _ : unit Fut.t = Step.Next.go_next window 1 in
           ()
-      | "ArrowLeft" | "ArrowUp" ->
+      | "ArrowLeft" | "PageUp" | "ArrowUp" ->
           let _ : unit Fut.t = Step.Next.go_prev window 1 in
           ()
       | "z" ->
