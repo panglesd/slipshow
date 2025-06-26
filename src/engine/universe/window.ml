@@ -138,7 +138,7 @@ let move_relative_pure ?(x = 0.) ?(y = 0.) ?(scale = 1.) window ~delay =
   move_relative ~x ~y ~scale window ~delay |> Undoable.discard
 
 let focus ?(margin = 0.) window elems =
-  let coords_e = List.map Coordinates.get elems in
+  let coords_e = List.map Coord_computation.elem elems in
   let coords_e =
     List.map
       (fun (c : Coordinates.element) ->
@@ -146,37 +146,37 @@ let focus ?(margin = 0.) window elems =
       coords_e
   in
   let current = State.get_coord () in
-  let coords_w = Coordinates.Window_of_elem.focus ~current coords_e in
+  let coords_w = Coord_computation.Window.focus ~current coords_e in
   move window coords_w ~delay:1.
 
 let focus_pure ?margin window elem =
   focus ?margin window elem |> Undoable.discard
 
 let enter window elem =
-  let coords_e = Coordinates.get elem in
-  let coords_w = Coordinates.Window_of_elem.enter coords_e in
+  let coords_e = Coord_computation.elem elem in
+  let coords_w = Coord_computation.Window.enter coords_e in
   move window coords_w ~delay:1.
 
 let up window elem =
-  let coords_e = Coordinates.get elem in
+  let coords_e = Coord_computation.elem elem in
   let current = State.get_coord () in
-  let coords_w = Coordinates.Window_of_elem.up ~current coords_e in
+  let coords_w = Coord_computation.Window.up ~current coords_e in
   move window coords_w ~delay:1.
 
 let down window elem =
-  let coords_e = Coordinates.get elem in
+  let coords_e = Coord_computation.elem elem in
   let current = State.get_coord () in
-  let coords_w = Coordinates.Window_of_elem.down ~current coords_e in
+  let coords_w = Coord_computation.Window.down ~current coords_e in
   move window coords_w ~delay:1.
 
 let center window elem =
-  let coords_e = Coordinates.get elem in
+  let coords_e = Coord_computation.elem elem in
   let current = State.get_coord () in
-  let coords_w = Coordinates.Window_of_elem.center ~current coords_e in
+  let coords_w = Coord_computation.Window.center ~current coords_e in
   move window coords_w ~delay:1.
 
 let scroll window elem =
-  let coords_e = Coordinates.get elem in
+  let coords_e = Coord_computation.elem elem in
   let current = State.get_coord () in
   if
     coords_e.y -. (coords_e.height /. 2.)
