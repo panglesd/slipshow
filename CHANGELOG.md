@@ -26,6 +26,7 @@
 - Improve zooming behaviour and performance (#121)
 - Add PageUp and PageDown as navigation keys, adding support for pointers (#126)
 - Do not act when control is pressed (#126)
+- Fix wrong positioning on scaled slips (#128)
 
 ## [v0.2.0] Friday 11th April, 2025. Lyon.
 
