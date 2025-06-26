@@ -92,3 +92,5 @@ let setup el =
   let parent = Brr.El.parent open_window.open_window |> Option.get in
   let _unobser = Brr.ResizeObserver.observe resize_observer parent in
   Fut.tick ~ms:0
+
+let scale f = f /. !state.scale

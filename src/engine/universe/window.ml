@@ -8,7 +8,7 @@ open struct
   module Console = Brr.Console
 end
 
-type window = {
+type t = {
   scale_container : Brr.El.t;
   rotate_container : Brr.El.t;
   universe : Brr.El.t;
@@ -85,22 +85,49 @@ let with_fast_moving f =
   let+ () = f () in
   fast_move := false
 
+let live_scale { scale_container; _ } =
+  let compute_scale elem =
+    let comp = El.computed_style (Jstr.v "transform") elem |> Jstr.to_string in
+    let b = String.index_opt comp '(' in
+    let e = String.index_opt comp ',' in
+    match (b, e) with
+    | Some b, Some e ->
+        String.sub comp (b + 1) (e - b - 1)
+        |> float_of_string_opt |> Option.value ~default:1.
+    | _ -> 1.
+  in
+  compute_scale scale_container
+
 let move_pure window ({ x; y; scale } as target : Coordinates.window) ~delay =
   let delay = if !fast_move then 0. else delay in
-  let { Coordinates.scale = old_scale; _ } = State.get_coord () in
+  let old_scale =
+    let live_scale = live_scale window in
+    let { Coordinates.scale = state_scale; _ } = State.get_coord () in
+    let diff =
+      Float.min live_scale state_scale /. Float.max live_scale state_scale
+    in
+    (* Live scale computes a less precise scale than state scale. If they are
+       close together, may make sense to consider them "equal" and use the more
+       precise one *)
+    if diff < 0.95 then live_scale else state_scale
+  in
+  let transitions_style =
+    if scale > old_scale then `Zoom
+    else if old_scale > scale then `Unzoom
+    else `Flat
+  in
   let (scale_function, scale_delay), (universe_function, universe_delay) =
-    if scale > old_scale then
-      ( ( Browser.Css.TransitionTiming "ease-in",
-          Browser.Css.TransitionDelay (0.5 *. delay) ),
-        (Browser.Css.TransitionTiming "ease-out", Browser.Css.TransitionDelay 0.)
-      )
-    else if scale < old_scale then
-      ( (TransitionTiming "ease-out", TransitionDelay 0.),
-        (TransitionTiming "ease-in", TransitionDelay (0.5 *. delay)) )
-    else (
-      Brr.Console.(log [ "linear: from"; old_scale; "to"; scale ]);
-      ( (TransitionTiming "", TransitionDelay 0.),
-        (TransitionTiming "", TransitionDelay 0.) ))
+    let open Browser.Css in
+    match transitions_style with
+    | `Zoom ->
+        ( (TransitionTiming "ease-in", TransitionDelay (0.5 *. delay)),
+          (TransitionTiming "ease-out", TransitionDelay 0.) )
+    | `Unzoom ->
+        ( (TransitionTiming "ease-out", TransitionDelay 0.),
+          (TransitionTiming "ease-in", TransitionDelay (0.5 *. delay)) )
+    | `Flat ->
+        ( (TransitionTiming "", TransitionDelay 0.),
+          (TransitionTiming "", TransitionDelay 0.) )
   in
   State.set_coord target;
   let x = -.x +. (width /. 2.) in
@@ -112,78 +139,9 @@ let move_pure window ({ x; y; scale } as target : Coordinates.window) ~delay =
   and+ () = Browser.Css.set [ TransitionDuration delay ] window.universe
   and+ () = Browser.Css.set [ universe_function ] window.universe
   and+ () = Browser.Css.set [ universe_delay ] window.universe
-  (* and+ () = Browser.Css.set [ Top y; Left x ] window.universe *)
   and+ () = Browser.Css.set [ Translate { x; y } ] window.universe
   and+ () = Browser.Css.set [ Scale scale ] window.scale_container in
   ()
 
-let move window target ~delay =
-  let old_coordinate = State.get_coord () in
-  let+ () = move_pure window target ~delay in
-  let undo () = move_pure window old_coordinate ~delay in
-  ((), undo)
-
-let move_relative ?(x = 0.) ?(y = 0.) ?(scale = 1.) window ~delay =
-  let coord = State.get_coord () in
-  let dest =
-    {
-      Coordinates.x = coord.x +. x;
-      y = coord.y +. y;
-      scale = coord.scale *. scale;
-    }
-  in
-  move window dest ~delay
-
-let move_relative_pure ?(x = 0.) ?(y = 0.) ?(scale = 1.) window ~delay =
-  move_relative ~x ~y ~scale window ~delay |> Undoable.discard
-
-let focus ?(margin = 0.) window elems =
-  let coords_e = List.map Coord_computation.elem elems in
-  let coords_e =
-    List.map
-      (fun (c : Coordinates.element) ->
-        { c with width = c.width +. margin; height = c.height +. margin })
-      coords_e
-  in
-  let current = State.get_coord () in
-  let coords_w = Coord_computation.Window.focus ~current coords_e in
-  move window coords_w ~delay:1.
-
-let focus_pure ?margin window elem =
-  focus ?margin window elem |> Undoable.discard
-
-let enter window elem =
-  let coords_e = Coord_computation.elem elem in
-  let coords_w = Coord_computation.Window.enter coords_e in
-  move window coords_w ~delay:1.
-
-let up window elem =
-  let coords_e = Coord_computation.elem elem in
-  let current = State.get_coord () in
-  let coords_w = Coord_computation.Window.up ~current coords_e in
-  move window coords_w ~delay:1.
-
-let down window elem =
-  let coords_e = Coord_computation.elem elem in
-  let current = State.get_coord () in
-  let coords_w = Coord_computation.Window.down ~current coords_e in
-  move window coords_w ~delay:1.
-
-let center window elem =
-  let coords_e = Coord_computation.elem elem in
-  let current = State.get_coord () in
-  let coords_w = Coord_computation.Window.center ~current coords_e in
-  move window coords_w ~delay:1.
-
-let scroll window elem =
-  let coords_e = Coord_computation.elem elem in
-  let current = State.get_coord () in
-  if
-    coords_e.y -. (coords_e.height /. 2.)
-    < current.y -. (Constants.height /. 2. *. current.scale)
-  then up window elem
-  else if
-    coords_e.y +. (coords_e.height /. 2.)
-    > current.y +. (Constants.height /. 2. *. current.scale)
-  then down window elem
-  else Undoable.return ()
+let bound_x { universe; _ } = Brr.El.bound_x universe
+let bound_y { universe; _ } = Brr.El.bound_y universe

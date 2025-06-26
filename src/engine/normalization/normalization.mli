@@ -9,4 +9,10 @@
     rescaling the window, the scale would change... *)
 
 val setup : Brr.El.t -> unit Fut.t
+
 val translate_coords : float * float -> float * float
+(** Turn coordinates given as "screen coordinates" to coordinates given as
+    inside the black square *)
+
+val scale : float -> float
+(** Scale coordinates (? TODO: improve docstring) *)
