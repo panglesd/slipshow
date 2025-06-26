@@ -23,6 +23,8 @@
 - Simplify table of content by removing preview (#118)
 - Fix wrong computation of location (#118, #119)
 - Improve zooming behaviour and performance (#121)
+- Add PageUp and PageDown as navigation keys, adding support for pointers (#126)
+- Do not act when control is pressed (#126)
 
 ## [v0.2.0] Friday 11th April, 2025. Lyon.
 
