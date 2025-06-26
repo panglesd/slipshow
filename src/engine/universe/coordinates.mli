@@ -13,12 +13,3 @@ type element = { x : float; y : float; width : float; height : float }
 
 val log_window : window -> unit
 val log_element : element -> unit
-val get : Brr.El.t -> element
-
-module Window_of_elem : sig
-  val focus : current:window -> element list -> window
-  val enter : element -> window
-  val up : ?margin:float -> current:window -> element -> window
-  val center : current:window -> element -> window
-  val down : ?margin:float -> current:window -> element -> window
-end
