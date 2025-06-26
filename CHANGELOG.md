@@ -17,6 +17,7 @@
 - Allow `pause` to have a target (#118)
 - Remove the need for `step` to execute actions (#118)
 - Added support for subslips and slides (#118)
+- Added pause blocks (#127)
 
 ### Engine
 
