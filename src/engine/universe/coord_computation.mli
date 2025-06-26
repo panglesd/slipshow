@@ -1,6 +1,6 @@
 open Coordinates
 
-val elem : Brr.El.t -> element
+val elem : Window.t -> Brr.El.t -> element
 
 module Window : sig
   val focus : current:window -> element list -> window

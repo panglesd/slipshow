@@ -1,4 +1,4 @@
-let keyboard_setup (window : Universe.Window.window) =
+let keyboard_setup (window : Universe.Window.t) =
   let target = Brr.Window.as_target Brr.G.window in
   let callback ev =
     let key = ev |> Brr.Ev.as_type |> Brr.Ev.Keyboard.key |> Jstr.to_string in
@@ -17,28 +17,28 @@ let keyboard_setup (window : Universe.Window.window) =
       | "X" -> Drawing.clear ()
       | "l" ->
           let _ : unit Fut.t =
-            Universe.Window.move_relative_pure
+            Universe.Move.move_relative_pure
               ~x:(30. *. 1. /. current_coord.scale)
               window ~delay:0.
           in
           ()
       | "j" ->
           let _ : unit Fut.t =
-            Universe.Window.move_relative_pure
+            Universe.Move.move_relative_pure
               ~x:(-30. *. 1. /. current_coord.scale)
               window ~delay:0.
           in
           ()
       | "k" ->
           let _ : unit Fut.t =
-            Universe.Window.move_relative_pure
+            Universe.Move.move_relative_pure
               ~y:(30. *. 1. /. current_coord.scale)
               window ~delay:0.
           in
           ()
       | "i" ->
           let _ : unit Fut.t =
-            Universe.Window.move_relative_pure
+            Universe.Move.move_relative_pure
               ~y:(-30. *. 1. /. current_coord.scale)
               window ~delay:0.
           in
@@ -51,12 +51,12 @@ let keyboard_setup (window : Universe.Window.window) =
           ()
       | "z" ->
           let _ : unit Fut.t =
-            Universe.Window.move_relative_pure ~scale:1.02 window ~delay:0.
+            Universe.Move.move_relative_pure ~scale:1.02 window ~delay:0.
           in
           ()
       | "Z" ->
           let _ : unit Fut.t =
-            Universe.Window.move_relative_pure ~scale:(1. /. 1.02) window
+            Universe.Move.move_relative_pure ~scale:(1. /. 1.02) window
               ~delay:0.
           in
           ()
@@ -68,7 +68,7 @@ let keyboard_setup (window : Universe.Window.window) =
   let _listener = Brr.Ev.listen Brr.Ev.keydown callback target in
   ()
 
-let touch_setup (window : Universe.Window.window) =
+let touch_setup (window : Universe.Window.t) =
   let () =
     let next =
       Brr.El.find_first_by_selector (Jstr.v "#slip-touch-controls .slip-next")
@@ -148,6 +148,6 @@ let touch_setup (window : Universe.Window.window) =
 
   ()
 
-let setup (window : Universe.Window.window) =
+let setup (window : Universe.Window.t) =
   keyboard_setup window;
   touch_setup window
