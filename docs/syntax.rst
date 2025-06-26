@@ -193,7 +193,31 @@ Pause attributes
 ----------------
 
 ``pause``
-  The pause attribute tells the slipshow engine that there is going to be a pause at this element. This element and every element after that in the document will be hidden.
+  The pause attribute tells the slipshow engine that there is going to be a pause at this element. This element and every element after (but inside the "pause block") that in the document will be hidden.
+
+``pause-block``
+  The ``pause-block`` attribute tells the slipshow engine that pauses inside it should not hide content outside of it.
+
+  Example:
+
+  .. code-block:: markdown
+
+     A
+
+     {pause-block}
+     > B
+     >
+     > {pause}
+     >
+     > C
+     >
+     > {pause}
+     >
+     > D
+
+     E
+
+  will initially display A, B and E, then going a step further will additionally display C, and another step will display D.
 
 ``step``
   Introduces a no-op step in the slip it's in. Useful to exit entered slips.
