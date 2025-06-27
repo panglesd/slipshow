@@ -20,11 +20,77 @@ Some extensions to CommonMarkd are quite common, and available in the slipshow s
 
 
 .. warning::
-   Quotes do not have the same syntax as commonmark!
+   Quotes and horizontal rules syntax differs slightly with commonmark!
 
-In addition to extensions, there is one modification to the Markdown syntax! The markdown syntax for `block quotation <https://spec.commonmark.org/0.31.2/#block-quotes>`_ is not considered to enclose a quotation. It instead simply groups blocks together, without assigning a default meaning to the group. The meaning can be given using the attribute syntax.
+   For block quotes, use the ``blockquote`` attribute (see :ref:`the section on attributes <block-metadata>`). For horizontal lines, use asterisks instead of dashes.
 
-For block quotes, use the html syntax until better support is added! (Slipshow is still in beta version.)
+Grouping blocks together
+========================
+
+In Slipshow's markup, it might be useful to group blocks together, for instance inside an admonition. There are several ways to group block together.
+
+Using ``>``
+-----------
+
+You can use ``>`` to group blocks together, just like it is used in Commonmark to group them in `quotations <https://spec.commonmark.org/0.31.2/#block-quotes>`_. Here is an example:
+
+.. code-block:: markdown
+
+   > Two paragraphs
+   >
+   > Grouped in a block
+
+
+Using ``---``
+-------------
+
+Like other markdown-to-slides generator, slipshow allows to use "horizontal lines" (such as ``---``) to group blocks together:
+
+
+qzdqzd
+
+.. code-block:: markdown
+
+   Two paragraphs
+
+   Grouped in a block
+
+   ---
+
+   Another group
+
+   ---
+
+   Yet another group
+
+The example above defines three groups, one after the other. It is important that each horizontal lines have the same number of ``-`` (and at least three). The separators with the most numbers of dashes have priority:
+
+.. code-block:: markdown
+
+   A
+
+   ---
+
+   B
+
+   ----
+
+   C
+
+will group the blocks above as (``A``, ``B``) in one group, and ``C`` in the other.
+
+You can attach metadata to a group by attaching metadata to the dashes (see the next section):
+
+.. code-block:: markdown
+
+   A
+
+   {#id}
+   ---
+
+   B
+
+This attaches metadata to B. Note that the a dash separation before the first block is optional, but possible to add metadata.
 
 Attaching metadata
 ==================
@@ -34,6 +100,8 @@ Metadatas are the backbone of your slipshow presentation! The tricky part is tha
 Attaching metadata is done very similarly to both pandoc's markdown and djot.
 
 Metadatas (also called attributes) are enclosed in curly braces: ``{}``. We can attach metadata to two kind of document parts: blocks (such as paragraphs, code blocks, title, definitions, ...) and inlines (such as words or group of words, code spans, links, images, ...).
+
+.. _block-metadata:
 
 Block metadata
 --------------
@@ -45,7 +113,7 @@ To add attributes to a block, put the curly braces on an (otherwise empty) line 
 		{the attributes}
 		# The title
 
-See the next section for the content on the attributes. If you want to add an attribute to a group of several blocks, indent all of them using ``>``. For instance
+See the :ref:`next-section <pres-flow>` for the content on the attributes. If you want to add an attribute to a group of several blocks, indent all of them using ``>``. For instance
 
 .. code-block:: markdown
 
@@ -100,6 +168,8 @@ However, sometimes putting long attributes in the middle of the text can hurt re
 
 Not perfect, but much better than the version where all words are given the attributes separately.
 
+.. _pres-flow:
+
 Describing your presentation flow
 =================================
 
@@ -142,7 +212,7 @@ Slipshow allows you to use subslips in your presentation. Just create an element
                 {slip}
                 > Subslips could contains subsubslips
 
-It is often useful to have them in multiple files, in flex containers and with ``step``s in between. See the `"campus du libre" example <https://github.com/panglesd/slipshow/tree/main/example/campus-du-libre>`_ in the example folder.
+It is often useful to have them in multiple files, in flex containers and with ``step``\s in between. See the `"campus du libre" example <https://github.com/panglesd/slipshow/tree/main/example/campus-du-libre>`_ in the example folder.
 
 
 List of classes
