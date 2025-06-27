@@ -180,7 +180,7 @@ module Stage1 = struct
     let rec collect_until_dash ?(first = false) ~separator (acc_attrs, acc1)
         global_acc blocks =
       let add_to_global_acc (acc_attrs, acc1) global_acc =
-        if List.is_empty global_acc && List.is_empty acc1 && first then []
+        if global_acc = [] && acc1 = [] && first then []
           (* We do not add empty first element to give a chance to add attributes to the (new) first element *)
         else (acc_attrs, List.rev acc1) :: global_acc
       in
