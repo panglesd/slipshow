@@ -112,8 +112,8 @@ let move_pure window ({ x; y; scale } as target : Coordinates.window) ~delay =
     if diff < 0.95 then live_scale else state_scale
   in
   let transitions_style =
-    if scale > old_scale then `Zoom
-    else if old_scale > scale then `Unzoom
+    if scale /. old_scale > 1.1 then `Zoom
+    else if old_scale /. scale > 1.1 then `Unzoom
     else `Flat
   in
   let (scale_function, scale_delay), (universe_function, universe_delay) =
