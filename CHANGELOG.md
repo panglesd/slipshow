@@ -18,6 +18,7 @@
 - Remove the need for `step` to execute actions (#118)
 - Added support for subslips and slides (#118)
 - Added pause blocks (#127)
+- Use horizontal lines (`---`) to group blocks (#129)
 
 ### Engine
 
