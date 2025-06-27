@@ -214,6 +214,22 @@ Slipshow allows you to use subslips in your presentation. Just create an element
 
 It is often useful to have them in multiple files, in flex containers and with ``step``\s in between. See the `"campus du libre" example <https://github.com/panglesd/slipshow/tree/main/example/campus-du-libre>`_ in the example folder.
 
+Giving attributes to children
+=============================
+
+It's sometimes useful to give the same attribute or class to all children of a group. This can be done by prefixing the attribute/class name with ``children:``:
+
+.. code-block:: markdown
+
+   {children:slide children:.class}
+   ----
+   Slide 1
+   ---
+   Slide 2
+   ---
+   Slide 3
+   ----
+
 
 List of classes
 ===============
