@@ -12,8 +12,8 @@ Asterisks still allow horizontal lines:
 
 For instance this one
 
-{.show-border}
-> aa
+{.show-border1}
+> aaa
 >
 > ---
 >
@@ -21,7 +21,7 @@ For instance this one
 >
 > ----
 >
-> ccc
+> cc
 >
 > ----
 >
@@ -29,4 +29,24 @@ For instance this one
 >
 > ---
 >
-> ee
+> eee
+
+{.show-border2}
+> ---
+>
+> aa
+>
+> ---
+>
+> bb
+
+{.show-border3}
+> {.c1}
+> ---
+>
+> aa
+>
+> {.c2}
+> ---
+>
+> bb

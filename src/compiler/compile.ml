@@ -164,31 +164,44 @@ module Stage1 = struct
       | None -> None
       | Some blocks -> Some (Ast.Div ((blocks, (attrs, am)), Meta.none))
     in
-    let rec collect_until_dash ?separator (acc_attrs, acc1) global_acc blocks =
+    let find_biggest blocks =
+      let find_biggest biggest block =
+        let max x = function None -> Some x | Some y -> Some (Int.max x y) in
+        match block with
+        | Block.Thematic_break ((tb, _), _)
+          when String.for_all
+                 (fun c -> c = '-')
+                 (Block.Thematic_break.layout tb) ->
+            max (String.length (Block.Thematic_break.layout tb)) biggest
+        | _ -> biggest
+      in
+      List.fold_left find_biggest None blocks
+    in
+    let rec collect_until_dash ?(first = false) ~separator (acc_attrs, acc1)
+        global_acc blocks =
+      let add_to_global_acc (acc_attrs, acc1) global_acc =
+        if List.is_empty global_acc && List.is_empty acc1 && first then []
+          (* We do not add empty first element to give a chance to add attributes to the (new) first element *)
+        else (acc_attrs, List.rev acc1) :: global_acc
+      in
       match blocks with
       | Block.Thematic_break ((tb, tb_attrs), _tb_meta) :: rest
-        when separator = None
-             && String.for_all
-                  (fun c -> c = '-')
-                  (Block.Thematic_break.layout tb) ->
-          let global_acc = (acc_attrs, List.rev acc1) :: global_acc in
-          let separator = Block.Thematic_break.layout tb in
+        when String.equal separator (Block.Thematic_break.layout tb) ->
+          let global_acc = add_to_global_acc (acc_attrs, acc1) global_acc in
           collect_until_dash ~separator (tb_attrs, []) global_acc rest
-      | Block.Thematic_break ((tb, tb_attrs), _tb_meta) :: rest
-        when separator = Some (Block.Thematic_break.layout tb) ->
-          let global_acc = (acc_attrs, List.rev acc1) :: global_acc in
-          collect_until_dash ?separator (tb_attrs, []) global_acc rest
       | e :: rest ->
-          collect_until_dash ?separator (acc_attrs, e :: acc1) global_acc rest
+          collect_until_dash ~separator (acc_attrs, e :: acc1) global_acc rest
       | [] -> List.rev ((acc_attrs, List.rev acc1) :: global_acc)
     in
-    let res =
-      collect_until_dash ((Attributes.empty, Meta.none), []) [] blocks
-    in
-    match res with
-    | [ _ ] (* When there is no separator, we avoid adding a useless div *) ->
-        Mapper.default
-    | res ->
+    match find_biggest blocks with
+    | None -> Mapper.default
+    | Some n ->
+        let separator = String.make n '-' in
+        let res =
+          collect_until_dash ~first:true ~separator
+            ((Attributes.empty, Meta.none), [])
+            [] blocks
+        in
         let res = List.filter_map div res in
         Mapper.ret @@ Block.Blocks (res, meta)
 
