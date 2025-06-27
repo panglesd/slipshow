@@ -21,9 +21,12 @@ type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
     - BlockS are grouped on divs by [---]
 
     The second stage is doing the following:
+    - [children:...] attributes are passed to children
+
+    The third stage is doing the following:
     - [blockquote] attributed elements are turned into block quotes
-    - [slip] attributed elements are turned into block quotes
-    - [slide] attributed elements are turned into block quotes *)
+    - [slip] attributed elements are turned into slips
+    - [slide] attributed elements are turned into slides *)
 
 module Path_entering : sig
   (** Path are relative to the file we are reading. When we include a file we
@@ -284,6 +287,104 @@ module Stage2 = struct
         Some (Ast.SlipScript ((slscr, no_attrs), meta), attrs)
     | _ -> None
 
+  (** Get the attributes of a cmarkit node, returns them and the element
+      stripped of its attributes *)
+  let merge_attribute new_attrs b =
+    let merge base =
+      Attributes.merge ~base ~new_attrs
+      (* Old attributes take precendence over "new" one *)
+    in
+    match b with
+    (* Standard Cmarkit nodes *)
+    | Block.Blank_line _ | Block.Blocks _ -> b
+    | Block.Block_quote ((bq, (attrs, meta_a)), meta) ->
+        Block.Block_quote ((bq, (merge attrs, meta_a)), meta)
+    | Block.Code_block ((cb, (attrs, meta_a)), meta) ->
+        Block.Code_block ((cb, (merge attrs, meta_a)), meta)
+    | Block.Heading ((h, (attrs, meta_a)), meta) ->
+        Block.Heading ((h, (merge attrs, meta_a)), meta)
+    | Block.Html_block ((hb, (attrs, meta_a)), meta) ->
+        Block.Html_block ((hb, (merge attrs, meta_a)), meta)
+    | Block.Link_reference_definition _ -> b
+    | Block.List ((l, (attrs, meta_a)), meta) ->
+        Block.List ((l, (merge attrs, meta_a)), meta)
+    | Block.Paragraph ((p, (attrs, meta_a)), meta) ->
+        Block.Paragraph ((p, (merge attrs, meta_a)), meta)
+    | Block.Thematic_break ((tb, (attrs, meta_a)), meta) ->
+        Block.Thematic_break ((tb, (merge attrs, meta_a)), meta)
+    (* Extension Cmarkit nodes *)
+    | Block.Ext_math_block ((mb, (attrs, meta_a)), meta) ->
+        Block.Ext_math_block ((mb, (merge attrs, meta_a)), meta)
+    | Block.Ext_table ((table, (attrs, meta_a)), meta) ->
+        Block.Ext_table ((table, (merge attrs, meta_a)), meta)
+    | Block.Ext_footnote_definition _ -> b
+    | Block.Ext_standalone_attributes _ -> b
+    | Block.Ext_attribute_definition _ -> b
+    (* Slipshow nodes *)
+    | Ast.Included ((inc, (attrs, meta_a)), meta) ->
+        Ast.Included ((inc, (merge attrs, meta_a)), meta)
+    | Ast.Div ((div, (attrs, meta_a)), meta) ->
+        Ast.Div ((div, (merge attrs, meta_a)), meta)
+    | Ast.Slide ((slide, (attrs, meta_a)), meta) ->
+        Logs.err (fun m ->
+            m
+              "Slides should not appear here, this is an error on slipshow's \
+               side. Please report!");
+        Ast.Slide ((slide, (merge attrs, meta_a)), meta)
+    | Ast.Slip ((slip, (attrs, meta_a)), meta) ->
+        Logs.err (fun m ->
+            m
+              "Slips should not appear here, this is an error on slipshow's \
+               side. Please report!");
+        Ast.Slip ((slip, (merge attrs, meta_a)), meta)
+    | Ast.SlipScript ((slscr, (attrs, meta_a)), meta) ->
+        Ast.SlipScript ((slscr, (merge attrs, meta_a)), meta)
+    | _ -> b
+
+  let execute =
+    let block m c =
+      match c with
+      | Ast.Div ((Block.Blocks (bs, m_bs), (attrs, m_attrs)), m_div) ->
+          let kvs = Attributes.kv_attributes attrs in
+          let rem_prefix ~prefix s =
+            if String.starts_with ~prefix s then
+              Some
+                (String.sub s (String.length prefix)
+                   (String.length s - String.length prefix))
+            else None
+          in
+          let categorize key =
+            match rem_prefix ~prefix:"." key with
+            | Some c -> `Class c
+            | None -> `Kv key
+          in
+          let new_attrs =
+            List.fold_left
+              (fun acc ((key, meta), value) ->
+                match rem_prefix ~prefix:"children:" key with
+                | None -> acc
+                | Some key -> (
+                    match (categorize key, value) with
+                    | `Class c, None -> Attributes.add_class acc (c, meta)
+                    | `Kv c, _ -> Attributes.add (c, meta) value acc
+                    | `Class c, Some _ ->
+                        Logs.warn (fun m ->
+                            m "Children classes cannot have a value");
+                        Attributes.add (c, meta) value acc))
+              Attributes.empty kvs
+          in
+          let bs = List.map (merge_attribute new_attrs) bs in
+          let bs =
+            Mapper.map_block m (Block.Blocks (bs, m_bs)) |> Option.get
+            (* No nodes are ever removed in this stage *)
+          in
+          Mapper.ret (Ast.Div ((bs, (attrs, m_attrs)), m_div))
+      | _ -> Mapper.default
+    in
+    Ast.Mapper.make ~block ()
+end
+
+module Stage3 = struct
   let execute =
     let block m c =
       let map block (attrs, meta2) =
@@ -299,7 +400,7 @@ module Stage2 = struct
         let attrs = Mapper.map_attrs m attrs in
         (b, (attrs, meta2))
       in
-      match get_attribute c with
+      match Stage2.get_attribute c with
       | None -> Mapper.default
       | Some (block, (attrs, meta2)) when Attributes.mem "blockquote" attrs ->
           let block, attrs = map block (attrs, meta2) in
@@ -318,7 +419,9 @@ end
 
 let of_cmarkit ~read_file md =
   let md1 = Cmarkit.Mapper.map_doc (Stage1.execute read_file) md in
-  Cmarkit.Mapper.map_doc Stage2.execute md1
+  let md2 = Cmarkit.Mapper.map_doc Stage2.execute md1 in
+  let md3 = Cmarkit.Mapper.map_doc Stage3.execute md2 in
+  md3
 
 let compile ?(read_file = fun _ -> Ok None) s =
   let md = Cmarkit.Doc.of_string ~heading_auto_ids:true ~strict:false s in
