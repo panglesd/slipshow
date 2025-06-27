@@ -1,13 +1,13 @@
 .slip, .slide {
-  width: 1438px;
+  width: calc(1440px - 2px);
   transform-origin: top left;
   /* Borders make margin of inner elements not leak outside */
   border: 1px solid transparent;
 }
 
 .slide {
-    height: calc(1080px - 2px);
-    width: calc(1440px - 2px);
+  height: calc(1080px - 2px);
+  width: calc(1440px - 2px);
 }
 
 .slipshow-rescaler {
