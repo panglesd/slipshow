@@ -53,15 +53,16 @@ Cette présentation se fera en **trois parties** :
 >
 > {#merci pause}
 > > {#merci-2}
-> > > # Merci de votre attention !
-> > >
-> > > - Site du projet : <https://github.com/panglesd/slipshow/>
-> > >
-> > > - Documentation : <https://slipshow.readthedocs.io/>
-> > >
-> > > - Source de ces slides : <https://github.com/panglesd/slipshow/tree/main/example/campus-du-libre>
-> > >
-> > > - Sliphub : <https://sliphub.choum.net/>
+> > ---
+> > # Merci de votre attention !
+> >
+> > - Site du projet : <https://github.com/panglesd/slipshow/>
+> >
+> > - Documentation : <https://slipshow.readthedocs.io/>
+> >
+> > - Source de ces slides : <https://github.com/panglesd/slipshow/tree/main/example/campus-du-libre>
+> >
+> > - Sliphub : <https://sliphub.choum.net/>
 
 <style>
 #merci {

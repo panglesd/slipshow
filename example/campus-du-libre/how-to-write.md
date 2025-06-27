@@ -12,69 +12,91 @@
 > [`ma-presentation.md`]{style="margin-left:20px;"}
 >
 > {.prrrouut style="text-align:center"}
-> > {style="margin-bottom:-10px"}
-> > compilation
-> >
-> > {style="margin:-50px"}
-> > [→]{style="font-size:6em"}
-> >
-> > {style="margin-top:-10px"}
-> > Slipshow
+> ---
+> {style="margin-bottom:-10px"}
+> compilation
+>
+> {style="margin:-50px"}
+> [→]{style="font-size:6em"}
+>
+> {style="margin-top:-10px"}
+> Slipshow
 >
 > {style="border: 2px solid black; border-radius: 10px; display: flex; align-items: center; background-color:#f3f3f3; text-align: center; padding:50px"}
+> ---
 > [`ma-presentation.html`]{style="margin-left:20px;"}
 >
 >
 
 
 {.block up=part2 pause title="Example"}
-> {.flex}
-> > ```markdown
-> > ### Ceci est un titre
-> >
-> > Et _ceci_ est un **paragraphe**.
-> >
-> > {pause}
-> >
-> > - Une liste à `points` {pause}
-> > - Avec plusieurs points
-> > ```
-> > {pause}
-> > > ### Ceci est un titre
-> > >
-> > > Et _ceci_ est un **paragraphe**.
-> > >
-> > > {pause}
-> > >
-> > > - Une liste à `points` {pause}
-> > > - Avec plusieurs points
+-----
+{.flex}
+----
+```markdown
+### Ceci est un titre
+
+Et _ceci_ est un **paragraphe**.
+
+{pause}
+
+- Une liste à `points` {pause}
+- Avec plusieurs points
+```
+{pause}
+---
+### Ceci est un titre
+
+Et _ceci_ est un **paragraphe**.
+
+{pause}
+
+- Une liste à `points` {pause}
+- Avec plusieurs points
+-----
 
 {.block pause down title="Example"}
-> {.flex style="gap: 20px"}
-> > {style="width:60%"}
-> > ```markdown
+-----
+{.flex style="gap: 20px"}
+> {style="width:60%"}
+> ```markdown
+> {.definition title="La définition"}
+> $D$ tel que $D=\{x : x\in x\}$.
+>
+> {pause}
+>
+> Marche aussi avec `theorem`,
+> `example`, `block`, `proof`, ...
+> ```
+>
+> {pause}
 > > {.definition title="La définition"}
 > > $D$ tel que $D=\{x : x\in x\}$.
 > >
 > > {pause}
 > >
-> > Marche aussi avec `theorem`,
-> > `example`, `block`, `proof`, ...
-> > ```
-> >
-> > {pause}
-> > > {.definition title="La définition"}
-> > > $D$ tel que $D=\{x : x\in x\}$.
-> > >
-> > > {pause}
-> > >
-> > > Marche aussi avec `theorem`, `example`, `definition`, `proof`, ...
+> > Marche aussi avec `theorem`, `example`, `definition`, `proof`, ...
 
 {.block pause down title="Example"}
-> {.flex style="gap: 20px"}
-> > {style="width:56%"}
-> > ````markdown
-> > {.example title="Multi paragraph"}
+-----
+{.flex style="gap: 20px"}
+> {style="width:56%"}
+> ````markdown
+> {.example title="Multi paragraph"}
+> > Voici un bloc de code:
+> >
+> > ```ocaml
+> > let rec fibo =
+> >  function
+> >  | 0 -> 0 | 1 -> 1
+> >  | n ->
+> >      fibo (n-1)
+> >    + fibo (n-2);;
+> > ```
+> ````
+>
+> {pause}
+> >  {.example title="Multi paragraph"}
 > > > Voici un bloc de code:
 > > >
 > > > ```ocaml
@@ -85,20 +107,8 @@
 > > >      fibo (n-1)
 > > >    + fibo (n-2);;
 > > > ```
-> > ````
-> >
-> > {pause}
-> > >  {.example title="Multi paragraph"}
-> > > > Voici un bloc de code:
-> > > >
-> > > > ```ocaml
-> > > > let rec fibo =
-> > > >  function
-> > > >  | 0 -> 0 | 1 -> 1
-> > > >  | n ->
-> > > >      fibo (n-1)
-> > > >    + fibo (n-2);;
-> > > > ```
+
+-----
 
 {pause up}
 {style="text-align:center"}
