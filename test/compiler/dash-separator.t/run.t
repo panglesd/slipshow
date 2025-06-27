@@ -16,6 +16,31 @@ Asterisks are still interpreted as horizontal lines
 
 However, dash lines are used as separator to group in divs
 
+  $ cat dash-sep.html | htmlq ".show-border" -p
+  
+  <div class="show-border">
+    <p><span>aa</span>
+    </p>
+    <div>
+      <p>
+        <span>
+          bbb</span>
+      </p>
+      <p>
+        <span>
+          ccc</span>
+      </p>
+      <p>
+        <span>
+          ddd</span>
+      </p>
+    </div>
+    <p>
+      <span>
+        ee</span>
+    </p>
+  </div>
+
   $ grep "class=\"show-border\"" -A 8 dash-sep.html
   <div class="show-border">
   <p><span>aa</span></p>
@@ -27,6 +52,30 @@ However, dash lines are used as separator to group in divs
   <p><span>ee</span></p>
   </div>
 
+  $ cat normal-divs.html | htmlq ".show-border" -p
+  
+  <div class="show-border">
+    <p><span>aa</span>
+    </p>
+    <div>
+      <p>
+        <span>
+          bbb</span>
+      </p>
+      <p>
+        <span>
+          ccc</span>
+      </p>
+      <p>
+        <span>
+          ddd</span>
+      </p>
+    </div>
+    <p>
+      <span>
+        ee</span>
+    </p>
+  </div>
 
   $ grep "class=\"show-border\"" -A 8 normal-divs.html
   <div class="show-border">
