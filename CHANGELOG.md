@@ -19,6 +19,7 @@
 - Added support for subslips and slides (#118)
 - Added pause blocks (#127)
 - Use horizontal lines (`---`) to group blocks (#129)
+- Pass attributes to children with `children:` (#130)
 
 ### Engine
 
