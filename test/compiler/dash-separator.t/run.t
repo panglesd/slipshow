@@ -1,11 +1,4 @@
-
-
   $ slipshow compile dash-sep.md
-
-  $ slipshow compile normal-divs.md
-
-  $ scp dash-sep.html /tmp/
-  $ scp normal-divs.html /tmp/
 
 Asterisks are still interpreted as horizontal lines
 
@@ -16,74 +9,55 @@ Asterisks are still interpreted as horizontal lines
 
 However, dash lines are used as separator to group in divs
 
-  $ cat dash-sep.html | htmlq ".show-border" -p
+  $ cat dash-sep.html | htmlq ".show-border1" -p
   
-  <div class="show-border">
-    <p><span>aa</span>
-    </p>
+  <div class="show-border1">
     <div>
+      <p><span>aaa</span>
+      </p>
       <p>
         <span>
           bbb</span>
       </p>
-      <p>
-        <span>
-          ccc</span>
-      </p>
-      <p>
-        <span>
-          ddd</span>
-      </p>
     </div>
     <p>
       <span>
-        ee</span>
-    </p>
-  </div>
-
-  $ grep "class=\"show-border\"" -A 8 dash-sep.html
-  <div class="show-border">
-  <p><span>aa</span></p>
-  <div>
-  <p><span>bbb</span></p>
-  <p><span>ccc</span></p>
-  <p><span>ddd</span></p>
-  </div>
-  <p><span>ee</span></p>
-  </div>
-
-  $ cat normal-divs.html | htmlq ".show-border" -p
-  
-  <div class="show-border">
-    <p><span>aa</span>
+        cc</span>
     </p>
     <div>
       <p>
         <span>
-          bbb</span>
-      </p>
-      <p>
-        <span>
-          ccc</span>
-      </p>
-      <p>
-        <span>
           ddd</span>
       </p>
+      <p>
+        <span>
+          eee</span>
+      </p>
     </div>
+  </div>
+
+  $ cat dash-sep.html | htmlq ".show-border2" -p
+  
+  <div class="show-border2">
+    <p><span>aa</span>
+    </p>
     <p>
       <span>
-        ee</span>
+        bb</span>
     </p>
   </div>
 
-  $ grep "class=\"show-border\"" -A 8 normal-divs.html
-  <div class="show-border">
-  <p><span>aa</span></p>
-  <div>
-  <p><span>bbb</span></p>
-  <p><span>ccc</span></p>
-  <p><span>ddd</span></p>
-  </div>
-  <p><span>ee</span></p>
+  $ cat dash-sep.html | htmlq ".show-border3" -p
+  
+  <div class="show-border3">
+    <div class="c1">
+      <p><span>aa</span>
+      </p>
+    </div>
+    <div class="c2">
+      <p>
+        <span>
+          bb</span>
+      </p>
+    </div>
   </div>
