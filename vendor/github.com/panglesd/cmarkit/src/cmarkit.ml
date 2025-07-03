@@ -3533,27 +3533,44 @@ module Mapper = struct
   | `Map i -> i
   | `Default ->
       let open Inline in
+     let map_attrs (attrs, meta) = Attributes.map m.attrs attrs, meta in
       match i with
-      | Autolink _ | Break _ | Code_span _ | Raw_html _
-      | Text _ | Ext_math_span _ as i -> Some i
+      | Break _ | Raw_html _ as i -> Some i
+      | Autolink ((al, attrs), meta) ->
+         let attrs = map_attrs attrs in
+         Some (Autolink ((al, attrs), meta))
+      | Code_span ((cs, attrs), meta) ->
+         let attrs = map_attrs attrs in
+         Some (Code_span ((cs, attrs), meta))
+      | Text ((t, attrs), meta) ->
+         let attrs = map_attrs attrs in
+         Some (Text ((t, attrs), meta))
+      | Ext_math_span ((m, attrs), meta) ->
+         let attrs = map_attrs attrs in
+         Some (Ext_math_span ((m, attrs), meta))
       | Image ((l, attrs), meta) ->
-          let text = Option.value ~default:Inline.empty (map_inline m l.text) in
-          Some (Image (({ l with text }, attrs), meta))
+         let attrs = map_attrs attrs in
+         let text = Option.value ~default:Inline.empty (map_inline m l.text) in
+         Some (Image (({ l with text }, attrs), meta))
       | Link ((l, attrs), meta) ->
-          let* text = map_inline m l.text in
-          Some (Link (({ l with text }, attrs), meta))
+         let attrs = map_attrs attrs in
+         let* text = map_inline m l.text in
+         Some (Link (({ l with text }, attrs), meta))
       | Emphasis ((e, attrs), meta) ->
-          let* inline = map_inline m e.inline in
-          Some (Emphasis (({ e with inline }, attrs), meta))
+         let attrs = map_attrs attrs in
+         let* inline = map_inline m e.inline in
+         Some (Emphasis (({ e with inline }, attrs), meta))
       | Strong_emphasis ((e, attrs), meta) ->
-          let* inline = map_inline m e.inline in
-          Some (Strong_emphasis (({ e with inline}, attrs), meta))
+         let attrs = map_attrs attrs in
+         let* inline = map_inline m e.inline in
+         Some (Strong_emphasis (({ e with inline}, attrs), meta))
       | Inlines (is, meta) ->
           (match List.filter_map (map_inline m) is with
           | [] -> None | is -> Some (Inlines (is, meta)))
       | Ext_strikethrough ((s, attrs), meta) ->
-          let* inline = map_inline m s in
-          Some (Ext_strikethrough ((inline, attrs), meta))
+         let attrs = map_attrs attrs in
+         let* inline = map_inline m s in
+         Some (Ext_strikethrough ((inline, attrs), meta))
       | Ext_attrs ({ content; attrs }, meta) ->
          let attrs =
            let attrs, meta = attrs in

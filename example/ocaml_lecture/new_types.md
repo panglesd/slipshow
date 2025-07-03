@@ -134,9 +134,9 @@ créens-on un nouveau !
 > {style="margin-left: 10px" #tricot-img}
 > ![tricot](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSiVN4-begPwEgAgiCnUmKId9TnXifQ-1kuQg&usqp=CAU)
 
-{pause focus-at-unpause=tricot-img}
+{pause focus=tricot-img}
 
-{pause unfocus-at-unpause}
+{pause unfocus}
 
 {pause}
 

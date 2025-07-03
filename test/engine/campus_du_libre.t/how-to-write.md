@@ -198,13 +198,13 @@
 > > {.block}
 > > Hehe
 
-{.remark pause center-at-unpause #tjrs-pas}
+{.remark pause center #tjrs-pas}
 On ne sait **toujours pas** comment **glisser**!!!
 
 
-{pause focus-at-unpause=attr-foc}
+{pause focus=attr-foc}
 
-{pause unfocus-at-unpause}
+{pause unfocus}
 
 {pause up=tjrs-pas}
 # Attributs
@@ -249,15 +249,15 @@ Avec du [contenu special]{style="color:red"}.
 - `center`, équivalent au **milieu de l'écran**. [`{.unrevealed
   #youhou}`]{.unrevealed #youhou}
 
-  **Exemple** `{pause center}` {pause center-at-unpause} {pause}
+  **Exemple** `{pause center}` {pause center} {pause}
 
 - `down`, équivalent au **bas de l'écran**.
 
   **Exemple** `{pause down}` {pause down} {pause up=id-titre-ex} {pause}
 
-- `focus-at-unpause`, `static-at-unpause`, `unstatic-at-unpause`, `reveal-at-unpause`, ...
+- `focus`, `static`, `unstatic`, `reveal`, ...
 
-  **Exemple** `{pause reveal-at-unpause=youhou}` {step reveal-at-unpause=youhou}
+  **Exemple** `{pause reveal=youhou}` {step reveal=youhou}
 
 {pause}
 

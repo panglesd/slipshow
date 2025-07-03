@@ -229,6 +229,14 @@ module Stage1 = struct
       | `Kv (("exec", m), v) -> Some (`Kv (("exec-at-unpause", m), v))
       | `Kv (("scroll", m), v) -> Some (`Kv (("scroll-at-unpause", m), v))
       | `Kv (("enter", m), v) -> Some (`Kv (("enter-at-unpause", m), v))
+      | `Kv (("emph", m), v) -> Some (`Kv (("emph-at-unpause", m), v))
+      | `Kv (("focus", m), v) -> Some (`Kv (("focus-at-unpause", m), v))
+      | `Kv (("reveal", m), v) -> Some (`Kv (("reveal-at-unpause", m), v))
+      | `Kv (("static", m), v) -> Some (`Kv (("static-at-unpause", m), v))
+      | `Kv (("unemph", m), v) -> Some (`Kv (("unemph-at-unpause", m), v))
+      | `Kv (("unfocus", m), v) -> Some (`Kv (("unfocus-at-unpause", m), v))
+      | `Kv (("unreveal", m), v) -> Some (`Kv (("unreveal-at-unpause", m), v))
+      | `Kv (("unstatic", m), v) -> Some (`Kv (("unstatic-at-unpause", m), v))
       | x -> Some x
     in
     Ast.Mapper.make ~block ~inline ~attrs ()

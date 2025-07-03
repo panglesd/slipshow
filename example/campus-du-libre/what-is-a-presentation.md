@@ -27,6 +27,6 @@ Voici [un exemple](https://choum.net/panglesd/slides/WDCM-2021-slips/wdcm-ada.ht
 >
 > - Faire apparaître **la structure** de la présentation. {pause}
 >
-> - Ouvrir de **nouvelles possibilités [pédagogiques]{step focus-at-unpause}**
+> - Ouvrir de **nouvelles possibilités [pédagogiques]{step focus}**
 
-{pause unfocus-at-unpause}
+{pause unfocus}
