@@ -181,7 +181,7 @@ Let's start first with the "general" syntax for the content inside the curly bra
 
 .. code-block:: markdown
 
-		{#fermat .theorem pause up-at-unpause=title1 exec-at-unpause="script1 script2"}
+		{#fermat .theorem pause up=title1 exec="script1 script2"}
 		Some content
 
 Attributes are separated by space.
@@ -192,7 +192,7 @@ A word starting with ``.`` is a class. Classes are used both controlling the lay
 
 A single word is a "flag attribute". In the example above, ``pause`` is a flag attribute. The meaning of all slipshow attributes is given later in this section!
 
-Key-value attributes are defined using an equal sign (``=``). They need a key, and a value. If the value contains spaces or other dubious characters, they should be enclosed in quotes. The quotes are not part of the value of they key attributes! In the example above, the key ``up-at-unpause`` is given value ``title1``, while the key ``exec-at-unpause`` is given the value ``script1 script2``.
+Key-value attributes are defined using an equal sign (``=``). They need a key, and a value. If the value contains spaces or other dubious characters, they should be enclosed in quotes. The quotes are not part of the value of they key attributes! In the example above, the key ``up`` is given value ``title1``, while the key ``exec`` is given the value ``script1 script2``.
 
 Some attribute can be used both as a flag attribute and as a key-value attribute.
 
@@ -313,44 +313,44 @@ Action attributes
 
 These attributes are actions that will be executed when a ``pause`` or ``step`` attribute attached to the same element is consumed. All of them accepts a value, consisting of the ``id`` of an element to apply the action to.
 
-``down`` or ``down-at-unpause``
+``down``
   Moves the screen untils the element is at the bottom of the screen.
 
-``up`` or ``up-at-unpause``
+``up``
   Moves the screen untils the element is at the top of the screen.
 
-``center`` or ``center-at-unpause``
+``center``
   Moves the screen untils the element is centered.
 
-``focus`` or ``focus-at-unpause``
+``focus``
   Focus on the element by zooming on it. Possible to specify multiple ids.
 
-``unfocus`` or ``unfocus-at-unpause``
+``unfocus``
   Unfocus by going back to the last position before a focus.
 
-``static-at-unpause``
+``static``
   Make the element ``static``. By "static" we mean the css styling ``position:static; visibility:visible`` will be applied. Possible to specify multiple ids.
 
-``unstatic-at-unpause``
+``unstatic``
   Make the element ``unstatic``. By "unstatic" we mean the css styling ``position:absolute; visibility:hidden`` will be applied. Possible to specify multiple ids.
 
-``reveal-at-unpause``
+``reveal``
   Reveal the element. By "revealing" we mean the css styling ``opacity:1`` will be applied.  Possible to specify multiple ids.
 
-``unreveal-at-unpause``
+``unreveal``
   Hide the element. By "unrevealing" we mean the css styling ``opacity:0`` will be applied.  Possible to specify multiple ids.
 
-``exec-at-unpause``
+``exec``
   Execute the slipscript. Possible to specify multiple ids.
 
 Custom scripts
 ==============
 
-Use a slipscript code block to add a script, and ``exec-at-unpause`` to execute it.
+Use a slipscript code block to add a script, and ``exec`` to execute it.
 
 .. code-block:: markdown
 
-		{pause exec-at-unpause}
+		{pause exec}
 		```slip-script
                 alert("Alerts are very annoying !")
 		```
@@ -361,7 +361,7 @@ one (but not the preferred one) is return an undo function:
 
 .. code-block:: markdown
 
-		{pause exec-at-unpause}
+		{pause exec}
 
 		```slip-script
                 let elem = document.querySelector("#id")
@@ -375,7 +375,7 @@ the ``slip.onUndo`` function to register callbacks to be run on undo.
 
 .. code-block:: markdown
 
-		{pause exec-at-unpause}
+		{pause exec}
 
 		```slip-script
                 let i = 0
@@ -402,17 +402,17 @@ Through the ``slip`` object, slip-scripts also have access to the actions define
 
 .. code-block:: markdown
 
-		{pause exec-at-unpause}
+		{pause exec}
 		```slip-script
                 let elem = document.querySelector("#id")
                 slip.up(elem);
 		```
 
-Note that if an API above accepts multiple IDs (as ``unstatic-at-unpause`` for instance), then the function expects a list of elements:
+Note that if an API above accepts multiple IDs (as ``unstatic`` for instance), then the function expects a list of elements:
 
 .. code-block:: markdown
 
-		{pause exec-at-unpause}
+		{pause exec}
 		```slip-script
                 let elems = document.querySelectorAll(".class")
                 slip.unstatic(elems);
@@ -424,7 +424,7 @@ Use it with ``slip.setProp`` to not forget undoing the changes!
 
 .. code-block:: markdown
 
-		{pause exec-at-unpause}
+		{pause exec}
 		```slip-script
                 log = function (slip, x) { // slip needs to be passed
                   console.log(x)
@@ -434,7 +434,7 @@ Use it with ``slip.setProp`` to not forget undoing the changes!
                 slip.setProp(slip.state, "x", 1);
                 log(slip, slip.state.x);
                 ```
-		{pause exec-at-unpause}
+		{pause exec}
 		```slip-script
                 log(slip, slip.state.x); // 1
                 ```
