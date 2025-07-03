@@ -12,7 +12,7 @@ We can compile the file using the slip_of_mark binary
   <div class="slip-body">
   <h1 id="a-title"><a class="anchor" aria-hidden="true" href="#a-title"></a><span>A title</span></h1>
   <div pause></div>
-  <p><span>A word </span><span id="id" step up>and</span><span> some other words.</span></p>
+  <p><span>A word </span><span id="id" emph-at-unpause step>and</span><span> some other words.</span></p>
   <div pause></div>
 
 $ du -h file.html
