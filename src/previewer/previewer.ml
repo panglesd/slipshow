@@ -53,7 +53,8 @@ let preview { stage; index; panels } source =
     Jv.set (Brr.El.to_jv panels.(unused ())) "srcdoc" (Jv.of_string slipshow)
   in
   let starting_state = get_starting_state () in
-  let slipshow = Slipshow.convert ~starting_state source in
+  let width, height = (1440, 1080) in
+  let slipshow = Slipshow.convert ~width ~height ~starting_state source in
   set_srcdoc slipshow
 
 let preview_compiled { stage; index; panels } delayed =
