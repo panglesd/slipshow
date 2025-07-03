@@ -27,7 +27,8 @@ val delayed_to_string : delayed -> string
 val string_to_delayed : string -> delayed
 
 val delayed :
-  ?dimension:int * int ->
+  width:int ->
+  height:int ->
   ?math_link:Asset.t ->
   ?css_links:Asset.t list ->
   ?theme:[ `Builtin of Themes.t | `External of Asset.t ] ->
@@ -42,7 +43,8 @@ val delayed :
 val add_starting_state : delayed -> starting_state option -> string
 
 val convert :
-  ?dimension:int * int ->
+  width:int ->
+  height:int ->
   ?starting_state:starting_state ->
   ?math_link:Asset.t ->
   ?theme:[ `Builtin of Themes.t | `External of Asset.t ] ->

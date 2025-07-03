@@ -43,7 +43,10 @@ module Conv = struct
                "Expected \"4:3\", \"16:9\", or two integers separated by a 'x'")
     in
     let printer fmt (w, h) =
-      Format.fprintf fmt "%ax%a" int_printer w int_printer h
+      match (w, h) with
+      | 1440, 1080 -> Format.fprintf fmt "4:3"
+      | 1920, 1080 -> Format.fprintf fmt "16:9"
+      | _ -> Format.fprintf fmt "%ax%a" int_printer w int_printer h
     in
     Cmdliner.Arg.conv ~docv:"WIDTHxHEIGHT" (parser_, printer)
 end
@@ -76,11 +79,11 @@ module Compile_args = struct
     let doc =
       "The fixed dimension (in pixels) for your presentation. Can be either \
        WIDTHxHEIGHT where both are integers, or 4:3 (which corresponds to \
-       1440x1080), or 16:9 (which corresponds to 1920x1080)"
+       1440x1080), or 16:9 (which corresponds to 1920x1080)."
     in
     Arg.(
       value
-      & opt (some Conv.dimension) None
+      & opt Conv.dimension (1440, 1080)
       & info ~docv:"WIDTHxHEIGHT" ~doc [ "d"; "dimension"; "dim" ])
 
   let output =
@@ -106,7 +109,7 @@ module Compile_args = struct
     css_links : string list;
     input : [ `File of Fpath.t | `Stdin ];
     output : [ `File of Fpath.t | `Stdout ] option;
-    dimension : (int * int) option;
+    dimension : int * int;
   }
 
   let term =
@@ -143,16 +146,23 @@ module Compile = struct
 
   let compile ~watch
       ~compile_args:
-        { Compile_args.input; output; math_link; theme; css_links; dimension } =
+        {
+          Compile_args.input;
+          output;
+          math_link;
+          theme;
+          css_links;
+          dimension = width, height;
+        } =
     let output =
       match output with Some o -> o | None -> output_of_input input
     in
     if watch then
       let* input, output = force_file_io input output in
-      Run.watch ~dimension ~input ~output ~math_link ~theme ~css_links
+      Run.watch ~width ~height ~input ~output ~math_link ~theme ~css_links
       |> handle_error
     else
-      Run.compile ~input ~output ~math_link ~theme ~css_links ~dimension
+      Run.compile ~input ~output ~math_link ~theme ~css_links ~width ~height
       |> Result.map ignore |> handle_error
 
   let term =
@@ -176,12 +186,19 @@ module Serve = struct
 
   let serve
       ~compile_args:
-        { Compile_args.input; output; math_link; theme; css_links; dimension } =
+        {
+          Compile_args.input;
+          output;
+          math_link;
+          theme;
+          css_links;
+          dimension = width, height;
+        } =
     let output =
       match output with Some o -> o | None -> Compile.output_of_input input
     in
     let* input, output = Compile.force_file_io input output in
-    Run.serve ~dimension ~input ~output ~math_link ~theme ~css_links
+    Run.serve ~width ~height ~input ~output ~math_link ~theme ~css_links
     |> handle_error
 
   let term =

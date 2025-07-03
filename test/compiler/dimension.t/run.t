@@ -2,17 +2,21 @@ Let's start with an empty file
 
   $ touch file.md
 
-  $ slipshow compile --help | grep "dim" -A 2
+  $ slipshow compile --help | grep "dim" -A 3
          -d WIDTHxHEIGHT, --dimension=WIDTHxHEIGHT, --dim=WIDTHxHEIGHT
-             The fixed dimension for your presentation. Can be either
-             WIDTHxHEIGHT where both are integers, or 4:3 (which corresponds to
-             1440x1080), or 16:9 (which corresponds to 1920x1080)
+         (absent=4:3)
+             The fixed dimension (in pixels) for your presentation. Can be
+             either WIDTHxHEIGHT where both are integers, or 4:3 (which
+             corresponds to 1440x1080), or 16:9 (which corresponds to
+             1920x1080).
 
-  $ slipshow serve --help | grep "dim" -A 2
+  $ slipshow serve --help | grep "dim" -A 3
          -d WIDTHxHEIGHT, --dimension=WIDTHxHEIGHT, --dim=WIDTHxHEIGHT
-             The fixed dimension for your presentation. Can be either
-             WIDTHxHEIGHT where both are integers, or 4:3 (which corresponds to
-             1440x1080), or 16:9 (which corresponds to 1920x1080)
+         (absent=4:3)
+             The fixed dimension (in pixels) for your presentation. Can be
+             either WIDTHxHEIGHT where both are integers, or 4:3 (which
+             corresponds to 1440x1080), or 16:9 (which corresponds to
+             1920x1080).
 
 We can provide the dimension with --dimension
 
