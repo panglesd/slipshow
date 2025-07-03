@@ -1,4 +1,6 @@
-let start id step =
+let start ~width ~height ~id ~step =
+  Constants.set_height height;
+  Constants.set_width width;
   let open Fut.Syntax in
   let el =
     Brr.El.find_first_by_selector (Jstr.v "#slipshow-content") |> Option.get
@@ -39,7 +41,11 @@ let start id step =
   Fut.return ()
 
 let () =
-  let start step id =
-    start (Jv.to_option Jv.to_string id) (Jv.to_option Jv.to_int step)
+  let start width height step id =
+    let height = Jv.to_float height in
+    let width = Jv.to_float width in
+    let id = Jv.to_option Jv.to_string id in
+    let step = Jv.to_option Jv.to_int step in
+    start ~width ~height ~id ~step
   in
-  Jv.set Jv.global "startSlipshow" (Jv.callback ~arity:2 start)
+  Jv.set Jv.global "startSlipshow" (Jv.callback ~arity:4 start)

@@ -24,6 +24,28 @@ module Conv = struct
 
   let input = io `Stdin
   let output = io `Stdout
+
+  let dimension =
+    let int_parser = Cmdliner.Arg.(conv_parser int) in
+    let int_printer = Cmdliner.Arg.(conv_printer int) in
+    let ( let* ) = Result.bind in
+    let parser_ s =
+      match String.split_on_char 'x' s with
+      | [ "4:3" ] -> Ok (1440, 1080)
+      | [ "16:9" ] -> Ok (1920, 1080)
+      | [ width; height ] ->
+          let* width = int_parser width in
+          let* height = int_parser height in
+          Ok (width, height)
+      | _ ->
+          Error
+            (`Msg
+               "Expected \"4:3\", \"16:9\", or two integers separated by a 'x'")
+    in
+    let printer fmt (w, h) =
+      Format.fprintf fmt "%ax%a" int_printer w int_printer h
+    in
+    Cmdliner.Arg.conv ~docv:"WIDTHxHEIGHT" (parser_, printer)
 end
 
 module Compile_args = struct
@@ -50,6 +72,17 @@ module Compile_args = struct
     Arg.(
       value & opt (some string) None & info ~docv:"URL" ~doc [ "m"; "mathjax" ])
 
+  let dim =
+    let doc =
+      "The fixed dimension (in pixels) for your presentation. Can be either \
+       WIDTHxHEIGHT where both are integers, or 4:3 (which corresponds to \
+       1440x1080), or 16:9 (which corresponds to 1920x1080)"
+    in
+    Arg.(
+      value
+      & opt (some Conv.dimension) None
+      & info ~docv:"WIDTHxHEIGHT" ~doc [ "d"; "dimension"; "dim" ])
+
   let output =
     let doc =
       "Output file path. When absent, generate a filename based on the input \
@@ -73,6 +106,7 @@ module Compile_args = struct
     css_links : string list;
     input : [ `File of Fpath.t | `Stdin ];
     output : [ `File of Fpath.t | `Stdout ] option;
+    dimension : (int * int) option;
   }
 
   let term =
@@ -81,8 +115,9 @@ module Compile_args = struct
     and+ theme = theme
     and+ css_links = css_links
     and+ input = input
-    and+ output = output in
-    { math_link; theme; css_links; input; output }
+    and+ output = output
+    and+ dimension = dim in
+    { math_link; theme; css_links; input; output; dimension }
 end
 
 module Compile = struct
@@ -107,16 +142,17 @@ module Compile = struct
     | `Stdout -> Error "Standard output cannot be used in serve nor watch mode"
 
   let compile ~watch
-      ~compile_args:{ Compile_args.input; output; math_link; theme; css_links }
-      =
+      ~compile_args:
+        { Compile_args.input; output; math_link; theme; css_links; dimension } =
     let output =
       match output with Some o -> o | None -> output_of_input input
     in
     if watch then
       let* input, output = force_file_io input output in
-      Run.watch ~input ~output ~math_link ~theme ~css_links |> handle_error
+      Run.watch ~dimension ~input ~output ~math_link ~theme ~css_links
+      |> handle_error
     else
-      Run.compile ~input ~output ~math_link ~theme ~css_links
+      Run.compile ~input ~output ~math_link ~theme ~css_links ~dimension
       |> Result.map ignore |> handle_error
 
   let term =
@@ -139,13 +175,14 @@ module Serve = struct
   let ( let* ) = Result.bind
 
   let serve
-      ~compile_args:{ Compile_args.input; output; math_link; theme; css_links }
-      =
+      ~compile_args:
+        { Compile_args.input; output; math_link; theme; css_links; dimension } =
     let output =
       match output with Some o -> o | None -> Compile.output_of_input input
     in
     let* input, output = Compile.force_file_io input output in
-    Run.serve ~input ~output ~math_link ~theme ~css_links |> handle_error
+    Run.serve ~dimension ~input ~output ~math_link ~theme ~css_links
+    |> handle_error
 
   let term =
     let open Term.Syntax in

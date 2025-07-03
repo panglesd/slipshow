@@ -1,9 +1,7 @@
 open Brr
 open Fut.Syntax
 module Window = Brr.Window
-
-let width = 1440.
-let height = 1080.
+open Constants
 
 type t = { open_window : El.t; format_container : El.t }
 type state = { left : float; top : float; scale : float }
@@ -13,7 +11,7 @@ let state = ref { left = 0.; top = 0.; scale = 1. }
 let translate_coords (x, y) =
   let x = (x -. !state.left) /. !state.scale
   and y = (y -. !state.top) /. !state.scale in
-  let x = x -. (width /. 2.) and y = y -. (height /. 2.) in
+  let x = x -. (width () /. 2.) and y = y -. (height () /. 2.) in
   (x, y)
 
 let replace_open_window window =
@@ -37,12 +35,12 @@ let replace_open_window window =
   let browser_w = foi @@ Brr.El.offset_w parent in
   let* window_w, _window_h =
     let body = Brr.Document.body Brr.G.document in
-    if width *. browser_h < height *. browser_w then
+    if width () *. browser_h < height () *. browser_w then
       let () =
         Brr.El.set_class (Jstr.v "horizontal") false body;
         Brr.El.set_class (Jstr.v "vertical") true body
       in
-      let window_w = browser_h *. width /. height in
+      let window_w = browser_h *. width () /. height () in
       let window_h = browser_h in
       let+ () =
         set_state
@@ -56,7 +54,7 @@ let replace_open_window window =
         Brr.El.set_class (Jstr.v "horizontal") true body;
         Brr.El.set_class (Jstr.v "vertical") false body
       in
-      let window_h = browser_w *. height /. width in
+      let window_h = browser_w *. height () /. width () in
       let window_w = browser_w in
       let+ () =
         set_state
@@ -66,8 +64,8 @@ let replace_open_window window =
       in
       (window_w, window_h)
   in
-  state := { !state with scale = window_w /. width };
-  Browser.Css.set [ Scale (window_w /. width) ] window.format_container
+  state := { !state with scale = window_w /. width () };
+  Browser.Css.set [ Scale (window_w /. width ()) ] window.format_container
 
 let create el =
   let format_container =

@@ -26,6 +26,11 @@ let internal_css =
 let system_css =
   Format.sprintf "<style>%s</style>" Data_files.(read Slip_system_css)
 
+let variable_css ~width ~height =
+  Format.sprintf
+    "<style>:root {  --page-width: %dpx;  --page-height: %dpx;}</style>" width
+    height
+
 let slipshow_js_element slipshow_link =
   match slipshow_link with
   | Some (Asset.Local { content = t; _ }) ->
@@ -33,7 +38,7 @@ let slipshow_js_element slipshow_link =
   | Some (Remote r) -> Format.sprintf "<script src=\"%s\"></script>" r
   | None -> Format.sprintf "<script>%s</script>" Data_files.(read Slipshow_js)
 
-let head ~theme ~has_math ~math_link ~css_links =
+let head ~width ~height ~theme ~has_math ~math_link ~css_links =
   let theme = theme_css theme in
   let highlight_css_element =
     "<style>" ^ Data_files.(read Highlight_css) ^ "</style>"
@@ -56,6 +61,7 @@ let head ~theme ~has_math ~math_link ~css_links =
   let css_elements = List.map css_element css_links |> String.concat "" in
   String.concat "\n"
     [
+      variable_css ~width ~height;
       favicon_element;
       mathjax_element;
       internal_css;
@@ -68,8 +74,8 @@ let head ~theme ~has_math ~math_link ~css_links =
     ]
 
 let embed_in_page content ~has_math ~math_link ~css_links ~theme
-    ~slipshow_js_link =
-  let head = head ~has_math ~math_link ~css_links ~theme in
+    ~slipshow_js_link ~width ~height =
+  let head = head ~has_math ~math_link ~css_links ~theme ~width ~height in
   let slipshow_js_element = slipshow_js_element slipshow_js_link in
   let start =
     Format.sprintf
@@ -99,8 +105,8 @@ let embed_in_page content ~has_math ~math_link ~css_links ~theme
     <!-- Start the presentation () -->
     <script>hljs.highlightAll();</script>
     <script>
-      startSlipshow(|}
-      head content slipshow_js_element
+      startSlipshow(%d, %d,|}
+      head content slipshow_js_element width height
   in
   let end_ = {|);
     </script>
@@ -123,14 +129,16 @@ let convert_to_md ~read_file content =
   let sd = Compile.to_cmarkit sd in
   Cmarkit_commonmark.of_doc ~include_attributes:false sd
 
-let delayed ?math_link ?(css_links = []) ?(theme = `Builtin Themes.Default)
-    ?slipshow_js_link ?read_file s =
+let delayed ?(dimension = (1440, 1080)) ?math_link ?(css_links = [])
+    ?(theme = `Builtin Themes.Default) ?slipshow_js_link ?read_file s =
+  let width, height = dimension in
   let md = Compile.compile ?read_file s in
   let content =
     Cmarkit_renderer.doc_to_string Renderers.custom_html_renderer md
   in
   let has_math = Folders.has_math md in
-  embed_in_page ~has_math ~math_link ~theme ~css_links ~slipshow_js_link content
+  embed_in_page ~width ~height ~has_math ~math_link ~theme ~css_links
+    ~slipshow_js_link content
 
 let add_starting_state (start, end_) starting_state =
   let starting_state =
@@ -140,9 +148,10 @@ let add_starting_state (start, end_) starting_state =
   in
   start ^ starting_state ^ end_
 
-let convert ?starting_state ?math_link ?theme ?css_links ?slipshow_js_link
-    ?(read_file = fun _ -> Ok None) s =
+let convert ?dimension ?starting_state ?math_link ?theme ?css_links
+    ?slipshow_js_link ?(read_file = fun _ -> Ok None) s =
   let delayed =
-    delayed ?math_link ?css_links ?theme ?slipshow_js_link ~read_file s
+    delayed ?math_link ?css_links ?theme ?slipshow_js_link ?dimension ~read_file
+      s
   in
   add_starting_state delayed starting_state
