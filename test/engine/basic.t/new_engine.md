@@ -95,7 +95,7 @@ AAAAAAAAAAAAAA A
 
 
 
-{pause exec-at-unpause}
+{pause exec}
 ```slip-script
 log = function (slip, x) { // slip needs to be passed
   console.log(x)
@@ -106,13 +106,13 @@ slip.setProp(slip.state, "x", 1);
 log(slip, slip.state.x);
 ```
 
-{pause exec-at-unpause}
+{pause exec}
 ```slip-script
 log(slip, slip.state.x); // 1
 ```
 
 
-{pause exec-at-unpause}
+{pause exec}
 ```slip-script
 let i = 0
 let incr = () => {
@@ -134,7 +134,7 @@ b
 {#c .unstatic}
 c
 
-{pause static-at-unpause="a b c"}
+{pause static="a b c"}
 
 {pause up}
 One
@@ -154,7 +154,7 @@ Three
 {pause #lehaut}
 Lorem ipsum [dolor]{#box2 .boxes} sit amet, consectetuer adipiscing elit.  Donec hendrerit tempor tellus.  Donec pretium posuere tellus.  Proin quam nisl, tincidunt et, mattis eget, convallis nec, purus.  Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.  Nulla posuere.  Donec vitae dolor.  Nullam tristique diam non turpis.  Cras placerat accumsan nulla.  Nullam rutrum.  Nam vestibulum accumsan nisl.
 
-{pause exec-at-unpause}
+{pause exec}
 ```slip-script
 let x = document.querySelector("#lehaut");
 x.classList.add("red");
@@ -166,18 +166,18 @@ return undo;
 - deuxième {pause} point
 - troisième
 
-{pause focus-at-unpause="box1 box2"}
+{pause focus="box1 box2"}
 
-{pause unfocus-at-unpause}
+{pause unfocus}
 Hello
 
-{pause exec-at-unpause}
+{pause exec}
 ```slip-script
 let elems = document.querySelectorAll(".boxes");
 slip.focus(elems);
 ```
 
-{pause exec-at-unpause}
+{pause exec}
 ```slip-script
 slip.onUndo(() => { console.log("Undoing") })
 ```
@@ -187,7 +187,7 @@ Lorem ipsum dolor sit amet, consectetuer adipiscing elit.  Donec hendrerit tempo
 
 ## Title 3
 
-{pause unfocus-at-unpause up}
+{pause unfocus up}
 Lorem ipsum dolor sit amet, consectetuer adipiscing elit.  Donec hendrerit tempor tellus.  Donec pretium posuere tellus.  Proin quam nisl, tincidunt et, mattis eget, convallis nec, purus.  Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.  Nulla posuere.  Donec vitae dolor.  Nullam tristique diam non turpis.  Cras placerat accumsan nulla.  Nullam rutrum.  Nam vestibulum accumsan nisl.
 
 {pause}

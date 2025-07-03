@@ -2,7 +2,7 @@
 
 {pause}
 
-A word and{#id step emph-at-unpause} some other words.
+A word and{#id step emph} some other words.
 
 {pause}
 

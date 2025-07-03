@@ -44,14 +44,14 @@ yo
 {pause enter=idslide2}
 yo
 
-{pause unfocus-at-unpause}
+{pause unfocus}
 
-{pause focus-at-unpause=box}
+{pause focus=box}
 yo
 
-{pause unfocus-at-unpause}
+{pause unfocus}
 
-{pause focus-at-unpause=box2}
+{pause focus=box2}
 yo
 
 
