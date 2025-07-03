@@ -34,7 +34,7 @@ let parse_theme to_asset theme =
   | Some theme -> `Builtin theme
   | None -> `External (to_asset theme)
 
-let compile ~input ~output ~math_link ~css_links ~theme =
+let compile ~dimension ~input ~output ~math_link ~css_links ~theme =
   let asset_files, to_asset =
     let used_files, read_file = read_file (Fpath.v "./") () in
     (used_files, Slipshow.Asset.of_string ~read_file)
@@ -48,7 +48,9 @@ let compile ~input ~output ~math_link ~css_links ~theme =
       (match input with `Stdin -> Fpath.v "./" | `File f -> Fpath.parent f)
       ()
   in
-  let html = Slipshow.convert ?math_link ~css_links ?theme ~read_file content in
+  let html =
+    Slipshow.convert ?dimension ?math_link ~css_links ?theme ~read_file content
+  in
   let all_used_files = Fpath.Set.union !asset_files !used_files in
   match output with
   | `Stdout ->
@@ -63,15 +65,15 @@ let compile ~input ~output ~math_link ~css_links ~theme =
             (Fpath.normalize (Fpath.( // ) (Fpath.v (Sys.getcwd ())) f))
             all_used_files)
 
-let watch ~input ~output ~math_link ~css_links ~theme =
+let watch ~dimension ~input ~output ~math_link ~css_links ~theme =
   let input = `File input and output = `File output in
   let compile () =
     Logs.app (fun m -> m "Compiling...");
-    compile ~input ~output ~math_link ~css_links ~theme
+    compile ~input ~output ~math_link ~css_links ~theme ~dimension
   in
   Slipshow_server.do_watch compile
 
-let serve ~input ~output ~math_link ~css_links ~theme =
+let serve ~dimension ~input ~output ~math_link ~css_links ~theme =
   let compile () =
     let asset_files, to_asset =
       let used_files, read_file = read_file (Fpath.v "./") () in
@@ -83,8 +85,8 @@ let serve ~input ~output ~math_link ~css_links ~theme =
     let theme = Option.map (parse_theme to_asset) theme in
     let used_files, read_file = read_file (Fpath.parent input) () in
     let result =
-      Slipshow.delayed ~css_links ?math_link:math_link_asset ?theme ~read_file
-        content
+      Slipshow.delayed ?dimension ~css_links ?math_link:math_link_asset ?theme
+        ~read_file content
     in
     let all_used_files = Fpath.Set.union !asset_files !used_files in
     let html = Slipshow.add_starting_state result None in

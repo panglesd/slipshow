@@ -75,7 +75,9 @@ let setup el =
   in
   Brr.El.insert_siblings `Replace el [ rotate_container ];
   Brr.El.append_children universe [ el ];
-  let+ () = Browser.Css.set [ Width width; Height height ] scale_container in
+  let+ () =
+    Browser.Css.set [ Width (width ()); Height (height ()) ] scale_container
+  in
   { rotate_container; scale_container; universe }
 
 let fast_move = ref false
@@ -130,8 +132,8 @@ let move_pure window ({ x; y; scale } as target : Coordinates.window) ~delay =
           (TransitionTiming "", TransitionDelay 0.) )
   in
   State.set_coord target;
-  let x = -.x +. (width /. 2.) in
-  let y = -.y +. (height /. 2.) in
+  let x = -.x +. (width () /. 2.) in
+  let y = -.y +. (height () /. 2.) in
   let+ () = Browser.Css.set [ TransitionDuration delay ] window.scale_container
   and+ () = Browser.Css.set [ scale_function ] window.scale_container
   and+ () = Browser.Css.set [ scale_delay ] window.scale_container

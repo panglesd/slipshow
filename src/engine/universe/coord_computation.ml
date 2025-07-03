@@ -52,26 +52,31 @@ module Window = struct
     | [] -> current
     | elem :: elems ->
         let box = List.fold_left box elem elems in
-        let scale1 = width /. box.width and scale2 = height /. box.height in
+        let scale1 = width () /. box.width
+        and scale2 = height () /. box.height in
         let scale = Float.min scale1 scale2 in
         { scale; x = box.x; y = box.y }
 
   let enter elem =
-    let scale = width /. elem.width in
-    let y = elem.y -. (elem.height /. 2.) +. (height /. 2. /. scale) in
+    let scale = width () /. elem.width in
+    let y = elem.y -. (elem.height /. 2.) +. (height () /. 2. /. scale) in
     { scale; x = elem.x; y }
 
   let up ?(margin = 13.5) ~current elem =
     let margin = margin /. current.scale in
     let y =
-      elem.y -. (elem.height /. 2.) +. (height /. 2. /. current.scale) -. margin
+      elem.y -. (elem.height /. 2.)
+      +. (height () /. 2. /. current.scale)
+      -. margin
     in
     { current with y }
 
   let down ?(margin = 13.5) ~current elem =
     let margin = margin /. current.scale in
     let y =
-      elem.y +. (elem.height /. 2.) -. (height /. 2. /. current.scale) +. margin
+      elem.y +. (elem.height /. 2.)
+      -. (height () /. 2. /. current.scale)
+      +. margin
     in
     { current with y }
 

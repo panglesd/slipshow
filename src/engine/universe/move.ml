@@ -72,10 +72,10 @@ let scroll window elem =
   let current = State.get_coord () in
   if
     coords_e.y -. (coords_e.height /. 2.)
-    < current.y -. (Constants.height /. 2. *. current.scale)
+    < current.y -. (Constants.height () /. 2. *. current.scale)
   then up window elem
   else if
     coords_e.y +. (coords_e.height /. 2.)
-    > current.y +. (Constants.height /. 2. *. current.scale)
+    > current.y +. (Constants.height () /. 2. *. current.scale)
   then down window elem
   else Undoable.return ()
