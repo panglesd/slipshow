@@ -22,6 +22,7 @@
 - Added pause blocks (#127)
 - Use horizontal lines (`---`) to group blocks (#129)
 - Pass attributes to children with `children:` (#130)
+- Consistently remove the need for `-at-unpause` (#133)
 
 ### Engine
 
