@@ -347,7 +347,7 @@ source should look like this now:
 Tell the engine *when* to move the screen
 """""""""""""""""""""""""""""""""""""""""
 
-For the second point, we use the ``at-unpause`` metadata kind. Such metadata
+For the second point, we use an action metadata kind. Such metadata
 should only be grouped with a ``pause`` metadata. It says that a specific action
 must be taken when stepping through this pause.
 
@@ -360,7 +360,7 @@ case, we want to put something on top of the screen, so we use ``up`` keyword.
 Putting everything together
 """""""""""""""""""""""""""
 
-So, we want to add ``up-at-unpause=prime-def`` to the
+So, we want to add ``up=prime-def`` to the
 pause associated to the proof. The modified source should look like this:
 
 .. code-block:: markdown
@@ -370,7 +370,7 @@ pause associated to the proof. The modified source should look like this:
 
    [...]
 
-   {pause .proof up-at-unpause=prime-def}
+   {pause .proof up=prime-def}
    > Suppose there are finitely many prime numbers.
    > [...]
 
@@ -388,7 +388,7 @@ easy to follow for the viewer.
    it.
 
    If no id is given, the instruction is considered to apply on the element
-   itself. For instance, ``down-at-unpause`` without id is a useful command,
+   itself. For instance, ``down`` without id is a useful command,
    that we could have used on the ``proof`` element.
 
 .. note::
@@ -456,7 +456,7 @@ point in not using this in our presentations!
 
 Altough slipshow itself does not provide any support for defining animations, it
 allows you to embed a video, or use any javascript library. For a scripted start
-and stepping of your animation, you can use the ``exec-at-unpause`` attribute,
+and stepping of your animation, you can use the ``exec`` attribute,
 combined with the special ``slip-script`` codeblock!
 
 Here is a minimal example of an Eratosthenes animation. It is very badly written,
@@ -467,7 +467,7 @@ can use libraries to make it less tedious.
 
    {#container}
 
-   {pause exec-at-unpause}
+   {pause exec}
    ```slip-script
    let d = document.querySelector("#container");
    d.style="display: grid; grid-template-columns: repeat(10, auto)";
@@ -479,7 +479,7 @@ can use libraries to make it less tedious.
    }
    ```
 
-   {pause exec-at-unpause}
+   {pause exec}
    ```slip-script
    let array = document.querySelectorAll("#container > *");
    function sleep(ms) {
@@ -497,7 +497,7 @@ can use libraries to make it less tedious.
    do_(2, 50)
    ```
 
-   {pause exec-at-unpause}
+   {pause exec}
    ```slip-script
    slip.do_(3, 100)
    ```
