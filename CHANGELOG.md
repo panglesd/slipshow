@@ -11,6 +11,7 @@
 - Fix missing mime type on images that made svg undisplayable (#120)
 - Fix detection of math inside inline attributes (#124)
 - Add `--dimension` to specify the dimension of the presentation (#131)
+- Add less boring name for versions (#132)
 
 ### Language
 
