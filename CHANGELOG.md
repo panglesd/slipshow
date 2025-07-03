@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [v0.3.0] The return of the subslips (Friday 3rd July, 2025)
 
 ### Compiler
 
