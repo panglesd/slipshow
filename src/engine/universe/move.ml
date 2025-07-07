@@ -29,7 +29,7 @@ let move_relative ?(x = 0.) ?(y = 0.) ?(scale = 1.) window ~delay =
 let move_relative_pure ?(x = 0.) ?(y = 0.) ?(scale = 1.) window ~delay =
   move_relative ~x ~y ~scale window ~delay |> Undoable.discard
 
-let focus ?(margin = 0.) window elems =
+let focus ?(delay = 1.) ?(margin = 0.) window elems =
   let coords_e = List.map (Coord_computation.elem window) elems in
   let coords_e =
     List.map
@@ -39,7 +39,7 @@ let focus ?(margin = 0.) window elems =
   in
   let current = State.get_coord () in
   let coords_w = Coord_computation.Window.focus ~current coords_e in
-  move window coords_w ~delay:1.
+  move window coords_w ~delay
 
 let focus_pure ?margin window elem =
   focus ?margin window elem |> Undoable.discard

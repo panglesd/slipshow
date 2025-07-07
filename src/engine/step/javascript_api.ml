@@ -19,7 +19,14 @@ let up window = one_elem (Actions.up window)
 let center window = one_elem (Actions.center window)
 let down window = one_elem (Actions.down window)
 let scroll window = one_elem (Actions.scroll window)
-let focus window = one_elem_list (Actions.focus window)
+
+let focus window undos_ref =
+  Jv.callback ~arity:3 @@ fun elems delay margin ->
+  let elems = (Jv.to_list Brr.El.of_jv) elems
+  and delay = Jv.to_float delay
+  and margin = Jv.to_float margin in
+  register_undo undos_ref @@ fun () -> Actions.focus window ~delay ~margin elems
+
 let unfocus window = one_arg (fun _ -> ()) (Actions.unfocus window)
 let static = one_elem_list Actions.static
 let unstatic = one_elem_list Actions.unstatic

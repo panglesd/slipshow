@@ -158,10 +158,36 @@ let unstatic elems =
 let static elem =
   Undoable.List.iter (Undoable.Browser.set_class "unstatic" false) elem
 
-let focus window elems =
+let parse_elems elem v =
+  let v = Jstr.of_string v in
+  if Jstr.equal Jstr.empty v then [ elem ]
+  else
+    Jstr.cuts ~sep:(Jstr.v " ") v
+    |> List.filter_map (fun id ->
+           Brr.El.find_first_by_selector (Jstr.concat [ Jstr.v "#"; id ]))
+
+let find_named_arg name named_args =
+  List.find_map
+    (function n, v when String.equal n name -> Some v | _ -> None)
+    named_args
+
+let parse_focus elem s =
+  let named_args, args = parse_string s in
+  let elems = parse_elems elem args in
+  let delay =
+    find_named_arg "delay" named_args
+    |> Option.map Float.of_string |> Option.value ~default:1.
+  in
+  let margin =
+    find_named_arg "margin" named_args
+    |> Option.map Float.of_string |> Option.value ~default:0.
+  in
+  (margin, delay, elems)
+
+let focus window ~margin ~delay elems =
   let> () = State.Focus.push (Universe.State.get_coord ()) in
   (* We focus 1px more in order to avoid off-by-one error due to round errors *)
-  Universe.Move.focus ~margin:(-1.) window elems
+  Universe.Move.focus ~margin ~delay window elems
 
 let unfocus window () =
   let> coord = State.Focus.pop () in

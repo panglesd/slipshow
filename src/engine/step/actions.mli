@@ -7,7 +7,15 @@ val enter : Universe.Window.t -> Brr.El.t -> unit Undoable.t
 val exit : Universe.Window.t -> Brr.El.t -> unit Undoable.t
 val unstatic : Brr.El.t list -> unit Undoable.t
 val static : Brr.El.t list -> unit Undoable.t
-val focus : Universe.Window.t -> Brr.El.t list -> unit Undoable.t
+val parse_focus : Brr.El.t -> string -> float * float * Brr.El.t list
+
+val focus :
+  Universe.Window.t ->
+  margin:float ->
+  delay:float ->
+  Brr.El.t list ->
+  unit Undoable.t
+
 val unfocus : Universe.Window.t -> unit -> unit Undoable.t
 val reveal : Brr.El.t list -> unit Undoable.t
 val unreveal : Brr.El.t list -> unit Undoable.t

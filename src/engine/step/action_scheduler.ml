@@ -51,17 +51,35 @@ module AttributeActions = struct
         |> List.filter_map (fun id ->
                Brr.El.find_first_by_selector (Jstr.concat [ Jstr.v "#"; id ])))
 
-  let act ?(remove_class = true) ~on:class_ ~payload action elem =
+  let act ?(remove_class = true) ~on:at_ ~payload action elem =
     let ( let$ ) x f =
       match x with None -> Undoable.return () | Some x -> f x
     in
-    let$ v = Brr.El.at (Jstr.v class_) elem in
+    let$ v = Brr.El.at (Jstr.v at_) elem in
     let> () =
-      if remove_class then Undoable.Browser.set_at class_ None elem
+      if remove_class then Undoable.Browser.set_at at_ None elem
       else Undoable.return ()
     in
     let$ payload = payload elem v in
     action payload
+
+  let act2 ?(remove_class = true) ~on:at_ action elem =
+    let ( let$ ) x f =
+      match x with None -> Undoable.return () | Some x -> f x
+    in
+    let$ v = Brr.El.at (Jstr.v at_) elem in
+    let> () =
+      if remove_class then Undoable.Browser.set_at at_ None elem
+      else Undoable.return ()
+    in
+    let v = Jstr.to_string v in
+    let v =
+      if v.[0] = '"' && v.[String.length v - 1] = '"' && String.length v > 1
+      then String.sub v 1 (String.length v - 2)
+      else v
+    in
+    let margin, delay, elems = Actions.parse_focus elem v in
+    action ~margin ~delay elems
 
   let up window = act ~on:"up-at-unpause" ~payload:as_id (Actions.up window)
 
@@ -79,9 +97,7 @@ module AttributeActions = struct
 
   let unstatic = act ~on:"unstatic-at-unpause" ~payload:as_ids Actions.unstatic
   let static = act ~on:"static-at-unpause" ~payload:as_ids Actions.static
-
-  let focus window =
-    act ~on:"focus-at-unpause" ~payload:as_ids (Actions.focus window)
+  let focus window = act2 ~on:"focus-at-unpause" (Actions.focus window)
 
   let unfocus window =
     act ~on:"unfocus-at-unpause"

@@ -12,7 +12,10 @@ val move_relative :
   unit Undoable.t
 
 val focus_pure : ?margin:float -> Window.t -> Brr.El.t list -> unit Fut.t
-val focus : ?margin:float -> Window.t -> Brr.El.t list -> unit Undoable.t
+
+val focus :
+  ?delay:float -> ?margin:float -> Window.t -> Brr.El.t list -> unit Undoable.t
+
 val enter : Window.t -> Brr.El.t -> unit Undoable.t
 val up : Window.t -> Brr.El.t -> unit Undoable.t
 val center : Window.t -> Brr.El.t -> unit Undoable.t
