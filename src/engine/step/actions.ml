@@ -1,5 +1,61 @@
 open Undoable.Syntax
 
+let parse_string s =
+  let is_ws idx = match s.[idx] with '\n' | ' ' -> true | _ -> false in
+  let is_alpha idx =
+    let c = s.[idx] in
+    ('a' <= c && c <= 'z')
+    || ('A' <= c && c <= 'Z')
+    || ('0' <= c && c <= '9')
+    || c = '_'
+  in
+  let rec consume_ws idx = if is_ws idx then consume_ws (idx + 1) else idx in
+  let rec consume_non_ws idx =
+    if not (is_ws idx) then consume_non_ws (idx + 1) else idx
+  in
+  let rec consume_alpha idx =
+    if is_alpha idx then consume_alpha (idx + 1) else idx
+  in
+  let rec parse_nameds acc idx =
+    let parse_name idx =
+      let idx0 = idx in
+      let idx = consume_alpha idx in
+      Format.printf "After consuming alpha idx is %d" idx;
+      let name = String.sub s idx0 (idx - idx0) in
+      (name, idx)
+    in
+    let parse_column idx =
+      match s.[idx] with
+      | ':' -> idx + 1
+      | _ -> failwith "no : after named argument"
+    in
+    let parse_arg idx =
+      let idx0 = idx in
+      let idx = consume_non_ws idx in
+      let arg = String.sub s idx0 (idx - idx0) in
+      (arg, idx)
+    in
+    let parse_named idx =
+      let idx = consume_ws idx in
+      match s.[idx] with
+      | '~' ->
+          let idx = idx + 1 in
+          let name, idx = parse_name idx in
+          let idx = parse_column idx in
+          let arg, idx = parse_arg idx in
+          Some ((name, arg), idx)
+      | _ -> None
+    in
+    match parse_named idx with
+    | None -> (List.rev acc, idx)
+    | Some (x, idx) -> parse_nameds (x :: acc) idx
+  in
+  let parse_others idx = String.sub s idx (String.length s - idx) in
+  let nameds, idx = parse_nameds [] 0 in
+  let idx = consume_ws idx in
+  let others = parse_others idx in
+  (nameds, others)
+
 let do_to_root elem f =
   let is_root elem =
     Brr.El.class' (Jstr.v "slip") elem
