@@ -7,14 +7,17 @@ val enter : Universe.Window.t -> Brr.El.t -> unit Undoable.t
 val exit : Universe.Window.t -> Brr.El.t -> unit Undoable.t
 val unstatic : Brr.El.t list -> unit Undoable.t
 val static : Brr.El.t list -> unit Undoable.t
-val parse_focus : Brr.El.t -> string -> float * float * Brr.El.t list
 
-val focus :
-  Universe.Window.t ->
-  margin:float ->
-  delay:float ->
-  Brr.El.t list ->
-  unit Undoable.t
+module Focus : sig
+  type args = {
+    margin : float option;
+    delay : float option;
+    elems : Brr.El.t list;
+  }
+
+  val parse_args : Brr.El.t -> string -> (args, [> `Msg of string ]) result
+  val do_ : Universe.Window.t -> args -> unit Undoable.t
+end
 
 val unfocus : Universe.Window.t -> unit -> unit Undoable.t
 val reveal : Brr.El.t list -> unit Undoable.t

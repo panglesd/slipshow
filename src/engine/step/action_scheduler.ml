@@ -67,6 +67,13 @@ module AttributeActions = struct
     let ( let$ ) x f =
       match x with None -> Undoable.return () | Some x -> f x
     in
+    let ( let$$ ) x f =
+      match x with
+      | Error (`Msg s) ->
+          Brr.Console.(log [ "Error:"; s ]);
+          Undoable.return ()
+      | Ok x -> f x
+    in
     let$ v = Brr.El.at (Jstr.v at_) elem in
     let> () =
       if remove_class then Undoable.Browser.set_at at_ None elem
@@ -78,8 +85,8 @@ module AttributeActions = struct
       then String.sub v 1 (String.length v - 2)
       else v
     in
-    let margin, delay, elems = Actions.parse_focus elem v in
-    action ~margin ~delay elems
+    let$$ args = Actions.Focus.parse_args elem v in
+    action args
 
   let up window = act ~on:"up-at-unpause" ~payload:as_id (Actions.up window)
 
@@ -97,7 +104,7 @@ module AttributeActions = struct
 
   let unstatic = act ~on:"unstatic-at-unpause" ~payload:as_ids Actions.unstatic
   let static = act ~on:"static-at-unpause" ~payload:as_ids Actions.static
-  let focus window = act2 ~on:"focus-at-unpause" (Actions.focus window)
+  let focus window = act2 ~on:"focus-at-unpause" (Actions.Focus.do_ window)
 
   let unfocus window =
     act ~on:"unfocus-at-unpause"

@@ -23,9 +23,10 @@ let scroll window = one_elem (Actions.scroll window)
 let focus window undos_ref =
   Jv.callback ~arity:3 @@ fun elems delay margin ->
   let elems = (Jv.to_list Brr.El.of_jv) elems
-  and delay = Jv.to_float delay
-  and margin = Jv.to_float margin in
-  register_undo undos_ref @@ fun () -> Actions.focus window ~delay ~margin elems
+  and delay = Jv.to_option Jv.to_float delay
+  and margin = Jv.to_option Jv.to_float margin in
+  register_undo undos_ref @@ fun () ->
+  Actions.Focus.do_ window { delay; margin; elems }
 
 let unfocus window = one_arg (fun _ -> ()) (Actions.unfocus window)
 let static = one_elem_list Actions.static

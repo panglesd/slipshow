@@ -17,10 +17,10 @@ let string_of_file = function
   | _ -> assert false
 
 let read f =match f with
-  | Slipshow_js -> [%blob "src/engine/slipshow.js"]
-  | Slip_internal_css -> [%blob "src/engine/slipshow-internal.css"]
-  | Slip_system_css -> [%blob "src/engine/slipshow-system.css"]
-  | Favicon -> [%blob "logo/favicon.ico"]
+  | Slipshow_js -> [%blob "../engine/slipshow.js"]
+  | Slip_internal_css -> [%blob "../engine/slipshow-internal.css"]
+  | Slip_system_css -> [%blob "../engine/slipshow-system.css"]
+  | Favicon -> [%blob "../../logo/favicon.ico"]
   | _ ->
      Data_contents.read (string_of_file f)
      |> function
