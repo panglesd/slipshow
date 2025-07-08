@@ -276,7 +276,7 @@ module Attributes : sig
   type key = string
   (** The type for attributes keys. *)
 
-  type value = string
+  type value = {v : string ; delimiter: char option}
   (** The type for attributes values. *)
 
   val empty : t

@@ -70,7 +70,7 @@ let cli ~exe () =
   let pos s = try examples := int_of_string s :: !examples with
   | Failure _ ->
       try
-        match String.cut_left ~sep:"-" s with
+        match String.cut ~sep:"-" s with
         | None -> failwith ""
         | Some (l, r) ->
             let l = int_of_string l in
