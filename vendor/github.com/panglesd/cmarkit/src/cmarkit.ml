@@ -131,7 +131,7 @@ module Attributes = struct
   and key = string
   (** The type for attributes keys. *)
 
-  and value = string
+  and value = {v : string ; delimiter: char option}
   (** The type for attributes values. *)
 
   let empty = {class' = [] ; id = None ; kv_attributes = []}
@@ -170,20 +170,10 @@ module Attributes = struct
 
   let add (key, meta) value t =
     match key, value with
-    | "id", Some (value, meta) ->
-       let value = match value.[0] with
-         | '"' ->
-            String.sub value 1 (String.length value - 2)
-         | _ -> value
-       in
+    | "id", Some ({v = value; _}, meta) ->
        set_id t (value, meta)
-    | "class", Some (value, meta) ->
-       let values = match value.[0] with
-         | '"' ->
-            let value = String.sub value 1 (String.length value - 2) in
-            String.split_on_char ' ' value
-         | _ -> [ value ]
-       in
+    | "class", Some ({v = value; _}, meta) ->
+       let values = String.split_on_char ' ' value in
        List.fold_left (fun t value -> add_class t (value, meta)) t values
     | _ ->
        let kv_attributes = ((key, meta), value) :: t.kv_attributes in
@@ -1764,7 +1754,9 @@ module Inline_struct = struct
          let key = clean_raw_span p key in
          let value = match value with
              None -> None
-           | Some value -> Some (attr_of_rev_spans p value)
+           | Some (value, delimiter) ->
+              let v, meta = attr_of_rev_spans p value in
+              Some ({Attributes.v ; delimiter}, meta)
          in
          Attributes.add key value attrs
     in
@@ -2820,7 +2812,9 @@ module Block_struct = struct
          let key = clean_raw_span p key in
          let value = match value with
              None -> None
-           | Some value -> Some (Inline_struct.attr_of_rev_spans p value)
+           | Some (value, delimiter) ->
+              let (v, meta) = Inline_struct.attr_of_rev_spans p value in
+              Some ({Attributes.v ; delimiter}, meta)
          in
          Attributes.add key value attrs
     in
@@ -2846,7 +2840,9 @@ module Block_struct = struct
          let key = clean_raw_span p key in
          let value = match value with
              None -> None
-           | Some value -> Some (Inline_struct.attr_of_rev_spans p value)
+           | Some (value, delimiter) ->
+              let (v, meta) =  (Inline_struct.attr_of_rev_spans p value) in
+              Some ({Attributes.v ; delimiter}, meta)
          in
          Attributes.add key value attrs
     in

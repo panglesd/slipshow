@@ -129,8 +129,12 @@ let pct_encoded_string c s = buffer_add_pct_encoded_string (C.buffer c) s
 
 (* Rendering functions *)
 
-let add_attr c (key, value) = match value with
-  | Some value -> C.string c (" " ^ key ^ "=" ^ value);
+let add_attr c (key, value) =
+  match value with
+  | Some {Attributes.v = value; delimiter = Some d} ->
+     let s = Format.sprintf " %s=%c%s%c" key d value d in
+     C.string c s
+  | Some {Attributes.v = value; delimiter = None} -> C.string c (" " ^ key ^ "=" ^ value);
   | None -> C.string c (" " ^ key)
 
 let add_attrs c attrs =
@@ -147,12 +151,14 @@ let add_attrs c attrs =
     let class' = List.map (fun (c, _) -> c) class' in
     match class' with
     | [] -> []
-    | _ -> ["class", Some ("\"" ^ String.concat " " class' ^ "\"") ]
+    | _ ->
+       let v = String.concat " " class' in
+       ["class", Some {Attributes.v ; delimiter = Some '"'} ]
   in
   let id =
     let id = Cmarkit.Attributes.id attrs in
     match id with
-    | Some (id, _) -> ["id", Some ("\""^id^"\"") ]
+    | Some (id, _) -> ["id", Some {Attributes.v =id; delimiter = Some '"'} ]
     | None -> []
   in
   let attrs = id @ class' @ kv_attrs in

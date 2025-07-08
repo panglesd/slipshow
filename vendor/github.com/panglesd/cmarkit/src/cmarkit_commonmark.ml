@@ -209,7 +209,8 @@ let attributes ?(inline = false) c attrs =
           (function
            | `Id v -> "#"^v
            | `Class v -> "." ^ v
-           | `Kv (k, Some v) -> k^"="^v
+           | `Kv (k, Some {Attributes.v; delimiter = Some delim}) -> Format.sprintf "%s=%c%s%c" k delim v delim
+           | `Kv (k, Some {Attributes.v; delimiter = None}) -> k^"="^v
            | `Kv (k, None) -> k
           ) attrs
       in
