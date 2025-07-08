@@ -85,23 +85,9 @@ module Stage1 = struct
               (Ast.SlipScript ((cb, (Mapper.map_attrs m attrs, meta)), meta2))
         | _ -> Mapper.default)
 
-  let remove_quotes src =
-    (* This is a horrible hack due to the fact that our current attribute
-       parsing leaves the quotes...
-
-       It was not spotted until now since leftover quotes are
-       interpreted as quotes by HTML, but as we use more attributes in
-       cmarkit, it's going to be really annoying.
-
-       Needs to be fixed in cmarkit... *)
-    if src.[0] = '"' && src.[String.length src - 1] = '"' then
-      String.sub src 1 (String.length src - 2)
-    else src
-
   let handle_includes read_file current_path m (attrs, meta) =
     match (Attributes.find "include" attrs, Attributes.find "src" attrs) with
-    | Some (_, None), Some (_, Some (src, _)) -> (
-        let src = remove_quotes src in
+    | Some (_, None), Some (_, Some ({v = src; _}, _)) -> (
         let relativized_path =
           Path_entering.relativize current_path (Fpath.v src)
         in

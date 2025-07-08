@@ -80,11 +80,6 @@ module AttributeActions = struct
       else Undoable.return ()
     in
     let v = Jstr.to_string v in
-    let v =
-      if String.length v > 1 && v.[0] = '"' && v.[String.length v - 1] = '"'
-      then String.sub v 1 (String.length v - 2)
-      else v
-    in
     let$$ args = Actions.Focus.parse_args elem v in
     action args
 
