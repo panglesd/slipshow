@@ -71,18 +71,16 @@ let parse_string s =
           let idx = parse_column idx in
           let arg, idx = parse_arg idx in
           Some ((name, arg), idx)
-      | _ -> None
+      | (exception Invalid_argument _) | _ -> None
     in
     repeat parse_named
   in
   let parse_other idx =
-    if idx >= String.length s then None
-    else
-      let idx = consume_ws idx in
-      let res =
-        match s.[idx] with '"' -> quoted_string idx | _ -> parse_arg idx
-      in
-      Some res
+    let idx = consume_ws idx in
+    match s.[idx] with
+    | '"' -> Some (quoted_string idx)
+    | _ -> Some (parse_arg idx)
+    | exception Invalid_argument _ -> None
   in
   let parse_others = repeat parse_other in
   let nameds, idx = parse_nameds 0 in

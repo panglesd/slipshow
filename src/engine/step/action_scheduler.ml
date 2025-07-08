@@ -81,7 +81,7 @@ module AttributeActions = struct
     in
     let v = Jstr.to_string v in
     let v =
-      if v.[0] = '"' && v.[String.length v - 1] = '"' && String.length v > 1
+      if String.length v > 1 && v.[0] = '"' && v.[String.length v - 1] = '"'
       then String.sub v 1 (String.length v - 2)
       else v
     in
