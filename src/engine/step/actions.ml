@@ -31,16 +31,18 @@ let parse_string s =
       | '\\' -> take_inside_quoted_string (s.[idx + 1] :: acc) (idx + 2)
       | _ -> take_inside_quoted_string (s.[idx] :: acc) (idx + 1)
     in
-    take_inside_quoted_string [] (idx + 1)
+    take_inside_quoted_string [] idx
+  in
+  let parse_unquoted_string idx =
+    let idx0 = idx in
+    let idx = consume_non_ws idx in
+    let arg = String.sub s idx0 (idx - idx0) in
+    (arg, idx)
   in
   let parse_arg idx =
     match s.[idx] with
-    | '"' -> quoted_string idx
-    | _ ->
-        let idx0 = idx in
-        let idx = consume_non_ws idx in
-        let arg = String.sub s idx0 (idx - idx0) in
-        (arg, idx)
+    | '"' -> quoted_string (idx + 1)
+    | _ -> parse_unquoted_string idx
   in
   let repeat parser idx =
     let rec do_ acc idx =
@@ -50,42 +52,49 @@ let parse_string s =
     in
     do_ [] idx
   in
-  let parse_nameds =
-    let parse_name idx =
-      let idx0 = idx in
-      let idx = consume_alpha idx in
-      let name = String.sub s idx0 (idx - idx0) in
-      (name, idx)
-    in
-    let parse_column idx =
-      match s.[idx] with
-      | ':' -> idx + 1
-      | _ -> failwith "no : after named argument"
-    in
-    let parse_named idx =
-      let idx = consume_ws idx in
-      match s.[idx] with
-      | '~' ->
-          let idx = idx + 1 in
-          let name, idx = parse_name idx in
-          let idx = parse_column idx in
-          let arg, idx = parse_arg idx in
-          Some ((name, arg), idx)
-      | (exception Invalid_argument _) | _ -> None
-    in
-    repeat parse_named
+  let parse_name idx =
+    let idx0 = idx in
+    let idx = consume_alpha idx in
+    let name = String.sub s idx0 (idx - idx0) in
+    (name, idx)
   in
-  let parse_other idx =
+  let parse_column idx =
+    match s.[idx] with
+    | ':' -> idx + 1
+    | _ -> failwith "no : after named argument"
+  in
+  let parse_named idx =
     let idx = consume_ws idx in
     match s.[idx] with
-    | '"' -> Some (quoted_string idx)
+    | '~' ->
+        let idx = idx + 1 in
+        let name, idx = parse_name idx in
+        let idx = parse_column idx in
+        let arg, idx = parse_arg idx in
+        Some ((name, arg), idx)
+    | (exception Invalid_argument _) | _ -> None
+  in
+  let parse_positional idx =
+    let idx = consume_ws idx in
+    match s.[idx] with
     | _ -> Some (parse_arg idx)
     | exception Invalid_argument _ -> None
   in
-  let parse_others = repeat parse_other in
-  let nameds, idx = parse_nameds 0 in
-  let idx = consume_ws idx in
-  let others, _idx = parse_others idx in
+  let parse_one idx =
+    match parse_named idx with
+    | Some (named, idx) -> Some (`Named named, idx)
+    | None -> (
+        match parse_positional idx with
+        | None -> None
+        | Some (p, idx) -> Some (`Positional p, idx))
+  in
+  let parse_all = repeat parse_one in
+  let parsed, _ = parse_all 0 in
+  let nameds, others =
+    List.partition_map
+      (function `Named x -> Left x | `Positional p -> Right p)
+      parsed
+  in
   (nameds, others)
 
 let parse_string s =
@@ -135,66 +144,60 @@ let parse_string s =
 (*   in *)
 (*   parse_string ~consume:All parser s |> Result.get_ok *)
 
-let do_to_root elem f =
-  let is_root elem =
-    Brr.El.class' (Jstr.v "slip") elem
-    || (Option.is_some @@ Brr.El.at (Jstr.v "pause-block") elem)
-  in
-  let rec do_rec elem =
-    if is_root elem then Undoable.return ()
-    else
-      let> () = f elem in
-      match Brr.El.parent elem with
-      | None -> Undoable.return ()
-      | Some elem -> do_rec elem
-  in
-  do_rec elem
+module Pause = struct
+  let do_to_root elem f =
+    let is_root elem =
+      Brr.El.class' (Jstr.v "slip") elem
+      || (Option.is_some @@ Brr.El.at (Jstr.v "pause-block") elem)
+    in
+    let rec do_rec elem =
+      if is_root elem then Undoable.return ()
+      else
+        let> () = f elem in
+        match Brr.El.parent elem with
+        | None -> Undoable.return ()
+        | Some elem -> do_rec elem
+    in
+    do_rec elem
 
-let setup_pause elem =
-  let open Undoable in
-  let> () = Browser.set_class "pauseTarget" true elem in
-  do_to_root elem @@ fun elem ->
-  match Brr.El.at (Jstr.v "pauseAncestorMultiplicity") elem with
-  | None ->
-      let> () = Browser.set_class "pauseAncestor" true elem in
-      Browser.set_at "pauseAncestorMultiplicity" (Some (Jstr.of_int 1)) elem
-  | Some i -> (
-      match Jstr.to_int i with
-      | None ->
-          Brr.Console.(
-            log [ "Error: wrong value to pauseAncestorMultiplicity:"; i ]);
-          Browser.set_class "pauseAncestor" true elem
-      | Some i ->
-          let> () =
-            Browser.set_at "pauseAncestorMultiplicity"
-              (Some (Jstr.of_int (i + 1)))
-              elem
-          in
-          Browser.set_class "pauseAncestor" true elem)
-
-(* TODO: factor pause and setup_pause duplicated logic *)
-let pause elem =
-  let open Undoable in
-  let> () = Browser.set_class "pauseTarget" false elem in
-  do_to_root elem @@ fun elem ->
-  match Brr.El.at (Jstr.v "pauseAncestorMultiplicity") elem with
-  | None ->
-      Brr.Console.(
-        log [ "Error: pauseAncestorMultiplicity was supposed to be some"; elem ]);
+  let update_single elem n =
+    let open Undoable in
+    if n <= 0 then
+      let> () = Browser.set_at "pauseAncestorMultiplicity" None elem in
       Browser.set_class "pauseAncestor" false elem
-  | Some i -> (
-      match Jstr.to_int i with
-      | None ->
-          Brr.Console.(
-            log [ "Error: wrong value to pauseAncestorMultiplicity:"; i ]);
-          Browser.set_class "pauseAncestor" false elem
-      | Some i when i <= 1 ->
-          let> () = Browser.set_at "pauseAncestorMultiplicity" None elem in
-          Browser.set_class "pauseAncestor" false elem
-      | Some i ->
-          Browser.set_at "pauseAncestorMultiplicity"
-            (Some (Jstr.of_int (i - 1)))
-            elem)
+    else
+      let> () =
+        Browser.set_at "pauseAncestorMultiplicity" (Some (Jstr.of_int n)) elem
+      in
+      Browser.set_class "pauseAncestor" true elem
+
+  let update elem f =
+    do_to_root elem @@ fun elem ->
+    let n =
+      match Brr.El.at (Jstr.v "pauseAncestorMultiplicity") elem with
+      | None -> 0
+      | Some n -> (
+          match Jstr.to_int n with
+          | None ->
+              Brr.Console.(
+                log [ "Error: wrong value to pauseAncestorMultiplicity:"; n ]);
+              0
+          | Some n -> n)
+    in
+    let n = f n in
+    update_single elem n
+
+  let setup elem =
+    let open Undoable in
+    let> () = Browser.set_class "pauseTarget" true elem in
+    update elem (( + ) 1)
+
+  (* TODO: factor pause and setup_pause duplicated logic *)
+  let do_ elem =
+    let open Undoable in
+    let> () = Browser.set_class "pauseTarget" false elem in
+    update elem (fun n -> n - 1)
+end
 
 let up window elem = Universe.Move.up window elem
 let down window elem = Universe.Move.down window elem

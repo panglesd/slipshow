@@ -112,7 +112,7 @@ module AttributeActions = struct
   let unemph = act ~on:"unemph-at-unpause" ~payload:as_ids Actions.unemph
 
   let pause elem =
-    act ~on:"pause" ~payload:as_id (fun target -> Actions.pause target) elem
+    act ~on:"pause" ~payload:as_id (fun target -> Actions.Pause.do_ target) elem
 
   let step elem =
     act ~on:"step" ~payload:as_id (fun _ -> Undoable.return ()) elem
@@ -177,7 +177,7 @@ let setup_pause_ancestors () =
     (fun elem acc ->
       let> () = acc in
       let open AttributeActions in
-      act ~remove_class:false ~on:"pause" ~payload:as_id Actions.setup_pause
+      act ~remove_class:false ~on:"pause" ~payload:as_id Actions.Pause.setup
         elem)
     (Jstr.v "[pause]") (Undoable.return ())
 
