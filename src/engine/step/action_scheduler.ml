@@ -28,6 +28,7 @@ module AttributeActions = struct
   let activate ?(remove_class = true) (module Action : Actions.S) window elem =
     let on = Action.on in
     let$ v = Brr.El.at (Jstr.v on) elem in
+    Brr.Console.(log [ "Activating"; Action.action_name; "by"; elem ]);
     let> () =
       if remove_class then Undoable.Browser.set_at on None elem
       else Undoable.return ()

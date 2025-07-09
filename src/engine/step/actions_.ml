@@ -404,7 +404,11 @@ module Scroll = Move (struct
 end)
 
 module Enter = struct
-  type t = { elem : Brr.El.t; coord : Universe.Coordinates.window }
+  type t = {
+    elem : Brr.El.t;
+    coord : Universe.Coordinates.window;
+    duration : float option;
+  }
 
   let stack = Stack.create ()
 
@@ -414,7 +418,9 @@ module Enter = struct
 
     let move ?duration ?margin window elem =
       let> () =
-        Undoable.Stack.push { elem; coord = Universe.State.get_coord () } stack
+        Undoable.Stack.push
+          { elem; coord = Universe.State.get_coord (); duration }
+          stack
       in
       Universe.Move.enter ?duration ?margin window elem
   end)
@@ -427,12 +433,15 @@ let exit window to_elem =
     | None -> Undoable.return ()
     | Some { Enter.elem; _ } when Brr.El.contains elem ~child:to_elem ->
         Undoable.return ()
-    | Some { coord; _ } -> (
+    | Some { coord; duration; _ } -> (
+        let duration = Option.value duration ~default:1.0 in
         let> _ = Undoable.Stack.pop_opt Enter.stack in
         match Undoable.Stack.peek Enter.stack with
-        | None -> Universe.Move.move window coord ~duration:1.0
+        | None -> Universe.Move.move window coord ~duration
         | Some { Enter.elem; _ } when Brr.El.contains elem ~child:to_elem ->
-            Universe.Move.move window coord ~duration:1.0
+            if Brr.El.at (Jstr.v "enter-at-unpause") to_elem |> Option.is_some
+            then Undoable.return ()
+            else Universe.Move.move window coord ~duration:1.0
         | Some _ -> exit ())
   in
   exit ()

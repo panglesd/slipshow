@@ -102,6 +102,7 @@ let live_scale { scale_container; _ } =
 
 let move_pure window ({ x; y; scale } as target : Coordinates.window) ~duration
     =
+  Brr.Console.(log [ "Moving with duration"; duration ]);
   let duration = if !fast_move then 0. else duration in
   let old_scale =
     let live_scale = live_scale window in
