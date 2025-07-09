@@ -63,8 +63,8 @@ module AttributeActions = struct
     let$ payload = payload elem v in
     action payload
 
-  let act3 ?(remove_class = true) ~on:at_ (module Move : Actions.Move) window
-      elem =
+  let act3 ?(remove_class = true) ~on:at_ (module Move : Actions.S) window elem
+      =
     let ( let$ ) x f =
       match x with None -> Undoable.return () | Some x -> f x
     in
@@ -113,11 +113,9 @@ module AttributeActions = struct
   let scroll window =
     act3 ~on:"uscroll-at-unpause" (module Actions.Scroll) window
 
-  let enter window =
-    act ~on:"enter-at-unpause" ~payload:as_id (Actions.enter window)
-
-  let unstatic = act ~on:"unstatic-at-unpause" ~payload:as_ids Actions.unstatic
-  let static = act ~on:"static-at-unpause" ~payload:as_ids Actions.static
+  let enter = act3 ~on:"enter-at-unpause" (module Actions.Enter)
+  let unstatic = act3 ~on:"unstatic-at-unpause" (module Actions.Unstatic)
+  let static = act3 ~on:"static-at-unpause" (module Actions.Static)
   let focus window = act2 ~on:"focus-at-unpause" (Actions.Focus.do_ window)
 
   let unfocus window =
@@ -125,15 +123,17 @@ module AttributeActions = struct
       ~payload:(fun _ _ -> Some ())
       (Actions.unfocus window)
 
-  let reveal = act ~on:"reveal-at-unpause" ~payload:as_ids Actions.reveal
-  let unreveal = act ~on:"unreveal-at-unpause" ~payload:as_ids Actions.unreveal
-  let emph = act ~on:"emph-at-unpause" ~payload:as_ids Actions.emph
-  let unemph = act ~on:"unemph-at-unpause" ~payload:as_ids Actions.unemph
+  let reveal = act3 ~on:"reveal-at-unpause" (module Actions.Reveal)
+  let unreveal = act3 ~on:"unreveal-at-unpause" (module Actions.Unreveal)
+  let emph = act3 ~on:"emph-at-unpause" (module Actions.Emph)
+  let unemph = act3 ~on:"unemph-at-unpause" (module Actions.Unemph)
 
-  let pause elem =
-    act ~on:"pause" ~payload:as_id (fun target -> Actions.Pause.do_ target) elem
+  let pause window elem =
+    act ~on:"pause" ~payload:as_ids
+      (fun target -> Actions.Pause.do_ window target)
+      elem
 
-  let step elem =
+  let step _window elem =
     act ~on:"step" ~payload:as_id (fun _ -> Undoable.return ()) elem
 
   let execute window elem =
@@ -168,7 +168,7 @@ module AttributeActions = struct
     let do_ =
      fun acc f ->
       let> _acc = acc in
-      f elem
+      f window elem
     in
     List.fold_left do_ (Undoable.return ())
       [
@@ -178,16 +178,16 @@ module AttributeActions = struct
         static;
         unreveal;
         reveal;
-        unfocus window;
-        center window;
-        enter window;
-        down window;
-        focus window;
-        up window;
-        scroll window;
+        unfocus;
+        center;
+        enter;
+        down;
+        focus;
+        up;
+        scroll;
         emph;
         unemph;
-        execute window;
+        execute;
       ]
 end
 

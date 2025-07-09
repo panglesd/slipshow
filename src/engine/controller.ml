@@ -19,28 +19,28 @@ let keyboard_setup (window : Universe.Window.t) =
           let _ : unit Fut.t =
             Universe.Move.move_relative_pure
               ~x:(30. *. 1. /. current_coord.scale)
-              window ~delay:0.
+              window ~duration:0.
           in
           ()
       | "j" ->
           let _ : unit Fut.t =
             Universe.Move.move_relative_pure
               ~x:(-30. *. 1. /. current_coord.scale)
-              window ~delay:0.
+              window ~duration:0.
           in
           ()
       | "k" ->
           let _ : unit Fut.t =
             Universe.Move.move_relative_pure
               ~y:(30. *. 1. /. current_coord.scale)
-              window ~delay:0.
+              window ~duration:0.
           in
           ()
       | "i" ->
           let _ : unit Fut.t =
             Universe.Move.move_relative_pure
               ~y:(-30. *. 1. /. current_coord.scale)
-              window ~delay:0.
+              window ~duration:0.
           in
           ()
       | "ArrowRight" | "ArrowDown" | "PageDown" | " " ->
@@ -51,13 +51,13 @@ let keyboard_setup (window : Universe.Window.t) =
           ()
       | "z" ->
           let _ : unit Fut.t =
-            Universe.Move.move_relative_pure ~scale:1.02 window ~delay:0.
+            Universe.Move.move_relative_pure ~scale:1.02 window ~duration:0.
           in
           ()
       | "Z" ->
           let _ : unit Fut.t =
             Universe.Move.move_relative_pure ~scale:(1. /. 1.02) window
-              ~delay:0.
+              ~duration:0.
           in
           ()
       | _ -> ()

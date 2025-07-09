@@ -14,14 +14,14 @@ let one_arg conv action undos_ref =
   register_undo undos_ref @@ fun () -> action elem
 
 (* let one_elem action = one_arg Brr.El.of_jv action *)
-let one_elem_list action = one_arg (Jv.to_list Brr.El.of_jv) action
+(* let one_elem_list action = one_arg (Jv.to_list Brr.El.of_jv) action *)
 
 let move (module X : Actions.Move) window undos_ref =
-  Jv.callback ~arity:3 @@ fun elems delay margin ->
+  Jv.callback ~arity:3 @@ fun elems duration margin ->
   let elem = Brr.El.of_jv elems
-  and delay = Jv.to_option Jv.to_float delay
+  and duration = Jv.to_option Jv.to_float duration
   and margin = Jv.to_option Jv.to_float margin in
-  register_undo undos_ref @@ fun () -> X.do_ window X.{ delay; margin; elem }
+  register_undo undos_ref @@ fun () -> X.do_ window X.{ duration; margin; elem }
 
 let up = move (module Actions.Up)
 let down = move (module Actions.Down)
@@ -29,20 +29,26 @@ let center = move (module Actions.Center)
 let scroll = move (module Actions.Scroll)
 
 let focus window undos_ref =
-  Jv.callback ~arity:3 @@ fun elems delay margin ->
+  Jv.callback ~arity:3 @@ fun elems duration margin ->
   let elems = (Jv.to_list Brr.El.of_jv) elems
-  and delay = Jv.to_option Jv.to_float delay
+  and duration = Jv.to_option Jv.to_float duration
   and margin = Jv.to_option Jv.to_float margin in
   register_undo undos_ref @@ fun () ->
-  Actions.Focus.do_ window { delay; margin; elems }
+  Actions.Focus.do_ window { duration; margin; elems }
 
 let unfocus window = one_arg (fun _ -> ()) (Actions.unfocus window)
-let static = one_elem_list Actions.static
-let unstatic = one_elem_list Actions.unstatic
-let reveal = one_elem_list Actions.reveal
-let unreveal = one_elem_list Actions.unreveal
-let emph = one_elem_list Actions.emph
-let unemph = one_elem_list Actions.unemph
+
+let class_setter (module X : Actions.SetClass) window undos_ref =
+  Jv.callback ~arity:1 @@ fun elems ->
+  let elems = (Jv.to_list Brr.El.of_jv) elems in
+  register_undo undos_ref @@ fun () -> X.do_ window elems
+
+let unstatic = class_setter (module Actions.Unstatic)
+let static = class_setter (module Actions.Static)
+let reveal = class_setter (module Actions.Reveal)
+let unreveal = class_setter (module Actions.Unreveal)
+let emph = class_setter (module Actions.Emph)
+let unemph = class_setter (module Actions.Unemph)
 
 let on_undo =
   one_arg Fun.id @@ fun callback ->
@@ -80,12 +86,12 @@ let slip window undos_ref =
       ("scroll", scroll window undos_ref);
       ("focus", focus window undos_ref);
       ("unfocus", unfocus window undos_ref);
-      ("static", static undos_ref);
-      ("unstatic", unstatic undos_ref);
-      ("reveal", reveal undos_ref);
-      ("unreveal", unreveal undos_ref);
-      ("emph", emph undos_ref);
-      ("unemph", unemph undos_ref);
+      ("static", static window undos_ref);
+      ("unstatic", unstatic window undos_ref);
+      ("reveal", reveal window undos_ref);
+      ("unreveal", unreveal window undos_ref);
+      ("emph", emph window undos_ref);
+      ("unemph", unemph window undos_ref);
       ("onUndo", on_undo undos_ref);
       (* Scripting utilities *)
       ("state", state);

@@ -27,7 +27,9 @@ let start ~width ~height ~id ~step =
   let* () =
     match Brr.El.find_first_by_selector (Jstr.v "[slipshow-entry-point]") with
     | None -> Fut.return ()
-    | Some elem -> Step.Actions.enter window elem |> Undoable.discard
+    | Some elem ->
+        Step.Actions.Enter.do_ window { elem; duration = None; margin = None }
+        |> Undoable.discard
   in
   let* () =
     match initial_step with

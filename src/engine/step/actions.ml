@@ -206,7 +206,7 @@ module Parse = struct
         in
         Some a
 
-  let delay = ("delay", Float.of_string)
+  let duration = ("duration", Float.of_string)
   let margin = ("margin", Float.of_string)
 end
 
@@ -257,7 +257,7 @@ module Pause = struct
     let> () = set_class "pauseTarget" true elem in
     update elem (( + ) 1)
 
-  type args = Brr.El.t
+  type args = Brr.El.t list
 
   let parse_args elem s =
     let ( let$ ) = Fun.flip Result.map in
@@ -266,35 +266,41 @@ module Pause = struct
     | [] -> [ elem ]
     | x -> List.filter_map Brr.El.find_first_by_selector x
 
-  let do_ elem =
-    let> () = set_class "pauseTarget" false elem in
-    update elem (fun n -> n - 1)
+  let do_ _window elems =
+    elems
+    |> Undoable.List.iter @@ fun elem ->
+       let> () = set_class "pauseTarget" false elem in
+       update elem (fun n -> n - 1)
 end
 
 module Move (X : sig
   val action_name : string
 
   val move :
-    ?delay:float ->
+    ?duration:float ->
     ?margin:float ->
     Universe.Window.t ->
     Brr.El.t ->
     unit Undoable.t
 end) =
 struct
-  type args = { margin : float option; delay : float option; elem : Brr.El.t }
+  type args = {
+    margin : float option;
+    duration : float option;
+    elem : Brr.El.t;
+  }
 
   let parse_args elem s =
     let ( let* ) = Result.bind in
     let* x =
-      Parse.parse ~named:[ Parse.delay; Parse.margin ] ~positional:Parse.id s
+      Parse.parse ~named:[ Parse.duration; Parse.margin ] ~positional:Parse.id s
     in
     match Parse.require_single_action ~action_name:X.action_name x with
-    | [ delay; margin ], positional -> (
+    | [ duration; margin ], positional -> (
         match
           Parse.require_single_positional ~action_name:X.action_name positional
         with
-        | None -> Ok { elem; delay; margin }
+        | None -> Ok { elem; duration; margin }
         | Some positional -> (
             match Brr.El.find_first_by_selector positional with
             | None ->
@@ -302,12 +308,30 @@ struct
                   (`Msg
                      ("Could not find element with id"
                     ^ Jstr.to_string positional))
-            | Some elem -> Ok { elem; delay; margin }))
+            | Some elem -> Ok { elem; duration; margin }))
 
-  let do_ window { margin; delay; elem } =
+  let do_ window { margin; duration; elem } =
     let margin = Option.value ~default:0. margin in
-    let delay = Option.value ~default:1. delay in
-    X.move ~margin ~delay window elem
+    let duration = Option.value ~default:1. duration in
+    X.move ~margin ~duration window elem
+end
+
+module SetClass (X : sig
+  val class_ : string
+  val state : bool
+end) =
+struct
+  type args = Brr.El.t list
+
+  let parse_args elem s =
+    let ( let$ ) = Fun.flip Result.map in
+    let$ x = Parse.parse ~named:[] ~positional:Parse.id s in
+    match Parse.merge_positional x with
+    | [] -> [ elem ]
+    | x -> List.filter_map Brr.El.find_first_by_selector x
+
+  let do_ _window elems =
+    Undoable.List.iter (Undoable.Browser.set_class X.class_ X.state) elems
 end
 
 module Up = Move (struct
@@ -335,13 +359,16 @@ module Enter = struct
 
   let stack = Stack.create ()
 
-  let in_ elem =
-    Undoable.Stack.push { elem; coord = Universe.State.get_coord () } stack
-end
+  include Move (struct
+    let action_name = "enter"
 
-let enter window elem =
-  let> () = Enter.in_ elem in
-  Universe.Move.enter window elem
+    let move ?duration ?margin window elem =
+      let> () =
+        Undoable.Stack.push { elem; coord = Universe.State.get_coord () } stack
+      in
+      Universe.Move.enter ?duration ?margin window elem
+  end)
+end
 
 let exit window to_elem =
   let rec exit () =
@@ -353,23 +380,27 @@ let exit window to_elem =
     | Some { coord; _ } -> (
         let> _ = Undoable.Stack.pop_opt Enter.stack in
         match Undoable.Stack.peek Enter.stack with
-        | None -> Universe.Move.move window coord ~delay:1.0
+        | None -> Universe.Move.move window coord ~duration:1.0
         | Some { Enter.elem; _ } when Brr.El.contains elem ~child:to_elem ->
-            Universe.Move.move window coord ~delay:1.0
+            Universe.Move.move window coord ~duration:1.0
         | Some _ -> exit ())
   in
   exit ()
 
-let unstatic elems =
-  Undoable.List.iter (Undoable.Browser.set_class "unstatic" true) elems
+module Unstatic = SetClass (struct
+  let class_ = "unstatic"
+  let state = true
+end)
 
-let static elem =
-  Undoable.List.iter (Undoable.Browser.set_class "unstatic" false) elem
+module Static = SetClass (struct
+  let class_ = "unstatic"
+  let state = false
+end)
 
 module Focus = struct
   type args = {
     margin : float option;
-    delay : float option;
+    duration : float option;
     elems : Brr.El.t list;
   }
 
@@ -378,38 +409,46 @@ module Focus = struct
   let parse_args elem s =
     let ( let$ ) = Fun.flip Result.map in
     let$ x =
-      Parse.parse ~named:[ Parse.delay; Parse.margin ] ~positional:Parse.id s
+      Parse.parse ~named:[ Parse.duration; Parse.margin ] ~positional:Parse.id s
     in
     match Parse.require_single_action ~action_name x with
-    | [ delay; margin ], [] -> { elems = [ elem ]; delay; margin }
-    | [ delay; margin ], positional ->
+    | [ duration; margin ], [] -> { elems = [ elem ]; duration; margin }
+    | [ duration; margin ], positional ->
         let elems = List.filter_map Brr.El.find_first_by_selector positional in
-        { elems; delay; margin }
+        { elems; duration; margin }
 
-  let do_ window { margin; delay; elems } =
+  let do_ window { margin; duration; elems } =
     let> () = State.Focus.push (Universe.State.get_coord ()) in
     let margin = Option.value ~default:0. margin in
-    let delay = Option.value ~default:1. delay in
-    Universe.Move.focus ~margin ~delay window elems
+    let duration = Option.value ~default:1. duration in
+    Universe.Move.focus ~margin ~duration window elems
 end
 
 let unfocus window () =
   let> coord = State.Focus.pop () in
   match coord with
   | None -> Undoable.return ()
-  | Some coord -> Universe.Move.move window coord ~delay:1.0
+  | Some coord -> Universe.Move.move window coord ~duration:1.0
 
-let reveal elem =
-  Undoable.List.iter (Undoable.Browser.set_class "unrevealed" false) elem
+module Reveal = SetClass (struct
+  let class_ = "unrevealed"
+  let state = false
+end)
 
-let unreveal elems =
-  Undoable.List.iter (Undoable.Browser.set_class "unrevealed" true) elems
+module Unreveal = SetClass (struct
+  let class_ = "unrevealed"
+  let state = true
+end)
 
-let emph elems =
-  Undoable.List.iter (Undoable.Browser.set_class "emphasized" true) elems
+module Emph = SetClass (struct
+  let class_ = "emphasized"
+  let state = true
+end)
 
-let unemph elems =
-  Undoable.List.iter (Undoable.Browser.set_class "emphasized" false) elems
+module Unemph = SetClass (struct
+  let class_ = "emphasized"
+  let state = false
+end)
 
 module type S = sig
   type args
@@ -419,7 +458,13 @@ module type S = sig
 end
 
 module type Move = sig
-  type args = { margin : float option; delay : float option; elem : Brr.El.t }
+  type args = {
+    margin : float option;
+    duration : float option;
+    elem : Brr.El.t;
+  }
 
   include S with type args := args
 end
+
+module type SetClass = S with type args = Brr.El.t list
