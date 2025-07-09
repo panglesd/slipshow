@@ -22,7 +22,7 @@ let start ~width ~height ~id ~step =
   in
   let _history = Browser.History.set_hash "" in
   let* () =
-    Step.Action_scheduler.setup_pause_ancestors () |> Undoable.discard
+    Step.Action_scheduler.setup_pause_ancestors window () |> Undoable.discard
   in
   let* () =
     match Brr.El.find_first_by_selector (Jstr.v "[slipshow-entry-point]") with

@@ -1,6 +1,8 @@
 module type S = sig
   type args
 
+  val on : string
+  val action_name : string
   val parse_args : Brr.El.t -> string -> (args, [> `Msg of string ]) result
   val do_ : Universe.Window.t -> args -> unit Undoable.t
 end
@@ -10,7 +12,7 @@ module Pause : sig
 
   include S with type args := args
 
-  val setup : Brr.El.t -> unit Undoable.t
+  val setup : Brr.El.t list -> unit Undoable.t
 end
 
 module type Move = sig
@@ -36,6 +38,7 @@ module Reveal : SetClass
 module Unreveal : SetClass
 module Emph : SetClass
 module Unemph : SetClass
+module Step : S with type args = unit
 
 val exit : Universe.Window.t -> Brr.El.t -> unit Undoable.t
 
@@ -49,4 +52,7 @@ module Focus : sig
   include S with type args := args
 end
 
-val unfocus : Universe.Window.t -> unit -> unit Undoable.t
+module Unfocus : S with type args = unit
+module Execute : S with type args = Brr.El.t list
+
+val all : (module S) list

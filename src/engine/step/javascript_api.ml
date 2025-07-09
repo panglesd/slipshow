@@ -1,5 +1,10 @@
 open Fut.Syntax
 
+(* We use the [Actions_] module to avoid a circular dependency: If we had only
+   one [Action] module (and not an [Actions] and an [Actions_]) then [Actions]
+   would depend on [Javascrip_api] which would depend on [Actions]. *)
+module Actions = Actions_
+
 let register_undo undos_ref f =
   let res =
     let+ (), undo = f () in
@@ -36,7 +41,7 @@ let focus window undos_ref =
   register_undo undos_ref @@ fun () ->
   Actions.Focus.do_ window { duration; margin; elems }
 
-let unfocus window = one_arg (fun _ -> ()) (Actions.unfocus window)
+let unfocus window = one_arg (fun _ -> ()) (Actions.Unfocus.do_ window)
 
 let class_setter (module X : Actions.SetClass) window undos_ref =
   Jv.callback ~arity:1 @@ fun elems ->
