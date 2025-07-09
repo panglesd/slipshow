@@ -63,6 +63,27 @@ module AttributeActions = struct
     let$ payload = payload elem v in
     action payload
 
+  let act3 ?(remove_class = true) ~on:at_ (module Move : Actions.Move) window
+      elem =
+    let ( let$ ) x f =
+      match x with None -> Undoable.return () | Some x -> f x
+    in
+    let ( let$$ ) x f =
+      match x with
+      | Error (`Msg s) ->
+          Brr.Console.(log [ "Error:"; s ]);
+          Undoable.return ()
+      | Ok x -> f x
+    in
+    let$ v = Brr.El.at (Jstr.v at_) elem in
+    let> () =
+      if remove_class then Undoable.Browser.set_at at_ None elem
+      else Undoable.return ()
+    in
+    let v = Jstr.to_string v in
+    let$$ args = Move.parse_args elem v in
+    Move.do_ window args
+
   let act2 ?(remove_class = true) ~on:at_ action elem =
     let ( let$ ) x f =
       match x with None -> Undoable.return () | Some x -> f x
@@ -83,19 +104,17 @@ module AttributeActions = struct
     let$$ args = Actions.Focus.parse_args elem v in
     action args
 
-  let up window = act ~on:"up-at-unpause" ~payload:as_id (Actions.up window)
-
-  let down window =
-    act ~on:"down-at-unpause" ~payload:as_id (Actions.down window)
+  let up window = act3 ~on:"up-at-unpause" (module Actions.Up) window
+  let down window = act3 ~on:"down-at-unpause" (module Actions.Down) window
 
   let center window =
-    act ~on:"center-at-unpause" ~payload:as_id (Actions.center window)
+    act3 ~on:"center-at-unpause" (module Actions.Center) window
+
+  let scroll window =
+    act3 ~on:"uscroll-at-unpause" (module Actions.Scroll) window
 
   let enter window =
     act ~on:"enter-at-unpause" ~payload:as_id (Actions.enter window)
-
-  let scroll window =
-    act ~on:"scroll-at-unpause" ~payload:as_id (Actions.scroll window)
 
   let unstatic = act ~on:"unstatic-at-unpause" ~payload:as_ids Actions.unstatic
   let static = act ~on:"static-at-unpause" ~payload:as_ids Actions.static

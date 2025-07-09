@@ -13,12 +13,20 @@ let one_arg conv action undos_ref =
   let elem = conv elem in
   register_undo undos_ref @@ fun () -> action elem
 
-let one_elem action = one_arg Brr.El.of_jv action
+(* let one_elem action = one_arg Brr.El.of_jv action *)
 let one_elem_list action = one_arg (Jv.to_list Brr.El.of_jv) action
-let up window = one_elem (Actions.up window)
-let center window = one_elem (Actions.center window)
-let down window = one_elem (Actions.down window)
-let scroll window = one_elem (Actions.scroll window)
+
+let move (module X : Actions.Move) window undos_ref =
+  Jv.callback ~arity:3 @@ fun elems delay margin ->
+  let elem = Brr.El.of_jv elems
+  and delay = Jv.to_option Jv.to_float delay
+  and margin = Jv.to_option Jv.to_float margin in
+  register_undo undos_ref @@ fun () -> X.do_ window X.{ delay; margin; elem }
+
+let up = move (module Actions.Up)
+let down = move (module Actions.Down)
+let center = move (module Actions.Center)
+let scroll = move (module Actions.Scroll)
 
 let focus window undos_ref =
   Jv.callback ~arity:3 @@ fun elems delay margin ->

@@ -17,7 +17,15 @@ val focus :
   ?delay:float -> ?margin:float -> Window.t -> Brr.El.t list -> unit Undoable.t
 
 val enter : Window.t -> Brr.El.t -> unit Undoable.t
-val up : Window.t -> Brr.El.t -> unit Undoable.t
-val center : Window.t -> Brr.El.t -> unit Undoable.t
-val down : Window.t -> Brr.El.t -> unit Undoable.t
-val scroll : Window.t -> Brr.El.t -> unit Undoable.t
+
+val up :
+  ?delay:float -> ?margin:float -> Window.t -> Brr.El.t -> unit Undoable.t
+
+val center :
+  ?delay:float -> ?margin:float -> Window.t -> Brr.El.t -> unit Undoable.t
+
+val down :
+  ?delay:float -> ?margin:float -> Window.t -> Brr.El.t -> unit Undoable.t
+
+val scroll :
+  ?delay:float -> ?margin:float -> Window.t -> Brr.El.t -> unit Undoable.t
