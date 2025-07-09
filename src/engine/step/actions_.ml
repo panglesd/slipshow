@@ -125,7 +125,15 @@ module Parse = struct
 
   let ( let+ ) x y = Result.map y x
 
-  module Smap = Map.Make (String)
+  module Smap_ = Map.Make (String)
+
+  module Smap = struct
+    include Smap_
+
+    (* of_list has only been added in 5.1. Implementation taken from the OCaml
+       stdlib. *)
+    let of_list bs = List.fold_left (fun m (k, v) -> add k v m) empty bs
+  end
 
   type action = { named : string Smap.t; positional : string list }
 
