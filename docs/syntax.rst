@@ -230,6 +230,63 @@ It's sometimes useful to give the same attribute or class to all children of a g
    Slide 3
    ----
 
+Giving parameters to actions
+============================
+
+It is possible to give parameters to actions. Remember that we mentioned the
+``up`` attribute to move the screen, so that the attached element is at the top
+of it?
+
+.. code-block:: markdown
+
+   {up}
+   Some content
+
+When we press the "next" button, the screen "scrolls" so that "Some content" is
+at the top. However it is also possible to set the element we want to put at the top:
+
+
+.. code-block:: markdown
+
+   {#an-id}
+   Hello
+
+   {up="an-id"}
+   Some content
+
+In addition to this parameter we give to an action, we can also give named
+parameters:
+
+.. code-block:: markdown
+
+   {#an-id}
+   Hello
+
+   {up="~duration:3 an-id"}
+   Some content
+
+Here it will take 3 seconds to move the screen (which is likely to be too low!
+This is just an example).
+
+The syntax for the arguments is the following:
+
+* ``ARGS`` is a list of ``ARG``
+
+* ``ARG`` is either a ``NAMED_ARG`` or a ``POSITIONAL_ARG``
+
+* ``NAMED_ARG`` is of the form ``~ARGUMENT_NAME:ARGUMENT_VALUE`` where
+  ``ARGUMENT_NAME`` depends on the actions (defined below), and
+  ``ARGUMENT_VALUE`` is either a string without whitespace, or is quoted with
+  double quotes: ``"``.
+
+* ``POSITIONAL_ARG`` is of the form ``ARGUMENT_VALUE`` where ``ARGUMENT_VALUE``
+  is either a string without whitespace, or is quoted with double quotes: ``"``.
+
+Here is a made-up example, just to illustrate the syntax:
+
+.. code-block::
+
+   ~duration:1 id1 ~selector:".wrapper .figures" id2 "third positional argument"
 
 List of classes
 ===============
@@ -316,14 +373,22 @@ These attributes are actions that will be executed when a ``pause`` or ``step`` 
 ``down``
   Moves the screen untils the element is at the bottom of the screen.
 
+  Accepts ``~duration:FLOAT`` and ``margin:INT``.
+
 ``up``
   Moves the screen untils the element is at the top of the screen.
+
+  Accepts ``~duration:FLOAT`` and ``margin:INT``.
 
 ``center``
   Moves the screen untils the element is centered.
 
+  Accepts ``~duration:FLOAT`` and ``margin:INT``.
+
 ``focus``
   Focus on the element by zooming on it. Possible to specify multiple ids.
+
+  Accepts ``~duration:FLOAT`` and ``margin:INT``.
 
 ``unfocus``
   Unfocus by going back to the last position before a focus.
