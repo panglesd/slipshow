@@ -306,7 +306,7 @@ type html_block_end_cond =
 type attributes = [
   | `Class of rev_spans
   | `Id of rev_spans
-  | `Kv_attr of  line_span * rev_spans option
+  | `Kv_attr of  line_span * (rev_spans * char option (* delimiter *)) option
 ]
 
 type line_type =
@@ -394,7 +394,7 @@ val md_attributes:
   ('a * line_span *
      [> `Class of (Textloc.byte_pos * line_span) list
      | `Id of (Textloc.byte_pos * line_span) list
-     | `Kv_attr of line_span * (Textloc.byte_pos * line_span) list option ]
+     | `Kv_attr of  line_span * (rev_spans * char option (* delimiter *)) option ]
        list * int)
     option
 

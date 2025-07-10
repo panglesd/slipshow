@@ -100,8 +100,10 @@ let live_scale { scale_container; _ } =
   in
   compute_scale scale_container
 
-let move_pure window ({ x; y; scale } as target : Coordinates.window) ~delay =
-  let delay = if !fast_move then 0. else delay in
+let move_pure window ({ x; y; scale } as target : Coordinates.window) ~duration
+    =
+  Brr.Console.(log [ "Moving with duration"; duration ]);
+  let duration = if !fast_move then 0. else duration in
   let old_scale =
     let live_scale = live_scale window in
     let { Coordinates.scale = state_scale; _ } = State.get_coord () in
@@ -118,15 +120,15 @@ let move_pure window ({ x; y; scale } as target : Coordinates.window) ~delay =
     else if old_scale /. scale > 1.1 then `Unzoom
     else `Flat
   in
-  let (scale_function, scale_delay), (universe_function, universe_delay) =
+  let (scale_function, scale_duration), (universe_function, universe_duration) =
     let open Browser.Css in
     match transitions_style with
     | `Zoom ->
-        ( (TransitionTiming "ease-in", TransitionDelay (0.5 *. delay)),
+        ( (TransitionTiming "ease-in", TransitionDelay (0.5 *. duration)),
           (TransitionTiming "ease-out", TransitionDelay 0.) )
     | `Unzoom ->
         ( (TransitionTiming "ease-out", TransitionDelay 0.),
-          (TransitionTiming "ease-in", TransitionDelay (0.5 *. delay)) )
+          (TransitionTiming "ease-in", TransitionDelay (0.5 *. duration)) )
     | `Flat ->
         ( (TransitionTiming "", TransitionDelay 0.),
           (TransitionTiming "", TransitionDelay 0.) )
@@ -134,13 +136,15 @@ let move_pure window ({ x; y; scale } as target : Coordinates.window) ~delay =
   State.set_coord target;
   let x = -.x +. (width () /. 2.) in
   let y = -.y +. (height () /. 2.) in
-  let+ () = Browser.Css.set [ TransitionDuration delay ] window.scale_container
+  let+ () =
+    Browser.Css.set [ TransitionDuration duration ] window.scale_container
   and+ () = Browser.Css.set [ scale_function ] window.scale_container
-  and+ () = Browser.Css.set [ scale_delay ] window.scale_container
-  and+ () = Browser.Css.set [ TransitionDuration delay ] window.rotate_container
-  and+ () = Browser.Css.set [ TransitionDuration delay ] window.universe
+  and+ () = Browser.Css.set [ scale_duration ] window.scale_container
+  and+ () =
+    Browser.Css.set [ TransitionDuration duration ] window.rotate_container
+  and+ () = Browser.Css.set [ TransitionDuration duration ] window.universe
   and+ () = Browser.Css.set [ universe_function ] window.universe
-  and+ () = Browser.Css.set [ universe_delay ] window.universe
+  and+ () = Browser.Css.set [ universe_duration ] window.universe
   and+ () = Browser.Css.set [ Translate { x; y } ] window.universe
   and+ () = Browser.Css.set [ Scale scale ] window.scale_container in
   ()

@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+### Compiler
+
+- Fix `children:` not working sometimes (#135)
+
+### Language
+
+- Add arguments to actions (#135)
+
+### Internal
+
+- Add compatibility with latest version of Cmdliner (#135)
+- Fix `"` sometimes being present in Cmarkit, removing the need for ~~hacks~~
+  workarounds. (#135)
+
+
 ## [v0.3.0] The return of the subslips (Friday 3rd July, 2025)
 
 ### Compiler

@@ -14,7 +14,7 @@ let setup_log =
 
 let handle_error = function Ok _ as x -> x | Error (`Msg msg) -> Error msg
 
-module Conv = struct
+module Custom_conv = struct
   let io std =
     let parser_ s =
       match s with "-" -> Ok std | s -> Ok (`File (Fpath.v s))
@@ -86,7 +86,7 @@ module Compile_args = struct
     in
     Arg.(
       value
-      & opt Conv.dimension (1440, 1080)
+      & opt Custom_conv.dimension (1440, 1080)
       & info ~docv:"WIDTHxHEIGHT" ~doc [ "d"; "dimension"; "dim" ])
 
   let output =
@@ -96,7 +96,7 @@ module Compile_args = struct
     in
     Arg.(
       value
-      & opt (some Conv.output) None
+      & opt (some Custom_conv.output) None
       & info ~docv:"PATH" ~doc [ "o"; "output" ])
 
   let input =
@@ -104,7 +104,7 @@ module Compile_args = struct
       "$(docv) is the CommonMark file to process. Reads from $(b,stdin) if \
        $(b,-) is specified."
     in
-    Arg.(value & pos 0 Conv.input `Stdin & info [] ~doc ~docv:"FILE.md")
+    Arg.(value & pos 0 Custom_conv.input `Stdin & info [] ~doc ~docv:"FILE.md")
 
   type compile_args = {
     math_link : string option;

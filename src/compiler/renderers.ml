@@ -4,7 +4,11 @@ module RenderAttrs = struct
 
   let add_attr c (key, value) =
     match value with
-    | Some value -> C.string c (" " ^ key ^ "=" ^ value)
+    | Some { Cmarkit.Attributes.v = value; delimiter = Some d } ->
+        let s = Format.sprintf " %s=%c%s%c" key d value d in
+        C.string c s
+    | Some { Cmarkit.Attributes.v = value; delimiter = None } ->
+        C.string c (" " ^ key ^ "=" ^ value)
     | None -> C.string c (" " ^ key)
 
   let add_attrs c ?(include_id = true) attrs =
@@ -21,12 +25,16 @@ module RenderAttrs = struct
       let class' = List.map (fun (c, _) -> c) class' in
       match class' with
       | [] -> []
-      | _ -> [ ("class", Some ("\"" ^ String.concat " " class' ^ "\"")) ]
+      | _ ->
+          let v = String.concat " " class' in
+          [ ("class", Some { Cmarkit.Attributes.v; delimiter = Some '"' }) ]
     in
     let id =
       let id = Cmarkit.Attributes.id attrs in
       match id with
-      | Some (id, _) when include_id -> [ ("id", Some ("\"" ^ id ^ "\"")) ]
+      | Some (id, _) when include_id ->
+          let attr = { Cmarkit.Attributes.v = id; delimiter = Some '"' } in
+          [ ("id", Some attr) ]
       | _ -> []
     in
     let attrs = id @ class' @ kv_attrs in
@@ -162,7 +170,7 @@ let custom_html_renderer =
       | Ast.SlipScript ((cb, (attrs, _)), _) ->
           let attrs =
             Attributes.add ("type", Meta.none)
-              (Some ("slip-script", Meta.none))
+              (Some ({ v = "slip-script"; delimiter = None }, Meta.none))
               attrs
           in
           RenderAttrs.in_block c "script" attrs (fun () ->

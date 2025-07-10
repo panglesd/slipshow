@@ -20,4 +20,4 @@ We can compile the file using the slip_of_mark binary
   </div>
   </div>
 
-  $ cp slides.html /tmp/
+$ cp slides.html /tmp/

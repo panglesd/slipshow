@@ -1,128 +1,65 @@
-open Undoable.Syntax
+include Actions_
 
-let do_to_root elem f =
-  let is_root elem =
-    Brr.El.class' (Jstr.v "slip") elem
-    || (Option.is_some @@ Brr.El.at (Jstr.v "pause-block") elem)
-  in
-  let rec do_rec elem =
-    if is_root elem then Undoable.return ()
-    else
-      let> () = f elem in
-      match Brr.El.parent elem with
-      | None -> Undoable.return ()
-      | Some elem -> do_rec elem
-  in
-  do_rec elem
+(* We define the [Actions_] module to avoid a circular dependency: If we had
+   only one [Action] module (and not an [Actions] and an [Actions_]) then
+   [Actions] would depend on [Javascrip_api] which would depend on [Actions]. *)
 
-let setup_pause elem =
-  let> () = Undoable.Browser.set_class "pauseTarget" true elem in
-  do_to_root elem @@ fun elem ->
-  match Brr.El.at (Jstr.v "pauseAncestorMultiplicity") elem with
-  | None ->
-      let> () = Undoable.Browser.set_class "pauseAncestor" true elem in
-      Undoable.Browser.set_at "pauseAncestorMultiplicity"
-        (Some (Jstr.of_int 1))
-        elem
-  | Some i -> (
-      match Jstr.to_int i with
-      | None ->
-          Brr.Console.(
-            log [ "Error: wrong value to pauseAncestorMultiplicity:"; i ]);
-          Undoable.Browser.set_class "pauseAncestor" true elem
-      | Some i ->
-          let> () =
-            Undoable.Browser.set_at "pauseAncestorMultiplicity"
-              (Some (Jstr.of_int (i + 1)))
-              elem
-          in
-          Undoable.Browser.set_class "pauseAncestor" true elem)
+module Execute = struct
+  type args = Brr.El.t list
 
-let pause elem =
-  let> () = Undoable.Browser.set_class "pauseTarget" false elem in
-  do_to_root elem @@ fun elem ->
-  match Brr.El.at (Jstr.v "pauseAncestorMultiplicity") elem with
-  | None ->
+  let on = "exec-at-unpause"
+  let action_name = "exec"
+  let parse_args = Parse.parse_only_els
+
+  open Fut.Syntax
+
+  let do_ window elem =
+    try
+      let body = Jv.get (Brr.El.to_jv elem) "innerHTML" |> Jv.to_jstr in
+      Brr.Console.(log [ body ]);
+      let args = Jv.Function.[ ("slip", Fun.id) ] in
+      let f = Jv.Function.v ~body ~args in
+      let undos_ref = ref [] in
+      let arg = Javascript_api.slip window undos_ref in
+      let u = f arg in
+      let undo () =
+        try Fut.return (ignore @@ Jv.call u "undo" [||])
+        with _ ->
+          List.fold_left
+            (fun acc f ->
+              let* () = acc in
+              f ())
+            (Fut.return ()) !undos_ref
+      in
+      Undoable.return ~undo ()
+    with e ->
       Brr.Console.(
-        log [ "Error: pauseAncestorMultiplicity was supposed to be some"; elem ]);
-      Undoable.Browser.set_class "pauseAncestor" false elem
-  | Some i -> (
-      match Jstr.to_int i with
-      | None ->
-          Brr.Console.(
-            log [ "Error: wrong value to pauseAncestorMultiplicity:"; i ]);
-          Undoable.Browser.set_class "pauseAncestor" false elem
-      | Some i when i <= 1 ->
-          let> () =
-            Undoable.Browser.set_at "pauseAncestorMultiplicity" None elem
-          in
-          Undoable.Browser.set_class "pauseAncestor" false elem
-      | Some i ->
-          Undoable.Browser.set_at "pauseAncestorMultiplicity"
-            (Some (Jstr.of_int (i - 1)))
-            elem)
+        log
+          [ "An exception occurred when trying to execute a custom script:"; e ]);
+      Undoable.return ()
 
-let up window elem = Universe.Move.up window elem
-let down window elem = Universe.Move.down window elem
-let center window elem = Universe.Move.center window elem
-
-module Enter = struct
-  type t = { elem : Brr.El.t; coord : Universe.Coordinates.window }
-
-  let stack = Stack.create ()
-
-  let in_ elem =
-    Undoable.Stack.push { elem; coord = Universe.State.get_coord () } stack
+  let do_ window elems = Undoable.List.iter (do_ window) elems
 end
 
-let enter window elem =
-  let> () = Enter.in_ elem in
-  Universe.Move.enter window elem
-
-let exit window to_elem =
-  let rec exit () =
-    let coord = Undoable.Stack.peek Enter.stack in
-    match coord with
-    | None -> Undoable.return ()
-    | Some { Enter.elem; _ } when Brr.El.contains elem ~child:to_elem ->
-        Undoable.return ()
-    | Some { coord; _ } -> (
-        let> _ = Undoable.Stack.pop_opt Enter.stack in
-        match Undoable.Stack.peek Enter.stack with
-        | None -> Universe.Move.move window coord ~delay:1.0
-        | Some { Enter.elem; _ } when Brr.El.contains elem ~child:to_elem ->
-            Universe.Move.move window coord ~delay:1.0
-        | Some _ -> exit ())
-  in
-  exit ()
-
-let unstatic elems =
-  Undoable.List.iter (Undoable.Browser.set_class "unstatic" true) elems
-
-let static elem =
-  Undoable.List.iter (Undoable.Browser.set_class "unstatic" false) elem
-
-let focus window elems =
-  let> () = State.Focus.push (Universe.State.get_coord ()) in
-  (* We focus 1px more in order to avoid off-by-one error due to round errors *)
-  Universe.Move.focus ~margin:(-1.) window elems
-
-let unfocus window () =
-  let> coord = State.Focus.pop () in
-  match coord with
-  | None -> Undoable.return ()
-  | Some coord -> Universe.Move.move window coord ~delay:1.0
-
-let reveal elem =
-  Undoable.List.iter (Undoable.Browser.set_class "unrevealed" false) elem
-
-let unreveal elems =
-  Undoable.List.iter (Undoable.Browser.set_class "unrevealed" true) elems
-
-let emph elems =
-  Undoable.List.iter (Undoable.Browser.set_class "emphasized" true) elems
-
-let unemph elems =
-  Undoable.List.iter (Undoable.Browser.set_class "emphasized" false) elems
-
-let scroll window elem = Universe.Move.scroll window elem
+(* Note: the order is important, it's going to be applied in this order *)
+let all =
+  [
+    (module Pause : S);
+    (module Actions_.Step : S);
+    (* For some reasons, without [Actions_.], this trips (probably ocamldep or
+       its driver, dune). *)
+    (module Unstatic : S);
+    (module Static : S);
+    (module Unreveal : S);
+    (module Reveal : S);
+    (module Unfocus : S);
+    (module Center : S);
+    (module Enter : S);
+    (module Down : S);
+    (module Focus : S);
+    (module Up : S);
+    (module Scroll : S);
+    (module Emph : S);
+    (module Unemph : S);
+    (module Execute : S);
+  ]

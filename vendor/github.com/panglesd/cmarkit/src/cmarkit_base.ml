@@ -744,18 +744,24 @@ let unquoted_attribute_value ~allow_curly ~next_line s lines ~line spans ~start 
   in
   loop s line.last (start + 1)
 
-let attribute_value ~allow_curly ~next_line s lines ~line spans ~start =
+let attribute_value ~collect_delimiter ~allow_curly ~next_line s lines ~line spans ~start =
   (* https://spec.commonmark.org/current/#attribute-value *)
   if start > line.last then None else match s.[start] with
   | '\'' | '\"' as char ->
       (* https://spec.commonmark.org/current/#double-quoted-attribute-value
          https://spec.commonmark.org/current/#single-quoted-attribute-value *)
-      accept_to ~char ~next_line s lines ~line spans ~after:start
+     if collect_delimiter then
+       (* Due to example 631, that we do not want for markdown attributes, we
+          need to act differently in those cases (represented by the
+          [collect_delimiter] value.) *)
+       accept_upto ~char ~next_line s lines ~line spans ~after:start |> Option.map (fun x -> x, Some char)
+     else
+       accept_to ~char ~next_line s lines ~line spans ~after:start |> Option.map (fun x -> x, Some char)
   | c ->
       (* https://spec.commonmark.org/current/#unquoted-attribute-value *)
-      unquoted_attribute_value ~allow_curly ~next_line s lines ~line spans ~start
+      unquoted_attribute_value ~allow_curly ~next_line s lines ~line spans ~start |> Option.map (fun x -> x, None)
 
-let attribute ~allow_curly ~next_line s lines ~line spans ~start =
+let attribute ?(collect_delimiter = true) ~allow_curly ~next_line s lines ~line spans ~start =
   (* https://spec.commonmark.org/current/#attribute *)
   (* https://spec.commonmark.org/current/#attribute-value-specification *)
   match attribute_name s ~last:line.last ~start with
@@ -783,11 +789,11 @@ let attribute ~allow_curly ~next_line s lines ~line spans ~start =
              let start = last_blank + 1 in
              let empty_spans = [] in
               match
-                attribute_value ~allow_curly ~next_line s lines ~line
+                attribute_value ~collect_delimiter ~allow_curly ~next_line s lines ~line
                   empty_spans ~start
               with
               | None -> None
-              | Some (lines, line, value_span, last_attr_value) ->
+              | Some ((lines, line, value_span, last_attr_value), delimiter) ->
                  (* let print_spans s spans = *)
                  (*   let print_line (i, {line_pos ; first ; last}) = *)
                  (*     Format.printf "  line(_start): %d\n" i; *)
@@ -810,7 +816,7 @@ let attribute ~allow_curly ~next_line s lines ~line spans ~start =
                  (* print_spans "combined" spans ; *)
                  Some
                    (lines, line, spans, last_attr_value,
-                    (name_span, Some value_span))
+                    (name_span, Some (value_span, delimiter)))
 
 let open_tag ~next_line s lines ~line ~start:tag_start = (* tag_start has < *)
   (* https://spec.commonmark.org/current/#open-tag *)
@@ -833,7 +839,7 @@ let open_tag ~next_line s lines ~line ~start:tag_start = (* tag_start has < *)
                 Some (lines, line, push_span ~line next last spans, last)
             | c ->
                 if next = start then None else
-                match attribute ~allow_curly:true ~next_line s lines ~line spans ~start:next with
+                match attribute ~collect_delimiter:false ~allow_curly:true ~next_line s lines ~line spans ~start:next with
                 | None -> None
                 | Some (lines, line, spans, last, _) ->
                     loop ~next_line s lines ~line spans ~start:(last + 1)
@@ -1066,7 +1072,7 @@ type html_block_end_cond =
 type attributes = [
   | `Class of rev_spans
   | `Id of rev_spans
-  | `Kv_attr of  line_span * rev_spans option
+  | `Kv_attr of  line_span * (rev_spans * char option (* delimiter *)) option
 ]
 
 type line_type =
