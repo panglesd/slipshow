@@ -1,6 +1,5 @@
 val compile :
-  width:int ->
-  height:int ->
+  dimension:(int * int) option ->
   input:[ `File of Fpath.t | `Stdin ] ->
   output:[ `File of Fpath.t | `Stdout ] ->
   math_link:string option ->
@@ -9,8 +8,7 @@ val compile :
   (Fpath.Set.t, [ `Msg of string ]) result
 
 val watch :
-  width:int ->
-  height:int ->
+  dimension:(int * int) option ->
   input:Fpath.t ->
   output:Fpath.t ->
   math_link:string option ->
@@ -19,8 +17,7 @@ val watch :
   (unit, [ `Msg of string ]) result
 
 val serve :
-  width:int ->
-  height:int ->
+  dimension:(int * int) option ->
   input:Fpath.t ->
   output:Fpath.t ->
   math_link:string option ->
