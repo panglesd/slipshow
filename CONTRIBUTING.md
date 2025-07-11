@@ -105,16 +105,19 @@ Git commit and push. This will create a draft release. Finish it and undraft it.
 Publish on vscode official repo
 
 ```
-slipshow-vscode$ dune build
+slipshow-vscode$ dune build --profile release
 slipshow-vscode$ vsce package
-slipshow-vscode$ vsce publish patch   # (or minor, major)
+slipshow-vscode$ vsce publish patch   # (or minor, major) OR NOTHING!
+# if cannot publish due to expired token, do:
+$ vsce publish -p <token>
 ```
 
-Publish on open-vsx: connect to open-vsx, login and manually publish the new vsix.
+
+Publish on open-vsx: connect to open-vsx, login and manually publish the new vsix (click on "PUBLISH" next to the avatar, top right. Send the vsix directly).
 
 ### Update sliphub
 
-TODO
+Use dune pkg!
 
 ## Vendoring
 
