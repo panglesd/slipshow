@@ -15,6 +15,41 @@ let setup_log =
 let handle_error = function Ok _ as x -> x | Error (`Msg msg) -> Error msg
 
 module Custom_conv = struct
+  let toplevel_attributes =
+    let parser s =
+      let s = String.trim s in
+      let s =
+        if String.length s > 0 && s.[0] = '{' then
+          (* Just so emacs does not find an unmatched curly brace! *)
+          let _ = '}' in
+          s
+        else "{" ^ s ^ "}"
+      in
+      let cmarkit = Cmarkit.Doc.of_string ~strict:false s in
+      let cmarkit = Cmarkit.Doc.block cmarkit in
+      match cmarkit with
+      | Cmarkit.Block.Ext_standalone_attributes (attrs, _) -> Ok (Some attrs)
+      | _ -> Error (`Msg "Can only be a set of attributes")
+    in
+    let printer fmt attrs =
+      let attrs =
+        Option.value ~default:Slipshow.Default.toplevel_attributes attrs
+      in
+      let doc =
+        Cmarkit.Doc.make
+          (Cmarkit.Block.Ext_standalone_attributes (attrs, Cmarkit.Meta.none))
+      in
+      let s =
+        let renderer =
+          Cmarkit_commonmark.renderer ~include_attributes:true ()
+        in
+        Cmarkit_renderer.doc_to_string renderer doc
+      in
+      let s = String.trim s in
+      Format.fprintf fmt "%s" s
+    in
+    Arg.conv (parser, printer)
+
   let io std =
     let parser_ s =
       match s with "-" -> Ok std | s -> Ok (`File (Fpath.v s))
@@ -90,6 +125,17 @@ module Compile_args = struct
       & opt Custom_conv.dimension None
       & info ~docv:"WIDTHxHEIGHT" ~doc [ "d"; "dimension"; "dim" ])
 
+  let toplevel_attributes =
+    let doc =
+      "The attributes given to the toplevel element containing all the \
+       presentation. Can be enclosed in '{ ... }' or not. Same syntax as \
+       attributes in the source file. For experts!"
+    in
+    Arg.(
+      value
+      & opt Custom_conv.toplevel_attributes None
+      & info ~docv:"ATTRIBUTES" ~doc [ "toplevel-attributes" ])
+
   let output =
     let doc =
       "Output file path. When absent, generate a filename based on the input \
@@ -108,6 +154,7 @@ module Compile_args = struct
     Arg.(value & pos 0 Custom_conv.input `Stdin & info [] ~doc ~docv:"FILE.md")
 
   type compile_args = {
+    toplevel_attributes : Cmarkit.Attributes.t option;
     math_link : string option;
     theme : string option;
     css_links : string list;
@@ -123,8 +170,17 @@ module Compile_args = struct
     and+ css_links = css_links
     and+ input = input
     and+ output = output
-    and+ dimension = dim in
-    { math_link; theme; css_links; input; output; dimension }
+    and+ dimension = dim
+    and+ toplevel_attributes = toplevel_attributes in
+    {
+      math_link;
+      theme;
+      css_links;
+      input;
+      output;
+      dimension;
+      toplevel_attributes;
+    }
 end
 
 module Compile = struct
@@ -150,16 +206,26 @@ module Compile = struct
 
   let compile ~watch
       ~compile_args:
-        { Compile_args.input; output; math_link; theme; css_links; dimension } =
+        {
+          Compile_args.input;
+          output;
+          math_link;
+          theme;
+          css_links;
+          dimension;
+          toplevel_attributes;
+        } =
     let output =
       match output with Some o -> o | None -> output_of_input input
     in
     if watch then
       let* input, output = force_file_io input output in
-      Run.watch ~dimension ~input ~output ~math_link ~theme ~css_links
+      Run.watch ~toplevel_attributes ~dimension ~input ~output ~math_link ~theme
+        ~css_links
       |> handle_error
     else
-      Run.compile ~input ~output ~math_link ~theme ~css_links ~dimension
+      Run.compile ~toplevel_attributes ~input ~output ~math_link ~theme
+        ~css_links ~dimension
       |> Result.map ignore |> handle_error
 
   let term =
@@ -185,12 +251,21 @@ module Serve = struct
 
   let serve
       ~compile_args:
-        { Compile_args.input; output; math_link; theme; css_links; dimension } =
+        {
+          Compile_args.input;
+          output;
+          math_link;
+          theme;
+          css_links;
+          dimension;
+          toplevel_attributes;
+        } =
     let output =
       match output with Some o -> o | None -> Compile.output_of_input input
     in
     let* input, output = Compile.force_file_io input output in
-    Run.serve ~dimension ~input ~output ~math_link ~theme ~css_links
+    Run.serve ~toplevel_attributes ~dimension ~input ~output ~math_link ~theme
+      ~css_links
     |> handle_error
 
   let term =

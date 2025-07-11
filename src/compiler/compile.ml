@@ -449,16 +449,15 @@ let of_cmarkit ~read_file md =
   let md3 = Cmarkit.Mapper.map_doc Stage3.execute md2 in
   md3
 
-let compile ?(read_file = fun _ -> Ok None) s =
-  let md = Cmarkit.Doc.of_string ~heading_auto_ids:true ~strict:false s in
-  let md = of_cmarkit ~read_file md in
+let compile ~attrs ?(read_file = fun _ -> Ok None) s =
   let open Cmarkit in
-  Doc.make
-  @@ Ast.Slip
-       ( ( Doc.block md,
-           ( Attributes.(empty |> add ("slipshow-entry-point", Meta.none) None),
-             Meta.none ) ),
-         Meta.none )
+  let md =
+    let doc = Doc.of_string ~heading_auto_ids:true ~strict:false s in
+    let bq = Block.Block_quote.make (Doc.block doc) in
+    let block = Block.Block_quote ((bq, (attrs, Meta.none)), Meta.none) in
+    Doc.make block
+  in
+  of_cmarkit ~read_file md
 
 let to_cmarkit =
   let block m = function
