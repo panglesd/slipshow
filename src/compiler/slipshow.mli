@@ -1,5 +1,6 @@
 module Default : sig
   val dimension : int * int
+  val toplevel_attributes : Cmarkit.Attributes.t
 end
 
 module Asset : sig
@@ -41,6 +42,7 @@ type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
       [Ok None]). *)
 
 val delayed :
+  ?toplevel_attributes:Cmarkit.Attributes.t ->
   ?dimension:int * int ->
   ?math_link:Asset.t ->
   ?css_links:Asset.t list ->
@@ -56,6 +58,7 @@ val delayed :
 val add_starting_state : delayed -> starting_state option -> string
 
 val convert :
+  ?toplevel_attributes:Cmarkit.Attributes.t ->
   ?dimension:int * int ->
   ?starting_state:starting_state ->
   ?math_link:Asset.t ->

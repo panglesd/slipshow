@@ -1,4 +1,5 @@
 val compile :
+  toplevel_attributes:Cmarkit.Attributes.t option ->
   dimension:(int * int) option ->
   input:[ `File of Fpath.t | `Stdin ] ->
   output:[ `File of Fpath.t | `Stdout ] ->
@@ -8,6 +9,7 @@ val compile :
   (Fpath.Set.t, [ `Msg of string ]) result
 
 val watch :
+  toplevel_attributes:Cmarkit.Attributes.t option ->
   dimension:(int * int) option ->
   input:Fpath.t ->
   output:Fpath.t ->
@@ -17,6 +19,7 @@ val watch :
   (unit, [ `Msg of string ]) result
 
 val serve :
+  toplevel_attributes:Cmarkit.Attributes.t option ->
   dimension:(int * int) option ->
   input:Fpath.t ->
   output:Fpath.t ->

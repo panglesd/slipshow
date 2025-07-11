@@ -34,7 +34,8 @@ let parse_theme to_asset theme =
   | Some theme -> `Builtin theme
   | None -> `External (to_asset theme)
 
-let compile ~dimension ~input ~output ~math_link ~css_links ~theme =
+let compile ~toplevel_attributes ~dimension ~input ~output ~math_link ~css_links
+    ~theme =
   let asset_files, to_asset =
     let used_files, read_file = read_file (Fpath.v "./") () in
     (used_files, Slipshow.Asset.of_string ~read_file)
@@ -49,7 +50,8 @@ let compile ~dimension ~input ~output ~math_link ~css_links ~theme =
       ()
   in
   let html =
-    Slipshow.convert ?dimension ?math_link ~css_links ?theme ~read_file content
+    Slipshow.convert ?toplevel_attributes ?dimension ?math_link ~css_links
+      ?theme ~read_file content
   in
   let all_used_files = Fpath.Set.union !asset_files !used_files in
   match output with
@@ -65,15 +67,18 @@ let compile ~dimension ~input ~output ~math_link ~css_links ~theme =
             (Fpath.normalize (Fpath.( // ) (Fpath.v (Sys.getcwd ())) f))
             all_used_files)
 
-let watch ~dimension ~input ~output ~math_link ~css_links ~theme =
+let watch ~toplevel_attributes ~dimension ~input ~output ~math_link ~css_links
+    ~theme =
   let input = `File input and output = `File output in
   let compile () =
     Logs.app (fun m -> m "Compiling...");
-    compile ~input ~output ~math_link ~css_links ~theme ~dimension
+    compile ~toplevel_attributes ~input ~output ~math_link ~css_links ~theme
+      ~dimension
   in
   Slipshow_server.do_watch compile
 
-let serve ~dimension ~input ~output ~math_link ~css_links ~theme =
+let serve ~toplevel_attributes ~dimension ~input ~output ~math_link ~css_links
+    ~theme =
   let compile () =
     let asset_files, to_asset =
       let used_files, read_file = read_file (Fpath.v "./") () in
@@ -85,8 +90,8 @@ let serve ~dimension ~input ~output ~math_link ~css_links ~theme =
     let theme = Option.map (parse_theme to_asset) theme in
     let used_files, read_file = read_file (Fpath.parent input) () in
     let result =
-      Slipshow.delayed ?dimension ~css_links ?math_link:math_link_asset ?theme
-        ~read_file content
+      Slipshow.delayed ?toplevel_attributes ?dimension ~css_links
+        ?math_link:math_link_asset ?theme ~read_file content
     in
     let all_used_files = Fpath.Set.union !asset_files !used_files in
     let html = Slipshow.add_starting_state result None in
