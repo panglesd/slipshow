@@ -1,29 +1,5 @@
-module Default : sig
-  val dimension : int * int
-  val toplevel_attributes : Cmarkit.Attributes.t
-end
-
-module Asset : sig
-  module Uri : sig
-    type t = Link of string | Path of Fpath.t
-
-    val of_string : string -> t
-  end
-
-  type t =
-    | Local of { mime_type : string option; content : string }
-    | Remote of string
-
-  val of_uri :
-    read_file:(Fpath.t -> (string option, [< `Msg of string ]) result) ->
-    Uri.t ->
-    t
-
-  val of_string :
-    read_file:(Fpath.t -> (string option, [< `Msg of string ]) result) ->
-    string ->
-    t
-end
+module Asset = Asset
+module Frontmatter = Frontmatter
 
 type starting_state = int * string
 type delayed
@@ -42,12 +18,7 @@ type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
       [Ok None]). *)
 
 val delayed :
-  ?toplevel_attributes:Cmarkit.Attributes.t ->
-  ?dimension:int * int ->
-  ?math_link:Asset.t ->
-  ?css_links:Asset.t list ->
-  ?theme:[ `Builtin of Themes.t | `External of Asset.t ] ->
-  ?slipshow_js_link:Asset.t ->
+  ?frontmatter:Frontmatter.(resolved t) ->
   ?read_file:file_reader ->
   string ->
   delayed
@@ -58,13 +29,8 @@ val delayed :
 val add_starting_state : delayed -> starting_state option -> string
 
 val convert :
-  ?toplevel_attributes:Cmarkit.Attributes.t ->
-  ?dimension:int * int ->
+  ?frontmatter:Frontmatter.(resolved t) ->
   ?starting_state:starting_state ->
-  ?math_link:Asset.t ->
-  ?theme:[ `Builtin of Themes.t | `External of Asset.t ] ->
-  ?css_links:Asset.t list ->
-  ?slipshow_js_link:Asset.t ->
   ?read_file:Compile.file_reader ->
   string ->
   string

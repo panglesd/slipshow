@@ -1,19 +1,7 @@
 module Asset = Asset
+module Frontmatter = Frontmatter
 
 type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
-
-module Default = struct
-  let dimension = (1440, 1080)
-
-  let toplevel_attributes =
-    Cmarkit.Attributes.make
-      ~kv_attributes:
-        [
-          (("slip", Cmarkit.Meta.none), None);
-          (("slipshow-entry-point", Cmarkit.Meta.none), None);
-        ]
-      ()
-end
 
 let mathjax_element has_math math_link =
   if not has_math then ""
@@ -88,11 +76,10 @@ let head ~width ~height ~theme ~has_math ~math_link ~css_links =
       highlight_js_ocaml_element;
     ]
 
-let embed_in_page content ~has_math ~math_link ~css_links ~theme
-    ~slipshow_js_link ~dimension =
+let embed_in_page content ~has_math ~math_link ~css_links ~theme ~dimension =
   let width, height = dimension in
   let head = head ~has_math ~math_link ~css_links ~theme ~width ~height in
-  let slipshow_js_element = slipshow_js_element slipshow_js_link in
+  let slipshow_js_element = slipshow_js_element None in
   let start =
     Format.sprintf
       {|
@@ -145,16 +132,53 @@ let convert_to_md ~read_file content =
   let sd = Compile.to_cmarkit sd in
   Cmarkit_commonmark.of_doc ~include_attributes:false sd
 
-let delayed ?(toplevel_attributes = Default.toplevel_attributes)
-    ?(dimension = Default.dimension) ?math_link ?(css_links = [])
-    ?(theme = `Builtin Themes.Default) ?slipshow_js_link ?read_file s =
-  let md = Compile.compile ~attrs:toplevel_attributes ?read_file s in
+let delayed ?(frontmatter = Frontmatter.empty) ?(read_file = fun _ -> Ok None) s
+    =
+  let Frontmatter.Resolved frontmatter, s =
+    let ( let* ) x f =
+      match x with
+      | Ok x -> f x
+      | Error (`Msg err) ->
+          Logs.err (fun m -> m "Failed to parse the frontmatter: %s" err);
+          (frontmatter, s)
+    in
+    match Frontmatter.extract s with
+    | None -> (frontmatter, s)
+    | Some (yaml, s) ->
+        let* yaml = yaml in
+        let* txt_frontmatter = Frontmatter.of_yaml yaml in
+        let to_asset = Asset.of_string ~read_file in
+        let txt_frontmatter = Frontmatter.resolve txt_frontmatter ~to_asset in
+        let frontmatter = Frontmatter.combine frontmatter txt_frontmatter in
+        (frontmatter, s)
+  in
+  let toplevel_attributes =
+    frontmatter.toplevel_attributes
+    |> Option.value ~default:Frontmatter.Default.toplevel_attributes
+  in
+  let dimension =
+    frontmatter.dimension |> Option.value ~default:Frontmatter.Default.dimension
+  in
+  let css_links =
+    frontmatter.css_links (* |> List.map (Asset.of_string ~read_file) *)
+  in
+  let theme =
+    match frontmatter.theme with
+    | None -> Frontmatter.Default.theme
+    | Some (`Builtin _ as x) -> x
+    | Some (`External x) ->
+        let asset = Asset.of_string ~read_file x in
+        `External asset
+  in
+  let math_link =
+    frontmatter.math_link (* |> Option.map (Asset.of_string ~read_file) *)
+  in
+  let md = Compile.compile ~attrs:toplevel_attributes ~read_file s in
   let content =
     Cmarkit_renderer.doc_to_string Renderers.custom_html_renderer md
   in
   let has_math = Folders.has_math md in
-  embed_in_page ~dimension ~has_math ~math_link ~theme ~css_links
-    ~slipshow_js_link content
+  embed_in_page ~dimension ~has_math ~math_link ~theme ~css_links content
 
 let add_starting_state (start, end_) starting_state =
   let starting_state =
@@ -164,10 +188,6 @@ let add_starting_state (start, end_) starting_state =
   in
   start ^ starting_state ^ end_
 
-let convert ?toplevel_attributes ?dimension ?starting_state ?math_link ?theme
-    ?css_links ?slipshow_js_link ?(read_file = fun _ -> Ok None) s =
-  let delayed =
-    delayed ?toplevel_attributes ?math_link ?css_links ?theme ?slipshow_js_link
-      ?dimension ~read_file s
-  in
+let convert ?frontmatter ?starting_state ?read_file s =
+  let delayed = delayed ?frontmatter ?read_file s in
   add_starting_state delayed starting_state

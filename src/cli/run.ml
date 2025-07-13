@@ -29,30 +29,26 @@ let read_file parent () =
       let+ res = Io.read (`File fp) in
       Some res )
 
-let parse_theme to_asset theme =
-  match Themes.of_string theme with
-  | Some theme -> `Builtin theme
-  | None -> `External (to_asset theme)
+(* let parse_theme to_asset theme = *)
+(*   match theme with *)
+(*   | `Builtin theme -> `Builtin theme *)
+(*   | `External theme -> `External (to_asset theme) *)
 
-let compile ~toplevel_attributes ~dimension ~input ~output ~math_link ~css_links
-    ~theme =
+let compile ~input ~output ~cli_frontmatter =
   let asset_files, to_asset =
     let used_files, read_file = read_file (Fpath.v "./") () in
     (used_files, Slipshow.Asset.of_string ~read_file)
   in
-  let math_link = Option.map to_asset math_link in
-  let css_links = List.map to_asset css_links in
-  let theme = Option.map (parse_theme to_asset) theme in
+  let cli_frontmatter =
+    Slipshow.Frontmatter.resolve cli_frontmatter ~to_asset
+  in
   let* content = Io.read input in
   let used_files, read_file =
     read_file
       (match input with `Stdin -> Fpath.v "./" | `File f -> Fpath.parent f)
       ()
   in
-  let html =
-    Slipshow.convert ?toplevel_attributes ?dimension ?math_link ~css_links
-      ?theme ~read_file content
-  in
+  let html = Slipshow.convert ~frontmatter:cli_frontmatter ~read_file content in
   let all_used_files = Fpath.Set.union !asset_files !used_files in
   match output with
   | `Stdout ->
@@ -67,31 +63,27 @@ let compile ~toplevel_attributes ~dimension ~input ~output ~math_link ~css_links
             (Fpath.normalize (Fpath.( // ) (Fpath.v (Sys.getcwd ())) f))
             all_used_files)
 
-let watch ~toplevel_attributes ~dimension ~input ~output ~math_link ~css_links
-    ~theme =
+let watch ~input ~output ~cli_frontmatter =
   let input = `File input and output = `File output in
   let compile () =
     Logs.app (fun m -> m "Compiling...");
-    compile ~toplevel_attributes ~input ~output ~math_link ~css_links ~theme
-      ~dimension
+    compile ~input ~output ~cli_frontmatter
   in
   Slipshow_server.do_watch compile
 
-let serve ~toplevel_attributes ~dimension ~input ~output ~math_link ~css_links
-    ~theme =
+let serve ~input ~output ~cli_frontmatter =
   let compile () =
     let asset_files, to_asset =
       let used_files, read_file = read_file (Fpath.v "./") () in
       (used_files, Slipshow.Asset.of_string ~read_file)
     in
-    let math_link_asset = Option.map to_asset math_link in
-    let css_links = List.map to_asset css_links in
+    let cli_frontmatter =
+      Slipshow.Frontmatter.resolve cli_frontmatter ~to_asset
+    in
     let* content = Io.read (`File input) in
-    let theme = Option.map (parse_theme to_asset) theme in
     let used_files, read_file = read_file (Fpath.parent input) () in
     let result =
-      Slipshow.delayed ?toplevel_attributes ?dimension ~css_links
-        ?math_link:math_link_asset ?theme ~read_file content
+      Slipshow.delayed ~frontmatter:cli_frontmatter ~read_file content
     in
     let all_used_files = Fpath.Set.union !asset_files !used_files in
     let html = Slipshow.add_starting_state result None in

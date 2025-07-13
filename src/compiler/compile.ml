@@ -126,7 +126,7 @@ module Stage1 = struct
           let dest =
             match resolve_image current_path ~read_file dest with
             | Asset.Remote s -> s
-            | Asset.Local { mime_type; content } ->
+            | Asset.Local { mime_type; content; path = _ } ->
                 let mime_type = Option.value ~default:"" mime_type in
                 let base64 = Base64.encode_string content in
                 Format.sprintf "data:%s;base64,%s" mime_type base64

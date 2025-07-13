@@ -10,7 +10,7 @@ module Uri = struct
 end
 
 type t =
-  | Local of { mime_type : string option; content : string }
+  | Local of { mime_type : string option; content : string; path : Fpath.t }
   | Remote of string
 
 (* https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types#image_types *)
@@ -33,7 +33,7 @@ let of_uri ~read_file s =
       match read_file fp with
       | Ok (Some content) ->
           let mime_type = mime_of_ext (Fpath.get_ext fp) in
-          Local { mime_type; content }
+          Local { mime_type; content; path = fp }
       | Ok None -> Remote (Fpath.to_string p)
       | Error (`Msg e) ->
           Logs.warn (fun f ->
