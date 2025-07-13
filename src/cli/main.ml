@@ -17,23 +17,13 @@ let handle_error = function Ok _ as x -> x | Error (`Msg msg) -> Error msg
 module Custom_conv = struct
   let toplevel_attributes =
     let parser s =
-      let s = String.trim s in
-      let s =
-        if String.length s > 0 && s.[0] = '{' then
-          (* Just so emacs does not find an unmatched curly brace! *)
-          let _ = '}' in
-          s
-        else "{" ^ s ^ "}"
-      in
-      let cmarkit = Cmarkit.Doc.of_string ~strict:false s in
-      let cmarkit = Cmarkit.Doc.block cmarkit in
-      match cmarkit with
-      | Cmarkit.Block.Ext_standalone_attributes (attrs, _) -> Ok (Some attrs)
-      | _ -> Error (`Msg "Can only be a set of attributes")
+      Slipshow.Frontmatter.String_to.toplevel_attributes s
+      |> Result.map @@ fun s -> Some s
     in
     let printer fmt attrs =
       let attrs =
-        Option.value ~default:Slipshow.Default.toplevel_attributes attrs
+        Option.value ~default:Slipshow.Frontmatter.Default.toplevel_attributes
+          attrs
       in
       let doc =
         Cmarkit.Doc.make
@@ -63,6 +53,15 @@ module Custom_conv = struct
   let input = io `Stdin
   let output = io `Stdout
 
+  let theme =
+    let parser_ s = Ok (Some (Slipshow.Frontmatter.String_to.theme s)) in
+    let rec printer fmt = function
+      | Some (`Builtin s) -> Format.fprintf fmt "%s" (Themes.to_string s)
+      | Some (`External s) -> Format.fprintf fmt "%s" s
+      | None -> printer fmt (Some Slipshow.Frontmatter.Default.theme)
+    in
+    Arg.conv (parser_, printer)
+
   let dimension =
     let int_parser = Cmdliner.Arg.(conv_parser int) in
     let int_printer = Cmdliner.Arg.(conv_printer int) in
@@ -85,7 +84,7 @@ module Custom_conv = struct
       | Some (1440, 1080) -> Format.fprintf fmt "4:3"
       | Some (1920, 1080) -> Format.fprintf fmt "16:9"
       | Some (w, h) -> Format.fprintf fmt "%ax%a" int_printer w int_printer h
-      | None -> printer fmt (Some Slipshow.Default.dimension)
+      | None -> printer fmt (Some Slipshow.Frontmatter.Default.dimension)
     in
     Cmdliner.Arg.conv ~docv:"WIDTHxHEIGHT" (parser_, printer)
 end
@@ -103,7 +102,7 @@ module Compile_args = struct
       "Slipshow theme to use in the presentation. Can be \"default\" for the \
        default theme, \"none\" for no theme, a local file or a remote URL."
     in
-    Arg.(value & opt (some string) None & info ~docv:"URL" ~doc [ "theme" ])
+    Arg.(value & opt Custom_conv.theme None & info ~docv:"URL" ~doc [ "theme" ])
 
   let math_link =
     let doc =
@@ -154,13 +153,9 @@ module Compile_args = struct
     Arg.(value & pos 0 Custom_conv.input `Stdin & info [] ~doc ~docv:"FILE.md")
 
   type compile_args = {
-    toplevel_attributes : Cmarkit.Attributes.t option;
-    math_link : string option;
-    theme : string option;
-    css_links : string list;
+    cli_frontmatter : Slipshow.Frontmatter.(unresolved t);
     input : [ `File of Fpath.t | `Stdin ];
     output : [ `File of Fpath.t | `Stdout ] option;
-    dimension : (int * int) option;
   }
 
   let term =
@@ -173,13 +168,11 @@ module Compile_args = struct
     and+ dimension = dim
     and+ toplevel_attributes = toplevel_attributes in
     {
-      math_link;
-      theme;
-      css_links;
+      cli_frontmatter =
+        Slipshow.Frontmatter.Unresolved
+          { math_link; theme; css_links; dimension; toplevel_attributes };
       input;
       output;
-      dimension;
-      toplevel_attributes;
     }
 end
 
@@ -205,27 +198,15 @@ module Compile = struct
     | `Stdout -> Error "Standard output cannot be used in serve nor watch mode"
 
   let compile ~watch
-      ~compile_args:
-        {
-          Compile_args.input;
-          output;
-          math_link;
-          theme;
-          css_links;
-          dimension;
-          toplevel_attributes;
-        } =
+      ~compile_args:{ Compile_args.input; output; cli_frontmatter } =
     let output =
       match output with Some o -> o | None -> output_of_input input
     in
     if watch then
       let* input, output = force_file_io input output in
-      Run.watch ~toplevel_attributes ~dimension ~input ~output ~math_link ~theme
-        ~css_links
-      |> handle_error
+      Run.watch ~cli_frontmatter ~input ~output |> handle_error
     else
-      Run.compile ~toplevel_attributes ~input ~output ~math_link ~theme
-        ~css_links ~dimension
+      Run.compile ~input ~output ~cli_frontmatter
       |> Result.map ignore |> handle_error
 
   let term =
@@ -249,24 +230,12 @@ end
 module Serve = struct
   let ( let* ) = Result.bind
 
-  let serve
-      ~compile_args:
-        {
-          Compile_args.input;
-          output;
-          math_link;
-          theme;
-          css_links;
-          dimension;
-          toplevel_attributes;
-        } =
+  let serve ~compile_args:{ Compile_args.input; output; cli_frontmatter } =
     let output =
       match output with Some o -> o | None -> Compile.output_of_input input
     in
     let* input, output = Compile.force_file_io input output in
-    Run.serve ~toplevel_attributes ~dimension ~input ~output ~math_link ~theme
-      ~css_links
-    |> handle_error
+    Run.serve ~input ~output ~cli_frontmatter |> handle_error
 
   let term =
     let open Term.Syntax in
