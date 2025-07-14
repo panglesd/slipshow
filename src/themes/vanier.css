@@ -6,7 +6,7 @@
 /*************************************/
 /*		Title page										 */
 /*************************************/
-.slip-body {
+.slip-body, .slide-body {
   /* padding:60px; */
   margin-top: auto;
   margin-bottom: auto;
@@ -54,7 +54,12 @@ body {
 /** On doit obligatoirement mettre la regle slip-slip slip-title sinon
  * on est pas assez précis et la règle de base prend la précédence */
 
-.slip-slip .slip-title{
+.slide {
+  display: flex;
+  flex-direction: column;
+}
+
+.slide .slide-title{
     all: unset;
     flex: 0 1 auto;
 	font-family: "Dosis";

@@ -408,6 +408,26 @@ module Stage2 = struct
 end
 
 module Stage3 = struct
+  let rec extract_title block =
+    match block with
+    | Ast.Div ((h, attrs), meta) ->
+        let block, title = extract_title h in
+        (Ast.Div ((block, attrs), meta), title)
+    | Block.Heading ((h, attrs), _) when Block.Heading.level h = 1 ->
+        (Block.Blocks ([], Meta.none), Some (Block.Heading.inline h, attrs))
+    | Block.Blocks (Block.Heading ((h, attrs), _) :: blocks, meta)
+      when Block.Heading.level h = 1 ->
+        (Block.Blocks (blocks, meta), Some (Block.Heading.inline h, attrs))
+    | Block.Blocks ((Block.Blank_line _ as bl) :: blocks, meta) ->
+        let block, title = extract_title (Block.Blocks (blocks, meta)) in
+        let blocks =
+          match block with
+          | Block.Blocks (bs, _) -> bl :: bs
+          | _ -> bl :: [ block ]
+        in
+        (Block.Blocks (blocks, meta), title)
+    | _ -> (block, None)
+
   let execute =
     let block m c =
       let map block (attrs, meta2) =
@@ -434,7 +454,9 @@ module Stage3 = struct
           Mapper.ret @@ Block.Block_quote ((block, attrs), Meta.none)
       | Some (block, (attrs, meta2)) when Attributes.mem "slide" attrs ->
           let block, attrs = map block (attrs, meta2) in
-          Mapper.ret @@ Ast.Slide ((block, attrs), Meta.none)
+          let block, title = extract_title block in
+          Mapper.ret
+          @@ Ast.Slide (({ content = block; title }, attrs), Meta.none)
       | Some (block, (attrs, meta2)) when Attributes.mem "slip" attrs ->
           let block, (attrs, meta) = map block (attrs, meta2) in
           Mapper.ret @@ Ast.Slip ((block, (attrs, meta)), Meta.none)
@@ -460,9 +482,24 @@ let compile ~attrs ?(read_file = fun _ -> Ok None) s =
   of_cmarkit ~read_file md
 
 let to_cmarkit =
+  let ( let* ) x f = Option.bind x f in
+  let ( let+ ) x f = Option.map f x in
+
   let block m = function
+    | Ast.Slide (({ content; title }, _), meta) ->
+        let title =
+          let* title, attrs = title in
+          let+ title = Mapper.map_inline m title in
+          Block.Heading ((Block.Heading.make ~level:1 title, attrs), Meta.none)
+        in
+        let title = Option.to_list title in
+        let b =
+          match Mapper.map_block m content with
+          | None -> Block.empty
+          | Some b -> b
+        in
+        Mapper.ret (Block.Blocks (title @ [ b ], meta))
     | Ast.Div ((bq, _), meta)
-    | Ast.Slide ((bq, _), meta)
     | Ast.Slip ((bq, _), meta)
     | Ast.Included ((bq, _), meta) ->
         let b =
