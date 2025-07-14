@@ -29,11 +29,6 @@ let read_file parent () =
       let+ res = Io.read (`File fp) in
       Some res )
 
-(* let parse_theme to_asset theme = *)
-(*   match theme with *)
-(*   | `Builtin theme -> `Builtin theme *)
-(*   | `External theme -> `External (to_asset theme) *)
-
 let compile ~input ~output ~cli_frontmatter =
   let asset_files, to_asset =
     let used_files, read_file = read_file (Fpath.v "./") () in

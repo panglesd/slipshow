@@ -221,13 +221,13 @@ It's sometimes useful to give the same attribute or class to all children of a g
 
 .. code-block:: markdown
 
-   {children:slide children:.class}
+   {children:slip children:.class}
    ----
-   Slide 1
+   Slip 1
    ---
-   Slide 2
+   Slip 2
    ---
-   Slide 3
+   Slip 3
    ----
 
 Giving parameters to actions
@@ -331,6 +331,8 @@ Those are attributes that are interpreted by the compiler in a special way
   ``slip`` introduces a subslip. The subslip is entered in the flow of the presentation, and executed when the element triggered is outside of it.
 
   The size of a subslip can be anything, it's content will adapt to be rendered the same way.
+
+  If a slide starts with a first level heading, this heading is used a the slides' title.
 
 Pause attributes
 ----------------
@@ -503,3 +505,36 @@ Use it with ``slip.setProp`` to not forget undoing the changes!
 		```slip-script
                 log(slip, slip.state.x); // 1
                 ```
+
+Frontmatter
+===========
+
+The frontmatter allows to define metadata for the whole presentation. For every CLI option, there is a corresponding frontmatter option.
+
+It must start the input file with a ``---``, and the frontmatter ends with the next ``---``. Inside, the metadata is given using yaml syntax.
+
+.. code-block:: markdown
+
+   ---
+   dimension: 16:9
+   theme: vanier
+   ---
+
+   # The rest of the presentation
+
+   Muspi merol
+
+The current options for the frontmatter are:
+
+- ``toplevel-attributes``, for defining the attributes of the topmost
+  container. Accepts a string with the syntax for attributes.
+
+- ``theme``, for selecting a theme. Accepts a string: either ``"default"``,
+  ``"vanier"`` or a path to a file.
+
+- ``css_links`` for adding css files to the presentation. Accepts either a
+  string or a list of strings (as path to the CSS files).
+
+- ``dimension`` for defining the dimension of the presentation. Accepts a
+  string, either ``"4:3"`` (``1440x1080``, the default), ``"16:9"``
+  (``1920x1080``), or ``"WIDTHxHEIGHT"``.
