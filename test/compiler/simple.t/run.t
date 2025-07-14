@@ -2,14 +2,15 @@ We can compile the file using the slip_of_mark binary
 
   $ slipshow compile -o file.html file.md
 
-  $ cat file.html | grep "<body>" -A 10
+  $ cat file.html | grep "<body>" -A 11
     <body>
       <div id="slipshow-main">
         <div id="slipshow-content">
           <svg id="slipshow-drawing-elem" style="overflow:visible; position: absolute; z-index:1000"></svg>
-          <div class="slipshow-rescaler" slipshow-entry-point>
+          <div class="slipshow-rescaler" slip enter-at-unpause>
   <div class="slip">
   <div class="slip-body">
+  <div>
   <h1 id="a-title"><a class="anchor" aria-hidden="true" href="#a-title"></a><span>A title</span></h1>
   <div pause></div>
   <p><span>A word </span><span id="id" emph-at-unpause step>and</span><span> some other words.</span></p>
@@ -39,14 +40,15 @@ If we do not pass an input file, it gets its value from stdin
   > Paragraph
   > EOF
 
-  $ cat file.html | grep "<body>" -A 10
+  $ cat file.html | grep "<body>" -A 11
     <body>
       <div id="slipshow-main">
         <div id="slipshow-content">
           <svg id="slipshow-drawing-elem" style="overflow:visible; position: absolute; z-index:1000"></svg>
-          <div class="slipshow-rescaler" slipshow-entry-point>
+          <div class="slipshow-rescaler" slip enter-at-unpause>
   <div class="slip">
   <div class="slip-body">
+  <div>
   <h1 id="title"><a class="anchor" aria-hidden="true" href="#title"></a><span>Title</span></h1>
   <p><span>Paragraph</span></p>
   </div>
