@@ -23,7 +23,8 @@
  (description "Slipshow is an engine to write slips, a concept evolved from slides.")
  (depends
   (ocaml (>= 4.14))
-  dune
+   dune
+   yaml
   (crunch :with-dev-setup)
   (cmdliner (>= 1.3.0))
    base64
