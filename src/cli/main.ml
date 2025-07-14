@@ -153,7 +153,7 @@ module Compile_args = struct
     Arg.(value & pos 0 Custom_conv.input `Stdin & info [] ~doc ~docv:"FILE.md")
 
   type compile_args = {
-    cli_frontmatter : Slipshow.Frontmatter.(unresolved t);
+    cli_frontmatter : Slipshow.Frontmatter.unresolved Slipshow.Frontmatter.t;
     input : [ `File of Fpath.t | `Stdin ];
     output : [ `File of Fpath.t | `Stdout ] option;
   }
