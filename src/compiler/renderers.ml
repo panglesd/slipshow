@@ -141,7 +141,7 @@ let custom_html_renderer =
             RenderAttrs.in_block c "div" attrs (fun () -> Context.block c b)
           else Context.block c b;
           true
-      | Ast.Slide ((slide, (attrs, _)), _) ->
+      | Ast.Slide (({ content; title }, (attrs, _)), _) ->
           let () =
             RenderAttrs.in_block c "div"
               (Attributes.add_class attrs ("slipshow-rescaler", Meta.none))
@@ -149,9 +149,15 @@ let custom_html_renderer =
             RenderAttrs.in_block c "div"
               (Attributes.make ~class':[ ("slide", Meta.none) ] ())
             @@ fun () ->
+            (match title with
+            | None -> ()
+            | Some (title, (title_attrs, _)) ->
+                RenderAttrs.in_block c "div"
+                  (Attributes.add_class title_attrs ("slide-title", Meta.none))
+                  (fun () -> Context.inline c title));
             RenderAttrs.in_block c "div"
               (Attributes.make ~class':[ ("slide-body", Meta.none) ] ())
-            @@ fun () -> Context.block c slide
+            @@ fun () -> Context.block c content
           in
           true
       | Ast.Slip ((slip, (attrs, _)), _) ->
