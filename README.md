@@ -87,6 +87,8 @@ Thanks to all the high quality libraries, either the [direct dependencies](https
 
 Thanks to the [mathjax](https://www.mathjax.org/) project and [highlight-js](https://highlightjs.org/) for respectively powering math and syntax-highlighting.
 
+I also would like to thank my parents for supporting me ever since I was young!
+
 ## Support
 
 The NLNet Foundation is [sponsoring](https://nlnet.nl/project/Slipshow/) the development in 2025 through the [NGI Commons Fund](https://nlnet.nl/commonsfund/) with funds from the European Commission. Thanks a lot!
