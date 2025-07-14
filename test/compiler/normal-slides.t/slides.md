@@ -1,5 +1,5 @@
 ---
-toplevel-attributes: "{children:slide children:enter='~duration:0'}"
+toplevel-attributes: {children:slide children:enter='~duration:0'}
 theme: vanier
 ---
 
