@@ -5,10 +5,17 @@
 ### Compiler
 
 - Fix `children:` not working sometimes (#135)
+- Add `--toplevel-attributes` to control the attributes on the toplevel
+  container (#137)
+
+### Engine
+
+- Render slide titles as slide titles (#137)
 
 ### Language
 
 - Add arguments to actions (#135)
+- Add frontmatter (#137)
 
 ### Internal
 
