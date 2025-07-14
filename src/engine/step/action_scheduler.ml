@@ -71,14 +71,14 @@ let update_history () =
   in
   Undoable.Browser.History.set_hash (string_of_int n)
 
-let next window () =
+let next ?(init = false) window () =
   match find_next_pause_or_step () with
   | None -> None
   | Some pause ->
       let res =
         let> () = Actions.exit window pause in
         let> () = AttributeActions.do_ window pause in
-        let> () = update_history () in
+        let> () = if not init then update_history () else Undoable.return () in
         Undoable.return ()
       in
       Some res

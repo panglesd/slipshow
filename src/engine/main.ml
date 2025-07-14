@@ -8,7 +8,6 @@ let start ~width ~height ~id ~step =
   let body = Brr.El.find_first_by_selector (Jstr.v "body") |> Option.get in
   let* () = Normalization.setup el in
   let* window = Universe.Window.setup el in
-  let () = Table_of_content.generate window el in
   (* TODO: move out of here (Later: Why?) *)
   let () = Rescale.setup_rescalers () in
   let () = Drawing.setup body in
@@ -24,6 +23,14 @@ let start ~width ~height ~id ~step =
   let* () =
     Step.Action_scheduler.setup_pause_ancestors window () |> Undoable.discard
   in
+  (* We do one step first, without recording it/updating the hash, to enter in
+     the first slip *)
+  let* _ =
+    Step.Action_scheduler.next ~init:true window ()
+    |> Option.value ~default:(Undoable.return ())
+    |> Undoable.discard
+  in
+  let () = Table_of_content.generate window el in
   let* () =
     match Brr.El.find_first_by_selector (Jstr.v "[slipshow-entry-point]") with
     | None -> Fut.return ()
