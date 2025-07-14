@@ -24,7 +24,6 @@
  (depends
   (ocaml (>= 4.14))
    dune
-   yaml
   (crunch :with-dev-setup)
   (cmdliner (>= 1.3.0))
    base64

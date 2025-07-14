@@ -145,8 +145,7 @@ let delayed ?(frontmatter = Frontmatter.empty) ?(read_file = fun _ -> Ok None) s
     match Frontmatter.extract s with
     | None -> (frontmatter, s)
     | Some (yaml, s) ->
-        let* yaml = yaml in
-        let* txt_frontmatter = Frontmatter.of_yaml yaml in
+        let* txt_frontmatter = Frontmatter.of_string yaml in
         let to_asset = Asset.of_string ~read_file in
         let txt_frontmatter = Frontmatter.resolve txt_frontmatter ~to_asset in
         let frontmatter = Frontmatter.combine frontmatter txt_frontmatter in

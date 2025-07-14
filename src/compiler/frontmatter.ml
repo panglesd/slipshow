@@ -86,80 +86,46 @@ module String_to = struct
     | _ -> error
 end
 
-module Yaml_to = struct
-  let expect_string name =
-    let error =
-      Format.sprintf "'%s' in frontmatter must be given as a string" name
-    in
-    Error (`Msg error)
+let get (field_name, convert) kv =
+  List.assoc_opt field_name kv |> Option.map convert
 
-  let toplevel_attributes = function
-    | `String s -> String_to.toplevel_attributes s
-    | _ -> expect_string "toplevel attributes"
+let cut s c =
+  String.index_opt s c
+  |> Option.map @@ fun idx ->
+     ( String.sub s 0 idx,
+       String.trim @@ String.sub s (idx + 1) (String.length s - (idx + 1)) )
 
-  let math_link = function
-    | `String s -> Ok (String_to.math_link s)
-    | _ -> expect_string "math-link"
-
-  let theme = function
-    | `String s -> Ok (String_to.theme s)
-    | _ -> expect_string "theme"
-
-  let css_link = function `String s -> Ok s | _ -> expect_string "css-link"
-  let ( let* ) = Result.bind
-
-  let css_links = function
-    | `String s -> Ok [ s ]
-    | `A a ->
-        let* res =
-          List.fold_left
-            (fun acc l ->
-              let* acc = acc in
-              let* res = css_link l in
-              Ok (res :: acc))
-            (Ok []) a
-        in
-        Ok (List.rev res)
-    | _ ->
-        Error
-          (`Msg
-             "'css-links' in frontmatter must be given as a string or an array \
-              of string")
-
-  let dimension = function
-    | `String s -> String_to.dimension s
-    | _ -> expect_string "dimension"
-end
-
-let get (field_name, convert) kv_yaml =
-  List.assoc_opt field_name kv_yaml |> Option.map convert
-
-let of_yaml yaml =
-  match yaml with
-  | `O kv_yaml ->
-      let get x y =
-        match get x y with
-        | Some (Ok x) -> Some x
-        | Some (Error (`Msg x)) ->
-            Logs.warn (fun m -> m "Error in frontmatter: %s" x);
-            None
-        | None -> None
-      in
-      let toplevel_attributes =
-        get ("toplevel-attributes", Yaml_to.toplevel_attributes) kv_yaml
-      in
-      let math_link = get ("math-link", Yaml_to.math_link) kv_yaml in
-      let theme = get ("theme", Yaml_to.theme) kv_yaml in
-      let css_links =
-        get ("css", Yaml_to.css_links) kv_yaml |> Option.value ~default:[]
-      in
-      let dimension = get ("dimension", Yaml_to.dimension) kv_yaml in
-      Ok
-        (Unresolved
-           { toplevel_attributes; math_link; theme; css_links; dimension })
-  | _ ->
-      Error
-        (`Msg "Malformed YAML frontmatter: Needs to be a list of key-values")
+let of_string s =
+  let assoc =
+    s |> String.split_on_char '\n'
+    |> List.filter_map @@ fun line ->
+       let line = String.trim line in
+       cut line ':'
+  in
+  let get x y =
+    match get x y with
+    | Some (Ok x) -> Some x
+    | Some (Error (`Msg x)) ->
+        Logs.warn (fun m -> m "Error in frontmatter: %s" x);
+        None
+    | None -> None
+  in
+  let toplevel_attributes =
+    get ("toplevel-attributes", String_to.toplevel_attributes) assoc
+  in
+  let math_link =
+    get ("math-link", fun x -> Ok (String_to.math_link x)) assoc
+  in
+  let theme = get ("theme", fun x -> Ok (String_to.theme x)) assoc in
+  let css_links =
+    get ("css", fun x -> Ok x) assoc
+    |> Option.map (fun x -> String.split_on_char ' ' x)
+    |> Option.map @@ List.filter (fun x -> not (String.equal " " x))
+    |> Option.value ~default:[]
+  in
+  let dimension = get ("dimension", String_to.dimension) assoc in
+  Ok
+    (Unresolved { toplevel_attributes; math_link; theme; css_links; dimension })
 
 let ( let* ) x f = Option.bind x f
 let ( let+ ) x f = Option.map f x
@@ -195,7 +161,6 @@ let extract s =
   let+ end_, after = find_closing s start in
   let frontmatter = String.sub s start (end_ - start) in
   let rest = String.sub s after (String.length s - after) in
-  let frontmatter = Yaml.of_string frontmatter in
   (frontmatter, rest)
 
 let combine (Resolved cli_frontmatter) (Resolved frontmatter) =

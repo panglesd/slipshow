@@ -38,12 +38,11 @@ module String_to : sig
   val dimension : string -> (int * int, [> `Msg of string ]) result
 end
 
-val of_yaml :
-  [> `O of
-     (string * [> `A of [> `String of string ] list | `String of string ]) list
-  ] ->
-  (unresolved t, [> `Msg of string ]) result
+val of_string : string -> (unresolved t, [> `Msg of string ]) result
 
-val extract : string -> (Yaml.value Yaml.res * string) option
+val extract : string -> (string * string) option
+(** The first string is the frontmatter, the second one the original string with
+    the frontmatter and separator stripped *)
+
 val combine : resolved t -> resolved t -> resolved t
 val resolve : unresolved t -> to_asset:(string -> Asset.t) -> resolved t
