@@ -79,16 +79,6 @@ You're ready to go! Have a look at the syntax, or the full tutorial for a more g
 
 You can issue a Pull Request of any kind, report a bug, ask for a new feature, suggest an enhancement on the documentation (or make a Pull Request)... You can also [write a theme](https://slipshow.readthedocs.io/en/latest/themes.html#writing-a-theme).
 
-## Acknowledgement
-
-This project would never have been possible without open source! Programming with [OCaml](https://github.com/ocaml/ocaml) is a blast, thanks to everyone participating in its development.
-
-Thanks to all the high quality libraries, either the [direct dependencies](https://github.com/panglesd/slipshow/blob/main/dune-project#L25-L48) or the vendored ones ([`brr`](https://erratique.ch/software/brr), [`cmarkit`](https://erratique.ch/software/cmarkit) and [`irmin-watcher`](https://github.com/mirage/irmin-watcher).)
-
-Thanks to the [mathjax](https://www.mathjax.org/) project and [highlight-js](https://highlightjs.org/) for respectively powering math and syntax-highlighting.
-
-I also would like to thank my parents for supporting me ever since I was young!
-
 ## Support
 
 The NLNet Foundation is [sponsoring](https://nlnet.nl/project/Slipshow/) the development in 2025 through the [NGI Commons Fund](https://nlnet.nl/commonsfund/) with funds from the European Commission. Thanks a lot!
