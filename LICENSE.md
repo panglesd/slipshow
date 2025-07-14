@@ -3,25 +3,25 @@
 - The [`vendor/github.com/panglesd/brr`
   directory](https://github.com/panglesd/slipshow/tree/main/vendor/github.com/panglesd/brr)
   contains a vendored and slightly modified copy of
-  [brr](https://erratique.ch/software/brr). It is licensed under the ISC
-  license, except
+  [brr](https://erratique.ch/software/brr). It is licensed under the [ISC
+  license](#Brr-copyrights), except
   [`vendor/github.com/panglesd/brr/src/console/highlight.pack.js`](https://github.com/panglesd/slipshow/blob/main/vendor/github.com/panglesd/brr/src/console/highlight.pack.js)
-  which is licensed under the BSD 3-Clause license.
+  which is licensed under the [BSD 3-Clause license](#highlightjs-copyrights).
 - The [`vendor/github.com/panglesd/cmarkit`
   directory](https://github.com/panglesd/slipshow/tree/main/vendor/github.com/panglesd/cmarkit)
   contains a vendored and slightly modified copy of [cmarkit](https://erratique.ch/software/cmarkit). It is licensed
-  under the [ISC license](#Brr-copyrights).
+  under the [ISC license](#cmarkit-copyrights).
 - The [`src/static_data`
   directory](https://github.com/panglesd/slipshow/tree/main/src/static_data/)
   contains various (compiled) javascript libraries:
   - Files that start with `highlight-js.` are part of the [highlight-js
     project](https://highlightjs.org/) and under the [BSD 3-Clause
-    license](#highlight.js-copyrights).
+    license](#highlightjs-copyrights).
   - Files that start with `tex-.` are part of the
     [mathjax](https://www.mathjax.org/) project and under the [Apache-2.0
     license](#mathjax-copyrights).
-- The Vanier theme, in [`src/themes/vanier.css`]
-  (https://github.com/panglesd/slipshow/blob/main/src/themes/vanier.css)
+- The Vanier theme, in
+  [`src/themes/vanier.css`](https://github.com/panglesd/slipshow/blob/main/src/themes/vanier.css)
   contains a base64 distribution of the [Dosis
   font](https://fonts.google.com/specimen/Dosis/license), under the [SIL OPEN
   FONT LICENSE Version 1.1](#dosis-font-copyrights).
