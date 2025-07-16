@@ -58,3 +58,12 @@ let () =
     start ~width ~height ~id ~step
   in
   Jv.set Jv.global "startSlipshow" (Jv.callback ~arity:4 start)
+
+let () =
+  let do_ el y =
+    let y = Jv.to_int y in
+    let s = Format.sprintf "translate3d(0px, %dpx, 0px)" y in
+    let el = Brr.El.of_jv el in
+    Brr.El.set_inline_style (Jstr.v "transform") (Jstr.v s) el
+  in
+  Jv.set Jv.global "my_try" (Jv.callback ~arity:2 do_)

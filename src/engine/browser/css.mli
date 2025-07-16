@@ -12,4 +12,4 @@ type property =
   | Width of float
   | Height of float
 
-val set : property list -> Brr.El.t -> unit Fut.t
+val set : property list -> Brr.El.t -> unit

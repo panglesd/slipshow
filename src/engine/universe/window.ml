@@ -76,7 +76,8 @@ let setup el =
   Brr.El.insert_siblings `Replace el [ rotate_container ];
   Brr.El.append_children universe [ el ];
   let+ () =
-    Browser.Css.set [ Width (width ()); Height (height ()) ] scale_container
+    Browser.Css.set [ Width (width ()); Height (height ()) ] scale_container;
+    Fut.tick ~ms:0
   in
   { rotate_container; scale_container; universe }
 
@@ -136,18 +137,18 @@ let move_pure window ({ x; y; scale } as target : Coordinates.window) ~duration
   State.set_coord target;
   let x = -.x +. (width () /. 2.) in
   let y = -.y +. (height () /. 2.) in
-  let+ () =
+  let () =
     Browser.Css.set [ TransitionDuration duration ] window.scale_container
-  and+ () = Browser.Css.set [ scale_function ] window.scale_container
-  and+ () = Browser.Css.set [ scale_duration ] window.scale_container
-  and+ () =
+  and () = Browser.Css.set [ scale_function ] window.scale_container
+  and () = Browser.Css.set [ scale_duration ] window.scale_container
+  and () =
     Browser.Css.set [ TransitionDuration duration ] window.rotate_container
-  and+ () = Browser.Css.set [ TransitionDuration duration ] window.universe
-  and+ () = Browser.Css.set [ universe_function ] window.universe
-  and+ () = Browser.Css.set [ universe_duration ] window.universe
-  and+ () = Browser.Css.set [ Translate { x; y } ] window.universe
-  and+ () = Browser.Css.set [ Scale scale ] window.scale_container in
-  ()
+  and () = Browser.Css.set [ TransitionDuration duration ] window.universe
+  and () = Browser.Css.set [ universe_function ] window.universe
+  and () = Browser.Css.set [ universe_duration ] window.universe
+  and () = Browser.Css.set [ Translate { x; y } ] window.universe
+  and () = Browser.Css.set [ Scale scale ] window.scale_container in
+  Fut.return ()
 
 let bound_x { universe; _ } = Brr.El.bound_x universe
 let bound_y { universe; _ } = Brr.El.bound_y universe
