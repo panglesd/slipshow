@@ -63,9 +63,6 @@ Do that! And write the tag in the changelog! And commit and push!
 
 ### Do the binary release
 
-First, fix https://github.com/panglesd/slipshow/issues/91
-Then, update softprops/action-gh-release@v1 to create a draft release instead of directly a release.
-
 - Write the binary release announcement (in the changelog)
 - Call `dune-release tag --dry-run` to check
 - Call `dune-release tag` to do the tag
