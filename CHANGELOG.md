@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [v0.4.0] The slides strike back (Wednesday 16th July, 2025)
 
 ### Compiler
 
