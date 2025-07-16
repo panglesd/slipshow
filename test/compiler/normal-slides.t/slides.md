@@ -1,23 +1,34 @@
 ---
-toplevel-attributes: {children:slide children:enter='~duration:0'}
-theme: vanier
+toplevel-attributes: {children:slide children:enter='~duration:0.01'}
 ---
 
-This is the first slide
+# Agenda
+
+{style="background-color:red"}
+> - Quarterly Revenue Overview
+>
+> - Strategic priorities
+>
+> - Q&A
 
 ---
 
+# Quarterly Revenue Overview
 
+![](happy.svg)
 
-# And now
+---
 
-## Blibli
+# Strategic priorities
 
-and some **content**
+1. Stop using bullet-point slides {pause}
 
-## With a title
+1. Switch to slips {pause}
 
-We are speaking!
+2. Bullet points come by three
 
-{.theorem title="Godel"}
-This is a theorem
+---
+
+# Q&A
+
+Thank you for your absence of attention!
