@@ -57,6 +57,10 @@ The directory structure is the following:
 
 In order to release a new version, you need to:
 
+### Update the name of the release
+
+See `version_title` in `src/cli/main.ml`.
+
 ### Check that the changelog is up to date
 
 Do that! And write the tag in the changelog! And commit and push!
