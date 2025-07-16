@@ -4,12 +4,11 @@ toplevel-attributes: {children:slide children:enter='~duration:0.01'}
 
 # Agenda
 
-{style="background-color:red"}
-> - Quarterly Revenue Overview
->
-> - Strategic priorities
->
-> - Q&A
+- Quarterly Revenue Overview
+
+- Strategic priorities
+
+- Q&A
 
 ---
 
