@@ -45,6 +45,4 @@ let set prop elem =
   let value = value_of_prop prop in
   Brr.El.set_inline_style style (Jstr.v value) elem
 
-let set props elem =
-  let () = List.iter (fun prop -> set prop elem) props in
-  Fut.tick ~ms:0
+let set props elem = List.iter (fun prop -> set prop elem) props

@@ -27,7 +27,8 @@ let replace_open_window window =
         Bottom bottom;
         Height height;
       ]
-      open_window
+      open_window;
+    Fut.tick ~ms:0
   in
   let foi = float_of_int in
   let parent = Brr.El.parent open_window |> Option.get in
@@ -65,7 +66,8 @@ let replace_open_window window =
       (window_w, window_h)
   in
   state := { !state with scale = window_w /. width () };
-  Browser.Css.set [ Scale (window_w /. width ()) ] window.format_container
+  Browser.Css.set [ Scale (window_w /. width ()) ] window.format_container;
+  Fut.tick ~ms:0
 
 let create el =
   let format_container =
