@@ -55,6 +55,11 @@ let unreveal = class_setter (module Actions.Unreveal)
 let emph = class_setter (module Actions.Emph)
 let unemph = class_setter (module Actions.Unemph)
 
+let play_video window undos_ref =
+  Jv.callback ~arity:1 @@ fun elems ->
+  let elems = Jv.to_list Brr.El.of_jv elems in
+  register_undo undos_ref @@ fun () -> Actions.Play_video.do_ window elems
+
 let on_undo =
   one_arg Fun.id @@ fun callback ->
   let undo () = Fut.return @@ ignore @@ Jv.apply callback [||] in
@@ -103,4 +108,5 @@ let slip window undos_ref =
       ("setStyle", set_style undos_ref);
       ("setClass", set_class undos_ref);
       ("setProp", set_prop undos_ref);
+      ("playVideo", play_video window undos_ref);
     |]
