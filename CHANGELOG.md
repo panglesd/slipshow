@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Compiler
+
+- Add support for videos (#139)
+
 ## [v0.4.1] (Wednesday 16th July, 2025)
 
 ### Engine
