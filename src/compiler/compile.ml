@@ -176,8 +176,6 @@ module Stage1 = struct
         let attrs = Mapper.map_attrs m attrs in
         Mapper.ret @@ Inline.Image ((l, (attrs, meta2)), meta)
     | `Video ->
-        let dest = Cmarkit.Link_definition.dest (ld |> fst |> fst) |> fst in
-        Format.printf "Video: dest is : %s" dest;
         let reference = `Inline ld in
         let l = Inline.Link.make text reference in
         let attrs = Mapper.map_attrs m attrs in
