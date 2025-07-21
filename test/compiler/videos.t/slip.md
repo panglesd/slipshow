@@ -1,1 +1,3 @@
-![](v.mp4)
+![](v.mp4){#myid}
+
+{play-video="myid"}

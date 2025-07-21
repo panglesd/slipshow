@@ -547,3 +547,33 @@ module Step = struct
   let parse_args elem s = Parse.no_args ~action_name elem s
   let do_ _ _ = Undoable.return ()
 end
+
+module Play_video = struct
+  let on = "play-video"
+  let action_name = "play-video"
+
+  type args = Brr.El.t list
+
+  let parse_args = Parse.parse_only_els
+  let log_error = function Ok x -> x | Error x -> Brr.Console.(log [ x ])
+
+  let do_ _window elems =
+    Undoable.List.iter
+      (fun e ->
+        let open Fut.Syntax in
+        let e = Brr_io.Media.El.of_el e in
+        let current = Brr_io.Media.El.current_time_s e in
+        let is_playing = not @@ Brr_io.Media.El.paused e in
+        let* res = Brr_io.Media.El.play e in
+        log_error res;
+        let undo () =
+          let+ res =
+            if is_playing then Brr_io.Media.El.play e
+            else Fut.return (Ok (Brr_io.Media.El.pause e))
+          in
+          log_error res;
+          Brr_io.Media.El.set_current_time_s e current
+        in
+        Undoable.return ~undo ())
+      elems
+end
