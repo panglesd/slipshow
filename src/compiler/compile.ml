@@ -58,6 +58,17 @@ end = struct
     do_ (path_stack |> Stack.to_seq |> List.of_seq) p
 end
 
+let classify_image p =
+  match Fpath.get_ext p with
+  | ".3gp" | ".mpg" | ".mpeg" | ".mp4" | ".m4v" | ".m4p" | ".ogv" | ".ogg"
+  | ".mov" | ".webm" ->
+      `Video
+  | ".apng" | ".avif" | ".gif" | ".jpeg" | ".jpg" | ".jpe" | ".jig" | ".jfif"
+  | ".png" | ".svg" | ".webp" ->
+      (* https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types#image_types *)
+      `Image
+  | _ -> `Image
+
 let resolve_image ps ~read_file s =
   let uri =
     match Asset.Uri.of_string s with
@@ -112,34 +123,65 @@ module Stage1 = struct
                   (Ast.Included ((mapped_blocks, (attrs, meta)), Meta.none))))
     | _ -> Mapper.default
 
-  let handle_image_inlining read_file current_path i ((l, (attrs, meta2)), meta)
-      =
-    let text = Inline.Link.text l in
-    let reference =
-      match Inline.Link.reference l with
-      | `Ref _ as r -> r
-      | `Inline ((ld, attrs), meta) ->
-          let label, layout, defined_label, (dest, meta_dest), title =
-            Link_definition.
-              (label ld, layout ld, defined_label ld, dest ld, title ld)
-          in
-          let dest =
-            match resolve_image current_path ~read_file dest with
-            | Asset.Remote s -> s
-            | Asset.Local { mime_type; content; path = _ } ->
-                let mime_type = Option.value ~default:"" mime_type in
-                let base64 = Base64.encode_string content in
-                Format.sprintf "data:%s;base64,%s" mime_type base64
-          in
-          let dest = (dest, meta_dest) in
-          let ld =
-            Link_definition.make ~layout ~defined_label ?label ~dest ?title ()
-          in
-          `Inline ((ld, attrs), meta)
+  let get_link_definition (defs : Cmarkit.Label.defs) l =
+    match Inline.Link.reference_definition defs l with
+    | Some (Cmarkit.Link_definition.Def ld) -> Some ld
+    | _ -> None
+
+  let classify_link_definition (ld : Cmarkit.Link_definition.t) attrs =
+    let has_attrs x = Cmarkit.Attributes.find x attrs |> Option.is_some in
+    if has_attrs "video" then `Video
+    else if has_attrs "image" then `Image
+    else
+      let d, _meta = Cmarkit.Link_definition.dest ld in
+      match Fpath.of_string d with
+      | Error _ -> `Image
+      | Ok p -> classify_image p
+
+  let update_link_definition current_path ~read_file ld =
+    let label, layout, defined_label, (dest, meta_dest), title =
+      Link_definition.(label ld, layout ld, defined_label ld, dest ld, title ld)
     in
-    let l = Inline.Link.make text reference in
-    let attrs = Mapper.map_attrs i attrs in
-    Mapper.ret (Inline.Image ((l, (attrs, meta2)), meta))
+    let dest =
+      match resolve_image current_path ~read_file dest with
+      | Asset.Remote s -> s
+      | Asset.Local { mime_type; content; path = _ } ->
+          let mime_type = Option.value ~default:"" mime_type in
+          let base64 = Base64.encode_string content in
+          Format.sprintf "data:%s;base64,%s" mime_type base64
+    in
+    let dest = (dest, meta_dest) in
+    Link_definition.make ~layout ~defined_label ?label ~dest ?title ()
+
+  let handle_image_inlining m defs read_file current_path
+      ((l, (attrs, meta2)), meta) =
+    let text = Inline.Link.text l in
+    let ( let* ) x f = match x with None -> Mapper.default | Some x -> f x in
+    let* kind, ld =
+      match get_link_definition defs l with
+      | None -> None
+      | Some ((ld, (attrs_ld, meta2)), meta) ->
+          let attrs =
+            Cmarkit.Attributes.merge ~base:attrs ~new_attrs:attrs_ld
+          in
+          let kind = classify_link_definition ld attrs in
+          let attrs_ld = Mapper.map_attrs m attrs_ld in
+          let ld = update_link_definition current_path ~read_file ld in
+          Some (kind, ((ld, (attrs_ld, meta2)), meta))
+    in
+    match kind with
+    | `Image ->
+        let reference = `Inline ld in
+        let l = Inline.Link.make text reference in
+        let attrs = Mapper.map_attrs m attrs in
+        Mapper.ret @@ Inline.Image ((l, (attrs, meta2)), meta)
+    | `Video ->
+        let dest = Cmarkit.Link_definition.dest (ld |> fst |> fst) |> fst in
+        Format.printf "Video: dest is : %s" dest;
+        let reference = `Inline ld in
+        let l = Inline.Link.make text reference in
+        let attrs = Mapper.map_attrs m attrs in
+        Mapper.ret @@ Ast.Video ((l, (attrs, meta2)), meta)
 
   let handle_dash_separated_blocks m (blocks, meta) =
     let div ((attrs, am), blocks) =
@@ -194,7 +236,7 @@ module Stage1 = struct
         let res = List.filter_map div res in
         Mapper.ret @@ Block.Blocks (res, meta)
 
-  let execute read_file =
+  let execute defs read_file =
     let current_path = Path_entering.make () in
     let block m = function
       | Block.Blocks bs -> handle_dash_separated_blocks m bs
@@ -205,7 +247,8 @@ module Stage1 = struct
       | _ -> Mapper.default
     in
     let inline i = function
-      | Inline.Image img -> handle_image_inlining read_file current_path i img
+      | Inline.Image img ->
+          handle_image_inlining i defs read_file current_path img
       | _ -> Mapper.default
     in
     let attrs = function
@@ -466,7 +509,8 @@ module Stage3 = struct
 end
 
 let of_cmarkit ~read_file md =
-  let md1 = Cmarkit.Mapper.map_doc (Stage1.execute read_file) md in
+  let defs = Cmarkit.Doc.defs md in
+  let md1 = Cmarkit.Mapper.map_doc (Stage1.execute defs read_file) md in
   let md2 = Cmarkit.Mapper.map_doc Stage2.execute md1 in
   let md3 = Cmarkit.Mapper.map_doc Stage3.execute md2 in
   md3
@@ -509,7 +553,10 @@ let to_cmarkit =
     | Ast.SlipScript _ -> Mapper.delete
     | _ -> Mapper.default
   in
-  let inline _i = function _ -> Mapper.default in
+  let inline m = function
+    | Ast.Video x -> `Map (Mapper.map_inline m (Inline.Image x))
+    | _ -> Mapper.default
+  in
   let attrs = function
     | `Kv (("up-at-unpause", m), v) -> Some (`Kv (("up", m), v))
     | `Kv (("center-at-unpause", m), v) -> Some (`Kv (("center", m), v))

@@ -11,6 +11,8 @@ type Block.t +=
   | Slip of Block.t attributed node
   | SlipScript of Block.Code_block.t attributed node
 
+type Inline.t += Video of Cmarkit.Inline.Link.t attributed node
+
 module Folder = struct
   let block_ext_default f acc = function
     | Slide (({ content = b; title = Some (title, _) }, _), _) ->
@@ -24,7 +26,12 @@ module Folder = struct
     | SlipScript _ -> acc
     | _ -> assert false
 
-  let make = Folder.make ~block_ext_default
+  let inline_ext_default f acc = function
+    | Video ((l, _), _) -> Folder.fold_inline f acc (Cmarkit.Inline.Link.text l)
+    | _ -> assert false
+
+  let make ~block ~inline () =
+    Folder.make ~block_ext_default ~inline_ext_default ~block ~inline ()
 end
 
 module Mapper = struct
@@ -58,5 +65,17 @@ module Mapper = struct
         Some (SlipScript ((s, attrs), meta))
     | _ -> assert false
 
-  let make = Mapper.make ~block_ext_default
+  let inline_ext_default m = function
+    | Video ((l, (attrs, a_meta)), meta) ->
+        let attrs = Mapper.map_attrs m attrs in
+        let text =
+          Option.value ~default:Inline.empty
+            (Mapper.map_inline m (Cmarkit.Inline.Link.text l))
+        in
+        let reference = Cmarkit.Inline.Link.reference l in
+        let l = Cmarkit.Inline.Link.make text reference in
+        Some (Video ((l, (attrs, a_meta)), meta))
+    | _ -> assert false
+
+  let make = Mapper.make ~block_ext_default ~inline_ext_default
 end
