@@ -100,6 +100,41 @@ let to_string = function
   | Ast.SlipScript _ -> "SlipScript"
   | _ -> "other"
 
+let link_dest_and_title ld =
+  let dest = match Cmarkit.Link_definition.dest ld with link, _ -> link in
+  let title =
+    match Cmarkit.Link_definition.title ld with
+    | None -> ""
+    | Some title -> String.concat "\n" (List.map (fun (_, (t, _)) -> t) title)
+  in
+  (dest, title)
+
+module C = Cmarkit_renderer.Context
+
+let video ?(close = " >") c i attrs =
+  let open Cmarkit in
+  match Inline.Link.reference_definition (C.get_defs c) i with
+  | Some (Link_definition.Def ((ld, (attributes, _)), _)) ->
+      let attributes = Attributes.merge ~base:attributes ~new_attrs:attrs in
+      let plain_text i =
+        let lines = Inline.to_plain_text ~break_on_soft:false i in
+        String.concat "\n" (List.map (String.concat "") lines)
+      in
+      let link, title = link_dest_and_title ld in
+      C.string c "<video src=\"";
+      Cmarkit_html.pct_encoded_string c link;
+      C.string c "\" alt=\"";
+      Cmarkit_html.html_escaped_string c (plain_text (Inline.Link.text i));
+      C.byte c '\"';
+      if false then C.string c " controls";
+      if title <> "" then (
+        C.string c " title=\"";
+        Cmarkit_html.html_escaped_string c title;
+        C.byte c '\"');
+      RenderAttrs.add_attrs c attributes;
+      C.string c close
+  | _ -> assert false
+
 let custom_html_renderer =
   let open Cmarkit_renderer in
   let open Cmarkit in
@@ -115,8 +150,9 @@ let custom_html_renderer =
           html_escaped_string c t;
           Context.string c "</span>";
           true
-          (* | Inline.Ext_attrs (attrs_span, _) ->    Context.string c "yooooo"; let (attrs, _) = Inline.Attributes_span.attrs attrs_span and i = Inline.Attributes_span.content attrs_span in     RenderAttrs.with_attrs_span c attrs (fun () -> Context.inline c i); *)
-          (*     true *)
+      | Ast.Video ((l, (attrs, _)), _) ->
+          video c l attrs;
+          true
       | _ -> false (* let the default HTML renderer handle that *)
     in
     let block c = function
