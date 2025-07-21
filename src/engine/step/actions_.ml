@@ -561,19 +561,25 @@ module Play_video = struct
     Undoable.List.iter
       (fun e ->
         let open Fut.Syntax in
-        let e = Brr_io.Media.El.of_el e in
-        let current = Brr_io.Media.El.current_time_s e in
-        let is_playing = not @@ Brr_io.Media.El.paused e in
-        let* res = Brr_io.Media.El.play e in
-        log_error res;
-        let undo () =
-          let+ res =
-            if is_playing then Brr_io.Media.El.play e
-            else Fut.return (Ok (Brr_io.Media.El.pause e))
-          in
+        let is_video = Jstr.equal (Jstr.v "video") @@ Brr.El.tag_name e in
+        if not is_video then (
+          Brr.Console.(
+            log [ "Action play-video has no effect on non-video elements:"; e ]);
+          Undoable.return ())
+        else
+          let e = Brr_io.Media.El.of_el e in
+          let current = Brr_io.Media.El.current_time_s e in
+          let is_playing = not @@ Brr_io.Media.El.paused e in
+          let* res = Brr_io.Media.El.play e in
           log_error res;
-          Brr_io.Media.El.set_current_time_s e current
-        in
-        Undoable.return ~undo ())
+          let undo () =
+            let+ res =
+              if is_playing then Brr_io.Media.El.play e
+              else Fut.return (Ok (Brr_io.Media.El.pause e))
+            in
+            log_error res;
+            Brr_io.Media.El.set_current_time_s e current
+          in
+          Undoable.return ~undo ())
       elems
 end
