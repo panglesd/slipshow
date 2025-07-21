@@ -334,6 +334,9 @@ Those are attributes that are interpreted by the compiler in a special way
 
   If a slide starts with a first level heading, this heading is used a the slides' title.
 
+``video`` and ``image``
+  Specify if a media element (``![](...)``) should be recognized as a video or an image. If absent, uses the file extension.
+
 Pause attributes
 ----------------
 
@@ -406,6 +409,9 @@ These attributes are actions that will be executed when a ``pause`` or ``step`` 
 
 ``unreveal``
   Hide the element. By "unrevealing" we mean the css styling ``opacity:0`` will be applied.  Possible to specify multiple ids.
+
+``play-video``
+  Play the video. The associated element/target id(s) need to be a video element: a ``![](path)`` where path is recognized as a video. Possible to specify multiple ids.
 
 ``exec``
   Execute the slipscript. Possible to specify multiple ids.
