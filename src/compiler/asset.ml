@@ -13,17 +13,7 @@ type t =
   | Local of { mime_type : string option; content : string; path : Fpath.t }
   | Remote of string
 
-(* https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types#image_types *)
-let mime_of_ext = function
-  | ".apng" -> Some "image/apng" (* Animated Portable Network Graphics (APNG) *)
-  | ".avif" -> Some "image/avif" (*  AV1 Image File Format (AVIF) *)
-  | ".gif" -> Some "image/gif" (* Graphics Interchange Format (GIF) *)
-  | ".jpeg" | ".jpg" | ".jpe" | ".jig" | ".jfif" ->
-      Some "image/jpeg" (* Joint Photographic Expert Group image (JPEG) *)
-  | ".png" -> Some "image/png" (* Portable Network Graphics (PNG) *)
-  | ".svg" -> Some "image/svg+xml" (* Scalable Vector Graphics (SVG) *)
-  | ".webp" -> Some "image/webp" (* Web Picture format (WEBP) *)
-  | _ -> None
+let mime_of_ext x = Magic_mime.lookup x
 
 let of_uri ~read_file s =
   match s with
@@ -32,7 +22,7 @@ let of_uri ~read_file s =
       let fp = Fpath.normalize p in
       match read_file fp with
       | Ok (Some content) ->
-          let mime_type = mime_of_ext (Fpath.get_ext fp) in
+          let mime_type = Some (mime_of_ext (Fpath.filename fp)) in
           Local { mime_type; content; path = fp }
       | Ok None -> Remote (Fpath.to_string p)
       | Error (`Msg e) ->
