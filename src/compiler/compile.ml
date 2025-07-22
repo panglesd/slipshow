@@ -1,6 +1,5 @@
 open Cmarkit
 
-type t = Doc.t
 type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
 
 (** The compilation from "pure" markdown cmarkit values to compiled slipshow
@@ -16,7 +15,8 @@ type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
     - Block quotes are turned into Divs,
     - [slip-script] code blocks are turned into slip scripts,
     - [includes] are included, with the first stage runned on them,
-    - Images are inlined.
+    - Images src are relativized,
+    - Images are turned into audio/video depending on the attributes/extension
     - Attributes are suffixed with [-at-unpause]
     - BlockS are grouped on divs by [---]
 
@@ -26,7 +26,9 @@ type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
     The third stage is doing the following:
     - [blockquote] attributed elements are turned into block quotes
     - [slip] attributed elements are turned into slips
-    - [slide] attributed elements are turned into slides *)
+    - [slide] attributed elements are turned into slides
+
+    The fourth stage is populating the media files map *)
 
 module Path_entering : sig
   (** Path are relative to the file we are reading. When we include a file we
@@ -55,7 +57,18 @@ end = struct
     let rec do_ l acc =
       match l with [] -> acc | p :: q -> do_ q (Fpath.( // ) p acc)
     in
-    do_ (path_stack |> Stack.to_seq |> List.of_seq) p
+    do_ (path_stack |> Stack.to_seq |> List.of_seq) p |> Fpath.normalize
+end
+
+module Id : sig
+  val gen : unit -> string
+end = struct
+  let i = ref 0
+
+  let gen () =
+    let res = "__slipshow__id__" ^ string_of_int !i in
+    incr i;
+    res
 end
 
 let classify_image p =
@@ -69,13 +82,10 @@ let classify_image p =
       `Image
   | _ -> `Image
 
-let resolve_image ps ~read_file s =
-  let uri =
-    match Asset.Uri.of_string s with
-    | Link s -> Asset.Uri.Link s
-    | Path p -> Path (Path_entering.relativize ps p)
-  in
-  Asset.of_uri ~read_file uri
+let resolve_file ps s =
+  match Asset.Uri.of_string s with
+  | Link s -> Asset.Uri.Link s
+  | Path p -> Path (Path_entering.relativize ps p)
 
 module Stage1 = struct
   let turn_block_quotes_into_divs m ((bq, (attrs, meta2)), meta) =
@@ -138,26 +148,18 @@ module Stage1 = struct
       | Error _ -> `Image
       | Ok p -> classify_image p
 
-  let update_link_definition current_path ~read_file ld =
+  let update_link_definition current_path ld =
     let label, layout, defined_label, (dest, meta_dest), title =
       Link_definition.(label ld, layout ld, defined_label ld, dest ld, title ld)
     in
-    let dest =
-      match resolve_image current_path ~read_file dest with
-      | Asset.Remote s -> s
-      | Asset.Local { mime_type; content; path = _ } ->
-          let mime_type = Option.value ~default:"" mime_type in
-          let base64 = Base64.encode_string content in
-          Format.sprintf "data:%s;base64,%s" mime_type base64
-    in
-    let dest = (dest, meta_dest) in
-    Link_definition.make ~layout ~defined_label ?label ~dest ?title ()
+    let uri = resolve_file current_path dest in
+    let dest = (Asset.Uri.to_string uri, meta_dest) in
+    (uri, Link_definition.make ~layout ~defined_label ?label ~dest ?title ())
 
-  let handle_image_inlining m defs read_file current_path
-      ((l, (attrs, meta2)), meta) =
+  let handle_image_inlining m defs current_path ((l, (attrs, meta2)), meta) =
     let text = Inline.Link.text l in
     let ( let* ) x f = match x with None -> Mapper.default | Some x -> f x in
-    let* kind, ld =
+    let* kind, ld, uri =
       match get_link_definition defs l with
       | None -> None
       | Some ((ld, (attrs_ld, meta2)), meta) ->
@@ -166,20 +168,16 @@ module Stage1 = struct
           in
           let kind = classify_link_definition ld attrs in
           let attrs_ld = Mapper.map_attrs m attrs_ld in
-          let ld = update_link_definition current_path ~read_file ld in
-          Some (kind, ((ld, (attrs_ld, meta2)), meta))
+          let dest, ld = update_link_definition current_path ld in
+          Some (kind, ((ld, (attrs_ld, meta2)), meta), dest)
     in
+    let reference = `Inline ld in
+    let l = Inline.Link.make text reference in
+    let attrs = Mapper.map_attrs m attrs in
+    let origin = ((l, (attrs, meta2)), meta) in
     match kind with
-    | `Image ->
-        let reference = `Inline ld in
-        let l = Inline.Link.make text reference in
-        let attrs = Mapper.map_attrs m attrs in
-        Mapper.ret @@ Inline.Image ((l, (attrs, meta2)), meta)
-    | `Video ->
-        let reference = `Inline ld in
-        let l = Inline.Link.make text reference in
-        let attrs = Mapper.map_attrs m attrs in
-        Mapper.ret @@ Ast.Video ((l, (attrs, meta2)), meta)
+    | `Image -> Mapper.ret @@ Ast.Image { Ast.uri; origin; id = Id.gen () }
+    | `Video -> Mapper.ret @@ Ast.Video { Ast.uri; origin; id = Id.gen () }
 
   let handle_dash_separated_blocks m (blocks, meta) =
     let div ((attrs, am), blocks) =
@@ -245,8 +243,7 @@ module Stage1 = struct
       | _ -> Mapper.default
     in
     let inline i = function
-      | Inline.Image img ->
-          handle_image_inlining i defs read_file current_path img
+      | Inline.Image img -> handle_image_inlining i defs current_path img
       | _ -> Mapper.default
     in
     let attrs = function
@@ -296,6 +293,9 @@ module Stage1 = struct
       | x -> Some x
     in
     Ast.Mapper.make ~block ~inline ~attrs ()
+
+  let execute defs read_file md =
+    Cmarkit.Mapper.map_doc (execute defs read_file) md
 end
 
 module Stage2 = struct
@@ -446,6 +446,8 @@ module Stage2 = struct
       | _ -> Mapper.default
     in
     Ast.Mapper.make ~block ()
+
+  let execute md = Cmarkit.Mapper.map_doc execute md
 end
 
 module Stage3 = struct
@@ -504,14 +506,48 @@ module Stage3 = struct
       | Some _ -> Mapper.default
     in
     Ast.Mapper.make ~block ()
+
+  let execute md = Cmarkit.Mapper.map_doc execute md
+end
+
+module Stage4 = struct
+  let execute =
+    let block _f _acc _c = Folder.default in
+    let inline _f acc = function
+      | Ast.Video { uri = Path p; id; _ }
+      | Ast.Audio { uri = Path p; id; _ }
+      | Ast.Image { uri = Path p; id; _ } ->
+          Folder.ret @@ Fpath.Map.add_to_list p id acc
+      | _ -> Folder.default
+    in
+    Ast.Folder.make ~block ~inline ()
+
+  let execute ~read_file md =
+    let asset_map = Cmarkit.Folder.fold_doc execute Fpath.Map.empty md in
+    let files =
+      Fpath.Map.filter_map
+        (fun path used_by ->
+          let read_file : file_reader = read_file in
+          let mode = `Base64 in
+          match read_file path with
+          | Ok (Some content) -> Some { Ast.Files.content; mode; used_by; path }
+          | Ok None -> None
+          | Error (`Msg s) ->
+              Logs.warn (fun m ->
+                  m "Could not read file: %a. Considering it as an URL. (%s)"
+                    Fpath.pp path s);
+              None)
+        asset_map
+    in
+    { Ast.doc = md; files }
 end
 
 let of_cmarkit ~read_file md =
   let defs = Cmarkit.Doc.defs md in
-  let md1 = Cmarkit.Mapper.map_doc (Stage1.execute defs read_file) md in
-  let md2 = Cmarkit.Mapper.map_doc Stage2.execute md1 in
-  let md3 = Cmarkit.Mapper.map_doc Stage3.execute md2 in
-  md3
+  let md1 = Stage1.execute defs read_file md in
+  let md2 = Stage2.execute md1 in
+  let md3 = Stage3.execute md2 in
+  Stage4.execute ~read_file md3
 
 let compile ~attrs ?(read_file = fun _ -> Ok None) s =
   let open Cmarkit in
@@ -552,7 +588,10 @@ let to_cmarkit =
     | _ -> Mapper.default
   in
   let inline m = function
-    | Ast.Video x -> `Map (Mapper.map_inline m (Inline.Image x))
+    | Ast.Video { origin; _ }
+    | Ast.Audio { origin; _ }
+    | Ast.Image { origin; _ } ->
+        `Map (Mapper.map_inline m (Inline.Image origin))
     | _ -> Mapper.default
   in
   let attrs = function
@@ -566,4 +605,4 @@ let to_cmarkit =
   in
   Ast.Mapper.make ~block ~inline ~attrs ()
 
-let to_cmarkit sd = Cmarkit.Mapper.map_doc to_cmarkit sd
+let to_cmarkit { Ast.doc = sd; _ } = Cmarkit.Mapper.map_doc to_cmarkit sd

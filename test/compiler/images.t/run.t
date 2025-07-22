@@ -2,8 +2,6 @@ We can compile the file using the slip_of_mark binary
 
   $ slipshow compile slip.md
   slipshow: [WARNING] Could not read file: img.png. Considering it as an URL. (img.png: No such file or directory)
-  slipshow: [WARNING] Could not read file: img.png. Considering it as an URL. (img.png: No such file or directory)
-  slipshow: [WARNING] Could not read file: img.png. Considering it as an URL. (img.png: No such file or directory)
 
   $ cat slip.html | grep "<body>" -A 10
     <body>

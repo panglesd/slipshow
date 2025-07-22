@@ -62,6 +62,8 @@ module RenderAttrs = struct
     if Attributes.is_empty attrs then f ()
     else in_block c ~with_newline "span" attrs f
 
+  let () = ignore with_attrs_span
+
   let block_lines c = function
     (* newlines only between lines *)
     | [] -> ()
@@ -100,42 +102,43 @@ let to_string = function
   | Ast.SlipScript _ -> "SlipScript"
   | _ -> "other"
 
-let link_dest_and_title ld =
-  let dest = match Cmarkit.Link_definition.dest ld with link, _ -> link in
-  let title =
-    match Cmarkit.Link_definition.title ld with
-    | None -> ""
-    | Some title -> String.concat "\n" (List.map (fun (_, (t, _)) -> t) title)
-  in
-  (dest, title)
+let () = ignore to_string
 
 module C = Cmarkit_renderer.Context
 
-let video ?(close = " >") c i attrs =
-  let open Cmarkit in
-  match Inline.Link.reference_definition (C.get_defs c) i with
-  | Some (Link_definition.Def ((ld, (attributes, _)), _)) ->
-      let attributes = Attributes.merge ~base:attributes ~new_attrs:attrs in
-      let plain_text i =
-        let lines = Inline.to_plain_text ~break_on_soft:false i in
-        String.concat "\n" (List.map (String.concat "") lines)
-      in
-      let link, title = link_dest_and_title ld in
-      C.string c "<video src=\"";
-      Cmarkit_html.pct_encoded_string c link;
-      C.string c "\" alt=\"";
-      Cmarkit_html.html_escaped_string c (plain_text (Inline.Link.text i));
-      C.byte c '\"';
-      if false then C.string c " controls";
-      if title <> "" then (
-        C.string c " title=\"";
-        Cmarkit_html.html_escaped_string c title;
-        C.byte c '\"');
-      RenderAttrs.add_attrs c attributes;
-      C.string c close
-  | _ -> assert false
+let src uri files =
+  match uri with
+  | Asset.Uri.Link l -> l
+  | Path p -> (
+      match Fpath.Map.find_opt p (files : Ast.Files.map) with
+      | None -> Fpath.to_string p
+      | Some { content; mode = `Base64; _ } ->
+          let mime_type = Magic_mime.lookup (Fpath.filename p) in
+          let base64 = Base64.encode_string content in
+          Format.sprintf "data:%s;base64,%s" mime_type base64
+      | Some { mode = `BlobURL; _ } ->
+          failwith "TODO: BlobURL embedding not implemented yet")
 
-let custom_html_renderer =
+(* Inspired from Cmarkit's image rendering *)
+let media ?(close = " >") ~media_name c ~uri ~id:_ ~files i attrs =
+  let open Cmarkit in
+  let src = src uri files in
+  let plain_text i =
+    let lines = Inline.to_plain_text ~break_on_soft:false i in
+    String.concat "\n" (List.map (String.concat "") lines)
+  in
+  C.byte c '<';
+  C.string c media_name;
+  C.string c " src=\"";
+  Cmarkit_html.pct_encoded_string c src;
+  C.string c "\" alt=\"";
+  Cmarkit_html.html_escaped_string c (plain_text (Inline.Link.text i));
+  C.byte c '\"';
+  if false then C.string c " controls";
+  RenderAttrs.add_attrs c attrs;
+  C.string c close
+
+let custom_html_renderer (files : Ast.Files.map) =
   let open Cmarkit_renderer in
   let open Cmarkit in
   let open Cmarkit_html in
@@ -150,8 +153,14 @@ let custom_html_renderer =
           html_escaped_string c t;
           Context.string c "</span>";
           true
-      | Ast.Video ((l, (attrs, _)), _) ->
-          video c l attrs;
+      | Ast.Video { uri; id; origin = (l, (attrs, _)), _ } ->
+          media ~media_name:"video" c ~uri ~id ~files l attrs;
+          true
+      | Ast.Image { uri; id; origin = (l, (attrs, _)), _ } ->
+          media ~media_name:"img" c ~uri ~id ~files l attrs;
+          true
+      | Ast.Audio { uri; id; origin = (l, (attrs, _)), _ } ->
+          media ~media_name:"audio" c ~uri ~id ~files l attrs;
           true
       | _ -> false (* let the default HTML renderer handle that *)
     in
@@ -162,9 +171,9 @@ let custom_html_renderer =
             let contains_multiple_blocks =
               let is_multiple l =
                 l
-                |> List.filter_map (function
-                     | Block.Blank_line _ -> None
-                     | x -> Some x)
+                |> List.filter (function
+                     | Block.Blank_line _ -> false
+                     | _ -> true)
                 |> List.length |> ( <= ) 2
               in
               match b with
@@ -223,3 +232,6 @@ let custom_html_renderer =
     make ~inline ~block ()
   in
   compose default custom_html
+
+let to_html_string (doc : Ast.t) =
+  Cmarkit_renderer.doc_to_string (custom_html_renderer doc.files) doc.doc
