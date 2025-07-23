@@ -1,1 +1,0 @@
-(library (name cmarkit) (package slipshow) (wrapped false) (flags -w -26-27))

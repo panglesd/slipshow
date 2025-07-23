@@ -2092,6 +2092,11 @@ module El : sig
   val is_el : t -> bool
   (** [is_el e] is [true] iff [e] is an element node. *)
 
+  val is_content_editable : t -> bool
+  (** [is_content_editable e] is [true] iff the content of [e] is editable (see
+      {{:https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/isContentEditable}the
+      relevant doc}). *)
+
   val tag_name : t -> tag_name
   (** [name e] is the tag name of element [e] lowercased. For {!is_txt}
       nodes this returns ["#text"]. *)
@@ -2390,6 +2395,21 @@ module El : sig
       to [e] in the document it belongs to. This listens on the
       document for the next {!Ev.pointerlockchange} and
       {!Ev.pointerlockerror} to resolve the future appropriately. *)
+
+  (** {1:shadowroot Shadow root} *)
+
+  module Shadow_root : sig
+    type t
+
+    val active_element : t -> el option
+
+    (**/**)
+    include Jv.CONV with type t := t
+    (**/**)
+
+  end
+
+  val shadow_root : t -> Shadow_root.t option
 
   (** {1:fullscreen Fullscreen} *)
 
