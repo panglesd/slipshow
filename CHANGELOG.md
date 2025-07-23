@@ -6,6 +6,10 @@
 
 - Add support for videos (#139)
 
+### Engine
+
+- Fix compatibility of slipshow and editable content (#141)
+
 ## [v0.4.1] (Wednesday 16th July, 2025)
 
 ### Engine

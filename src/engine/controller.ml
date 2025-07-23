@@ -4,10 +4,41 @@ let keyboard_setup (window : Universe.Window.t) =
     let key = ev |> Brr.Ev.as_type |> Brr.Ev.Keyboard.key |> Jstr.to_string in
     let current_coord = Universe.State.get_coord () in
     let () =
-      let check_ctrl_key f =
-        if ev |> Brr.Ev.as_type |> Brr.Ev.Keyboard.ctrl_key then () else f ()
+      let check_modif_key modif f =
+        if ev |> Brr.Ev.as_type |> modif then () else f ()
       in
-      check_ctrl_key @@ fun () ->
+      let check_textarea f =
+        (* This checks that we are not typing in a text input, to allow for editing *)
+        let is_editable active_elem =
+          if Brr.El.is_content_editable active_elem then true
+          else
+            let tag_name =
+              Brr.El.tag_name active_elem |> Jstr.lowercased |> Jstr.to_string
+            in
+            match tag_name with
+            | "input" | "textarea" | "select" | "button" -> true
+            | _ -> false
+        in
+        let active_elem = Brr.Document.active_el Brr.G.document in
+        (* We need to go inside shadow roots to check if focused content is editable *)
+        let rec check active_elem =
+          match active_elem with
+          | None -> f ()
+          | Some active_elem -> (
+              if is_editable active_elem then ()
+              else
+                match Brr.El.shadow_root active_elem with
+                | None -> f ()
+                | Some shadow_root ->
+                    check (Brr.El.Shadow_root.active_element shadow_root))
+        in
+        check active_elem
+      in
+      check_modif_key Brr.Ev.Keyboard.ctrl_key @@ fun () ->
+      check_modif_key Brr.Ev.Keyboard.shift_key @@ fun () ->
+      check_modif_key Brr.Ev.Keyboard.meta_key @@ fun () ->
+      check_textarea @@ fun () ->
+      Brr.Console.(log [ "event is"; ev ]);
       match key with
       | "t" -> Table_of_content.toggle_visibility ()
       | "w" -> Drawing.State.set_tool Pen

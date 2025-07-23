@@ -1247,6 +1247,7 @@ module El = struct
 
   let is_txt e = Jv.Int.get e "nodeType" = 3
   let is_el e = Jv.Int.get e "nodeType" = 1
+  let is_content_editable e = Jv.Bool.get e "isContentEditable"
   let tag_name e = Jstr.lowercased @@ Jv.Jstr.get e "nodeName"
   let has_tag_name n e = Jstr.equal n (tag_name e)
   let txt_text txt = match is_txt txt with
@@ -1482,6 +1483,18 @@ module El = struct
 
   let click e = ignore (Jv.call e "click" [||])
   let select_text e = ignore (Jv.call e "select" [||])
+
+  (* Shadow root *)
+
+  module Shadow_root = struct
+    type t = Jv.t
+
+    let active_element v = Jv.get v "activeElement" |> Jv.to_option of_jv
+
+    include (Jv.Id : Jv.CONV with type t := t)
+  end
+
+  let shadow_root e = Jv.get e "shadowRoot" |> Jv.to_option Shadow_root.of_jv
 
   (* Fullscreen *)
 
