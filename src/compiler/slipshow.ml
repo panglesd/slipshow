@@ -173,10 +173,8 @@ let delayed ?(frontmatter = Frontmatter.empty) ?(read_file = fun _ -> Ok None) s
     frontmatter.math_link (* |> Option.map (Asset.of_string ~read_file) *)
   in
   let md = Compile.compile ~attrs:toplevel_attributes ~read_file s in
-  let content =
-    Cmarkit_renderer.doc_to_string Renderers.custom_html_renderer md
-  in
-  let has_math = Folders.has_math md in
+  let content = Renderers.to_html_string md in
+  let has_math = Folders.has_math md.doc in
   embed_in_page ~dimension ~has_math ~math_link ~theme ~css_links content
 
 let add_starting_state (start, end_) starting_state =

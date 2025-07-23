@@ -7,6 +7,8 @@ module Uri = struct
       || String.starts_with ~prefix:"//" s
     then Link s
     else Path (Fpath.v s)
+
+  let to_string = function Link s -> s | Path p -> Fpath.to_string p
 end
 
 type t =
