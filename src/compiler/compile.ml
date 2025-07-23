@@ -511,13 +511,18 @@ module Stage3 = struct
 end
 
 module Stage4 = struct
+  let fpath_map_add_to_list x data m =
+    let open Fpath.Map in
+    let add = function None -> Some [ data ] | Some l -> Some (data :: l) in
+    update x add m
+
   let execute =
     let block _f _acc _c = Folder.default in
     let inline _f acc = function
       | Ast.Video { uri = Path p; id; _ }
       | Ast.Audio { uri = Path p; id; _ }
       | Ast.Image { uri = Path p; id; _ } ->
-          Folder.ret @@ Fpath.Map.add_to_list p id acc
+          Folder.ret @@ fpath_map_add_to_list p id acc
       | _ -> Folder.default
     in
     Ast.Folder.make ~block ~inline ()
