@@ -184,6 +184,10 @@ let custom_html_renderer (files : Ast.Files.map) =
             RenderAttrs.in_block c "div" attrs (fun () -> Context.block c b)
           else Context.block c b;
           true
+      | Ast.Carousel ((l, (attrs, _)), _) ->
+          RenderAttrs.in_block c "div" attrs (fun () ->
+              List.iter (Context.block c) l);
+          true
       | Ast.Slide (({ content; title }, (attrs, _)), _) ->
           let () =
             RenderAttrs.in_block c "div"
