@@ -27,6 +27,7 @@ type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
     - [blockquote] attributed elements are turned into block quotes
     - [slip] attributed elements are turned into slips
     - [slide] attributed elements are turned into slides
+    - [carousel] attributed elements are turned into carousels
 
     The fourth stage is populating the media files map *)
 
@@ -349,6 +350,8 @@ module Stage2 = struct
         Some (Ast.Slip ((slip, no_attrs), meta), attrs)
     | Ast.SlipScript ((slscr, attrs), meta) ->
         Some (Ast.SlipScript ((slscr, no_attrs), meta), attrs)
+    | Ast.Carousel ((c, attrs), meta) ->
+        Some (Ast.Carousel ((c, no_attrs), meta), attrs)
     | _ -> None
 
   (** Get the attributes of a cmarkit node, returns them and the element
@@ -403,6 +406,8 @@ module Stage2 = struct
         Ast.Slip ((slip, (merge attrs, meta_a)), meta)
     | Ast.SlipScript ((slscr, (attrs, meta_a)), meta) ->
         Ast.SlipScript ((slscr, (merge attrs, meta_a)), meta)
+    | Ast.Carousel ((c, (attrs, meta_a)), meta) ->
+        Ast.Carousel ((c, (merge attrs, meta_a)), meta)
     | _ -> b
 
   let execute =
@@ -503,6 +508,14 @@ module Stage3 = struct
       | Some (block, (attrs, meta2)) when Attributes.mem "slip" attrs ->
           let block, (attrs, meta) = map block (attrs, meta2) in
           Mapper.ret @@ Ast.Slip ((block, (attrs, meta)), Meta.none)
+      | Some (block, (attrs, meta2)) when Attributes.mem "carousel" attrs ->
+          let block, attrs = map block (attrs, meta2) in
+          let children =
+            match block with
+            | Ast.Div ((Block.Blocks (l, _), _), _) -> l
+            | _ -> [ block ]
+          in
+          Mapper.ret @@ Ast.Carousel ((children, attrs), Meta.none)
       | Some _ -> Mapper.default
     in
     Ast.Mapper.make ~block ()
@@ -590,6 +603,8 @@ let to_cmarkit =
         in
         Mapper.ret (Block.Blocks ([ b ], meta))
     | Ast.SlipScript _ -> Mapper.delete
+    | Ast.Carousel ((l, _), meta) ->
+        `Map (Mapper.map_block m (Block.Blocks (l, meta)))
     | _ -> Mapper.default
   in
   let inline m = function

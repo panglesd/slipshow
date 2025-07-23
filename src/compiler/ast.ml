@@ -10,7 +10,7 @@ type Block.t +=
   | Slide of slide attributed node
   | Slip of Block.t attributed node
   | SlipScript of Block.Code_block.t attributed node
-  | Carousel of Block.t attributed node list
+  | Carousel of Block.t list attributed node
 
 type media = {
   uri : Asset.Uri.t;
@@ -46,8 +46,8 @@ module Folder = struct
     | Slip ((b, _), _) ->
         Folder.fold_block f acc b
     | SlipScript _ -> acc
-    | Carousel l ->
-        List.fold_left (fun acc ((x, _), _) -> Folder.fold_block f acc x) acc l
+    | Carousel ((l, _), _) ->
+        List.fold_left (fun acc x -> Folder.fold_block f acc x) acc l
     | _ -> assert false
 
   let inline_ext_default f acc = function
@@ -90,14 +90,11 @@ module Mapper = struct
     | SlipScript ((s, attrs), meta) ->
         let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
         Some (SlipScript ((s, attrs), meta))
-    | Carousel l -> (
-        List.filter_map
-          (fun ((x, a), meta) ->
-            Mapper.map_block m x |> Option.map (fun x -> ((x, a), meta)))
-          l
-        |> function
+    | Carousel ((l, attrs), meta) -> (
+        let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
+        List.filter_map (Mapper.map_block m) l |> function
         | [] -> None
-        | l -> Some (Carousel l))
+        | l -> Some (Carousel ((l, attrs), meta)))
     | _ -> assert false
 
   let map_origin m ((l, (attrs, a_meta)), meta) =
