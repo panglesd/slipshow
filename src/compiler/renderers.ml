@@ -115,9 +115,7 @@ let src uri files =
       | Some { content; mode = `Base64; _ } ->
           let mime_type = Magic_mime.lookup (Fpath.filename p) in
           let base64 = Base64.encode_string content in
-          Format.sprintf "data:%s;base64,%s" mime_type base64
-      | Some { mode = `BlobURL; _ } ->
-          failwith "TODO: BlobURL embedding not implemented yet")
+          Format.sprintf "data:%s;base64,%s" mime_type base64)
 
 (* Inspired from Cmarkit's image rendering *)
 let media ?(close = " >") ~media_name c ~uri ~id:_ ~files i attrs =

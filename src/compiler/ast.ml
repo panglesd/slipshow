@@ -20,7 +20,7 @@ type media = {
 type Inline.t += Image of media | Video of media | Audio of media
 
 module Files = struct
-  type mode = [ `Base64 | `BlobURL ]
+  type mode = [ `Base64 ]
 
   type t = {
     path : Fpath.t;
