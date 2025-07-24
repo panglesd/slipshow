@@ -185,8 +185,26 @@ let custom_html_renderer (files : Ast.Files.map) =
           else Context.block c b;
           true
       | Ast.Carousel ((l, (attrs, _)), _) ->
+          let attrs =
+            Attributes.add_class attrs ("slipshow__carousel", Meta.none)
+          in
+          let children_attrs =
+            Attributes.make
+              ~class':[ ("slipshow__carousel_children", Meta.none) ]
+              ()
+          in
           RenderAttrs.in_block c "div" attrs (fun () ->
-              List.iter (Context.block c) l);
+              List.iteri
+                (fun i b ->
+                  let attrs =
+                    if i = 0 then
+                      Attributes.add_class children_attrs
+                        ("slipshow__carousel_active", Meta.none)
+                    else children_attrs
+                  in
+                  RenderAttrs.in_block c "div" attrs @@ fun () ->
+                  Context.block c b)
+                l);
           true
       | Ast.Slide (({ content; title }, (attrs, _)), _) ->
           let () =
