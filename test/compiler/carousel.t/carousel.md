@@ -11,16 +11,16 @@
 >
 > Third
 
-{next-page="~n:2 id"}
+{change-page="~n:+2 id"}
 
-{next-page="~n:-2 id"}
+{change-page="~n:-2 id"}
 
-{next-page=id}
+{change-page="~n:3 id"}
 
-{next-page=id}
+{change-page="~n:2 id"}
 
-{next-page="~n:-1 id"}
+{change-page="~n:-1 id"}
 
-{next-page="~n:-1 id"}
+{change-page=id}
 
-{next-page=id}
+{change-page=id}

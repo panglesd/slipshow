@@ -659,31 +659,33 @@ module Play_video = struct
       elems
 end
 
-module Next_page = struct
-  type arg = { elems : Brr.El.t list; n : int }
+module Change_page = struct
+  type change = Absolute of int | Relative of int
+  type arg = { elems : Brr.El.t list; n : change }
   type args = arg list
 
-  let on = "next-page"
+  let on = "change-page"
+  let action_name = "change-page"
 
   let parse_args elem s =
     let ( let$ ) = Fun.flip Result.map in
-    let$ a, x =
-      Parse.parse
-        ~named:
-          [
-            ( "n",
-              fun x ->
-                x |> int_of_string_opt
-                |> Parse.option_to_error "Error during int parsing" );
-          ]
-        ~positional:Parse.id s
+    let parse_n s =
+      if String.length s = 0 then Error (`Msg "this parameter cannot be empty")
+      else
+        match int_of_string_opt s with
+        | None -> Error (`Msg "Could not parse parameter as int")
+        | Some x -> (
+            match s.[0] with
+            | '+' | '-' -> Ok (Relative x)
+            | _ -> Ok (Absolute x))
     in
+    let$ a, x = Parse.parse ~named:[ ("n", parse_n) ] ~positional:Parse.id s in
     List.map
       (fun {
              Parse.p_named = ([ n_opt ] : _ Parse.output_tuple);
              p_pos = elem_ids;
            } ->
-        let n = Option.value ~default:1 n_opt in
+        let n = Option.value ~default:(Relative 1) n_opt in
         let elems =
           match elem_ids with
           | [] -> [ elem ]
@@ -691,8 +693,6 @@ module Next_page = struct
         in
         { n; elems })
       (a :: x)
-
-  let action_name = "next-page"
 
   let do_ ~n elem =
     let check_carousel f =
@@ -702,8 +702,11 @@ module Next_page = struct
     check_carousel @@ fun () ->
     let children = Brr.El.children ~only_els:true elem in
     match
-      List.find_opt
-        (Brr.El.class' (Jstr.v "slipshow__carousel_active"))
+      List.find_mapi
+        (fun i x ->
+          if Brr.El.class' (Jstr.v "slipshow__carousel_active") x then
+            Some (i, x)
+          else None)
         children
     with
     | None -> (
@@ -711,18 +714,13 @@ module Next_page = struct
         | [] -> Undoable.return ()
         | c :: _ ->
             Undoable.Browser.set_class "slipshow__carousel_active" true c)
-    | Some active_elem ->
-        let loop f x n =
-          List.fold_left
-            (fun x _ -> Option.value ~default:x (f x))
-            x
-            (List.init n (fun _ -> ()))
+    | Some (i, active_elem) ->
+        let new_index =
+          match n with Absolute i -> i - 1 | Relative r -> i + r
         in
-        let n, sibling =
-          if n < 0 then (-n, Brr.El.previous_sibling)
-          else (n, Brr.El.next_sibling)
-        in
-        let next = loop sibling active_elem n in
+        let new_index = Int.max 0 new_index in
+        let new_index = Int.min (List.length children - 1) new_index in
+        let next = List.nth children new_index in
         let> () =
           Undoable.Browser.set_class "slipshow__carousel_active" false
             active_elem
