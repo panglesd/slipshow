@@ -24,6 +24,6 @@
 }
 
 .slipshow__carousel > .slipshow__carousel_children:not(.slipshow__carousel_active) {
-  position: relative;
+  position: absolute;
   visibility: hidden;
 }

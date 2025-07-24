@@ -4,7 +4,49 @@ open Undoable.Syntax
    only one [Action] module (and not an [Actions] and an [Actions_]) then
    [Actions] would depend on [Javascrip_api] which would depend on [Actions]. *)
 
-module Parse = struct
+module Parse : sig
+  val id : string -> Jstr.t
+
+  type 'a description_named_atom =
+    string * (string -> ('a, [ `Msg of string ]) result)
+
+  type _ descr_tuple =
+    | [] : unit descr_tuple
+    | ( :: ) :
+        'a description_named_atom * 'b descr_tuple
+        -> ('a * 'b) descr_tuple
+
+  type _ output_tuple =
+    | [] : unit output_tuple
+    | ( :: ) : 'a option * 'b output_tuple -> ('a * 'b) output_tuple
+
+  type 'a non_empty_list = 'a * 'a list
+
+  type ('named, 'positional) parsed = {
+    p_named : 'named output_tuple;
+    p_pos : 'positional list;
+  }
+
+  val parse :
+    named:'named descr_tuple ->
+    positional:(string -> 'pos) ->
+    string ->
+    (('named, 'pos) parsed non_empty_list, [> `Msg of string ]) result
+
+  val merge_positional : (unit, 'a) parsed * (unit, 'a) parsed list -> 'a list
+  val require_single_action : action_name:string -> 'a * 'b list -> 'a
+  val require_single_positional : action_name:string -> 'a list -> 'a option
+
+  val no_args :
+    action_name:string -> 'a -> string -> (unit, [> `Msg of string ]) result
+
+  val parse_only_els :
+    Brr.El.t -> string -> (Brr.El.t list, [> `Msg of string ]) result
+
+  val option_to_error : 'a -> 'b option -> ('b, [> `Msg of 'a ]) result
+  val duration : string * (string -> (float, [> `Msg of string ]) result)
+  val margin : string * (string -> (float, [> `Msg of string ]) result)
+end = struct
   let parse_string s =
     let is_ws idx = match s.[idx] with '\n' | ' ' -> true | _ -> false in
     let is_alpha idx =
@@ -153,7 +195,8 @@ module Parse = struct
 
   let id x = Jstr.of_string ("#" ^ x)
 
-  type 'a description_named_atom = string * (string -> 'a)
+  type 'a description_named_atom =
+    string * (string -> ('a, [ `Msg of string ]) result)
 
   type _ descr_tuple =
     | [] : unit descr_tuple
@@ -165,6 +208,13 @@ module Parse = struct
     | [] : unit output_tuple
     | ( :: ) : 'a option * 'b output_tuple -> ('a * 'b) output_tuple
 
+  type 'a non_empty_list = 'a * 'a list
+
+  type ('named, 'positional) parsed = {
+    p_named : 'named output_tuple;
+    p_pos : 'positional list;
+  }
+
   let parsed_name (description_name, description_convert) action =
     Smap.find_opt description_name action.named
     |> Option.map description_convert
@@ -174,23 +224,34 @@ module Parse = struct
     match descriptions with
     | [] -> []
     | description :: rest ->
-        parsed_name description action :: parsed_names action rest
+        let parsed =
+          match parsed_name description action with
+          | None -> None
+          | Some (Error (`Msg s)) ->
+              Logs.warn (fun m -> m "Could not parse argument: %s" s);
+              None
+          | Some (Ok a) -> Some a
+        in
+        parsed :: parsed_names action rest
 
   let parse_atom ~named ~positional action =
-    let named = parsed_names action named in
-    let positional = List.map positional action.positional in
-    (named, positional)
+    let p_named = parsed_names action named in
+    let p_pos = List.map positional action.positional in
+    { p_named; p_pos }
 
-  let parse ~named ~positional s =
+  let parse ~named ~positional s :
+      (('named, 'pos) parsed non_empty_list, _) result =
     let+ parsed_string = parse_string s in
     List.map (parse_atom ~named ~positional) parsed_string |> function
     | [] ->
         assert false
         (* An empty string would be parsed as [ [[None; None; ...], []] ] *)
-    | a :: rest -> (a, rest)
+    | a :: rest -> ((a, rest) : _ non_empty_list)
 
-  let merge_positional ((([] : _ output_tuple), p), x) =
-    p @ List.concat_map (fun (([] : _ output_tuple), p) -> p) x
+  let merge_positional (h, t) =
+    List.concat_map
+      (fun { p_named = ([] : _ output_tuple); p_pos = p } -> p)
+      (h :: t)
 
   let require_single_action ~action_name x =
     match x with
@@ -222,7 +283,7 @@ module Parse = struct
     let ( let$ ) = Fun.flip Result.map in
     let$ x = parse ~named:[] ~positional:id s in
     match x with
-    | ([], []), [] -> ()
+    | { p_named = []; p_pos = [] }, [] -> ()
     | _ ->
         Logs.warn (fun m ->
             m "The %s action does not accept any argument" action_name)
@@ -234,8 +295,21 @@ module Parse = struct
     | [] -> List.[ elem ]
     | x -> List.filter_map Brr.El.find_first_by_selector x
 
-  let duration = ("duration", Float.of_string)
-  let margin = ("margin", Float.of_string)
+  let option_to_error error = function
+    | Some x -> Ok x
+    | None -> Error (`Msg error)
+
+  let duration =
+    ( "duration",
+      fun x ->
+        x |> Float.of_string_opt |> option_to_error "Error during float parsing"
+    )
+
+  let margin =
+    ( "margin",
+      fun x ->
+        x |> Float.of_string_opt |> option_to_error "Error during float parsing"
+    )
 end
 
 module type S = sig
@@ -350,7 +424,7 @@ struct
       Parse.parse ~named:[ Parse.duration; Parse.margin ] ~positional:Parse.id s
     in
     match Parse.require_single_action ~action_name:X.action_name x with
-    | [ duration; margin ], positional -> (
+    | { p_named = [ duration; margin ]; p_pos = positional } -> (
         match
           Parse.require_single_positional ~action_name:X.action_name positional
         with
@@ -485,8 +559,9 @@ module Focus = struct
       Parse.parse ~named:[ Parse.duration; Parse.margin ] ~positional:Parse.id s
     in
     match Parse.require_single_action ~action_name x with
-    | [ duration; margin ], [] -> { elems = [ elem ]; duration; margin }
-    | [ duration; margin ], positional ->
+    | { p_named = [ duration; margin ]; p_pos = [] } ->
+        { elems = [ elem ]; duration; margin }
+    | { p_named = [ duration; margin ]; p_pos = positional } ->
         let elems = List.filter_map Brr.El.find_first_by_selector positional in
         { elems; duration; margin }
 
@@ -582,4 +657,81 @@ module Play_video = struct
           in
           Undoable.return ~undo ())
       elems
+end
+
+module Next_page = struct
+  type arg = { elems : Brr.El.t list; n : int }
+  type args = arg list
+
+  let on = "next-page"
+
+  let parse_args elem s =
+    let ( let$ ) = Fun.flip Result.map in
+    let$ a, x =
+      Parse.parse
+        ~named:
+          [
+            ( "n",
+              fun x ->
+                x |> int_of_string_opt
+                |> Parse.option_to_error "Error during int parsing" );
+          ]
+        ~positional:Parse.id s
+    in
+    List.map
+      (fun {
+             Parse.p_named = ([ n_opt ] : _ Parse.output_tuple);
+             p_pos = elem_ids;
+           } ->
+        let n = Option.value ~default:1 n_opt in
+        let elems =
+          match elem_ids with
+          | [] -> [ elem ]
+          | _ -> List.filter_map Brr.El.find_first_by_selector elem_ids
+        in
+        { n; elems })
+      (a :: x)
+
+  let action_name = "next-page"
+
+  let do_ ~n elem =
+    let check_carousel f =
+      if Brr.El.class' (Jstr.v "slipshow__carousel") elem then f ()
+      else Undoable.return ()
+    in
+    check_carousel @@ fun () ->
+    let children = Brr.El.children ~only_els:true elem in
+    match
+      List.find_opt
+        (Brr.El.class' (Jstr.v "slipshow__carousel_active"))
+        children
+    with
+    | None -> (
+        match children with
+        | [] -> Undoable.return ()
+        | c :: _ ->
+            Undoable.Browser.set_class "slipshow__carousel_active" true c)
+    | Some active_elem ->
+        let loop f x n =
+          List.fold_left
+            (fun x _ -> Option.value ~default:x (f x))
+            x
+            (List.init n (fun _ -> ()))
+        in
+        let n, sibling =
+          if n < 0 then (-n, Brr.El.previous_sibling)
+          else (n, Brr.El.next_sibling)
+        in
+        let next = loop sibling active_elem n in
+        let> () =
+          Undoable.Browser.set_class "slipshow__carousel_active" false
+            active_elem
+        in
+        Undoable.Browser.set_class "slipshow__carousel_active" true next
+
+  let do_ action =
+    let elems = action.elems in
+    Undoable.List.iter (do_ ~n:action.n) elems
+
+  let do_ _window actions = Undoable.List.iter do_ actions
 end

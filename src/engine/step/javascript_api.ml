@@ -60,6 +60,14 @@ let play_video window undos_ref =
   let elems = Jv.to_list Brr.El.of_jv elems in
   register_undo undos_ref @@ fun () -> Actions.Play_video.do_ window elems
 
+let next_page window undos_ref =
+  Jv.callback ~arity:2 @@ fun elems n ->
+  let elems = Jv.to_list Brr.El.of_jv elems in
+  let n = Jv.to_option Jv.to_int n in
+  let n = Option.value ~default:1 n in
+  let arg = { Actions.Next_page.n; elems } in
+  register_undo undos_ref @@ fun () -> Actions.Next_page.do_ window [ arg ]
+
 let on_undo =
   one_arg Fun.id @@ fun callback ->
   let undo () = Fut.return @@ ignore @@ Jv.apply callback [||] in
@@ -109,4 +117,5 @@ let slip window undos_ref =
       ("setClass", set_class undos_ref);
       ("setProp", set_prop undos_ref);
       ("playVideo", play_video window undos_ref);
+      ("nextPage", next_page window undos_ref);
     |]
