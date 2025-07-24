@@ -38,7 +38,6 @@ let keyboard_setup (window : Universe.Window.t) =
       check_modif_key Brr.Ev.Keyboard.shift_key @@ fun () ->
       check_modif_key Brr.Ev.Keyboard.meta_key @@ fun () ->
       check_textarea @@ fun () ->
-      Brr.Console.(log [ "event is"; ev ]);
       match key with
       | "t" -> Table_of_content.toggle_visibility ()
       | "w" -> Drawing.State.set_tool Pen
