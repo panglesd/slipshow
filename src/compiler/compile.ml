@@ -481,7 +481,7 @@ module Stage3 = struct
 
   let execute =
     let block m c =
-      let map block (attrs, meta2) =
+      let map ~may_enter block (attrs, meta2) =
         let b =
           match Mapper.map_block m block with
           | None -> Block.empty
@@ -489,8 +489,9 @@ module Stage3 = struct
         in
         let attrs =
           if
-            Attributes.mem "no-enter" attrs
-            || Attributes.mem "enter-at-unpause" attrs
+            (Attributes.mem "no-enter" attrs
+            || Attributes.mem "enter-at-unpause" attrs)
+            || not may_enter
           then attrs
           else Attributes.add ("enter-at-unpause", Meta.none) None attrs
         in
@@ -500,19 +501,19 @@ module Stage3 = struct
       match Stage2.get_attribute c with
       | None -> Mapper.default
       | Some (block, (attrs, meta2)) when Attributes.mem "blockquote" attrs ->
-          let block, attrs = map block (attrs, meta2) in
+          let block, attrs = map ~may_enter:false block (attrs, meta2) in
           let block = Block.Block_quote.make block in
           Mapper.ret @@ Block.Block_quote ((block, attrs), Meta.none)
       | Some (block, (attrs, meta2)) when Attributes.mem "slide" attrs ->
-          let block, attrs = map block (attrs, meta2) in
+          let block, attrs = map ~may_enter:true block (attrs, meta2) in
           let block, title = extract_title block in
           Mapper.ret
           @@ Ast.Slide (({ content = block; title }, attrs), Meta.none)
       | Some (block, (attrs, meta2)) when Attributes.mem "slip" attrs ->
-          let block, (attrs, meta) = map block (attrs, meta2) in
+          let block, (attrs, meta) = map ~may_enter:true block (attrs, meta2) in
           Mapper.ret @@ Ast.Slip ((block, (attrs, meta)), Meta.none)
       | Some (block, (attrs, meta2)) when Attributes.mem "carousel" attrs ->
-          let block, attrs = map block (attrs, meta2) in
+          let block, attrs = map ~may_enter:false block (attrs, meta2) in
           let children =
             match block with
             | Ast.Div ((Block.Blocks (l, _), _), _) -> l
