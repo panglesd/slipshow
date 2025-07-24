@@ -57,9 +57,14 @@ module Execute : S with type args = Brr.El.t list
 module Play_media : S with type args = Brr.El.t list
 
 module Change_page : sig
-  type change = Absolute of int | Relative of int
-  type arg = { elems : Brr.El.t list; n : change }
-  type args = arg list
+  type change = Absolute of int | Relative of int | All
+
+  type args = {
+    elem : Brr.El.t;
+    n : change list;
+    original_elem : Brr.El.t;
+    original_id : string option;
+  }
 
   include S with type args := args
 end
