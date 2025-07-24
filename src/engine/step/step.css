@@ -22,3 +22,8 @@
   border-radius: 5px;
   cursor: pointer;
 }
+
+.slipshow__carousel > .slipshow__carousel_children:not(.slipshow__carousel_active) {
+  position: relative;
+  visibility: hidden;
+}
