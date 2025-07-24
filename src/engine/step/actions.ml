@@ -63,4 +63,5 @@ let all =
     (module Unemph : S);
     (module Execute : S);
     (module Play_media : S);
+    (module Next_page : S);
   ]

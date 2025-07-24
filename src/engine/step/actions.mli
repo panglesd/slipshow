@@ -54,5 +54,13 @@ end
 
 module Unfocus : S with type args = unit
 module Execute : S with type args = Brr.El.t list
+module Play_media : S with type args = Brr.El.t list
+
+module Next_page : sig
+  type arg = { elems : Brr.El.t list; n : int }
+  type args = arg list
+
+  include S with type args := args
+end
 
 val all : (module S) list
