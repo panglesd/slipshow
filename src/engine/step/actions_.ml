@@ -95,7 +95,10 @@ end = struct
       let rec do_ acc idx =
         match parser idx with
         | None -> (List.rev acc, idx)
-        | Some (x, idx) -> do_ (x :: acc) idx
+        | Some (x, idx') ->
+            if idx' = idx then
+              failwith "Parser did not consume input; infinite loop detected"
+            else do_ (x :: acc) idx'
       in
       do_ [] idx
     in
@@ -124,7 +127,7 @@ end = struct
     let parse_semicolon idx =
       let idx = consume_ws idx in
       match s.[idx] with
-      | ';' -> Some ((), idx)
+      | ';' -> Some ((), idx + 1)
       | (exception Invalid_argument _) | _ -> None
     in
     let parse_positional idx =
