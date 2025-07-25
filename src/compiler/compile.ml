@@ -78,6 +78,7 @@ let classify_image p =
   | ".mov" | ".webm" ->
       `Video
   | ".aac" | ".flac" | ".mp3" | ".oga" | ".wav" -> `Audio
+  | ".pdf" -> `Pdf
   | ".apng" | ".avif" | ".gif" | ".jpeg" | ".jpg" | ".jpe" | ".jig" | ".jfif"
   | ".png" | ".svg" | ".webp" ->
       (* https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types#image_types *)
@@ -182,6 +183,7 @@ module Stage1 = struct
     | `Image -> Mapper.ret @@ Ast.Image { Ast.uri; origin; id = Id.gen () }
     | `Video -> Mapper.ret @@ Ast.Video { Ast.uri; origin; id = Id.gen () }
     | `Audio -> Mapper.ret @@ Ast.Audio { Ast.uri; origin; id = Id.gen () }
+    | `Pdf -> Mapper.ret @@ Ast.Pdf { Ast.uri; origin; id = Id.gen () }
 
   let handle_dash_separated_blocks m (blocks, meta) =
     let div ((attrs, am), blocks) =
@@ -537,6 +539,7 @@ module Stage4 = struct
     let block _f _acc _c = Folder.default in
     let inline _f acc = function
       | Ast.Video { uri = Path p; id; _ }
+      | Ast.Pdf { uri = Path p; id; _ }
       | Ast.Audio { uri = Path p; id; _ }
       | Ast.Image { uri = Path p; id; _ } ->
           Folder.ret @@ fpath_map_add_to_list p id acc
@@ -614,6 +617,7 @@ let to_cmarkit =
   let inline m = function
     | Ast.Video { origin; _ }
     | Ast.Audio { origin; _ }
+    | Ast.Pdf { origin; _ }
     | Ast.Image { origin; _ } ->
         `Map (Mapper.map_inline m (Inline.Image origin))
     | _ -> Mapper.default

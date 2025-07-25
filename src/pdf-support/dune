@@ -1,0 +1,4 @@
+(executable
+ (modes js)
+ (name pdf_support)
+ (libraries pdfjs_ocaml brr))
