@@ -60,14 +60,14 @@ let play_media window undos_ref =
   let elems = Jv.to_list Brr.El.of_jv elems in
   register_undo undos_ref @@ fun () -> Actions.Play_media.do_ window elems
 
-(* TODO *)
-(* let next_page window undos_ref = *)
-(*   Jv.callback ~arity:2 @@ fun elems n -> *)
-(*   let elems = Jv.to_list Brr.El.of_jv elems in *)
-(*   let n = Jv.to_option Jv.to_int n in *)
-(*   let n = Option.value ~default:1 n in *)
-(*   let arg = { Actions.Change_page.n = Relative n; elems } in *)
-(*   register_undo undos_ref @@ fun () -> Actions.Change_page.do_ window [ arg ] *)
+let change_page _window undos_ref =
+  Jv.callback ~arity:2 @@ fun elem change ->
+  let target_elem = Brr.El.of_jv elem in
+  let change = Jv.to_string change in
+  register_undo undos_ref @@ fun () ->
+  Actions.Change_page.parse_change change
+  |> Undoable.Option.iter @@ fun change ->
+     Actions.Change_page.do_javascript_api ~target_elem ~change
 
 let on_undo =
   one_arg Fun.id @@ fun callback ->
@@ -121,5 +121,5 @@ let slip window undos_ref =
       ("setProp", set_prop undos_ref);
       ("playMedia", play_media window undos_ref);
       ("isFast", is_fast);
-      (* ("nextPage", next_page window undos_ref); *)
+      ("changePage", change_page window undos_ref);
     |]

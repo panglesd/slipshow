@@ -678,43 +678,39 @@ end
 module Change_page = struct
   type change = Absolute of int | Relative of int | All
 
-  type args = {
-    elem : Brr.El.t;
+  type arg = {
+    target_elem : Brr.El.t;
     n : change list;
-    original_elem : Brr.El.t;
     original_id : string option;
   }
 
+  type args = { original_elem : Brr.El.t; args : arg list }
+
   let on = "change-page"
   let action_name = "change-page"
+  let ( let+ ) x f = Result.map f x
+  let ( let* ) x f = Result.bind x f
 
-  let parse_args original_elem s =
-    let ( let+ ) = Fun.flip Result.map in
-    let ( let* ) = Result.bind in
-    let parse_n s =
-      let l =
-        String.split_on_char ' ' s
-        |> List.filter (fun x -> not @@ String.equal "" x)
-      in
-      l
-      |> List.filter_map (fun s ->
-             if String.equal "all" s then Some All
-             else
-               match int_of_string_opt s with
-               | None ->
-                   Brr.Console.(log [ "Could not parse parameter as int" ]);
-                   None
-               | Some x -> (
-                   match s.[0] with
-                   | '+' | '-' -> Some (Relative x)
-                   | _ -> Some (Absolute x)))
-      |> Result.ok
-    in
-    let* a = Parse.parse ~named:[ ("n", parse_n) ] ~positional:Fun.id s in
-    let { Parse.p_named = ([ n_opt ] : _ Parse.output_tuple); p_pos = elem_ids }
-        =
-      a |> Parse.require_single_action ~action_name
-    in
+  let handle_error = function
+    | Ok x -> Some x
+    | Error (`Msg x) ->
+        Brr.Console.(log [ x ]);
+        None
+
+  let parse_change s =
+    if String.equal "all" s then Some All
+    else
+      match int_of_string_opt s with
+      | None ->
+          Brr.Console.(log [ "Could not parse parameter as int" ]);
+          None
+      | Some x -> (
+          match s.[0] with
+          | '+' | '-' -> Some (Relative x)
+          | _ -> Some (Absolute x))
+
+  let parse_single_action original_elem
+      { Parse.p_named = ([ n_opt ] : _ Parse.output_tuple); p_pos = elem_ids } =
     let n = Option.value ~default:[ Relative 1 ] n_opt in
     let+ elem, elem_id =
       match elem_ids with
@@ -729,67 +725,99 @@ module Change_page = struct
           | Some x -> Ok (x, Some id)
           | None -> Error (`Msg "No elem of id found"))
     in
-    { n; elem; original_elem; original_id = elem_id }
+    { n; target_elem = elem; original_id = elem_id }
 
-  let do_ _window ({ elem; n; original_elem; original_id } : args) =
+  let parse_n s =
+    let l =
+      String.split_on_char ' ' s
+      |> List.filter (fun x -> not @@ String.equal "" x)
+    in
+    l |> List.filter_map parse_change |> Result.ok
+
+  let parse_args original_elem s =
+    let+ ac, actions =
+      Parse.parse ~named:[ ("n", parse_n) ] ~positional:Fun.id s
+    in
+    let actions = ac :: actions in
+    let args =
+      List.filter_map
+        (fun action -> parse_single_action original_elem action |> handle_error)
+        actions
+    in
+    { args; original_elem }
+
+  let args_as_string args =
+    let arg_to_string { n; original_id; _ } =
+      let to_string = function
+        | All -> "all"
+        | Relative x when x < 0 -> string_of_int x
+        | Relative x -> "+" ^ string_of_int x
+        | Absolute x -> string_of_int x
+      in
+      let s = n |> List.map to_string |> String.concat " " in
+      let n = "~n:\"" ^ s ^ "\"" in
+      let original_id =
+        match original_id with None -> "" | Some s -> " " ^ s
+      in
+      n ^ original_id
+    in
+    args |> List.map arg_to_string |> String.concat " ; "
+
+  let do_1 ({ target_elem; n; _ } as arg) =
     let check_carousel f =
-      if Brr.El.class' (Jstr.v "slipshow__carousel") elem then f ()
-      else Undoable.return ()
+      if Brr.El.class' (Jstr.v "slipshow__carousel") target_elem then f ()
+      else Undoable.return None
     in
     check_carousel @@ fun () ->
-    let children = Brr.El.children ~only_els:true elem in
-    match
+    let children = Brr.El.children ~only_els:true target_elem in
+    let current_index =
       List.find_mapi
         (fun i x ->
           if Brr.El.class' (Jstr.v "slipshow__carousel_active") x then
             Some (i, x)
           else None)
         children
-    with
-    | None -> (
-        match children with
-        | [] -> Undoable.return ()
-        | c :: _ ->
-            Undoable.Browser.set_class "slipshow__carousel_active" true c)
-    | Some (i, active_elem) -> (
-        let ac = match n with [] -> Relative 1 | n :: _ -> n in
-        let new_index =
-          match ac with
-          | Absolute i -> i - 1
-          | Relative r -> i + r
-          | All -> i + 1
-        in
-        let new_index = Int.max 0 new_index in
-        let overflow = new_index = List.length children - 1 in
-        let new_index = Int.min (List.length children - 1) new_index in
-        let next = List.nth children new_index in
-        let> () =
-          Undoable.Browser.set_class "slipshow__carousel_active" false
-            active_elem
-        in
-        let> () =
-          Undoable.Browser.set_class "slipshow__carousel_active" true next
-        in
-        let new_n =
-          match n with
-          | [] -> []
-          | All :: _ as n when not overflow -> n
-          | _ :: n -> n
-        in
-        match new_n with
-        | [] -> Undoable.return ()
-        | _ :: _ ->
-            let to_string = function
-              | All -> "all"
-              | Relative x when x < 0 -> string_of_int x
-              | Relative x -> "+" ^ string_of_int x
-              | Absolute x -> string_of_int x
-            in
-            let s = new_n |> List.map to_string |> String.concat " " in
-            let n = "~n:\"" ^ s ^ "\"" in
-            let original_id =
-              match original_id with None -> "" | Some s -> " " ^ s
-            in
-            let v = n ^ original_id |> Jstr.v in
-            Undoable.Browser.set_at on (Some v) original_elem)
+    in
+    let new_index =
+      match (n, current_index) with
+      | Absolute i :: _, _ -> i - 1
+      | Relative r :: _, Some (i, _) -> i + r
+      | All :: _, Some (i, _) -> i + 1
+      | _ ->
+          Brr.Console.(log [ "Error during carousel" ]);
+          0
+    in
+    let new_index = Int.max 0 new_index in
+    let overflow = new_index = List.length children - 1 in
+    let new_index = Int.min (List.length children - 1) new_index in
+    let next = List.nth children new_index in
+    let> () =
+      current_index |> Option.to_list
+      |> Undoable.List.iter (fun (_, active_elem) ->
+             Undoable.Browser.set_class "slipshow__carousel_active" false
+               active_elem)
+    in
+    let> () =
+      Undoable.Browser.set_class "slipshow__carousel_active" true next
+    in
+    let new_n =
+      match n with
+      | [] -> []
+      | All :: _ as n when not overflow -> n
+      | _ :: n -> n
+    in
+    Undoable.return
+    @@ match new_n with [] -> None | new_n -> Some { arg with n = new_n }
+
+  let do_ _window { args; original_elem } =
+    let> args = Undoable.List.filter_map do_1 args in
+    match args with
+    | [] -> Undoable.return ()
+    | args ->
+        let new_v = args_as_string args in
+        Undoable.Browser.set_at on (Some (Jstr.v new_v)) original_elem
+
+  let do_javascript_api ~target_elem ~change =
+    let> _ = do_1 { target_elem; n = [ change ]; original_id = None } in
+    Undoable.return ()
 end
