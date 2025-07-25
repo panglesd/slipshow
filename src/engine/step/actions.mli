@@ -59,12 +59,18 @@ module Play_video : S with type args = Brr.El.t list
 module Change_page : sig
   type change = Absolute of int | Relative of int | All
 
-  type args = {
-    elem : Brr.El.t;
+  type arg = {
+    target_elem : Brr.El.t;
     n : change list;
-    original_elem : Brr.El.t;
     original_id : string option;
   }
+
+  type args = { original_elem : Brr.El.t; args : arg list }
+
+  val parse_change : string -> change option
+
+  val do_javascript_api :
+    target_elem:Brr.El.t -> change:change -> unit Undoable.t
 
   include S with type args := args
 end

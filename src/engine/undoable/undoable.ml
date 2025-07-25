@@ -10,6 +10,16 @@ module List = struct
         let> () = acc in
         f x)
       (return ()) l
+
+  let rec filter_map f = function
+    | [] -> return []
+    | x :: l -> (
+        let> res = f x in
+        match res with
+        | None -> filter_map f l
+        | Some v ->
+            let> res = filter_map f l in
+            return @@ (v :: res))
 end
 
 module Stack = struct
@@ -30,4 +40,8 @@ module Stack = struct
     | Some x as s ->
         Stack.push x stack;
         s
+end
+
+module Option = struct
+  let iter f = function None -> return () | Some x -> f x
 end
