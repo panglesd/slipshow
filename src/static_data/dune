@@ -109,6 +109,7 @@
  (preprocess
   (pps ppx_blob))
  (preprocessor_deps
+  ../pdf-support/pdf_support.bc.js
   ../../logo/favicon.ico
   ../engine/slipshow.js
   ../engine/slipshow-internal.css

@@ -80,6 +80,7 @@ let embed_in_page content ~has_math ~math_link ~css_links ~theme ~dimension =
   let width, height = dimension in
   let head = head ~has_math ~math_link ~css_links ~theme ~width ~height in
   let slipshow_js_element = slipshow_js_element None in
+  let pdf_support = Data_files.(read Pdf_support) in
   let start =
     Format.sprintf
       {|
@@ -107,9 +108,11 @@ let embed_in_page content ~has_math ~math_link ~css_links ~theme ~dimension =
     %s
     <!-- Start the presentation () -->
     <script>hljs.highlightAll();</script>
+    <script>%s</script>
+    <script>slipshow__do_pdf()</script>
     <script>
       startSlipshow(%d, %d,|}
-      head content slipshow_js_element width height
+      head content slipshow_js_element pdf_support width height
   in
   let end_ = {|);
     </script>

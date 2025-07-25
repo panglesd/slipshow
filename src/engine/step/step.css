@@ -27,3 +27,11 @@
   position: absolute;
   visibility: hidden;
 }
+
+[pdf] {
+    display:inline-block;
+}
+
+[pdf] canvas {
+    display: block;
+}

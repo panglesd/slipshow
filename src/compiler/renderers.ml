@@ -118,6 +118,41 @@ let src uri files =
           Format.sprintf "data:%s;base64,%s" mime_type base64)
 
 (* Inspired from Cmarkit's image rendering *)
+let pdf ?(close = " >") c ~uri ~id:_ ~files i attrs =
+  let open Cmarkit in
+  match uri with
+  | Asset.Uri.Link l ->
+      Logs.warn (fun m -> m "pdf does not work with urls: ignoring %s" l)
+  | Path p ->
+      let attrs =
+        Attributes.add_class attrs ("slipshow__carousel", Meta.none)
+      in
+      let src =
+        match Fpath.Map.find_opt p (files : Ast.Files.map) with
+        | None ->
+            Logs.warn (fun m -> m "No pdf found: %a" Fpath.pp p);
+            Fpath.to_string p
+        | Some { content; mode = `Base64; _ } ->
+            let base64 = Base64.encode_string content in
+            Format.sprintf "%s" base64
+      in
+      let plain_text i =
+        let lines = Inline.to_plain_text ~break_on_soft:false i in
+        String.concat "\n" (List.map (String.concat "") lines)
+      in
+      C.byte c '<';
+      C.string c "div pdf";
+      C.string c " pdf-src=\"";
+      Cmarkit_html.pct_encoded_string c src;
+      C.string c "\" alt=\"";
+      Cmarkit_html.html_escaped_string c (plain_text (Inline.Link.text i));
+      C.byte c '\"';
+      if false then C.string c " controls";
+      RenderAttrs.add_attrs c attrs;
+      C.string c close;
+      C.string c "</div>"
+
+(* Inspired from Cmarkit's image rendering *)
 let media ?(close = " >") ~media_name c ~uri ~id:_ ~files i attrs =
   let open Cmarkit in
   let src = src uri files in
@@ -150,6 +185,9 @@ let custom_html_renderer (files : Ast.Files.map) =
           Context.byte c '>';
           html_escaped_string c t;
           Context.string c "</span>";
+          true
+      | Ast.Pdf { uri; id; origin = (l, (attrs, _)), _ } ->
+          pdf c ~uri ~id ~files l attrs;
           true
       | Ast.Video { uri; id; origin = (l, (attrs, _)), _ } ->
           media ~media_name:"video" c ~uri ~id ~files l attrs;

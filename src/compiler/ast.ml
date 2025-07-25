@@ -18,7 +18,7 @@ type media = {
   origin : Cmarkit.Inline.Link.t attributed node;
 }
 
-type Inline.t += Image of media | Video of media | Audio of media
+type Inline.t += Image of media | Video of media | Audio of media | Pdf of media
 
 module Files = struct
   type mode = [ `Base64 ]
@@ -51,6 +51,7 @@ module Folder = struct
     | _ -> assert false
 
   let inline_ext_default f acc = function
+    | Pdf { origin = (l, _), _; uri = _; id = _ }
     | Audio { origin = (l, _), _; uri = _; id = _ }
     | Video { origin = (l, _), _; uri = _; id = _ }
     | Image { origin = (l, _), _; uri = _; id = _ } ->
@@ -108,6 +109,9 @@ module Mapper = struct
     ((l, (attrs, a_meta)), meta)
 
   let inline_ext_default m = function
+    | Pdf { origin; uri; id } ->
+        let origin = map_origin m origin in
+        Some (Pdf { origin; uri; id })
     | Video { origin; uri; id } ->
         let origin = map_origin m origin in
         Some (Video { origin; uri; id })
