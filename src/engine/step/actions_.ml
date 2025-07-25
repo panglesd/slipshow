@@ -1,5 +1,13 @@
 open Undoable.Syntax
 
+(** On an invalid selector, this function will raise. Since in this module ids
+    are user input, we valide them *)
+let find_first_by_selector ?root x =
+  try Brr.El.find_first_by_selector ?root x
+  with e ->
+    Brr.Console.(error [ e ]);
+    None
+
 (* We define the [Actions_] module to avoid a circular dependency: If we had
    only one [Action] module (and not an [Actions] and an [Actions_]) then
    [Actions] would depend on [Javascrip_api] which would depend on [Actions]. *)
@@ -296,7 +304,7 @@ end = struct
     let$ x = parse ~named:[] ~positional:id s in
     match merge_positional x with
     | [] -> List.[ elem ]
-    | x -> List.filter_map Brr.El.find_first_by_selector x
+    | x -> List.filter_map find_first_by_selector x
 
   let option_to_error error = function
     | Some x -> Ok x
@@ -433,7 +441,7 @@ struct
         with
         | None -> Ok { elem; duration; margin }
         | Some positional -> (
-            match Brr.El.find_first_by_selector positional with
+            match find_first_by_selector positional with
             | None ->
                 Error
                   (`Msg
@@ -565,7 +573,7 @@ module Focus = struct
     | { p_named = [ duration; margin ]; p_pos = [] } ->
         { elems = [ elem ]; duration; margin }
     | { p_named = [ duration; margin ]; p_pos = positional } ->
-        let elems = List.filter_map Brr.El.find_first_by_selector positional in
+        let elems = List.filter_map find_first_by_selector positional in
         { elems; duration; margin }
 
   let do_ window { margin; duration; elems } =
@@ -716,12 +724,12 @@ module Change_page = struct
       match elem_ids with
       | [] -> Ok (original_elem, None)
       | [ id ] -> (
-          Brr.El.find_first_by_selector ("#" ^ id |> Jstr.v) |> function
+          find_first_by_selector ("#" ^ id |> Jstr.v) |> function
           | Some x -> Ok (x, Some id)
           | None -> Error (`Msg "No elem of id found"))
       | id :: _ -> (
           Brr.Console.(log [ "Expected single id" ]);
-          Brr.El.find_first_by_selector ("#" ^ id |> Jstr.v) |> function
+          find_first_by_selector ("#" ^ id |> Jstr.v) |> function
           | Some x -> Ok (x, Some id)
           | None -> Error (`Msg "No elem of id found"))
     in
