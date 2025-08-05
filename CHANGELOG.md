@@ -9,6 +9,7 @@
 ### Engine
 
 - Fix compatibility of slipshow and editable content (#141)
+- Fix scroll bar appearing in drawing toolbox (#143)
 
 ## [v0.4.1] (Wednesday 16th July, 2025)
 
