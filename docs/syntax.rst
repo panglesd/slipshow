@@ -335,7 +335,7 @@ Those are attributes that are interpreted by the compiler in a special way
   If a slide starts with a first level heading, this heading is used a the slides' title.
 
 ``video``, ``audio`` and ``image``
-  Specify if a media element (``![](...)``) should be recognized as a video or an image. If absent, uses the file extension.
+  Specify if a media element (``![](...)``) should be recognized as a video or an image. If absent, uses the file extension. Add ``controls`` to it if you want to be able to control it with the mouse.
 
 Pause attributes
 ----------------
