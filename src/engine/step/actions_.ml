@@ -548,9 +548,9 @@ module Step = struct
   let do_ _ _ = Undoable.return ()
 end
 
-module Play_video = struct
-  let on = "play-video"
-  let action_name = "play-video"
+module Play_media = struct
+  let on = "play-media"
+  let action_name = "play-media"
 
   type args = Brr.El.t list
 
@@ -562,9 +562,14 @@ module Play_video = struct
       (fun e ->
         let open Fut.Syntax in
         let is_video = Jstr.equal (Jstr.v "video") @@ Brr.El.tag_name e in
-        if not is_video then (
+        let is_audio = Jstr.equal (Jstr.v "audio") @@ Brr.El.tag_name e in
+        if (not is_video) && not is_audio then (
           Brr.Console.(
-            log [ "Action play-video has no effect on non-video elements:"; e ]);
+            log
+              [
+                "Action play-media only has effect on video and audio elements:";
+                e;
+              ]);
           Undoable.return ())
         else
           let e = Brr_io.Media.El.of_el e in

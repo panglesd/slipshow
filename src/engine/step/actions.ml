@@ -62,5 +62,5 @@ let all =
     (module Emph : S);
     (module Unemph : S);
     (module Execute : S);
-    (module Play_video : S);
+    (module Play_media : S);
   ]

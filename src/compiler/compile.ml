@@ -76,6 +76,7 @@ let classify_image p =
   | ".3gp" | ".mpg" | ".mpeg" | ".mp4" | ".m4v" | ".m4p" | ".ogv" | ".ogg"
   | ".mov" | ".webm" ->
       `Video
+  | ".aac" | ".flac" | ".mp3" | ".oga" | ".wav" -> `Audio
   | ".apng" | ".avif" | ".gif" | ".jpeg" | ".jpg" | ".jpe" | ".jig" | ".jfif"
   | ".png" | ".svg" | ".webp" ->
       (* https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types#image_types *)
@@ -141,6 +142,7 @@ module Stage1 = struct
   let classify_link_definition (ld : Cmarkit.Link_definition.t) attrs =
     let has_attrs x = Cmarkit.Attributes.find x attrs |> Option.is_some in
     if has_attrs "video" then `Video
+    else if has_attrs "audio" then `Audio
     else if has_attrs "image" then `Image
     else
       let d, _meta = Cmarkit.Link_definition.dest ld in
@@ -178,6 +180,7 @@ module Stage1 = struct
     match kind with
     | `Image -> Mapper.ret @@ Ast.Image { Ast.uri; origin; id = Id.gen () }
     | `Video -> Mapper.ret @@ Ast.Video { Ast.uri; origin; id = Id.gen () }
+    | `Audio -> Mapper.ret @@ Ast.Audio { Ast.uri; origin; id = Id.gen () }
 
   let handle_dash_separated_blocks m (blocks, meta) =
     let div ((attrs, am), blocks) =
