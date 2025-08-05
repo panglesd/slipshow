@@ -99,16 +99,20 @@ module Mapper = struct
     let l = Cmarkit.Inline.Link.make text reference in
     ((l, (attrs, a_meta)), meta)
 
+  let map_media m { origin; uri; id } =
+    let origin = map_origin m origin in
+    { origin; uri; id }
+
   let inline_ext_default m = function
-    | Video { origin; uri; id } ->
-        let origin = map_origin m origin in
-        Some (Video { origin; uri; id })
-    | Audio { origin; uri; id } ->
-        let origin = map_origin m origin in
-        Some (Audio { origin; uri; id })
-    | Image { origin; uri; id } ->
-        let origin = map_origin m origin in
-        Some (Image { origin; uri; id })
+    | Video media ->
+        let media = map_media m media in
+        Some (Video media)
+    | Audio media ->
+        let media = map_media m media in
+        Some (Audio media)
+    | Image media ->
+        let media = map_media m media in
+        Some (Image media)
     | _ -> assert false
 
   let make = Mapper.make ~block_ext_default ~inline_ext_default
