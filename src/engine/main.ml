@@ -1,7 +1,14 @@
 let start ~width ~height ~id ~step =
+  let open Fut.Syntax in
+  let* _ : (unit, _) result =
+    let window = Brr.G.window |> Brr.Window.to_jv in
+    let do_pdf = Jv.get window "slipshow__do_pdf" in
+    match Jv.defined do_pdf with
+    | true -> Jv.apply do_pdf [||] |> Fut.of_promise ~ok:(fun _ -> ())
+    | false -> Fut.return (Ok ())
+  in
   Constants.set_height height;
   Constants.set_width width;
-  let open Fut.Syntax in
   let el =
     Brr.El.find_first_by_selector (Jstr.v "#slipshow-content") |> Option.get
   in

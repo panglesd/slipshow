@@ -88,6 +88,7 @@ let embed_in_page content ~has_math ~math_link ~css_links ~theme ~dimension =
 <html>
   <head>
     <meta charset="utf-8" />
+    <script>%s</script>
     %s
   </head>
   <body>
@@ -108,11 +109,9 @@ let embed_in_page content ~has_math ~math_link ~css_links ~theme ~dimension =
     %s
     <!-- Start the presentation () -->
     <script>hljs.highlightAll();</script>
-    <script>%s</script>
-    <script>slipshow__do_pdf()</script>
     <script>
       startSlipshow(%d, %d,|}
-      head content slipshow_js_element pdf_support width height
+      pdf_support head content slipshow_js_element width height
   in
   let end_ = {|);
     </script>

@@ -20,40 +20,53 @@ let handle elem src =
   in
   let pdf = pdf |> handle_error in
   let num_pages = Pdfjs_ocaml.Pdf_document_proxy.num_pages pdf in
-  let+ l =
+  let* l =
     Fut.of_list
     @@ List.init num_pages (fun i ->
            Pdfjs_ocaml.Pdf_document_proxy.get_page pdf (i + 1))
   in
   let l = List.map handle_error l in
-  List.iteri
-    (fun i page ->
-      let canvas = Brr.El.canvas [] in
-      let canvas_el = canvas in
-      Brr.El.append_children elem [ canvas ];
-      let canvas = Brr_canvas.Canvas.of_el canvas in
-      let scale = 3. in
-      let viewport = Pdfjs_ocaml.Pdf_page_proxy.get_viewport ~scale page in
-      let canvas_context = Brr_canvas.C2d.get_context canvas in
-      let () =
-        let width = Pdfjs_ocaml.Page_viewport.width viewport in
-        let height = Pdfjs_ocaml.Page_viewport.height viewport in
-        Brr_canvas.Canvas.set_h canvas (height |> int_of_float);
-        Brr_canvas.Canvas.set_w canvas (width |> int_of_float)
-      in
-      let _ =
-        Pdfjs_ocaml.Pdf_page_proxy.render page ~viewport ~canvas_context
-      in
-      let () =
-        Brr.El.set_class (Jstr.v "slipshow__carousel_children") true canvas_el
-      in
-      let () =
-        if i = 0 then
-          Brr.El.set_class (Jstr.v "slipshow__carousel_active") true canvas_el
-      in
-      Brr.Console.(log [ canvas_el ]);
-      ())
-    l
+  let+ res =
+    Fut.of_list
+    @@ List.mapi
+         (fun i page ->
+           let canvas = Brr.El.canvas [] in
+           let canvas_el = canvas in
+           Brr.El.append_children elem [ canvas ];
+           let canvas = Brr_canvas.Canvas.of_el canvas in
+           let scale = 3. in
+           let viewport = Pdfjs_ocaml.Pdf_page_proxy.get_viewport ~scale page in
+           let canvas_context = Brr_canvas.C2d.get_context canvas in
+           let () =
+             let width = Pdfjs_ocaml.Page_viewport.width viewport in
+             let height = Pdfjs_ocaml.Page_viewport.height viewport in
+             Brr_canvas.Canvas.set_h canvas (height |> int_of_float);
+             Brr_canvas.Canvas.set_w canvas (width |> int_of_float)
+           in
+           let render_task =
+             Pdfjs_ocaml.Pdf_page_proxy.render page ~viewport ~canvas_context
+           in
+           let () =
+             Brr.El.set_class
+               (Jstr.v "slipshow__carousel_children")
+               true canvas_el
+           in
+           let () =
+             if i = 0 then
+               Brr.El.set_class
+                 (Jstr.v "slipshow__carousel_active")
+                 true canvas_el
+           in
+           Brr.Console.(log [ canvas_el ]);
+           Pdfjs_ocaml.Render_task.promise render_task)
+         l
+  in
+  List.iter
+    (function
+      | Ok () -> ()
+      | Error e -> Brr.Console.(error [ "Error while rendering pdf:"; e ]))
+    res;
+  ()
 
 let activate root =
   Brr.El.fold_find_by_selector ?root
@@ -66,6 +79,11 @@ let activate root =
 let () =
   let do_ el =
     let root = Jv.to_option Brr.El.of_jv el in
-    activate root
+    let fut =
+      let open Fut.Syntax in
+      let+ res = activate root in
+      Ok res
+    in
+    Fut.to_promise ~ok:(fun () -> Jv.undefined) fut
   in
   Jv.set Jv.global "slipshow__do_pdf" (Jv.callback ~arity:1 do_)
