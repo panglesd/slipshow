@@ -493,6 +493,8 @@ Note that if an API above accepts multiple IDs (as ``unstatic`` for instance), t
                 slip.unstatic(elems);
 		```
 
+The expression ``slip.isFast()`` tells whether we are "running fast" (eg when going to a specific starting state) or not.
+
 Finally, the ``slip.state`` object is persisted between scripts. (Other functions are specific to a script. This might change in the future, but ``slip.state`` is safe to use).
 
 Use it with ``slip.setProp`` to not forget undoing the changes!

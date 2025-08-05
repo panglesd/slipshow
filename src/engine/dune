@@ -12,6 +12,7 @@
   step
   universe
   drawing
+  fast
   mouse_disappearing))
 
 (rule

@@ -575,8 +575,6 @@ module Play_media = struct
           let e = Brr_io.Media.El.of_el e in
           let current = Brr_io.Media.El.current_time_s e in
           let is_playing = not @@ Brr_io.Media.El.paused e in
-          let* res = Brr_io.Media.El.play e in
-          log_error res;
           let undo () =
             let+ res =
               if is_playing then Brr_io.Media.El.play e
@@ -585,6 +583,16 @@ module Play_media = struct
             log_error res;
             Brr_io.Media.El.set_current_time_s e current
           in
+          let* res =
+            let open Brr_io.Media.El in
+            if Fast.is_fast () then (
+              Brr.Console.(log [ "Just setting current time" ]);
+              Fut.return @@ Ok (set_current_time_s e (duration_s e)))
+            else (
+              Brr.Console.(log [ "Playing" ]);
+              Brr_io.Media.El.play e)
+          in
+          log_error res;
           Undoable.return ~undo ())
       elems
 end
