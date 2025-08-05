@@ -41,8 +41,7 @@ let start ~width ~height ~id ~step =
   let* () =
     match initial_step with
     | None -> Fut.return @@ Step.Next.actualize ()
-    | Some step ->
-        Universe.Window.with_fast_moving @@ fun () -> Step.Next.goto step window
+    | Some step -> Fast.with_fast @@ fun () -> Step.Next.goto step window
   in
   let () = Controller.setup window in
   let () = Step.Messaging.set_id id in

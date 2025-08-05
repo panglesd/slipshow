@@ -86,6 +86,8 @@ let set_prop undos_ref =
   let prop = Jv.to_jstr prop in
   register_undo undos_ref @@ fun () -> Undoable.Browser.set_prop obj prop value
 
+let is_fast = Jv.callback ~arity:1 (fun _ -> Jv.of_bool @@ Fast.is_fast ())
+
 let slip window undos_ref =
   Jv.obj
     [|
@@ -109,4 +111,5 @@ let slip window undos_ref =
       ("setClass", set_class undos_ref);
       ("setProp", set_prop undos_ref);
       ("playMedia", play_media window undos_ref);
+      ("isFast", is_fast);
     |]

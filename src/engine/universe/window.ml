@@ -81,13 +81,6 @@ let setup el =
   in
   { rotate_container; scale_container; universe }
 
-let fast_move = ref false
-
-let with_fast_moving f =
-  fast_move := true;
-  let+ () = f () in
-  fast_move := false
-
 let live_scale { scale_container; _ } =
   let compute_scale elem =
     let comp = El.computed_style (Jstr.v "transform") elem |> Jstr.to_string in
@@ -104,7 +97,7 @@ let live_scale { scale_container; _ } =
 let move_pure window ({ x; y; scale } as target : Coordinates.window) ~duration
     =
   Brr.Console.(log [ "Moving with duration"; duration ]);
-  let duration = if !fast_move then 0. else duration in
+  let duration = if Fast.is_fast () then 0. else duration in
   let old_scale =
     let live_scale = live_scale window in
     let { Coordinates.scale = state_scale; _ } = State.get_coord () in
