@@ -4,7 +4,7 @@
 
 ### Compiler
 
-- Add support for videos (#139)
+- Add support for audios and videos (#139, #142)
 
 ### Engine
 
