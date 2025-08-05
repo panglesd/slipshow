@@ -5,7 +5,7 @@
 ### Compiler
 
 - Add support for audios and videos (#139, #142)
-- Fix enter being added to blockquotes
+- Fix `enter` action being added to blockquotes
 
 ### Engine
 
