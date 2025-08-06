@@ -58,16 +58,16 @@ let generate window root =
     |> List.rev |> List.concat
   in
   let rec loop undo entries step categorized_els =
-    let* () = Fut.tick ~ms:0 in
     match categorized_els with
     | `Title t :: res ->
         let entries = entry_title t :: entries in
         loop undo entries step res
     | `Action a :: res ->
         if Step.Action_scheduler.is_action a then
+          let* res = Step.Action_scheduler.AttributeActions.do_ window a in
           let undo =
             let> () = undo in
-            Step.Action_scheduler.AttributeActions.do_ window a
+            Fut.return res
           in
           let step = step + 1 in
           let entries = entry_action window step :: entries in

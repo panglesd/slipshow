@@ -3,7 +3,7 @@
 }
 
 #slipshow-toc {
-  overflow: scroll;
+  overflow: auto;
   opacity: 0.98;
   top: 0;
   left: 0;
@@ -29,10 +29,6 @@
 
 .slipshow-toc-only-step {
   display: inline-block;
-}
-
-.slipshow-toc-content {
-  display: inline;
 }
 
 .slipshow-toc-entry {
