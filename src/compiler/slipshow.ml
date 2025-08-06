@@ -41,7 +41,7 @@ let slipshow_js_element slipshow_link =
   | Some (Remote r) -> Format.sprintf "<script src=\"%s\"></script>" r
   | None -> Format.sprintf "<script>%s</script>" Data_files.(read Slipshow_js)
 
-let head ~width ~height ~theme ~has_math ~math_link ~css_links =
+let head ~width ~height ~theme ~(has : Has.t) ~math_link ~css_links =
   let theme = theme_css theme in
   let highlight_css_element =
     "<style>" ^ Data_files.(read Highlight_css) ^ "</style>"
@@ -52,6 +52,13 @@ let head ~width ~height ~theme ~has_math ~math_link ~css_links =
   let highlight_js_ocaml_element =
     "<script>" ^ Data_files.(read Highlight_js_ocaml) ^ "</script>"
   in
+  let pdf_support =
+    if has.pdf then
+      "<script id=\"__pdf_support\">"
+      ^ Data_files.(read Pdf_support)
+      ^ "</script>"
+    else ""
+  in
   let favicon_element =
     let href =
       let mime_type = "image/x-icon" in
@@ -60,10 +67,11 @@ let head ~width ~height ~theme ~has_math ~math_link ~css_links =
     in
     Format.sprintf {|<link rel="icon" type="image/x-icon" href="%s">|} href
   in
-  let mathjax_element = mathjax_element has_math math_link in
+  let mathjax_element = mathjax_element has.math math_link in
   let css_elements = List.map css_element css_links |> String.concat "" in
   String.concat "\n"
     [
+      pdf_support;
       variable_css ~width ~height;
       favicon_element;
       mathjax_element;
@@ -76,11 +84,10 @@ let head ~width ~height ~theme ~has_math ~math_link ~css_links =
       highlight_js_ocaml_element;
     ]
 
-let embed_in_page content ~has_math ~math_link ~css_links ~theme ~dimension =
+let embed_in_page content ~has ~math_link ~css_links ~theme ~dimension =
   let width, height = dimension in
-  let head = head ~has_math ~math_link ~css_links ~theme ~width ~height in
+  let head = head ~has ~math_link ~css_links ~theme ~width ~height in
   let slipshow_js_element = slipshow_js_element None in
-  let pdf_support = Data_files.(read Pdf_support) in
   let start =
     Format.sprintf
       {|
@@ -88,7 +95,6 @@ let embed_in_page content ~has_math ~math_link ~css_links ~theme ~dimension =
 <html>
   <head>
     <meta charset="utf-8" />
-    <script>%s</script>
     %s
   </head>
   <body>
@@ -111,7 +117,7 @@ let embed_in_page content ~has_math ~math_link ~css_links ~theme ~dimension =
     <script>hljs.highlightAll();</script>
     <script>
       startSlipshow(%d, %d,|}
-      pdf_support head content slipshow_js_element width height
+      head content slipshow_js_element width height
   in
   let end_ = {|);
     </script>
@@ -176,8 +182,8 @@ let delayed ?(frontmatter = Frontmatter.empty) ?(read_file = fun _ -> Ok None) s
   in
   let md = Compile.compile ~attrs:toplevel_attributes ~read_file s in
   let content = Renderers.to_html_string md in
-  let has_math = Folders.has_math md.doc in
-  embed_in_page ~dimension ~has_math ~math_link ~theme ~css_links content
+  let has = Has.find_out md in
+  embed_in_page ~dimension ~has ~math_link ~theme ~css_links content
 
 let add_starting_state (start, end_) starting_state =
   let starting_state =
