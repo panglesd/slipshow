@@ -22,7 +22,7 @@ end
 module Render_task : sig
   type t
 
-  val promise : t -> unit Fut.t
+  val promise : t -> unit Fut.or_error
 
   (**/**)
 

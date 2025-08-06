@@ -9,6 +9,8 @@
  (deps binding.js)
  (target bundled.js)
  (mode promote)
+ (enabled_if
+  (= %{profile} "with-bundle"))
  (action
   (run
    esbuild
