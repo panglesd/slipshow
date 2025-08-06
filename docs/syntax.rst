@@ -334,8 +334,11 @@ Those are attributes that are interpreted by the compiler in a special way
 
   If a slide starts with a first level heading, this heading is used a the slides' title.
 
-``video``, ``audio`` and ``image``
-  Specify if a media element (``![](...)``) should be recognized as a video or an image. If absent, uses the file extension. Add ``controls`` to it if you want to be able to control it with the mouse.
+``video``, ``audio``, ``image`` and ``pdf``
+  Specify if a media element (``![](...)``) should be recognized as a video or an image. If absent, the dectection uses the file extension. Add ``controls`` to it if you want to be able to control it with the mouse.
+
+``carousel``
+  A carousel is an element that only displays one of its children at a time. Initially it displays the first one, and that can be changed with the ``change-page`` action.
 
 Pause attributes
 ----------------
@@ -414,6 +417,13 @@ These attributes are actions that will be executed when a ``pause`` or ``step`` 
   Play the media (audio or video). The associated element/target id(s) need to be a video element: a ``![](path)`` where path is recognized as a video or audio. Possible to specify multiple ids.
 
   Pay attention that browsers will prevent the playing if they consider that the user has not "interacted" with the page yet, in an effort to forbid spam "autoplay" of medias. Interact with the page (eg by clicking anywhere on it) to make sure it'll work.
+
+``change-page``
+  Changes the current page of a carousel or pdf. Takes as input the id of the carousel/pdf.
+
+  Also takes a ``~n:"<pages>"`` argument, which allows to specify the list of pages changes to do, by absolute number (eg ``4``), relative number (eg ``+1``, ``-2``) or ``all`` which displays one by one the page until completion. Default for ``~n`` is ``+1``.
+
+  For instance, ``{change-page='~n:"7 -1 +2 all"}`` will display pages ``7``, ``6``, ``8`` and then all further pages that the pdf/carousel contains.
 
 ``exec``
   Execute the slipscript. Possible to specify multiple ids.
