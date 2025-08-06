@@ -779,6 +779,15 @@ module Change_page = struct
     in
     args |> List.map arg_to_string |> String.concat " ; "
 
+  (* Taken from OCaml 5.2 *)
+  let find_mapi f =
+    let rec aux i = function
+      | [] -> None
+      | x :: l -> (
+          match f i x with Some _ as result -> result | None -> aux (i + 1) l)
+    in
+    aux 0
+
   let do_1 ({ target_elem; n; _ } as arg) =
     let check_carousel f =
       if Brr.El.class' (Jstr.v "slipshow__carousel") target_elem then f ()
@@ -787,7 +796,7 @@ module Change_page = struct
     check_carousel @@ fun () ->
     let children = Brr.El.children ~only_els:true target_elem in
     let current_index =
-      List.find_mapi
+      find_mapi
         (fun i x ->
           if Brr.El.class' (Jstr.v "slipshow__carousel_active") x then
             Some (i, x)
