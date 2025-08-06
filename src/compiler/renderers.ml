@@ -118,7 +118,7 @@ let src uri files =
           Format.sprintf "data:%s;base64,%s" mime_type base64)
 
 (* Inspired from Cmarkit's image rendering *)
-let pdf ?(close = " >") c ~uri ~id:_ ~files i attrs =
+let pdf c ~uri ~id:_ ~files i attrs =
   let open Cmarkit in
   match uri with
   | Asset.Uri.Link l ->
@@ -140,17 +140,15 @@ let pdf ?(close = " >") c ~uri ~id:_ ~files i attrs =
         let lines = Inline.to_plain_text ~break_on_soft:false i in
         String.concat "\n" (List.map (String.concat "") lines)
       in
-      C.byte c '<';
-      C.string c "div pdf";
+      C.string c "<span slipshow-pdf";
       C.string c " pdf-src=\"";
       Cmarkit_html.pct_encoded_string c src;
       C.string c "\" alt=\"";
       Cmarkit_html.html_escaped_string c (plain_text (Inline.Link.text i));
       C.byte c '\"';
-      if false then C.string c " controls";
       RenderAttrs.add_attrs c attrs;
-      C.string c close;
-      C.string c "</div>"
+      C.string c ">";
+      C.string c "</span>"
 
 (* Inspired from Cmarkit's image rendering *)
 let media ?(close = " >") ~media_name c ~uri ~id:_ ~files i attrs =

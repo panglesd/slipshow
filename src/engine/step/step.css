@@ -28,10 +28,11 @@
   visibility: hidden;
 }
 
-[pdf] {
-    display:inline-block;
+[slipshow-pdf] {
+  display:inline-block;
 }
 
-[pdf] canvas {
-    display: block;
+[slipshow-pdf] canvas {
+  display: block;
+  width: 100%;
 }

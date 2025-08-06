@@ -6,7 +6,8 @@ Bienvenue à ma présentation de 2019!
 
 Voici donc mes slides:
 
-![](seminaire.pdf){#s}
+{style="text-align:center"}
+![](seminaire.pdf){#s pdf-resolution="200"}
 
 {focus=s}
 

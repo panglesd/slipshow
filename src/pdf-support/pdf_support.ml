@@ -11,7 +11,7 @@ let parse_src base64PDF =
   let raw = Brr.Base64.data_to_binary_jstr raw in
   Brr.Tarray.of_binary_jstr raw |> handle_error
 
-let handle elem src =
+let handle elem src resolution =
   let src = parse_src src in
   let src = Pdfjs_ocaml.Array src in
   let* pdf =
@@ -34,7 +34,7 @@ let handle elem src =
            let canvas_el = canvas in
            Brr.El.append_children elem [ canvas ];
            let canvas = Brr_canvas.Canvas.of_el canvas in
-           let scale = 3. in
+           let scale = resolution /. 72. in
            let viewport = Pdfjs_ocaml.Pdf_page_proxy.get_viewport ~scale page in
            let canvas_context = Brr_canvas.C2d.get_context canvas in
            let () =
@@ -73,8 +73,21 @@ let activate root =
     (fun pdf_elem acc ->
       let* () = acc in
       let src = Brr.El.at (Jstr.v "pdf-src") pdf_elem |> Option.get in
-      handle pdf_elem src)
-    (Jstr.v "div[pdf]") (Fut.return ())
+      let resolution =
+        Brr.El.at (Jstr.v "pdf-resolution") pdf_elem
+        |> Option.map Jstr.to_string
+        |> Option.value ~default:"300"
+      in
+      let resolution =
+        match float_of_string_opt resolution with
+        | None ->
+            Brr.Console.(error [ "Failed to parse pdf-resolution"; resolution ]);
+            300.
+        | Some x -> x
+      in
+
+      handle pdf_elem src resolution)
+    (Jstr.v "[slipshow-pdf]") (Fut.return ())
 
 let () =
   let do_ el =
