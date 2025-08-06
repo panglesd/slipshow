@@ -11,6 +11,10 @@ let start ~width ~height ~id ~step =
   let* () =
     Step.Action_scheduler.setup_pause_ancestors window () |> Undoable.discard
   in
+  (* TODO: move out of here (Later: Why?) *)
+  let () = Rescale.setup_rescalers () in
+  let () = Drawing.setup body in
+  let () = Mouse_disappearing.setup () in
   let* _ : (unit, _) result =
     let window = Brr.G.window |> Brr.Window.to_jv in
     let do_pdf = Jv.get window "slipshow__do_pdf" in
@@ -18,10 +22,6 @@ let start ~width ~height ~id ~step =
     | true -> Jv.apply do_pdf [||] |> Fut.of_promise ~ok:(fun _ -> ())
     | false -> Fut.return (Ok ())
   in
-  (* TODO: move out of here (Later: Why?) *)
-  let () = Rescale.setup_rescalers () in
-  let () = Drawing.setup body in
-  let () = Mouse_disappearing.setup () in
   let initial_step =
     match step with
     | Some _ as step -> step
@@ -37,14 +37,8 @@ let start ~width ~height ~id ~step =
     |> Option.value ~default:(Undoable.return ())
     |> Undoable.discard
   in
+  let* () = Fut.tick ~ms:0 in
   let* () = Table_of_content.generate window el in
-  let* () =
-    match Brr.El.find_first_by_selector (Jstr.v "[slipshow-entry-point]") with
-    | None -> Fut.return ()
-    | Some elem ->
-        Step.Actions.Enter.do_ window { elem; duration = None; margin = None }
-        |> Undoable.discard
-  in
   let* () =
     match initial_step with
     | None -> Fut.return @@ Step.Next.actualize ()
