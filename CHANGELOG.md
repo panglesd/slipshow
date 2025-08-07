@@ -4,8 +4,14 @@
 
 ### Compiler
 
+- Add support for pdfs (#144)
 - Add support for audios and videos (#139, #142)
 - Fix `enter` action being added to blockquotes
+
+### Language
+
+- Add a carousel type and a `change-page` action (#144)
+- Add a `play-media` action (#139, #142)
 
 ### Engine
 
