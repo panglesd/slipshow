@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [v0.5.0] Plan 9 from External Files (Thursday 7th August, 2025)
 
 ### Compiler
 
