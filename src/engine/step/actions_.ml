@@ -692,7 +692,7 @@ module Play_media = struct
 end
 
 module Change_page = struct
-  type change = Absolute of int | Relative of int | All
+  type change = Absolute of int | Relative of int | All | Range of int * int
 
   type arg = {
     target_elem : Brr.El.t;
@@ -717,9 +717,17 @@ module Change_page = struct
     if String.equal "all" s then Some All
     else
       match int_of_string_opt s with
-      | None ->
-          Brr.Console.(log [ "Could not parse parameter as int" ]);
-          None
+      | None -> (
+          match String.split_on_char '-' s with
+          | [ a; b ] -> (
+              match (int_of_string_opt a, int_of_string_opt b) with
+              | Some a, Some b -> Some (Range (a, b))
+              | _ ->
+                  Brr.Console.(log [ "Could not parse parameter" ]);
+                  None)
+          | _ ->
+              Brr.Console.(log [ "Could not parse parameter" ]);
+              None)
       | Some x -> (
           match s.[0] with
           | '+' | '-' -> Some (Relative x)
@@ -769,6 +777,7 @@ module Change_page = struct
         | Relative x when x < 0 -> string_of_int x
         | Relative x -> "+" ^ string_of_int x
         | Absolute x -> string_of_int x
+        | Range (x, y) -> string_of_int x ^ "-" ^ string_of_int y
       in
       let s = n |> List.map to_string |> String.concat " " in
       let n = "~n:\"" ^ s ^ "\"" in
@@ -805,6 +814,7 @@ module Change_page = struct
     in
     let new_index =
       match (n, current_index) with
+      | Range (a, _) :: _, _ -> a
       | Absolute i :: _, _ -> i - 1
       | Relative r :: _, Some (i, _) -> i + r
       | All :: _, Some (i, _) -> i + 1
@@ -829,6 +839,9 @@ module Change_page = struct
       match n with
       | [] -> []
       | All :: _ as n when not overflow -> n
+      | Range (a, b) :: rest when a < b -> Range (a + 1, b) :: rest
+      | Range (a, b) :: rest when a = b -> rest
+      | Range (a, b) :: rest (* when a > b *) -> Range (a - 1, b) :: rest
       | _ :: n -> n
     in
     Undoable.return
