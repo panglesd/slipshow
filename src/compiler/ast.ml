@@ -10,6 +10,7 @@ type Block.t +=
   | Slide of slide attributed node
   | Slip of Block.t attributed node
   | SlipScript of Block.Code_block.t attributed node
+  | Carousel of Block.t list attributed node
 
 type media = {
   uri : Asset.Uri.t;
@@ -17,7 +18,7 @@ type media = {
   origin : Cmarkit.Inline.Link.t attributed node;
 }
 
-type Inline.t += Image of media | Video of media | Audio of media
+type Inline.t += Image of media | Video of media | Audio of media | Pdf of media
 
 module Files = struct
   type mode = [ `Base64 ]
@@ -45,9 +46,12 @@ module Folder = struct
     | Slip ((b, _), _) ->
         Folder.fold_block f acc b
     | SlipScript _ -> acc
+    | Carousel ((l, _), _) ->
+        List.fold_left (fun acc x -> Folder.fold_block f acc x) acc l
     | _ -> assert false
 
   let inline_ext_default f acc = function
+    | Pdf { origin = (l, _), _; uri = _; id = _ }
     | Audio { origin = (l, _), _; uri = _; id = _ }
     | Video { origin = (l, _), _; uri = _; id = _ }
     | Image { origin = (l, _), _; uri = _; id = _ } ->
@@ -87,6 +91,11 @@ module Mapper = struct
     | SlipScript ((s, attrs), meta) ->
         let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
         Some (SlipScript ((s, attrs), meta))
+    | Carousel ((l, attrs), meta) -> (
+        let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
+        List.filter_map (Mapper.map_block m) l |> function
+        | [] -> None
+        | l -> Some (Carousel ((l, attrs), meta)))
     | _ -> assert false
 
   let map_origin m ((l, (attrs, a_meta)), meta) =
@@ -104,6 +113,9 @@ module Mapper = struct
     { origin; uri; id }
 
   let inline_ext_default m = function
+    | Pdf media ->
+        let media = map_media m media in
+        Some (Pdf media)
     | Video media ->
         let media = map_media m media in
         Some (Video media)

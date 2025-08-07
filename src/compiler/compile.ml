@@ -27,6 +27,7 @@ type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
     - [blockquote] attributed elements are turned into block quotes
     - [slip] attributed elements are turned into slips
     - [slide] attributed elements are turned into slides
+    - [carousel] attributed elements are turned into carousels
 
     The fourth stage is populating the media files map *)
 
@@ -77,6 +78,7 @@ let classify_image p =
   | ".mov" | ".webm" ->
       `Video
   | ".aac" | ".flac" | ".mp3" | ".oga" | ".wav" -> `Audio
+  | ".pdf" -> `Pdf
   | ".apng" | ".avif" | ".gif" | ".jpeg" | ".jpg" | ".jpe" | ".jig" | ".jfif"
   | ".png" | ".svg" | ".webp" ->
       (* https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types#image_types *)
@@ -144,6 +146,7 @@ module Stage1 = struct
     if has_attrs "video" then `Video
     else if has_attrs "audio" then `Audio
     else if has_attrs "image" then `Image
+    else if has_attrs "pdf" then `Pdf
     else
       let d, _meta = Cmarkit.Link_definition.dest ld in
       match Fpath.of_string d with
@@ -181,6 +184,7 @@ module Stage1 = struct
     | `Image -> Mapper.ret @@ Ast.Image { Ast.uri; origin; id = Id.gen () }
     | `Video -> Mapper.ret @@ Ast.Video { Ast.uri; origin; id = Id.gen () }
     | `Audio -> Mapper.ret @@ Ast.Audio { Ast.uri; origin; id = Id.gen () }
+    | `Pdf -> Mapper.ret @@ Ast.Pdf { Ast.uri; origin; id = Id.gen () }
 
   let handle_dash_separated_blocks m (blocks, meta) =
     let div ((attrs, am), blocks) =
@@ -352,6 +356,8 @@ module Stage2 = struct
         Some (Ast.Slip ((slip, no_attrs), meta), attrs)
     | Ast.SlipScript ((slscr, attrs), meta) ->
         Some (Ast.SlipScript ((slscr, no_attrs), meta), attrs)
+    | Ast.Carousel ((c, attrs), meta) ->
+        Some (Ast.Carousel ((c, no_attrs), meta), attrs)
     | _ -> None
 
   (** Get the attributes of a cmarkit node, returns them and the element
@@ -406,6 +412,8 @@ module Stage2 = struct
         Ast.Slip ((slip, (merge attrs, meta_a)), meta)
     | Ast.SlipScript ((slscr, (attrs, meta_a)), meta) ->
         Ast.SlipScript ((slscr, (merge attrs, meta_a)), meta)
+    | Ast.Carousel ((c, (attrs, meta_a)), meta) ->
+        Ast.Carousel ((c, (merge attrs, meta_a)), meta)
     | _ -> b
 
   let execute =
@@ -476,7 +484,7 @@ module Stage3 = struct
 
   let execute =
     let block m c =
-      let map block (attrs, meta2) =
+      let map ~may_enter block (attrs, meta2) =
         let b =
           match Mapper.map_block m block with
           | None -> Block.empty
@@ -484,8 +492,9 @@ module Stage3 = struct
         in
         let attrs =
           if
-            Attributes.mem "no-enter" attrs
-            || Attributes.mem "enter-at-unpause" attrs
+            (Attributes.mem "no-enter" attrs
+            || Attributes.mem "enter-at-unpause" attrs)
+            || not may_enter
           then attrs
           else Attributes.add ("enter-at-unpause", Meta.none) None attrs
         in
@@ -495,17 +504,25 @@ module Stage3 = struct
       match Stage2.get_attribute c with
       | None -> Mapper.default
       | Some (block, (attrs, meta2)) when Attributes.mem "blockquote" attrs ->
-          let block, attrs = map block (attrs, meta2) in
+          let block, attrs = map ~may_enter:false block (attrs, meta2) in
           let block = Block.Block_quote.make block in
           Mapper.ret @@ Block.Block_quote ((block, attrs), Meta.none)
       | Some (block, (attrs, meta2)) when Attributes.mem "slide" attrs ->
-          let block, attrs = map block (attrs, meta2) in
+          let block, attrs = map ~may_enter:true block (attrs, meta2) in
           let block, title = extract_title block in
           Mapper.ret
           @@ Ast.Slide (({ content = block; title }, attrs), Meta.none)
       | Some (block, (attrs, meta2)) when Attributes.mem "slip" attrs ->
-          let block, (attrs, meta) = map block (attrs, meta2) in
+          let block, (attrs, meta) = map ~may_enter:true block (attrs, meta2) in
           Mapper.ret @@ Ast.Slip ((block, (attrs, meta)), Meta.none)
+      | Some (block, (attrs, meta2)) when Attributes.mem "carousel" attrs ->
+          let block, attrs = map ~may_enter:false block (attrs, meta2) in
+          let children =
+            match block with
+            | Ast.Div ((Block.Blocks (l, _), _), _) -> l
+            | _ -> [ block ]
+          in
+          Mapper.ret @@ Ast.Carousel ((children, attrs), Meta.none)
       | Some _ -> Mapper.default
     in
     Ast.Mapper.make ~block ()
@@ -523,6 +540,7 @@ module Stage4 = struct
     let block _f _acc _c = Folder.default in
     let inline _f acc = function
       | Ast.Video { uri = Path p; id; _ }
+      | Ast.Pdf { uri = Path p; id; _ }
       | Ast.Audio { uri = Path p; id; _ }
       | Ast.Image { uri = Path p; id; _ } ->
           Folder.ret @@ fpath_map_add_to_list p id acc
@@ -593,11 +611,14 @@ let to_cmarkit =
         in
         Mapper.ret (Block.Blocks ([ b ], meta))
     | Ast.SlipScript _ -> Mapper.delete
+    | Ast.Carousel ((l, _), meta) ->
+        `Map (Mapper.map_block m (Block.Blocks (l, meta)))
     | _ -> Mapper.default
   in
   let inline m = function
     | Ast.Video { origin; _ }
     | Ast.Audio { origin; _ }
+    | Ast.Pdf { origin; _ }
     | Ast.Image { origin; _ } ->
         `Map (Mapper.map_inline m (Inline.Image origin))
     | _ -> Mapper.default

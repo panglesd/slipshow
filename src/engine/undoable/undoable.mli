@@ -13,6 +13,11 @@ module Browser = Browser_
 
 module List : sig
   val iter : ('a -> unit t) -> 'a list -> unit t
+  val filter_map : ('a -> 'b option t) -> 'a list -> 'b list t
+end
+
+module Option : sig
+  val iter : ('a -> unit t) -> 'a option -> unit t
 end
 
 module Stack : sig

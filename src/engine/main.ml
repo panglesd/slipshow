@@ -1,7 +1,14 @@
 let start ~width ~height ~id ~step =
+  let open Fut.Syntax in
+  let* _ : (unit, _) result =
+    let window = Brr.G.window |> Brr.Window.to_jv in
+    let do_pdf = Jv.get window "slipshow__do_pdf" in
+    match Jv.defined do_pdf with
+    | true -> Jv.apply do_pdf [||] |> Fut.of_promise ~ok:(fun _ -> ())
+    | false -> Fut.return (Ok ())
+  in
   Constants.set_height height;
   Constants.set_width width;
-  let open Fut.Syntax in
   let el =
     Brr.El.find_first_by_selector (Jstr.v "#slipshow-content") |> Option.get
   in
@@ -30,14 +37,12 @@ let start ~width ~height ~id ~step =
     |> Option.value ~default:(Undoable.return ())
     |> Undoable.discard
   in
-  let () = Table_of_content.generate window el in
   let* () =
-    match Brr.El.find_first_by_selector (Jstr.v "[slipshow-entry-point]") with
-    | None -> Fut.return ()
-    | Some elem ->
-        Step.Actions.Enter.do_ window { elem; duration = None; margin = None }
-        |> Undoable.discard
+    (* For some reason, otherwise we things are not properly initialized during
+       the toc computation *)
+    Fut.tick ~ms:0
   in
+  let* () = Table_of_content.generate window el in
   let* () =
     match initial_step with
     | None -> Fut.return @@ Step.Next.actualize ()
@@ -57,12 +62,3 @@ let () =
     start ~width ~height ~id ~step
   in
   Jv.set Jv.global "startSlipshow" (Jv.callback ~arity:4 start)
-
-let () =
-  let do_ el y =
-    let y = Jv.to_int y in
-    let s = Format.sprintf "translate3d(0px, %dpx, 0px)" y in
-    let el = Brr.El.of_jv el in
-    Brr.El.set_inline_style (Jstr.v "transform") (Jstr.v s) el
-  in
-  Jv.set Jv.global "my_try" (Jv.callback ~arity:2 do_)
