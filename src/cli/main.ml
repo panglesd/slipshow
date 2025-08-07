@@ -1,7 +1,7 @@
 open Cmdliner
 
 (* Update this on every release! *)
-let version_title = "The slides strike back"
+let version_title = "Plan 9 from External Files"
 
 let setup_log style_renderer level =
   Fmt_tty.setup_std_outputs ?style_renderer ();
