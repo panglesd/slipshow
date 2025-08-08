@@ -188,10 +188,64 @@ let delayed ?(frontmatter = Frontmatter.empty) ?(read_file = fun _ -> Ok None) s
 let add_starting_state (start, end_) starting_state =
   let starting_state =
     match starting_state with
-    | None -> ""
+    | None -> "0, \"hello\""
     | Some (st, id) -> string_of_int st ^ ", \"" ^ id ^ "\""
   in
-  start ^ starting_state ^ end_
+  let html = start ^ starting_state ^ end_ in
+  let orig_html = html in
+  let html =
+    let buf = Buffer.create 10 in
+    Cmarkit_html.buffer_add_html_escaped_string buf html;
+    Buffer.contents buf
+  in
+  let html =
+    Format.sprintf
+      {|
+<!doctype html>
+<html>
+  <body>
+          <iframe id="yoyo" srcdoc="%s" style="
+    width: 100%%;
+    height: 50%%;
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+"></iframe>
+      <script>
+          function openChild(s) {
+      child = window.open();
+      child.document.write(s);
+      child.document.close();
+    }
+
+let ifra = document.querySelector("#yoyo");
+let src = ifra.getAttribute("srcdoc");
+      document.addEventListener("keypress", (ev) => {
+        if(ev.key != "s") return;
+        console.log(src);
+      openChild(src)
+      })
+      window.addEventListener('message', (event) => {
+  // Ensure the message is from a trusted origin
+  if (event.origin === '*') {
+    // Access the data sent from the parent window
+    const receivedData = event.data;
+
+    // Do something with the data
+    console.log(receivedData.message);
+    console.log(receivedData.someValue);
+  } else {
+    console.log(event);
+  }
+});
+</script>
+  </body>
+                   </html>|}
+      html
+  in
+  if true then html else orig_html
 
 let convert ?frontmatter ?starting_state ?read_file s =
   let delayed = delayed ?frontmatter ?read_file s in
