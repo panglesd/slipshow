@@ -3,7 +3,9 @@
  (name main)
  (flags
   (:standard
-   (:include static-linking-flags/flags)))
+   -cclib -force_load,/usr/local/opt/openssl@3/lib/libssl.a
+   -cclib -force_load,/usr/local/opt/openssl@3/lib/libcrypto.a
+   -cclib -no-pie)))
  (libraries
   slipshow_server
   cmdliner
