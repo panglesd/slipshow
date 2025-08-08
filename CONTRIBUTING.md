@@ -38,7 +38,8 @@ The directory structure is the following:
 - `test/` for tests
 - `vendor/` for vendored library, see the vendoring section of this document
 - `src/` for the source:
-  - `src/engine/` contains the code for the engine, the part translated to
+  - `src/engine/` for all code running in the browser
+  - `src/engine/runtime/` contains the code for the engine, the part translated to
     javascript that is run during a presentation, and that is responsible for
     reacting to the user's input etc.
     - `src/engine/themes/` contains the CSS themes.
@@ -50,7 +51,7 @@ The directory structure is the following:
     - `src/server/client/` contains the code for the client-side javascript of the preview server
   - `src/communication/` contains the types and utilities to serialize and
     deserialize data exchanged between server and client.
-  - `src/previewer/` contains the code for the previewer panel (used by
+  - `src/engine/previewer/` contains the code for the previewer panel (used by
     slipshow's preview mode but also sliphub, the VSCode extension, ...)
 
 ## Releasing
