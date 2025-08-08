@@ -25,3 +25,12 @@ let send_step () =
     |> Communication.to_string |> Jv.of_string
   in
   Brr.Window.post_message parent ~msg
+
+let send_speaker_notes () =
+  if_id @@ fun id ->
+  if_parent @@ fun parent ->
+  let msg =
+    { Communication.id; payload = Open_speaker_notes }
+    |> Communication.to_string |> Jv.of_string
+  in
+  Brr.Window.post_message parent ~msg

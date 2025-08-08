@@ -204,7 +204,7 @@ let add_starting_state (start, end_) starting_state =
 <!doctype html>
 <html>
   <body>
-          <iframe id="yoyo" srcdoc="%s" style="
+          <iframe name="slipshow_main_pres" id="ifra" srcdoc="%s" style="
     width: 100%%;
     height: 50%%;
     position: fixed;
@@ -213,6 +213,9 @@ let add_starting_state (start, end_) starting_state =
     top: 0;
     bottom: 0;
 "></iframe>
+      <script>
+      %s
+      </script>
       <script>
           function openChild(s) {
       child = window.open();
@@ -244,6 +247,7 @@ let src = ifra.getAttribute("srcdoc");
   </body>
                    </html>|}
       html
+      Data_files.(read Scheduler_js)
   in
   if true then html else orig_html
 

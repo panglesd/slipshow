@@ -110,6 +110,7 @@
   (pps ppx_blob))
  (preprocessor_deps
   ../engine/pdf-support/pdf_support.bc.js
+  ../engine/scheduler/scheduler.bc.js
   ../../logo/favicon.ico
   ../engine/runtime/slipshow.js
   ../engine/runtime/slipshow-internal.css
