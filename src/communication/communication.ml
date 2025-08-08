@@ -1,6 +1,6 @@
 open Sexplib.Std
 
-type payload = State of int | Ready [@@deriving sexp]
+type payload = State of int | Ready | Open_speaker_notes [@@deriving sexp]
 type t = { id : string; payload : payload } [@@deriving sexp]
 
 let t_of_sexp_opt s =
