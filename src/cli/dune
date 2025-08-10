@@ -20,7 +20,6 @@
     -cclib -lmirage_crypto_rng_unix_stubs
     -cclib -lthreadsnat
     -cclib -lbigstringaf_stubs
-    -cclib -lunixnat
     -cclib -ldigestif_c_stubs
     -cclib -lcf_stubs
     -cclib -lfsevents_stubs
