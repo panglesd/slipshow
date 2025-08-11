@@ -3,23 +3,31 @@ module Date = struct
   let now () = Jv.call date "now" [||] |> Jv.to_int
   let initial_t = now ()
 
+  let soi i =
+    if i = 0 then "00"
+    else if i < 10 then "0" ^ string_of_int i
+    else string_of_int i
+
   let string_of_t ms =
     let t = ms / 1000 in
     let s = t mod 60 in
     let m = s / 60 in
     let h = m / 60 in
     let m = m mod 60 in
-    let soi i =
-      if i = 0 then "00"
-      else if i < 10 then "0" ^ string_of_int i
-      else string_of_int i
-    in
     soi h ^ ":" ^ soi m ^ ":" ^ soi s
 
   let setup_timer el =
     Brr.G.set_interval ~ms:100 (fun () ->
         let now = now () in
         Brr.El.set_children el [ Brr.El.txt' (string_of_t (now - initial_t)) ];
+        ())
+
+  let clock el =
+    Brr.G.set_interval ~ms:20000 (fun () ->
+        let now = Jv.new' date [||] in
+        let hours = Jv.call now "getHours" [||] |> Jv.to_int in
+        let minutes = Jv.call now "getMinutes" [||] |> Jv.to_int in
+        Brr.El.set_children el [ Brr.El.txt' (soi hours ^ ":" ^ soi minutes) ];
         ())
 end
 
@@ -38,7 +46,7 @@ let html =
 <html>
   <body>
     <iframe name="slipshow_speaker_view" id="speaker-view"></iframe>
-    <div id="speaker-notes"><div id="timer"></div><h2>Notes</h2></div>
+    <div id="speaker-notes"><div id="timer"></div><div id="clock"></div><h2>Notes</h2></div>
     <style>
     html, body {
       height: 100%;
@@ -123,7 +131,12 @@ let open_window s =
             Brr.El.find_first_by_selector ~root:el (Jstr.v "#timer")
             |> Option.get
           in
+          let clock =
+            Brr.El.find_first_by_selector ~root:el (Jstr.v "#clock")
+            |> Option.get
+          in
           let _untimer = Date.setup_timer timer in
+          let _untimer = Date.clock clock in
           Brr.Console.(log [ "Done" ]))
 
 let receive_message_speaker_view = function
