@@ -75,10 +75,18 @@ let keyboard_setup (window : Universe.Window.t) =
           in
           ()
       | "ArrowRight" | "ArrowDown" | "PageDown" | " " ->
-          let _ : unit Fut.t = Step.Next.go_next window 1 in
+          let _ : unit Fut.t =
+            let open Fut.Syntax in
+            let+ () = Step.Next.go_next window 1 in
+            Step.Messaging.send_step ()
+          in
           ()
       | "ArrowLeft" | "PageUp" | "ArrowUp" ->
-          let _ : unit Fut.t = Step.Next.go_prev window 1 in
+          let _ : unit Fut.t =
+            let open Fut.Syntax in
+            let+ () = Step.Next.go_prev window 1 in
+            Step.Messaging.send_step ()
+          in
           ()
       | "z" ->
           let _ : unit Fut.t =
@@ -176,9 +184,25 @@ let touch_setup (window : Universe.Window.t) =
     then stop_here ()
   in
   let _listener = Brr.Ev.listen ~opts Brr.Ev.pointerup touchend target in
-
   ()
+
+let comm_of_jv m = m |> Jv.to_string |> Communication.of_string
+
+let message_setup window =
+  Brr.Ev.listen Brr_io.Message.Ev.message
+    (fun event ->
+      let raw_data : Jv.t = Brr_io.Message.Ev.data (Brr.Ev.as_type event) in
+      let msg = comm_of_jv raw_data in
+      match msg with
+      | Some { Communication.id = "hello"; payload = State i } ->
+          Brr.Console.(log [ "Receiving an order to open the speaker notes" ]);
+          let _ : unit Fut.t = Step.Next.goto i window in
+          ()
+      | _ -> ())
+    (Brr.Window.as_target Brr.G.window)
+  |> ignore
 
 let setup (window : Universe.Window.t) =
   keyboard_setup window;
-  touch_setup window
+  touch_setup window;
+  message_setup window

@@ -38,7 +38,11 @@ let entry_action window step =
     let _unlistener =
       Brr.Ev.listen Brr.Ev.click
         (fun _ ->
-          let _ : unit Fut.t = Step.Next.goto step window in
+          let _ : unit Fut.t =
+            let open Fut.Syntax in
+            let+ () = Step.Next.goto step window in
+            Step.Messaging.send_step ()
+          in
           ())
         (Brr.El.as_target el)
     in

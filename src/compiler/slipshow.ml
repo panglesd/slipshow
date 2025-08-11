@@ -206,9 +206,10 @@ let add_starting_state (start, end_) starting_state =
   <body>
           <iframe name="slipshow_main_pres" id="ifra" srcdoc="%s" style="
     width: 100%%;
-    height: 50%%;
+    height: 100%%;
     position: fixed;
     left: 0;
+    border: 1px;
     right: 0;
     top: 0;
     bottom: 0;
@@ -216,34 +217,6 @@ let add_starting_state (start, end_) starting_state =
       <script>
       %s
       </script>
-      <script>
-          function openChild(s) {
-      child = window.open();
-      child.document.write(s);
-      child.document.close();
-    }
-
-let ifra = document.querySelector("#yoyo");
-let src = ifra.getAttribute("srcdoc");
-      document.addEventListener("keypress", (ev) => {
-        if(ev.key != "s") return;
-        console.log(src);
-      openChild(src)
-      })
-      window.addEventListener('message', (event) => {
-  // Ensure the message is from a trusted origin
-  if (event.origin === '*') {
-    // Access the data sent from the parent window
-    const receivedData = event.data;
-
-    // Do something with the data
-    console.log(receivedData.message);
-    console.log(receivedData.someValue);
-  } else {
-    console.log(event);
-  }
-});
-</script>
   </body>
                    </html>|}
       html

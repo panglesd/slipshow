@@ -34,17 +34,14 @@ let actualize () =
       !!".slipshow-toc-current-step"
       ()
   in
-  let () =
-    match
-      Brr.El.find_first_by_selector
-        !!(".slipshow-toc-step-" ^ string_of_int (State.get_step ()))
-    with
-    | None -> ()
-    | Some el ->
-        Brr.El.scroll_into_view ~align_v:`Nearest ~behavior:`Smooth el;
-        Brr.El.set_class !!"slipshow-toc-current-step" true el
-  in
-  Messaging.send_step ()
+  match
+    Brr.El.find_first_by_selector
+      !!(".slipshow-toc-step-" ^ string_of_int (State.get_step ()))
+  with
+  | None -> ()
+  | Some el ->
+      Brr.El.scroll_into_view ~align_v:`Nearest ~behavior:`Smooth el;
+      Brr.El.set_class !!"slipshow-toc-current-step" true el
 
 let go_next window n =
   in_queue @@ fun () ->
