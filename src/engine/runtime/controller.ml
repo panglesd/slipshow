@@ -193,8 +193,7 @@ let message_setup window =
       let raw_data : Jv.t = Brr_io.Message.Ev.data (Brr.Ev.as_type event) in
       let msg = comm_of_jv raw_data in
       match msg with
-      | Some { Communication.id = "hello"; payload = State i } ->
-          Brr.Console.(log [ "Receiving an order to open the speaker notes" ]);
+      | Some { Communication.id = _; payload = State i } ->
           let _ : unit Fut.t = Step.Next.goto i window in
           ()
       | Some { Communication.id = _; payload = Drawing (End { state }) } -> (

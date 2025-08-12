@@ -65,13 +65,6 @@ let html =
       padding: 30px;
     }
     </style>
-    <script>
-      window.addEventListener("message", (event) => {
-        if (window.opener) {
-          window.opener.postMessage(event.data);
-        }
-      });
-    </script>
   </body>
 </html>
 |}
@@ -97,10 +90,9 @@ let current_step =
 
 let speaker_view_ref = ref None
 
-let receive_message forward_to self =
+let receive_message ?(condition = true) forward_to self =
   let forward_message msg =
-    if not (Brr.Window.closed forward_to) then
-      Brr.Window.post_message forward_to ~msg
+    if condition then Brr.Window.post_message forward_to ~msg
   in
   function
   | Some { Communication.payload = State i; _ } ->
@@ -136,13 +128,17 @@ let open_window src =
           (Jstr.of_string "")
       in
       match child with
-      | None -> Brr.Console.(log [ "No child" ])
+      | None -> Brr.Console.(error [ "Could not open speaker view" ])
       | Some child ->
           Brr.Window.set_name (Jstr.v "speaker-view") child;
           let document = Brr.Window.document child in
           let () = document_write (Jstr.v html) document in
           let () = document_close document in
           let el = Brr.Document.element document in
+          let child_iframe =
+            Brr.El.find_first_by_selector ~root:el (Jstr.v "#speaker-view")
+            |> Option.get
+          in
           let _unlisten =
             Brr.Ev.listen Brr_io.Message.Ev.message
               (fun event ->
@@ -150,12 +146,10 @@ let open_window src =
                   Brr_io.Message.Ev.data (Brr.Ev.as_type event)
                 in
                 let msg = Msg.of_jv raw_data in
-                receive_message (content_window iframe) child msg)
+                receive_message (content_window iframe)
+                  (content_window child_iframe)
+                  msg)
               (Brr.Window.as_target child)
-          in
-          let child_iframe =
-            Brr.El.find_first_by_selector ~root:el (Jstr.v "#speaker-view")
-            |> Option.get
           in
           speaker_view_ref := Some (child, child_iframe);
           Brr.El.set_at (Jstr.v "srcdoc") (Some src) child_iframe;
@@ -169,16 +163,28 @@ let open_window src =
           in
           let _untimer = Date.setup_timer timer in
           let _untimer = Date.clock clock in
-          Brr.Console.(log [ "Done" ]))
+          ())
 
 let receive_message_main = function
   | Some { Communication.id = "hello"; payload = Open_speaker_notes } ->
-      Brr.Console.(log [ "Receiving an order to open the speaker notes" ]);
       open_window src;
       ()
+  | Some { id = _; payload = Ready } -> (
+      match !current_step with
+      | Some i ->
+          let msg =
+            { id = "hello"; payload = State i }
+            |> Communication.to_string |> Jv.of_string
+          in
+          Brr.Window.post_message (content_window iframe) ~msg
+      | _ -> ())
   | msg -> (
       match !speaker_view_ref with
-      | Some (w, child_frame) -> receive_message w (content_window iframe) msg
+      | Some (w, child_frame) ->
+          receive_message
+            ~condition:(not (Brr.Window.closed w))
+            (content_window child_frame)
+            (content_window iframe) msg
       | _ -> ())
 
 let _ =
