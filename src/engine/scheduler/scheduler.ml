@@ -97,6 +97,36 @@ let current_step =
 
 let speaker_view_ref = ref None
 
+let receive_message forward_to self =
+  let forward_message msg =
+    if not (Brr.Window.closed forward_to) then
+      Brr.Window.post_message forward_to ~msg
+  in
+  function
+  | Some { Communication.payload = State i; _ } ->
+      let _history = Browser.History.set_hash (string_of_int i) in
+      current_step := Some i;
+      let msg =
+        { id = "hello"; payload = State i }
+        |> Communication.to_string |> Jv.of_string
+      in
+      forward_message msg
+  | Some { id = "hello"; payload = Drawing _ as payload } ->
+      let msg =
+        { id = "hello"; payload } |> Communication.to_string |> Jv.of_string
+      in
+      forward_message msg
+  | Some { id = _; payload = Ready } -> (
+      match !current_step with
+      | Some i ->
+          let msg =
+            { id = "hello"; payload = State i }
+            |> Communication.to_string |> Jv.of_string
+          in
+          Brr.Window.post_message self ~msg
+      | _ -> ())
+  | _ -> ()
+
 let open_window src =
   match !speaker_view_ref with
   | Some (w, _) when not (Brr.Window.closed w) -> ()
@@ -109,11 +139,20 @@ let open_window src =
       | None -> Brr.Console.(log [ "No child" ])
       | Some child ->
           Brr.Window.set_name (Jstr.v "speaker-view") child;
-          (* let _ = child |> document_of_window |> document_inner_write s in *)
           let document = Brr.Window.document child in
           let () = document_write (Jstr.v html) document in
           let () = document_close document in
           let el = Brr.Document.element document in
+          let _unlisten =
+            Brr.Ev.listen Brr_io.Message.Ev.message
+              (fun event ->
+                let raw_data : Jv.t =
+                  Brr_io.Message.Ev.data (Brr.Ev.as_type event)
+                in
+                let msg = Msg.of_jv raw_data in
+                receive_message (content_window iframe) child msg)
+              (Brr.Window.as_target child)
+          in
           let child_iframe =
             Brr.El.find_first_by_selector ~root:el (Jstr.v "#speaker-view")
             |> Option.get
@@ -132,93 +171,22 @@ let open_window src =
           let _untimer = Date.clock clock in
           Brr.Console.(log [ "Done" ]))
 
-let receive_message_speaker_view = function
-  | Some { Communication.payload = State i; _ } ->
-      let _history = Browser.History.set_hash (string_of_int i) in
-      current_step := Some i;
-      let msg =
-        { id = "hello"; payload = State i }
-        |> Communication.to_string |> Jv.of_string
-      in
-      Brr.Window.post_message (content_window iframe) ~msg
-  | Some { Communication.id = "hello"; payload = Drawing _ as payload } ->
-      Brr.Console.(log [ "Something has been written" ]);
-      ();
-      let msg =
-        { id = "hello"; payload } |> Communication.to_string |> Jv.of_string
-      in
-      Brr.Window.post_message (content_window iframe) ~msg
-  | Some { Communication.id = _; payload = Ready } -> (
-      match (!current_step, !speaker_view_ref) with
-      | Some i, Some (w, child_frame) when not (Brr.Window.closed w) ->
-          let msg =
-            { id = "hello"; payload = State i }
-            |> Communication.to_string |> Jv.of_string
-          in
-          Brr.Console.(log [ "Sending initial state"; i ]);
-          Brr.Window.post_message (content_window child_frame) ~msg
-      | _ -> ())
-  | _ -> ()
-
 let receive_message_main = function
-  | Some { Communication.id = _; payload = Ready } ->
-      let i =
-        Brr.G.window |> Brr.Window.location |> Brr.Uri.fragment
-        |> Jstr.to_string |> int_of_string_opt
-      in
-      let () =
-        match i with
-        | None -> ()
-        | Some i ->
-            let msg =
-              { id = "hello"; payload = State i }
-              |> Communication.to_string |> Jv.of_string
-            in
-            Brr.Console.(log [ "Sending initial state"; i ]);
-            Brr.Window.post_message (content_window iframe) ~msg
-      in
-      ()
   | Some { Communication.id = "hello"; payload = Open_speaker_notes } ->
       Brr.Console.(log [ "Receiving an order to open the speaker notes" ]);
       open_window src;
       ()
-  | Some { Communication.id = "hello"; payload = Drawing _ as payload } -> (
-      Brr.Console.(log [ "Something has been written" ]);
-      ();
+  | msg -> (
       match !speaker_view_ref with
-      | Some (w, child_frame) when not (Brr.Window.closed w) ->
-          let msg =
-            { id = "hello"; payload } |> Communication.to_string |> Jv.of_string
-          in
-          Brr.Window.post_message (content_window child_frame) ~msg
+      | Some (w, child_frame) -> receive_message w (content_window iframe) msg
       | _ -> ())
-  | Some { id = "hello"; payload = State i } -> (
-      let _history = Browser.History.set_hash (string_of_int i) in
-      current_step := Some i;
-      match !speaker_view_ref with
-      | Some (w, child_frame) when not (Brr.Window.closed w) ->
-          let msg =
-            { id = "hello"; payload = State i }
-            |> Communication.to_string |> Jv.of_string
-          in
-          Brr.Window.post_message (content_window child_frame) ~msg
-      | _ -> ())
-  | _ -> ()
 
 let _ =
   Brr.Ev.listen Brr_io.Message.Ev.message
     (fun event ->
-      let source =
-        Brr_io.Message.Ev.source (Brr.Ev.as_type event)
-        |> Option.get |> Brr.Window.of_jv
-      in
-      let source_name = Brr.Window.name source |> Jstr.to_string in
       let raw_data : Jv.t = Brr_io.Message.Ev.data (Brr.Ev.as_type event) in
       let msg = Msg.of_jv raw_data in
-      match source_name with
-      | "speaker-view" -> receive_message_speaker_view msg
-      | "slipshow_main_pres" -> receive_message_main msg
-      | _ -> ())
+      receive_message_main msg)
     (Brr.Window.as_target Brr.G.window)
 
 let _ =
