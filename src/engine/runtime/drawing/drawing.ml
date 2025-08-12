@@ -1,10 +1,6 @@
-(* TODO: upstream to Brr *)
-let window_name w =
-  Jv.get (Brr.Window.to_jv w) "name" |> Jv.to_option Jv.to_string
-
 let get_id =
   let id_number = ref 0 in
-  let window_name = window_name Brr.G.window |> Option.value ~default:"" in
+  let window_name = Brr.Window.name Brr.G.window |> Jstr.to_string in
   let name = "__slipshow__" ^ window_name in
   fun () ->
     let i = !id_number in
