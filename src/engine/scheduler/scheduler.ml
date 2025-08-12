@@ -11,7 +11,7 @@ module Date = struct
   let string_of_t ms =
     let t = ms / 1000 in
     let s = t mod 60 in
-    let m = s / 60 in
+    let m = t / 60 in
     let h = m / 60 in
     let m = m mod 60 in
     soi h ^ ":" ^ soi m ^ ":" ^ soi s
@@ -23,12 +23,14 @@ module Date = struct
         ())
 
   let clock el =
-    Brr.G.set_interval ~ms:20000 (fun () ->
-        let now = Jv.new' date [||] in
-        let hours = Jv.call now "getHours" [||] |> Jv.to_int in
-        let minutes = Jv.call now "getMinutes" [||] |> Jv.to_int in
-        Brr.El.set_children el [ Brr.El.txt' (soi hours ^ ":" ^ soi minutes) ];
-        ())
+    let write_date () =
+      let now = Jv.new' date [||] in
+      let hours = Jv.call now "getHours" [||] |> Jv.to_int in
+      let minutes = Jv.call now "getMinutes" [||] |> Jv.to_int in
+      Brr.El.set_children el [ Brr.El.txt' (soi hours ^ ":" ^ soi minutes) ]
+    in
+    write_date ();
+    Brr.G.set_interval ~ms:20000 write_date
 end
 
 module Msg = struct
