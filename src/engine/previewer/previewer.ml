@@ -30,7 +30,8 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ()) root =
           let raw_data : Jv.t = Brr_io.Message.Ev.data (Brr.Ev.as_type event) in
           let msg = Msg.of_jv raw_data in
           match msg with
-          | Some { id; payload = State new_stage } when id = ids.(!index) ->
+          | Some { id; payload = State (new_stage, _mode) }
+            when id = ids.(!index) ->
               callback new_stage;
               stage := new_stage
           | Some { id = "p1"; payload = Ready } ->

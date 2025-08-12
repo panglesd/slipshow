@@ -8,7 +8,7 @@ type drawing_payload =
 [@@deriving sexp]
 
 type payload =
-  | State of int
+  | State of int * [ `Fast | `Normal ]
   | Ready
   | Open_speaker_notes
   | Drawing of drawing_payload

@@ -42,6 +42,9 @@ let entry_action window step =
             let open Fut.Syntax in
             let+ () = Step.Next.goto step window in
             Messaging.send_step step
+              (match Fast.get_mode () with
+              | Normal | Counting_for_toc -> `Normal
+              | Fast.Fast_move -> `Fast)
           in
           ())
         (Brr.El.as_target el)

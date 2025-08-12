@@ -77,14 +77,14 @@ let keyboard_setup (window : Universe.Window.t) =
           let _ : unit Fut.t =
             let open Fut.Syntax in
             let+ () = Step.Next.go_next window 1 in
-            Messaging.send_step (Step.State.get_step ())
+            Messaging.send_step (Step.State.get_step ()) `Normal
           in
           ()
       | "ArrowLeft" | "PageUp" | "ArrowUp" ->
           let _ : unit Fut.t =
             let open Fut.Syntax in
             let+ () = Step.Next.go_prev window 1 in
-            Messaging.send_step (Step.State.get_step ())
+            Messaging.send_step (Step.State.get_step ()) `Normal
           in
           ()
       | "z" ->
@@ -193,8 +193,12 @@ let message_setup window =
       let raw_data : Jv.t = Brr_io.Message.Ev.data (Brr.Ev.as_type event) in
       let msg = comm_of_jv raw_data in
       match msg with
-      | Some { Communication.id = _; payload = State i } ->
-          let _ : unit Fut.t = Step.Next.goto i window in
+      | Some { Communication.id = _; payload = State (i, mode) } ->
+          let fast = match mode with `Fast -> true | _ -> false in
+          let _ : unit Fut.t =
+            if fast then Fast.with_fast @@ fun () -> Step.Next.goto i window
+            else Step.Next.goto i window
+          in
           ()
       | Some { Communication.id = _; payload = Drawing (End { state }) } -> (
           match Drawing.State.of_string state with

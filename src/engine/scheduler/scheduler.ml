@@ -97,11 +97,11 @@ let receive_message forward_to self =
     | _ -> ()
   in
   function
-  | Some { Communication.payload = State i; _ } ->
+  | Some { Communication.payload = State (i, mode); _ } ->
       let _history = Browser.History.set_hash (string_of_int i) in
       current_step := Some i;
       let msg =
-        { id = "hello"; payload = State i }
+        { id = "hello"; payload = State (i, mode) }
         |> Communication.to_string |> Jv.of_string
       in
       forward_message msg
@@ -114,7 +114,7 @@ let receive_message forward_to self =
       match !current_step with
       | Some i ->
           let msg =
-            { id = "hello"; payload = State i }
+            { id = "hello"; payload = State (i, `Fast) }
             |> Communication.to_string |> Jv.of_string
           in
           Brr.Window.post_message self ~msg
@@ -172,15 +172,6 @@ let receive_message_main = function
   | Some { Communication.id = "hello"; payload = Open_speaker_notes } ->
       open_window src;
       ()
-  | Some { id = _; payload = Ready } -> (
-      match !current_step with
-      | Some i ->
-          let msg =
-            { id = "hello"; payload = State i }
-            |> Communication.to_string |> Jv.of_string
-          in
-          Brr.Window.post_message (content_window iframe) ~msg
-      | _ -> ())
   | msg ->
       let forward_to =
         Option.map

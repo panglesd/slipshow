@@ -203,6 +203,9 @@ let add_starting_state (start, end_) starting_state =
       {|
 <!doctype html>
 <html>
+<head>
+<meta charset='utf-8'>
+</head>
   <body>
           <iframe name="slipshow_main_pres" id="ifra" srcdoc="%s" style="
     width: 100%%;
