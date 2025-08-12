@@ -89,7 +89,6 @@ let window_name w = Jv.get (Brr.Window.to_jv w) "name" |> Brr.El.of_jv
 (* TODO: Upstream to [Brr] *)
 let window_set_name w n = Jv.set (Brr.Window.to_jv w) "name" (Jv.of_string n)
 
-(* TODO: Upstream to [Brr] *)
 let content_window w =
   Jv.get (Brr.El.to_jv w) "contentWindow" |> Brr.Window.of_jv
 
