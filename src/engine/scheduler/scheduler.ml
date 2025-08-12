@@ -95,7 +95,7 @@ let current_step =
 
 let speaker_view_ref = ref None
 
-let open_window s =
+let open_window src =
   match !speaker_view_ref with
   | Some (w, _) when not (Brr.Window.closed w) -> ()
   | _ -> (
@@ -106,11 +106,12 @@ let open_window s =
       match child with
       | None -> Brr.Console.(log [ "No child" ])
       | Some child ->
-          window_set_name child "speaker-view";
+          Brr.Window.set_name (Jstr.v "speaker-view") child;
           (* let _ = child |> document_of_window |> document_inner_write s in *)
-          let _ = child |> document_of_window |> document_write (Jstr.v html) in
-          let _ = child |> document_of_window |> document_close in
-          let el = child |> document_of_window |> document_element in
+          let document = Brr.Window.document child in
+          let () = document_write (Jstr.v html) document in
+          let () = document_close document in
+          let el = Brr.Document.element document in
           let child_iframe =
             Brr.El.find_first_by_selector ~root:el (Jstr.v "#speaker-view")
             |> Option.get
@@ -128,10 +129,6 @@ let open_window s =
           let _untimer = Date.setup_timer timer in
           let _untimer = Date.clock clock in
           Brr.Console.(log [ "Done" ]))
-
-let initial_step =
-  Brr.G.window |> Brr.Window.location |> Brr.Uri.fragment |> Jstr.to_string
-  |> int_of_string_opt
 
 let receive_message_speaker_view = function
   | Some { Communication.payload = State i; _ } ->
@@ -224,7 +221,7 @@ let _ =
 
 let _ =
   Brr.Ev.listen Brr.Ev.beforeunload
-    (fun event ->
+    (fun _event ->
       match !speaker_view_ref with
       | None -> ()
       | Some (w, _) -> Brr.Window.close w)

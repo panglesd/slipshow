@@ -217,7 +217,7 @@ let intersect_poly p segment =
         false
       with Not_found -> true)
 
-let continue_shape_func state coord =
+let continue_shape_func _state coord =
   match !current_drawing_state with
   | Drawing (path, el) ->
       let path = coord :: path in
@@ -271,7 +271,7 @@ let start_shape_func id { State.color; width; tool } coord =
 
   Brr.El.append_children svg [ p ]
 
-let start_shape svg ev =
+let start_shape _svg ev =
   do_if_drawing @@ fun state ->
   let id = get_id () in
   let coord = coord_of_event ev in
@@ -279,7 +279,7 @@ let start_shape svg ev =
   let state = state |> State.sexp_of_t |> Sexplib0.Sexp.to_string in
   Step.Messaging.draw (Start { state; id; coord })
 
-let end_shape_func attrs =
+let end_shape_func _attrs =
   (match !current_drawing_state with
   | Drawing (path, el) ->
       let () =
