@@ -207,10 +207,10 @@ let _ =
   Brr.Ev.listen Brr_io.Message.Ev.message
     (fun event ->
       let source =
-        Brr_io.Message.Ev.source (Brr.Ev.as_type event) |> Option.get
+        Brr_io.Message.Ev.source (Brr.Ev.as_type event)
+        |> Option.get |> Brr.Window.of_jv
       in
-      (* TODO: use window_name *)
-      let source_name = Jv.get source "name" |> Jv.to_string in
+      let source_name = Brr.Window.name source |> Jstr.to_string in
       let raw_data : Jv.t = Brr_io.Message.Ev.data (Brr.Ev.as_type event) in
       let msg = Msg.of_jv raw_data in
       match source_name with
