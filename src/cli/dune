@@ -3,27 +3,6 @@
  (name main)
  (flags
   (:standard
-    -noautolink
-    -cclib "-framework Foundation"
-    -cclib "-framework CoreServices"
-    -cclib -lctypes_foreign_stubs
-    -cclib -lctypes_stubs
-    -cclib -lirmin_watcher_stubs
-    -cclib -loverlap_stubs
-    -cclib -lssl_stubs
-    -cclib -lmtime_clock_stubs
-    -cclib -lptime_clock_stubs
-    -cclib -lcstruct_stubs
-    -cclib -lintegers_stubs
-    -cclib -lmirage_crypto_stubs
-    -cclib -llwt_unix_stubs
-    -cclib -lmirage_crypto_rng_unix_stubs
-    -cclib -lthreadsnat
-    -cclib -lbigstringaf_stubs
-    -cclib -ldigestif_c_stubs
-    -cclib -lcf_stubs
-    -cclib -lfsevents_stubs
-    -cclib -lcamlstrbyt
     -cclib /usr/local/opt/libffi/lib/libffi.a
     -cclib /usr/local/opt/openssl@3/lib/libssl.a
     -cclib /usr/local/opt/openssl@3/lib/libcrypto.a
