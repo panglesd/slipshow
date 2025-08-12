@@ -1,6 +1,5 @@
 (library
  (name drawing)
- ; TODO: extract messaging from step library
  (libraries step brr universe normalization messaging)
  (preprocess
   (pps ppx_sexp_conv)))

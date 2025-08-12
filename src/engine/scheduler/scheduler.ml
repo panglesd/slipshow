@@ -89,9 +89,12 @@ let current_step =
 
 let speaker_view_ref = ref None
 
-let receive_message ?(condition = true) forward_to self =
+let receive_message forward_to self =
   let forward_message msg =
-    if condition then Brr.Window.post_message forward_to ~msg
+    match forward_to with
+    | Some (window, iframe_window) when not (Brr.Window.closed window) ->
+        Brr.Window.post_message iframe_window ~msg
+    | _ -> ()
   in
   function
   | Some { Communication.payload = State i; _ } ->
@@ -145,7 +148,8 @@ let open_window src =
                   Brr_io.Message.Ev.data (Brr.Ev.as_type event)
                 in
                 let msg = Msg.of_jv raw_data in
-                receive_message (content_window iframe)
+                receive_message
+                  (Some (Brr.G.window, content_window iframe))
                   (content_window child_iframe)
                   msg)
               (Brr.Window.as_target child)
@@ -177,14 +181,13 @@ let receive_message_main = function
           in
           Brr.Window.post_message (content_window iframe) ~msg
       | _ -> ())
-  | msg -> (
-      match !speaker_view_ref with
-      | Some (w, child_frame) ->
-          receive_message
-            ~condition:(not (Brr.Window.closed w))
-            (content_window child_frame)
-            (content_window iframe) msg
-      | _ -> ())
+  | msg ->
+      let forward_to =
+        Option.map
+          (fun (w, child_frame) -> (w, content_window child_frame))
+          !speaker_view_ref
+      in
+      receive_message forward_to (content_window iframe) msg
 
 let _ =
   Brr.Ev.listen Brr_io.Message.Ev.message
