@@ -75,32 +75,18 @@ let html =
 |}
 (* TODO: move this script to ocaml realm *)
 
-(* TODO: Upstream to [Brr] *)
-let document_of_window w =
-  Jv.get (Brr.Window.to_jv w) "document" |> Brr.Document.of_jv
-
-(* TODO: Upstream to [Brr] *)
-let document_element d =
-  Jv.get (Brr.Document.to_jv d) "documentElement" |> Brr.El.of_jv
-
-(* TODO: Upstream to [Brr] *)
-let window_name w = Jv.get (Brr.Window.to_jv w) "name" |> Brr.El.of_jv
-
-(* TODO: Upstream to [Brr] *)
-let window_set_name w n = Jv.set (Brr.Window.to_jv w) "name" (Jv.of_string n)
-
 let content_window w =
   Jv.get (Brr.El.to_jv w) "contentWindow" |> Brr.Window.of_jv
 
 (* This is deprecated but sill works better than anything else *)
 let document_write s d =
-  Jv.call (Brr.Document.to_jv d) "write" [| Jv.of_jstr s |]
+  Jv.call (Brr.Document.to_jv d) "write" [| Jv.of_jstr s |] |> ignore
 
 (* let document_inner_write s d = *)
 (*   let document_element = document_element d in *)
 (*   Jv.set (Brr.El.to_jv document_element) "innerHTML" (Jv.of_jstr s) *)
 
-let document_close d = Jv.call (Brr.Document.to_jv d) "close" [||]
+let document_close d = Jv.call (Brr.Document.to_jv d) "close" [||] |> ignore
 
 let current_step =
   ref
