@@ -35,7 +35,6 @@ let keyboard_setup (window : Universe.Window.t) =
         check active_elem
       in
       check_modif_key Brr.Ev.Keyboard.ctrl_key @@ fun () ->
-      check_modif_key Brr.Ev.Keyboard.shift_key @@ fun () ->
       check_modif_key Brr.Ev.Keyboard.meta_key @@ fun () ->
       check_textarea @@ fun () ->
       match key with
@@ -198,6 +197,28 @@ let message_setup window =
           Brr.Console.(log [ "Receiving an order to open the speaker notes" ]);
           let _ : unit Fut.t = Step.Next.goto i window in
           ()
+      | Some { Communication.id = _; payload = Drawing (End { state }) } -> (
+          match Drawing.State.of_string state with
+          | None -> ()
+          | Some state -> Drawing.end_shape_func state)
+      | Some
+          {
+            Communication.id = _;
+            payload = Drawing (Continue { state; coord });
+          } -> (
+          match Drawing.State.of_string state with
+          | None -> ()
+          | Some state -> Drawing.continue_shape_func state coord)
+      | Some
+          {
+            Communication.id = _;
+            payload = Drawing (Start { state; coord; id });
+          } -> (
+          match Drawing.State.of_string state with
+          | None -> ()
+          | Some state -> Drawing.start_shape_func id state coord)
+      | Some { Communication.id = _; payload = Drawing Clear } ->
+          Drawing.clear_func ()
       | _ -> ())
     (Brr.Window.as_target Brr.G.window)
   |> ignore

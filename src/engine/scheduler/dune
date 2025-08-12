@@ -3,4 +3,4 @@
 (executable
  (name scheduler)
  (modes js)
- (libraries communication brr))
+ (libraries communication brr browser))

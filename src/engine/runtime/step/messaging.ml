@@ -26,6 +26,15 @@ let send_step () =
   in
   Brr.Window.post_message parent ~msg
 
+let draw draw_payload =
+  if_id @@ fun id ->
+  if_parent @@ fun parent ->
+  let payload = Communication.Drawing draw_payload in
+  let msg =
+    { Communication.id; payload } |> Communication.to_string |> Jv.of_string
+  in
+  Brr.Window.post_message parent ~msg
+
 let send_speaker_notes () =
   if_id @@ fun id ->
   if_parent @@ fun parent ->

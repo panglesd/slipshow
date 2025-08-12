@@ -102,7 +102,12 @@ let document_write s d =
 (*   Jv.set (Brr.El.to_jv document_element) "innerHTML" (Jv.of_jstr s) *)
 
 let document_close d = Jv.call (Brr.Document.to_jv d) "close" [||]
-let current_step = ref None
+
+let current_step =
+  ref
+    (Brr.G.window |> Brr.Window.location |> Brr.Uri.fragment |> Jstr.to_string
+   |> int_of_string_opt)
+
 let speaker_view_ref = ref None
 
 let open_window s =
@@ -139,12 +144,24 @@ let open_window s =
           let _untimer = Date.clock clock in
           Brr.Console.(log [ "Done" ]))
 
+let initial_step =
+  Brr.G.window |> Brr.Window.location |> Brr.Uri.fragment |> Jstr.to_string
+  |> int_of_string_opt
+
 let receive_message_speaker_view = function
   | Some { Communication.payload = State i; _ } ->
+      let _history = Browser.History.set_hash (string_of_int i) in
       current_step := Some i;
       let msg =
         { id = "hello"; payload = State i }
         |> Communication.to_string |> Jv.of_string
+      in
+      Brr.Window.post_message (content_window iframe) ~msg
+  | Some { Communication.id = "hello"; payload = Drawing _ as payload } ->
+      Brr.Console.(log [ "Something has been written" ]);
+      ();
+      let msg =
+        { id = "hello"; payload } |> Communication.to_string |> Jv.of_string
       in
       Brr.Window.post_message (content_window iframe) ~msg
   | Some { Communication.id = _; payload = Ready } -> (
@@ -154,18 +171,45 @@ let receive_message_speaker_view = function
             { id = "hello"; payload = State i }
             |> Communication.to_string |> Jv.of_string
           in
-          Fut.await (Fut.tick ~ms:000) (fun _ ->
-              Brr.Console.(log [ "Sending initial state"; i ]);
-              Brr.Window.post_message (content_window child_frame) ~msg)
+          Brr.Console.(log [ "Sending initial state"; i ]);
+          Brr.Window.post_message (content_window child_frame) ~msg
       | _ -> ())
   | _ -> ()
 
 let receive_message_main = function
+  | Some { Communication.id = _; payload = Ready } ->
+      let i =
+        Brr.G.window |> Brr.Window.location |> Brr.Uri.fragment
+        |> Jstr.to_string |> int_of_string_opt
+      in
+      let () =
+        match i with
+        | None -> ()
+        | Some i ->
+            let msg =
+              { id = "hello"; payload = State i }
+              |> Communication.to_string |> Jv.of_string
+            in
+            Brr.Console.(log [ "Sending initial state"; i ]);
+            Brr.Window.post_message (content_window iframe) ~msg
+      in
+      ()
   | Some { Communication.id = "hello"; payload = Open_speaker_notes } ->
       Brr.Console.(log [ "Receiving an order to open the speaker notes" ]);
       open_window src;
       ()
+  | Some { Communication.id = "hello"; payload = Drawing _ as payload } -> (
+      Brr.Console.(log [ "Something has been written" ]);
+      ();
+      match !speaker_view_ref with
+      | Some (w, child_frame) when not (Brr.Window.closed w) ->
+          let msg =
+            { id = "hello"; payload } |> Communication.to_string |> Jv.of_string
+          in
+          Brr.Window.post_message (content_window child_frame) ~msg
+      | _ -> ())
   | Some { id = "hello"; payload = State i } -> (
+      let _history = Browser.History.set_hash (string_of_int i) in
       current_step := Some i;
       match !speaker_view_ref with
       | Some (w, child_frame) when not (Brr.Window.closed w) ->

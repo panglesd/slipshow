@@ -1,4 +1,15 @@
-type payload = State of int | Ready | Open_speaker_notes
+type drawing_payload =
+  | End of { state : string }
+  | Start of { id : string; state : string; coord : float * float }
+  | Continue of { state : string; coord : float * float }
+  | Clear
+
+type payload =
+  | State of int
+  | Ready
+  | Open_speaker_notes
+  | Drawing of drawing_payload
+
 type t = { id : string; payload : payload }
 
 val of_string : string -> t option

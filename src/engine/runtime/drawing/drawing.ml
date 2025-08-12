@@ -1,8 +1,25 @@
+(* TODO: upstream to Brr *)
+let window_name w =
+  Jv.get (Brr.Window.to_jv w) "name" |> Jv.to_option Jv.to_string
+
+let get_id =
+  let id_number = ref 0 in
+  let window_name = window_name Brr.G.window |> Option.value ~default:"" in
+  let name = "__slipshow__" ^ window_name in
+  fun () ->
+    let i = !id_number in
+    incr id_number;
+    name ^ string_of_int i
+
 let all_paths = Hashtbl.create 10
 
 let remove elem =
-  Hashtbl.remove all_paths elem;
-  Brr.El.remove elem
+  match Brr.El.at (Jstr.v "id") elem with
+  | None -> Brr.El.remove elem
+  | Some id ->
+      let id = Jstr.to_string id in
+      Hashtbl.remove all_paths id;
+      Brr.El.remove elem
 
 let is_pressed = ( != ) 0
 
@@ -14,7 +31,7 @@ type drawing_state =
 let current_drawing_state = ref Pointing
 
 module Color = struct
-  type t = Red | Blue | Green | Black | Yellow
+  type t = Red | Blue | Green | Black | Yellow [@@deriving sexp]
 
   let to_string = function
     | Red -> "red"
@@ -25,13 +42,13 @@ module Color = struct
 end
 
 module Width = struct
-  type t = Small | Medium | Large
+  type t = Small | Medium | Large [@@deriving sexp]
 
   let to_string = function Small -> "1" | Medium -> "3" | Large -> "5"
 end
 
 module Tool = struct
-  type t = Pen | Highlighter | Eraser | Pointer
+  type t = Pen | Highlighter | Eraser | Pointer [@@deriving sexp]
 
   let to_string = function
     | Pen -> "pen"
@@ -60,15 +77,24 @@ module Button = struct
 end
 
 module State : sig
-  type t = { color : Color.t; width : Width.t; tool : Tool.t }
+  type t = { color : Color.t; width : Width.t; tool : Tool.t } [@@deriving sexp]
 
   val get_state : unit -> t
   val set_color : Color.t -> unit
   val set_width : Width.t -> unit
   val set_tool : Tool.t -> unit
   val get_tool : unit -> Tool.t
+  val of_string : string -> t option
 end = struct
-  type t = { color : Color.t; width : Width.t; tool : Tool.t }
+  type t = { color : Color.t; width : Width.t; tool : Tool.t } [@@deriving sexp]
+
+  let t_of_sexp_opt s =
+    try Some (t_of_sexp s) with Sexplib0.Sexp.Of_sexp_error _ -> None
+
+  let of_string s =
+    match Sexplib.Sexp.of_string_conv s t_of_sexp_opt with
+    | `Result (Some _ as r) -> r
+    | _ -> None
 
   let color = ref Color.Blue
   let width = ref Width.Medium
@@ -127,6 +153,9 @@ let svg_path path =
   let res =
     match path with
     | [] -> []
+    (* TODO: This does not work due to being impossible to delete... *)
+    (* | [ (x, y) ] -> *)
+    (*     [ Format.sprintf "M %f,%f L %f,%f " x y (x +. 1.) (y +. 1.) ] *)
     | (x, y) :: rest ->
         Format.sprintf "M %f,%f" x y
         :: List.map (fun (x, y) -> Format.sprintf "L %f,%f" x y) rest
@@ -188,26 +217,30 @@ let intersect_poly p segment =
         false
       with Not_found -> true)
 
-let continue_shape ev =
-  check_is_pressed ev @@ fun () ->
-  do_if_drawing @@ fun { tool = _; _ } ->
+let continue_shape_func state coord =
   match !current_drawing_state with
   | Drawing (path, el) ->
-      let path = coord_of_event ev :: path in
+      let path = coord :: path in
       current_drawing_state := Drawing (path, el);
       Brr.El.set_at (Jstr.v "d") (Some (Jstr.v (svg_path path))) el
   | Erasing last_point ->
-      let current_point = coord_of_event ev in
       Hashtbl.iter
-        (fun elem path ->
-          if intersect_poly path (current_point, last_point) then remove elem)
+        (fun _id (elem, path) ->
+          if intersect_poly path (coord, last_point) then remove elem)
         all_paths;
-      current_drawing_state := Erasing current_point;
+      current_drawing_state := Erasing coord;
       ()
   | Pointing -> ()
 
-let start_shape svg ev =
-  do_if_drawing @@ fun { color; width; tool } ->
+let continue_shape ev =
+  check_is_pressed ev @@ fun () ->
+  do_if_drawing @@ fun state ->
+  let coord = coord_of_event ev in
+  continue_shape_func state coord;
+  let state = state |> State.sexp_of_t |> Sexplib0.Sexp.to_string in
+  Step.Messaging.draw (Continue { state; coord })
+
+let start_shape_func id { State.color; width; tool } coord =
   let p = Brr.El.v ~ns:`SVG (Jstr.v "path") [] in
   let set_at at v = Brr.El.set_at (Jstr.v at) (Some (Jstr.v v)) p in
   (match tool with
@@ -215,24 +248,85 @@ let start_shape svg ev =
       set_at "stroke" (Color.to_string color);
       set_at "stroke-width" (Width.to_string width);
       set_at "fill" "none";
-      current_drawing_state := Drawing ([], p)
+      set_at "id" id;
+      let path = [ coord ] in
+      Brr.El.set_at (Jstr.v "d") (Some (Jstr.v (svg_path path))) p;
+      current_drawing_state := Drawing (path, p)
   | Highlighter ->
       set_at "stroke" (Color.to_string color);
       set_at "stroke-linecap" "round";
       set_at "stroke-width" (Width.to_string width ^ "0");
       set_at "opacity" (string_of_float 0.33);
+      set_at "id" id;
       set_at "fill" "none";
-      current_drawing_state := Drawing ([], p)
-  | Eraser -> current_drawing_state := Erasing (coord_of_event ev)
+      let path = [ coord ] in
+      Brr.El.set_at (Jstr.v "d") (Some (Jstr.v (svg_path path))) p;
+      current_drawing_state := Drawing (path, p)
+  | Eraser -> current_drawing_state := Erasing coord
   | Pointer -> ());
+  let svg =
+    Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing-elem")
+    |> Option.get
+  in
+
   Brr.El.append_children svg [ p ]
 
-let end_shape () =
-  do_if_drawing @@ fun _ ->
+let start_shape svg ev =
+  do_if_drawing @@ fun state ->
+  let id = get_id () in
+  let coord = coord_of_event ev in
+  start_shape_func id state coord;
+  let state = state |> State.sexp_of_t |> Sexplib0.Sexp.to_string in
+  Step.Messaging.draw (Start { state; id; coord })
+
+let end_shape_func attrs =
   (match !current_drawing_state with
-  | Drawing (path, el) -> Hashtbl.add all_paths el path
+  | Drawing (path, el) ->
+      let () =
+        match Brr.El.at (Jstr.v "id") el with
+        | None -> ()
+        | Some id ->
+            let id = Jstr.to_string id in
+            Hashtbl.add all_paths id (el, path)
+      in
+      ()
   | _ -> ());
   current_drawing_state := Pointing
+
+let end_shape () =
+  do_if_drawing @@ fun attrs ->
+  let state = attrs |> State.sexp_of_t |> Sexplib0.Sexp.to_string in
+  Step.Messaging.draw (End { state });
+  end_shape_func attrs
+
+(* let add_drawing id attrs path = *)
+(*   let { State.color; width; tool } = attrs in *)
+(*   let svg = *)
+(*     Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing-elem") *)
+(*     |> Option.get *)
+(*   in *)
+(*   let p = Brr.El.v ~ns:`SVG (Jstr.v "path") [] in *)
+(*   let set_at at v = Brr.El.set_at (Jstr.v at) (Some (Jstr.v v)) p in *)
+(*   (match tool with *)
+(*   | Tool.Pen -> *)
+(*       set_at "stroke" (Color.to_string color); *)
+(*       set_at "stroke-width" (Width.to_string width); *)
+(*       set_at "fill" "none"; *)
+(*       set_at "id" id; *)
+(*       Brr.El.set_at (Jstr.v "d") (Some (Jstr.v (svg_path path))) p; *)
+(*       current_drawing_state := Drawing (path, p) *)
+(*   | Highlighter -> *)
+(*       set_at "stroke" (Color.to_string color); *)
+(*       set_at "stroke-linecap" "round"; *)
+(*       set_at "stroke-width" (Width.to_string width ^ "0"); *)
+(*       set_at "opacity" (string_of_float 0.33); *)
+(*       set_at "fill" "none"; *)
+(*       Brr.El.set_at (Jstr.v "d") (Some (Jstr.v (svg_path path))) p; *)
+(*       current_drawing_state := Drawing (path, p) *)
+(*   | Eraser -> failwith "TODO" *)
+(*   | Pointer -> ()); *)
+(*   Brr.El.append_children svg [ p ]; *)
+(*   Hashtbl.add all_paths id (p, path) *)
 
 let connect svg =
   let _mousemove =
@@ -250,7 +344,11 @@ let connect svg =
   in
   ()
 
-let clear () = Hashtbl.iter (fun elem _ -> remove elem) all_paths
+let clear_func () = Hashtbl.iter (fun _ (elem, _) -> remove elem) all_paths
+
+let clear () =
+  Step.Messaging.draw Clear;
+  clear_func ()
 
 let setup el =
   let content =

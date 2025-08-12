@@ -1,6 +1,19 @@
 open Sexplib.Std
 
-type payload = State of int | Ready | Open_speaker_notes [@@deriving sexp]
+type drawing_payload =
+  | End of { state : string }
+  | Start of { id : string; state : string; coord : float * float }
+  | Continue of { state : string; coord : float * float }
+  | Clear
+[@@deriving sexp]
+
+type payload =
+  | State of int
+  | Ready
+  | Open_speaker_notes
+  | Drawing of drawing_payload
+[@@deriving sexp]
+
 type t = { id : string; payload : payload } [@@deriving sexp]
 
 let t_of_sexp_opt s =
