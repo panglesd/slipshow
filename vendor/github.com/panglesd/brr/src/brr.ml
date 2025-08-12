@@ -1755,6 +1755,8 @@ module Document = struct
 
   let as_target d = d
 
+  let element d = Jv.get d "documentElement"
+
   (* Elements *)
 
   let root d = El.of_jv (Jv.get d "documentElement")
@@ -1923,9 +1925,15 @@ module Window = struct
   let inner_width w = Jv.Int.get w "innerWidth"
   let inner_height w = Jv.Int.get w "innerHeight"
 
+  let document w = Jv.get w "document"
+
   let parent w =
     let p = Jv.get w "parent" in
     if p == w then None else Some p
+
+  let name w = Jv.Jstr.get w "name"
+
+  let set_name name w = Jv.Jstr.set w "name" name
 
   let post_message w ~msg =
     ignore @@ Jv.call w "postMessage" [| msg |]
