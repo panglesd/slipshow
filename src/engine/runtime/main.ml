@@ -49,8 +49,8 @@ let start ~width ~height ~id ~step =
     | Some step -> Fast.with_fast @@ fun () -> Step.Next.goto step window
   in
   let () = Controller.setup window in
-  let () = Step.Messaging.set_id id in
-  let () = Step.Messaging.send_ready () in
+  let () = Messaging.set_id id in
+  let () = Messaging.send_ready () in
   Fut.return ()
 
 let () =

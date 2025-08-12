@@ -234,7 +234,7 @@ let continue_shape ev =
   let coord = coord_of_event ev in
   continue_shape_func state coord;
   let state = state |> State.sexp_of_t |> Sexplib0.Sexp.to_string in
-  Step.Messaging.draw (Continue { state; coord })
+  Messaging.draw (Continue { state; coord })
 
 let start_shape_func id { State.color; width; tool } coord =
   let p = Brr.El.v ~ns:`SVG (Jstr.v "path") [] in
@@ -273,7 +273,7 @@ let start_shape _svg ev =
   let coord = coord_of_event ev in
   start_shape_func id state coord;
   let state = state |> State.sexp_of_t |> Sexplib0.Sexp.to_string in
-  Step.Messaging.draw (Start { state; id; coord })
+  Messaging.draw (Start { state; id; coord })
 
 let end_shape_func _attrs =
   (match !current_drawing_state with
@@ -292,7 +292,7 @@ let end_shape_func _attrs =
 let end_shape () =
   do_if_drawing @@ fun attrs ->
   let state = attrs |> State.sexp_of_t |> Sexplib0.Sexp.to_string in
-  Step.Messaging.draw (End { state });
+  Messaging.draw (End { state });
   end_shape_func attrs
 
 (* let add_drawing id attrs path = *)
@@ -343,7 +343,7 @@ let connect svg =
 let clear_func () = Hashtbl.iter (fun _ (elem, _) -> remove elem) all_paths
 
 let clear () =
-  Step.Messaging.draw Clear;
+  Messaging.draw Clear;
   clear_func ()
 
 let setup el =

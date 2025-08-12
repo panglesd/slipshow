@@ -41,7 +41,7 @@ let entry_action window step =
           let _ : unit Fut.t =
             let open Fut.Syntax in
             let+ () = Step.Next.goto step window in
-            Step.Messaging.send_step ()
+            Messaging.send_step step
           in
           ())
         (Brr.El.as_target el)

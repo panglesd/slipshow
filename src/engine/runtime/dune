@@ -12,6 +12,7 @@
   step
   universe
   drawing
+  messaging
   fast
   mouse_disappearing))
 

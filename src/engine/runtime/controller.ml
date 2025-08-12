@@ -38,7 +38,7 @@ let keyboard_setup (window : Universe.Window.t) =
       check_modif_key Brr.Ev.Keyboard.meta_key @@ fun () ->
       check_textarea @@ fun () ->
       match key with
-      | "s" -> Step.Messaging.send_speaker_notes ()
+      | "s" -> Messaging.send_speaker_notes ()
       | "t" -> Table_of_content.toggle_visibility ()
       | "w" -> Drawing.State.set_tool Pen
       | "h" -> Drawing.State.set_tool Highlighter
@@ -77,14 +77,14 @@ let keyboard_setup (window : Universe.Window.t) =
           let _ : unit Fut.t =
             let open Fut.Syntax in
             let+ () = Step.Next.go_next window 1 in
-            Step.Messaging.send_step ()
+            Messaging.send_step (Step.State.get_step ())
           in
           ()
       | "ArrowLeft" | "PageUp" | "ArrowUp" ->
           let _ : unit Fut.t =
             let open Fut.Syntax in
             let+ () = Step.Next.go_prev window 1 in
-            Step.Messaging.send_step ()
+            Messaging.send_step (Step.State.get_step ())
           in
           ()
       | "z" ->

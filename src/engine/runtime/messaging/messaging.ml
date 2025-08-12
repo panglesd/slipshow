@@ -16,10 +16,9 @@ let send_ready () =
   in
   Brr.Window.post_message parent ~msg
 
-let send_step () =
+let send_step step =
   if_id @@ fun id ->
   if_parent @@ fun parent ->
-  let step = State.get_step () in
   let msg =
     { Communication.id; payload = State step }
     |> Communication.to_string |> Jv.of_string

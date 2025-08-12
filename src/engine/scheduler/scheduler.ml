@@ -68,7 +68,6 @@ let html =
   </body>
 </html>
 |}
-(* TODO: move this script to ocaml realm *)
 
 let content_window w =
   Jv.get (Brr.El.to_jv w) "contentWindow" |> Brr.Window.of_jv
