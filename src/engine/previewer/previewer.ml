@@ -6,7 +6,7 @@ end
 
 type previewer = { stage : int ref; index : int ref; panels : Brr.El.t array }
 
-let ids = [| "p1"; "p2" |]
+let ids = [| "slipshow-frame-1"; "slipshow-frame-2" |]
 
 let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ()) root =
   let panel1 =
@@ -24,25 +24,21 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ()) root =
         let source =
           Brr_io.Message.Ev.source (Brr.Ev.as_type event) |> Option.get
         in
-        let source_name = Jv.get source "name" |> Jv.to_jstr in
-        if not (Jstr.equal source_name (Jstr.v "frame")) then ()
-        else
-          let raw_data : Jv.t = Brr_io.Message.Ev.data (Brr.Ev.as_type event) in
-          let msg = Msg.of_jv raw_data in
-          match msg with
-          | Some { id; payload = State (new_stage, _mode) }
-            when id = ids.(!index) ->
-              callback new_stage;
-              stage := new_stage
-          | Some { id = "p1"; payload = Ready } ->
-              index := 0;
-              Brr.El.set_class (Jstr.v "active_panel") true panels.(!index);
-              Brr.El.set_class (Jstr.v "active_panel") false panels.(1 - !index)
-          | Some { id = "p2"; payload = Ready } ->
-              index := 1;
-              Brr.El.set_class (Jstr.v "active_panel") true panels.(!index);
-              Brr.El.set_class (Jstr.v "active_panel") false panels.(1 - !index)
-          | _ -> ())
+        let source_name = Jv.get source "name" |> Jv.to_string in
+        let raw_data : Jv.t = Brr_io.Message.Ev.data (Brr.Ev.as_type event) in
+        let msg = Msg.of_jv raw_data in
+        match msg with
+        | Some { payload = State (new_stage, _mode) }
+          when String.equal source_name ids.(!index) ->
+            callback new_stage;
+            stage := new_stage
+        | Some { payload = Ready } when String.equal source_name ids.(!index) ->
+            ()
+        | Some { payload = Ready } ->
+            index := 1 - !index;
+            Brr.El.set_class (Jstr.v "active_panel") true panels.(!index);
+            Brr.El.set_class (Jstr.v "active_panel") false panels.(1 - !index)
+        | _ -> ())
       (Brr.Window.as_target Brr.G.window)
   in
   { stage; index; panels }

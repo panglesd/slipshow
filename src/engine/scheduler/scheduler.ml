@@ -154,7 +154,7 @@ module Handle = struct
         match !current_step with
         | Some i ->
             let msg =
-              { id = "hello"; payload = State (i, `Fast) }
+              { payload = State (i, `Fast) }
               |> Communication.to_string |> Jv.of_string
             in
             Brr.Window.post_message self ~msg
@@ -164,7 +164,7 @@ module Handle = struct
   let send_all_strokes_on_ready main_frame = function
     | { Communication.payload = Ready; _ } ->
         let msg =
-          { id = "hello"; payload = Send_all_drawing }
+          { payload = Send_all_drawing }
           |> Communication.to_string |> Jv.of_string
         in
         Brr.Window.post_message main_frame ~msg

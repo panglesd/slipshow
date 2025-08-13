@@ -19,7 +19,7 @@ type payload =
   | Receive_all_drawing of stroke list
 [@@deriving sexp]
 
-type t = { id : string; payload : payload } [@@deriving sexp]
+type t = { payload : payload } [@@deriving sexp]
 
 let t_of_sexp_opt s =
   try Some (t_of_sexp s) with Sexplib0.Sexp.Of_sexp_error _ -> None

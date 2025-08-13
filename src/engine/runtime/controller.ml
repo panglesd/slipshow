@@ -193,39 +193,28 @@ let message_setup window =
       let raw_data : Jv.t = Brr_io.Message.Ev.data (Brr.Ev.as_type event) in
       let msg = comm_of_jv raw_data in
       match msg with
-      | Some { Communication.id = _; payload = State (i, mode) } ->
+      | Some { payload = State (i, mode) } ->
           let fast = match mode with `Fast -> true | _ -> false in
           let _ : unit Fut.t =
             if fast then Fast.with_fast @@ fun () -> Step.Next.goto i window
             else Step.Next.goto i window
           in
           ()
-      | Some { Communication.id = _; payload = Drawing (End { state }) } -> (
+      | Some { payload = Drawing (End { state }) } -> (
           match Drawing.State.of_string state with
           | None -> ()
           | Some state -> Drawing.end_shape_func state)
-      | Some
-          {
-            Communication.id = _;
-            payload = Drawing (Continue { state; coord });
-          } -> (
+      | Some { payload = Drawing (Continue { state; coord }) } -> (
           match Drawing.State.of_string state with
           | None -> ()
           | Some state -> Drawing.continue_shape_func state coord)
-      | Some
-          {
-            Communication.id = _;
-            payload = Drawing (Start { state; coord; id });
-          } -> (
+      | Some { payload = Drawing (Start { state; coord; id }) } -> (
           match Drawing.State.of_string state with
           | None -> ()
           | Some state -> Drawing.start_shape_func id state coord)
-      | Some { Communication.id = _; payload = Drawing Clear } ->
-          Drawing.clear_func ()
-      | Some { Communication.id = _; payload = Send_all_drawing } ->
-          Drawing.send_all_strokes ()
-      | Some { Communication.id = _; payload = Receive_all_drawing all_strokes }
-        ->
+      | Some { payload = Drawing Clear } -> Drawing.clear_func ()
+      | Some { payload = Send_all_drawing } -> Drawing.send_all_strokes ()
+      | Some { payload = Receive_all_drawing all_strokes } ->
           Drawing.receive_all_strokes all_strokes
       | _ -> ())
     (Brr.Window.as_target Brr.G.window)

@@ -1,53 +1,35 @@
-let id = ref None
-let set_id i = id := i
-let if_id f = match !id with None -> () | Some id -> f id
-
 let if_parent f =
   match Brr.Window.parent Brr.G.window with
   | None -> ()
   | Some parent -> f parent
 
 let send_ready () =
-  if_id @@ fun id ->
   if_parent @@ fun parent ->
-  let msg =
-    { Communication.id; payload = Ready }
-    |> Communication.to_string |> Jv.of_string
-  in
+  let msg = { payload = Ready } |> Communication.to_string |> Jv.of_string in
   Brr.Window.post_message parent ~msg
 
 let send_step step mode =
-  if_id @@ fun id ->
   if_parent @@ fun parent ->
   let msg =
-    { Communication.id; payload = State (step, mode) }
-    |> Communication.to_string |> Jv.of_string
+    { payload = State (step, mode) } |> Communication.to_string |> Jv.of_string
   in
   Brr.Window.post_message parent ~msg
 
 let draw draw_payload =
-  if_id @@ fun id ->
   if_parent @@ fun parent ->
   let payload = Communication.Drawing draw_payload in
-  let msg =
-    { Communication.id; payload } |> Communication.to_string |> Jv.of_string
-  in
+  let msg = { payload } |> Communication.to_string |> Jv.of_string in
   Brr.Window.post_message parent ~msg
 
 let send_all_strokes strokes =
-  if_id @@ fun id ->
   if_parent @@ fun parent ->
   let payload = Communication.Receive_all_drawing strokes in
-  let msg =
-    { Communication.id; payload } |> Communication.to_string |> Jv.of_string
-  in
+  let msg = { payload } |> Communication.to_string |> Jv.of_string in
   Brr.Window.post_message parent ~msg
 
 let send_speaker_notes () =
-  if_id @@ fun id ->
   if_parent @@ fun parent ->
   let msg =
-    { Communication.id; payload = Open_speaker_notes }
-    |> Communication.to_string |> Jv.of_string
+    { payload = Open_speaker_notes } |> Communication.to_string |> Jv.of_string
   in
   Brr.Window.post_message parent ~msg

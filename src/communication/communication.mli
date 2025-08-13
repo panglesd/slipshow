@@ -14,7 +14,7 @@ type payload =
   | Send_all_drawing
   | Receive_all_drawing of stroke list
 
-type t = { id : string; payload : payload }
+type t = { payload : payload }
 
 val of_string : string -> t option
 val to_string : t -> string
