@@ -105,6 +105,11 @@ let receive_message forward_to self =
         |> Communication.to_string |> Jv.of_string
       in
       forward_message msg
+  | Some { Communication.payload = Receive_all_drawing _ as payload; _ } ->
+      let msg =
+        { id = "hello"; payload } |> Communication.to_string |> Jv.of_string
+      in
+      forward_message msg
   | Some { id = "hello"; payload = Drawing _ as payload } ->
       let msg =
         { id = "hello"; payload } |> Communication.to_string |> Jv.of_string
@@ -117,7 +122,12 @@ let receive_message forward_to self =
             { id = "hello"; payload = State (i, `Fast) }
             |> Communication.to_string |> Jv.of_string
           in
-          Brr.Window.post_message self ~msg
+          Brr.Window.post_message self ~msg;
+          let msg =
+            { id = "hello"; payload = Send_all_drawing }
+            |> Communication.to_string |> Jv.of_string
+          in
+          forward_message msg
       | _ -> ())
   | _ -> ()
 

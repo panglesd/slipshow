@@ -28,3 +28,5 @@ val end_shape_func : State.t -> unit
 val start_shape_func : string -> State.t -> float * float -> unit
 val continue_shape_func : State.t -> float * float -> unit
 val clear_func : unit -> unit
+val send_all_strokes : unit -> unit
+val receive_all_strokes : Communication.stroke list -> unit

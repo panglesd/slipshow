@@ -34,6 +34,15 @@ let draw draw_payload =
   in
   Brr.Window.post_message parent ~msg
 
+let send_all_strokes strokes =
+  if_id @@ fun id ->
+  if_parent @@ fun parent ->
+  let payload = Communication.Receive_all_drawing strokes in
+  let msg =
+    { Communication.id; payload } |> Communication.to_string |> Jv.of_string
+  in
+  Brr.Window.post_message parent ~msg
+
 let send_speaker_notes () =
   if_id @@ fun id ->
   if_parent @@ fun parent ->

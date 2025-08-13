@@ -222,6 +222,11 @@ let message_setup window =
           | Some state -> Drawing.start_shape_func id state coord)
       | Some { Communication.id = _; payload = Drawing Clear } ->
           Drawing.clear_func ()
+      | Some { Communication.id = _; payload = Send_all_drawing } ->
+          Drawing.send_all_strokes ()
+      | Some { Communication.id = _; payload = Receive_all_drawing all_strokes }
+        ->
+          Drawing.receive_all_strokes all_strokes
       | _ -> ())
     (Brr.Window.as_target Brr.G.window)
   |> ignore
