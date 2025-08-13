@@ -215,6 +215,12 @@ let add_starting_state (start, end_) (starting_state : starting_state option) =
     top: 0;
     bottom: 0;
 "></iframe>
+
+<script>
+document.getElementById('ifra').addEventListener('load', function () {
+    this.contentWindow.focus();
+});
+</script>
       <script>
       %s
       </script>

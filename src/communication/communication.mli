@@ -10,6 +10,7 @@ type payload =
   | State of int * [ `Fast | `Normal ]
   | Ready
   | Open_speaker_notes
+  | Speaker_notes of string
   | Drawing of drawing_event
   | Send_all_drawing
   | Receive_all_drawing of stroke list

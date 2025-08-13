@@ -38,7 +38,7 @@ let keyboard_setup (window : Universe.Window.t) =
       check_modif_key Brr.Ev.Keyboard.meta_key @@ fun () ->
       check_textarea @@ fun () ->
       match key with
-      | "s" -> Messaging.send_speaker_notes ()
+      | "s" -> Messaging.open_speaker_notes ()
       | "t" -> Table_of_content.toggle_visibility ()
       | "w" -> Drawing.State.set_tool Pen
       | "h" -> Drawing.State.set_tool Highlighter

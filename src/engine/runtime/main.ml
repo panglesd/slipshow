@@ -27,9 +27,7 @@ let start ~width ~height ~step =
         |> Jstr.to_string |> int_of_string_opt
   in
   let _history = Browser.History.set_hash "" in
-  let* () =
-    Step.Action_scheduler.setup_pause_ancestors window () |> Undoable.discard
-  in
+  let* () = Step.Action_scheduler.setup_actions window () in
   (* We do one step first, without recording it/updating the hash, to enter in
      the first slip *)
   let* _ =

@@ -42,19 +42,36 @@ module AttributeActions = struct
     Undoable.List.iter do_ Actions.all
 end
 
-let setup_pause_ancestors window () =
-  Brr.El.fold_find_by_selector
-    (fun elem acc ->
-      let> () = acc in
-      let open AttributeActions in
-      activate ~remove_class:false
-        (module struct
-          include Actions.Pause
+let setup_actions window () =
+  let open Fut.Syntax in
+  let+ _ : unit list =
+    Fut.of_list
+    @@ List.filter_map
+         (fun (module X : Actions.S) ->
+           match X.setup with
+           | None -> None
+           | Some setup2 ->
+               let res =
+                 Brr.El.fold_find_by_selector
+                   (fun elem acc ->
+                     let> () = acc in
+                     let open AttributeActions in
+                     activate ~remove_class:false
+                       (module struct
+                         include X
 
-          let do_ _window = setup
-        end)
-        window elem)
-    (Jstr.v "[pause]") (Undoable.return ())
+                         let do_ _window x =
+                           setup2 x |> ignore;
+                           Undoable.return ()
+                       end)
+                       window elem)
+                   (Jstr.v ("[" ^ X.on ^ "]"))
+                   (Undoable.return ())
+               in
+               Some (Undoable.discard res))
+         Actions.all
+  in
+  ()
 
 let update_history () =
   let prev_step = State.get_step () in

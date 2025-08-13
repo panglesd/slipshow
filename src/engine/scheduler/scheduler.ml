@@ -1,7 +1,6 @@
 module Date = struct
   let date = Jv.get Jv.global "Date"
   let now () = Jv.call date "now" [||] |> Jv.to_int
-  let initial_t = now ()
 
   let soi i =
     if i = 0 then "00"
@@ -17,17 +16,57 @@ module Date = struct
     soi h ^ ":" ^ soi m ^ ":" ^ soi s
 
   let setup_timer el =
+    let timer_mode = ref (`Since (now ())) in
+    let timer = Brr.El.span [] in
+    let restart =
+      Brr.El.input
+        ~at:[ Brr.At.type' (Jstr.v "button"); Brr.At.value (Jstr.v "Restart") ]
+        ()
+    in
+    let pause =
+      Brr.El.input
+        ~at:
+          [
+            Brr.At.type' (Jstr.v "button");
+            Brr.At.value (Jstr.v "Play/Pause");
+            Brr.At.style (Jstr.v "margin-left: 20px");
+          ]
+        ()
+    in
+    let current_time = ref "" in
+    let _ =
+      Brr.Ev.listen Brr.Ev.click
+        (fun _ ->
+          match !timer_mode with
+          | `Since n -> timer_mode := `Since (now ())
+          | `Paused_at n -> timer_mode := `Paused_at 0)
+        (Brr.El.as_target restart)
+    in
+    let _ =
+      Brr.Ev.listen Brr.Ev.click
+        (fun _ ->
+          match !timer_mode with
+          | `Since n -> timer_mode := `Paused_at (now () - n)
+          | `Paused_at n -> timer_mode := `Since (now () - n))
+        (Brr.El.as_target pause)
+    in
+    Brr.El.set_children el [ timer; pause; restart ];
     Brr.G.set_interval ~ms:100 (fun () ->
-        let now = now () in
-        Brr.El.set_children el [ Brr.El.txt' (string_of_t (now - initial_t)) ];
-        ())
+        let v =
+          match !timer_mode with `Since n -> now () - n | `Paused_at n -> n
+        in
+        let new_current_time = "⏱️ " ^ string_of_t v in
+        if not (String.equal !current_time new_current_time) then (
+          Brr.El.set_children timer [ Brr.El.txt' new_current_time ];
+          current_time := new_current_time))
 
   let clock el =
     let write_date () =
       let now = Jv.new' date [||] in
       let hours = Jv.call now "getHours" [||] |> Jv.to_int in
       let minutes = Jv.call now "getMinutes" [||] |> Jv.to_int in
-      Brr.El.set_children el [ Brr.El.txt' (soi hours ^ ":" ^ soi minutes) ]
+      Brr.El.set_children el
+        [ Brr.El.txt' ("⏰ " ^ soi hours ^ ":" ^ soi minutes) ]
     in
     write_date ();
     Brr.G.set_interval ~ms:20000 write_date
@@ -48,21 +87,37 @@ let html =
 <html>
   <body>
     <iframe name="slipshow_speaker_view" id="speaker-view"></iframe>
-    <div id="speaker-notes"><div id="timer"></div><div id="clock"></div><h2>Notes</h2></div>
+    <div id="speaker-notes"><div id="slswrapper"><div id="timer"></div><div id="clock"></div><h2>Notes</h2><div id="notes_div"></div></div></div>
+<script>
+document.getElementById('speaker-view').addEventListener('load', function () {
+    // Ensure iframe gets focus
+    this.contentWindow.focus();
+});
+</script>
     <style>
+    #timer {
+      font-size: 2em;
+    }
+    #clock {
+      font-size: 2em;
+    }
     html, body {
       height: 100%;
       margin: 0;
       padding: 0;
     }
+    #slswrapper {
+      padding: 30px;
+      font-size: 2em;
+    }
     body {
       display: flex;
     }
     #speaker-view {
-      width:70%;
+      width:60%;
     }
     #speaker-notes {
-      padding: 30px;
+      width:40%;
     }
     </style>
   </body>
@@ -188,6 +243,20 @@ module Handle = struct
         | Some parent ->
             let msg = msg |> Communication.to_string |> Jv.of_string in
             Brr.Window.post_message parent ~msg)
+
+  let new_speaker_notes = function
+    | { Communication.payload = Speaker_notes s; _ } -> (
+        match !speaker_view_ref with
+        | None -> ()
+        | Some (window, _) ->
+            let document = Brr.Window.document window in
+            let root = Brr.Document.element document in
+            let notes_elem =
+              Brr.El.find_first_by_selector ~root (Jstr.v "#notes_div")
+              |> Option.get
+            in
+            Jv.Jstr.set (Brr.El.to_jv notes_elem) "innerHTML" (Jstr.v s))
+    | _ -> ()
 end
 
 let speaker_note_handling window msg =
@@ -198,6 +267,7 @@ let speaker_note_handling window msg =
   let () = Handle.setting_state msg in
   let () = Handle.initial_state window msg in
   let () = Handle.send_all_strokes_on_ready (content_window iframe) msg in
+  let () = Handle.new_speaker_notes msg in
   ()
 
 let main_frame_handling msg =
