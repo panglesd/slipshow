@@ -2,12 +2,15 @@
  (public_name slipshow)
  (name main)
  (flags
-  (:standard
-    -noautolink
-    -cclib /usr/local/opt/libffi/lib/libffi.a
-    -cclib /usr/local/opt/openssl@3/lib/libssl.a
-    -cclib /usr/local/opt/openssl@3/lib/libcrypto.a
-    -cclib /usr/local/opt/libev/lib/libev.a))
+  (-cclib
+   /usr/local/opt/libffi/lib/libffi.a
+   -cclib
+   /usr/local/opt/openssl@3/lib/libssl.a
+   -cclib
+   /usr/local/opt/openssl@3/lib/libcrypto.a
+   -cclib
+   /usr/local/opt/libev/lib/libev.a
+   :standard))
  (libraries
   slipshow_server
   cmdliner
