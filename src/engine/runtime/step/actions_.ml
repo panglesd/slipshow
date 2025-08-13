@@ -51,6 +51,9 @@ module Parse : sig
   val parse_only_els :
     Brr.El.t -> string -> (Brr.El.t list, [> `Msg of string ]) result
 
+  val parse_only_el :
+    Brr.El.t -> string -> (Brr.El.t, [> `Msg of string ]) result
+
   val option_to_error : 'a -> 'b option -> ('b, [> `Msg of 'a ]) result
   val duration : string * (string -> (float, [> `Msg of string ]) result)
   val margin : string * (string -> (float, [> `Msg of string ]) result)
@@ -306,6 +309,18 @@ end = struct
     | [] -> List.[ elem ]
     | x -> List.filter_map find_first_by_selector x
 
+  let parse_only_el elem s =
+    let ( let$ ) = Result.bind in
+    let$ x = parse ~named:[] ~positional:id s in
+    match merge_positional x with
+    | [] -> Ok elem
+    | _ :: _ :: _ -> Error (`Msg "Expected a single ID")
+    | [ x ] -> (
+        match find_first_by_selector x with
+        | Some x -> Ok x
+        | None ->
+            Error (`Msg ("Could not find element with ID " ^ Jstr.to_string x)))
+
   let option_to_error error = function
     | Some x -> Ok x
     | None -> Error (`Msg error)
@@ -326,6 +341,7 @@ end
 module type S = sig
   type args
 
+  val setup : (args -> unit Fut.t) option
   val on : string
   val action_name : string
   val parse_args : Brr.El.t -> string -> (args, [> `Msg of string ]) result
@@ -397,7 +413,8 @@ module Pause = struct
     let> () = set_class "pauseTarget" true elem in
     update elem (( + ) 1)
 
-  let setup elems = Undoable.List.iter setup elems
+  let setup elems = Undoable.List.iter setup elems |> Undoable.discard
+  let setup = Some setup
 
   type args = Brr.El.t list
 
@@ -425,6 +442,7 @@ end) =
 struct
   let on = X.on
   let action_name = X.action_name
+  let setup = None
 
   type args = {
     margin : float option;
@@ -468,6 +486,7 @@ end) =
 struct
   let on = X.on
   let action_name = X.action_name
+  let setup = None
 
   type args = Brr.El.t list
 
@@ -587,11 +606,14 @@ module Focus = struct
     let margin = Option.value ~default:0. margin in
     let duration = Option.value ~default:1. duration in
     Universe.Move.focus ~margin ~duration window elems
+
+  let setup = None
 end
 
 module Unfocus = struct
   type args = unit
 
+  let setup = None
   let on = "unfocus-at-unpause"
   let action_name = "unfocus"
   let parse_args elem s = Parse.no_args ~action_name elem s
@@ -635,10 +657,40 @@ end)
 module Step = struct
   type args = unit
 
+  let setup = None
   let on = "step"
   let action_name = "step"
   let parse_args elem s = Parse.no_args ~action_name elem s
   let do_ _ _ = Undoable.return ()
+end
+
+module Speaker_note : S = struct
+  let on = "speaker-note"
+  let action_name = on
+
+  type args = Brr.El.t
+
+  let parse_args = Parse.parse_only_el
+  let sn = ref ""
+
+  let setup elem =
+    Fut.return @@ Brr.El.set_class (Jstr.v "__slipshow__speaker_note") true elem
+
+  let setup = Some setup
+
+  let do_ (_ : Universe.Window.t) (el : args) =
+    let innerHTML =
+      Jv.Jstr.get (Brr.El.to_jv el) "innerHTML" |> Jstr.to_string
+    in
+    let old_value = !sn in
+    let undo () =
+      Messaging.send_speaker_notes old_value;
+      sn := old_value;
+      Fut.return ()
+    in
+    sn := innerHTML;
+    Messaging.send_speaker_notes !sn;
+    Undoable.return ~undo ()
 end
 
 module Play_media = struct
@@ -689,6 +741,8 @@ module Play_media = struct
           log_error res;
           Undoable.return ~undo ())
       elems
+
+  let setup = None
 end
 
 module Change_page = struct
@@ -858,4 +912,6 @@ module Change_page = struct
   let do_javascript_api ~target_elem ~change =
     let> _ = do_1 { target_elem; n = [ change ]; original_id = None } in
     Undoable.return ()
+
+  let setup = None
 end

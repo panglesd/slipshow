@@ -1,7 +1,7 @@
 module Asset = Asset
 module Frontmatter = Frontmatter
 
-type starting_state = int * string
+type starting_state = int
 type delayed
 
 val delayed_to_string : delayed -> string

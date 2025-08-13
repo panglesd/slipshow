@@ -35,10 +35,10 @@ let keyboard_setup (window : Universe.Window.t) =
         check active_elem
       in
       check_modif_key Brr.Ev.Keyboard.ctrl_key @@ fun () ->
-      check_modif_key Brr.Ev.Keyboard.shift_key @@ fun () ->
       check_modif_key Brr.Ev.Keyboard.meta_key @@ fun () ->
       check_textarea @@ fun () ->
       match key with
+      | "s" -> Messaging.open_speaker_notes ()
       | "t" -> Table_of_content.toggle_visibility ()
       | "w" -> Drawing.State.set_tool Pen
       | "h" -> Drawing.State.set_tool Highlighter
@@ -74,10 +74,18 @@ let keyboard_setup (window : Universe.Window.t) =
           in
           ()
       | "ArrowRight" | "ArrowDown" | "PageDown" | " " ->
-          let _ : unit Fut.t = Step.Next.go_next window 1 in
+          let _ : unit Fut.t =
+            let open Fut.Syntax in
+            let+ () = Step.Next.go_next window 1 in
+            Messaging.send_step (Step.State.get_step ()) `Normal
+          in
           ()
       | "ArrowLeft" | "PageUp" | "ArrowUp" ->
-          let _ : unit Fut.t = Step.Next.go_prev window 1 in
+          let _ : unit Fut.t =
+            let open Fut.Syntax in
+            let+ () = Step.Next.go_prev window 1 in
+            Messaging.send_step (Step.State.get_step ()) `Normal
+          in
           ()
       | "z" ->
           let _ : unit Fut.t =
@@ -175,9 +183,44 @@ let touch_setup (window : Universe.Window.t) =
     then stop_here ()
   in
   let _listener = Brr.Ev.listen ~opts Brr.Ev.pointerup touchend target in
-
   ()
+
+let comm_of_jv m = m |> Jv.to_string |> Communication.of_string
+
+let message_setup window =
+  Brr.Ev.listen Brr_io.Message.Ev.message
+    (fun event ->
+      let raw_data : Jv.t = Brr_io.Message.Ev.data (Brr.Ev.as_type event) in
+      let msg = comm_of_jv raw_data in
+      match msg with
+      | Some { payload = State (i, mode) } ->
+          let fast = match mode with `Fast -> true | _ -> false in
+          let _ : unit Fut.t =
+            if fast then Fast.with_fast @@ fun () -> Step.Next.goto i window
+            else Step.Next.goto i window
+          in
+          ()
+      | Some { payload = Drawing (End { state }) } -> (
+          match Drawing.State.of_string state with
+          | None -> ()
+          | Some state -> Drawing.end_shape_func state)
+      | Some { payload = Drawing (Continue { state; coord }) } -> (
+          match Drawing.State.of_string state with
+          | None -> ()
+          | Some state -> Drawing.continue_shape_func state coord)
+      | Some { payload = Drawing (Start { state; coord; id }) } -> (
+          match Drawing.State.of_string state with
+          | None -> ()
+          | Some state -> Drawing.start_shape_func id state coord)
+      | Some { payload = Drawing Clear } -> Drawing.clear_func ()
+      | Some { payload = Send_all_drawing } -> Drawing.send_all_strokes ()
+      | Some { payload = Receive_all_drawing all_strokes } ->
+          Drawing.receive_all_strokes all_strokes
+      | _ -> ())
+    (Brr.Window.as_target Brr.G.window)
+  |> ignore
 
 let setup (window : Universe.Window.t) =
   keyboard_setup window;
-  touch_setup window
+  touch_setup window;
+  message_setup window

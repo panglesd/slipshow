@@ -1,0 +1,3 @@
+(library
+ (name messaging)
+ (libraries brr communication))

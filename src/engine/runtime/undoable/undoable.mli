@@ -32,3 +32,7 @@ module Stack : sig
   (** [pop s] returns the topmost element in stack [s], or returns [None] if the
       stack is empty. *)
 end
+
+module Ref : sig
+  val set : 'a ref -> 'a -> unit t
+end

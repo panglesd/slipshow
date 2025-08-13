@@ -3003,6 +3003,12 @@ module Document : sig
   val as_target : t -> Ev.target
   (** [as_target d] is the document as an event target. *)
 
+  val element : t -> El.t
+  (** [element d] is the element that is the
+      {{:https://developer.mozilla.org/en-US/docs/Web/API/Document/documentElement}root
+      element} of the document (for example, the [<html>] element for HTML
+      documents). *)
+
   (** {1:el_lookups Element lookups} *)
 
   val find_el_by_id : t -> Jstr.t -> El.t option
@@ -3406,6 +3412,11 @@ module Window : sig
       height} of the window in pixels, including the height of the horizontal
       scroll bar, if present. *)
 
+  val document : t -> Document.t
+  (** [document w] is the
+      {{:https://developer.mozilla.org/en-US/docs/Web/API/Window/document}document
+      of the window}. *)
+
   val parent : t -> t option
   (** [parent w] is the
       {{:https://developer.mozilla.org/en-US/docs/Web/API/Window/parent}parent}
@@ -3413,6 +3424,16 @@ module Window : sig
 
       When a window is loaded in an [<iframe>], [<object>], or [<frame>], its
       parent is the window with the element embedding the window. *)
+
+  val name : t -> Jstr.t
+  (** [name w] is the
+      {{:https://developer.mozilla.org/en-US/docs/Web/API/Window/name}
+      name} of [w]. *)
+
+  val set_name : Jstr.t -> t -> unit
+  (** [set_name w] sets the
+      {{:https://developer.mozilla.org/en-US/docs/Web/API/Window/name}
+      name} of [w]. *)
 
   val post_message : t -> msg:Jv.t -> unit
   (** [post_message w ~msg]

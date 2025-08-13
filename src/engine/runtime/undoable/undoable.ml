@@ -45,3 +45,10 @@ end
 module Option = struct
   let iter f = function None -> return () | Some x -> f x
 end
+
+module Ref = struct
+  let set x v =
+    let old_v = !x in
+    let undo () = Fut.return @@ (x := old_v) in
+    return ~undo (x := v)
+end

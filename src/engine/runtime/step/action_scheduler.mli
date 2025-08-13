@@ -5,7 +5,7 @@ module AttributeActions : sig
 end
 
 val all_action_selector : string
-val setup_pause_ancestors : Universe.Window.t -> unit -> unit Undoable.t
+val setup_actions : Universe.Window.t -> unit -> unit Fut.t
 
 val next : ?init:bool -> Universe.Window.t -> unit -> unit Undoable.t option
 (** [init] tells whether to update the history: Set true only for the first

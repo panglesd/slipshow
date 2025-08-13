@@ -1,4 +1,4 @@
-let start ~width ~height ~id ~step =
+let start ~width ~height ~step =
   let open Fut.Syntax in
   let* _ : (unit, _) result =
     let window = Brr.G.window |> Brr.Window.to_jv in
@@ -27,9 +27,7 @@ let start ~width ~height ~id ~step =
         |> Jstr.to_string |> int_of_string_opt
   in
   let _history = Browser.History.set_hash "" in
-  let* () =
-    Step.Action_scheduler.setup_pause_ancestors window () |> Undoable.discard
-  in
+  let* () = Step.Action_scheduler.setup_actions window () in
   (* We do one step first, without recording it/updating the hash, to enter in
      the first slip *)
   let* _ =
@@ -49,16 +47,14 @@ let start ~width ~height ~id ~step =
     | Some step -> Fast.with_fast @@ fun () -> Step.Next.goto step window
   in
   let () = Controller.setup window in
-  let () = Step.Messaging.set_id id in
-  let () = Step.Messaging.send_ready () in
+  let () = Messaging.send_ready () in
   Fut.return ()
 
 let () =
-  let start width height step id =
+  let start width height step =
     let height = Jv.to_float height in
     let width = Jv.to_float width in
-    let id = Jv.to_option Jv.to_string id in
     let step = Jv.to_option Jv.to_int step in
-    start ~width ~height ~id ~step
+    start ~width ~height ~step
   in
-  Jv.set Jv.global "startSlipshow" (Jv.callback ~arity:4 start)
+  Jv.set Jv.global "startSlipshow" (Jv.callback ~arity:3 start)

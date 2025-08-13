@@ -1,3 +1,3 @@
 (library
  (name table_of_content)
- (libraries brr step))
+ (libraries brr step messaging))
