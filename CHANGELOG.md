@@ -5,6 +5,7 @@
 ### Engine
 
 - Add a speaker view, opened with `s`. (#147)
+- Fix `Z` and `X` not working (#147)
 
 ### Language
 
