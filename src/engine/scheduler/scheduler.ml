@@ -117,7 +117,9 @@ let open_window handle_msg =
             Brr.El.find_first_by_selector ~root:el (Jstr.v "#speaker-view")
             |> Option.get
           in
-          let _unlisten = listen child handle_msg in
+          let _unlisten =
+            listen child (handle_msg (content_window child_iframe))
+          in
           speaker_view_ref := Some (child, child_iframe);
           Brr.El.set_at (Jstr.v "srcdoc") (Some src) child_iframe;
           let timer =
@@ -180,13 +182,13 @@ module Handle = struct
     | _ -> ()
 end
 
-let speaker_note_handling msg =
+let speaker_note_handling window msg =
   let () =
     let forward_to = Some (Brr.G.window, content_window iframe) in
     Handle.forwarding forward_to msg
   in
   let () = Handle.setting_state msg in
-  let () = Handle.initial_state (content_window iframe) msg in
+  let () = Handle.initial_state window msg in
   let () = Handle.send_all_strokes_on_ready (content_window iframe) msg in
   ()
 
