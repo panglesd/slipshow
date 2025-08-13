@@ -89,49 +89,15 @@ let current_step =
 
 let speaker_view_ref = ref None
 
-let receive_message forward_to self =
-  let forward_message msg =
-    match forward_to with
-    | Some (window, iframe_window) when not (Brr.Window.closed window) ->
-        Brr.Window.post_message iframe_window ~msg
-    | _ -> ()
-  in
-  function
-  | Some { Communication.payload = State (i, mode); _ } ->
-      let _history = Browser.History.set_hash (string_of_int i) in
-      current_step := Some i;
-      let msg =
-        { id = "hello"; payload = State (i, mode) }
-        |> Communication.to_string |> Jv.of_string
-      in
-      forward_message msg
-  | Some { Communication.payload = Receive_all_drawing _ as payload; _ } ->
-      let msg =
-        { id = "hello"; payload } |> Communication.to_string |> Jv.of_string
-      in
-      forward_message msg
-  | Some { id = "hello"; payload = Drawing _ as payload } ->
-      let msg =
-        { id = "hello"; payload } |> Communication.to_string |> Jv.of_string
-      in
-      forward_message msg
-  | Some { id = _; payload = Ready } -> (
-      match !current_step with
-      | Some i ->
-          let msg =
-            { id = "hello"; payload = State (i, `Fast) }
-            |> Communication.to_string |> Jv.of_string
-          in
-          Brr.Window.post_message self ~msg;
-          let msg =
-            { id = "hello"; payload = Send_all_drawing }
-            |> Communication.to_string |> Jv.of_string
-          in
-          forward_message msg
-      | _ -> ())
-  | _ -> ()
+let listen w handle_msg =
+  Brr.Ev.listen Brr_io.Message.Ev.message
+    (fun event ->
+      let raw_data : Jv.t = Brr_io.Message.Ev.data (Brr.Ev.as_type event) in
+      let msg = Msg.of_jv raw_data in
+      match msg with None -> () | Some msg -> handle_msg msg)
+    (Brr.Window.as_target w)
 
-let open_window src =
+let open_window handle_msg =
   match !speaker_view_ref with
   | Some (w, _) when not (Brr.Window.closed w) -> ()
   | _ -> (
@@ -151,19 +117,7 @@ let open_window src =
             Brr.El.find_first_by_selector ~root:el (Jstr.v "#speaker-view")
             |> Option.get
           in
-          let _unlisten =
-            Brr.Ev.listen Brr_io.Message.Ev.message
-              (fun event ->
-                let raw_data : Jv.t =
-                  Brr_io.Message.Ev.data (Brr.Ev.as_type event)
-                in
-                let msg = Msg.of_jv raw_data in
-                receive_message
-                  (Some (Brr.G.window, content_window iframe))
-                  (content_window child_iframe)
-                  msg)
-              (Brr.Window.as_target child)
-          in
+          let _unlisten = listen child handle_msg in
           speaker_view_ref := Some (child, child_iframe);
           Brr.El.set_at (Jstr.v "srcdoc") (Some src) child_iframe;
           let timer =
@@ -178,25 +132,79 @@ let open_window src =
           let _untimer = Date.clock clock in
           ())
 
-let receive_message_main = function
-  | Some { Communication.id = "hello"; payload = Open_speaker_notes } ->
-      open_window src;
-      ()
-  | msg ->
-      let forward_to =
-        Option.map
-          (fun (w, child_frame) -> (w, content_window child_frame))
-          !speaker_view_ref
-      in
-      receive_message forward_to (content_window iframe) msg
+module Handle = struct
+  let forwarding forward_to =
+    let forward_message msg =
+      match forward_to with
+      | Some (window, iframe_window) when not (Brr.Window.closed window) ->
+          Brr.Window.post_message iframe_window ~msg
+      | _ -> ()
+    in
+    function
+    | { Communication.payload = State _ | Drawing _ | Receive_all_drawing _; _ }
+      as msg ->
+        let msg = msg |> Communication.to_string |> Jv.of_string in
+        forward_message msg
+    | _ -> ()
 
-let _ =
-  Brr.Ev.listen Brr_io.Message.Ev.message
-    (fun event ->
-      let raw_data : Jv.t = Brr_io.Message.Ev.data (Brr.Ev.as_type event) in
-      let msg = Msg.of_jv raw_data in
-      receive_message_main msg)
-    (Brr.Window.as_target Brr.G.window)
+  let initial_state self = function
+    | { Communication.payload = Ready; _ } -> (
+        match !current_step with
+        | Some i ->
+            let msg =
+              { id = "hello"; payload = State (i, `Fast) }
+              |> Communication.to_string |> Jv.of_string
+            in
+            Brr.Window.post_message self ~msg
+        | _ -> ())
+    | _ -> ()
+
+  let send_all_strokes_on_ready main_frame = function
+    | { Communication.payload = Ready; _ } ->
+        let msg =
+          { id = "hello"; payload = Send_all_drawing }
+          |> Communication.to_string |> Jv.of_string
+        in
+        Brr.Window.post_message main_frame ~msg
+    | _ -> ()
+
+  let setting_state = function
+    | { Communication.payload = State (i, _); _ } ->
+        let _history = Browser.History.set_hash (string_of_int i) in
+        current_step := Some i
+    | _ -> ()
+
+  let opening_speaker_note handle_msg = function
+    | { Communication.payload = Open_speaker_notes; _ } ->
+        open_window handle_msg
+    | _ -> ()
+end
+
+let speaker_note_handling msg =
+  let () =
+    let forward_to = Some (Brr.G.window, content_window iframe) in
+    Handle.forwarding forward_to msg
+  in
+  let () = Handle.setting_state msg in
+  let () = Handle.initial_state (content_window iframe) msg in
+  let () = Handle.send_all_strokes_on_ready (content_window iframe) msg in
+  ()
+
+let main_frame_handling msg =
+  let () =
+    let forward_to =
+      Option.map
+        (fun (w, child_frame) -> (w, content_window child_frame))
+        !speaker_view_ref
+    in
+    Handle.forwarding forward_to msg
+  in
+  let () = Handle.setting_state msg in
+  let () = Handle.initial_state (content_window iframe) msg in
+  let () = Handle.opening_speaker_note speaker_note_handling msg in
+  ()
+
+let _ = listen Brr.G.window main_frame_handling
 
 let _ =
   Brr.Ev.listen Brr.Ev.beforeunload
