@@ -45,20 +45,18 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ()) root =
 
 let preview { stage; index; panels } source =
   let unused () = 1 - !index in
-  let get_starting_state () = (!stage, ids.(unused ())) in
   let set_srcdoc slipshow =
     Jv.set (Brr.El.to_jv panels.(unused ())) "srcdoc" (Jv.of_string slipshow)
   in
-  let starting_state = get_starting_state () in
+  let starting_state = !stage in
   let slipshow = Slipshow.convert ~starting_state source in
   set_srcdoc slipshow
 
 let preview_compiled { stage; index; panels } delayed =
   let unused () = 1 - !index in
-  let get_starting_state () = (!stage, ids.(unused ())) in
   let set_srcdoc slipshow =
     Jv.set (Brr.El.to_jv panels.(unused ())) "srcdoc" (Jv.of_string slipshow)
   in
-  let starting_state = Some (get_starting_state ()) in
+  let starting_state = Some !stage in
   let slipshow = Slipshow.add_starting_state delayed starting_state in
   set_srcdoc slipshow

@@ -258,7 +258,7 @@ let create_elem_of_stroke { State.color; width; tool } id path =
   | Pointer -> ());
   p
 
-let start_shape_func id ({ State.color; width; tool } as state) coord =
+let start_shape_func id ({ State.tool; _ } as state) coord =
   let svg =
     Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing-elem")
     |> Option.get

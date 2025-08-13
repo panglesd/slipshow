@@ -125,7 +125,7 @@ let embed_in_page content ~has ~math_link ~css_links ~theme ~dimension =
                    </html>|} in
   (start, end_)
 
-type starting_state = int * string
+type starting_state = int
 type delayed = string * string
 
 let delayed_to_string s = Marshal.to_string s [] |> Base64.encode_string
@@ -185,11 +185,9 @@ let delayed ?(frontmatter = Frontmatter.empty) ?(read_file = fun _ -> Ok None) s
   let has = Has.find_out md in
   embed_in_page ~dimension ~has ~math_link ~theme ~css_links content
 
-let add_starting_state (start, end_) starting_state =
+let add_starting_state (start, end_) (starting_state : starting_state option) =
   let starting_state =
-    match starting_state with
-    | None -> "0, \"hello\""
-    | Some (st, id) -> string_of_int st ^ ", \"" ^ id ^ "\""
+    match starting_state with None -> "0" | Some st -> string_of_int st
   in
   let html = start ^ starting_state ^ end_ in
   let orig_html = html in
