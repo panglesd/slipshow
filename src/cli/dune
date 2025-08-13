@@ -3,6 +3,7 @@
  (name main)
  (flags
   (:standard
+    -noautolink
     -cclib /usr/local/opt/libffi/lib/libffi.a
     -cclib /usr/local/opt/openssl@3/lib/libssl.a
     -cclib /usr/local/opt/openssl@3/lib/libcrypto.a
