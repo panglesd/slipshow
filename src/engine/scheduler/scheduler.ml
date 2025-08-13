@@ -38,8 +38,8 @@ module Date = struct
       Brr.Ev.listen Brr.Ev.click
         (fun _ ->
           match !timer_mode with
-          | `Since n -> timer_mode := `Since (now ())
-          | `Paused_at n -> timer_mode := `Paused_at 0)
+          | `Since _ -> timer_mode := `Since (now ())
+          | `Paused_at _ -> timer_mode := `Paused_at 0)
         (Brr.El.as_target restart)
     in
     let _ =
