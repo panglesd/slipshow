@@ -180,6 +180,14 @@ module Handle = struct
     | { Communication.payload = Open_speaker_notes; _ } ->
         open_window handle_msg
     | _ -> ()
+
+  let forward_to_parent = function
+    | msg -> (
+        match Brr.Window.parent Brr.G.window with
+        | None -> ()
+        | Some parent ->
+            let msg = msg |> Communication.to_string |> Jv.of_string in
+            Brr.Window.post_message parent ~msg)
 end
 
 let speaker_note_handling window msg =
@@ -204,6 +212,7 @@ let main_frame_handling msg =
   let () = Handle.setting_state msg in
   let () = Handle.initial_state (content_window iframe) msg in
   let () = Handle.opening_speaker_note speaker_note_handling msg in
+  let () = Handle.forward_to_parent msg in
   ()
 
 let _ = listen Brr.G.window main_frame_handling
