@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Engine
+
+- Add a speaker view, opened with `s`. (#147)
+
+### Language
+
+- Add a `speaker-note` action. (#147)
+
 ## [v0.5.0] Plan 9 from External Files (Thursday 7th August, 2025)
 
 ### Compiler
