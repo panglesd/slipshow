@@ -1,2 +1,8 @@
+(env
+ (_
+  (binaries
+   (../show-source/show_source.exe as show_source))))
+
+
 (cram
- (deps %{bin:slipshow}))
+ (deps %{bin:show_source} %{bin:slipshow}))

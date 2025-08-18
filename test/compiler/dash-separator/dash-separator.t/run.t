@@ -2,14 +2,14 @@
 
 Asterisks are still interpreted as horizontal lines
 
-  $ grep Asterisks -A 2 dash-sep.html
+  $ show_source dash-sep.html | grep Asterisks -A 2
   <p><span>Asterisks still allow horizontal lines:</span></p>
   <hr>
   <p><span>For instance this one</span></p>
 
 However, dash lines are used as separator to group in divs
 
-  $ cat dash-sep.html | htmlq ".show-border1" -p
+  $ show_source dash-sep.html | htmlq ".show-border1" -p
   
   <div class="show-border1">
     <div>
@@ -36,7 +36,7 @@ However, dash lines are used as separator to group in divs
     </div>
   </div>
 
-  $ cat dash-sep.html | htmlq ".show-border2" -p
+  $ show_source dash-sep.html | htmlq ".show-border2" -p
   
   <div class="show-border2">
     <p><span>aa</span>
@@ -47,7 +47,7 @@ However, dash lines are used as separator to group in divs
     </p>
   </div>
 
-  $ cat dash-sep.html | htmlq ".show-border3" -p
+  $ show_source dash-sep.html | htmlq ".show-border3" -p
   
   <div class="show-border3">
     <div class="c1">

@@ -1,6 +1,6 @@
   $ slipshow compile slides.md
 
-  $ cat slides.html | htmlq -p "#slides"
+  $ show_source slides.html | htmlq -p "#slides"
   
   <div children:slide="" id="slides" style="display:flex">
     <div class="slipshow-rescaler" enter-at-unpause="" slide="">
@@ -32,7 +32,7 @@
       </div>
     </div>
   </div>
-  $ cat slides.html | htmlq -p "#classes"
+  $ show_source slides.html | htmlq -p "#classes"
   
   <div children:.custom-class="" id="classes">
     <div class="custom-class">
@@ -46,7 +46,7 @@
       </p>
     </div>
   </div>
-  $ cat slides.html | htmlq -p "#attributes"
+  $ show_source slides.html | htmlq -p "#attributes"
   
   <div children:key="value" id="attributes">
     <div key="value">

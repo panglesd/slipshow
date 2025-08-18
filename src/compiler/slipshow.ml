@@ -205,7 +205,7 @@ let add_starting_state (start, end_) (starting_state : starting_state option) =
 <meta charset='utf-8'>
 </head>
   <body>
-          <iframe name="slipshow_main_pres" id="ifra" srcdoc="%s" style="
+          <iframe name="slipshow_main_pres" id="slipshow__internal_iframe" srcdoc="%s" style="
     width: 100%%;
     height: 100%%;
     position: fixed;
@@ -217,7 +217,7 @@ let add_starting_state (start, end_) (starting_state : starting_state option) =
 "></iframe>
 
 <script>
-document.getElementById('ifra').addEventListener('load', function () {
+document.getElementById('slipshow__internal_iframe').addEventListener('load', function () {
     this.contentWindow.focus();
 });
 </script>
