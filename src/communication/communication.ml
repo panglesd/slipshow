@@ -14,6 +14,7 @@ type payload =
   | State of int * [ `Fast | `Normal ]
   | Ready
   | Open_speaker_notes
+  | Close_speaker_notes
   | Speaker_notes of string
   | Drawing of drawing_event
   | Send_all_drawing

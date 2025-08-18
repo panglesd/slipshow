@@ -7,6 +7,20 @@ end
 type previewer = { stage : int ref; index : int ref; panels : Brr.El.t array }
 
 let ids = [| "slipshow-frame-1"; "slipshow-frame-2" |]
+let is_speaker_view_open = ref false
+
+let send_speaker_view oc panel =
+  let payload =
+    match oc with
+    | `Open -> Communication.Open_speaker_notes
+    | `Close -> Close_speaker_notes
+  in
+  let content_window w =
+    Jv.get (Brr.El.to_jv w) "contentWindow" |> Brr.Window.of_jv
+  in
+  let window = content_window panel in
+  let msg = { payload } |> Communication.to_string |> Jv.of_string in
+  Brr.Window.post_message window ~msg
 
 let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ()) root =
   let panel1 =
@@ -32,9 +46,18 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ()) root =
           when String.equal source_name ids.(!index) ->
             callback new_stage;
             stage := new_stage
+        | Some { payload = Open_speaker_notes }
+          when String.equal source_name ids.(!index) ->
+            is_speaker_view_open := true
+        | Some { payload = Close_speaker_notes }
+          when String.equal source_name ids.(!index) ->
+            is_speaker_view_open := false
         | Some { payload = Ready } when String.equal source_name ids.(!index) ->
             ()
         | Some { payload = Ready } ->
+            if !is_speaker_view_open then (
+              send_speaker_view `Close panels.(!index);
+              send_speaker_view `Open panels.(1 - !index));
             index := 1 - !index;
             Brr.El.set_class (Jstr.v "active_panel") true panels.(!index);
             Brr.El.set_class (Jstr.v "active_panel") false panels.(1 - !index)
@@ -43,20 +66,15 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ()) root =
   in
   { stage; index; panels }
 
-let preview { stage; index; panels } source =
-  let unused () = 1 - !index in
-  let set_srcdoc slipshow =
-    Jv.set (Brr.El.to_jv panels.(unused ())) "srcdoc" (Jv.of_string slipshow)
-  in
-  let starting_state = !stage in
-  let slipshow = Slipshow.convert ~starting_state source in
-  set_srcdoc slipshow
+let set_srcdoc { index; panels; _ } slipshow =
+  Jv.set (Brr.El.to_jv panels.(1 - !index)) "srcdoc" (Jv.of_string slipshow)
 
-let preview_compiled { stage; index; panels } delayed =
-  let unused () = 1 - !index in
-  let set_srcdoc slipshow =
-    Jv.set (Brr.El.to_jv panels.(unused ())) "srcdoc" (Jv.of_string slipshow)
-  in
-  let starting_state = Some !stage in
+let preview previewer source =
+  let starting_state = !(previewer.stage) in
+  let slipshow = Slipshow.convert ~starting_state source in
+  set_srcdoc previewer slipshow
+
+let preview_compiled previewer delayed =
+  let starting_state = Some !(previewer.stage) in
   let slipshow = Slipshow.add_starting_state delayed starting_state in
-  set_srcdoc slipshow
+  set_srcdoc previewer slipshow

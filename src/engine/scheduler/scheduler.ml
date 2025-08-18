@@ -78,7 +78,10 @@ module Msg = struct
   let of_jv m : msg option = m |> Jv.to_string |> Communication.of_string
 end
 
-let iframe = Brr.El.find_first_by_selector (Jstr.v "#ifra") |> Option.get
+let iframe =
+  Brr.El.find_first_by_selector (Jstr.v "#slipshow__internal_iframe")
+  |> Option.get
+
 let src = Brr.El.at (Jstr.v "srcdoc") iframe |> Option.get
 
 let html =
@@ -145,6 +148,18 @@ let current_step =
 let speaker_view_ref = ref None
 
 let listen w handle_msg =
+  let _ =
+    Brr.Ev.listen Brr.Ev.beforeunload
+      (fun _event ->
+        let msg =
+          { payload = Close_speaker_notes }
+          |> Communication.to_string |> Jv.of_string
+        in
+        match Brr.Window.parent Brr.G.window with
+        | None -> ()
+        | Some parent -> Brr.Window.post_message parent ~msg)
+      (Brr.Window.as_target w)
+  in
   Brr.Ev.listen Brr_io.Message.Ev.message
     (fun event ->
       let raw_data : Jv.t = Brr_io.Message.Ev.data (Brr.Ev.as_type event) in
@@ -189,6 +204,11 @@ let open_window handle_msg =
           let _untimer = Date.clock clock in
           ())
 
+let close_window () =
+  match !speaker_view_ref with
+  | Some (w, _) when not (Brr.Window.closed w) -> Brr.Window.close w
+  | _ -> ()
+
 module Handle = struct
   let forwarding forward_to =
     let forward_message msg =
@@ -231,9 +251,10 @@ module Handle = struct
         current_step := Some i
     | _ -> ()
 
-  let opening_speaker_note handle_msg = function
+  let opening_closing_speaker_note handle_msg = function
     | { Communication.payload = Open_speaker_notes; _ } ->
         open_window handle_msg
+    | { payload = Close_speaker_notes } -> close_window ()
     | _ -> ()
 
   let forward_to_parent = function
@@ -281,7 +302,7 @@ let main_frame_handling msg =
   in
   let () = Handle.setting_state msg in
   let () = Handle.initial_state (content_window iframe) msg in
-  let () = Handle.opening_speaker_note speaker_note_handling msg in
+  let () = Handle.opening_closing_speaker_note speaker_note_handling msg in
   let () = Handle.forward_to_parent msg in
   ()
 
