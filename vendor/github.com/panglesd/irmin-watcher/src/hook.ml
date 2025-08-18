@@ -36,7 +36,11 @@ let read_file ~prefix f =
       let r = String.with_range ~first:(String.length prefix) f in
       Some (r, Digest.file f)
   with ex ->
-    Log.info (fun fm -> fm "read_file(%s): %a" f Fmt.exn ex);
+    (* Apparently, some very short-lived files are removed between the check
+       that they exist, and the computation of their digest. In this case we do
+       not want to log. *)
+    if Sys.file_exists f then
+      Log.info (fun fm -> fm "read_file(%s): %a" f Fmt.exn ex);
     None
 
 let read_files dir =
