@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [v0.6.0] The King's Slipshow (Monday 18th August, 2025)
 
 ### Engine
 
