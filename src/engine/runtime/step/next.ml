@@ -43,8 +43,29 @@ let actualize () =
       Brr.El.scroll_into_view ~align_v:`Nearest ~behavior:`Smooth el;
       Brr.El.set_class !!"slipshow-toc-current-step" true el
 
+module Excursion = struct
+  let excursion = ref None
+
+  let start () =
+    match !excursion with
+    | None -> excursion := Some (Universe.State.get_coord ())
+    | Some _ -> ()
+
+  (* When we [move_away] using [ijkl] and [zZ], we store the position we
+     left. When we change the presentation step, we [move_back] to where we
+     were. *)
+
+  let end_ window () =
+    match !excursion with
+    | None -> Fut.return ()
+    | Some last_pos ->
+        excursion := None;
+        Universe.Window.move_pure window last_pos ~duration:1.
+end
+
 let go_next window n =
   in_queue @@ fun () ->
+  let* () = Excursion.end_ window () in
   let rec loop n =
     if n <= 0 then Fut.return ()
     else
@@ -58,8 +79,9 @@ let go_next window n =
   let+ () = loop n in
   actualize ()
 
-let go_prev _window n =
+let go_prev window n =
   in_queue @@ fun () ->
+  let* () = Excursion.end_ window () in
   let rec loop n =
     if n <= 0 then Fut.return ()
     else
@@ -76,4 +98,6 @@ let goto step window =
   let current_step = State.get_step () in
   if current_step > step then go_prev window (current_step - step)
   else if current_step < step then go_next window (step - current_step)
-  else Fut.return ()
+  else
+    let+ () = Excursion.end_ window () in
+    ()
