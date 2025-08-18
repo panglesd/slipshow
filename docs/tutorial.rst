@@ -82,14 +82,6 @@ This step depends on the way you have access to the slipshow compiler.
 
 .. tabs::
 
-   .. tab:: In VS Code
-
-      In the command palette (``Cmd + Maj + P``), write ``Compile slipshow``. This will create a file in the same directory, with the same name but the ``.html`` extension.
-
-      To view this file, opening it in a browser is sufficient! However, the file won't automatically update to new modifications on your source file. For this, open the command palette again and this time, write ``Preview slipshow``. This will open a preview of the presentation, which will automatically update to the newest changes!
-
-      In conclusion: use the preview command when writing your presentation, and use the compile one when your presentation is finished!
-
    .. tab:: Using the binary
 
       In a terminal, issue the following command:
@@ -111,6 +103,14 @@ This step depends on the way you have access to the slipshow compiler.
       ``http://localhost:8080``. It is very useful when writing your
       presentation. When you only want to generate the html file once, use
       ``compile`` instead.
+
+   .. tab:: In VS Code
+
+      In the command palette (``Cmd + Maj + P``), write ``Compile slipshow``. This will create a file in the same directory, with the same name but the ``.html`` extension.
+
+      To view this file, opening it in a browser is sufficient! However, the file won't automatically update to new modifications on your source file. For this, open the command palette again and this time, write ``Preview slipshow``. This will open a preview of the presentation, which will automatically update to the newest changes!
+
+      In conclusion: use the preview command when writing your presentation, and use the compile one when your presentation is finished!
 
    .. tab:: In the slipshow editor
 
