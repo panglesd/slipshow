@@ -415,7 +415,7 @@ presentation in itself!
 Using the speaker view
 ~~~~~~~~~~~~~~~~~~~~~~
 
-You can open the speaker view with the ``s`` keybding. The speaker view has a
+You can open the speaker view with the ``s`` keybinding. The speaker view has a
 timer and a clock, speaker notes (filled using the ``speaker-note`` action) and
 a mirror of your main presentation.
 
