@@ -1,3 +1,8 @@
+(env
+ (_
+  (binaries
+   (../../show-source/show_source.exe as show_source))))
+
 (cram
  (enabled_if %{bin-available:htmlq})
- (deps %{bin:slipshow}))
+ (deps %{bin:show_source} %{bin:slipshow}))
