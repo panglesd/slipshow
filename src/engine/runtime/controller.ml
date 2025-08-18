@@ -1,23 +1,5 @@
 let keyboard_setup (window : Universe.Window.t) =
   let target = Brr.Window.as_target Brr.G.window in
-  (* When we [move_away] using [ijkl] and [zZ], we store the position we
-     left. When we change the presentation step, we [move_back] to where we
-     were. *)
-  let move_away, move_back =
-    let position_before_moving = ref None in
-    ( (fun () ->
-        match !position_before_moving with
-        | None ->
-            let last_pos = Universe.State.get_coord () in
-            position_before_moving := Some last_pos
-        | _ -> ()),
-      fun () ->
-        match !position_before_moving with
-        | None -> Fut.return ()
-        | Some last_pos ->
-            position_before_moving := None;
-            Universe.Window.move_pure window last_pos ~duration:1. )
-  in
   let callback ev =
     let key = ev |> Brr.Ev.as_type |> Brr.Ev.Keyboard.key |> Jstr.to_string in
     let current_coord = Universe.State.get_coord () in
@@ -65,7 +47,7 @@ let keyboard_setup (window : Universe.Window.t) =
       | "X" -> Drawing.clear ()
       | "l" ->
           let _ : unit Fut.t =
-            move_away ();
+            Step.Next.Excursion.start ();
             Universe.Move.move_relative_pure
               ~x:(30. *. 1. /. current_coord.scale)
               window ~duration:0.
@@ -73,7 +55,7 @@ let keyboard_setup (window : Universe.Window.t) =
           ()
       | "j" ->
           let _ : unit Fut.t =
-            move_away ();
+            Step.Next.Excursion.start ();
             Universe.Move.move_relative_pure
               ~x:(-30. *. 1. /. current_coord.scale)
               window ~duration:0.
@@ -81,7 +63,7 @@ let keyboard_setup (window : Universe.Window.t) =
           ()
       | "k" ->
           let _ : unit Fut.t =
-            move_away ();
+            Step.Next.Excursion.start ();
             Universe.Move.move_relative_pure
               ~y:(30. *. 1. /. current_coord.scale)
               window ~duration:0.
@@ -89,7 +71,7 @@ let keyboard_setup (window : Universe.Window.t) =
           ()
       | "i" ->
           let _ : unit Fut.t =
-            move_away ();
+            Step.Next.Excursion.start ();
             Universe.Move.move_relative_pure
               ~y:(-30. *. 1. /. current_coord.scale)
               window ~duration:0.
@@ -98,7 +80,6 @@ let keyboard_setup (window : Universe.Window.t) =
       | "ArrowRight" | "ArrowDown" | "PageDown" | " " ->
           let _ : unit Fut.t =
             let open Fut.Syntax in
-            let* () = move_back () in
             let+ () = Step.Next.go_next window 1 in
             Messaging.send_step (Step.State.get_step ()) `Normal
           in
@@ -106,20 +87,19 @@ let keyboard_setup (window : Universe.Window.t) =
       | "ArrowLeft" | "PageUp" | "ArrowUp" ->
           let _ : unit Fut.t =
             let open Fut.Syntax in
-            let* () = move_back () in
             let+ () = Step.Next.go_prev window 1 in
             Messaging.send_step (Step.State.get_step ()) `Normal
           in
           ()
       | "z" ->
           let _ : unit Fut.t =
-            move_away ();
+            Step.Next.Excursion.start ();
             Universe.Move.move_relative_pure ~scale:1.02 window ~duration:0.
           in
           ()
       | "Z" ->
           let _ : unit Fut.t =
-            move_away ();
+            Step.Next.Excursion.start ();
             Universe.Move.move_relative_pure ~scale:(1. /. 1.02) window
               ~duration:0.
           in
