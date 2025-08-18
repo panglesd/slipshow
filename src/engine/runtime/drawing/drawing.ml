@@ -325,35 +325,6 @@ let receive_all_strokes all_strokes =
           Brr.El.append_children svg [ el ])
     all_strokes
 
-(* let add_drawing id attrs path = *)
-(*   let { State.color; width; tool } = attrs in *)
-(*   let svg = *)
-(*     Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing-elem") *)
-(*     |> Option.get *)
-(*   in *)
-(*   let p = Brr.El.v ~ns:`SVG (Jstr.v "path") [] in *)
-(*   let set_at at v = Brr.El.set_at (Jstr.v at) (Some (Jstr.v v)) p in *)
-(*   (match tool with *)
-(*   | Tool.Pen -> *)
-(*       set_at "stroke" (Color.to_string color); *)
-(*       set_at "stroke-width" (Width.to_string width); *)
-(*       set_at "fill" "none"; *)
-(*       set_at "id" id; *)
-(*       Brr.El.set_at (Jstr.v "d") (Some (Jstr.v (svg_path path))) p; *)
-(*       current_drawing_state := Drawing (path, p) *)
-(*   | Highlighter -> *)
-(*       set_at "stroke" (Color.to_string color); *)
-(*       set_at "stroke-linecap" "round"; *)
-(*       set_at "stroke-width" (Width.to_string width ^ "0"); *)
-(*       set_at "opacity" (string_of_float 0.33); *)
-(*       set_at "fill" "none"; *)
-(*       Brr.El.set_at (Jstr.v "d") (Some (Jstr.v (svg_path path))) p; *)
-(*       current_drawing_state := Drawing (path, p) *)
-(*   | Eraser -> failwith "TODO" *)
-(*   | Pointer -> ()); *)
-(*   Brr.El.append_children svg [ p ]; *)
-(*   Hashtbl.add all_paths id (p, path) *)
-
 let connect svg =
   let _mousemove =
     Brr.Ev.listen Brr.Ev.pointermove continue_shape

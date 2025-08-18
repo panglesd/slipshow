@@ -22,8 +22,6 @@ end
 
 val setup : Brr.El.t -> unit
 val clear : unit -> unit
-
-(* val add_drawing : string -> (float * float) list -> unit *)
 val end_shape_func : State.t -> unit
 val start_shape_func : string -> State.t -> float * float -> unit
 val continue_shape_func : State.t -> float * float -> unit
