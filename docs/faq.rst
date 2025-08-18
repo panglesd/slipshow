@@ -110,6 +110,10 @@ Can I see my presentation on a smartphone or similar device?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   Slipshow offers basic gesture to trigger steps in the presentation. But this is a work in progress. PRs or ideas welcome!
 
+Is there a speaker view?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  Yes, open it with ``s`` and send notes to it with the ``speaker-note`` action.
+
 I don't like your system, what can I do?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   There are other great HTML5 presentation system such as `reveal.js <https://revealjs.com/>`_, `impress.js <https://impress.js.org/>`_, `eagle.js <https://zulko.github.io/eaglejs-demo/#/>`_, `Flides <https://github.com/nathanael-fijalkow/Flides>`_. There are great way to write pdf based presentation such as `Beamer <https://ctan.org/pkg/beamer>`_. You can also use `Libreoffice <https://www.libreoffice.org/discover/impress/>`_ (I have never tried).

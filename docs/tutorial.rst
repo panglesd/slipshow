@@ -138,6 +138,9 @@ steps: the initial one, and the last one.
 Try to make a modification in ``prime-numbers.md`` and save the file. The
 preview should refresh automatically with the new content!
 
+Also, type ``s``: this opens the speaker view, with a timer, notes you might
+want to add, and a synced view of the presentation.
+
 The syntax used
 ~~~~~~~~~~~~~~~~
 
