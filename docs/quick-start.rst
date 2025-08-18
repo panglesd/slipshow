@@ -9,36 +9,21 @@ Installation
 
 There are different ways to have access to the slipshow compiler:
 
-- **VSCode user**: Use the :ref:`VSCode extension<The VS Code plugin>`.
 - **Linux or Mac user**, reasonably comfortable with the command line: Use
   :ref:`precompiled binaries<Precompiled binaries>`.
+- **VSCode user**: If you don't want to use the CLI, use the :ref:`VSCode
+  extension<The VS Code plugin>`.
 - For **online-only use**, consider the :ref:`online sliphub editor<the sliphub online editor>`.
 - Otherwise, use the :ref:`slipshow editor<the slipshow editor>`.
 
-In addition to this, for advanced users, you also have the following options:
+In addition to this, you also have the following options:
 
-- You can always :ref:`compile from source<compiling from source>`! This solution is convenient
-  for ``opam`` users.
+- You can always :ref:`compile from source<compiling from source>`! This
+  solution is convenient for ``opam`` users.
 
 ..
    .. contents:: Installation methods
      :local:
-
-The VS Code plugin
-------------------
-
-The VS Code plugin can be downloaded from the `official marketplace
-<https://marketplace.visualstudio.com/items?itemName=Slipshow.slipshow>`_ as
-well as from `open VSX
-<https://open-vsx.org/extension/Slipshow/slipshow>`_. This means that searching
-the ``slipshow`` extension directly from within VS Code should yield a result in
-most cases!
-
-The VS Code plugin provides two commands:
-- Compile presentation. Open the command palette, and type "Compile slipshow". This should compile the presentation in a ``.html`` of the same name.
-- Preview presentation.  Open the command palette, and type "Preview
-slipshow". This should open a new window with a live preview of your
-presentation!
 
 Precompiled binaries
 --------------------
@@ -47,6 +32,8 @@ Precompiled binaries are available to download in the `release
 <https://github.com/panglesd/slipshow/releases/latest>`_ page of the
 project. Save the file corresponding to your architecture, and make it available
 by moving to a directory included in your ``$PATH``, eg ``/usr/local/bin``.
+
+Note that Mac user needs to have a homebrew installation until `this bug <https://github.com/panglesd/slipshow/issues/145>`_ is fixed.
 
 You can test that the ``slipshow`` binary is available by running:
 
@@ -63,6 +50,21 @@ Then, you can use ``slipshow`` to compile your documents:
    $ slipshow compile presentation.md    # Compiles to `presentation.html`
    $ slipshow serve presentation.md      # Compiles to `presentation.html` and serves a live-preview on 127.0.0.1:8080
 
+The VS Code plugin
+------------------
+
+The VS Code plugin can be downloaded from the `official marketplace
+<https://marketplace.visualstudio.com/items?itemName=Slipshow.slipshow>`_ as
+well as from `open VSX
+<https://open-vsx.org/extension/Slipshow/slipshow>`_. This means that searching
+the ``slipshow`` extension directly from within VS Code should yield a result in
+most cases!
+
+The VS Code plugin provides two commands:
+- Compile presentation. Open the command palette, and type "Compile slipshow". This should compile the presentation in a ``.html`` of the same name.
+- Preview presentation.  Open the command palette, and type "Preview
+slipshow". This should open a new window with a live preview of your
+presentation!
 
 The sliphub online editor
 -------------------------
