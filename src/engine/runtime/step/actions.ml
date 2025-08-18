@@ -39,6 +39,7 @@ module Execute = struct
       Undoable.return ()
 
   let do_ window elems = Undoable.List.iter (do_ window) elems
+  let setup = None
 end
 
 (* Note: the order is important, it's going to be applied in this order *)
@@ -64,4 +65,5 @@ let all =
     (module Execute : S);
     (module Play_media : S);
     (module Change_page : S);
+    (module Speaker_note : S);
   ]

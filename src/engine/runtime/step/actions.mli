@@ -1,6 +1,7 @@
 module type S = sig
   type args
 
+  val setup : (args -> unit Fut.t) option
   val on : string
   val action_name : string
   val parse_args : Brr.El.t -> string -> (args, [> `Msg of string ]) result
@@ -11,8 +12,6 @@ module Pause : sig
   type args = Brr.El.t list
 
   include S with type args := args
-
-  val setup : Brr.El.t list -> unit Undoable.t
 end
 
 module type Move = sig

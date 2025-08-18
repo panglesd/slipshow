@@ -26,7 +26,7 @@ $ cp main.html /tmp/
   ![](chapter2/image_of_chapter_2.png)
   
   
-  $ grep -A 11 "class=\"slip-body" main.html
+  $ show_source main.html | grep -A 11 "class=\"slip-body"
   <div class="slip-body">
   <div>
   <h1 id="a-title"><a class="anchor" aria-hidden="true" href="#a-title"></a><span>A title</span></h1>

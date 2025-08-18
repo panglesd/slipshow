@@ -125,7 +125,7 @@ let embed_in_page content ~has ~math_link ~css_links ~theme ~dimension =
                    </html>|} in
   (start, end_)
 
-type starting_state = int * string
+type starting_state = int
 type delayed = string * string
 
 let delayed_to_string s = Marshal.to_string s [] |> Base64.encode_string
@@ -185,13 +185,51 @@ let delayed ?(frontmatter = Frontmatter.empty) ?(read_file = fun _ -> Ok None) s
   let has = Has.find_out md in
   embed_in_page ~dimension ~has ~math_link ~theme ~css_links content
 
-let add_starting_state (start, end_) starting_state =
+let add_starting_state (start, end_) (starting_state : starting_state option) =
   let starting_state =
-    match starting_state with
-    | None -> ""
-    | Some (st, id) -> string_of_int st ^ ", \"" ^ id ^ "\""
+    match starting_state with None -> "0" | Some st -> string_of_int st
   in
-  start ^ starting_state ^ end_
+  let html = start ^ starting_state ^ end_ in
+  let orig_html = html in
+  let html =
+    let buf = Buffer.create 10 in
+    Cmarkit_html.buffer_add_html_escaped_string buf html;
+    Buffer.contents buf
+  in
+  let html =
+    Format.sprintf
+      {|
+<!doctype html>
+<html>
+<head>
+<meta charset='utf-8'>
+</head>
+  <body>
+          <iframe name="slipshow_main_pres" id="slipshow__internal_iframe" srcdoc="%s" style="
+    width: 100%%;
+    height: 100%%;
+    position: fixed;
+    left: 0;
+    border: 1px;
+    right: 0;
+    top: 0;
+    bottom: 0;
+"></iframe>
+
+<script>
+document.getElementById('slipshow__internal_iframe').addEventListener('load', function () {
+    this.contentWindow.focus();
+});
+</script>
+      <script>
+      %s
+      </script>
+  </body>
+                   </html>|}
+      html
+      Data_files.(read Scheduler_js)
+  in
+  if true then html else orig_html
 
 let convert ?frontmatter ?starting_state ?read_file s =
   let delayed = delayed ?frontmatter ?read_file s in

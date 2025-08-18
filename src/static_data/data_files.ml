@@ -1,5 +1,6 @@
 type file =
   | Slipshow_js
+  | Scheduler_js
   | Pdf_support
   | Slip_internal_css
   | Slip_system_css
@@ -18,10 +19,11 @@ let string_of_file = function
   | _ -> assert false
 
 let read f =match f with
-  | Slipshow_js -> [%blob "../engine/slipshow.js"]
-  | Slip_internal_css -> [%blob "../engine/slipshow-internal.css"]
-  | Slip_system_css -> [%blob "../engine/slipshow-system.css"]
-  | Pdf_support -> [%blob "../pdf-support/pdf_support.bc.js"]
+  | Slipshow_js -> [%blob "../engine/runtime/slipshow.js"]
+  | Scheduler_js -> [%blob "../engine/scheduler/scheduler.bc.js"]
+  | Slip_internal_css -> [%blob "../engine/runtime/slipshow-internal.css"]
+  | Slip_system_css -> [%blob "../engine/runtime/slipshow-system.css"]
+  | Pdf_support -> [%blob "../engine/pdf-support/pdf_support.bc.js"]
   | Favicon -> [%blob "../../logo/favicon.ico"]
   | _ ->
      Data_contents.read (string_of_file f)

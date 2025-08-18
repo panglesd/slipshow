@@ -425,6 +425,9 @@ These attributes are actions that will be executed when a ``pause`` or ``step`` 
 
   For instance, ``{change-page='~n:"2-4 6-4 7 -1 +2 all"}`` will change pages to ``2``, ``3``, ``4``, ``6``, ``5``, ``4``, ``7``, ``6``, ``8`` and then all further pages that the pdf/carousel contains. It will always initially start with page 1.
 
+``speaker-note``
+  Hides the targeted element (either with given ID, or self). When the action is executed, send the targeted element to the "Notes" section of the speaker notes (that you can open with ``s``).
+
 ``exec``
   Execute the slipscript. Possible to specify multiple ids.
 

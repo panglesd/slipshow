@@ -12,7 +12,7 @@ No theme provided or "--theme default" is the same
 
 In those cases, the default theme is included
 
-  $ grep ".slip-body, " default_theme1.html -A 3
+  $ show_source default_theme1.html | grep ".slip-body, " -A 3
   <style>.slip-body, .slide-body {
     /* padding:60px; */
     margin-top: auto;
@@ -38,7 +38,7 @@ slipshow theme list outputs the list of themes
 You can set a builtin theme
 
   $ slipshow compile --theme vanier file.md -o vanier_theme.html
-  $ grep "Dosis" vanier_theme.html
+  $ show_source vanier_theme.html | grep "Dosis"
    font-family: 'Dosis';
   	font-family: "Dosis";
   		font-family: "Dosis";
@@ -47,7 +47,7 @@ You can set a builtin theme
 "--theme none" adds no theme
 
   $ slipshow compile --theme none file.md -o no_theme.html
-  $ grep ".slip-body " no_theme.html
+  $ show_source no_theme.html | grep ".slip-body "
   [1]
 
 "--theme <file.css>" replaces the default theme with the local file theme
@@ -56,26 +56,26 @@ You can set a builtin theme
 
   $ slipshow compile --theme my_theme.css file.md -o local_theme.html
  No default theme included:
-  $ grep ".slip-body " local_theme.html
+  $ show_source local_theme.html | grep ".slip-body "
   [1]
  But local theme included:
-  $ grep YOYO -A 1 local_theme.html
+  $ show_source local_theme.html | grep YOYO -A 1
   <style>YOYO
   </style>
 
 Remote themes also replace the default theme but are included with a link:
 
   $ slipshow compile --theme https://example.org file.md -o remote_theme.html
-  $ grep example.org remote_theme.html
+  $ show_source remote_theme.html | grep example.org
   <link href="https://example.org" rel="stylesheet" />
 
 Independently, an arbitrary number of css files can be included with "--css", without changing the theme:
 
   $ slipshow compile --css https://example.org file.md --css my_theme.css -o additional_css.html
-  $ grep example.org additional_css.html
+  $ show_source additional_css.html | grep example.org
   <link href="https://example.org" rel="stylesheet" /><style>YOYO
-  $ grep YOYO -A 1 additional_css.html
+  $ show_source additional_css.html | grep YOYO -A 1
   <link href="https://example.org" rel="stylesheet" /><style>YOYO
   </style>
-  $ grep ".slip-body, " additional_css.html
+  $ show_source additional_css.html | grep ".slip-body, "
   <style>.slip-body, .slide-body {

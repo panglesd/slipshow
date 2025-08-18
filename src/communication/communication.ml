@@ -1,7 +1,27 @@
 open Sexplib.Std
 
-type payload = State of int | Ready [@@deriving sexp]
-type t = { id : string; payload : payload } [@@deriving sexp]
+type drawing_event =
+  | End of { state : string }
+  | Start of { id : string; state : string; coord : float * float }
+  | Continue of { state : string; coord : float * float }
+  | Clear
+[@@deriving sexp]
+
+type stroke = { id : string; state : string; path : (float * float) list }
+[@@deriving sexp]
+
+type payload =
+  | State of int * [ `Fast | `Normal ]
+  | Ready
+  | Open_speaker_notes
+  | Close_speaker_notes
+  | Speaker_notes of string
+  | Drawing of drawing_event
+  | Send_all_drawing
+  | Receive_all_drawing of stroke list
+[@@deriving sexp]
+
+type t = { payload : payload } [@@deriving sexp]
 
 let t_of_sexp_opt s =
   try Some (t_of_sexp s) with Sexplib0.Sexp.Of_sexp_error _ -> None

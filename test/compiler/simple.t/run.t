@@ -2,7 +2,7 @@ We can compile the file using the slip_of_mark binary
 
   $ slipshow compile -o file.html file.md
 
-  $ cat file.html | grep "<body>" -A 11
+  $ show_source file.html | grep "<body>" -A 11
     <body>
       <div id="slipshow-main">
         <div id="slipshow-content">
@@ -40,7 +40,7 @@ If we do not pass an input file, it gets its value from stdin
   > Paragraph
   > EOF
 
-  $ cat file.html | grep "<body>" -A 11
+  $ show_source file.html | grep "<body>" -A 11
     <body>
       <div id="slipshow-main">
         <div id="slipshow-content">
@@ -81,11 +81,11 @@ If we pass a mathjax value, with a remote url:
   $ slipshow compile -o m2.html --mathjax https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js with_block_math.md
   $ slipshow compile -o m3.html --mathjax https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js without_math.md
 
-  $ cat m1.html | grep mathjax
+  $ show_source m1.html | grep mathjax
   <script id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-  $ cat m2.html | grep mathjax
+  $ show_source m2.html | grep mathjax
   <script id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-  $ cat m3.html | grep mathjax
+  $ show_source m3.html | grep mathjax
   [1]
 
 With a file
@@ -94,12 +94,12 @@ With a file
   $ slipshow compile -o m.html --mathjax mathjax-unknown.js with_inline_math.md
   slipshow: [WARNING] Could not read file: mathjax-unknown.js. Considering it as an URL. (mathjax-unknown.js: No such file or directory)
   $ slipshow compile -o m.html --mathjax mathjax.js with_inline_math.md
-  $ cat m.html | grep -A 1 dummyABC
+  $ show_source m.html | grep -A 1 dummyABC
   <script id="MathJax-script">dummyABC
   </script>
 
 Images
 
   $ slipshow compile file_with_image.md
-  $ cat file_with_image.html | grep "alt=\"image\"" | grep base64
+  $ show_source file_with_image.html | grep "alt=\"image\"" | grep base64
   <p><span>A paragraph with an </span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAABg2lDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9bpaIVB4OIOGSoTnZREcdahSJUCLVCqw4ml35Bk4YkxcVRcC04+LFYdXBx1tXBVRAEP0BcXZwUXaTE/yWFFjEeHPfj3b3H3Tsg2KgwzeqKA5pum+lkQszmVsXwK/ogIIIhCDKzjDlJSsF3fN0jwNe7GM/yP/fn6FfzFgMCInGcGaZNvEE8s2kbnPeJBVaSVeJz4gmTLkj8yHXF4zfORZeDPFMwM+l5YoFYLHaw0sGsZGrE08RRVdMpP5j1WOW8xVmr1FjrnvyFkby+ssx1mqNIYhFLkCBCQQ1lVGAjRqtOioU07Sd8/COuXyKXQq4yGDkWUIUG2fWD/8Hvbq3C1KSXFEkA3S+O8zEGhHeBZt1xvo8dp3kChJ6BK73trzaA2U/S620tegQMbAMX121N2QMud4DhJ0M2ZVcK0QwWCsD7GX1TDhi8BXrXvN5a+zh9ADLUVeoGODgExouUve7z7p7O3v490+rvB2/RcqXOpP/kAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH5wsUDBghqFYBIAAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAACeSURBVBjTbY4xCoQwFEQny1aWCVFPkEKTK4SAeATv5wE8gjew+wpewV/aB9xC1Cz4qhkeDIPjYhzHruuGYTgScCciUkp571P9wYVzLsYopUTCd55nAHmen31dV2YuigIAM6OqKmPM6YQQAO4KQEzTtO87AGttWZZZlvV9T0QhhKZpnmvbthlj6rp+v/bKo5dlYea2bf98Oq61JqJ0/AfIKIeErZAqOwAAAABJRU5ErkJggg==" alt="image" ></p>

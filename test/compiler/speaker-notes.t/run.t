@@ -1,5 +1,5 @@
 We can compile the file using the slip_of_mark binary
 
-  $ slipshow compile audio.md
+  $ slipshow compile sn.md
 
-$ cp audio.html /tmp/
+$ cp sn.html /tmp/

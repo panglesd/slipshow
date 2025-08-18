@@ -2,7 +2,7 @@ We can compile the file using the slip_of_mark binary
 
   $ slipshow compile slides.md
 
-  $ cat slides.html | grep "<body>" -A 16
+  $ show_source slides.html | grep "<body>" -A 16
     <body>
       <div id="slipshow-main">
         <div id="slipshow-content">
