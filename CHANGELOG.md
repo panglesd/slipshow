@@ -6,6 +6,7 @@
 
 - Add a speaker view, opened with `s`. (#147)
 - Fix `Z` and `X` not working (#147)
+- On step change, move back to the position we left (#148)
 
 ### Language
 
