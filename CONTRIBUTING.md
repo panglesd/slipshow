@@ -82,9 +82,7 @@ Do that! And write the tag in the changelog! And commit and push!
 <!-- Call `dune-release publish distrib --draft` // A release already has been created. I don't know if this command allows a tag to have already been pushed/a release already been created. -->
 <!--   An alternative is to add using the GUI the asset (eg `_build/slipshow-0.1.0.tbz`). -->
 <!--   Use the `--dry-run` flag to be sure -->
-- Call `dune-release opam pkg` TODO: add --src-uri in the release guide to avoid having to modify it by hand (or forgetting to do so)
-  It seems that there is some discrepencies between the release created by the CI (which has a leading `v`) and the one dune release expect to have been created (by itself).
-  So, there might be a need to update the url.
+- Call `$ dune-release opam pkg --dist-uri https://github.com/panglesd/slipshow/releases/download/v0.X.0/slipshow-0.X.0.tbz`
 - Call `dune-release opam submit`
 - Verify that everything is right by comparing the `opam` file for the previous version, with this one!
 
