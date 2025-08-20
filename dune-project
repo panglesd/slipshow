@@ -36,7 +36,7 @@
    fmt
    logs
    fsevents-lwt
-   js_of_ocaml-compiler
+   (js_of_ocaml-compiler (>= "6.0.1"))
    js_of_ocaml-lwt
    magic-mime
    (dream (>= "1.0.0~alpha5"))
