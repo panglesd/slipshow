@@ -13,7 +13,10 @@ module Execute = struct
 
   open Fut.Syntax
 
+  let only_if_fast f = if Fast.is_counting () then Undoable.return () else f ()
+
   let do_ window elem =
+    only_if_fast @@ fun () ->
     try
       let body = Jv.get (Brr.El.to_jv elem) "innerHTML" |> Jv.to_jstr in
       Brr.Console.(log [ body ]);
