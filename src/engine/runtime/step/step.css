@@ -1,5 +1,6 @@
 .pauseAncestor ~ *, .pauseTarget {
   opacity: 0;
+  pointer-events: none;
 }
 
 .unstatic {
@@ -9,6 +10,7 @@
 
 .unrevealed {
   opacity: 0;
+  pointer-events: none;
 }
 
 #slipshow-counter {
