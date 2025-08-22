@@ -1,5 +1,6 @@
 ; The scheduler ensures communication between the presentation and the rest of
 ; the world (eg the speaker notes)
+
 (executable
  (name scheduler)
  (modes js)
