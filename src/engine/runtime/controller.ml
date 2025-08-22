@@ -206,19 +206,22 @@ let message_setup window =
             else Step.Next.goto i window
           in
           ()
-      | Some { payload = Drawing (End { state }) } -> (
-          match Drawing.State.of_string state with
-          | None -> ()
-          | Some state -> Drawing.end_shape_func state)
-      | Some { payload = Drawing (Continue { state; coord }) } -> (
-          match Drawing.State.of_string state with
-          | None -> ()
-          | Some state -> Drawing.continue_shape_func state coord)
-      | Some { payload = Drawing (Start { state; coord; id }) } -> (
-          match Drawing.State.of_string state with
-          | None -> ()
-          | Some state -> Drawing.start_shape_func id state coord)
-      | Some { payload = Drawing Clear } -> Drawing.clear_func ()
+      | Some { payload = Drawing d } -> (
+          let if_state state f =
+            match Drawing.State.of_string state with
+            | None -> ()
+            | Some state -> f state
+          in
+          match d with
+          | End { state } ->
+              if_state state @@ fun state -> Drawing.end_shape_func state
+          | Continue { state; coord } ->
+              if_state state @@ fun state ->
+              Drawing.continue_shape_func state coord
+          | Start { state; coord; id } ->
+              if_state state @@ fun state ->
+              Drawing.start_shape_func id state coord
+          | Clear -> Drawing.clear_func ())
       | Some { payload = Send_all_drawing } -> Drawing.send_all_strokes ()
       | Some { payload = Receive_all_drawing all_strokes } ->
           Drawing.receive_all_strokes all_strokes
