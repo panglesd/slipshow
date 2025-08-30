@@ -145,18 +145,26 @@ type drawing_state =
 
 let current_drawing_state = ref Pointing
 
+(* let svg_path path =
+ *   let res =
+ *     match path with
+ *     | [] -> []
+ *     (\* TODO: This does not work due to being impossible to delete... *\)
+ *     (\* | [ (x, y) ] -> *\)
+ *     (\*     [ Format.sprintf "M %f,%f L %f,%f " x y (x +. 1.) (y +. 1.) ] *\)
+ *     | (x, y) :: rest ->
+ *         Format.sprintf "M %f,%f" x y
+ *         :: List.map (fun (x, y) -> Format.sprintf "L %f,%f" x y) rest
+ *   in
+ *   String.concat " " res *)
+
+
 let svg_path path =
-  let res =
-    match path with
-    | [] -> []
-    (* TODO: This does not work due to being impossible to delete... *)
-    (* | [ (x, y) ] -> *)
-    (*     [ Format.sprintf "M %f,%f L %f,%f " x y (x +. 1.) (y +. 1.) ] *)
-    | (x, y) :: rest ->
-        Format.sprintf "M %f,%f" x y
-        :: List.map (fun (x, y) -> Format.sprintf "L %f,%f" x y) rest
-  in
-  String.concat " " res
+  let path = List.map (fun (x,y) -> Perfect_freehand.Point.v x y) path in
+  let options = Perfect_freehand.Options.v ~smoothing:0. ~size:64. ~streamline:0.25 ~last:false () in
+  let stroke = Perfect_freehand.get_stroke ~options path in
+  let svg_path = Perfect_freehand.get_svg_path_from_stroke stroke in
+  Jstr.to_string svg_path
 
 let coord_of_event ev =
   let mouse = Brr.Ev.as_type ev |> Brr.Ev.Pointer.as_mouse in
@@ -241,18 +249,19 @@ let create_elem_of_stroke { State.color; width; tool } id path =
   let set_at at v = Brr.El.set_at (Jstr.v at) (Some (Jstr.v v)) p in
   (match tool with
   | Tool.Pen ->
-      set_at "stroke" (Color.to_string color);
-      set_at "stroke-width" (Width.to_string width);
-      set_at "fill" "none";
+      (* set_at "stroke" (Color.to_string color);
+       * set_at "stroke-width" (Width.to_string width); *)
+      set_at "fill"  (Color.to_string color);
       set_at "id" id;
       Brr.El.set_at (Jstr.v "d") (Some (Jstr.v (svg_path path))) p
   | Highlighter ->
-      set_at "stroke" (Color.to_string color);
-      set_at "stroke-linecap" "round";
-      set_at "stroke-width" (Width.to_string width ^ "0");
+      (* set_at "stroke" (Color.to_string color);
+       * set_at "stroke-linecap" "round";
+       * set_at "stroke-width" (Width.to_string width ^ "0"); *)
       set_at "opacity" (string_of_float 0.33);
       set_at "id" id;
-      set_at "fill" "none";
+      (* set_at "fill" "none"; *)
+      set_at "fill"  (Color.to_string color);
       Brr.El.set_at (Jstr.v "d") (Some (Jstr.v (svg_path path))) p
   | Eraser -> ()
   | Pointer -> ());

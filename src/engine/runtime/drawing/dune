@@ -1,5 +1,5 @@
 (library
  (name drawing)
- (libraries step brr universe normalization messaging)
+ (libraries step brr universe normalization messaging perfect_freehand)
  (preprocess
   (pps ppx_sexp_conv)))
