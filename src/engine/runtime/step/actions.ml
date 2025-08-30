@@ -17,29 +17,31 @@ module Execute = struct
 
   let do_ window elem =
     only_if_fast @@ fun () ->
+    let undos_ref = ref [] in
+    let undo_fallback () =
+      List.fold_left
+        (fun acc f ->
+          let* () = acc in
+          f ())
+        (Fut.return ()) !undos_ref
+    in
     try
       let body = Jv.get (Brr.El.to_jv elem) "innerHTML" |> Jv.to_jstr in
       Brr.Console.(log [ body ]);
       let args = Jv.Function.[ ("slip", Fun.id) ] in
       let f = Jv.Function.v ~body ~args in
-      let undos_ref = ref [] in
       let arg = Javascript_api.slip window undos_ref in
       let u = f arg in
       let undo () =
         try Fut.return (ignore @@ Jv.call u "undo" [||])
-        with _ ->
-          List.fold_left
-            (fun acc f ->
-              let* () = acc in
-              f ())
-            (Fut.return ()) !undos_ref
+        with _ -> undo_fallback ()
       in
       Undoable.return ~undo ()
     with e ->
       Brr.Console.(
         log
           [ "An exception occurred when trying to execute a custom script:"; e ]);
-      Undoable.return ()
+      Undoable.return ~undo:undo_fallback ()
 
   let do_ window elems = Undoable.List.iter (do_ window) elems
   let setup = None
