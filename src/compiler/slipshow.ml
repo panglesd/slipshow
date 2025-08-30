@@ -196,6 +196,14 @@ let add_starting_state (start, end_) (starting_state : starting_state option) =
     Cmarkit_html.buffer_add_html_escaped_string buf html;
     Buffer.contents buf
   in
+  let favicon_element =
+    let href =
+      let mime_type = "image/x-icon" in
+      let base64 = Base64.encode_string Data_files.(read Favicon) in
+      Format.sprintf "data:%s;base64,%s" mime_type base64
+    in
+    Format.sprintf {|<link rel="icon" type="image/x-icon" href="%s">|} href
+  in
   let html =
     Format.sprintf
       {|
@@ -203,6 +211,7 @@ let add_starting_state (start, end_) (starting_state : starting_state option) =
 <html>
 <head>
 <meta charset='utf-8'>
+%s
 </head>
   <body>
           <iframe name="slipshow_main_pres" id="slipshow__internal_iframe" srcdoc="%s" style="
@@ -226,7 +235,7 @@ document.getElementById('slipshow__internal_iframe').addEventListener('load', fu
       </script>
   </body>
                    </html>|}
-      html
+      favicon_element html
       Data_files.(read Scheduler_js)
   in
   if true then html else orig_html
