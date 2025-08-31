@@ -1,0 +1,22 @@
+(library
+ (name perfect_freehand)
+ (public_name perfect_freehand)
+ (js_of_ocaml
+  (javascript_files bundled.js))
+ (libraries brr))
+
+(rule
+ (deps binding.js)
+ (target bundled.js)
+ (mode promote)
+ (enabled_if
+  (= %{profile} "with-bundle"))
+ (action
+  (run
+   esbuild
+   binding.js
+   --bundle
+   --loader:.svg=dataurl
+   --loader:.gif=dataurl
+   --loader:.css=text
+   --outfile=bundled.js)))
