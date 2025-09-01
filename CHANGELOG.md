@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+## Compiler
+
+- Embed Liberation Sans fonts (and use them) (#150)
+- Fix missing favicon (which was missing since speaker view) (#150)
+
+## Engine
+
+- Fix speaker note scrolling (#150)
+- Fix script undos recovery when script execution fails (#150)
+- Hide paused/unrevealed elems also for mouse (#150)
+- Don't execute scripts when computing toc (#150)
+
 ## [v0.6.0] The King's Slipshow (Monday 18th August, 2025)
 
 ### Engine
