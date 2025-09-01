@@ -235,7 +235,7 @@ document.getElementById('slipshow__internal_iframe').addEventListener('load', fu
       </script>
   </body>
                    </html>|}
-  favicon_element    html
+      favicon_element html
       Data_files.(read Scheduler_js)
   in
   if true then html else orig_html

@@ -23,7 +23,7 @@ end
 module Width = struct
   type t = Small | Medium | Large [@@deriving sexp]
 
-  let to_string = function Small -> "1" | Medium -> "3" | Large -> "5"
+  let _to_string = function Small -> "1" | Medium -> "3" | Large -> "5"
 end
 
 module Tool = struct
@@ -139,30 +139,39 @@ let remove elem =
       Brr.El.remove elem
 
 type drawing_state =
-  | Drawing of (float * float) list * Brr.El.t * State.t
+  | Drawing of
+      (float * float) list * Brr.El.t * State.t * Perfect_freehand.Options.t
   | Erasing of (float * float)
   | Pointing
 
 let current_drawing_state = ref Pointing
 
-(* let svg_path path =
- *   let res =
- *     match path with
- *     | [] -> []
- *     (\* TODO: This does not work due to being impossible to delete... *\)
- *     (\* | [ (x, y) ] -> *\)
- *     (\*     [ Format.sprintf "M %f,%f L %f,%f " x y (x +. 1.) (y +. 1.) ] *\)
- *     | (x, y) :: rest ->
- *         Format.sprintf "M %f,%f" x y
- *         :: List.map (fun (x, y) -> Format.sprintf "L %f,%f" x y) rest
- *   in
- *   String.concat " " res *)
-
-
-let svg_path path =
-  let path = List.map (fun (x,y) -> Perfect_freehand.Point.v x y) path in
-  let options = Perfect_freehand.Options.v ~smoothing:0. ~size:64. ~streamline:0.25 ~last:false () in
+let svg_path options path =
+  let { Universe.Coordinates.scale; _ } = Universe.State.get_coord () in
+  Brr.Console.(log [ "scale is"; scale ]);
+  (* let scale = 10. in *)
+  let path =
+    List.rev_map
+      (fun (x, y) -> Perfect_freehand.Point.v (x *. scale) (y *. scale))
+      path
+  in
   let stroke = Perfect_freehand.get_stroke ~options path in
+  let stroke =
+    List.map
+      (fun p ->
+        let x =
+          Perfect_freehand.Point.get_x p
+          (* /. scale *)
+        in
+        let y =
+          Perfect_freehand.Point.get_y p
+          (* /. scale *)
+        in
+        Perfect_freehand.Point.v x y)
+      stroke
+  in
+  Brr.Console.(
+    log [ "stroke is"; Jv.of_list Perfect_freehand.Point.to_jv stroke ]);
   let svg_path = Perfect_freehand.get_svg_path_from_stroke stroke in
   Jstr.to_string svg_path
 
@@ -221,16 +230,24 @@ let intersect_poly p segment =
         false
       with Not_found -> true)
 
+let close_enough_poly p coord =
+  let close_enough (x1, y1) (x2, y2) =
+    abs_float (x1 -. x2) < 10. && abs_float (y1 -. y2) < 10.
+  in
+  List.exists (fun p1 -> close_enough p1 coord) p
+
 let continue_shape_func _state coord =
   match !current_drawing_state with
-  | Drawing (path, el, state) ->
+  | Drawing (path, el, state, options) ->
       let path = coord :: path in
-      current_drawing_state := Drawing (path, el, state);
-      Brr.El.set_at (Jstr.v "d") (Some (Jstr.v (svg_path path))) el
+      current_drawing_state := Drawing (path, el, state, options);
+      Brr.El.set_at (Jstr.v "d") (Some (Jstr.v (svg_path options path))) el
   | Erasing last_point ->
       Hashtbl.iter
         (fun _id (elem, path, _state) ->
-          if intersect_poly path (coord, last_point) then remove elem)
+          let intersect = intersect_poly path (coord, last_point) in
+          let close_enough = close_enough_poly path coord in
+          if intersect || close_enough then remove elem)
         all_paths;
       current_drawing_state := Erasing coord;
       ()
@@ -244,28 +261,35 @@ let continue_shape ev =
   let state = state |> State.sexp_of_t |> Sexplib0.Sexp.to_string in
   Messaging.draw (Continue { state; coord })
 
-let create_elem_of_stroke { State.color; width; tool } id path =
+let create_elem_of_stroke options { State.color; width = _; tool } id path =
   let p = Brr.El.v ~ns:`SVG (Jstr.v "path") [] in
   let set_at at v = Brr.El.set_at (Jstr.v at) (Some (Jstr.v v)) p in
+  set_at "fill" (Color.to_string color);
+  set_at "id" id;
+  let { Universe.Coordinates.scale; _ } = Universe.State.get_coord () in
+  let scale = 1. /. scale in
+  Brr.El.set_inline_style (Jstr.v "transform")
+    (Jstr.v @@ Format.sprintf "scale3d(%.10f,%.10f,%.10f)" scale scale scale)
+    p;
   (match tool with
-  | Tool.Pen ->
-      (* set_at "stroke" (Color.to_string color);
-       * set_at "stroke-width" (Width.to_string width); *)
-      set_at "fill"  (Color.to_string color);
-      set_at "id" id;
-      Brr.El.set_at (Jstr.v "d") (Some (Jstr.v (svg_path path))) p
-  | Highlighter ->
-      (* set_at "stroke" (Color.to_string color);
-       * set_at "stroke-linecap" "round";
-       * set_at "stroke-width" (Width.to_string width ^ "0"); *)
-      set_at "opacity" (string_of_float 0.33);
-      set_at "id" id;
-      (* set_at "fill" "none"; *)
-      set_at "fill"  (Color.to_string color);
-      Brr.El.set_at (Jstr.v "d") (Some (Jstr.v (svg_path path))) p
-  | Eraser -> ()
-  | Pointer -> ());
+  | Highlighter -> set_at "opacity" (string_of_float 0.33)
+  | _ -> ());
+  Brr.El.set_at (Jstr.v "d") (Some (Jstr.v (svg_path options path))) p;
   p
+
+let options_of { State.color = _; width; tool } =
+  let size =
+    match (tool, width) with
+    | Pen, Small -> 6.
+    | Pen, Medium -> 10.
+    | Pen, Large -> 14.
+    | Highlighter, Small -> 28.
+    | Highlighter, Medium -> 38.
+    | Highlighter, Large -> 48.
+    | _ -> 0.
+  in
+  Perfect_freehand.Options.v ~thinning:0.3 ~smoothing:0.5 ~size ~streamline:0.05
+    ~last:false ()
 
 let start_shape_func id ({ State.tool; _ } as state) coord =
   let svg =
@@ -275,8 +299,9 @@ let start_shape_func id ({ State.tool; _ } as state) coord =
   match tool with
   | Tool.Pen | Highlighter ->
       let path = [ coord ] in
-      let p = create_elem_of_stroke state id path in
-      current_drawing_state := Drawing (path, p, state);
+      let options = options_of state in
+      let p = create_elem_of_stroke options state id path in
+      current_drawing_state := Drawing (path, p, state, options);
       Brr.El.append_children svg [ p ]
   | Eraser -> current_drawing_state := Erasing coord
   | Pointer -> ()
@@ -291,7 +316,7 @@ let start_shape _svg ev =
 
 let end_shape_func _attrs =
   (match !current_drawing_state with
-  | Drawing (path, el, state) ->
+  | Drawing (path, el, state, options) ->
       let () =
         match Brr.El.at (Jstr.v "id") el with
         | None -> ()
@@ -325,7 +350,8 @@ let receive_all_strokes all_strokes =
       match State.of_string state with
       | None -> ()
       | Some state ->
-          let el = create_elem_of_stroke state id path in
+          let options = options_of state in
+          let el = create_elem_of_stroke options state id path in
           Hashtbl.add all_paths id (el, path, state);
           let svg =
             Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing-elem")
