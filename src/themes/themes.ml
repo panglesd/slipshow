@@ -19,6 +19,6 @@ let of_string = function
   | _ -> None
 
 let content = function
-  | Default -> [%blob "default.css"]
-  | Vanier -> [%blob "vanier.css"]
+  | Default -> [%blob "font-embedding.css"] ^ [%blob "default.css"]
+  | Vanier -> [%blob "font-embedding.css"] ^ [%blob "vanier.css"]
   | NoTheme -> ""
