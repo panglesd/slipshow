@@ -13,7 +13,7 @@ No theme provided or "--theme default" is the same
 In those cases, the default theme is included
 
   $ show_source default_theme1.html | grep ".slip-body, " -A 3
-  <style>.slip-body, .slide-body {
+  .slip-body, .slide-body {
     /* padding:60px; */
     margin-top: auto;
     margin-bottom: auto;
@@ -78,4 +78,4 @@ Independently, an arbitrary number of css files can be included with "--css", wi
   <link href="https://example.org" rel="stylesheet" /><style>YOYO
   </style>
   $ show_source additional_css.html | grep ".slip-body, "
-  <style>.slip-body, .slide-body {
+  .slip-body, .slide-body {
