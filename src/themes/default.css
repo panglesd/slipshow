@@ -15,7 +15,7 @@
     flex: 0 1 auto;
     -webkit-box-shadow: 0px 5px 18px 5px rgba(0,0,0,0.42); 
     box-shadow: 0px 5px 18px 5px rgba(0,0,0,0.42);
-    font: 1.8em "Fira Sans", sans-serif;
+    font: 1.8em "Liberation Sans", sans-serif;
     background: linear-gradient(to right, #004dc9, #001e63);
     /* Negative margin to consider the 1px margin of slides rescaler content */
     margin-left: -1px;
@@ -45,14 +45,14 @@
   text-align: left;
   box-shadow: 0px 5px 18px 5px rgba(0,0,0,0.42);
   background: linear-gradient(to right, #004dc9, #001e63);
-  font: 51.84px "Fira Sans", sans-serif;
+  font: 51.84px "Liberation Sans", sans-serif;
   padding-bottom: 10px;
   margin-bottom: 20px;
 }
 
 body {
   font:
-    30px "Fira Sans",
+    30px "Liberation Sans",
     sans-serif;
 }
 
