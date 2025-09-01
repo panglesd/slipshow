@@ -121,6 +121,7 @@ document.getElementById('speaker-view').addEventListener('load', function () {
     }
     #speaker-notes {
       width:40%;
+      overflow: scroll;
     }
     </style>
   </body>
