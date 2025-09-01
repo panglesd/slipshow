@@ -16,21 +16,26 @@ module Point : sig
   (**/**)
 end
 
-
-module Options :sig
+module Options : sig
   type t
 
-  val v : ?size:float -> ?thinning:float -> ?smoothing:float -> ?streamline:float -> ?last:bool -> unit -> t
-   
+  val v :
+    ?size:float ->
+    ?thinning:float ->
+    ?smoothing:float ->
+    ?streamline:float ->
+    ?last:bool ->
+    unit ->
+    t
+
   (**/**)
 
   include Jv.CONV with type t := t
 
   (**/**)
-  end
+end
 
 val get_stroke : ?options:Options.t -> Point.t list -> Point.t list
 (* TODO: options *)
 
 val get_svg_path_from_stroke : Point.t list -> Jstr.t
-  
