@@ -44,6 +44,7 @@
   (ppx_blob (>= "0.8.0"))
    sexplib
    ppx_sexp_conv
+   ppx_deriving_yojson
   (odoc :with-doc)
   (ocamlformat
    (and :with-dev-setup (= 0.27.0))))
