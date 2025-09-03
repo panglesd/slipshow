@@ -44,7 +44,7 @@ let keyboard_setup (window : Universe.Window.t) =
       | "h" -> Drawing.State.set_tool (Stroker Highlighter)
       | "x" -> Drawing.State.set_tool Pointer
       | "e" -> Drawing.State.set_tool Eraser
-      | "X" -> Drawing.clear ()
+      | "X" -> Drawing.Event.clear ()
       | "l" ->
           let _ : unit Fut.t =
             Step.Next.Excursion.start ();
@@ -214,12 +214,12 @@ let message_setup window =
           in
           match d with
           | End { state } ->
-              if_state state @@ fun state -> Drawing.end_shape_func state
-          | Continue { coord } -> Drawing.continue_shape_func coord
+              if_state state @@ fun state -> Drawing.Event.end_shape_func state
+          | Continue { coord } -> Drawing.Event.continue_shape_func coord
           | Start { state; coord; id } ->
               if_state state @@ fun state ->
-              Drawing.start_shape_func id state coord
-          | Clear -> Drawing.clear_func ())
+              Drawing.Event.start_shape_func id state coord
+          | Clear -> Drawing.Event.clear_func ())
       | Some { payload = Send_all_drawing } -> Drawing.send_all_strokes ()
       | Some { payload = Receive_all_drawing all_strokes } ->
           Drawing.receive_all_strokes all_strokes
