@@ -10,7 +10,7 @@ let get_id =
 let is_pressed = ( != ) 0
 
 module Color = struct
-  type t = Red | Blue | Green | Black | Yellow [@@deriving sexp]
+  type t = Red | Blue | Green | Black | Yellow [@@deriving yojson]
 
   let to_string = function
     | Red -> "red"
@@ -21,17 +21,16 @@ module Color = struct
 end
 
 module Width = struct
-  type t = Small | Medium | Large [@@deriving sexp]
-
-  let _to_string = function Small -> "1" | Medium -> "3" | Large -> "5"
+  type t = Small | Medium | Large [@@deriving yojson]
 end
 
 module Tool = struct
-  type t = Pen | Highlighter | Eraser | Pointer [@@deriving sexp]
+  type stroker = Pen | Highlighter [@@deriving yojson]
+  type t = Stroker of stroker | Eraser | Pointer [@@deriving yojson]
 
   let to_string = function
-    | Pen -> "pen"
-    | Highlighter -> "highlighter"
+    | Stroker Pen -> "pen"
+    | Stroker Highlighter -> "highlighter"
     | Eraser -> "eraser"
     | Pointer -> "cursor"
 end
@@ -56,7 +55,7 @@ module Button = struct
 end
 
 module State : sig
-  type t = { color : Color.t; width : Width.t; tool : Tool.t } [@@deriving sexp]
+  type t = { color : Color.t; width : Width.t; tool : Tool.t }
 
   val get_state : unit -> t
   val set_color : Color.t -> unit
@@ -64,17 +63,24 @@ module State : sig
   val set_tool : Tool.t -> unit
   val get_tool : unit -> Tool.t
   val of_string : string -> t option
+  val to_string : t -> string
 end = struct
-  type t = { color : Color.t; width : Width.t; tool : Tool.t } [@@deriving sexp]
-
-  let t_of_sexp_opt s =
-    try Some (t_of_sexp s) with Sexplib0.Sexp.Of_sexp_error _ -> None
+  type t = { color : Color.t; width : Width.t; tool : Tool.t }
+  [@@deriving yojson]
 
   let of_string s =
-    match Sexplib.Sexp.of_string_conv s t_of_sexp_opt with
-    | `Result (Some _ as r) -> r
-    | _ -> None
+    match Yojson.Safe.from_string s with
+    | r -> of_yojson r
+    | exception Yojson.Json_error e -> Error e
 
+  let of_string s =
+    match of_string s with
+    | Ok s -> Some s
+    | Error e ->
+        Brr.Console.(log [ "Error when converting back a state:"; e ]);
+        None
+
+  let to_string v = v |> to_yojson |> Yojson.Safe.to_string
   let color = ref Color.Blue
   let width = ref Width.Medium
   let tool = ref Tool.Pointer
@@ -120,7 +126,7 @@ end = struct
   let set_tool t =
     let () =
       match t with
-      | Tool.Pen | Highlighter | Eraser -> make_active ()
+      | Tool.Stroker _ | Eraser -> make_active ()
       | Pointer -> make_inactive ()
     in
     set_current Tool t
@@ -128,19 +134,81 @@ end = struct
   let get_tool () = !tool
 end
 
-let all_paths : (_, _ * _ * State.t) Hashtbl.t = Hashtbl.create 10
+module Stroke = struct
+  open Sexplib.Std
+
+  type freehand_option = {
+    size : float option;
+    thinning : float option;
+    smoothing : float option;
+    streamline : float option;
+    last : bool option;
+  }
+  [@@deriving yojson]
+
+  let option_to_yojson v =
+    let option =
+      {
+        size = Perfect_freehand.Options.size v;
+        thinning = Perfect_freehand.Options.thinning v;
+        smoothing = Perfect_freehand.Options.smoothing v;
+        streamline = Perfect_freehand.Options.streamline v;
+        last = Perfect_freehand.Options.last v;
+      }
+    in
+    freehand_option_to_yojson option
+
+  let option_of_yojson yojson =
+    match freehand_option_of_yojson yojson with
+    | Ok { size; thinning; smoothing; streamline; last } ->
+        Ok
+          (Perfect_freehand.Options.v ?size ?thinning ?smoothing ?streamline
+             ?last ())
+    | Error _ as e -> e
+
+  type t = {
+    id : string;
+    path : (float * float) list;
+    color : Color.t;
+    opacity : float;
+    options : Perfect_freehand.Options.t;
+        [@to_yojson option_to_yojson] [@of_yojson option_of_yojson]
+  }
+  [@@deriving yojson]
+
+  let of_string s =
+    match Yojson.Safe.from_string s with
+    | r -> of_yojson r
+    | exception Yojson.Json_error e -> Error e
+
+  let of_string s =
+    match of_string s with
+    | Ok s -> Some s
+    | Error e ->
+        Brr.Console.(log [ "Error when converting back a stroke:"; e ]);
+        None
+
+  let to_string v = v |> to_yojson |> Yojson.Safe.to_string
+
+  module Db = struct
+    type nonrec t = (string, Brr.El.t * t) Hashtbl.t
+    (** The ID is the key. We include the element too to avoid having to query
+        for it. *)
+
+    let all : t = Hashtbl.create 10
+  end
+end
 
 let remove elem =
   match Brr.El.at (Jstr.v "id") elem with
   | None -> Brr.El.remove elem
   | Some id ->
       let id = Jstr.to_string id in
-      Hashtbl.remove all_paths id;
+      Hashtbl.remove Stroke.Db.all id;
       Brr.El.remove elem
 
 type drawing_state =
-  | Drawing of
-      (float * float) list * Brr.El.t * State.t * Perfect_freehand.Options.t
+  | Drawing of Brr.El.t * Stroke.t
   | Erasing of (float * float)
   | Pointing
 
@@ -148,30 +216,12 @@ let current_drawing_state = ref Pointing
 
 let svg_path options path =
   let { Universe.Coordinates.scale; _ } = Universe.State.get_coord () in
-  Brr.Console.(log [ "scale is"; scale ]);
-  (* let scale = 10. in *)
   let path =
     List.rev_map
       (fun (x, y) -> Perfect_freehand.Point.v (x *. scale) (y *. scale))
       path
   in
   let stroke = Perfect_freehand.get_stroke ~options path in
-  let stroke =
-    List.map
-      (fun p ->
-        let x =
-          Perfect_freehand.Point.get_x p
-          (* /. scale *)
-        in
-        let y =
-          Perfect_freehand.Point.get_y p
-          (* /. scale *)
-        in
-        Perfect_freehand.Point.v x y)
-      stroke
-  in
-  Brr.Console.(
-    log [ "stroke is"; Jv.of_list Perfect_freehand.Point.to_jv stroke ]);
   let svg_path = Perfect_freehand.get_svg_path_from_stroke stroke in
   Jstr.to_string svg_path
 
@@ -236,32 +286,32 @@ let close_enough_poly p coord =
   in
   List.exists (fun p1 -> close_enough p1 coord) p
 
-let continue_shape_func _state coord =
+let continue_shape_func coord =
   match !current_drawing_state with
-  | Drawing (path, el, state, options) ->
-      let path = coord :: path in
-      current_drawing_state := Drawing (path, el, state, options);
-      Brr.El.set_at (Jstr.v "d") (Some (Jstr.v (svg_path options path))) el
+  | Drawing (el, stroke) ->
+      let stroke = { stroke with path = coord :: stroke.path } in
+      current_drawing_state := Drawing (el, stroke);
+      Brr.El.set_at (Jstr.v "d")
+        (Some (Jstr.v (svg_path stroke.options stroke.path)))
+        el
   | Erasing last_point ->
       Hashtbl.iter
-        (fun _id (elem, path, _state) ->
+        (fun _id (elem, { Stroke.path; _ }) ->
           let intersect = intersect_poly path (coord, last_point) in
           let close_enough = close_enough_poly path coord in
           if intersect || close_enough then remove elem)
-        all_paths;
+        Stroke.Db.all;
       current_drawing_state := Erasing coord;
       ()
   | Pointing -> ()
 
 let continue_shape ev =
   check_is_pressed ev @@ fun () ->
-  do_if_drawing @@ fun state ->
   let coord = coord_of_event ev in
-  continue_shape_func state coord;
-  let state = state |> State.sexp_of_t |> Sexplib0.Sexp.to_string in
-  Messaging.draw (Continue { state; coord })
+  continue_shape_func coord;
+  Messaging.draw (Continue { coord })
 
-let create_elem_of_stroke options { State.color; width = _; tool } id path =
+let create_elem_of_stroke { Stroke.options; color; opacity; id; path } =
   let p = Brr.El.v ~ns:`SVG (Jstr.v "path") [] in
   let set_at at v = Brr.El.set_at (Jstr.v at) (Some (Jstr.v v)) p in
   set_at "fill" (Color.to_string color);
@@ -271,22 +321,19 @@ let create_elem_of_stroke options { State.color; width = _; tool } id path =
   Brr.El.set_inline_style (Jstr.v "transform")
     (Jstr.v @@ Format.sprintf "scale3d(%.10f,%.10f,%.10f)" scale scale scale)
     p;
-  (match tool with
-  | Highlighter -> set_at "opacity" (string_of_float 0.33)
-  | _ -> ());
+  set_at "opacity" (string_of_float opacity);
   Brr.El.set_at (Jstr.v "d") (Some (Jstr.v (svg_path options path))) p;
   p
 
-let options_of { State.color = _; width; tool } =
+let options_of stroke width =
   let size =
-    match (tool, width) with
-    | Pen, Small -> 6.
+    match (stroke, width) with
+    | Tool.Pen, Width.Small -> 6.
     | Pen, Medium -> 10.
     | Pen, Large -> 14.
     | Highlighter, Small -> 28.
     | Highlighter, Medium -> 38.
     | Highlighter, Large -> 48.
-    | _ -> 0.
   in
   Perfect_freehand.Options.v ~thinning:0.3 ~smoothing:0.5 ~size ~streamline:0.05
     ~last:false ()
@@ -297,11 +344,13 @@ let start_shape_func id ({ State.tool; _ } as state) coord =
     |> Option.get
   in
   match tool with
-  | Tool.Pen | Highlighter ->
+  | Tool.Stroker stroker ->
+      let opacity = match stroker with Tool.Highlighter -> 0.33 | Pen -> 1. in
       let path = [ coord ] in
-      let options = options_of state in
-      let p = create_elem_of_stroke options state id path in
-      current_drawing_state := Drawing (path, p, state, options);
+      let options = options_of stroker state.width in
+      let stroke = { Stroke.path; options; opacity; id; color = state.color } in
+      let p = create_elem_of_stroke stroke in
+      current_drawing_state := Drawing (p, stroke);
       Brr.El.append_children svg [ p ]
   | Eraser -> current_drawing_state := Erasing coord
   | Pointer -> ()
@@ -311,48 +360,37 @@ let start_shape _svg ev =
   let id = get_id () in
   let coord = coord_of_event ev in
   start_shape_func id state coord;
-  let state = state |> State.sexp_of_t |> Sexplib0.Sexp.to_string in
+  let state = state |> State.to_string in
   Messaging.draw (Start { state; id; coord })
 
 let end_shape_func _attrs =
   (match !current_drawing_state with
-  | Drawing (path, el, state, options) ->
-      let () =
-        match Brr.El.at (Jstr.v "id") el with
-        | None -> ()
-        | Some id ->
-            let id = Jstr.to_string id in
-            Hashtbl.add all_paths id (el, path, state)
-      in
-      ()
+  | Drawing (el, stroke) -> Hashtbl.add Stroke.Db.all stroke.id (el, stroke)
   | _ -> ());
   current_drawing_state := Pointing
 
 let end_shape () =
   do_if_drawing @@ fun attrs ->
-  let state = attrs |> State.sexp_of_t |> Sexplib0.Sexp.to_string in
+  let state = attrs |> State.to_string in
   Messaging.draw (End { state });
   end_shape_func attrs
 
 let send_all_strokes () =
   let all_strokes =
     Hashtbl.fold
-      (fun id (_, path, state) acc ->
-        let state = state |> State.sexp_of_t |> Sexplib0.Sexp.to_string in
-        { Communication.path; state; id } :: acc)
-      all_paths []
+      (fun _ (_, stroke) acc -> Stroke.to_string stroke :: acc)
+      Stroke.Db.all []
   in
   Messaging.send_all_strokes all_strokes
 
 let receive_all_strokes all_strokes =
   List.iter
-    (fun { Communication.path; id; state } ->
-      match State.of_string state with
+    (fun s ->
+      match Stroke.of_string s with
       | None -> ()
-      | Some state ->
-          let options = options_of state in
-          let el = create_elem_of_stroke options state id path in
-          Hashtbl.add all_paths id (el, path, state);
+      | Some stroke ->
+          let el = create_elem_of_stroke stroke in
+          Hashtbl.add Stroke.Db.all stroke.id (el, stroke);
           let svg =
             Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing-elem")
             |> Option.get
@@ -376,7 +414,7 @@ let connect svg =
   in
   ()
 
-let clear_func () = Hashtbl.iter (fun _ (elem, _, _) -> remove elem) all_paths
+let clear_func () = Hashtbl.iter (fun _ (elem, _) -> remove elem) Stroke.Db.all
 
 let clear () =
   Messaging.draw Clear;
@@ -434,8 +472,8 @@ let setup el =
            (fun _ -> setter value)
            (Brr.El.as_target (button value))
     in
-    add_listener State.set_tool Button.tool Pen;
-    add_listener State.set_tool Button.tool Highlighter;
+    add_listener State.set_tool Button.tool (Stroker Pen);
+    add_listener State.set_tool Button.tool (Stroker Highlighter);
     add_listener State.set_tool Button.tool Eraser;
     add_listener State.set_tool Button.tool Pointer;
     add_listener State.set_color Button.color Black;

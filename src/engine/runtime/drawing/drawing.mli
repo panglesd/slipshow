@@ -7,7 +7,8 @@ module Width : sig
 end
 
 module Tool : sig
-  type t = Pen | Highlighter | Eraser | Pointer
+  type stroker = Pen | Highlighter
+  type t = Stroker of stroker | Eraser | Pointer
 end
 
 module State : sig
@@ -24,7 +25,7 @@ val setup : Brr.El.t -> unit
 val clear : unit -> unit
 val end_shape_func : State.t -> unit
 val start_shape_func : string -> State.t -> float * float -> unit
-val continue_shape_func : State.t -> float * float -> unit
+val continue_shape_func : float * float -> unit
 val clear_func : unit -> unit
 val send_all_strokes : unit -> unit
-val receive_all_strokes : Communication.stroke list -> unit
+val receive_all_strokes : string list -> unit

@@ -40,8 +40,8 @@ let keyboard_setup (window : Universe.Window.t) =
       match key with
       | "s" -> Messaging.open_speaker_notes ()
       | "t" -> Table_of_content.toggle_visibility ()
-      | "w" -> Drawing.State.set_tool Pen
-      | "h" -> Drawing.State.set_tool Highlighter
+      | "w" -> Drawing.State.set_tool (Stroker Pen)
+      | "h" -> Drawing.State.set_tool (Stroker Highlighter)
       | "x" -> Drawing.State.set_tool Pointer
       | "e" -> Drawing.State.set_tool Eraser
       | "X" -> Drawing.clear ()
@@ -215,9 +215,7 @@ let message_setup window =
           match d with
           | End { state } ->
               if_state state @@ fun state -> Drawing.end_shape_func state
-          | Continue { state; coord } ->
-              if_state state @@ fun state ->
-              Drawing.continue_shape_func state coord
+          | Continue { coord } -> Drawing.continue_shape_func coord
           | Start { state; coord; id } ->
               if_state state @@ fun state ->
               Drawing.start_shape_func id state coord
