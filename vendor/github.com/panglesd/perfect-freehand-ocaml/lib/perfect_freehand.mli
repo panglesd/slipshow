@@ -28,6 +28,12 @@ module Options : sig
     unit ->
     t
 
+  val size : t -> float option
+  val thinning : t -> float option
+  val smoothing : t -> float option
+  val streamline : t -> float option
+  val last : t -> bool option
+
   (**/**)
 
   include Jv.CONV with type t := t
