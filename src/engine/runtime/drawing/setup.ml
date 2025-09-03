@@ -1,10 +1,10 @@
-let connect svg =
+let connect () =
   let _mousemove =
     Brr.Ev.listen Brr.Ev.pointermove Event.continue_shape
       (Brr.Document.as_target Brr.G.document)
   in
   let _pointerdown =
-    Brr.Ev.listen Brr.Ev.pointerdown (Event.start_shape svg)
+    Brr.Ev.listen Brr.Ev.pointerdown Event.start_shape
       (Brr.Document.as_target Brr.G.document)
   in
   let _pointerup =
@@ -53,10 +53,6 @@ let setup el =
   let d = Brr.El.div ~at:[ Brr.At.id (Jstr.v "slipshow-drawing-toolbar") ] [] in
   Jv.set (Brr.El.to_jv d) "innerHTML" (Jv.of_string content);
   Brr.El.append_children el [ d ];
-  let svg =
-    Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing-elem")
-    |> Option.get
-  in
   let _ : unit Fut.t =
     let open Fut.Syntax in
     let+ () = Fut.tick ~ms:0 in
@@ -85,5 +81,5 @@ let setup el =
     State.set_color Blue;
     State.set_tool Pointer
   in
-  let _listeners = connect svg in
+  let _listeners = connect () in
   ()

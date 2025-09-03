@@ -1,5 +1,5 @@
 type drawing_event =
-  | End of { state : string }
+  | End
   | Start of { id : string; state : string; coord : float * float }
   | Continue of { coord : float * float }
   | Clear

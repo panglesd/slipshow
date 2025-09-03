@@ -4,6 +4,7 @@ module Width = Width
 module Tool = Tool
 module State = State
 module Event = Event
+module Action = Action
 
 val setup : Brr.El.t -> unit
 val send_all_strokes : unit -> unit

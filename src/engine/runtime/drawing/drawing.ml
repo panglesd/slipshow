@@ -5,6 +5,7 @@ module Color = Color
 module State = State
 module Stroke = Stroke
 module Event = Event
+module Action = Action
 
 let send_all_strokes () =
   let all_strokes =
@@ -20,7 +21,7 @@ let receive_all_strokes all_strokes =
       match Stroke.of_string s with
       | None -> ()
       | Some stroke ->
-          let el = Event.create_elem_of_stroke stroke in
+          let el = Action.create_elem_of_stroke stroke in
           Hashtbl.add State.Strokes.all stroke.id (el, stroke);
           let svg =
             Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing-elem")

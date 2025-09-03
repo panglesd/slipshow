@@ -213,13 +213,12 @@ let message_setup window =
             | Some state -> f state
           in
           match d with
-          | End { state } ->
-              if_state state @@ fun state -> Drawing.Event.end_shape_func state
-          | Continue { coord } -> Drawing.Event.continue_shape_func coord
+          | End -> Drawing.Action.end_shape ()
+          | Continue { coord } -> Drawing.Action.continue_shape coord
           | Start { state; coord; id } ->
               if_state state @@ fun state ->
-              Drawing.Event.start_shape_func id state coord
-          | Clear -> Drawing.Event.clear_func ())
+              Drawing.Action.start_shape id state coord
+          | Clear -> Drawing.Action.clear ())
       | Some { payload = Send_all_drawing } -> Drawing.send_all_strokes ()
       | Some { payload = Receive_all_drawing all_strokes } ->
           Drawing.receive_all_strokes all_strokes
