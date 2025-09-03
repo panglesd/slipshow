@@ -360,7 +360,8 @@ end
 
 module type SetClass = S with type args = Brr.El.t list
 
-let only_if_fast f = if Fast.is_counting () then Undoable.return () else f ()
+let only_if_not_fast f =
+  if Fast.is_counting () then Undoable.return () else f ()
 
 module Pause = struct
   let on = "pause"
@@ -421,7 +422,7 @@ module Pause = struct
   let parse_args = Parse.parse_only_els
 
   let do_ _window elems =
-    only_if_fast @@ fun () ->
+    only_if_not_fast @@ fun () ->
     elems
     |> Undoable.List.iter @@ fun elem ->
        let> () = set_class "pauseTarget" false elem in
@@ -471,7 +472,7 @@ struct
             | Some elem -> Ok { elem; duration; margin }))
 
   let do_ window { margin; duration; elem } =
-    only_if_fast @@ fun () ->
+    only_if_not_fast @@ fun () ->
     let margin = Option.value ~default:0. margin in
     let duration = Option.value ~default:1. duration in
     X.move ~margin ~duration window elem
@@ -493,7 +494,7 @@ struct
   let parse_args = Parse.parse_only_els
 
   let do_ _window elems =
-    only_if_fast @@ fun () ->
+    only_if_not_fast @@ fun () ->
     Undoable.List.iter (Undoable.Browser.set_class X.class_ X.state) elems
 end
 
@@ -601,7 +602,7 @@ module Focus = struct
         { elems; duration; margin }
 
   let do_ window { margin; duration; elems } =
-    only_if_fast @@ fun () ->
+    only_if_not_fast @@ fun () ->
     let> () = State.Focus.push (Universe.State.get_coord ()) in
     let margin = Option.value ~default:0. margin in
     let duration = Option.value ~default:1. duration in
@@ -619,7 +620,7 @@ module Unfocus = struct
   let parse_args elem s = Parse.no_args ~action_name elem s
 
   let do_ window () =
-    only_if_fast @@ fun () ->
+    only_if_not_fast @@ fun () ->
     let> coord = State.Focus.pop () in
     match coord with
     | None -> Undoable.return ()
@@ -703,7 +704,12 @@ module Play_media = struct
   let log_error = function Ok x -> x | Error x -> Brr.Console.(log [ x ])
 
   let do_ _window elems =
-    only_if_fast @@ fun () ->
+    only_if_not_fast @@ fun () ->
+    let is_speaker_note =
+      match Brr.Window.name Brr.G.window |> Jstr.to_string with
+      | "slipshow_speaker_view" -> true
+      | _ -> false
+    in
     Undoable.List.iter
       (fun e ->
         let open Fut.Syntax in
@@ -719,6 +725,7 @@ module Play_media = struct
           Undoable.return ())
         else
           let e = Brr_io.Media.El.of_el e in
+          let () = if is_speaker_note then Brr_io.Media.El.set_muted e true in
           let current = Brr_io.Media.El.current_time_s e in
           let is_playing = not @@ Brr_io.Media.El.paused e in
           let undo () =

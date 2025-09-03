@@ -85,6 +85,8 @@ let iframe =
 let src = Brr.El.at (Jstr.v "srcdoc") iframe |> Option.get
 
 let html =
+  (* If you change the speaker view name, you should change the speaker view
+     detection in the [play-media] action. *)
   {|
 <!doctype html>
 <html>
