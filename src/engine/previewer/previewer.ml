@@ -60,6 +60,15 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ()) root =
               send_speaker_view `Open panels.(1 - !index));
             index := 1 - !index;
             Brr.El.set_class (Jstr.v "active_panel") true panels.(!index);
+            let contentDocument el =
+              Jv.get (Brr.El.to_jv el) "contentDocument" |> Brr.Document.of_jv
+            in
+            let inner_iframe =
+              panels.(!index) |> contentDocument |> fun d ->
+              Brr.Document.find_el_by_id d (Jstr.v "slipshow__internal_iframe")
+              |> Option.get
+            in
+            let () = Brr.El.set_has_focus true inner_iframe in
             Brr.El.set_class (Jstr.v "active_panel") false panels.(1 - !index)
         | _ -> ())
       (Brr.Window.as_target Brr.G.window)
