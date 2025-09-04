@@ -1,13 +1,10 @@
 open Sexplib.Std
 
 type drawing_event =
-  | End of { state : string }
+  | End
   | Start of { id : string; state : string; coord : float * float }
-  | Continue of { state : string; coord : float * float }
+  | Continue of { coord : float * float }
   | Clear
-[@@deriving sexp]
-
-type stroke = { id : string; state : string; path : (float * float) list }
 [@@deriving sexp]
 
 type payload =
@@ -18,7 +15,7 @@ type payload =
   | Speaker_notes of string
   | Drawing of drawing_event
   | Send_all_drawing
-  | Receive_all_drawing of stroke list
+  | Receive_all_drawing of string list
 [@@deriving sexp]
 
 type t = { payload : payload } [@@deriving sexp]

@@ -40,11 +40,11 @@ let keyboard_setup (window : Universe.Window.t) =
       match key with
       | "s" -> Messaging.open_speaker_notes ()
       | "t" -> Table_of_content.toggle_visibility ()
-      | "w" -> Drawing.State.set_tool Pen
-      | "h" -> Drawing.State.set_tool Highlighter
+      | "w" -> Drawing.State.set_tool (Stroker Pen)
+      | "h" -> Drawing.State.set_tool (Stroker Highlighter)
       | "x" -> Drawing.State.set_tool Pointer
       | "e" -> Drawing.State.set_tool Eraser
-      | "X" -> Drawing.clear ()
+      | "X" -> Drawing.Event.clear ()
       | "l" ->
           let _ : unit Fut.t =
             Step.Next.Excursion.start ();
@@ -213,15 +213,12 @@ let message_setup window =
             | Some state -> f state
           in
           match d with
-          | End { state } ->
-              if_state state @@ fun state -> Drawing.end_shape_func state
-          | Continue { state; coord } ->
-              if_state state @@ fun state ->
-              Drawing.continue_shape_func state coord
+          | End -> Drawing.Action.end_shape ()
+          | Continue { coord } -> Drawing.Action.continue_shape coord
           | Start { state; coord; id } ->
               if_state state @@ fun state ->
-              Drawing.start_shape_func id state coord
-          | Clear -> Drawing.clear_func ())
+              Drawing.Action.start_shape id state coord
+          | Clear -> Drawing.Action.clear ())
       | Some { payload = Send_all_drawing } -> Drawing.send_all_strokes ()
       | Some { payload = Receive_all_drawing all_strokes } ->
           Drawing.receive_all_strokes all_strokes

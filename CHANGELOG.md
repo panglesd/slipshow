@@ -14,6 +14,8 @@
 - Hide paused/unrevealed elems also for mouse (#150)
 - Don't execute scripts when computing toc (#150)
 - Mute medias in speaker view (#152)
+- Use the [perfect-freehand](https://github.com/steveruizok/perfect-freehand)
+  library to generate strokes. (#151)
 
 ## [v0.6.0] The King's Slipshow (Monday 18th August, 2025)
 
