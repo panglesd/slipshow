@@ -1,10 +1,12 @@
 open Types
 
-let svg_path options path =
-  let { Universe.Coordinates.scale; _ } = Universe.State.get_coord () in
+let date = Jv.get Jv.global "Date"
+let now () = Jv.call date "now" [||] |> Jv.to_int
+
+let svg_path options scale path =
   let path =
     List.rev_map
-      (fun (x, y) -> Perfect_freehand.Point.v (x *. scale) (y *. scale))
+      (fun ((x, y), _) -> Perfect_freehand.Point.v (x *. scale) (y *. scale))
       path
   in
   let stroke = Perfect_freehand.get_stroke ~options path in
@@ -13,11 +15,12 @@ let svg_path options path =
 
 let continue_shape coord =
   match !State.current_drawing_state with
-  | Drawing (el, stroke) ->
-      let stroke = { stroke with path = coord :: stroke.path } in
-      State.current_drawing_state := Drawing (el, stroke);
+  | Drawing (el, stroke, initial_time) ->
+      let t = now () - initial_time in
+      let stroke = { stroke with path = (coord, t) :: stroke.path } in
+      State.current_drawing_state := Drawing (el, stroke, initial_time);
       Brr.El.set_at (Jstr.v "d")
-        (Some (Jstr.v (svg_path stroke.options stroke.path)))
+        (Some (Jstr.v (svg_path stroke.options stroke.scale stroke.path)))
         el
   | Erasing last_point ->
       Hashtbl.iter
@@ -30,18 +33,19 @@ let continue_shape coord =
       ()
   | Pointing -> ()
 
-let create_elem_of_stroke { Stroke.options; color; opacity; id; path } =
+let create_elem_of_stroke { Stroke.options; scale; color; opacity; id; path } =
   let p = Brr.El.v ~ns:`SVG (Jstr.v "path") [] in
   let set_at at v = Brr.El.set_at (Jstr.v at) (Some (Jstr.v v)) p in
   set_at "fill" (Color.to_string color);
   set_at "id" id;
-  let { Universe.Coordinates.scale; _ } = Universe.State.get_coord () in
-  let scale = 1. /. scale in
-  Brr.El.set_inline_style (Jstr.v "transform")
-    (Jstr.v @@ Format.sprintf "scale3d(%.10f,%.10f,%.10f)" scale scale scale)
-    p;
+  let () =
+    let scale = 1. /. scale in
+    Brr.El.set_inline_style (Jstr.v "transform")
+      (Jstr.v @@ Format.sprintf "scale3d(%.10f,%.10f,%.10f)" scale scale scale)
+      p
+  in
   set_at "opacity" (string_of_float opacity);
-  Brr.El.set_at (Jstr.v "d") (Some (Jstr.v (svg_path options path))) p;
+  Brr.El.set_at (Jstr.v "d") (Some (Jstr.v (svg_path options scale path))) p;
   p
 
 let options_of stroke width =
@@ -58,6 +62,7 @@ let options_of stroke width =
     ~last:false ()
 
 let start_shape id ({ State.tool; _ } as state) coord =
+  let initial_time = now () in
   let svg =
     Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing-elem")
     |> Option.get
@@ -65,18 +70,24 @@ let start_shape id ({ State.tool; _ } as state) coord =
   match tool with
   | Tool.Stroker stroker ->
       let opacity = match stroker with Tool.Highlighter -> 0.33 | Pen -> 1. in
-      let path = [ coord ] in
+      let path = [ (coord, 0) ] in
       let options = options_of stroker state.width in
-      let stroke = { Stroke.path; options; opacity; id; color = state.color } in
+      let { Universe.Coordinates.scale; _ } = Universe.State.get_coord () in
+      let stroke =
+        { Stroke.path; options; opacity; id; color = state.color; scale }
+      in
       let p = create_elem_of_stroke stroke in
-      State.current_drawing_state := Drawing (p, stroke);
+      State.current_drawing_state := Drawing (p, stroke, initial_time);
       Brr.El.append_children svg [ p ]
   | Eraser -> State.current_drawing_state := Erasing coord
   | Pointer -> ()
 
 let end_shape () =
   (match !State.current_drawing_state with
-  | Drawing (el, stroke) -> Hashtbl.add State.Strokes.all stroke.id (el, stroke)
+  | Drawing (el, stroke, _) ->
+      let s = Stroke.to_string stroke in
+      Brr.Console.(log [ "a stroke is: "; s ]);
+      Hashtbl.add State.Strokes.all stroke.id (el, stroke)
   | _ -> ());
   State.current_drawing_state := Pointing
 
@@ -84,3 +95,42 @@ let clear () =
   Hashtbl.iter
     (fun _ (elem, _) -> State.Strokes.remove_el elem)
     State.Strokes.all
+
+let () =
+  let draw stroke =
+    let start_time = now () in
+    let el = create_elem_of_stroke { stroke with path = [] } in
+    let svg =
+      Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing-elem")
+      |> Option.get
+    in
+    Brr.El.append_children svg [ el ];
+    let filter () =
+      let time_elapsed = now () - start_time in
+      let rec loop acc = function
+        | [] -> (acc, true)
+        | ((_, t) as hd) :: tl when t <= time_elapsed -> loop (hd :: acc) tl
+        | _ :: tl -> (acc, false)
+      in
+      loop [] (List.rev stroke.path)
+    in
+    let rec draw_loop _ =
+      let path, finished = filter () in
+      Brr.El.set_at (Jstr.v "d")
+        (Some (Jstr.v (svg_path stroke.options stroke.scale path)))
+        el;
+      if finished then ()
+      else
+        let _animation_frame_id = Brr.G.request_animation_frame draw_loop in
+        ()
+    in
+    let _animation_frame_id = Brr.G.request_animation_frame draw_loop in
+    ()
+  in
+  let draw s =
+    match s |> Jv.to_string |> Stroke.of_string with
+    | Some stroke -> draw stroke
+    | None -> Brr.Console.(log [ "Not a stroke" ])
+  in
+  let v = Jv.callback ~arity:1 draw in
+  Jv.set Jv.global "draw_stroke" v
