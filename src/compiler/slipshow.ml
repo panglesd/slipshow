@@ -214,7 +214,7 @@ let add_starting_state (start, end_) (starting_state : starting_state option) =
 %s
 </head>
   <body>
-          <iframe name="slipshow_main_pres" id="slipshow__internal_iframe" srcdoc="%s" style="
+          <iframe autofocus name="slipshow_main_pres" id="slipshow__internal_iframe" srcdoc="%s" style="
     width: 100%%;
     height: 100%%;
     position: fixed;
@@ -225,11 +225,6 @@ let add_starting_state (start, end_) (starting_state : starting_state option) =
     bottom: 0;
 "></iframe>
 
-<script>
-document.getElementById('slipshow__internal_iframe').addEventListener('load', function () {
-    this.contentWindow.focus();
-});
-</script>
       <script>
       %s
       </script>
