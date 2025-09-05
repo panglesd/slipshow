@@ -292,6 +292,7 @@ let speaker_note_handling window msg =
   let () = Handle.initial_state window msg in
   let () = Handle.send_all_strokes_on_ready (content_window iframe) msg in
   let () = Handle.new_speaker_notes msg in
+  let () = Handle.forward_to_parent msg in
   ()
 
 let main_frame_handling msg =
