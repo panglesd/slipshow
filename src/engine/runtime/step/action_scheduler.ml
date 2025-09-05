@@ -6,9 +6,7 @@ let is_action elem =
     all_actions
 
 let all_action_selector =
-  all_actions
-  |> List.map (fun s -> Format.sprintf "[%s]" s)
-  |> String.concat ", "
+  all_actions |> List.map (fun s -> "[" ^ s ^ "]") |> String.concat ", "
 
 let find_next_pause_or_step () =
   Brr.El.find_first_by_selector (Jstr.v all_action_selector)

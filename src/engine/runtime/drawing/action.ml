@@ -40,8 +40,9 @@ let create_elem_of_stroke { Stroke.options; scale; color; opacity; id; path } =
   set_at "id" id;
   let () =
     let scale = 1. /. scale in
+    let scale = string_of_float scale in
     Brr.El.set_inline_style (Jstr.v "transform")
-      (Jstr.v @@ Format.sprintf "scale3d(%.10f,%.10f,%.10f)" scale scale scale)
+      (Jstr.v @@ "scale3d(" ^ scale ^ "," ^ scale ^ "," ^ scale ^ ")")
       p
   in
   set_at "opacity" (string_of_float opacity);

@@ -1,14 +1,24 @@
 type window = { x : float; y : float; scale : float }
 
 let log_window { x; y; scale } =
-  let s = Format.sprintf "{ x = %f; y = %f; scale = %f }" x y scale in
+  let s =
+    Jv.obj
+      [|
+        ("x", Jv.of_float x); ("y", Jv.of_float y); ("scale", Jv.of_float scale);
+      |]
+  in
   Brr.Console.(log [ s ])
 
 type element = { x : float; y : float; width : float; height : float }
 
 let log_element { x; y; width; height } =
   let s =
-    Format.sprintf "{ x = %f; y = %f; width = %f; height = %f }" x y width
-      height
+    Jv.obj
+      [|
+        ("x", Jv.of_float x);
+        ("y", Jv.of_float y);
+        ("width", Jv.of_float height);
+        ("height", Jv.of_float height);
+      |]
   in
   Brr.Console.(log [ s ])
