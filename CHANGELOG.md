@@ -6,6 +6,8 @@
 
 - Embed Liberation Sans fonts (and use them) (#150)
 - Fix missing favicon (which was missing since speaker view) (#150)
+- Fix changing step number from speaker note does not update serve mode state
+  (#154)
 
 ## Engine
 
