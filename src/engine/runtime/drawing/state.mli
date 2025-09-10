@@ -24,7 +24,7 @@ module Strokes : sig
 end
 
 type drawing_state =
-  | Drawing of Brr.El.t * Types.Stroke.t * int
+  | Drawing of Brr.El.t * Types.Stroke.t * float
   | Erasing of (float * float)
   | Pointing
 

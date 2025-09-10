@@ -1,7 +1,36 @@
 open Types
 
-let date = Jv.get Jv.global "Date"
-let now () = Jv.call date "now" [||] |> Jv.to_int
+module Record = struct
+  type event = Stroke of Stroke.t | Erase of unit
+  type timed_event = { event : event; time : float }
+
+  type t = timed_event list
+  (** Ordered by time *)
+
+  type record = { start_time : float; evs : t }
+
+  let current_record = ref None
+  let now () = Brr.Performance.now_ms Brr.G.performance
+
+  let add_event { start_time; evs } event =
+    let time = now () -. start_time in
+    let evs = { time; event } :: evs in
+    { start_time; evs }
+
+  let empty_record () = { start_time = now (); evs = [] }
+  let start_record () = current_record := Some (empty_record ())
+
+  let stop_record () =
+    let res = !current_record in
+    current_record := None;
+    res
+
+  let record event =
+    match !current_record with
+    | None -> ()
+    | Some current_record_val ->
+        current_record := Some (add_event current_record_val event)
+end
 
 let svg_path options scale path =
   let path =
@@ -16,7 +45,7 @@ let svg_path options scale path =
 let continue_shape coord =
   match !State.current_drawing_state with
   | Drawing (el, stroke, initial_time) ->
-      let t = now () - initial_time in
+      let t = Record.now () -. initial_time in
       let stroke = { stroke with path = (coord, t) :: stroke.path } in
       State.current_drawing_state := Drawing (el, stroke, initial_time);
       Brr.El.set_at (Jstr.v "d")
@@ -63,7 +92,7 @@ let options_of stroke width =
     ~last:false ()
 
 let start_shape id ({ State.tool; _ } as state) coord =
-  let initial_time = now () in
+  let initial_time = Record.now () in
   let svg =
     Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing-elem")
     |> Option.get
@@ -71,7 +100,7 @@ let start_shape id ({ State.tool; _ } as state) coord =
   match tool with
   | Tool.Stroker stroker ->
       let opacity = match stroker with Tool.Highlighter -> 0.33 | Pen -> 1. in
-      let path = [ (coord, 0) ] in
+      let path = [ (coord, 0.) ] in
       let options = options_of stroker state.width in
       let { Universe.Coordinates.scale; _ } = Universe.State.get_coord () in
       let stroke =
@@ -88,6 +117,7 @@ let end_shape () =
   | Drawing (el, stroke, _) ->
       let s = Stroke.to_string stroke in
       Brr.Console.(log [ "a stroke is: "; s ]);
+      Record.record (Stroke stroke);
       Hashtbl.add State.Strokes.all stroke.id (el, stroke)
   | _ -> ());
   State.current_drawing_state := Pointing
@@ -99,7 +129,7 @@ let clear () =
 
 let () =
   let draw stroke =
-    let start_time = now () in
+    let start_time = Record.now () in
     let el = create_elem_of_stroke { stroke with path = [] } in
     let svg =
       Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing-elem")
@@ -107,7 +137,7 @@ let () =
     in
     Brr.El.append_children svg [ el ];
     let filter () =
-      let time_elapsed = now () - start_time in
+      let time_elapsed = Record.now () -. start_time in
       let rec loop acc = function
         | [] -> (acc, true)
         | ((_, t) as hd) :: tl when t <= time_elapsed -> loop (hd :: acc) tl
@@ -135,3 +165,41 @@ let () =
   in
   let v = Jv.callback ~arity:1 draw in
   Jv.set Jv.global "draw_stroke" v
+
+module Replay = struct
+  open Record
+
+  let replay_stroke (stroke : Stroke.t) =
+    let start_time = now () in
+    let el = create_elem_of_stroke { stroke with path = [] } in
+    let svg =
+      Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing-elem")
+      |> Option.get
+    in
+    Brr.El.append_children svg [ el ];
+    let filter () =
+      let time_elapsed = now () -. start_time in
+      let rec loop acc = function
+        | [] -> (acc, true)
+        | ((_, t) as hd) :: tl when t <= time_elapsed -> loop (hd :: acc) tl
+        | _ :: tl -> (acc, false)
+      in
+      loop [] (List.rev stroke.path)
+    in
+    let rec draw_loop _ =
+      let path, finished = filter () in
+      Brr.El.set_at (Jstr.v "d")
+        (Some (Jstr.v (svg_path stroke.options stroke.scale path)))
+        el;
+      if finished then ()
+      else
+        let _animation_frame_id = Brr.G.request_animation_frame draw_loop in
+        ()
+    in
+    let _animation_frame_id = Brr.G.request_animation_frame draw_loop in
+    ()
+
+  let replay (record : record) =
+    let start_replay = now () in
+    ()
+end

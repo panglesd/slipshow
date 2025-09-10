@@ -104,6 +104,9 @@ let keyboard_setup (window : Universe.Window.t) =
               ~duration:0.
           in
           ()
+      | "r" ->
+          let _ : unit Fut.t = Drawing.start_recording () in
+          ()
       | _ -> ()
     in
     Brr.Console.(log [ key ]);

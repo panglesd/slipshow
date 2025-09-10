@@ -57,7 +57,7 @@ module Stroke = struct
   type t = {
     id : string;
     scale : float;
-    path : ((float * float) * int) list;
+    path : ((float * float) * float) list (* TODO: (position * time) list *);
     color : Color.t;
     opacity : float;
     options : Perfect_freehand.Options.t;
