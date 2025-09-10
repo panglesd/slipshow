@@ -1,3 +1,5 @@
+let record = ref None
+
 let keyboard_setup (window : Universe.Window.t) =
   let target = Brr.Window.as_target Brr.G.window in
   let callback ev =
@@ -105,8 +107,17 @@ let keyboard_setup (window : Universe.Window.t) =
           in
           ()
       | "r" ->
-          let _ : unit Fut.t = Drawing.start_recording () in
-          ()
+          Brr.Console.(log [ "Starting to record" ]);
+          Drawing.Action.Record.start_record ()
+      | "R" ->
+          record := Drawing.Action.Record.stop_record ();
+          Brr.Console.(log [ "Saving record"; !record ])
+      | "p" -> (
+          match !record with
+          | None -> Brr.Console.(log [ "No record to replay" ])
+          | Some record ->
+              Brr.Console.(log [ "Replaying" ]);
+              Drawing.Action.Replay.replay ~speedup:2. record)
       | _ -> ()
     in
     Brr.Console.(log [ key ]);

@@ -21,8 +21,9 @@ let get_id =
   let name = "__slipshow__" ^ window_name in
   fun () ->
     let i = !id_number in
+    let hash = Random.bits () |> string_of_int in
     incr id_number;
-    name ^ string_of_int i
+    String.concat "" [ name; string_of_int i; "_"; hash ]
 
 let start_shape ev =
   do_if_drawing @@ fun state ->

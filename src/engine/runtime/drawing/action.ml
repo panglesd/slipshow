@@ -2,6 +2,9 @@ open Types
 
 module Record = struct
   type event = Stroke of Stroke.t | Erase of unit
+
+  let _ = Erase ()
+
   type timed_event = { event : event; time : float }
 
   type t = timed_event list
@@ -12,8 +15,8 @@ module Record = struct
   let current_record = ref None
   let now () = Brr.Performance.now_ms Brr.G.performance
 
-  let add_event { start_time; evs } event =
-    let time = now () -. start_time in
+  let add_event { start_time; evs } event event starting_time =
+    let time = starting_time -. start_time in
     let evs = { time; event } :: evs in
     { start_time; evs }
 
@@ -25,11 +28,12 @@ module Record = struct
     current_record := None;
     res
 
-  let record event =
+  let record event starting_time =
     match !current_record with
     | None -> ()
     | Some current_record_val ->
-        current_record := Some (add_event current_record_val event)
+        current_record :=
+          Some (add_event current_record_val event event starting_time)
 end
 
 let svg_path options scale path =
@@ -114,10 +118,10 @@ let start_shape id ({ State.tool; _ } as state) coord =
 
 let end_shape () =
   (match !State.current_drawing_state with
-  | Drawing (el, stroke, _) ->
+  | Drawing (el, stroke, stroke_starting_time) ->
       let s = Stroke.to_string stroke in
       Brr.Console.(log [ "a stroke is: "; s ]);
-      Record.record (Stroke stroke);
+      Record.record (Stroke stroke) stroke_starting_time;
       Hashtbl.add State.Strokes.all stroke.id (el, stroke)
   | _ -> ());
   State.current_drawing_state := Pointing
@@ -141,7 +145,7 @@ let () =
       let rec loop acc = function
         | [] -> (acc, true)
         | ((_, t) as hd) :: tl when t <= time_elapsed -> loop (hd :: acc) tl
-        | _ :: tl -> (acc, false)
+        | _ :: _ -> (acc, false)
       in
       loop [] (List.rev stroke.path)
     in
@@ -169,7 +173,8 @@ let () =
 module Replay = struct
   open Record
 
-  let replay_stroke (stroke : Stroke.t) =
+  let replay_stroke ?(speedup = 1.) (stroke : Stroke.t) =
+    Brr.Console.(log [ "Replaying stroke" ]);
     let start_time = now () in
     let el = create_elem_of_stroke { stroke with path = [] } in
     let svg =
@@ -181,8 +186,9 @@ module Replay = struct
       let time_elapsed = now () -. start_time in
       let rec loop acc = function
         | [] -> (acc, true)
-        | ((_, t) as hd) :: tl when t <= time_elapsed -> loop (hd :: acc) tl
-        | _ :: tl -> (acc, false)
+        | ((_, t) as hd) :: tl when t <= speedup *. time_elapsed ->
+            loop (hd :: acc) tl
+        | _ :: _ -> (acc, false)
       in
       loop [] (List.rev stroke.path)
     in
@@ -199,7 +205,35 @@ module Replay = struct
     let _animation_frame_id = Brr.G.request_animation_frame draw_loop in
     ()
 
-  let replay (record : record) =
+  let replay ?(speedup = 1.) (record : record) =
     let start_replay = now () in
+    let filter l =
+      let time_elapsed = now () -. start_replay in
+      let rec loop acc = function
+        | [] -> (acc, [])
+        | { time; event } :: tl when time <= speedup *. time_elapsed ->
+            loop (event :: acc) tl
+        | rest -> (acc, rest)
+      in
+      loop [] l
+    in
+    let rec draw_loop l _ =
+      Brr.Console.(log [ "l has length"; List.length l ]);
+      let to_draw, rest = filter l in
+      List.iter
+        (function
+          | Stroke s -> replay_stroke ~speedup s | Erase () -> failwith "TODO")
+        to_draw;
+      match rest with
+      | [] -> ()
+      | _ :: _ ->
+          let _animation_frame_id =
+            Brr.G.request_animation_frame (draw_loop rest)
+          in
+          ()
+    in
+    let _animation_frame_id =
+      Brr.G.request_animation_frame (draw_loop (List.rev record.evs))
+    in
     ()
 end
