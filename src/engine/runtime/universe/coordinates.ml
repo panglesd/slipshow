@@ -17,7 +17,7 @@ let log_element { x; y; width; height } =
       [|
         ("x", Jv.of_float x);
         ("y", Jv.of_float y);
-        ("width", Jv.of_float height);
+        ("width", Jv.of_float width);
         ("height", Jv.of_float height);
       |]
   in
