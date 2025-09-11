@@ -15,7 +15,7 @@ module Record = struct
   let current_record = ref None
   let now () = Brr.Performance.now_ms Brr.G.performance
 
-  let add_event { start_time; evs } event event starting_time =
+  let add_event { start_time; evs } event starting_time =
     let time = starting_time -. start_time in
     let evs = { time; event } :: evs in
     { start_time; evs }
@@ -33,7 +33,7 @@ module Record = struct
     | None -> ()
     | Some current_record_val ->
         current_record :=
-          Some (add_event current_record_val event event starting_time)
+          Some (add_event current_record_val event starting_time)
 end
 
 let svg_path options scale path =
