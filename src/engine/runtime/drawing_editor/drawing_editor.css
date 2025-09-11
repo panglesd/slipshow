@@ -1,0 +1,93 @@
+
+.slipshow-drawing-mode #slipshow-open-window {
+  pointer-events: none;
+}
+
+#slipshow-drawing-toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+.slip-writing-toolbar:hover,
+.slipshow-drawing-mode .slip-writing-toolbar {
+  width: 32px;
+  height: min(640px, 100vh);
+  overflow: auto;
+}
+.slip-writing-toolbar {
+  background-color: white;
+  overflow: hidden;
+  transition:
+    width 0.5s,
+    height 0.5s;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0;
+  width: 32px;
+  height: 32px;
+  z-index: 10;
+  border-radius: 0px 0px 16px 16px;
+  user-select: none;
+}
+
+.slip-writing-toolbar > * {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+.slip-writing-toolbar > * > * {
+  width: 30px;
+  height: 30px;
+  border: 1px solid black;
+  border-radius: 30px;
+  transition: border-radius 0.5s;
+  cursor: pointer;
+}
+.slip-writing-toolbar > .slip-toolbar-color > .slip-toolbar-red {
+  background-color: red;
+}
+.slip-writing-toolbar > .slip-toolbar-color > .slip-toolbar-black {
+  background-color: black;
+}
+.slip-writing-toolbar > .slip-toolbar-color > .slip-toolbar-blue {
+  background-color: blue;
+}
+.slip-writing-toolbar > .slip-toolbar-color > .slip-toolbar-green {
+  background-color: green;
+}
+.slip-writing-toolbar > .slip-toolbar-color > .slip-toolbar-yellow {
+  background-color: yellow;
+}
+.slip-writing-toolbar > * > * {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.slip-writing-toolbar > .slip-toolbar-width > * > * {
+  width: 14px;
+  border-radius: 16px;
+}
+
+.slip-writing-toolbar > .slip-toolbar-width > .slip-toolbar-small > * {
+  border: 1px solid black;
+}
+.slip-writing-toolbar > .slip-toolbar-width > .slip-toolbar-medium > * {
+  border: 2px solid black;
+}
+.slip-writing-toolbar > .slip-toolbar-width > .slip-toolbar-large > * {
+  border: 4px solid black;
+}
+.slip-set-tool,
+.slip-set-width {
+  background-color: lightsteelblue;
+  border-radius: 5px;
+}
+
+.slip-set-color {
+  height: 25px;
+  width: 25px;
+  border: 3px solid steelblue;
+  border-radius: 5px;
+}

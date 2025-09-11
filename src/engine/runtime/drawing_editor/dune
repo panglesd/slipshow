@@ -1,0 +1,5 @@
+(library
+ (name drawing_editor)
+ (libraries brr messaging drawing brr-lwd)
+ (preprocess
+  (pps ppx_deriving_yojson)))
