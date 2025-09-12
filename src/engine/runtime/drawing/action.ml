@@ -50,7 +50,9 @@ let continue_shape coord =
   match !State.current_drawing_state with
   | Drawing (el, stroke, initial_time) ->
       let t = Record.now () -. initial_time in
-      let stroke = { stroke with path = (coord, t) :: stroke.path } in
+      let stroke =
+        { stroke with path = (coord, t) :: stroke.path; total_duration = t }
+      in
       State.current_drawing_state := Drawing (el, stroke, initial_time);
       Brr.El.set_at (Jstr.v "d")
         (Some (Jstr.v (svg_path stroke.options stroke.scale stroke.path)))
@@ -107,8 +109,17 @@ let start_shape id ({ State.tool; _ } as state) coord =
       let path = [ (coord, 0.) ] in
       let options = options_of stroker state.width in
       let { Universe.Coordinates.scale; _ } = Universe.State.get_coord () in
+      let total_duration = 0. in
       let stroke =
-        { Stroke.path; options; opacity; id; color = state.color; scale }
+        {
+          Stroke.path;
+          options;
+          opacity;
+          id;
+          color = state.color;
+          scale;
+          total_duration;
+        }
       in
       let p = create_elem_of_stroke stroke in
       State.current_drawing_state := Drawing (p, stroke, initial_time);

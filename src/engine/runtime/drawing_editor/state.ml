@@ -89,7 +89,7 @@ module Recording = struct
     in
     let ti =
       let$ time = Lwd.get time in
-      Brr.El.txt' (string_of_float time)
+      Brr.El.div [ Brr.El.txt' (string_of_float time) ]
     in
     Brr_lwd.Elwd.div
       ~at:[ `P (Brr.At.id (Jstr.v "slipshow-drawing-editor")); `S display ]
@@ -107,7 +107,9 @@ module Svg = struct
           let elapsed_time =
             match recording.evs with
             | [] -> time_slider
-            | { time; _ } :: _ -> time *. time_slider /. 100.
+            | { time; event = Erase _ } :: _ -> time *. time_slider /. 100.
+            | { time; event = Stroke { total_duration; _ } } :: _ ->
+                (time +. total_duration) *. time_slider /. 100.
           in
           let els = Drawing.Action.Replay.draw_until ~elapsed_time recording in
           Lwd_seq.of_list els
