@@ -236,4 +236,20 @@ module Replay = struct
       Brr.G.request_animation_frame (draw_loop (List.rev record.evs))
     in
     ()
+
+  let stroke_until ~time_elapsed (stroke : Stroke.t) =
+    let path = List.filter (fun (_, t) -> t <= time_elapsed) stroke.path in
+    let el = create_elem_of_stroke { stroke with path } in
+    el
+
+  let draw_until ~elapsed_time (record : record) =
+    List.concat_map
+      (fun { event; time } ->
+        if elapsed_time >= time then
+          let time_elapsed = elapsed_time -. time in
+          match event with
+          | Stroke s -> [ stroke_until ~time_elapsed s ]
+          | _ -> failwith "TODO" (* TODO: DO *)
+        else [])
+      record.evs
 end

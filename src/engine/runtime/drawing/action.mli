@@ -19,4 +19,5 @@ val clear : unit -> unit
 
 module Replay : sig
   val replay : ?speedup:float -> Record.record -> unit
+  val draw_until : elapsed_time:float -> Record.record -> Brr.El.t list
 end

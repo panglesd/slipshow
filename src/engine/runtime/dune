@@ -37,5 +37,6 @@
    slipshow-system.css
    (progn
     (cat drawing/drawing.css)
+    (cat drawing_editor/drawing_editor.css)
     (cat table_of_content/table_of_content.css)
     (cat system.css)))))
