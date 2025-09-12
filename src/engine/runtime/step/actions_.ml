@@ -922,3 +922,66 @@ module Change_page = struct
 
   let setup = None
 end
+
+module Draw = struct
+  let on = "draw"
+  let action_name = on
+  let setup = None
+
+  type args = Brr.El.t list
+
+  let parse_args = Parse.parse_only_els
+
+  let do_ _window elems =
+    only_if_not_fast @@ fun () ->
+    Undoable.List.iter
+      (fun elem ->
+        let data = Brr.El.at (Jstr.v "x-data") elem in
+        match data with
+        | None -> Undoable.return ()
+        | Some data -> (
+            match Drawing.Action.Record.of_string (Jstr.to_string data) with
+            | Error e ->
+                Brr.Console.(log [ e ]);
+                Undoable.return ()
+            | Ok record ->
+                Drawing.Action.Replay.replay ~speedup:3. record;
+                Undoable.return ()))
+      elems
+end
+
+module Clear_draw = struct
+  let on = "clear"
+  let action_name = on
+  let setup = None
+
+  type args = Brr.El.t list
+
+  let parse_args = Parse.parse_only_els
+
+  let do_ _window elems =
+    only_if_not_fast @@ fun () ->
+    Undoable.List.iter
+      (fun elem ->
+        let data = Brr.El.at (Jstr.v "x-data") elem in
+        match data with
+        | None -> Undoable.return ()
+        | Some data -> (
+            match Drawing.Action.Record.of_string (Jstr.to_string data) with
+            | Error e ->
+                Brr.Console.(log [ e ]);
+                Undoable.return ()
+            | Ok record ->
+                List.iter
+                  (function
+                    | { Drawing.Action.Record.event = Stroke { id; _ }; _ } ->
+                        (match
+                           Brr.El.find_first_by_selector (Jstr.v ("#" ^ id))
+                         with
+                        | _ -> _)
+                          _
+                    | _ -> ())
+                  record.evs;
+                Undoable.return ()))
+      elems
+end

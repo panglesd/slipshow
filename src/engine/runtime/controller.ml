@@ -109,10 +109,15 @@ let keyboard_setup (window : Universe.Window.t) =
       | "r" ->
           Brr.Console.(log [ "Starting to record" ]);
           Drawing.Action.Record.start_record ()
-      | "R" ->
+      | "R" -> (
           record := Drawing.Action.Record.stop_record ();
           Drawing_editor.set_record !record;
-          Brr.Console.(log [ "NOW"; "Saving record"; !record ])
+          Brr.Console.(log [ "NOW"; "Saving record"; !record ]);
+          match !record with
+          | None -> ()
+          | Some r ->
+              Brr.Console.(
+                log [ "record is"; Drawing.Action.Record.to_string r ]))
       | "p" -> (
           match !record with
           | None -> Brr.Console.(log [ "No record to replay" ])

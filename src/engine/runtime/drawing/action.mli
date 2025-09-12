@@ -7,6 +7,8 @@ module Record : sig
 
   type record = { start_time : float; evs : t }
 
+  val of_string : string -> (record, string) result
+  val to_string : record -> string
   val start_record : unit -> unit
   val stop_record : unit -> record option
 end

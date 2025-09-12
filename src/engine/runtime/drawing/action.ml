@@ -1,17 +1,19 @@
 open Types
 
 module Record = struct
-  type event = Stroke of Stroke.t | Erase of unit
+  type event = Stroke of Stroke.t | Erase of unit [@@deriving yojson]
 
   let _ = Erase ()
 
-  type timed_event = { event : event; time : float }
+  type timed_event = { event : event; time : float } [@@deriving yojson]
 
-  type t = timed_event list
+  type t = timed_event list [@@deriving yojson]
   (** Ordered by time *)
 
-  type record = { start_time : float; evs : t }
+  type record = { start_time : float; evs : t } [@@deriving yojson]
 
+  let of_string s = s |> Yojson.Safe.from_string |> record_of_yojson
+  let to_string r = r |> record_to_yojson |> Yojson.Safe.to_string
   let current_record = ref None
   let now () = Brr.Performance.now_ms Brr.G.performance
 

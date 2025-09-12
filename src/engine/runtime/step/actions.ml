@@ -71,4 +71,5 @@ let all =
     (module Play_media : S);
     (module Change_page : S);
     (module Speaker_note : S);
+    (module Draw : S);
   ]
