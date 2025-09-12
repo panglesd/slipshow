@@ -1,7 +1,12 @@
 let coord_of_event ev =
   let mouse = Brr.Ev.as_type ev |> Brr.Ev.Pointer.as_mouse in
   let x = Brr.Ev.Mouse.client_x mouse and y = Brr.Ev.Mouse.client_y mouse in
-  (x, y) |> Normalization.translate_coords |> Universe.Window.translate_coords
+  let main =
+    Brr.El.find_first_by_selector (Jstr.v "#slipshow-main") |> Option.get
+  in
+  let offset_x = Brr.El.bound_x main in
+  (x -. offset_x, y)
+  |> Normalization.translate_coords |> Universe.Window.translate_coords
 
 let is_pressed = ( != ) 0
 

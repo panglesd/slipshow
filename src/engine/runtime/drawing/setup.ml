@@ -1,12 +1,13 @@
 let connect () =
+  let main =
+    Brr.El.find_first_by_selector (Jstr.v "#slipshow-main")
+    |> Option.get |> Brr.El.as_target
+  in
   let _mousemove =
     Brr.Ev.listen Brr.Ev.pointermove Event.continue_shape
       (Brr.Document.as_target Brr.G.document)
   in
-  let _pointerdown =
-    Brr.Ev.listen Brr.Ev.pointerdown Event.start_shape
-      (Brr.Document.as_target Brr.G.document)
-  in
+  let _pointerdown = Brr.Ev.listen Brr.Ev.pointerdown Event.start_shape main in
   let _pointerup =
     Brr.Ev.listen Brr.Ev.pointerup
       (fun _x -> Event.end_shape ())
