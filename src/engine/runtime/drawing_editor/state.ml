@@ -60,15 +60,6 @@ module Recording = struct
     color
 
   let el =
-    let start_time =
-      let$ current = current in
-      let id =
-        match current with
-        | None -> "custom_start_time"
-        | Some current -> current.start_time |> string_of_float
-      in
-      Brr.El.txt' id
-    in
     let display =
       let$ current = current in
       match current with
@@ -76,7 +67,7 @@ module Recording = struct
           Lwd_seq.element @@ Brr.At.class' (Jstr.v "slipshow-dont-display")
       | Some _ -> Lwd_seq.empty
     in
-    let strokes =
+    let _strokes =
       let$ current = current in
       match current with
       | None -> Lwd_seq.empty
@@ -93,7 +84,7 @@ module Recording = struct
     in
     Brr_lwd.Elwd.div
       ~at:[ `P (Brr.At.id (Jstr.v "slipshow-drawing-editor")); `S display ]
-      [ `R start_time; `S strokes; `R ti; `R slider ]
+      [ `R ti; `R slider ]
 end
 
 module Svg = struct
