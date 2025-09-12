@@ -12,6 +12,7 @@
   step
   universe
   drawing
+  drawing_editor
   messaging
   fast
   mouse_disappearing))

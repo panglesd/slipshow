@@ -48,6 +48,7 @@ let start ~width ~height ~step =
   in
   let () = Controller.setup window in
   let () = Messaging.send_ready () in
+  let () = Drawing_editor.init () in
   Fut.return ()
 
 let () =

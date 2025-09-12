@@ -1,5 +1,11 @@
 module Record : sig
-  type record
+  type event = Stroke of Types.Stroke.t | Erase of unit
+  type timed_event = { event : event; time : float }
+
+  type t = timed_event list
+  (** Ordered by time *)
+
+  type record = { start_time : float; evs : t }
 
   val start_record : unit -> unit
   val stop_record : unit -> record option
