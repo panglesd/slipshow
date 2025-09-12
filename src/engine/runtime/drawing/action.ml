@@ -68,7 +68,8 @@ let continue_shape coord =
       ()
   | Pointing -> ()
 
-let create_elem_of_stroke { Stroke.options; scale; color; opacity; id; path } =
+let create_elem_of_stroke
+    { Stroke.options; scale; color; opacity; id; path; total_duration = _ } =
   let p = Brr.El.v ~ns:`SVG (Jstr.v "path") [] in
   let set_at at v = Brr.El.set_at (Jstr.v at) (Some (Jstr.v v)) p in
   set_at "fill" (Color.to_string color);
