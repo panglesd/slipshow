@@ -18,7 +18,12 @@ type media = {
   origin : Cmarkit.Inline.Link.t attributed node;
 }
 
-type Inline.t += Image of media | Video of media | Audio of media | Pdf of media
+type Inline.t +=
+  | Image of media
+  | Video of media
+  | Audio of media
+  | Pdf of media
+  | Hand_drawn of media
 
 module Files = struct
   type mode = [ `Base64 ]
