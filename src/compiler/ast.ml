@@ -59,6 +59,7 @@ module Folder = struct
     | Pdf { origin = (l, _), _; uri = _; id = _ }
     | Audio { origin = (l, _), _; uri = _; id = _ }
     | Video { origin = (l, _), _; uri = _; id = _ }
+    | Hand_drawn { origin = (l, _), _; uri = _; id = _ }
     | Image { origin = (l, _), _; uri = _; id = _ } ->
         Folder.fold_inline f acc (Cmarkit.Inline.Link.text l)
     | _ -> assert false
@@ -130,6 +131,9 @@ module Mapper = struct
     | Image media ->
         let media = map_media m media in
         Some (Image media)
+    | Hand_drawn media ->
+        let media = map_media m media in
+        Some (Hand_drawn media)
     | _ -> assert false
 
   let make = Mapper.make ~block_ext_default ~inline_ext_default
