@@ -82,14 +82,14 @@ let keyboard_setup (window : Universe.Window.t) =
       | "ArrowRight" | "ArrowDown" | "PageDown" | " " ->
           let _ : unit Fut.t =
             let open Fut.Syntax in
-            let+ () = Step.Next.go_next window 1 in
+            let+ () = Step.Next.go_next window in
             Messaging.send_step (Step.State.get_step ()) `Normal
           in
           ()
       | "ArrowLeft" | "PageUp" | "ArrowUp" ->
           let _ : unit Fut.t =
             let open Fut.Syntax in
-            let+ () = Step.Next.go_prev window 1 in
+            let+ () = Step.Next.go_prev window in
             Messaging.send_step (Step.State.get_step ()) `Normal
           in
           ()
@@ -142,7 +142,7 @@ let touch_setup (window : Universe.Window.t) =
     let _unlisten =
       Brr.Ev.listen Brr.Ev.click
         (fun _ ->
-          let _ : unit Fut.t = Step.Next.go_next window 1 in
+          let _ : unit Fut.t = Step.Next.go_next window in
           ())
         (Brr.El.as_target next)
     in
@@ -157,7 +157,7 @@ let touch_setup (window : Universe.Window.t) =
     let _unlisten =
       Brr.Ev.listen Brr.Ev.click
         (fun _ ->
-          let _ : unit Fut.t = Step.Next.go_prev window 1 in
+          let _ : unit Fut.t = Step.Next.go_prev window in
           ())
         (Brr.El.as_target prev)
     in

@@ -5,6 +5,7 @@ let in_queue =
   let queue = Queue.create () in
   let wait_in_queue () =
     if !running then (
+      Fast.with_fast @@ fun () ->
       let fut, cont = Fut.create () in
       Queue.add cont queue;
       fut)
@@ -101,3 +102,44 @@ let goto step window =
   else
     let+ () = Excursion.end_ window () in
     ()
+
+let current_execution = ref None
+
+let go_next window =
+  let* () = Excursion.end_ window () in
+  match !current_execution with
+  | None -> (
+      match Action_scheduler.next window () with
+      | None -> Fut.return ()
+      | Some fut ->
+          let fut =
+            let+ (), undos = fut in
+            Stack.push undos all_undos;
+            actualize ();
+            current_execution := None
+          in
+          current_execution := Some fut;
+          Fut.return ())
+  | Some fut -> Fast.with_fast @@ fun () -> fut
+
+let go_prev window =
+  let do_the_undo () =
+    match Stack.pop_opt all_undos with
+    | None -> Fut.return ()
+    | Some undo ->
+        let fut =
+          let+ () = undo () in
+          actualize ();
+          current_execution := None
+        in
+        current_execution := Some fut;
+        Fut.return ()
+  in
+  let* () = Excursion.end_ window () in
+  match !current_execution with
+  | None -> do_the_undo ()
+  | Some fut ->
+      let* () = Fast.with_fast @@ fun () -> fut in
+      do_the_undo ()
+
+(* let go_prev _ = failwith "TODO" *)
