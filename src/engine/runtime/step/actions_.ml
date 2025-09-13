@@ -974,12 +974,12 @@ module Clear_draw = struct
             | Ok record ->
                 List.iter
                   (function
-                    | { Drawing.Action.Record.event = Stroke { id; _ }; _ } ->
-                        (match
-                           Brr.El.find_first_by_selector (Jstr.v ("#" ^ id))
-                         with
-                        | _ -> _)
-                          _
+                    | { Drawing.Action.Record.event = Stroke { id; _ }; _ } -> (
+                        match
+                          Brr.El.find_first_by_selector (Jstr.v ("#" ^ id))
+                        with
+                        | Some el -> Brr.El.remove el
+                        | None -> ())
                     | _ -> ())
                   record.evs;
                 Undoable.return ()))
