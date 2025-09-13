@@ -220,6 +220,7 @@ module Replay = struct
     ()
 
   let replay ?(speedup = 1.) (record : record) =
+    let fut, resolve_fut = Fut.create () in
     let start_replay = now () in
     let filter l =
       let time_elapsed = now () -. start_replay in
@@ -239,7 +240,7 @@ module Replay = struct
           | Stroke s -> replay_stroke ~speedup s | Erase () -> failwith "TODO")
         to_draw;
       match rest with
-      | [] -> ()
+      | [] -> resolve_fut ()
       | _ :: _ ->
           let _animation_frame_id =
             Brr.G.request_animation_frame (draw_loop rest)
@@ -249,7 +250,7 @@ module Replay = struct
     let _animation_frame_id =
       Brr.G.request_animation_frame (draw_loop (List.rev record.evs))
     in
-    ()
+    fut
 
   let stroke_until ~time_elapsed (stroke : Stroke.t) =
     let path = List.filter (fun (_, t) -> t <= time_elapsed) stroke.path in

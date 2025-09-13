@@ -123,7 +123,8 @@ let keyboard_setup (window : Universe.Window.t) =
           | None -> Brr.Console.(log [ "No record to replay" ])
           | Some record ->
               Brr.Console.(log [ "Replaying" ]);
-              Drawing.Action.Replay.replay ~speedup:2. record)
+              let _ = Drawing.Action.Replay.replay ~speedup:2. record in
+              ())
       | _ -> ()
     in
     Brr.Console.(log [ key ]);

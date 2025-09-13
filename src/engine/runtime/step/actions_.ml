@@ -957,8 +957,7 @@ module Clear_draw = struct
             | Ok record ->
                 clear_record record;
                 let undo () =
-                  Fut.return
-                  @@ Drawing.Action.Replay.replay ~speedup:10000. record
+                  Drawing.Action.Replay.replay ~speedup:10000. record
                 in
                 Undoable.return ~undo ()))
       elems
@@ -993,9 +992,8 @@ module Draw = struct
                 Undoable.return ()
             | Ok record ->
                 let undo () = Fut.return @@ Clear_draw.clear_record record in
-                Drawing.Action.Replay.replay ~speedup record;
                 let open Fut.Syntax in
-                let* () = Fut.tick ~ms:0 in
+                let* () = Drawing.Action.Replay.replay ~speedup record in
                 Undoable.return ~undo ()))
       elems
 end
