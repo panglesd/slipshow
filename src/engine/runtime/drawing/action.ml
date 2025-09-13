@@ -222,7 +222,7 @@ module Replay = struct
   let replay ?(speedup = 1.) (record : record) =
     let fut, resolve_fut = Fut.create () in
     let start_replay = now () in
-    let filter l =
+    let filter l speedup =
       let time_elapsed = now () -. start_replay in
       let rec loop acc = function
         | [] -> (acc, [])
@@ -233,8 +233,11 @@ module Replay = struct
       loop [] l
     in
     let rec draw_loop l _ =
+      let speedup =
+        match Fast.get_mode () with Normal -> speedup | _ -> 10000.
+      in
       Brr.Console.(log [ "l has length"; List.length l ]);
-      let to_draw, rest = filter l in
+      let to_draw, rest = filter l speedup in
       List.iter
         (function
           | Stroke s -> replay_stroke ~speedup s | Erase () -> failwith "TODO")
