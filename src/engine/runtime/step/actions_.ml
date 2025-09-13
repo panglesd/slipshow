@@ -923,6 +923,47 @@ module Change_page = struct
   let setup = None
 end
 
+module Clear_draw = struct
+  let on = "clear"
+  let action_name = on
+  let setup = None
+
+  type args = Brr.El.t list
+
+  let parse_args = Parse.parse_only_els
+
+  let clear_record (record : Drawing.Action.Record.record) =
+    List.iter
+      (function
+        | { Drawing.Action.Record.event = Stroke { id; _ }; _ } -> (
+            match Brr.El.find_first_by_selector (Jstr.v ("#" ^ id)) with
+            | Some el -> Brr.El.remove el
+            | None -> ())
+        | _ -> ())
+      record.evs
+
+  let do_ _window elems =
+    only_if_not_fast @@ fun () ->
+    Undoable.List.iter
+      (fun elem ->
+        let data = Brr.El.at (Jstr.v "x-data") elem in
+        match data with
+        | None -> Undoable.return ()
+        | Some data -> (
+            match Drawing.Action.Record.of_string (Jstr.to_string data) with
+            | Error e ->
+                Brr.Console.(log [ e ]);
+                Undoable.return ()
+            | Ok record ->
+                clear_record record;
+                let undo () =
+                  Fut.return
+                  @@ Drawing.Action.Replay.replay ~speedup:10000. record
+                in
+                Undoable.return ~undo ()))
+      elems
+end
+
 module Draw = struct
   let on = "draw"
   let action_name = on
@@ -934,6 +975,12 @@ module Draw = struct
 
   let do_ _window elems =
     only_if_not_fast @@ fun () ->
+    let speedup =
+      match Fast.get_mode () with
+      | Normal -> 3.
+      | Fast_move -> 10000.
+      | Counting_for_toc -> assert false (* See "only_if_not_fast" *)
+    in
     Undoable.List.iter
       (fun elem ->
         let data = Brr.El.at (Jstr.v "x-data") elem in
@@ -945,43 +992,10 @@ module Draw = struct
                 Brr.Console.(log [ e ]);
                 Undoable.return ()
             | Ok record ->
-                Drawing.Action.Replay.replay ~speedup:3. record;
-                Undoable.return ()))
-      elems
-end
-
-module Clear_draw = struct
-  let on = "clear"
-  let action_name = on
-  let setup = None
-
-  type args = Brr.El.t list
-
-  let parse_args = Parse.parse_only_els
-
-  let do_ _window elems =
-    only_if_not_fast @@ fun () ->
-    Undoable.List.iter
-      (fun elem ->
-        let data = Brr.El.at (Jstr.v "x-data") elem in
-        match data with
-        | None -> Undoable.return ()
-        | Some data -> (
-            match Drawing.Action.Record.of_string (Jstr.to_string data) with
-            | Error e ->
-                Brr.Console.(log [ e ]);
-                Undoable.return ()
-            | Ok record ->
-                List.iter
-                  (function
-                    | { Drawing.Action.Record.event = Stroke { id; _ }; _ } -> (
-                        match
-                          Brr.El.find_first_by_selector (Jstr.v ("#" ^ id))
-                        with
-                        | Some el -> Brr.El.remove el
-                        | None -> ())
-                    | _ -> ())
-                  record.evs;
-                Undoable.return ()))
+                let undo () = Fut.return @@ Clear_draw.clear_record record in
+                Drawing.Action.Replay.replay ~speedup record;
+                let open Fut.Syntax in
+                let* () = Fut.tick ~ms:0 in
+                Undoable.return ~undo ()))
       elems
 end
