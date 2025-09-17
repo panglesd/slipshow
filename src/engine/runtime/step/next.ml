@@ -99,9 +99,7 @@ let goto step window =
   let current_step = State.get_step () in
   if current_step > step then go_prev window (current_step - step)
   else if current_step < step then go_next window (step - current_step)
-  else
-    let+ () = Excursion.end_ window () in
-    ()
+  else Excursion.end_ window ()
 
 let current_execution = ref None
 
