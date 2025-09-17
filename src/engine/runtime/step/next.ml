@@ -119,7 +119,7 @@ let go_next window =
             current_execution := None
           in
           current_execution := Some fut;
-          Fut.return ())
+          fut)
   | Some fut -> Fast.with_fast @@ fun () -> fut
 
 let go_prev window =
