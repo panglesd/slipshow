@@ -7,6 +7,16 @@ module Color = struct
     | Green -> "green"
     | Black -> "black"
     | Yellow -> "yellow"
+
+  let all = [ Red; Blue; Green; Black; Yellow ]
+
+  let of_string = function
+    | "red" -> Red
+    | "blue" -> Blue
+    | "green" -> Green
+    | "black" -> Black
+    | "yellow" -> Yellow
+    | _ -> Blue (* TODO: decide if we need to warn user? *)
 end
 
 module Width = struct
