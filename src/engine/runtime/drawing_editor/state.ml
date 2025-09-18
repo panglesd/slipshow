@@ -18,7 +18,7 @@ let time = Lwd.var 0.
 open Lwd_infix
 
 module UI = struct
-  let float (type x) ?type' ?(kind = `Change) var =
+  let float ?type' ?(kind = `Change) var =
     let h =
      fun ev ->
       let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv in
@@ -96,6 +96,7 @@ module Recording = struct
     color : Drawing.Color.t Lwd.var;
     opacity : float Lwd.var;
     options : pfo;
+    selected : bool Lwd.var;
   }
 
   type timed_event = { event : stro; time : float Lwd.var }
@@ -125,7 +126,16 @@ module Recording = struct
                 { size; thinning; smoothing; streamline }
               in
               let event =
-                { id; scale; path; total_duration; color; opacity; options }
+                {
+                  id;
+                  scale;
+                  path;
+                  total_duration;
+                  color;
+                  opacity;
+                  options;
+                  selected = Lwd.var false;
+                }
               in
               let time = Lwd.var time in
               Some { event; time }
@@ -147,6 +157,7 @@ module Recording = struct
                    color;
                    opacity;
                    options = { size; thinning; smoothing; streamline };
+                   selected = _;
                  };
                time;
              } ->
@@ -180,7 +191,16 @@ module Recording = struct
 
   let el_of_stroke (stroke : stro) =
     let option = UI.of_color stroke.color in
-    Brr_lwd.Elwd.div [ `R option ]
+    let handler1 =
+      Brr_lwd.Elwd.handler Brr.Ev.mouseenter (fun _ ->
+          Lwd.set stroke.selected true)
+    in
+    let handler2 =
+      Brr_lwd.Elwd.handler Brr.Ev.mouseleave (fun _ ->
+          Lwd.set stroke.selected false)
+    in
+    let ev = [ `P handler1; `P handler2 ] in
+    Brr_lwd.Elwd.div ~ev [ `R option ]
 
   let el =
     let display =
@@ -210,8 +230,6 @@ module Recording = struct
 end
 
 module Svg = struct
-  open Lwd.Infix
-
   let to_stroke ~elapsed_time =
    fun {
          Recording.id;
@@ -221,6 +239,7 @@ module Svg = struct
          color;
          opacity;
          options = { size; thinning; smoothing; streamline };
+         selected = _;
        } ->
     let$* color = Lwd.get color in
     let$* elapsed_time = elapsed_time in
@@ -243,27 +262,94 @@ module Svg = struct
     in
     event
 
+  let create_elem_of_stroke ~elapsed_time
+      {
+        Recording.options;
+        scale;
+        color;
+        opacity;
+        id;
+        path;
+        total_duration = _;
+        selected;
+      } =
+    let$* _elapsed_time =
+      let$ diff = elapsed_time in
+      Brr.Console.(log [ "CCCC" ]);
+      diff
+    in
+    let$* d =
+      let$* elapsed_time = elapsed_time in
+      Brr.Console.(log [ "path should be updated" ]);
+      let path = List.filter (fun (_, t) -> t <= elapsed_time) path in
+      let$ options =
+        let$ size = Lwd.get options.size in
+        Perfect_freehand.Options.v ?size ?thinning:options.thinning
+          ?streamline:options.streamline ?smoothing:options.smoothing ()
+      in
+      let v = Jstr.v (Drawing.Action.svg_path options scale path) in
+      Brr.At.v (Jstr.v "d") v
+    in
+    let at =
+      let fill =
+        let color = Lwd.peek color in
+        (* TODO Lwd.get instead *)
+        Brr.At.v (Jstr.v "fill") (Jstr.v (Drawing.Color.to_string color))
+      in
+      let id = Brr.At.id (Jstr.v id) in
+      let style =
+        let scale = 1. /. scale in
+        let scale = string_of_float scale in
+        let s =
+          Jstr.v @@ "scale3d(" ^ scale ^ "," ^ scale ^ "," ^ scale ^ ")"
+        in
+        Brr.At.style s
+      in
+      let opacity =
+        let$ opacity = Lwd.get opacity in
+        Brr.At.v (Jstr.v "opacity") (opacity |> string_of_float |> Jstr.v)
+      in
+      let selected =
+        let$ selected = Lwd.get selected in
+        if selected then
+          Lwd_seq.of_list
+          @@ [ Brr.At.v (Jstr.v "stroke") (Jstr.v "darkorange") ]
+        else Lwd_seq.empty
+      in
+      [ `P fill; `P id; `P style; `R opacity; `P d; `S selected ]
+    in
+    Brr_lwd.Elwd.v ~ns:`SVG ~at (Jstr.v "path") []
+
   let stroke_until ~elapsed_time (stroke : Recording.stro) =
-    let$ stroke = to_stroke ~elapsed_time stroke in
-    let el = Drawing.Action.create_elem_of_stroke stroke in
+    (* let$ stroke = to_stroke ~elapsed_time stroke in *)
+    let el = (* Drawing.Action. *) create_elem_of_stroke ~elapsed_time stroke in
     el
 
   let draw_until ~elapsed_time (record : Recording.record) =
     let res =
       List.map
         (fun { Recording.event; time = ctime } ->
-          let$* should_display =
+          let diff =
+            let ctime = Lwd.get ctime in
             let$* elapsed_time = elapsed_time in
-            let$ time = Lwd.get ctime in
-            elapsed_time >= time
+            let$ time = ctime in
+            let res = elapsed_time -. time in
+            Brr.Console.(log [ "Diff is"; res ]);
+            res
+          in
+          let$* should_display =
+            let$* diff = diff in
+            Brr.Console.(log [ "AAAAAAAA" ]);
+            let$ time = Lwd.get time in
+            diff >= 0. || true
+          in
+          let$* _elapsed_time =
+            let$ diff = diff in
+            Brr.Console.(log [ "BBBB" ]);
+            diff
           in
           if should_display then
-            let elapsed_time =
-              let$* elapsed_time = elapsed_time in
-              let$ time = Lwd.get ctime in
-              elapsed_time -. time
-            in
-            let$ res = stroke_until ~elapsed_time event in
+            let$ res = create_elem_of_stroke ~elapsed_time:diff event in
             Some res
           else Lwd.return None)
         record.evs

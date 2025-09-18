@@ -13,3 +13,7 @@
 .slipshow-dont-display {
   display: none;
 }
+.slipshow-drawing-editor-display {
+  stroke: darkorange;
+  
+}

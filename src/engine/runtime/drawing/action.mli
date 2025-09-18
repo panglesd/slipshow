@@ -19,6 +19,12 @@ val start_shape : string -> State.t -> float * float -> unit
 val end_shape : unit -> unit
 val clear : unit -> unit
 
+val svg_path :
+  Perfect_freehand.Options.t ->
+  float ->
+  ((float * float) * float) list ->
+  string
+
 module Replay : sig
   val replay : ?speedup:float -> Record.record -> unit Fut.t
   val draw_until : elapsed_time:float -> Record.record -> Brr.El.t list
