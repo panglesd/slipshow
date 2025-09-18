@@ -249,24 +249,27 @@ module Svg = struct
     el
 
   let draw_until ~elapsed_time (record : Recording.record) =
-    List.map
-      (fun { Recording.event; time = ctime } ->
-        let$ should_display =
-          let$* elapsed_time = elapsed_time in
-          let$ time = Lwd.get ctime in
-          elapsed_time >= time
-        in
-        if should_display then
-          let elapsed_time =
+    let res =
+      List.map
+        (fun { Recording.event; time = ctime } ->
+          let$* should_display =
             let$* elapsed_time = elapsed_time in
             let$ time = Lwd.get ctime in
-            elapsed_time -. time
+            elapsed_time >= time
           in
-          Some (stroke_until ~elapsed_time event)
-        else None)
-      record.evs
-    |> Lwd_seq.of_list |> Lwd.return |> Lwd_seq.lift
-    |> Lwd_seq.filter_map Fun.id |> Lwd_seq.lift
+          if should_display then
+            let elapsed_time =
+              let$* elapsed_time = elapsed_time in
+              let$ time = Lwd.get ctime in
+              elapsed_time -. time
+            in
+            let$ res = stroke_until ~elapsed_time event in
+            Some res
+          else Lwd.return None)
+        record.evs
+    in
+    res |> Lwd_seq.of_list |> Lwd.return |> Lwd_seq.lift
+    |> Lwd_seq.filter_map Fun.id
 
   let el =
     let content =
