@@ -305,10 +305,10 @@ module Svg = struct
         in
         Brr.At.style s
       in
-      (* let opacity = *)
-      (*   let$ opacity = Lwd.get opacity in *)
-      (*   Brr.At.v (Jstr.v "opacity") (opacity |> string_of_float |> Jstr.v) *)
-      (* in *)
+      let opacity =
+        let$ opacity = Lwd.get opacity in
+        Brr.At.v (Jstr.v "opacity") (opacity |> string_of_float |> Jstr.v)
+      in
       (* let selected = *)
       (*   let$ selected = Lwd.get selected in *)
       (*   if selected then *)
@@ -316,7 +316,7 @@ module Svg = struct
       (*     @@ [ Brr.At.v (Jstr.v "stroke") (Jstr.v "darkorange") ] *)
       (*   else Lwd_seq.empty *)
       (* in *)
-      [ `P fill; `P id; `P style (* ; `R opacity *); `R d (* ; `S selected *) ]
+      [ `P fill; `P id; `P style; `R opacity; `R d (* ; `S selected *) ]
     in
     Brr_lwd.Elwd.v ~ns:`SVG ~at (Jstr.v "path") []
 
