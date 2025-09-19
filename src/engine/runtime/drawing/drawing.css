@@ -4,7 +4,7 @@
 }
 
 #slipshow-drawing-toolbar {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
 }
@@ -23,7 +23,7 @@
     height 0.5s;
   display: flex;
   flex-direction: column;
-  position: fixed;
+  position: absolute;
   left: 0;
   width: 32px;
   height: 32px;

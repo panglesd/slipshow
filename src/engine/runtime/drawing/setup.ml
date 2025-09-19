@@ -16,6 +16,10 @@ let connect () =
   ()
 
 let setup el =
+  let el =
+    Brr.El.find_first_by_selector ~root:el (Jstr.v "#slipshow-main")
+    |> Option.get
+  in
   let content =
     {|	  <div class="slip-writing-toolbar">
               <div class="slip-toolbar-tool no-tool">
