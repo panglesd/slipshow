@@ -90,7 +90,11 @@ let generate window root =
   let+ () = undo () in
   let els = entry_action window 0 :: entries in
   let toc_el = Brr.El.div ~at:[ Brr.At.id !!"slipshow-toc" ] els in
-  Brr.El.append_children (Brr.Document.body Brr.G.document) [ toc_el ];
+  let horizontal_container =
+    Brr.El.find_first_by_selector (Jstr.v "#slipshow-horizontal-flex")
+    |> Option.get
+  in
+  Brr.El.append_children horizontal_container [ toc_el ];
   let _unlisten =
     Brr.Ev.listen Brr.Ev.click
       (fun _ -> toggle_visibility ())

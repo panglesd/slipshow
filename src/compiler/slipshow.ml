@@ -98,19 +98,22 @@ let embed_in_page content ~has ~math_link ~css_links ~theme ~dimension =
     %s
   </head>
   <body>
-    <div id="slipshow-main">
-      <div id="slipshow-content">
-        <svg id="slipshow-drawing-elem" style="overflow:visible; position: absolute; z-index:1000"></svg>
-        %s
+    <div id="slipshow-vertical-flex">
+      <div id="slipshow-horizontal-flex">
+        <div id="slipshow-main">
+          <div id="slipshow-content">
+            <svg id="slipshow-drawing-elem" style="overflow:visible; position: absolute; z-index:1000"></svg>
+            %s
+          </div>
+          <div id="slip-touch-controls">
+            <div class="slip-previous">←</div>
+            <div class="slip-fullscreen">⇱</div>
+            <div class="slip-next">→</div>
+          </div>
+          <div id="slipshow-counter">0</div>
+        </div>
       </div>
-      <div id="slip-touch-controls">
-        <div class="slip-previous">←</div>
-        <div class="slip-fullscreen">⇱</div>
-        <div class="slip-next">→</div>
-      </div>
-      <div id="slipshow-counter">0</div>
     </div>
-
     <!-- Include the library -->
     %s
     <!-- Start the presentation () -->

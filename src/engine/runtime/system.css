@@ -56,3 +56,14 @@
 body.slipshow-drawing-mode {
   touch-action: pinch-zoom;
 }
+
+#slipshow-vertical-flex {
+  display: flex;
+  height: 100vh;
+  flex-direction: column;
+}
+#slipshow-horizontal-flex {
+  display: flex;
+  flex-grow: 1;
+  flex-direction: row-reverse;
+}

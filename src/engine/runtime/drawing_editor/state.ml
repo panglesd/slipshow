@@ -296,15 +296,15 @@ module Svg = struct
         (* TODO Lwd.get instead *)
         Brr.At.v (Jstr.v "fill") (Jstr.v (Drawing.Color.to_string color))
       in
-      (* let id = Brr.At.id (Jstr.v id) in *)
-      (* let style = *)
-      (*   let scale = 1. /. scale in *)
-      (*   let scale = string_of_float scale in *)
-      (*   let s = *)
-      (*     Jstr.v @@ "scale3d(" ^ scale ^ "," ^ scale ^ "," ^ scale ^ ")" *)
-      (*   in *)
-      (*   Brr.At.style s *)
-      (* in *)
+      let id = Brr.At.id (Jstr.v id) in
+      let style =
+        let scale = 1. /. scale in
+        let scale = string_of_float scale in
+        let s =
+          Jstr.v @@ "scale3d(" ^ scale ^ "," ^ scale ^ "," ^ scale ^ ")"
+        in
+        Brr.At.style s
+      in
       (* let opacity = *)
       (*   let$ opacity = Lwd.get opacity in *)
       (*   Brr.At.v (Jstr.v "opacity") (opacity |> string_of_float |> Jstr.v) *)
@@ -316,12 +316,7 @@ module Svg = struct
       (*     @@ [ Brr.At.v (Jstr.v "stroke") (Jstr.v "darkorange") ] *)
       (*   else Lwd_seq.empty *)
       (* in *)
-      [
-        `P fill;
-        (* `P id; `P style;  *)
-        (* `R opacity; *)
-        `R d (* ; `S selected *);
-      ]
+      [ `P fill; `P id; `P style (* ; `R opacity *); `R d (* ; `S selected *) ]
     in
     Brr_lwd.Elwd.v ~ns:`SVG ~at (Jstr.v "path") []
 
