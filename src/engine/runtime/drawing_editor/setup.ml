@@ -1,16 +1,17 @@
 open Brr
 
-(*         <svg id="slipshow-drawing-elem" style="overflow:visible; position: absolute; z-index:1000"></svg>
- *)
+(* init function inspired from brr-lwd examples. There seem to be a limitation
+   in handling reactive top level element, see comment below. *)
 
 let init_ui () =
-  Console.(log [ "Setting up lwd" ]);
-  let ui = State.Recording.el in
+  let ui = Ui.el in
   let ui = Lwd.observe ui in
   let on_invalidate _ =
     let _ : int =
       G.request_animation_frame @@ fun _ ->
       let _ui = Lwd.quick_sample ui in
+      (* Beware that due to this being ignored, a changed "root" element will
+         not be updated by Lwd, only its reactive attributes/children *)
       ()
     in
     ()
@@ -21,19 +22,17 @@ let init_ui () =
   in
   El.append_children vertical [ Lwd.quick_sample ui ];
   Lwd.set_on_invalidate ui on_invalidate;
-  (* let on_load _ = *)
-  (*   Console.(log [ str "onload" ]); *)
-  (* in *)
-  (* ignore (Ev.listen Ev.dom_content_loaded on_load (Window.as_target G.window)); *)
   ()
 
 let init_svg () =
-  let svg = State.Svg.el in
+  let svg = Preview.el in
   let svg = Lwd.observe svg in
   let on_invalidate _ =
     let _ : int =
       G.request_animation_frame @@ fun _ ->
       let _ui = Lwd.quick_sample svg in
+      (* Beware that due to this being ignored, a changed "root" element will
+         not be updated by Lwd, only its reactive attributes/children *)
       ()
     in
     ()
