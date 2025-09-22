@@ -15,7 +15,11 @@ let init_ui () =
     in
     ()
   in
-  El.append_children (Document.body G.document) [ Lwd.quick_sample ui ];
+  let vertical =
+    Brr.El.find_first_by_selector (Jstr.v "#slipshow-vertical-flex")
+    |> Option.get
+  in
+  El.append_children vertical [ Lwd.quick_sample ui ];
   Lwd.set_on_invalidate ui on_invalidate;
   (* let on_load _ = *)
   (*   Console.(log [ str "onload" ]); *)

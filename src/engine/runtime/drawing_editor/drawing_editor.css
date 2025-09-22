@@ -4,8 +4,6 @@
   top: 0;
   left: 0;
   bottom: 0;
-  min-width: 25%;
-  max-width: 30%;
   padding: 30px;
   background: rosybrown;
   z-index: 100;
@@ -15,5 +13,7 @@
 }
 .slipshow-drawing-editor-display {
   stroke: darkorange;
-  
+}
+#slipshow-time-slider {
+  width: 100%;
 }

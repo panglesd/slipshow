@@ -18,7 +18,7 @@ let time = Lwd.var 0.
 open Lwd_infix
 
 module UI = struct
-  let float ?type' ?(kind = `Change) var =
+  let float ?type' ?(kind = `Change) var attrs =
     let h =
      fun ev ->
       let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv in
@@ -42,7 +42,7 @@ module UI = struct
         | None -> []
         | Some t -> [ `P (Brr.At.type' (Jstr.v t)) ]
       in
-      `R v :: type'
+      (`R v :: type') @ attrs
     in
     Brr_lwd.Elwd.input ~at ~ev ()
 
@@ -75,7 +75,10 @@ module UI = struct
 end
 
 let slider =
-  let el = UI.float ~type':"range" ~kind:`Input time in
+  let el =
+    UI.float ~type':"range" ~kind:`Input time
+      [ `P (Brr.At.id (Jstr.v "slipshow-time_slider")) ]
+  in
   Brr_lwd.Elwd.div [ `R el ]
 
 module Recording = struct
@@ -230,38 +233,6 @@ module Recording = struct
 end
 
 module Svg = struct
-  let to_stroke ~elapsed_time =
-   fun {
-         Recording.id;
-         scale;
-         path;
-         total_duration;
-         color;
-         opacity;
-         options = { size; thinning; smoothing; streamline };
-         selected = _;
-       } ->
-    let$* color = Lwd.get color in
-    let$* elapsed_time = elapsed_time in
-    let$* opacity = Lwd.get opacity in
-    let$ size = Lwd.get size in
-    let path = List.filter (fun (_, t) -> t <= elapsed_time) path in
-    let options =
-      Perfect_freehand.Options.v ?size ?thinning ?smoothing ?streamline ()
-    in
-    let event =
-      {
-        Drawing.Stroke.id;
-        scale;
-        path;
-        total_duration;
-        color;
-        opacity;
-        options;
-      }
-    in
-    event
-
   let create_elem_of_stroke ~elapsed_time
       {
         Recording.options;
@@ -273,15 +244,9 @@ module Svg = struct
         total_duration = _;
         selected;
       } =
-    (* let _elapsed_time = *)
-    (*   let$ diff = Lwd.get time in *)
-    (*   Brr.Console.(log [ "CCCC" ]); *)
-    (*   diff *)
-    (* in *)
     let at =
       let d =
         let$* elapsed_time = elapsed_time in
-        Brr.Console.(log [ "path should be updated" ]);
         let path = List.filter (fun (_, t) -> t <= elapsed_time) path in
         let$ options =
           let$ size = Lwd.get options.size in
@@ -292,8 +257,7 @@ module Svg = struct
         Brr.At.v (Jstr.v "d") v
       in
       let fill =
-        let color = Lwd.peek color in
-        (* TODO Lwd.get instead *)
+        let$ color = Lwd.get color in
         Brr.At.v (Jstr.v "fill") (Jstr.v (Drawing.Color.to_string color))
       in
       let id = Brr.At.id (Jstr.v id) in
@@ -309,54 +273,33 @@ module Svg = struct
         let$ opacity = Lwd.get opacity in
         Brr.At.v (Jstr.v "opacity") (opacity |> string_of_float |> Jstr.v)
       in
-      (* let selected = *)
-      (*   let$ selected = Lwd.get selected in *)
-      (*   if selected then *)
-      (*     Lwd_seq.of_list *)
-      (*     @@ [ Brr.At.v (Jstr.v "stroke") (Jstr.v "darkorange") ] *)
-      (*   else Lwd_seq.empty *)
-      (* in *)
-      [ `P fill; `P id; `P style; `R opacity; `R d (* ; `S selected *) ]
+      let selected =
+        let$ selected = Lwd.get selected in
+        if selected then
+          Lwd_seq.of_list
+          @@ [
+               Brr.At.v (Jstr.v "stroke") (Jstr.v "darkorange");
+               Brr.At.v (Jstr.v "stroke-width") (Jstr.v "2px");
+             ]
+        else Lwd_seq.empty
+      in
+      [ `R fill; `P id; `P style; `R opacity; `R d; `S selected ]
     in
     Brr_lwd.Elwd.v ~ns:`SVG ~at (Jstr.v "path") []
 
-  let stroke_until ~elapsed_time (stroke : Recording.stro) =
-    (* let$ stroke = to_stroke ~elapsed_time stroke in *)
-    let el = (* Drawing.Action. *) create_elem_of_stroke ~elapsed_time stroke in
-    el
-
   let draw_until ~elapsed_time (record : Recording.record) =
-    let res =
-      List.map
-        (fun { Recording.event; time = ctime } ->
-          let diff =
-            let ctime = Lwd.get ctime in
-            let$* elapsed_time = elapsed_time in
-            let$ time = ctime in
-            let res = elapsed_time -. time in
-            Brr.Console.(log [ "Diff is"; res ]);
-            res
-          in
-          (* let$* should_display = *)
-          (*   let$* diff = diff in *)
-          (*   Brr.Console.(log [ "AAAAAAAA" ]); *)
-          (*   let$ time = Lwd.get time in *)
-          (*   diff >= 0. || true *)
-          (* in *)
-          (* let$* _elapsed_time = *)
-          (*   let$ diff = diff in *)
-          (*   Brr.Console.(log [ "BBBB" ]); *)
-          (*   diff *)
-          (* in *)
-          (* if should_display then *)
-          let res = create_elem_of_stroke ~elapsed_time:diff event in
-          (* Some *) `R res
-          (* else Lwd.return None *))
-        record.evs
-    in
-    res
-  (* res |> Lwd_seq.of_list |> Lwd.return |> Lwd_seq.lift *)
-  (* |> Lwd_seq.filter_map Fun.id *)
+    List.map
+      (fun { Recording.event; time = ctime } ->
+        let diff =
+          let ctime = Lwd.get ctime in
+          let$* elapsed_time = elapsed_time in
+          let$ time = ctime in
+          let res = elapsed_time -. time in
+          res
+        in
+        let res = create_elem_of_stroke ~elapsed_time:diff event in
+        `R res)
+      record.evs
 
   let el =
     let gs =
@@ -369,17 +312,16 @@ module Svg = struct
             let elapsed_time =
               match recording.evs with
               | [] -> Lwd.return time_slider
-              (* | { time; event = Erase _ } :: _ -> time *. time_slider /. 100. *)
-              | { time; event = (* Stroke *) { total_duration; _ } } :: _ ->
+              | { time; event = { total_duration; _ } } :: _ ->
                   let$ time = Lwd.get time in
                   (time +. total_duration) *. time_slider /. 100.
             in
-            (* let recording = Recording.record_to_record recording in *)
-            let els = draw_until ~elapsed_time recording in
-            Brr.Console.(log [ "collection has size"; List.length els ]);
-            (* Lwd_seq.of_list els *)
-            els
+            draw_until ~elapsed_time recording
       in
+      (* From what I remember when I did this, the reason for an intermediate
+         "g" is that with the current "Lwd.observe" implementation, taken from
+         the brr-lwd example, only the attributes/children will be updated, not
+         the element itself *)
       Brr_lwd.Elwd.v ~ns:`SVG (Jstr.v "g") content
     in
     Brr_lwd.Elwd.v ~ns:`SVG (Jstr.v "svg")
