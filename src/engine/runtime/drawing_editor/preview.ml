@@ -57,10 +57,7 @@ let el =
       let$ recording = State.Recording.current in
       match recording with
       | Some (first :: _ as recording) ->
-          let elapsed_time =
-            let$ time_slider = Lwd.get State.time in
-            first.end_at *. time_slider /. 100.
-          in
+          let elapsed_time = Lwd.get State.time in
           draw_until ~elapsed_time recording
       | None | Some [] -> []
     in
