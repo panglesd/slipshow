@@ -110,7 +110,7 @@ module Strokes = struct
 end
 
 type drawing_state =
-  | Drawing of Brr.El.t * Stroke.t * float (* Initial time *)
+  | Drawing of Brr.El.t * Stroke.t
   | Erasing of (float * float)
   | Pointing
 

@@ -1,41 +1,46 @@
 open Types
 
 module Record = struct
-  type event = Stroke of Stroke.t | Erase of unit [@@deriving yojson]
+  type event = Stroke of Stroke.t | Erase of float [@@deriving yojson]
 
-  let _ = Erase ()
+  let _ = Erase 1.0
 
-  type timed_event = { event : event; time : float } [@@deriving yojson]
-
-  type t = timed_event list [@@deriving yojson]
+  type t = event list [@@deriving yojson]
   (** Ordered by time *)
 
   type record = { start_time : float; evs : t } [@@deriving yojson]
 
-  let of_string s = s |> Yojson.Safe.from_string |> record_of_yojson
-  let to_string r = r |> record_to_yojson |> Yojson.Safe.to_string
+  let of_string s = s |> Yojson.Safe.from_string |> of_yojson
+  let to_string r = r |> to_yojson |> Yojson.Safe.to_string
   let current_record = ref None
   let now () = Brr.Performance.now_ms Brr.G.performance
-
-  let add_event { start_time; evs } event starting_time =
-    let time = starting_time -. start_time in
-    let evs = { time; event } :: evs in
-    { start_time; evs }
-
   let empty_record () = { start_time = now (); evs = [] }
   let start_record () = current_record := Some (empty_record ())
 
   let stop_record () =
     let res = !current_record in
     current_record := None;
-    res
+    Option.map (fun res -> res.evs) res
 
-  let record event starting_time =
+  let relativize_path starting_time path =
+    List.map (fun (pos, t) -> (pos, t -. starting_time)) path
+
+  let relativize_event starting_time event =
+    match event with
+    | Stroke ev ->
+        let path = relativize_path starting_time ev.path in
+        let end_at = ev.end_at -. starting_time in
+        Stroke { ev with path; end_at }
+    | Erase t -> Erase (t -. starting_time)
+
+  let record (event : event) =
     match !current_record with
     | None -> ()
     | Some current_record_val ->
-        current_record :=
-          Some (add_event current_record_val event starting_time)
+        let event = relativize_event current_record_val.start_time event in
+        let evs = event :: current_record_val.evs in
+        let current_record_val = { current_record_val with evs } in
+        current_record := Some current_record_val
 end
 
 let svg_path options scale path =
@@ -50,12 +55,12 @@ let svg_path options scale path =
 
 let continue_shape coord =
   match !State.current_drawing_state with
-  | Drawing (el, stroke, initial_time) ->
-      let t = Record.now () -. initial_time in
+  | Drawing (el, stroke) ->
+      let t = Record.now () in
       let stroke =
-        { stroke with path = (coord, t) :: stroke.path; total_duration = t }
+        { stroke with path = (coord, t) :: stroke.path; end_at = t }
       in
-      State.current_drawing_state := Drawing (el, stroke, initial_time);
+      State.current_drawing_state := Drawing (el, stroke);
       Brr.El.set_at (Jstr.v "d")
         (Some (Jstr.v (svg_path stroke.options stroke.scale stroke.path)))
         el
@@ -71,7 +76,7 @@ let continue_shape coord =
   | Pointing -> ()
 
 let create_elem_of_stroke
-    { Stroke.options; scale; color; opacity; id; path; total_duration = _ } =
+    { Stroke.options; scale; color; opacity; id; path; end_at = _ } =
   let p = Brr.El.v ~ns:`SVG (Jstr.v "path") [] in
   let set_at at v = Brr.El.set_at (Jstr.v at) (Some (Jstr.v v)) p in
   set_at "fill" (Color.to_string color);
@@ -101,7 +106,6 @@ let options_of stroke width =
     ~last:false ()
 
 let start_shape id ({ State.tool; _ } as state) coord =
-  let initial_time = Record.now () in
   let svg =
     Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing-elem")
     |> Option.get
@@ -109,10 +113,10 @@ let start_shape id ({ State.tool; _ } as state) coord =
   match tool with
   | Tool.Stroker stroker ->
       let opacity = match stroker with Tool.Highlighter -> 0.33 | Pen -> 1. in
-      let path = [ (coord, 0.) ] in
+      let end_at = Record.now () in
+      let path = [ (coord, end_at) ] in
       let options = options_of stroker state.width in
       let { Universe.Coordinates.scale; _ } = Universe.State.get_coord () in
-      let total_duration = 0. in
       let stroke =
         {
           Stroke.path;
@@ -121,21 +125,21 @@ let start_shape id ({ State.tool; _ } as state) coord =
           id;
           color = state.color;
           scale;
-          total_duration;
+          end_at;
         }
       in
       let p = create_elem_of_stroke stroke in
-      State.current_drawing_state := Drawing (p, stroke, initial_time);
+      State.current_drawing_state := Drawing (p, stroke);
       Brr.El.append_children svg [ p ]
   | Eraser -> State.current_drawing_state := Erasing coord
   | Pointer -> ()
 
 let end_shape () =
   (match !State.current_drawing_state with
-  | Drawing (el, stroke, stroke_starting_time) ->
+  | Drawing (el, stroke) ->
       let s = Stroke.to_string stroke in
       Brr.Console.(log [ "a stroke is: "; s ]);
-      Record.record (Stroke stroke) stroke_starting_time;
+      Record.record (Record.Stroke stroke);
       Hashtbl.add State.Strokes.all stroke.id (el, stroke)
   | _ -> ());
   State.current_drawing_state := Pointing
@@ -144,45 +148,6 @@ let clear () =
   Hashtbl.iter
     (fun _ (elem, _) -> State.Strokes.remove_el elem)
     State.Strokes.all
-
-let () =
-  let draw stroke =
-    let start_time = Record.now () in
-    let el = create_elem_of_stroke { stroke with path = [] } in
-    let svg =
-      Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing-elem")
-      |> Option.get
-    in
-    Brr.El.append_children svg [ el ];
-    let filter () =
-      let time_elapsed = Record.now () -. start_time in
-      let rec loop acc = function
-        | [] -> (acc, true)
-        | ((_, t) as hd) :: tl when t <= time_elapsed -> loop (hd :: acc) tl
-        | _ :: _ -> (acc, false)
-      in
-      loop [] (List.rev stroke.path)
-    in
-    let rec draw_loop _ =
-      let path, finished = filter () in
-      Brr.El.set_at (Jstr.v "d")
-        (Some (Jstr.v (svg_path stroke.options stroke.scale path)))
-        el;
-      if finished then ()
-      else
-        let _animation_frame_id = Brr.G.request_animation_frame draw_loop in
-        ()
-    in
-    let _animation_frame_id = Brr.G.request_animation_frame draw_loop in
-    ()
-  in
-  let draw s =
-    match s |> Jv.to_string |> Stroke.of_string with
-    | Some stroke -> draw stroke
-    | None -> Brr.Console.(log [ "Not a stroke" ])
-  in
-  let v = Jv.callback ~arity:1 draw in
-  Jv.set Jv.global "draw_stroke" v
 
 module Replay = struct
   open Record
@@ -219,15 +184,19 @@ module Replay = struct
     let _animation_frame_id = Brr.G.request_animation_frame draw_loop in
     ()
 
-  let replay ?(speedup = 1.) (record : record) =
+  let start_time = function
+    | Stroke { path = (_, t) :: _; _ } | Erase t -> t
+    | Stroke { path = []; _ } -> failwith "TODO" (* TODO: implement *)
+
+  let replay ?(speedup = 1.) (record : t (* record *)) =
     let fut, resolve_fut = Fut.create () in
     let start_replay = now () in
     let filter l speedup =
       let time_elapsed = now () -. start_replay in
       let rec loop acc = function
         | [] -> (acc, [])
-        | { time; event } :: tl when time <= speedup *. time_elapsed ->
-            loop (event :: acc) tl
+        | ev :: tl when start_time ev <= speedup *. time_elapsed ->
+            loop (ev :: acc) tl
         | rest -> (acc, rest)
       in
       loop [] l
@@ -240,7 +209,8 @@ module Replay = struct
       let to_draw, rest = filter l speedup in
       List.iter
         (function
-          | Stroke s -> replay_stroke ~speedup s | Erase () -> failwith "TODO")
+          | Stroke s -> replay_stroke ~speedup s
+          | Erase _ -> failwith "TODO" (* TODO: implement *))
         to_draw;
       match rest with
       | [] -> resolve_fut ()
@@ -251,7 +221,7 @@ module Replay = struct
           ()
     in
     let _animation_frame_id =
-      Brr.G.request_animation_frame (draw_loop (List.rev record.evs))
+      Brr.G.request_animation_frame (draw_loop (List.rev record))
     in
     fut
 
@@ -260,14 +230,15 @@ module Replay = struct
     let el = create_elem_of_stroke { stroke with path } in
     el
 
-  let draw_until ~elapsed_time (record : record) =
+  let draw_until ~elapsed_time (record : t) =
     List.concat_map
-      (fun { event; time } ->
+      (fun event ->
+        let time = start_time event in
         if elapsed_time >= time then
           let time_elapsed = elapsed_time -. time in
           match event with
           | Stroke s -> [ stroke_until ~time_elapsed s ]
           | _ -> failwith "TODO" (* TODO: DO *)
         else [])
-      record.evs
+      record
 end

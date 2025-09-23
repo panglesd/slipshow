@@ -932,15 +932,15 @@ module Clear_draw = struct
 
   let parse_args = Parse.parse_only_els
 
-  let clear_record (record : Drawing.Action.Record.record) =
+  let clear_record (record : Drawing.Action.Record.t) =
     List.iter
       (function
-        | { Drawing.Action.Record.event = Stroke { id; _ }; _ } -> (
+        | Drawing.Action.Record.Stroke { id; _ } -> (
             match Brr.El.find_first_by_selector (Jstr.v ("#" ^ id)) with
             | Some el -> Brr.El.remove el
             | None -> ())
         | _ -> ())
-      record.evs
+      record
 
   let do_ _window elems =
     only_if_not_fast @@ fun () ->

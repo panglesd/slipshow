@@ -2,11 +2,11 @@ open State_types
 open Lwd_infix
 
 let create_elem_of_stroke ~elapsed_time
-    { options; scale; color; opacity; id; path; total_duration = _; selected } =
+    { options; scale; color; opacity; id; path; end_at = _; selected } =
   let at =
     let d =
       let$* elapsed_time = elapsed_time in
-      let path = List.filter (fun (_, t) -> t <= elapsed_time) path in
+      let path = List.filter (fun (_, t) -> t < elapsed_time) path in
       let$ options =
         let$ size = Lwd.get options.size in
         Perfect_freehand.Options.v ?size ?thinning:options.thinning
@@ -44,36 +44,25 @@ let create_elem_of_stroke ~elapsed_time
   in
   Brr_lwd.Elwd.v ~ns:`SVG ~at (Jstr.v "path") []
 
-let draw_until ~elapsed_time (record : record) =
+let draw_until ~elapsed_time (record : t) =
   List.map
-    (fun { event; time = ctime } ->
-      let diff =
-        let ctime = Lwd.get ctime in
-        let$* elapsed_time = elapsed_time in
-        let$ time = ctime in
-        let res = elapsed_time -. time in
-        res
-      in
-      let res = create_elem_of_stroke ~elapsed_time:diff event in
+    (fun event ->
+      let res = create_elem_of_stroke ~elapsed_time event in
       `R res)
-    record.evs
+    record
 
 let el =
   let gs =
     let$* content =
-      let$* time_slider = Lwd.get State.time in
       let$ recording = State.Recording.current in
       match recording with
-      | None -> []
-      | Some recording ->
+      | Some (first :: _ as recording) ->
           let elapsed_time =
-            match recording.evs with
-            | [] -> Lwd.return time_slider
-            | { time; event = { total_duration; _ } } :: _ ->
-                let$ time = Lwd.get time in
-                (time +. total_duration) *. time_slider /. 100.
+            let$ time_slider = Lwd.get State.time in
+            first.end_at *. time_slider /. 100.
           in
           draw_until ~elapsed_time recording
+      | None | Some [] -> []
     in
     (* From what I remember when I did this, the reason for an intermediate
          "g" is that with the current "Lwd.observe" implementation, taken from

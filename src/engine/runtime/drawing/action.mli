@@ -1,16 +1,13 @@
 module Record : sig
-  type event = Stroke of Types.Stroke.t | Erase of unit
-  type timed_event = { event : event; time : float }
+  type event = Stroke of Types.Stroke.t | Erase of float
 
-  type t = timed_event list
+  type t = event list
   (** Ordered by time *)
 
-  type record = { start_time : float; evs : t }
-
-  val of_string : string -> (record, string) result
-  val to_string : record -> string
+  val of_string : string -> (t, string) result
+  val to_string : t -> string
   val start_record : unit -> unit
-  val stop_record : unit -> record option
+  val stop_record : unit -> t option
 end
 
 val continue_shape : float * float -> unit
@@ -26,6 +23,6 @@ val svg_path :
   string
 
 module Replay : sig
-  val replay : ?speedup:float -> Record.record -> unit Fut.t
-  val draw_until : elapsed_time:float -> Record.record -> Brr.El.t list
+  val replay : ?speedup:float -> Record.t -> unit Fut.t
+  val draw_until : elapsed_time:float -> Record.t -> Brr.El.t list
 end

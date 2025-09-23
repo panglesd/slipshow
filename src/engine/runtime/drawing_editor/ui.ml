@@ -4,7 +4,7 @@ open Lwd_infix
 let slider =
   let el =
     Ui_widgets.float ~type':"range" ~kind:`Input State.time
-      [ `P (Brr.At.id (Jstr.v "slipshow-time_slider")) ]
+      [ `P (Brr.At.id (Jstr.v "slipshow-time-slider")) ]
   in
   Brr_lwd.Elwd.div [ `R el ]
 
@@ -24,17 +24,18 @@ let el =
   let strokes =
     let$ current = State.Recording.current in
     match current with
-    | None -> Lwd_seq.empty
-    | Some current ->
-        List.map (fun (stroke : timed_event) -> stroke.event) current.evs
-        |> List.map el_of_stroke |> List.rev (* TODO: Why rev? *)
-        |> Lwd_seq.of_list
+    | None -> []
+    | Some current -> current |> List.rev_map (fun x -> `R (el_of_stroke x))
+    (* We reverse as strokes are ordered in reverse (by time) in recordings *)
   in
-  let strokes = Lwd_seq.lift strokes in
   let ti =
     let$ time = Lwd.get State.time in
     Brr.El.div [ Brr.El.txt' (string_of_float time) ]
   in
+  let strokes =
+    let$* strokes = strokes in
+    Brr_lwd.Elwd.div strokes
+  in
   Brr_lwd.Elwd.div
     ~at:[ `P (Brr.At.id (Jstr.v "slipshow-drawing-editor")); `S display ]
-    [ `R ti; `R slider; `S strokes ]
+    [ `R ti; `R slider; `R strokes ]

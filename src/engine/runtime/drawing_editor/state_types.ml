@@ -9,16 +9,12 @@ type stro = {
   id : string;
   scale : float;
   path : ((float * float) * float) list (* TODO: (position * time) list *);
-  total_duration : float;
+  end_at : float;
   color : Drawing.Color.t Lwd.var;
   opacity : float Lwd.var;
   options : pfo;
   selected : bool Lwd.t Lwd.var;
 }
 
-type timed_event = { event : stro; time : float Lwd.var }
-
-type t = timed_event list
+type t = stro list
 (** Ordered by time *)
-
-type record = { start_time : float; evs : t }
