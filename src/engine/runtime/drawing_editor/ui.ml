@@ -1,9 +1,12 @@
 open State_types
 open Lwd_infix
 
+let total_length recording =
+  match recording with [] -> 0. | x :: _ -> x.end_at
+
 let slider recording =
   let attrs =
-    let max = match recording with [] -> 0. | x :: _ -> x.end_at in
+    let max = total_length recording in
     [
       `P (Brr.At.id (Jstr.v "slipshow-time-slider"));
       `P (Brr.At.v (Jstr.v "min") (Jstr.v "0"));
@@ -14,34 +17,89 @@ let slider recording =
   Brr_lwd.Elwd.div [ `R el ]
 
 let description_of_stroke (stroke : stro) =
-  let option = Ui_widgets.of_color stroke.color in
-  let selected, ev = Ui_widgets.hover () in
-  Lwd.set stroke.selected selected;
-  Brr_lwd.Elwd.div ~ev [ `R option ]
+  let color = Ui_widgets.of_color stroke.color in
+  let color = Brr_lwd.Elwd.div [ `P (Brr.El.txt' "Color:"); `R color ] in
+  let size = Ui_widgets.float ~type':"number" stroke.options.size [] in
+  let size = Brr_lwd.Elwd.div [ `P (Brr.El.txt' "Size:"); `R size ] in
+  let close =
+    let click_handler =
+      Brr_lwd.Elwd.handler Brr.Ev.click (fun _ -> Lwd.set State.clicked_on None)
+    in
+    Brr_lwd.Elwd.button ~ev:[ `P click_handler ] [ `P (Brr.El.txt' "Close") ]
+  in
+  Brr_lwd.Elwd.div [ `R color; `R size; `R close ]
 
-let el_of_stroke (stroke : stro) =
-  let start_time = match stroke.path with [] -> 0. | (_, t) :: _ -> t in
+let el_of_stroke recording (stroke : stro) =
+  let start_time =
+    match List.rev stroke.path with [] -> 0. | (_, t) :: _ -> t
+  in
   let end_time = stroke.end_at in
-  (start_time, end_time)
+  let total_length = total_length recording in
+  let left =
+    let left = start_time *. 100. /. total_length in
+    Jstr.append (Jstr.of_float left) (Jstr.v "%")
+  in
+  let right =
+    let right = (total_length -. end_time) *. 100. /. total_length in
+    Jstr.append (Jstr.of_float right) (Jstr.v "%")
+  in
+  let color =
+    let$ color = Lwd.get stroke.color in
+    let color = color |> Drawing.Color.to_string |> Jstr.v in
+    (Brr.El.Style.background_color, color)
+  in
+  let st =
+    [
+      `P (Brr.El.Style.left, left);
+      `P (Brr.El.Style.right, right);
+      `P (Brr.El.Style.position, Jstr.v "absolute");
+      `P (Brr.El.Style.height, Jstr.v "50px");
+      `R color;
+    ]
+  in
+  let selected, ev1 = Ui_widgets.hover () in
+  let click_handler =
+    Brr_lwd.Elwd.handler Brr.Ev.click (fun _ ->
+        Lwd.set State.clicked_on (Some stroke))
+  in
+  let ev = `P click_handler :: ev1 in
+  Lwd.set stroke.selected selected;
+  Brr_lwd.Elwd.div ~ev ~st []
 
 let el recording =
   let description =
-    let$ current = State.Recording.current in
-    match current with
-    | None -> []
-    | Some current ->
-        current |> List.rev_map (fun x -> `R (description_of_stroke x))
+    let$ current_stroke = Lwd.get State.clicked_on in
+    match current_stroke with
+    | None -> Lwd_seq.empty
+    | Some current_stroke ->
+        Lwd_seq.element @@ description_of_stroke current_stroke
+  in
+  let strokes =
+    recording |> List.rev_map (fun x -> `R (el_of_stroke recording x))
     (* We reverse as strokes are ordered in reverse (by time) in recordings *)
   in
   let ti =
     let$ time = Lwd.get State.time in
     Brr.El.div [ Brr.El.txt' (string_of_float time) ]
   in
-  let _description =
-    let$* description = description in
-    Brr_lwd.Elwd.div description
+  let description = Brr_lwd.Elwd.div [ `S (Lwd_seq.lift description) ] in
+  let strokes =
+    let st =
+      [
+        `P (Brr.El.Style.position, Jstr.v "relative");
+        `P (Brr.El.Style.height, Jstr.v "50px");
+      ]
+    in
+    Brr_lwd.Elwd.div ~st strokes
   in
-  Brr_lwd.Elwd.div [ `R ti; `R (slider recording); `R _description ]
+  let time_panel =
+    Brr_lwd.Elwd.div
+      ~st:[ `P (Jstr.v "flex-grow", Jstr.v "1") ]
+      [ `R ti; `R (slider recording); `R strokes ]
+  in
+  Brr_lwd.Elwd.div
+    ~st:[ `P (Brr.El.Style.display, Jstr.v "flex") ]
+    [ `R description; `R time_panel ]
 
 let el =
   let display =

@@ -1,5 +1,5 @@
 type pfo = {
-  size : float option Lwd.var;
+  size : float Lwd.var;
   thinning : float option;
   smoothing : float option;
   streamline : float option;

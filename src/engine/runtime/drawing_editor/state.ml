@@ -14,6 +14,7 @@ module Stroke = struct
 end
 
 let time = Lwd.var 0.
+let clicked_on : State_types.stro option Lwd.var = Lwd.var None
 
 module Recording = struct
   let current = Lwd.var None

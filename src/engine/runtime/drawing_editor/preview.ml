@@ -2,18 +2,29 @@ open State_types
 open Lwd_infix
 
 let create_elem_of_stroke ~elapsed_time
-    { options; scale; color; opacity; id; path; end_at = _; selected } =
+    { options; scale; color; opacity; id; path; end_at; selected } =
   let at =
     let d =
-      let$* elapsed_time = elapsed_time in
-      let path = List.filter (fun (_, t) -> t < elapsed_time) path in
-      let$ options =
-        let$ size = Lwd.get options.size in
-        Perfect_freehand.Options.v ?size ?thinning:options.thinning
-          ?streamline:options.streamline ?smoothing:options.smoothing ()
+      let$* should_continue =
+        (* I was hoping that when a value does not change, the recomputation
+           stops. See https://github.com/let-def/lwd/issues/55 *)
+        let$ elapsed_time = elapsed_time in
+        elapsed_time <= end_at
       in
-      let v = Jstr.v (Drawing.Action.svg_path options scale path) in
-      Brr.At.v (Jstr.v "d") v
+      let with_path path =
+        let$ options =
+          let$ size = Lwd.get options.size in
+          Perfect_freehand.Options.v ~size ?thinning:options.thinning
+            ?streamline:options.streamline ?smoothing:options.smoothing ()
+        in
+        let v = Jstr.v (Drawing.Action.svg_path options scale path) in
+        Brr.At.v (Jstr.v "d") v
+      in
+      if should_continue then
+        let$* elapsed_time = elapsed_time in
+        let path = List.filter (fun (_, t) -> t < elapsed_time) path in
+        with_path path
+      else with_path path
     in
     let fill =
       let$ color = Lwd.get color in
@@ -36,7 +47,7 @@ let create_elem_of_stroke ~elapsed_time
         Lwd_seq.of_list
         @@ [
              Brr.At.v (Jstr.v "stroke") (Jstr.v "darkorange");
-             Brr.At.v (Jstr.v "stroke-width") (Jstr.v "2px");
+             Brr.At.v (Jstr.v "stroke-width") (Jstr.v "4px");
            ]
       else Lwd_seq.empty
     in
@@ -56,10 +67,10 @@ let el =
     let$* content =
       let$ recording = State.Recording.current in
       match recording with
-      | Some (first :: _ as recording) ->
+      | Some recording ->
           let elapsed_time = Lwd.get State.time in
           draw_until ~elapsed_time recording
-      | None | Some [] -> []
+      | None -> []
     in
     (* From what I remember when I did this, the reason for an intermediate
          "g" is that with the current "Lwd.observe" implementation, taken from

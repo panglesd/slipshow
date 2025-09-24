@@ -8,7 +8,11 @@ let record_of_record (evs : Drawing.Action.Record.t) =
     let options =
       let open Perfect_freehand.Options in
       let thinning = thinning options in
-      let size = Lwd.var @@ size options in
+      let size =
+        Lwd.var @@ Option.get @@ size options
+        (* Size options is _always_ set in strokes. The option type comes from
+           the Perfect_freehand binding. *)
+      in
       let smoothing = smoothing options in
       let streamline = streamline options in
       { size; thinning; smoothing; streamline }
@@ -30,7 +34,7 @@ let record_to_record (evs : t) =
       let opacity = Lwd.peek opacity in
       let options =
         let size = Lwd.peek size in
-        Perfect_freehand.Options.v ?size ?thinning ?smoothing ?streamline ()
+        Perfect_freehand.Options.v ~size ?thinning ?smoothing ?streamline ()
       in
       let event =
         { Drawing.Stroke.id; scale; path; end_at; color; opacity; options }
