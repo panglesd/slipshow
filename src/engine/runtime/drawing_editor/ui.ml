@@ -79,7 +79,9 @@ let block_of_stroke recording (stroke : stro) =
   let _preselected, ev1 = Ui_widgets.hover ~var:State.preselected stroke () in
   let click_handler =
     Brr_lwd.Elwd.handler Brr.Ev.click (fun _ ->
-        Lwd.set State.selected (Some stroke))
+        match Lwd.peek State.selected with
+        | Some stroke2 when stroke2 == stroke -> Lwd.set State.selected None
+        | _ -> Lwd.set State.selected (Some stroke))
   in
   let ev = `P click_handler :: ev1 in
   Brr_lwd.Elwd.div ~ev ~st []
