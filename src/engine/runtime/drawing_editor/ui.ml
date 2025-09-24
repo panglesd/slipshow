@@ -18,9 +18,13 @@ let slider recording =
 
 let description_of_stroke (stroke : stro) =
   let color = Ui_widgets.of_color stroke.color in
-  let color = Brr_lwd.Elwd.div [ `P (Brr.El.txt' "Color:"); `R color ] in
-  let size = Ui_widgets.float ~type':"number" stroke.options.size [] in
-  let size = Brr_lwd.Elwd.div [ `P (Brr.El.txt' "Size:"); `R size ] in
+  let color = Brr_lwd.Elwd.div [ `P (Brr.El.txt' "Color: "); `R color ] in
+  let size =
+    Ui_widgets.float
+      ~st:[ `P (Brr.El.Style.width, Jstr.v "50px") ]
+      ~type':"number" stroke.options.size []
+  in
+  let size = Brr_lwd.Elwd.div [ `P (Brr.El.txt' "Size: "); `R size ] in
   let close =
     let click_handler =
       Brr_lwd.Elwd.handler Brr.Ev.click (fun _ -> Lwd.set State.selected None)
@@ -86,13 +90,38 @@ let block_of_stroke recording (stroke : stro) =
   let ev = `P click_handler :: ev1 in
   Brr_lwd.Elwd.div ~ev ~st []
 
+let play recording =
+  Lwd.set State.is_playing true;
+  let now () = Brr.Performance.now_ms Brr.G.performance in
+  let max = total_length recording in
+  let start_time = now () -. Lwd.peek State.time in
+  let rec loop _ =
+    let now = now () -. start_time in
+    Lwd.set State.time now;
+    if now <= max && Lwd.peek State.is_playing then
+      let _animation_frame_id = Brr.G.request_animation_frame loop in
+      ()
+    else Lwd.set State.is_playing false
+  in
+  loop 0.
+
+let stop () = Lwd.set State.is_playing false
+
+let play_panel recording =
+  let$* is_playing = Lwd.get State.is_playing in
+  if is_playing then
+    let click = Brr_lwd.Elwd.handler Brr.Ev.click (fun _ -> stop ()) in
+    Brr_lwd.Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Pause") ]
+  else
+    let click = Brr_lwd.Elwd.handler Brr.Ev.click (fun _ -> play recording) in
+    Brr_lwd.Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Play") ]
+
 let el recording =
   let description =
-    let$ current_stroke = Lwd.get State.selected in
+    let$* current_stroke = Lwd.get State.selected in
     match current_stroke with
-    | None -> Lwd_seq.empty
-    | Some current_stroke ->
-        Lwd_seq.element @@ description_of_stroke current_stroke
+    | None -> play_panel recording
+    | Some current_stroke -> description_of_stroke current_stroke
   in
   let strokes =
     recording |> List.rev_map (fun x -> `R (block_of_stroke recording x))
@@ -101,7 +130,11 @@ let el recording =
     let$ time = Lwd.get State.time in
     Brr.El.div [ Brr.El.txt' (string_of_float time) ]
   in
-  let description = Brr_lwd.Elwd.div [ `S (Lwd_seq.lift description) ] in
+  let description =
+    Brr_lwd.Elwd.div
+      ~st:[ `P (Brr.El.Style.width, Jstr.v "20%") ]
+      [ `R description ]
+  in
   let strokes =
     let st =
       [
@@ -135,4 +168,5 @@ let el =
   in
   Brr_lwd.Elwd.div
     ~at:[ `P (Brr.At.id (Jstr.v "slipshow-drawing-editor")); `S display ]
+    ~st:[ `P (Brr.El.Style.height, Jstr.v "200px") ]
     [ `R el ]

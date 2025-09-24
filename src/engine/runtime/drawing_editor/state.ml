@@ -15,6 +15,7 @@ end
 
 let time = Lwd.var 0.
 let selected : State_types.stro option Lwd.var = Lwd.var None
+let is_playing = Lwd.var false
 
 open Lwd_infix
 
