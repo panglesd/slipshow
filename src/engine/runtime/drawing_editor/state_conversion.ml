@@ -17,8 +17,7 @@ let record_of_record (evs : Drawing.Action.Record.t) =
       let streamline = streamline options in
       { size; thinning; smoothing; streamline }
     in
-    let selected = Lwd.var (Lwd.return false) in
-    { id; scale; path; end_at; color; opacity; options; selected }
+    { id; scale; path; end_at; color; opacity; options }
   in
   List.filter_map
     (function
@@ -28,7 +27,7 @@ let record_of_record (evs : Drawing.Action.Record.t) =
 
 let record_to_record (evs : t) =
   List.map
-    (fun { id; scale; path; end_at; color; opacity; options; selected = _ } ->
+    (fun { id; scale; path; end_at; color; opacity; options } ->
       let { size; thinning; smoothing; streamline } = options in
       let color = Lwd.peek color in
       let opacity = Lwd.peek opacity in

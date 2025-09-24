@@ -14,7 +14,21 @@ module Stroke = struct
 end
 
 let time = Lwd.var 0.
-let clicked_on : State_types.stro option Lwd.var = Lwd.var None
+let selected : State_types.stro option Lwd.var = Lwd.var None
+
+open Lwd_infix
+
+let is_selected stroke =
+  let$ selected = Lwd.get selected in
+  match selected with None -> false | Some selected -> stroke == selected
+
+let preselected : State_types.stro option Lwd.var = Lwd.var None
+
+let is_preselected stroke =
+  let$ preselected = Lwd.get preselected in
+  match preselected with
+  | None -> false
+  | Some preselected -> stroke == preselected
 
 module Recording = struct
   let current = Lwd.var None

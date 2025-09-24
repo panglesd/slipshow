@@ -2,7 +2,7 @@ open State_types
 open Lwd_infix
 
 let create_elem_of_stroke ~elapsed_time
-    { options; scale; color; opacity; id; path; end_at; selected } =
+    ({ options; scale; color; opacity; id; path; end_at } as stroke) =
   let at =
     let d =
       let$* should_continue =
@@ -42,11 +42,18 @@ let create_elem_of_stroke ~elapsed_time
       Brr.At.v (Jstr.v "opacity") (opacity |> string_of_float |> Jstr.v)
     in
     let selected =
-      let$ selected = Lwd.join @@ Lwd.get selected in
+      let$* selected = State.is_selected stroke in
+      let$ preselected = State.is_preselected stroke in
       if selected then
         Lwd_seq.of_list
         @@ [
              Brr.At.v (Jstr.v "stroke") (Jstr.v "darkorange");
+             Brr.At.v (Jstr.v "stroke-width") (Jstr.v "4px");
+           ]
+      else if preselected then
+        Lwd_seq.of_list
+        @@ [
+             Brr.At.v (Jstr.v "stroke") (Jstr.v "orange");
              Brr.At.v (Jstr.v "stroke-width") (Jstr.v "4px");
            ]
       else Lwd_seq.empty

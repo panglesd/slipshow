@@ -23,13 +23,13 @@ let description_of_stroke (stroke : stro) =
   let size = Brr_lwd.Elwd.div [ `P (Brr.El.txt' "Size:"); `R size ] in
   let close =
     let click_handler =
-      Brr_lwd.Elwd.handler Brr.Ev.click (fun _ -> Lwd.set State.clicked_on None)
+      Brr_lwd.Elwd.handler Brr.Ev.click (fun _ -> Lwd.set State.selected None)
     in
     Brr_lwd.Elwd.button ~ev:[ `P click_handler ] [ `P (Brr.El.txt' "Close") ]
   in
   Brr_lwd.Elwd.div [ `R color; `R size; `R close ]
 
-let el_of_stroke recording (stroke : stro) =
+let block_of_stroke recording (stroke : stro) =
   let start_time =
     match List.rev stroke.path with [] -> 0. | (_, t) :: _ -> t
   in
@@ -48,35 +48,52 @@ let el_of_stroke recording (stroke : stro) =
     let color = color |> Drawing.Color.to_string |> Jstr.v in
     (Brr.El.Style.background_color, color)
   in
+  let selected =
+    let$* selected = State.is_selected stroke in
+    let$ preselected = State.is_preselected stroke in
+    let l =
+      if selected then
+        [
+          (Brr.El.Style.height, Jstr.v "40px");
+          (Jstr.v "border", Jstr.v "5px solid black");
+        ]
+      else if preselected then
+        [
+          (Brr.El.Style.height, Jstr.v "40px");
+          (Jstr.v "border", Jstr.v "5px solid grey");
+        ]
+      else [ (Brr.El.Style.height, Jstr.v "50px") ]
+    in
+    Lwd_seq.of_list l
+  in
   let st =
     [
+      `P (Brr.El.Style.cursor, Jstr.v "pointer");
       `P (Brr.El.Style.left, left);
       `P (Brr.El.Style.right, right);
+      `S selected;
       `P (Brr.El.Style.position, Jstr.v "absolute");
-      `P (Brr.El.Style.height, Jstr.v "50px");
       `R color;
     ]
   in
-  let selected, ev1 = Ui_widgets.hover () in
+  let _preselected, ev1 = Ui_widgets.hover ~var:State.preselected stroke () in
   let click_handler =
     Brr_lwd.Elwd.handler Brr.Ev.click (fun _ ->
-        Lwd.set State.clicked_on (Some stroke))
+        Lwd.set State.selected (Some stroke))
   in
   let ev = `P click_handler :: ev1 in
-  Lwd.set stroke.selected selected;
   Brr_lwd.Elwd.div ~ev ~st []
 
 let el recording =
   let description =
-    let$ current_stroke = Lwd.get State.clicked_on in
+    let$ current_stroke = Lwd.get State.selected in
     match current_stroke with
     | None -> Lwd_seq.empty
     | Some current_stroke ->
         Lwd_seq.element @@ description_of_stroke current_stroke
   in
   let strokes =
-    recording |> List.rev_map (fun x -> `R (el_of_stroke recording x))
-    (* We reverse as strokes are ordered in reverse (by time) in recordings *)
+    recording |> List.rev_map (fun x -> `R (block_of_stroke recording x))
   in
   let ti =
     let$ time = Lwd.get State.time in

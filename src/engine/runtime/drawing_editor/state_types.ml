@@ -13,7 +13,6 @@ type stro = {
   color : Drawing.Color.t Lwd.var;
   opacity : float Lwd.var;
   options : pfo;
-  selected : bool Lwd.t Lwd.var;
 }
 
 type t = stro list

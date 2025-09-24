@@ -53,12 +53,13 @@ let of_color (c : Drawing.Color.t Lwd.var) =
   in
   Brr_lwd.Elwd.select ~at ~ev children
 
-let hover () =
-  let selected = Lwd.var false in
+let hover ?(var = Lwd.var None) value () =
+  let selected = var in
   let handler1 =
-    Brr_lwd.Elwd.handler Brr.Ev.mouseenter (fun _ -> Lwd.set selected true)
+    Brr_lwd.Elwd.handler Brr.Ev.mouseenter (fun _ ->
+        Lwd.set selected (Some value))
   in
   let handler2 =
-    Brr_lwd.Elwd.handler Brr.Ev.mouseleave (fun _ -> Lwd.set selected false)
+    Brr_lwd.Elwd.handler Brr.Ev.mouseleave (fun _ -> Lwd.set selected None)
   in
   (Lwd.get selected, [ `P handler1; `P handler2 ])
