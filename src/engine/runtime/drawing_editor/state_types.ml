@@ -17,5 +17,5 @@ type stro = {
   options : pfo;
 }
 
-type t = stro list
+type t = { strokes : stro list; total_time : float Lwd.var }
 (** Ordered by time *)

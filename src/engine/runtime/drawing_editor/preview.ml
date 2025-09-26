@@ -70,7 +70,7 @@ let draw_until ~elapsed_time (record : t) =
     (fun event ->
       let res = create_elem_of_stroke ~elapsed_time event in
       `R res)
-    record
+    record.strokes
 
 let el =
   let gs =

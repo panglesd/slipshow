@@ -1,19 +1,19 @@
 open State_types
 open Lwd_infix
 
-let total_length (recording : t) =
-  match recording with [] -> Lwd.pure 0. | x :: _ -> x.end_at
+let ( !! ) = Jstr.v
+let total_length (recording : t) = Lwd.get recording.total_time
 
 let slider recording =
   let attrs =
     let max =
       let$ max = total_length recording in
-      Brr.At.v (Jstr.v "max") (Jstr.of_float max)
+      Brr.At.v !!"max" (Jstr.of_float max)
     in
     [
-      `P (Brr.At.id (Jstr.v "slipshow-time-slider"));
-      `P (Brr.At.class' (Jstr.v "time-slider"));
-      `P (Brr.At.v (Jstr.v "min") (Jstr.v "0"));
+      `P (Brr.At.id !!"slipshow-time-slider");
+      `P (Brr.At.class' !!"time-slider");
+      `P (Brr.At.v !!"min" !!"0");
       `R max;
     ]
   in
@@ -24,12 +24,12 @@ let left_selection recording =
   let attrs =
     let max =
       let$ max = total_length recording in
-      Brr.At.v (Jstr.v "max") (Jstr.of_float max)
+      Brr.At.v !!"max" (Jstr.of_float max)
     in
     [
-      `P (Brr.At.id (Jstr.v "slipshow-right-selection-slider"));
-      `P (Brr.At.class' (Jstr.v "time-slider"));
-      `P (Brr.At.v (Jstr.v "min") (Jstr.v "0"));
+      `P (Brr.At.id !!"slipshow-right-selection-slider");
+      `P (Brr.At.class' !!"time-slider");
+      `P (Brr.At.v !!"min" !!"0");
       `R max;
     ]
   in
@@ -48,12 +48,12 @@ let right_selection recording =
   let attrs =
     let max =
       let$ max = total_length recording in
-      Brr.At.v (Jstr.v "max") (Jstr.of_float max)
+      Brr.At.v !!"max" (Jstr.of_float max)
     in
     [
-      `P (Brr.At.id (Jstr.v "slipshow-right-selection-slider"));
-      `P (Brr.At.class' (Jstr.v "time-slider"));
-      `P (Brr.At.v (Jstr.v "min") (Jstr.v "0"));
+      `P (Brr.At.id !!"slipshow-right-selection-slider");
+      `P (Brr.At.class' !!"time-slider");
+      `P (Brr.At.v !!"min" !!"0");
       `R max;
     ]
   in
@@ -73,7 +73,7 @@ let description_of_stroke (stroke : stro) =
   let color = Brr_lwd.Elwd.div [ `P (Brr.El.txt' "Color: "); `R color ] in
   let size =
     Ui_widgets.float
-      ~st:[ `P (Brr.El.Style.width, Jstr.v "50px") ]
+      ~st:[ `P (Brr.El.Style.width, !!"50px") ]
       ~type':"number" stroke.options.size []
   in
   let size = Brr_lwd.Elwd.div [ `P (Brr.El.txt' "Size: "); `R size ] in
@@ -85,11 +85,11 @@ let description_of_stroke (stroke : stro) =
   in
   let duration =
     let duration =
-      let at = [ `P (Brr.At.type' (Jstr.v "number")) ] in
+      let at = [ `P (Brr.At.type' !!"number") ] in
       let prop =
         let v =
           let$ end_at = stroke.end_at and$ starts_at = stroke.starts_at in
-          (Jstr.v "value", Jv.of_float (end_at -. starts_at))
+          (!!"value", Jv.of_float (end_at -. starts_at))
         in
         [ `R v ]
       in
@@ -114,24 +114,31 @@ let description_of_stroke (stroke : stro) =
   in
   Brr_lwd.Elwd.div [ `R color; `R size; `R duration; `R close ]
 
+let global_panel recording =
+  let total_time = Ui_widgets.float recording.total_time [] in
+  let total_time =
+    Brr_lwd.Elwd.div [ `P (Brr.El.txt' "Total_duration: "); `R total_time ]
+  in
+  Brr_lwd.Elwd.div [ `R total_time ]
+
 let block_of_stroke recording (stroke : stro) =
   let left =
     let$* start_time = stroke.starts_at in
     let$ total_length = total_length recording in
     let left = start_time *. 100. /. total_length in
-    let left = Jstr.append (Jstr.of_float left) (Jstr.v "%") in
+    let left = Jstr.append (Jstr.of_float left) !!"%" in
     (Brr.El.Style.left, left)
   in
   let right =
     let$* end_time = stroke.end_at in
     let$ total_length = total_length recording in
     let right = (total_length -. end_time) *. 100. /. total_length in
-    let right = Jstr.append (Jstr.of_float right) (Jstr.v "%") in
+    let right = Jstr.append (Jstr.of_float right) !!"%" in
     (Brr.El.Style.right, right)
   in
   let color =
     let$ color = Lwd.get stroke.color in
-    let color = color |> Drawing.Color.to_string |> Jstr.v in
+    let color = color |> Drawing.Color.to_string |> ( !! ) in
     (Brr.El.Style.background_color, color)
   in
   let selected =
@@ -139,26 +146,20 @@ let block_of_stroke recording (stroke : stro) =
     let$ preselected = State.is_preselected stroke in
     let l =
       if selected then
-        [
-          (Brr.El.Style.height, Jstr.v "40px");
-          (Jstr.v "border", Jstr.v "5px solid black");
-        ]
+        [ (Brr.El.Style.height, !!"40px"); (!!"border", !!"5px solid black") ]
       else if preselected then
-        [
-          (Brr.El.Style.height, Jstr.v "40px");
-          (Jstr.v "border", Jstr.v "5px solid grey");
-        ]
-      else [ (Brr.El.Style.height, Jstr.v "50px") ]
+        [ (Brr.El.Style.height, !!"40px"); (!!"border", !!"5px solid grey") ]
+      else [ (Brr.El.Style.height, !!"50px") ]
     in
-    Lwd_seq.of_list l
+    Lwd_seq.of_list ((!!"min-width", !!"1px") :: l)
   in
   let st =
     [
-      `P (Brr.El.Style.cursor, Jstr.v "pointer");
+      `P (Brr.El.Style.cursor, !!"pointer");
       `R left;
       `R right;
       `S selected;
-      `P (Brr.El.Style.position, Jstr.v "absolute");
+      `P (Brr.El.Style.position, !!"absolute");
       `R color;
     ]
   in
@@ -176,27 +177,33 @@ let block_of_stroke recording (stroke : stro) =
   in
   let move_handler =
     let$ total_length = total_length recording in
-    let mouse_move x path ev =
-      has_moved := true;
-      let parent =
-        ev |> Brr.Ev.target |> Brr.Ev.target_to_jv |> Brr.El.of_jv
-        |> Brr.El.parent |> Option.get
-      in
+    let mouse_move x parent path =
       let width_in_pixel = Brr.El.bound_w parent in
       let scale = total_length /. width_in_pixel in
-      let ev = Brr.Ev.as_type ev in
-      let y = Brr.Ev.Mouse.client_x ev in
-      let new_pos = scale *. (y -. x) in
-      let new_path = Path_editing.translate path new_pos in
-      Lwd.set stroke.path new_path
+      let end_ = List.hd path |> snd in
+      let start = List.hd (List.rev path) |> snd in
+      fun ev ->
+        has_moved := true;
+        let ev = Brr.Ev.as_type ev in
+        let y = Brr.Ev.Mouse.client_x ev in
+        let translation = scale *. (y -. x) in
+        let translation = Float.min translation (total_length -. end_) in
+        let translation = Float.max translation (0. -. start) in
+        let new_path = Path_editing.translate path translation in
+        Lwd.set stroke.path new_path
     in
     Brr_lwd.Elwd.handler Brr.Ev.mousedown (fun ev ->
+        Brr.Ev.prevent_default ev;
         has_moved := false;
         let path = Lwd.peek stroke.path in
+        let parent =
+          ev |> Brr.Ev.target |> Brr.Ev.target_to_jv |> Brr.El.of_jv
+          |> Brr.El.parent |> Option.get
+        in
         let ev = Brr.Ev.as_type ev in
         let x = Brr.Ev.Mouse.client_x ev in
         let id =
-          Brr.Ev.listen Brr.Ev.mousemove (mouse_move x path)
+          Brr.Ev.listen Brr.Ev.mousemove (mouse_move x parent path)
             (Brr.Document.body Brr.G.document |> Brr.El.as_target)
         in
         let opts = Brr.Ev.listen_opts ~once:true () in
@@ -213,11 +220,7 @@ let block_of_stroke recording (stroke : stro) =
 let play (recording : t) =
   Lwd.set State.is_playing true;
   let now () = Brr.Performance.now_ms Brr.G.performance in
-  let max =
-    match recording with
-    | [] -> 0.
-    | stroke :: _ -> List.hd (Lwd.peek stroke.path) |> snd
-  in
+  let max = Lwd.peek recording.total_time in
   let start_time = now () -. Lwd.peek State.time in
   let rec loop _ =
     let now = now () -. start_time in
@@ -244,33 +247,29 @@ let el (recording : t) =
   let description =
     let$* current_stroke = Lwd.get State.selected in
     match current_stroke with
-    | None -> (* play_panel recording *) Brr_lwd.Elwd.div []
+    | None -> global_panel recording
     | Some current_stroke -> description_of_stroke current_stroke
   in
   let strokes =
-    recording |> List.rev_map (fun x -> `R (block_of_stroke recording x))
+    recording.strokes
+    |> List.rev_map (fun x -> `R (block_of_stroke recording x))
   in
-  let ti =
-    Ui_widgets.float State.time []
-    (* Brr.El.div [ Brr.El.txt' (string_of_float time) ] *)
-  in
+  let ti = Ui_widgets.float State.time [] in
   let description =
-    Brr_lwd.Elwd.div
-      ~st:[ `P (Brr.El.Style.width, Jstr.v "20%") ]
-      [ `R description ]
+    Brr_lwd.Elwd.div ~st:[ `P (Brr.El.Style.width, !!"20%") ] [ `R description ]
   in
   let strokes =
     let st =
       [
-        `P (Brr.El.Style.position, Jstr.v "relative");
-        `P (Brr.El.Style.height, Jstr.v "50px");
+        `P (Brr.El.Style.position, !!"relative");
+        `P (Brr.El.Style.height, !!"50px");
       ]
     in
     Brr_lwd.Elwd.div ~st strokes
   in
   let time_panel =
     Brr_lwd.Elwd.div
-      ~st:[ `P (Jstr.v "flex-grow", Jstr.v "1") ]
+      ~st:[ `P (!!"flex-grow", !!"1") ]
       [
         `R ti;
         `R (play_panel recording);
@@ -281,14 +280,14 @@ let el (recording : t) =
       ]
   in
   Brr_lwd.Elwd.div
-    ~st:[ `P (Brr.El.Style.display, Jstr.v "flex") ]
+    ~st:[ `P (Brr.El.Style.display, !!"flex") ]
     [ `R description; `R time_panel ]
 
 let el =
   let display =
     let$ current = State.Recording.current in
     match current with
-    | None -> Lwd_seq.element @@ Brr.At.class' (Jstr.v "slipshow-dont-display")
+    | None -> Lwd_seq.element @@ Brr.At.class' !!"slipshow-dont-display"
     | Some _ -> Lwd_seq.empty
   in
   let el =
@@ -298,6 +297,6 @@ let el =
     | Some recording -> el recording
   in
   Brr_lwd.Elwd.div
-    ~at:[ `P (Brr.At.id (Jstr.v "slipshow-drawing-editor")); `S display ]
-    ~st:[ `P (Brr.El.Style.height, Jstr.v "200px") ]
+    ~at:[ `P (Brr.At.id !!"slipshow-drawing-editor"); `S display ]
+    ~st:[ `P (Brr.El.Style.height, !!"200px") ]
     [ `R el ]
