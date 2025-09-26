@@ -1,10 +1,14 @@
 open State_types
 
+let starts_at l = List.hd (List.rev l) |> snd
+let end_at l = List.hd l |> snd
+
 let record_of_record (evs : Drawing.Action.Record.t) =
   let of_stroke
-      { Drawing.Stroke.id; scale; path; end_at; color; opacity; options } =
+      { Drawing.Stroke.id; scale; path; end_at = _; color; opacity; options } =
     let color = Lwd.var color in
     let opacity = Lwd.var opacity in
+    let path = Lwd.var path in
     let options =
       let open Perfect_freehand.Options in
       let thinning = thinning options in
@@ -17,7 +21,9 @@ let record_of_record (evs : Drawing.Action.Record.t) =
       let streamline = streamline options in
       { size; thinning; smoothing; streamline }
     in
-    { id; scale; path; end_at; color; opacity; options }
+    let end_at = Lwd.map (Lwd.get path) ~f:end_at in
+    let starts_at = Lwd.map (Lwd.get path) ~f:starts_at in
+    { id; scale; path; end_at; starts_at; color; opacity; options }
   in
   List.filter_map
     (function
@@ -27,14 +33,17 @@ let record_of_record (evs : Drawing.Action.Record.t) =
 
 let record_to_record (evs : t) =
   List.map
-    (fun { id; scale; path; end_at; color; opacity; options } ->
+    (fun { id; scale; path; starts_at = _; end_at = _; color; opacity; options }
+       ->
       let { size; thinning; smoothing; streamline } = options in
       let color = Lwd.peek color in
       let opacity = Lwd.peek opacity in
+      let path = Lwd.peek path in
       let options =
         let size = Lwd.peek size in
         Perfect_freehand.Options.v ~size ?thinning ?smoothing ?streamline ()
       in
+      let end_at = end_at path in
       let event =
         { Drawing.Stroke.id; scale; path; end_at; color; opacity; options }
       in

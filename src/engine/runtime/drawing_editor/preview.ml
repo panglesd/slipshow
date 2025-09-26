@@ -2,9 +2,11 @@ open State_types
 open Lwd_infix
 
 let create_elem_of_stroke ~elapsed_time
-    ({ options; scale; color; opacity; id; path; end_at } as stroke) =
+    ({ options; scale; color; opacity; id; path; end_at; starts_at = _ } as
+     stroke) =
   let at =
     let d =
+      let$* end_at = end_at in
       let$* should_continue =
         (* I was hoping that when a value does not change, the recomputation
            stops. See https://github.com/let-def/lwd/issues/55 *)
@@ -20,6 +22,7 @@ let create_elem_of_stroke ~elapsed_time
         let v = Jstr.v (Drawing.Action.svg_path options scale path) in
         Brr.At.v (Jstr.v "d") v
       in
+      let$* path = Lwd.get path in
       if should_continue then
         let$* elapsed_time = elapsed_time in
         let path = List.filter (fun (_, t) -> t < elapsed_time) path in

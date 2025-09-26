@@ -1,10 +1,12 @@
 open Lwd_infix
 
-let float ?st ?type' ?(kind = `Change) var attrs =
+let float ?(callback = fun _ -> ()) ?(ev = []) ?st ?type' ?(kind = `Change) var
+    attrs =
   let h =
    fun ev ->
     let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv in
     let new_value = Jv.get el "value" |> Jv.to_string |> float_of_string in
+    callback new_value;
     Lwd.set var new_value
   in
   let set =
@@ -12,7 +14,7 @@ let float ?st ?type' ?(kind = `Change) var attrs =
     | `Change -> Brr_lwd.Elwd.handler Brr.Ev.change h
     | `Input -> Brr_lwd.Elwd.handler Brr.Ev.input h
   in
-  let ev = [ `P set ] in
+  let ev = `P set :: ev in
   let at =
     let type' =
       match type' with None -> [] | Some t -> [ `P (Brr.At.type' (Jstr.v t)) ]
