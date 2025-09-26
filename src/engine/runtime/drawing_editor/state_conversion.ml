@@ -23,7 +23,20 @@ let record_of_record (evs : Drawing.Action.Record.t) : t =
     in
     let end_at = Lwd.map (Lwd.get path) ~f:end_at in
     let starts_at = Lwd.map (Lwd.get path) ~f:starts_at in
-    { id; scale; path; end_at; starts_at; color; opacity; options }
+    let selected = Lwd.var false in
+    let preselected = Lwd.var false in
+    {
+      id;
+      scale;
+      path;
+      end_at;
+      starts_at;
+      color;
+      opacity;
+      options;
+      selected;
+      preselected;
+    }
   in
   let strokes =
     List.filter_map
@@ -36,8 +49,18 @@ let record_of_record (evs : Drawing.Action.Record.t) : t =
 
 let record_to_record (evs : t) =
   List.map
-    (fun { id; scale; path; starts_at = _; end_at = _; color; opacity; options }
-       ->
+    (fun {
+           id;
+           scale;
+           path;
+           starts_at = _;
+           end_at = _;
+           color;
+           opacity;
+           options;
+           selected = _;
+           preselected = _;
+         } ->
       let { size; thinning; smoothing; streamline } = options in
       let color = Lwd.peek color in
       let opacity = Lwd.peek opacity in

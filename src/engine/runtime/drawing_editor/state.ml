@@ -16,22 +16,12 @@ end
 let time = Lwd.var 0.
 let left_selection = Lwd.var 0.
 let right_selection = Lwd.var 0.
-let selected : State_types.stro option Lwd.var = Lwd.var None
 let is_playing = Lwd.var false
 
-open Lwd_infix
+open State_types
 
-let is_selected stroke =
-  let$ selected = Lwd.get selected in
-  match selected with None -> false | Some selected -> stroke == selected
-
-let preselected : State_types.stro option Lwd.var = Lwd.var None
-
-let is_preselected stroke =
-  let$ preselected = Lwd.get preselected in
-  match preselected with
-  | None -> false
-  | Some preselected -> stroke == preselected
+let is_selected stroke = Lwd.get stroke.selected
+let is_preselected stroke = Lwd.get stroke.preselected
 
 module Recording = struct
   let current = Lwd.var None

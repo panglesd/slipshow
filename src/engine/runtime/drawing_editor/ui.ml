@@ -79,7 +79,7 @@ let description_of_stroke (stroke : stro) =
   let size = Brr_lwd.Elwd.div [ `P (Brr.El.txt' "Size: "); `R size ] in
   let close =
     let click_handler =
-      Brr_lwd.Elwd.handler Brr.Ev.click (fun _ -> Lwd.set State.selected None)
+      Brr_lwd.Elwd.handler Brr.Ev.click (fun _ -> Lwd.set stroke.selected false)
     in
     Brr_lwd.Elwd.button ~ev:[ `P click_handler ] [ `P (Brr.El.txt' "Close") ]
   in
@@ -163,17 +163,11 @@ let block_of_stroke recording (stroke : stro) =
       `R color;
     ]
   in
-  let _preselected, ev_hover =
-    Ui_widgets.hover ~var:State.preselected stroke ()
-  in
+  let _preselected, ev_hover = Ui_widgets.hover ~var:stroke.preselected () in
   let has_moved = ref false in
   let click_handler =
     Brr_lwd.Elwd.handler Brr.Ev.click (fun _ ->
-        if !has_moved then ()
-        else
-          match Lwd.peek State.selected with
-          | Some stroke2 when stroke2 == stroke -> Lwd.set State.selected None
-          | _ -> Lwd.set State.selected (Some stroke))
+        if !has_moved then () else Lwd.update not stroke.selected)
   in
   let move_handler =
     let$ total_length = total_length recording in
@@ -245,10 +239,19 @@ let play_panel recording =
 
 let el (recording : t) =
   let description =
-    let$* current_stroke = Lwd.get State.selected in
-    match current_stroke with
-    | None -> global_panel recording
-    | Some current_stroke -> description_of_stroke current_stroke
+    let s =
+      List.map
+        (fun s -> Lwd.get s.selected |> Lwd.map ~f:(fun x -> (x, s)))
+        recording.strokes
+    in
+    let s = Lwd_seq.of_list s in
+    let s = Lwd.pure s |> Lwd_seq.lift in
+    let$* s = Lwd_seq.filter_map (fun (x, s) -> if x then Some s else None) s in
+    let l = Lwd_seq.to_list s in
+    match l with
+    | [] -> global_panel recording
+    | [ current_stroke ] -> description_of_stroke current_stroke
+    | _ :: _ :: _ -> Brr_lwd.Elwd.div [ `P (Brr.El.txt' "Not implemented") ]
   in
   let strokes =
     recording.strokes

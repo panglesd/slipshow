@@ -15,6 +15,8 @@ type stro = {
   color : Drawing.Color.t Lwd.var;
   opacity : float Lwd.var;
   options : pfo;
+  selected : bool Lwd.var;
+  preselected : bool Lwd.var;
 }
 
 type t = { strokes : stro list; total_time : float Lwd.var }
