@@ -165,73 +165,49 @@ let block_of_stroke recording (stroke : stro) =
   let _preselected, ev_hover =
     Ui_widgets.hover ~var:State.preselected stroke ()
   in
+  let has_moved = ref false in
   let click_handler =
     Brr_lwd.Elwd.handler Brr.Ev.click (fun _ ->
-        match Lwd.peek State.selected with
-        | Some stroke2 when stroke2 == stroke -> Lwd.set State.selected None
-        | _ -> Lwd.set State.selected (Some stroke))
+        if !has_moved then ()
+        else
+          match Lwd.peek State.selected with
+          | Some stroke2 when stroke2 == stroke -> Lwd.set State.selected None
+          | _ -> Lwd.set State.selected (Some stroke))
   in
-  let move_handlers =
-    let state = ref None in
-    let mouse_down =
-      let$ total_length = total_length recording in
-      let path = Lwd.peek stroke.path in
-      let mouse_move x path ev =
-        let parent =
-          ev |> Brr.Ev.target |> Brr.Ev.target_to_jv |> Brr.El.of_jv
-          |> Brr.El.parent |> Option.get
-        in
-        let width_in_pixel = Brr.El.bound_w parent in
-        let scale = total_length /. width_in_pixel in
-        let ev = Brr.Ev.as_type ev in
-        let y = Brr.Ev.Mouse.client_x ev in
-        let new_pos = scale *. (y -. x) in
-        let new_path = Path_editing.translate path new_pos in
-        Lwd.set stroke.path new_path;
-        Brr.Console.(log [ "new pos"; y -. x ])
+  let move_handler =
+    let$ total_length = total_length recording in
+    let mouse_move x path ev =
+      has_moved := true;
+      let parent =
+        ev |> Brr.Ev.target |> Brr.Ev.target_to_jv |> Brr.El.of_jv
+        |> Brr.El.parent |> Option.get
       in
-      Brr_lwd.Elwd.handler Brr.Ev.mousedown (fun ev ->
-          let ev = Brr.Ev.as_type ev in
-          let x = Brr.Ev.Mouse.client_x ev in
-          let id_to_remove = ref None in
-          let id =
-            Brr.Ev.listen Brr.Ev.mousemove (mouse_move x path)
-              (Brr.Document.body Brr.G.document |> Brr.El.as_target)
-          in
-          id_to_remove := Some id)
+      let width_in_pixel = Brr.El.bound_w parent in
+      let scale = total_length /. width_in_pixel in
+      let ev = Brr.Ev.as_type ev in
+      let y = Brr.Ev.Mouse.client_x ev in
+      let new_pos = scale *. (y -. x) in
+      let new_path = Path_editing.translate path new_pos in
+      Lwd.set stroke.path new_path
     in
-    let mouse_move =
-      match initial_mouse_pos with
-      | None -> Lwd_seq.empty
-      | Some x ->
-          let path = Lwd.peek stroke.path in
-          Lwd_seq.element
-          @@ Brr_lwd.Elwd.handler Brr.Ev.mousemove (fun ev ->
-                 let parent =
-                   ev |> Brr.Ev.target |> Brr.Ev.target_to_jv |> Brr.El.of_jv
-                   |> Brr.El.parent |> Option.get
-                 in
-                 let width_in_pixel = Brr.El.bound_w parent in
-                 let scale = total_length /. width_in_pixel in
-                 let ev = Brr.Ev.as_type ev in
-                 let y = Brr.Ev.Mouse.client_x ev in
-                 let new_pos = scale *. (y -. x) in
-                 let new_path = Path_editing.translate path new_pos in
-                 Lwd.set stroke.path new_path;
-                 Brr.Console.(log [ "new pos"; y -. x ]))
-    in
-    let mouse_up =
-      let$ initial_mouse_pos' = Lwd.get initial_mouse_pos in
-      match initial_mouse_pos' with
-      | None -> Lwd_seq.empty
-      | Some _ ->
-          Lwd_seq.element
-          @@ Brr_lwd.Elwd.handler Brr.Ev.mouseup (fun _ ->
-                 Lwd.set initial_mouse_pos None)
-    in
-    [ `P mouse_down; `S mouse_move; `S mouse_up ]
+    Brr_lwd.Elwd.handler Brr.Ev.mousedown (fun ev ->
+        has_moved := false;
+        let path = Lwd.peek stroke.path in
+        let ev = Brr.Ev.as_type ev in
+        let x = Brr.Ev.Mouse.client_x ev in
+        let id =
+          Brr.Ev.listen Brr.Ev.mousemove (mouse_move x path)
+            (Brr.Document.body Brr.G.document |> Brr.El.as_target)
+        in
+        let opts = Brr.Ev.listen_opts ~once:true () in
+        let _id =
+          Brr.Ev.listen ~opts Brr.Ev.mouseup
+            (fun _ -> Brr.Ev.unlisten id)
+            (Brr.Document.body Brr.G.document |> Brr.El.as_target)
+        in
+        ())
   in
-  let ev = (`P click_handler :: ev_hover) @ move_handlers in
+  let ev = `R move_handler :: `P click_handler :: ev_hover in
   Brr_lwd.Elwd.div ~ev ~st []
 
 let play (recording : t) =
