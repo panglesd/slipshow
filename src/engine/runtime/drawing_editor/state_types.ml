@@ -19,5 +19,5 @@ type stro = {
   preselected : bool Lwd.var;
 }
 
-type t = { strokes : stro list; total_time : float Lwd.var }
+type t = { strokes : stro Lwd_table.t; total_time : float Lwd.var }
 (** Ordered by time *)

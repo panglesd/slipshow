@@ -45,9 +45,23 @@ let record_of_record (evs : Drawing.Action.Record.t) : t =
   in
   let total_time = Lwd.var @@ end_at (List.hd strokes).path in
   let strokes = List.map of_stroke strokes in
-  { strokes; total_time }
+  let table = Lwd_table.make () in
+  List.iter (fun stroke -> Lwd_table.append' table stroke) strokes;
+  { strokes = table; total_time }
 
 let record_to_record (evs : t) =
+  let strokes =
+    let rec loop acc row =
+      match row with
+      | None -> acc
+      | Some row ->
+          let acc =
+            match Lwd_table.get row with None -> acc | Some v -> v :: acc
+          in
+          loop acc (Lwd_table.prev row)
+    in
+    loop [] (Lwd_table.last evs.strokes)
+  in
   List.map
     (fun {
            id;
@@ -74,5 +88,5 @@ let record_to_record (evs : t) =
         { Drawing.Stroke.id; scale; path; end_at; color; opacity; options }
       in
       Drawing.Action.Record.Stroke event)
-    evs.strokes
+    strokes
 (* TODO: Sort by starting time *)

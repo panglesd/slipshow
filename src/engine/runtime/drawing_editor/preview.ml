@@ -75,11 +75,12 @@ let create_elem_of_stroke ~elapsed_time
   Brr_lwd.Elwd.v ~ns:`SVG ~at (Jstr.v "path") []
 
 let draw_until ~elapsed_time (record : t) =
-  List.map
-    (fun event ->
+  Lwd_table.map_reduce
+    (fun _ event ->
       let res = create_elem_of_stroke ~elapsed_time event in
-      `R res)
-    record.strokes
+      Lwd_seq.element res)
+    Lwd_seq.monoid record.strokes
+  |> Lwd_seq.lift
 
 let el =
   let gs =
@@ -89,13 +90,13 @@ let el =
       | Some recording ->
           let elapsed_time = Lwd.get State.time in
           draw_until ~elapsed_time recording
-      | None -> []
+      | None -> Lwd.pure Lwd_seq.empty
     in
     (* From what I remember when I did this, the reason for an intermediate
          "g" is that with the current "Lwd.observe" implementation, taken from
          the brr-lwd example, only the attributes/children will be updated, not
          the element itself *)
-    Brr_lwd.Elwd.v ~ns:`SVG (Jstr.v "g") content
+    Brr_lwd.Elwd.v ~ns:`SVG (Jstr.v "g") [ `S content ]
   in
   Brr_lwd.Elwd.v ~ns:`SVG (Jstr.v "svg")
     ~at:

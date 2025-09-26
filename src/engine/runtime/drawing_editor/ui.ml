@@ -68,7 +68,7 @@ let right_selection recording =
   in
   Brr_lwd.Elwd.div [ `R el ]
 
-let description_of_stroke (stroke : stro) =
+let description_of_stroke row (stroke : stro) =
   let color = Ui_widgets.of_color stroke.color in
   let color = Brr_lwd.Elwd.div [ `P (Brr.El.txt' "Color: "); `R color ] in
   let size =
@@ -82,6 +82,12 @@ let description_of_stroke (stroke : stro) =
       Brr_lwd.Elwd.handler Brr.Ev.click (fun _ -> Lwd.set stroke.selected false)
     in
     Brr_lwd.Elwd.button ~ev:[ `P click_handler ] [ `P (Brr.El.txt' "Close") ]
+  in
+  let delete =
+    let click_handler =
+      Brr_lwd.Elwd.handler Brr.Ev.click (fun _ -> Lwd_table.remove row)
+    in
+    Brr_lwd.Elwd.button ~ev:[ `P click_handler ] [ `P (Brr.El.txt' "Remove") ]
   in
   let duration =
     let duration =
@@ -112,7 +118,7 @@ let description_of_stroke (stroke : stro) =
     in
     Brr_lwd.Elwd.div [ `P (Brr.El.txt' "Duration: "); `R duration ]
   in
-  Brr_lwd.Elwd.div [ `R color; `R size; `R duration; `R close ]
+  Brr_lwd.Elwd.div [ `R color; `R size; `R duration; `R delete; `R close ]
 
 let global_panel recording =
   let total_time = Ui_widgets.float recording.total_time [] in
@@ -239,23 +245,26 @@ let play_panel recording =
 
 let el (recording : t) =
   let description =
-    let s =
-      List.map
-        (fun s -> Lwd.get s.selected |> Lwd.map ~f:(fun x -> (x, s)))
-        recording.strokes
+    let$* s =
+      Lwd_table.map_reduce
+        (fun row s ->
+          Lwd.get s.selected
+          |> Lwd.map ~f:(fun x ->
+                 if x then Lwd_seq.element (row, s) else Lwd_seq.empty))
+        Lwd_seq.lwd_monoid recording.strokes
+      |> Lwd.join
     in
-    let s = Lwd_seq.of_list s in
-    let s = Lwd.pure s |> Lwd_seq.lift in
-    let$* s = Lwd_seq.filter_map (fun (x, s) -> if x then Some s else None) s in
     let l = Lwd_seq.to_list s in
     match l with
     | [] -> global_panel recording
-    | [ current_stroke ] -> description_of_stroke current_stroke
+    | [ (row, current_stroke) ] -> description_of_stroke row current_stroke
     | _ :: _ :: _ -> Brr_lwd.Elwd.div [ `P (Brr.El.txt' "Not implemented") ]
   in
   let strokes =
-    recording.strokes
-    |> List.rev_map (fun x -> `R (block_of_stroke recording x))
+    Lwd_table.map_reduce
+      (fun _ s -> Lwd_seq.element @@ block_of_stroke recording s)
+      Lwd_seq.monoid recording.strokes
+    |> Lwd_seq.lift
   in
   let ti = Ui_widgets.float State.time [] in
   let description =
@@ -268,7 +277,7 @@ let el (recording : t) =
         `P (Brr.El.Style.height, !!"50px");
       ]
     in
-    Brr_lwd.Elwd.div ~st strokes
+    Brr_lwd.Elwd.div ~st [ `S strokes ]
   in
   let time_panel =
     Brr_lwd.Elwd.div
