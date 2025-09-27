@@ -1,7 +1,7 @@
 open Lwd_infix
 
-let float ?(callback = fun _ -> ()) ?(ev = []) ?st ?type' ?(kind = `Change) var
-    attrs =
+let float ?(callback = fun _ -> ()) ?(ev = []) ?st ?(prop = []) ?type'
+    ?(kind = `Change) var attrs =
   let h =
    fun ev ->
     let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv in
@@ -26,7 +26,7 @@ let float ?(callback = fun _ -> ()) ?(ev = []) ?st ?type' ?(kind = `Change) var
       let$ v = Lwd.get var in
       (Jstr.v "value", Jv.of_float v)
     in
-    [ `R v ]
+    `R v :: prop
   in
   Brr_lwd.Elwd.input ?st ~at ~ev ~prop ()
 

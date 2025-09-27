@@ -6,18 +6,22 @@ let total_length (recording : t) = Lwd.get recording.total_time
 
 let slider recording =
   let attrs =
-    let max =
-      let$ max = total_length recording in
-      Brr.At.v !!"max" (Jstr.of_float max)
-    in
     [
       `P (Brr.At.id !!"slipshow-time-slider");
       `P (Brr.At.class' !!"time-slider");
       `P (Brr.At.v !!"min" !!"0");
-      `R max;
     ]
   in
-  let el = Ui_widgets.float ~type':"range" ~kind:`Input State.time attrs in
+  let prop =
+    let max =
+      let$ max = total_length recording in
+      (!!"max", Jv.of_float max)
+    in
+    [ `R max ]
+  in
+  let el =
+    Ui_widgets.float ~prop ~type':"range" ~kind:`Input State.time attrs
+  in
   Brr_lwd.Elwd.div [ `R el ]
 
 let left_selection recording =
@@ -121,9 +125,9 @@ let description_of_stroke row (stroke : stro) =
   Brr_lwd.Elwd.div [ `R color; `R size; `R duration; `R delete; `R close ]
 
 let global_panel recording =
-  let total_time = Ui_widgets.float recording.total_time [] in
+  let total_time = Ui_widgets.float ~type':"number" recording.total_time [] in
   let total_time =
-    Brr_lwd.Elwd.div [ `P (Brr.El.txt' "Total_duration: "); `R total_time ]
+    Brr_lwd.Elwd.div [ `P (Brr.El.txt' "Total duration: "); `R total_time ]
   in
   Brr_lwd.Elwd.div [ `R total_time ]
 

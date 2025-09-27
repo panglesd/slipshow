@@ -27,7 +27,42 @@ module Recording = struct
   let current = Lwd.var None
 
   let set_current c =
-    Lwd.set current (Option.map State_conversion.record_of_record c)
+    match c with
+    | None as c -> Lwd.set current c
+    | Some record_to_add -> (
+        match Lwd.peek current with
+        | None ->
+            let record = State_conversion.record_of_record record_to_add in
+            let total_time_recorded = Lwd.peek record.total_time in
+            Lwd.set current (Some record);
+            Lwd.set time total_time_recorded;
+            Drawing.Event.clear ()
+        | Some current_recording ->
+            let record_to_add =
+              State_conversion.record_of_record record_to_add
+            in
+            let total_time_recorded = Lwd.peek record_to_add.total_time in
+            Lwd.set current_recording.total_time
+              (Lwd.peek current_recording.total_time +. total_time_recorded);
+            Lwd_table.iter
+              (fun s ->
+                let path_var = s.path in
+                let path = Lwd.peek path_var in
+                Lwd.set path_var
+                  (Path_editing.add_time path (Lwd.peek time)
+                     total_time_recorded))
+              current_recording.strokes;
+            Lwd_table.iter
+              (fun s ->
+                let path_var = s.path in
+                let path = Lwd.peek path_var in
+                Lwd.set path_var (Path_editing.translate path (Lwd.peek time)))
+              record_to_add.strokes;
+            Lwd_table.iter
+              (fun s -> Lwd_table.append' current_recording.strokes s)
+              record_to_add.strokes;
+            Lwd.set time (Lwd.peek time +. total_time_recorded);
+            Drawing.Event.clear ())
 
   let peek_current () = Lwd.peek current
   let current = Lwd.get current
