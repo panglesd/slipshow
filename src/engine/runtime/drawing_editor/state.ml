@@ -79,3 +79,24 @@ module Track = struct
       recording
     |> Lwd.join
 end
+
+let play () =
+  let record = Recording.peek_current () in
+  match record with
+  | None -> ()
+  | Some recording ->
+      Lwd.set is_playing true;
+      let now () = Brr.Performance.now_ms Brr.G.performance in
+      let max = Lwd.peek recording.total_time in
+      let start_time = now () -. Lwd.peek time in
+      let rec loop _ =
+        let now = now () -. start_time in
+        Lwd.set time now;
+        if now <= max && Lwd.peek is_playing then
+          let _animation_frame_id = Brr.G.request_animation_frame loop in
+          ()
+        else Lwd.set is_playing false
+      in
+      loop 0.
+
+let stop () = Lwd.set is_playing false

@@ -102,7 +102,7 @@ let options_of stroke width =
     | Highlighter, Medium -> 38.
     | Highlighter, Large -> 48.
   in
-  Perfect_freehand.Options.v ~thinning:0.3 ~smoothing:0.5 ~size ~streamline:0.05
+  Perfect_freehand.Options.v ~thinning:0.5 ~smoothing:0.5 ~size ~streamline:0.5
     ~last:false ()
 
 let start_shape id ({ State.tool; _ } as state) coord =

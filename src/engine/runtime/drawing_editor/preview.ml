@@ -1,20 +1,59 @@
 open State_types
 open Lwd_infix
 
+let move_handler stroke =
+  let has_moved = ref false in
+  let click_handler =
+    Brr_lwd.Elwd.handler Brr.Ev.click (fun _ ->
+        if !has_moved then () else Lwd.update not stroke.selected)
+  in
+  let mouse_move x y path =
+   fun ev ->
+    has_moved := true;
+    let ev = Brr.Ev.as_type ev in
+    let x' = Brr.Ev.Mouse.client_x ev in
+    let dx = x' -. x in
+    let y' = Brr.Ev.Mouse.client_y ev in
+    let dy = y' -. y in
+    let new_path = Path_editing.translate_space path dx dy in
+    Lwd.set stroke.path new_path
+  in
+  let move_handler =
+    Brr_lwd.Elwd.handler Brr.Ev.mousedown (fun ev ->
+        Brr.Ev.prevent_default ev;
+        has_moved := false;
+        let path = Lwd.peek stroke.path in
+        let ev = Brr.Ev.as_type ev in
+        let x = Brr.Ev.Mouse.client_x ev in
+        let y = Brr.Ev.Mouse.client_y ev in
+        let id =
+          Brr.Ev.listen Brr.Ev.mousemove (mouse_move x y path)
+            (Brr.Document.body Brr.G.document |> Brr.El.as_target)
+        in
+        let opts = Brr.Ev.listen_opts ~once:true () in
+        let _id =
+          Brr.Ev.listen ~opts Brr.Ev.mouseup
+            (fun _ -> Brr.Ev.unlisten id)
+            (Brr.Document.body Brr.G.document |> Brr.El.as_target)
+        in
+        ())
+  in
+  [ `P click_handler; `P move_handler ]
+
 let create_elem_of_stroke ~elapsed_time
-    {
-      options;
-      scale;
-      color;
-      opacity;
-      id;
-      path;
-      end_at;
-      starts_at = _;
-      selected;
-      preselected;
-      track = _;
-    } =
+    ({
+       options;
+       scale;
+       color;
+       opacity;
+       id;
+       path;
+       end_at;
+       starts_at = _;
+       selected;
+       preselected;
+       track = _;
+     } as stroke) =
   let at =
     let d =
       let$* end_at = end_at in
@@ -73,7 +112,8 @@ let create_elem_of_stroke ~elapsed_time
     in
     [ `R fill; `P id; `P style; `R opacity; `R d; `S selected ]
   in
-  Brr_lwd.Elwd.v ~ns:`SVG ~at (Jstr.v "path") []
+  let ev = move_handler stroke in
+  Brr_lwd.Elwd.v ~ns:`SVG ~at ~ev (Jstr.v "path") []
 
 let draw_until ~elapsed_time (record : t) =
   Lwd_table.map_reduce

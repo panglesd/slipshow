@@ -1,5 +1,11 @@
 let record = ref None
 
+module State = struct
+  type mode = Normal | Drawing_editing
+
+  let mode = ref Normal
+end
+
 let keyboard_setup (window : Universe.Window.t) =
   let target = Brr.Window.as_target Brr.G.window in
   let callback ev =
@@ -36,6 +42,12 @@ let keyboard_setup (window : Universe.Window.t) =
         in
         check active_elem
       in
+      let check_mode f =
+        match !State.mode with
+        | Drawing_editing -> Drawing_editor.Controller.handle ev
+        | Normal -> f ()
+      in
+      check_mode @@ fun () ->
       check_modif_key Brr.Ev.Keyboard.ctrl_key @@ fun () ->
       check_modif_key Brr.Ev.Keyboard.meta_key @@ fun () ->
       check_textarea @@ fun () ->
@@ -110,6 +122,8 @@ let keyboard_setup (window : Universe.Window.t) =
           Brr.Console.(log [ "Starting to record" ]);
           Drawing.Action.Record.start_record ()
       | "R" -> (
+          State.mode := Drawing_editing;
+          (* TODO: we don't need this ref anymore since "p" shortcut was only for testing purpose *)
           record := Drawing.Action.Record.stop_record ();
           Drawing_editor.set_record !record;
           Brr.Console.(log [ "NOW"; "Saving record"; !record ]);
@@ -118,13 +132,13 @@ let keyboard_setup (window : Universe.Window.t) =
           | Some r ->
               Brr.Console.(
                 log [ "record is"; Drawing.Action.Record.to_string r ]))
-      | "p" -> (
-          match !record with
-          | None -> Brr.Console.(log [ "No record to replay" ])
-          | Some record ->
-              Brr.Console.(log [ "Replaying" ]);
-              let _ = Drawing.Action.Replay.replay ~speedup:2. record in
-              ())
+      (* | "p" -> ( *)
+      (*     match !record with *)
+      (*     | None -> Brr.Console.(log [ "No record to replay" ]) *)
+      (*     | Some record -> *)
+      (*         Brr.Console.(log [ "Replaying" ]); *)
+      (*         let _ = Drawing.Action.Replay.replay ~speedup:2. record in *)
+      (*         ()) *)
       | _ -> ()
     in
     Brr.Console.(log [ key ]);

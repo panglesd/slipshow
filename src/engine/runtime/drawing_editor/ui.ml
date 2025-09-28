@@ -237,30 +237,15 @@ let block_of_stroke recording (stroke : stro) =
   let ev = `R move_handler :: `P click_handler :: ev_hover in
   Brr_lwd.Elwd.div ~ev ~st []
 
-let play (recording : t) =
-  Lwd.set State.is_playing true;
-  let now () = Brr.Performance.now_ms Brr.G.performance in
-  let max = Lwd.peek recording.total_time in
-  let start_time = now () -. Lwd.peek State.time in
-  let rec loop _ =
-    let now = now () -. start_time in
-    Lwd.set State.time now;
-    if now <= max && Lwd.peek State.is_playing then
-      let _animation_frame_id = Brr.G.request_animation_frame loop in
-      ()
-    else Lwd.set State.is_playing false
-  in
-  loop 0.
-
-let stop () = Lwd.set State.is_playing false
-
 let play_panel recording =
   let$* is_playing = Lwd.get State.is_playing in
   if is_playing then
-    let click = Brr_lwd.Elwd.handler Brr.Ev.click (fun _ -> stop ()) in
+    let click = Brr_lwd.Elwd.handler Brr.Ev.click (fun _ -> State.stop ()) in
     Brr_lwd.Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Pause") ]
   else
-    let click = Brr_lwd.Elwd.handler Brr.Ev.click (fun _ -> play recording) in
+    let click =
+      Brr_lwd.Elwd.handler Brr.Ev.click (fun _ -> State.play recording)
+    in
     Brr_lwd.Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Play") ]
 
 let el (recording : t) =
@@ -306,7 +291,7 @@ let el (recording : t) =
       ~st:[ `P (!!"flex-grow", !!"1") ]
       [
         `R ti;
-        `R (play_panel recording);
+        `R (play_panel ());
         `R (slider recording);
         `R strokes;
         `R (left_selection recording);
