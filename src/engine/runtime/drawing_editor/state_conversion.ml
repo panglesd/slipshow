@@ -36,6 +36,7 @@ let record_of_record (evs : Drawing.Action.Record.t) : t =
       options;
       selected;
       preselected;
+      track = Lwd.var 0;
     }
   in
   let strokes =
@@ -74,6 +75,7 @@ let record_to_record (evs : t) =
            options;
            selected = _;
            preselected = _;
+           track = _;
          } ->
       let { size; thinning; smoothing; streamline } = options in
       let color = Lwd.peek color in

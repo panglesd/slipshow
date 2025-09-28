@@ -44,8 +44,10 @@ module Recording = struct
             let total_time_recorded = Lwd.peek record_to_add.total_time in
             Lwd.set current_recording.total_time
               (Lwd.peek current_recording.total_time +. total_time_recorded);
+            let max_track = ref (-1) in
             Lwd_table.iter
               (fun s ->
+                max_track := Int.max !max_track (Lwd.peek s.track);
                 let path_var = s.path in
                 let path = Lwd.peek path_var in
                 Lwd.set path_var
@@ -54,6 +56,7 @@ module Recording = struct
               current_recording.strokes;
             Lwd_table.iter
               (fun s ->
+                Lwd.set s.track (!max_track + 1);
                 let path_var = s.path in
                 let path = Lwd.peek path_var in
                 Lwd.set path_var (Path_editing.translate path (Lwd.peek time)))
@@ -66,4 +69,13 @@ module Recording = struct
 
   let peek_current () = Lwd.peek current
   let current = Lwd.get current
+end
+
+module Track = struct
+  let n_track recording =
+    Lwd_table.map_reduce
+      (fun _ (s : stro) -> Lwd.get s.track)
+      (Lwd.pure 0, Lwd.map2 ~f:Int.max)
+      recording
+    |> Lwd.join
 end

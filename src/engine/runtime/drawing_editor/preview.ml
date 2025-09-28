@@ -13,6 +13,7 @@ let create_elem_of_stroke ~elapsed_time
       starts_at = _;
       selected;
       preselected;
+      track = _;
     } =
   let at =
     let d =

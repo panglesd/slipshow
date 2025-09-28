@@ -10,7 +10,7 @@ let change_path path time1 time2 new_duration =
 let translate path t0 = List.map (fun (pos, time) -> (pos, time +. t0)) path
 
 let add_time path from amount =
-  List.map
-    (fun ((pos, time) as s) ->
-      if time <= from then s else (pos, time +. amount))
-    path
+  match List.rev path with
+  | (_, time) :: _ when time > from ->
+      List.map (fun (pos, time) -> (pos, time +. amount)) path
+  | _ -> path

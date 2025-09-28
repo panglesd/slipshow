@@ -146,6 +146,13 @@ let block_of_stroke recording (stroke : stro) =
     let right = Jstr.append (Jstr.of_float right) !!"%" in
     (Brr.El.Style.right, right)
   in
+  let stroke_height = 20 in
+  let px_int x = Jstr.append (Jstr.of_int x) !!"px" in
+  let top =
+    let$ track = Lwd.get stroke.track in
+    let top = px_int (track * stroke_height) in
+    (Brr.El.Style.top, top)
+  in
   let color =
     let$ color = Lwd.get stroke.color in
     let color = color |> Drawing.Color.to_string |> ( !! ) in
@@ -156,10 +163,12 @@ let block_of_stroke recording (stroke : stro) =
     let$ preselected = State.is_preselected stroke in
     let l =
       if selected then
-        [ (Brr.El.Style.height, !!"40px"); (!!"border", !!"5px solid black") ]
+        let height = px_int (stroke_height - 10) in
+        [ (Brr.El.Style.height, height); (!!"border", !!"5px solid black") ]
       else if preselected then
-        [ (Brr.El.Style.height, !!"40px"); (!!"border", !!"5px solid grey") ]
-      else [ (Brr.El.Style.height, !!"50px") ]
+        let height = px_int (stroke_height - 10) in
+        [ (Brr.El.Style.height, height); (!!"border", !!"5px solid grey") ]
+      else [ (Brr.El.Style.height, px_int stroke_height) ]
     in
     Lwd_seq.of_list ((!!"min-width", !!"1px") :: l)
   in
@@ -168,6 +177,7 @@ let block_of_stroke recording (stroke : stro) =
       `P (Brr.El.Style.cursor, !!"pointer");
       `R left;
       `R right;
+      `R top;
       `S selected;
       `P (Brr.El.Style.position, !!"absolute");
       `R color;
@@ -181,7 +191,7 @@ let block_of_stroke recording (stroke : stro) =
   in
   let move_handler =
     let$ total_length = total_length recording in
-    let mouse_move x parent path =
+    let mouse_move x y parent path track =
       let width_in_pixel = Brr.El.bound_w parent in
       let scale = total_length /. width_in_pixel in
       let end_ = List.hd path |> snd in
@@ -189,8 +199,12 @@ let block_of_stroke recording (stroke : stro) =
       fun ev ->
         has_moved := true;
         let ev = Brr.Ev.as_type ev in
-        let y = Brr.Ev.Mouse.client_x ev in
-        let translation = scale *. (y -. x) in
+        let x' = Brr.Ev.Mouse.client_x ev in
+        let y' = Brr.Ev.Mouse.client_y ev in
+        let translation = scale *. (x' -. x) in
+        let y_change = (y' -. y) /. float_of_int 20 |> int_of_float in
+        let new_track = Int.max 0 (track + y_change) in
+        Lwd.set stroke.track new_track;
         let translation = Float.min translation (total_length -. end_) in
         let translation = Float.max translation (0. -. start) in
         let new_path = Path_editing.translate path translation in
@@ -206,8 +220,10 @@ let block_of_stroke recording (stroke : stro) =
         in
         let ev = Brr.Ev.as_type ev in
         let x = Brr.Ev.Mouse.client_x ev in
+        let y = Brr.Ev.Mouse.client_y ev in
         let id =
-          Brr.Ev.listen Brr.Ev.mousemove (mouse_move x parent path)
+          Brr.Ev.listen Brr.Ev.mousemove
+            (mouse_move x y parent path (Lwd.peek stroke.track))
             (Brr.Document.body Brr.G.document |> Brr.El.as_target)
         in
         let opts = Brr.Ev.listen_opts ~once:true () in
@@ -276,10 +292,12 @@ let el (recording : t) =
   in
   let strokes =
     let st =
-      [
-        `P (Brr.El.Style.position, !!"relative");
-        `P (Brr.El.Style.height, !!"50px");
-      ]
+      let height =
+        let$ n_track = State.Track.n_track recording.strokes in
+        ( Brr.El.Style.height,
+          Jstr.append (Jstr.of_int ((n_track + 1) * 20)) !!"px" )
+      in
+      [ `P (Brr.El.Style.position, !!"relative"); `R height ]
     in
     Brr_lwd.Elwd.div ~st [ `S strokes ]
   in

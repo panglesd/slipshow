@@ -17,6 +17,7 @@ type stro = {
   options : pfo;
   selected : bool Lwd.var;
   preselected : bool Lwd.var;
+  track : int Lwd.var;
 }
 
 type t = { strokes : stro Lwd_table.t; total_time : float Lwd.var }
