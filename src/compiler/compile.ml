@@ -522,6 +522,11 @@ module Stage3 = struct
             | Ast.Div ((Block.Blocks (l, _), _), _) -> l
             | _ -> [ block ]
           in
+          let children =
+            List.filter_map
+              (function Block.Blank_line _ -> None | x -> Some x)
+              children
+          in
           Mapper.ret @@ Ast.Carousel ((children, attrs), Meta.none)
       | Some _ -> Mapper.default
     in

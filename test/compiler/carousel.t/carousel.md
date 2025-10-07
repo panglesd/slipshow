@@ -3,11 +3,7 @@
 {carousel #id}
 > First
 >
-> ---
->
 > Second
->
-> ---
 >
 > Third
 
