@@ -16,6 +16,7 @@
 - Hide paused/unrevealed elems also for mouse (#150)
 - Don't execute scripts when computing toc (#150)
 - Mute medias in speaker view (#152)
+- Fix order of execution of actions (`center` after `enter`) (#171)
 
 ## [v0.6.0] The King's Slipshow (Monday 18th August, 2025)
 
