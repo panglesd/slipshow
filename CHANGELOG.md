@@ -8,6 +8,7 @@
 - Fix missing favicon (which was missing since speaker view) (#150)
 - Fix changing step number from speaker note does not update serve mode state
   (#154)
+- Fix blank lines considered as elements in carousel (#170)
 
 ## Engine
 
