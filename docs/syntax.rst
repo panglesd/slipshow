@@ -379,17 +379,22 @@ Action attributes
 These attributes are actions that will be executed when a ``pause`` or ``step`` attribute attached to the same element is consumed. All of them accepts a value, consisting of the ``id`` of an element to apply the action to.
 
 ``down``
-  Moves the screen untils the element is at the bottom of the screen.
+  Moves the screen vertically until the element is at the bottom of the screen.
 
   Accepts ``~duration:FLOAT`` and ``margin:INT``.
 
 ``up``
-  Moves the screen untils the element is at the top of the screen.
+  Moves the screen vertically until the element is at the top of the screen.
 
   Accepts ``~duration:FLOAT`` and ``margin:INT``.
 
 ``center``
-  Moves the screen untils the element is centered.
+  Moves the screen vertically until the element is centered.
+
+  Accepts ``~duration:FLOAT`` and ``margin:INT``.
+
+``scroll``
+  Moves the screen vertically until the element is entirely visible on screen, if possible.
 
   Accepts ``~duration:FLOAT`` and ``margin:INT``.
 
