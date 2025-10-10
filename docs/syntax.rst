@@ -416,12 +416,12 @@ These attributes are actions that will be executed when a ``pause`` or ``step`` 
 ``play-media``
   Play the media (audio or video). The associated element/target id(s) need to be a video element: a ``![](path)`` where path is recognized as a video or audio. Possible to specify multiple ids.
 
-  Pay attention that browsers will prevent the playing if they consider that the user has not "interacted" with the page yet, in an effort to forbid spam "autoplay" of medias. Interact with the page (eg by clicking anywhere on it) to make sure it'll work.
+  Pay attention that browsers will prevent the playing if they consider that the user has not "interacted" with the page yet, in an effort to forbid spam "autoplay" of medias. Interact with the page (e.g. by clicking anywhere on it) to make sure it'll work.
 
 ``change-page``
   Changes the current page of a carousel or pdf. Takes as input the id of the carousel/pdf.
 
-  Also takes a ``~n:"<pages>"`` argument, which allows to specify the list of pages changes to do, by absolute number (eg ``4``), relative number (eg ``+1``, ``-2``), range (``3-10`` or ``5-3``), or ``all`` which displays one by one the page until completion. Default for ``~n`` is ``+1``.
+  Also takes a ``~n:"<pages>"`` argument, which allows to specify the list of pages changes to do, by absolute number (e.g. ``4``), relative number (e.g. ``+1``, ``-2``), range (``3-10`` or ``5-3``), or ``all`` which displays one by one the page until completion. Default for ``~n`` is ``+1``.
 
   For instance, ``{change-page='~n:"2-4 6-4 7 -1 +2 all"}`` will change pages to ``2``, ``3``, ``4``, ``6``, ``5``, ``4``, ``7``, ``6``, ``8`` and then all further pages that the pdf/carousel contains. It will always initially start with page 1.
 
@@ -478,7 +478,7 @@ the ``slip.onUndo`` function to register callbacks to be run on undo.
 
 Using ``slip.onUndo`` inside an undo callback should not be a problem. (Actually, it might be recommended.)
 
-Slipshow provides a few utils function, using the callback mechanism just desribed.
+Slipshow provides a few utils function, using the callback mechanism just described.
 
 You can use ``slip.setStyle(elem, style, value)`` where ``elem`` is an element, and ``style`` and ``value`` a string to set a style and register an undo callback.
 
@@ -506,7 +506,7 @@ Note that if an API above accepts multiple IDs (as ``unstatic`` for instance), t
                 slip.unstatic(elems);
 		```
 
-The expression ``slip.isFast()`` tells whether we are "running fast" (eg when going to a specific starting state) or not.
+The expression ``slip.isFast()`` tells whether we are "running fast" (e.g. when going to a specific starting state) or not.
 
 Finally, the ``slip.state`` object is persisted between scripts. (Other functions are specific to a script. This might change in the future, but ``slip.state`` is safe to use).
 

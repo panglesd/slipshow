@@ -39,7 +39,7 @@ Creating a theme consists in writing a CSS file.
 
 Each theme can define any CSS rule. Once Slipshow is more stable, it will provide a list of classes with their meaning, that is guaranteed not to change (even if the engine change).
 
-Currently, the layouts may still slightly change, necessiting updates in the themes. However, these changes won't happen frequently, and will likely be easy to update!
+Currently, the layouts may still slightly change, necessitating updates in the themes. However, these changes won't happen frequently, and will likely be easy to update!
 
 Here are some classes that may be of interest for a theme writer:
 
