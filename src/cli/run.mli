@@ -14,6 +14,7 @@ val serve :
   input:Fpath.t ->
   output:Fpath.t ->
   cli_frontmatter:Slipshow.Frontmatter.unresolved Slipshow.Frontmatter.t ->
+  port:int ->
   (unit, [ `Msg of string ]) result
 
 val markdown_compile :

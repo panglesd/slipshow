@@ -66,7 +66,7 @@ let watch ~input ~output ~cli_frontmatter =
   in
   Slipshow_server.do_watch compile
 
-let serve ~input ~output ~cli_frontmatter =
+let serve ~input ~output ~cli_frontmatter ~port =
   let compile () =
     let asset_files, to_asset =
       let used_files, read_file = read_file (Fpath.v "./") () in
@@ -88,7 +88,7 @@ let serve ~input ~output ~cli_frontmatter =
         (Fpath.normalize (Fpath.( // ) (Fpath.v (Sys.getcwd ())) input))
         all_used_files )
   in
-  Slipshow_server.do_serve compile
+  Slipshow_server.do_serve ~port compile
 
 let markdown_compile ~input ~output =
   let* content = Io.read input in
