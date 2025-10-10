@@ -6,7 +6,7 @@ interested in trying out slipshow before deciding to install it (or not), you
 can use the `sliphub editor <https://sliphub.choum.net/new>`_: it requires no installation
 on your computer, nor to create any account!
 
-If you do want to use slipshow, we recommand completing the
+If you do want to use slipshow, we recommend completing the
 :ref:`getting-started` part of the document.
 
 .. contents:: Outline of the tutorial
@@ -254,7 +254,7 @@ proof, feel free to improve it 🙂.)
    > **Therefore, there must exists infinitely many prime numbers.**
 
 Let's look at the updated rendering of the presentation: What you see is quite
-disapointing. There is too many content for the space available, and the last
+disappointing. There is too many content for the space available, and the last
 part of the proof overflows and is invisible. Most presentations would solve
 this problem by creating a new slide, but slipshow does it very differently,
 which is what makes it unique!
@@ -464,7 +464,7 @@ impressed at how scientific popularization video can make very difficult
 concepts much easier to understand, and also much more fun to learn. There is no
 point in not using this in our presentations!
 
-Altough slipshow itself does not provide any support for defining animations, it
+Although slipshow itself does not provide any support for defining animations, it
 allows you to embed a video, or use any javascript library. For a scripted start
 and stepping of your animation, you can use the ``exec`` attribute,
 combined with the special ``slip-script`` codeblock!
