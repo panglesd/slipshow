@@ -1100,22 +1100,11 @@ module Block : sig
   (** Headings. *)
   module Heading : sig
 
-    type atx_layout =
+    type layout =
       { indent : Layout.indent; (** Indent to ['#']. *)
         after_opening : Layout.blanks; (** Blanks after ['#']. *)
         closing : Layout.string; (** Closing sequence of ['#'] and blanks. *) }
     (** The type for ATX heading layout. *)
-
-    type setext_layout =
-      { leading_indent : Layout.indent; (** Of heading first line. *)
-        trailing_blanks : Layout.blanks; (** Of heading last line. *)
-        underline_indent : Layout.indent; (** Indentation of underline. *)
-        underline_count : Layout.count node; (** Underline char count. *)
-        underline_blanks : Layout.blanks; (** Underline trailing blanks. *) }
-    (** The type for setext heading layout. *)
-
-    type layout = [ `Atx of atx_layout | `Setext of setext_layout ]
-    (** The type for heading layouts. *)
 
     type id =
     [ `Auto of string (** Automatically derived. *)
@@ -1125,8 +1114,7 @@ module Block : sig
 
     type t
     (** The type for {{:https://spec.commonmark.org/0.30/#atx-headings}
-        ATX} and {{:https://spec.commonmark.org/0.30/#setext-headings}Setext}
-        headings. *)
+        ATX} headings. *)
 
     val make : ?id:id -> ?layout:layout -> level:int -> Inline.t -> t
     (** [make ~level text] is a heading with given
