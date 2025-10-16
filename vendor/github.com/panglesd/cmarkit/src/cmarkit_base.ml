@@ -1084,7 +1084,6 @@ type line_type =
 | Indented_code_block_line
 | List_marker_line of ([ `Ordered of int * char | `Unordered of char ] * last)
 | Paragraph_line
-| Setext_underline_line of heading_level * last
 | Thematic_break_line of last
 | Ext_table_row of last
 | Ext_footnote_label of rev_spans * last * string
@@ -1146,22 +1145,6 @@ let atx_heading s ~last ~start =
   in
   if start > last || s.[start] <> '#' then Nomatch else
   level s last 1 (start + 1)
-
-let setext_heading_underline s ~last ~start =
-  (* https://spec.commonmark.org/current/#setext-heading *)
-  let level c = if c = '=' then 1 else 2 in
-  let rec underline s last start k =
-    if k > last then Setext_underline_line (level s.[start], k - 1) else
-    if s.[k] = s.[start] then underline s last start (k + 1) else
-    if not (s.[k] = ' ' || s.[k] = '\t') then Nomatch else
-    let end_blank = first_non_blank s ~last ~start:(k + 1) in
-    if end_blank > last
-    then Setext_underline_line (level s.[start], k - 1)
-    else Nomatch
-  in
-  if start > last then Nomatch else
-  if not (s.[start] = '-' || s.[start] = '=') then Nomatch else
-  underline s last start (start + 1)
 
 let fenced_code_block_start s ~last ~start  =
   (* https://spec.commonmark.org/current/#code-fence *)
