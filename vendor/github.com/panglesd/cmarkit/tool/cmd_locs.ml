@@ -168,15 +168,9 @@ and block ~indent:n ppf = function
 | Block.Heading ((h, _), m) ->
     let level = Block.Heading.level h in
     let heading = "Heading, level " ^ Int.to_string level in
-    let setext_underline ppf h = match Block.Heading.layout h with
-    | `Atx _ -> () | `Setext st ->
-        cut ppf ();
-        loc "Setext underline" ~indent:(n + 2) ppf (snd st.underline_count)
-    in
     let i = Block.Heading.inline h in
-    pf ppf "@[<v>%a@,%a%a@]"
+    pf ppf "@[<v>%a@,%a@]"
       (loc heading ~indent:n) m (inline ~indent:(n + 2)) i
-      setext_underline h
 | Block.Html_block ((lines, _), m) ->
     pf ppf "@[<v>%a@,%a@]"
       (loc "HTML block" ~indent:n) m

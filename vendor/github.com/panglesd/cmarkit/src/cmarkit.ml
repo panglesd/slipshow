@@ -639,26 +639,18 @@ module Block = struct
   end
 
   module Heading = struct
-    type atx_layout =
+    type layout =
       { indent : Layout.indent;
         after_opening : Layout.blanks;
         closing : Layout.string; }
 
     let default_atx_layout = { indent = 0; after_opening = ""; closing = "" }
 
-    type setext_layout =
-      { leading_indent : Layout.indent;
-        trailing_blanks : Layout.blanks;
-        underline_indent : Layout.indent;
-        underline_count : Layout.count node;
-        underline_blanks : Layout.blanks; }
-
-    type layout = [ `Atx of atx_layout | `Setext of setext_layout ]
     type id = [ `Auto of string | `Id of string ] (* TODO: fix this. Id should be in attribute ? or here *)
     type t = { layout : layout; level : int; inline : Inline.t; id : id option }
 
-    let make ?id ?(layout = `Atx default_atx_layout) ~level inline =
-      let max = match layout with `Atx _ -> 6 | `Setext _ -> 2 in
+    let make ?id ?(layout = default_atx_layout) ~level inline =
+      let max = 6 in
       let level = Int.max 1 (Int.min level max) in
       {layout; level; inline; id}
 
@@ -2338,13 +2330,7 @@ module Block_struct = struct
       heading : line_span;
       layout_after : line_span }
 
-  type setext =
-    { level : Match.heading_level;
-      heading_lines : line_span list;
-      underline : (* Indent, underline char count, blanks *)
-        Layout.indent * line_span * line_span; }
-
-  type heading = [ `Atx of atx | `Setext of setext ]
+  type heading = [ `Atx of atx ]
 
   type html_block =
     { end_cond : Match.html_block_end_cond option;
@@ -2415,15 +2401,6 @@ module Block_struct = struct
       current_line_span p ~first ~last
     in
     Heading ((`Atx { indent; level; after_open; heading; layout_after }), attrs)
-
-  let setext_heading p ~indent ~level ~last_underline heading_lines attrs =
-    let u = current_line_span p ~first:p.current_char ~last:last_underline in
-    let blanks =
-      let first = last_underline + 1 and last = p.current_line_last_char in
-      current_line_span p ~first ~last
-    in
-    let underline = indent, u, blanks in
-    Heading (`Setext {level; heading_lines; underline}, attrs)
 
   let indented_code_block p attrs = (* Has a side-effect on [p] *)
     let pad, first = accept_code_indent p ~count:4 in
@@ -2680,16 +2657,7 @@ module Block_struct = struct
       | '>' ->
           if match_and_accept_block_quote p then Match.Block_quote_line else
           Paragraph_line
-      | '=' when not no_setext ->
-          let r = Match.setext_heading_underline p.i ~last ~start in
-          if r <> Nomatch then r else
-          Paragraph_line
       | '-' ->
-          let r =
-            if no_setext then Match.Nomatch else
-            Match.setext_heading_underline p.i ~last ~start
-          in
-          if r <> Nomatch then r else
           let r = Match.thematic_break p.i ~last ~start in
           if r <> Nomatch then r else
           let r = Match.list_marker p.i ~last ~start in
@@ -2778,7 +2746,7 @@ module Block_struct = struct
   | Ext_attributes_label (rev_span, key, new_attrs, first, last) ->
      attributes_label ~indent ~last p rev_span key (new_attrs, Some (first, last)) attrs last :: bs
      (* failwith "not implemented" *)
-  | Setext_underline_line _ | Nomatch ->
+  | Nomatch ->
       (* This function should be called with a line type that comes out
          of match_line_type ~no_setext:true *)
       assert false
@@ -2912,13 +2880,6 @@ module Block_struct = struct
        Block_quote
          ((indent, add_open_blocks p empty_attrs []), empty_attrs)
        :: (close_paragraph p par attrs bs)
-    | Setext_underline_line (level, last_underline) ->
-        let bs = close_paragraph p par attrs bs in
-        begin match bs with
-        | Paragraph ({ lines; _ }, attrs) :: bs ->
-            setext_heading p ~indent ~level ~last_underline lines attrs :: bs
-        | bs -> paragraph p ~start:indent_start attrs :: bs
-        end
     | Thematic_break_line last ->
         thematic_break p ~indent ~last empty_attrs
         :: (close_paragraph p par attrs bs)
@@ -3238,7 +3199,7 @@ let block_struct_to_heading p attrs = function
       layout_clean_raw_span' p { heading with first; last }
     in
     let closing = layout_clean_raw_span' p layout_after in
-    let layout = `Atx { Block.Heading.indent; after_opening; closing } in
+    let layout = { Block.Heading.indent; after_opening; closing } in
     let meta =
       meta p (textloc_of_span p { heading with first = after_open - level })
     in
@@ -3249,29 +3210,6 @@ let block_struct_to_heading p attrs = function
     in
     let attrs = block_struct_to_attr p attrs in
     Block.Heading (({layout; level; inline; id}, attrs), meta)
-| `Setext { Block_struct.level; heading_lines; underline } ->
-    let (leading_indent, trailing_blanks), inline =
-      Inline_struct.parse p heading_lines
-    in
-    let underline_indent, u, blanks = underline in
-    let underline_blanks = layout_clean_raw_span' p blanks in
-    let underline_count = u.last - u.first + 1, meta p (textloc_of_span p u) in
-    let layout =
-      { Block.Heading.leading_indent; trailing_blanks; underline_indent;
-        underline_count; underline_blanks }
-    in
-    let meta =
-      let last_line = u.line_pos and last_byte = u.last in
-      let start = Meta.textloc (Inline.meta inline) in
-      meta p (Textloc.set_last start ~last_byte ~last_line)
-    in
-    let id = match p.heading_auto_ids with
-    | false -> None
-    | true -> Some (`Auto (Inline.id ~buf:p.buf inline))
-    in
-    let attrs = block_struct_to_attr p attrs in
-    Block.Heading
-      (({ layout = `Setext layout; level; inline; id }, attrs), meta)
 
 let block_struct_to_html_block p attrs (b : Block_struct.html_block) =
   let last = List.hd b.html in

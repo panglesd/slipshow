@@ -10,6 +10,7 @@
   (#154)
 - Fix blank lines considered as elements in carousel (#170)
 - Allow to specify port in `slipshow serve` with `-p` or `--port` (#176)
+- Remove support for Setext headings (#178)
 
 ## Engine
 

@@ -374,7 +374,7 @@ let heading c h attrs =
   attributes c attrs;
   newline c; indent c;
   match (Block.Heading.layout h) with
-  | `Atx { indent; after_opening; closing } ->
+  | { indent; after_opening; closing } ->
       let inline = Block.Heading.inline h in
       nchars c indent ' ';
       nchars c (Block.Heading.level h) '#';
@@ -382,15 +382,6 @@ let heading c h attrs =
        then C.byte c ' ' else C.string c after_opening);
       C.inline c inline;
       C.string c closing
-  | `Setext l ->
-      let u = match Block.Heading.level h with 1 -> '=' | 2 -> '-' | _ -> '-' in
-      nchars c l.leading_indent ' ';
-      C.inline c (Block.Heading.inline h);
-      C.string c l.trailing_blanks;
-      newline c; indent c;
-      nchars c l.underline_indent ' ';
-      nchars c (fst l.underline_count) u;
-      C.string c l.underline_blanks
 
 let html_block c h attrs =
   attributes c attrs; newline c; indent c; block_lines c h
