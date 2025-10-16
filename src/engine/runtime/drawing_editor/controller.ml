@@ -15,9 +15,13 @@ let handle ev =
   match key with
   | "ArrowLeft" ->
       let new_time = Float.max 0. (Lwd.peek State.time -. 100.) in
-      Lwd.set State.time new_time
+      Lwd.set State.time new_time;
+      true
   | "ArrowRight" ->
       let new_time = Float.min (total_time ()) (Lwd.peek State.time +. 100.) in
-      Lwd.set State.time new_time
-  | " " -> if Lwd.peek State.is_playing then State.stop () else State.play ()
-  | _ -> ()
+      Lwd.set State.time new_time;
+      true
+  | " " ->
+      if Lwd.peek State.is_playing then State.stop () else State.play ();
+      true
+  | _ -> false

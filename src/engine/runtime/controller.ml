@@ -42,10 +42,13 @@ let keyboard_setup (window : Universe.Window.t) =
         in
         check active_elem
       in
+      let try_handle handler k =
+        match handler ev with true -> () | false -> k ()
+      in
       let check_mode f =
         match !State.mode with
-        | Drawing_editing -> Drawing_editor.Controller.handle ev
         | Normal -> f ()
+        | Drawing_editing -> try_handle Drawing_editor.Controller.handle f
       in
       check_mode @@ fun () ->
       check_modif_key Brr.Ev.Keyboard.ctrl_key @@ fun () ->
