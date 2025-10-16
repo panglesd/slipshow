@@ -72,7 +72,7 @@ let go_next window n =
       match Action_scheduler.next window () with
       | None -> Fut.return ()
       | Some undos ->
-          let* (), undos = undos in
+          let* (), undos = undos () in
           Stack.push undos all_undos;
           loop (n - 1)
   in

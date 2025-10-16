@@ -53,7 +53,7 @@ let entry_action window step =
   in
   el
 
-open Undoable.Syntax
+(* open Undoable.Syntax *)
 open Fut.Syntax
 
 let generate window root =
@@ -71,10 +71,11 @@ let generate window root =
         loop undo entries step res
     | `Action a :: res ->
         if Step.Action_scheduler.is_action a then
-          let* res = Step.Action_scheduler.AttributeActions.do_ window a in
+          let* res = Step.Action_scheduler.AttributeActions.do_ window a () in
           let undo =
-            let> () = undo in
-            Fut.return res
+            (* let> () = undo in *)
+            (* Fut.return res *)
+            snd res :: undo
           in
           let step = step + 1 in
           let entries = entry_action window step :: entries in
@@ -84,10 +85,16 @@ let generate window root =
   in
   let* undo, entries =
     Fast.with_counting @@ fun () ->
-    loop (Undoable.return ()) [] 0 categorized_els
+    loop [] (* (Undoable.return ()) *) [] 0 categorized_els
   in
-  let* (), undo = undo in
-  let+ () = undo () in
+  (* let* (), undo = undo in *)
+  let+ () =
+    List.fold_left
+      (fun acc undo ->
+        let* () = acc in
+        undo ())
+      (Fut.return ()) undo
+  in
   let els = entry_action window 0 :: entries in
   let toc_el = Brr.El.div ~at:[ Brr.At.id !!"slipshow-toc" ] els in
   Brr.El.append_children (Brr.Document.body Brr.G.document) [ toc_el ];

@@ -1,5 +1,6 @@
 type undo = unit -> unit Fut.t
-type 'a t = ('a * undo) Fut.t
+type 'a undoable = ('a * undo) Fut.t
+type 'a t = unit -> 'a undoable
 
 val bind : ('a -> 'b t) -> 'a t -> 'b t
 val return : ?undo:undo -> 'a -> 'a t

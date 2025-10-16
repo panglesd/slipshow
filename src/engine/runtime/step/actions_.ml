@@ -711,7 +711,7 @@ module Play_media = struct
       | _ -> false
     in
     Undoable.List.iter
-      (fun e ->
+      (fun e () ->
         let open Fut.Syntax in
         let is_video = Jstr.equal (Jstr.v "video") @@ Brr.El.tag_name e in
         let is_audio = Jstr.equal (Jstr.v "audio") @@ Brr.El.tag_name e in
@@ -722,7 +722,7 @@ module Play_media = struct
                 "Action play-media only has effect on video and audio elements:";
                 e;
               ]);
-          Undoable.return ())
+          Undoable.return () ())
         else
           let e = Brr_io.Media.El.of_el e in
           let () = if is_speaker_note then Brr_io.Media.El.set_muted e true in
@@ -746,7 +746,7 @@ module Play_media = struct
               Brr_io.Media.El.play e)
           in
           log_error res;
-          Undoable.return ~undo ())
+          Undoable.return ~undo () ())
       elems
 
   let setup = None

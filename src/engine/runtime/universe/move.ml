@@ -9,13 +9,13 @@ open struct
   module Console = Brr.Console
 end
 
-let move window target ~duration =
+let move window target ~duration () =
   let old_coordinate = State.get_coord () in
   let+ () = move_pure window target ~duration in
   let undo () = move_pure window old_coordinate ~duration in
   ((), undo)
 
-let move_relative ?(x = 0.) ?(y = 0.) ?(scale = 1.) window ~duration =
+let move_relative ?(x = 0.) ?(y = 0.) ?(scale = 1.) window ~duration () =
   let coord = State.get_coord () in
   let dest =
     {
@@ -24,7 +24,7 @@ let move_relative ?(x = 0.) ?(y = 0.) ?(scale = 1.) window ~duration =
       scale = coord.scale *. scale;
     }
   in
-  move window dest ~duration
+  move window dest ~duration ()
 
 let move_relative_pure ?(x = 0.) ?(y = 0.) ?(scale = 1.) window ~duration =
   move_relative ~x ~y ~scale window ~duration |> Undoable.discard

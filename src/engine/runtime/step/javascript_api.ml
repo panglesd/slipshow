@@ -26,7 +26,8 @@ let move (module X : Actions.Move) window undos_ref =
   let elem = Brr.El.of_jv elems
   and duration = Jv.to_option Jv.to_float duration
   and margin = Jv.to_option Jv.to_float margin in
-  register_undo undos_ref @@ fun () -> X.do_ window X.{ duration; margin; elem }
+  register_undo undos_ref @@ fun () ->
+  X.do_ window X.{ duration; margin; elem } ()
 
 let up = move (module Actions.Up)
 let down = move (module Actions.Down)
@@ -39,14 +40,14 @@ let focus window undos_ref =
   and duration = Jv.to_option Jv.to_float duration
   and margin = Jv.to_option Jv.to_float margin in
   register_undo undos_ref @@ fun () ->
-  Actions.Focus.do_ window { duration; margin; elems }
+  Actions.Focus.do_ window { duration; margin; elems } ()
 
-let unfocus window = one_arg (fun _ -> ()) (Actions.Unfocus.do_ window)
+let unfocus window = one_arg (fun _ -> ()) (Actions.Unfocus.do_ window ())
 
 let class_setter (module X : Actions.SetClass) window undos_ref =
   Jv.callback ~arity:1 @@ fun elems ->
   let elems = (Jv.to_list Brr.El.of_jv) elems in
-  register_undo undos_ref @@ fun () -> X.do_ window elems
+  register_undo undos_ref @@ fun () -> X.do_ window elems ()
 
 let unstatic = class_setter (module Actions.Unstatic)
 let static = class_setter (module Actions.Static)
@@ -58,21 +59,22 @@ let unemph = class_setter (module Actions.Unemph)
 let play_media window undos_ref =
   Jv.callback ~arity:1 @@ fun elems ->
   let elems = Jv.to_list Brr.El.of_jv elems in
-  register_undo undos_ref @@ fun () -> Actions.Play_media.do_ window elems
+  register_undo undos_ref @@ fun () -> Actions.Play_media.do_ window elems ()
 
 let change_page _window undos_ref =
   Jv.callback ~arity:2 @@ fun elem change ->
   let target_elem = Brr.El.of_jv elem in
   let change = Jv.to_string change in
   register_undo undos_ref @@ fun () ->
-  Actions.Change_page.parse_change change
+  (Actions.Change_page.parse_change change
   |> Undoable.Option.iter @@ fun change ->
-     Actions.Change_page.do_javascript_api ~target_elem ~change
+     Actions.Change_page.do_javascript_api ~target_elem ~change)
+  |> fun f -> f ()
 
 let on_undo =
   one_arg Fun.id @@ fun callback ->
   let undo () = Fut.return @@ ignore @@ Jv.apply callback [||] in
-  Undoable.return ~undo ()
+  Undoable.return ~undo () ()
 
 let state = Jv.obj [||]
 
@@ -82,18 +84,19 @@ let set_style undos_ref =
   and style = Jv.to_jstr style
   and value = Jv.to_jstr value in
   register_undo undos_ref @@ fun () ->
-  Undoable.Browser.set_style style value elem
+  Undoable.Browser.set_style style value elem ()
 
 let set_class undos_ref =
   Jv.callback ~arity:3 @@ fun elem class_ bool ->
   let bool = Jv.to_bool bool in
   register_undo undos_ref @@ fun () ->
-  Undoable.Browser.set_class class_ bool elem
+  Undoable.Browser.set_class class_ bool elem ()
 
 let set_prop undos_ref =
   Jv.callback ~arity:3 @@ fun obj prop value ->
   let prop = Jv.to_jstr prop in
-  register_undo undos_ref @@ fun () -> Undoable.Browser.set_prop obj prop value
+  register_undo undos_ref @@ fun () ->
+  Undoable.Browser.set_prop obj prop value ()
 
 let is_fast = Jv.callback ~arity:1 (fun _ -> Jv.of_bool @@ Fast.is_fast ())
 
