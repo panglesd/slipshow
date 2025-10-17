@@ -248,6 +248,30 @@ let play_panel recording =
     in
     Brr_lwd.Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Play") ]
 
+let save_panel recording =
+  let click =
+    Brr_lwd.Elwd.handler Brr.Ev.click (fun _ ->
+        let recording = State_conversion.record_to_record recording in
+        let s = Drawing.Action.Record.to_string recording in
+        let blob =
+          let init = Brr.Blob.init ~type':(Jstr.v "application/json") () in
+          Brr.Blob.of_jstr ~init (Jstr.v s)
+        in
+        let a = Brr.El.a [] in
+        let revoke_url =
+          let url = Jv.get Jv.global "URL" in
+          let object_url =
+            Jv.call url "createObjectURL" [| Brr.Blob.to_jv blob |]
+          in
+          Jv.set (Brr.El.to_jv a) "href" object_url;
+          fun () -> Jv.call url "revokeObjectURL" [| object_url |] |> ignore
+        in
+        Jv.set (Brr.El.to_jv a) "download" (Jv.of_string "drawing.draw");
+        Jv.call (Brr.El.to_jv a) "click" [||] |> ignore;
+        revoke_url ())
+  in
+  Brr_lwd.Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Save") ]
+
 let el (recording : t) =
   let description =
     let$* s =
@@ -292,6 +316,7 @@ let el (recording : t) =
       [
         `R ti;
         `R (play_panel ());
+        `R (save_panel recording);
         `R (slider recording);
         `R strokes;
         `R (left_selection recording);
