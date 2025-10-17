@@ -19,6 +19,9 @@
 - Don't execute scripts when computing toc (#150)
 - Mute medias in speaker view (#152)
 - Fix order of execution of actions (`center` after `enter`) (#171)
+- Fix pauses not being scoped in slides (#179)
+- Fix exiting not where it should (#179)
+- Fix `unfocus` behavior to match the docs (#179)
 
 ## [v0.6.0] The King's Slipshow (Monday 18th August, 2025)
 
