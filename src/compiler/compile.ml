@@ -450,8 +450,9 @@ module Stage2 = struct
           in
           let bs = List.map (merge_attribute new_attrs) bs in
           let bs =
-            Mapper.map_block m (Block.Blocks (bs, m_bs)) |> Option.get
-            (* No nodes are ever removed in this stage *)
+            match Mapper.map_block m (Block.Blocks (bs, m_bs)) with
+            | None -> Block.Blocks ([], m_bs)
+            | Some l -> l
           in
           Mapper.ret (Ast.Div ((bs, (attrs, m_attrs)), m_div))
       | _ -> Mapper.default
