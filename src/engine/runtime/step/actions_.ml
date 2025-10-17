@@ -582,6 +582,25 @@ module Static = SetClass (struct
 end)
 
 module Focus = struct
+  module State = struct
+    let stack = ref None
+
+    let push c =
+      match !stack with
+      | None ->
+          let undo () = Fut.return @@ (stack := None) in
+          Undoable.return ~undo (stack := Some c)
+      | Some _ -> Undoable.return ()
+
+    let pop () =
+      match !stack with
+      | None -> Undoable.return !stack
+      | Some v as ret ->
+          let undo () = Fut.return @@ (stack := Some v) in
+          stack := None;
+          Undoable.return ~undo ret
+  end
+
   type args = {
     margin : float option;
     duration : float option;
@@ -605,7 +624,7 @@ module Focus = struct
 
   let do_ window { margin; duration; elems } =
     only_if_not_fast @@ fun () ->
-    let> () = State.Focus.push (Universe.State.get_coord ()) in
+    let> () = State.push (Universe.State.get_coord ()) in
     let margin = Option.value ~default:0. margin in
     let duration = Option.value ~default:1. duration in
     Universe.Move.focus ~margin ~duration window elems
@@ -623,7 +642,7 @@ module Unfocus = struct
 
   let do_ window () =
     only_if_not_fast @@ fun () ->
-    let> coord = State.Focus.pop () in
+    let> coord = Focus.State.pop () in
     match coord with
     | None -> Undoable.return ()
     | Some coord -> Universe.Move.move window coord ~duration:1.0
