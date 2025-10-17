@@ -551,14 +551,15 @@ let exit window to_elem =
     let coord = Undoable.Stack.peek Enter.stack in
     match coord with
     | None -> Undoable.return ()
-    | Some { Enter.elem; _ } when Brr.El.contains elem ~child:to_elem ->
+    | Some { elem; _ } when Brr.El.contains elem ~child:to_elem ->
         Undoable.return ()
     | Some { coord; duration; _ } -> (
         let duration = Option.value duration ~default:1.0 in
         let> _ = Undoable.Stack.pop_opt Enter.stack in
         match Undoable.Stack.peek Enter.stack with
         | None -> Universe.Move.move window coord ~duration
-        | Some { Enter.elem; _ } when Brr.El.contains elem ~child:to_elem ->
+        | Some { Enter.elem; coord; _ } when Brr.El.contains elem ~child:to_elem
+          ->
             if Brr.El.at (Jstr.v "enter-at-unpause") to_elem |> Option.is_some
             then Undoable.return ()
             else Universe.Move.move window coord ~duration:1.0
