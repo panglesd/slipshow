@@ -10,6 +10,7 @@
   (#154)
 - Fix blank lines considered as elements in carousel (#170)
 - Allow to specify port in `slipshow serve` with `-p` or `--port` (#176)
+- Fix link with no content in block raising a syntax error (#180)
 
 ## Engine
 
