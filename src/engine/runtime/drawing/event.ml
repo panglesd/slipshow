@@ -20,6 +20,8 @@ let check_is_pressed ev f =
 let do_if_drawing f =
   match State.get_state () with { tool = Pointer; _ } -> () | state -> f state
 
+let () = Random.self_init ()
+
 let get_id =
   let id_number = ref 0 in
   let window_name = Brr.Window.name Brr.G.window |> Jstr.to_string in
