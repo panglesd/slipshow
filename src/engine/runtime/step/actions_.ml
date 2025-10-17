@@ -370,6 +370,7 @@ module Pause = struct
   let do_to_root elem f =
     let is_root elem =
       Brr.El.class' (Jstr.v "slip") elem
+      || Brr.El.class' (Jstr.v "slide") elem
       || Brr.El.class' (Jstr.v "slipshow-universe") elem
       || (Option.is_some @@ Brr.El.at (Jstr.v "pause-block") elem)
     in
