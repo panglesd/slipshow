@@ -16,10 +16,7 @@ module Record = struct
       | x -> of_yojson x
       | exception Yojson.Json_error _ -> Error "Not a json file"
 
-    let to_string r =
-      r |> to_yojson |> fun x ->
-      `Assoc [ ("version", `String "1"); ("record", x) ]
-      |> Yojson.Safe.to_string
+    let to_string r = r |> to_yojson |> Yojson.Safe.to_string
   end
 
   include V1
