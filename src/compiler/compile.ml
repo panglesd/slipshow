@@ -452,8 +452,9 @@ module Stage2 = struct
           in
           let bs = List.map (merge_attribute new_attrs) bs in
           let bs =
-            Mapper.map_block m (Block.Blocks (bs, m_bs)) |> Option.get
-            (* No nodes are ever removed in this stage *)
+            match Mapper.map_block m (Block.Blocks (bs, m_bs)) with
+            | None -> Block.Blocks ([], m_bs)
+            | Some l -> l
           in
           Mapper.ret (Ast.Div ((bs, (attrs, m_attrs)), m_div))
       | _ -> Mapper.default
@@ -523,6 +524,11 @@ module Stage3 = struct
             match block with
             | Ast.Div ((Block.Blocks (l, _), _), _) -> l
             | _ -> [ block ]
+          in
+          let children =
+            List.filter_map
+              (function Block.Blank_line _ -> None | x -> Some x)
+              children
           in
           Mapper.ret @@ Ast.Carousel ((children, attrs), Meta.none)
       | Some _ -> Mapper.default

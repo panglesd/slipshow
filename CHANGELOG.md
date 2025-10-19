@@ -6,6 +6,11 @@
 
 - Embed Liberation Sans fonts (and use them) (#150)
 - Fix missing favicon (which was missing since speaker view) (#150)
+- Fix changing step number from speaker note does not update serve mode state
+  (#154)
+- Fix blank lines considered as elements in carousel (#170)
+- Allow to specify port in `slipshow serve` with `-p` or `--port` (#176)
+- Fix link with no content in block raising a syntax error (#180)
 
 ## Engine
 
@@ -16,6 +21,10 @@
 - Mute medias in speaker view (#152)
 - Use the [perfect-freehand](https://github.com/steveruizok/perfect-freehand)
   library to generate strokes. (#151)
+- Fix order of execution of actions (`center` after `enter`) (#171)
+- Fix pauses not being scoped in slides (#179)
+- Fix exiting not where it should (#179)
+- Fix `unfocus` behavior to match the docs (#179)
 
 ## [v0.6.0] The King's Slipshow (Monday 18th August, 2025)
 

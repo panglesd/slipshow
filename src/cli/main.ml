@@ -230,17 +230,24 @@ end
 module Serve = struct
   let ( let* ) = Result.bind
 
-  let serve ~compile_args:{ Compile_args.input; output; cli_frontmatter } =
+  let serve ~port ~compile_args:{ Compile_args.input; output; cli_frontmatter }
+      =
     let output =
       match output with Some o -> o | None -> Compile.output_of_input input
     in
     let* input, output = Compile.force_file_io input output in
-    Run.serve ~input ~output ~cli_frontmatter |> handle_error
+    Run.serve ~input ~output ~cli_frontmatter ~port |> handle_error
+
+  let port =
+    let doc = "Which port to use." in
+    Arg.(value & opt int 8080 & info ~docv:"PORT" ~doc [ "port"; "p" ])
 
   let term =
     let open Term.Syntax in
-    let+ compile_args = Compile_args.term and+ () = setup_log in
-    serve ~compile_args
+    let+ compile_args = Compile_args.term
+    and+ () = setup_log
+    and+ port = port in
+    serve ~port ~compile_args
 
   let cmd =
     let doc =
