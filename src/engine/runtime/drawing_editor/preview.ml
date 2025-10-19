@@ -69,7 +69,7 @@ let create_elem_of_stroke ~elapsed_time
           Perfect_freehand.Options.v ~size ?thinning:options.thinning
             ?streamline:options.streamline ?smoothing:options.smoothing ()
         in
-        let v = Jstr.v (Drawing.Action.svg_path options scale path) in
+        let v = Jstr.v (Drawing.Tools.Draw.svg_path options scale path) in
         Brr.At.v (Jstr.v "d") v
       in
       let$* path = Lwd.get path in

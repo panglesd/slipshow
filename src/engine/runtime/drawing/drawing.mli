@@ -6,6 +6,7 @@ module State = State
 module Event = Event
 module Action = Action
 module Stroke = Stroke
+module Tools = Tools
 
 val setup : Brr.El.t -> unit
 val send_all_strokes : unit -> unit

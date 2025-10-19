@@ -80,7 +80,7 @@ let set_tool t =
   let () =
     match t with
     | Tool.Stroker _ | Eraser -> make_active ()
-    | Pointer -> make_inactive ()
+    | Pointer | Move | Select -> make_inactive ()
   in
   set_current Tool t
 

@@ -10,17 +10,17 @@ module Record : sig
   val stop_record : unit -> t option
 end
 
-val continue_shape : float * float -> unit
-val create_elem_of_stroke : Types.Stroke.t -> Brr.El.t
-val start_shape : string -> State.t -> float * float -> unit
-val end_shape : unit -> unit
+(* val continue_shape : float * float -> unit *)
+(* val create_elem_of_stroke : Types.Stroke.t -> Brr.El.t *)
+(* val start_shape : string -> State.t -> float * float -> unit *)
+(* val end_shape : unit -> unit *)
 val clear : unit -> unit
 
-val svg_path :
-  Perfect_freehand.Options.t ->
-  float ->
-  ((float * float) * float) list ->
-  string
+(* val svg_path : *)
+(*   Perfect_freehand.Options.t -> *)
+(*   float -> *)
+(*   ((float * float) * float) list -> *)
+(*   string *)
 
 module Replay : sig
   val replay : ?speedup:float -> Record.t -> unit Fut.t

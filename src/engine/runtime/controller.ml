@@ -237,28 +237,30 @@ let message_setup window =
       let raw_data : Jv.t = Brr_io.Message.Ev.data (Brr.Ev.as_type event) in
       let msg = comm_of_jv raw_data in
       match msg with
-      | Some { payload = State (i, mode) } ->
+      | Some { payload = State (i, mode); id = _ } ->
           let fast = match mode with `Fast -> true | _ -> false in
           let _ : unit Fut.t =
             if fast then Fast.with_fast @@ fun () -> Step.Next.goto i window
             else Step.Next.goto i window
           in
           ()
-      | Some { payload = Drawing d } -> (
+      | Some { payload = Drawing d; id = window_id } -> (
           let if_state state f =
             match Drawing.State.of_string state with
             | None -> ()
             | Some state -> f state
           in
+          let origin = Drawing.Tools.Sent window_id in
           match d with
-          | End -> Drawing.Action.end_shape ()
-          | Continue { coord } -> Drawing.Action.continue_shape coord
+          | End -> Drawing.Event.end_shape origin ()
+          | Continue { coord } -> Drawing.Tools.Draw.continue origin ~coord
           | Start { state; coord; id } ->
               if_state state @@ fun state ->
-              Drawing.Action.start_shape id state coord
+              Drawing.Event.start origin state coord id
           | Clear -> Drawing.Action.clear ())
-      | Some { payload = Send_all_drawing } -> Drawing.send_all_strokes ()
-      | Some { payload = Receive_all_drawing all_strokes } ->
+      | Some { payload = Send_all_drawing; id = _ } ->
+          Drawing.send_all_strokes ()
+      | Some { payload = Receive_all_drawing all_strokes; id = _ } ->
           Drawing.receive_all_strokes all_strokes
       | _ -> ())
     (Brr.Window.as_target Brr.G.window)

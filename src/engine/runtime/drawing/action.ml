@@ -84,108 +84,110 @@ module Record = struct
         let evs = event :: current_record_val.evs in
         let current_record_val = { current_record_val with evs } in
         current_record := Some current_record_val
+
+  let () = ignore record
 end
 
-let svg_path options scale path =
-  let path =
-    List.rev_map
-      (fun ((x, y), _) -> Perfect_freehand.Point.v (x *. scale) (y *. scale))
-      path
-  in
-  let stroke = Perfect_freehand.get_stroke ~options path in
-  let svg_path = Perfect_freehand.get_svg_path_from_stroke stroke in
-  Jstr.to_string svg_path
+(* let svg_path options scale path = *)
+(*   let path = *)
+(*     List.rev_map *)
+(*       (fun ((x, y), _) -> Perfect_freehand.Point.v (x *. scale) (y *. scale)) *)
+(*       path *)
+(*   in *)
+(*   let stroke = Perfect_freehand.get_stroke ~options path in *)
+(*   let svg_path = Perfect_freehand.get_svg_path_from_stroke stroke in *)
+(*   Jstr.to_string svg_path *)
 
-let continue_shape coord =
-  match !State.current_drawing_state with
-  | Drawing (el, stroke) ->
-      let t = Record.now () in
-      let stroke =
-        { stroke with path = (coord, t) :: stroke.path; end_at = t }
-      in
-      State.current_drawing_state := Drawing (el, stroke);
-      Brr.El.set_at (Jstr.v "d")
-        (Some (Jstr.v (svg_path stroke.options stroke.scale stroke.path)))
-        el
-  | Erasing last_point ->
-      Hashtbl.iter
-        (fun _id (elem, { Stroke.path; _ }) ->
-          let intersect = Utils.intersect_poly path (coord, last_point) in
-          let close_enough = Utils.close_enough_poly path coord in
-          if intersect || close_enough then State.Strokes.remove_el elem)
-        State.Strokes.all;
-      State.current_drawing_state := Erasing coord;
-      ()
-  | Pointing -> ()
+(* let continue_shape coord = *)
+(*   match !State.current_drawing_state with *)
+(*   | Drawing (el, stroke) -> *)
+(*       let t = Record.now () in *)
+(*       let stroke = *)
+(*         { stroke with path = (coord, t) :: stroke.path; end_at = t } *)
+(*       in *)
+(*       State.current_drawing_state := Drawing (el, stroke); *)
+(*       Brr.El.set_at (Jstr.v "d") *)
+(*         (Some (Jstr.v (svg_path stroke.options stroke.scale stroke.path))) *)
+(*         el *)
+(*   | Erasing last_point -> *)
+(*       Hashtbl.iter *)
+(*         (fun _id (elem, { Stroke.path; _ }) -> *)
+(*           let intersect = Utils.intersect_poly path (coord, last_point) in *)
+(*           let close_enough = Utils.close_enough_poly path coord in *)
+(*           if intersect || close_enough then State.Strokes.remove_el elem) *)
+(*         State.Strokes.all; *)
+(*       State.current_drawing_state := Erasing coord; *)
+(*       () *)
+(*   | Pointing -> () *)
 
-let create_elem_of_stroke
-    { Stroke.options; scale; color; opacity; id; path; end_at = _ } =
-  let p = Brr.El.v ~ns:`SVG (Jstr.v "path") [] in
-  let set_at at v = Brr.El.set_at (Jstr.v at) (Some (Jstr.v v)) p in
-  set_at "fill" (Color.to_string color);
-  set_at "id" id;
-  let () =
-    let scale = 1. /. scale in
-    let scale = string_of_float scale in
-    Brr.El.set_inline_style (Jstr.v "transform")
-      (Jstr.v @@ "scale3d(" ^ scale ^ "," ^ scale ^ "," ^ scale ^ ")")
-      p
-  in
-  set_at "opacity" (string_of_float opacity);
-  Brr.El.set_at (Jstr.v "d") (Some (Jstr.v (svg_path options scale path))) p;
-  p
+(* let create_elem_of_stroke *)
+(*     { Stroke.options; scale; color; opacity; id; path; end_at = _ } = *)
+(*   let p = Brr.El.v ~ns:`SVG (Jstr.v "path") [] in *)
+(*   let set_at at v = Brr.El.set_at (Jstr.v at) (Some (Jstr.v v)) p in *)
+(*   set_at "fill" (Color.to_string color); *)
+(*   set_at "id" id; *)
+(*   let () = *)
+(*     let scale = 1. /. scale in *)
+(*     let scale = string_of_float scale in *)
+(*     Brr.El.set_inline_style (Jstr.v "transform") *)
+(*       (Jstr.v @@ "scale3d(" ^ scale ^ "," ^ scale ^ "," ^ scale ^ ")") *)
+(*       p *)
+(*   in *)
+(*   set_at "opacity" (string_of_float opacity); *)
+(*   Brr.El.set_at (Jstr.v "d") (Some (Jstr.v (svg_path options scale path))) p; *)
+(*   p *)
 
-let options_of stroke width =
-  let size =
-    match (stroke, width) with
-    | Tool.Pen, Width.Small -> 6.
-    | Pen, Medium -> 10.
-    | Pen, Large -> 14.
-    | Highlighter, Small -> 28.
-    | Highlighter, Medium -> 38.
-    | Highlighter, Large -> 48.
-  in
-  Perfect_freehand.Options.v ~thinning:0.5 ~smoothing:0.5 ~size ~streamline:0.5
-    ~last:false ()
+(* let options_of stroke width = *)
+(*   let size = *)
+(*     match (stroke, width) with *)
+(*     | Tool.Pen, Width.Small -> 6. *)
+(*     | Pen, Medium -> 10. *)
+(*     | Pen, Large -> 14. *)
+(*     | Highlighter, Small -> 28. *)
+(*     | Highlighter, Medium -> 38. *)
+(*     | Highlighter, Large -> 48. *)
+(*   in *)
+(*   Perfect_freehand.Options.v ~thinning:0.5 ~smoothing:0.5 ~size ~streamline:0.5 *)
+(*     ~last:false () *)
 
-let start_shape id ({ State.tool; _ } as state) coord =
-  let svg =
-    Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing-elem")
-    |> Option.get
-  in
-  match tool with
-  | Tool.Stroker stroker ->
-      let opacity = match stroker with Tool.Highlighter -> 0.33 | Pen -> 1. in
-      let end_at = Record.now () in
-      let path = [ (coord, end_at) ] in
-      let options = options_of stroker state.width in
-      let { Universe.Coordinates.scale; _ } = Universe.State.get_coord () in
-      let stroke =
-        {
-          Stroke.path;
-          options;
-          opacity;
-          id;
-          color = state.color;
-          scale;
-          end_at;
-        }
-      in
-      let p = create_elem_of_stroke stroke in
-      State.current_drawing_state := Drawing (p, stroke);
-      Brr.El.append_children svg [ p ]
-  | Eraser -> State.current_drawing_state := Erasing coord
-  | Pointer -> ()
+(* let start_shape id ({ State.tool; _ } as state) coord = *)
+(*   let svg = *)
+(*     Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing-elem") *)
+(*     |> Option.get *)
+(*   in *)
+(*   match tool with *)
+(*   | Tool.Stroker stroker -> *)
+(*       let opacity = match stroker with Tool.Highlighter -> 0.33 | Pen -> 1. in *)
+(*       let end_at = Record.now () in *)
+(*       let path = [ (coord, end_at) ] in *)
+(*       let options = options_of stroker state.width in *)
+(*       let { Universe.Coordinates.scale; _ } = Universe.State.get_coord () in *)
+(*       let stroke = *)
+(*         { *)
+(*           Stroke.path; *)
+(*           options; *)
+(*           opacity; *)
+(*           id; *)
+(*           color = state.color; *)
+(*           scale; *)
+(*           end_at; *)
+(*         } *)
+(*       in *)
+(*       let p = create_elem_of_stroke stroke in *)
+(*       State.current_drawing_state := Drawing (p, stroke); *)
+(*       Brr.El.append_children svg [ p ] *)
+(*   | Eraser -> State.current_drawing_state := Erasing coord *)
+(*   | Pointer | Move | Select -> () *)
 
-let end_shape () =
-  (match !State.current_drawing_state with
-  | Drawing (el, stroke) ->
-      let s = Stroke.to_string stroke in
-      Brr.Console.(log [ "a stroke is: "; s ]);
-      Record.record (Record.Stroke stroke);
-      Hashtbl.add State.Strokes.all stroke.id (el, stroke)
-  | _ -> ());
-  State.current_drawing_state := Pointing
+(* let end_shape () = *)
+(*   (match !State.current_drawing_state with *)
+(*   | Drawing (el, stroke) -> *)
+(*       let s = Stroke.to_string stroke in *)
+(*       Brr.Console.(log [ "a stroke is: "; s ]); *)
+(*       Record.record (Record.Stroke stroke); *)
+(*       Hashtbl.add State.Strokes.all stroke.id (el, stroke) *)
+(*   | _ -> ()); *)
+(*   State.current_drawing_state := Pointing *)
 
 let clear () =
   Hashtbl.iter
@@ -198,7 +200,7 @@ module Replay = struct
   let replay_stroke ?(speedup = 1.) (stroke : Stroke.t) =
     Brr.Console.(log [ "Replaying stroke" ]);
     let start_time = now () in
-    let el = create_elem_of_stroke { stroke with path = [] } in
+    let el = Tools.Draw.create_elem_of_stroke { stroke with path = [] } in
     let svg =
       Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing-elem")
       |> Option.get
@@ -217,7 +219,7 @@ module Replay = struct
     let rec draw_loop _ =
       let path, finished = filter () in
       Brr.El.set_at (Jstr.v "d")
-        (Some (Jstr.v (svg_path stroke.options stroke.scale path)))
+        (Some (Jstr.v (Tools.Draw.svg_path stroke.options stroke.scale path)))
         el;
       if finished then ()
       else
@@ -270,7 +272,7 @@ module Replay = struct
 
   let stroke_until ~time_elapsed (stroke : Stroke.t) =
     let path = List.filter (fun (_, t) -> t <= time_elapsed) stroke.path in
-    let el = create_elem_of_stroke { stroke with path } in
+    let el = Tools.Draw.create_elem_of_stroke { stroke with path } in
     el
 
   let draw_until ~elapsed_time (record : t) =

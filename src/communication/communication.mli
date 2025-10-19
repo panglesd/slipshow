@@ -14,7 +14,7 @@ type payload =
   | Send_all_drawing
   | Receive_all_drawing of string list
 
-type t = { payload : payload }
+type t = { payload : payload; id : string }
 
 val of_string : string -> t option
 val to_string : t -> string

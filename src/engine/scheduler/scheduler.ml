@@ -155,7 +155,7 @@ let listen w handle_msg =
     Brr.Ev.listen Brr.Ev.beforeunload
       (fun _event ->
         let msg =
-          { payload = Close_speaker_notes }
+          { payload = Close_speaker_notes; id = "TODO" }
           |> Communication.to_string |> Jv.of_string
         in
         match Brr.Window.parent Brr.G.window with
@@ -228,11 +228,11 @@ module Handle = struct
     | _ -> ()
 
   let initial_state self = function
-    | { Communication.payload = Ready; _ } -> (
+    | { Communication.payload = Ready; id } -> (
         match !current_step with
         | Some i ->
             let msg =
-              { payload = State (i, `Fast) }
+              { payload = State (i, `Fast); id }
               |> Communication.to_string |> Jv.of_string
             in
             Brr.Window.post_message self ~msg
@@ -240,9 +240,9 @@ module Handle = struct
     | _ -> ()
 
   let send_all_strokes_on_ready main_frame = function
-    | { Communication.payload = Ready; _ } ->
+    | { Communication.payload = Ready; id } ->
         let msg =
-          { payload = Send_all_drawing }
+          { payload = Send_all_drawing; id }
           |> Communication.to_string |> Jv.of_string
         in
         Brr.Window.post_message main_frame ~msg
@@ -257,7 +257,7 @@ module Handle = struct
   let opening_closing_speaker_note handle_msg = function
     | { Communication.payload = Open_speaker_notes; _ } ->
         open_window handle_msg
-    | { payload = Close_speaker_notes } -> close_window ()
+    | { payload = Close_speaker_notes; id = _ } -> close_window ()
     | _ -> ()
 
   let forward_to_parent = function

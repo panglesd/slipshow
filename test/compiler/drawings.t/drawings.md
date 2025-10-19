@@ -1,77 +1,8 @@
-# Hello
+---
+dimension: 16:9
+toplevel-attributes: slide enter="~duration:0" draw=clo
+---
 
-![](test.draw){draw}
+![](clo.draw){#clo}
 
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
-- a
+{style=height:10000px}

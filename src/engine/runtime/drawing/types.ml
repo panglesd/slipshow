@@ -26,13 +26,17 @@ module V1 = struct
 
   module Tool = struct
     type stroker = Pen | Highlighter [@@deriving yojson]
-    type t = Stroker of stroker | Eraser | Pointer [@@deriving yojson]
+
+    type t = Stroker of stroker | Eraser | Pointer | Select | Move
+    [@@deriving yojson]
 
     let to_string = function
       | Stroker Pen -> "pen"
       | Stroker Highlighter -> "highlighter"
       | Eraser -> "eraser"
       | Pointer -> "cursor"
+      | Select -> "select"
+      | Move -> "move"
   end
 
   module Stroke = struct

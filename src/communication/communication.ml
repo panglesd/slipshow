@@ -18,7 +18,7 @@ type payload =
   | Receive_all_drawing of string list
 [@@deriving sexp]
 
-type t = { payload : payload } [@@deriving sexp]
+type t = { payload : payload; id : string } [@@deriving sexp]
 
 let t_of_sexp_opt s =
   try Some (t_of_sexp s) with Sexplib0.Sexp.Of_sexp_error _ -> None

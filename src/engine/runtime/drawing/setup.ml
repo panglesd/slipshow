@@ -4,13 +4,16 @@ let connect () =
     |> Option.get |> Brr.El.as_target
   in
   let _mousemove =
-    Brr.Ev.listen Brr.Ev.pointermove Event.continue_shape
+    Brr.Ev.listen Brr.Ev.pointermove
+      (Event.continue_shape Self)
       (Brr.Document.as_target Brr.G.document)
   in
-  let _pointerdown = Brr.Ev.listen Brr.Ev.pointerdown Event.start_shape main in
+  let _pointerdown =
+    Brr.Ev.listen Brr.Ev.pointerdown (Event.start_shape Self) main
+  in
   let _pointerup =
     Brr.Ev.listen Brr.Ev.pointerup
-      (fun _x -> Event.end_shape ())
+      (fun _x -> Event.end_shape Self ())
       (Brr.Document.as_target Brr.G.document)
   in
   ()

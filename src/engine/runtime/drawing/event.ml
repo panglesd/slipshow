@@ -17,8 +17,8 @@ let check_is_pressed ev f =
   then f ()
   else ()
 
-let do_if_drawing f =
-  match State.get_state () with { tool = Pointer; _ } -> () | state -> f state
+(* let do_if_drawing f = *)
+(*   match State.get_state () with { tool = Pointer; _ } -> () | state -> f state *)
 
 let () = Random.self_init ()
 
@@ -32,23 +32,105 @@ let get_id =
     incr id_number;
     String.concat "" [ name; string_of_int i; "_"; hash ]
 
-let start_shape ev =
-  do_if_drawing @@ fun state ->
-  let id = get_id () in
-  let coord = coord_of_event ev in
-  Action.start_shape id state coord;
-  let state = state |> State.to_string in
-  Messaging.draw (Start { state; id; coord })
+type current_situation = K : (module Tools.T) -> current_situation
 
-let continue_shape ev =
+let current_situation : (Tools.origin, current_situation) Hashtbl.t =
+  Hashtbl.create 10
+(* let current_situation : current_situation option ref = ref None *)
+
+let start origin state coord id =
+  match state.State.tool with
+  | Stroker stroker ->
+      (* let id = get_id () in *)
+      (* let coord = coord_of_event ev in *)
+      (* Action.start_shape id state coord; *)
+      let () = Tools.Draw.start origin stroker ~id ~coord in
+      let state = state |> State.to_string in
+      Messaging.draw (Start { state; id; coord });
+      Hashtbl.replace current_situation origin (K (module Tools.Draw))
+      (* ; *)
+      (* current_situation := Some (K (module Tools.Draw)) *)
+  | Eraser -> ()
+  | Pointer | Select | Move -> ()
+
+let start_shape origin ev =
+  let coord = coord_of_event ev in
+  let state = State.get_state () in
+  let id = get_id () in
+  let () =
+    let state = state |> State.to_string in
+    Messaging.draw (Start { state; id; coord })
+  in
+  start origin state coord id
+(* do_if_drawing @@ fun state -> *)
+(* match state.tool with *)
+(* | Stroker stroker -> *)
+(*     let id = get_id () in *)
+(*     (\* Action.start_shape id state coord; *\) *)
+(*     let () = Tools.Draw.start origin stroker ~id ~coord in *)
+(*     let state = state |> State.to_string in *)
+(*     Messaging.draw (Start { state; id; coord }); *)
+(*     current_situation := Some (K (module Tools.Draw)) *)
+(* | Eraser -> () *)
+(* | Pointer | Select | Move -> () *)
+
+let continue origin coord =
+  match Hashtbl.find_opt current_situation origin with
+  | None -> ()
+  | Some (K (module Tool)) ->
+      (* Action.continue_shape coord; *)
+      let () = Tool.continue origin ~coord in
+      Hashtbl.replace current_situation origin (K (module Tool));
+      (* current_situation := Some (K (module Tool)); *)
+      Messaging.draw (Continue { coord })
+
+let continue_shape origin ev =
   check_is_pressed ev @@ fun () ->
   let coord = coord_of_event ev in
-  Action.continue_shape coord;
-  Messaging.draw (Continue { coord })
+  Messaging.draw (Continue { coord });
+  continue origin coord
+(* match !current_situation with *)
+(* | None -> () *)
+(* | Some (K (module Tool)) -> *)
+(*     (\* Action.continue_shape coord; *\) *)
+(*     let () = Tool.continue origin ~coord in *)
+(*     current_situation := Some (K (module Tool)); *)
+(*     Messaging.draw (Continue { coord }) *)
 
-let end_shape () =
+let end_ origin () =
+  (* Messaging.draw End; *)
+  match Hashtbl.find_opt current_situation origin with
+  | None -> ()
+  | Some (K (module Tool)) ->
+      Tool.end_ origin;
+      Hashtbl.remove current_situation origin
+(* Action.end_shape () *)
+
+let end_shape origin () =
   Messaging.draw End;
-  Action.end_shape ()
+  end_ origin ()
+(* match !current_situation with *)
+(* | None -> () *)
+(* | Some (K (module Tool)) -> Tool.end_ origin *)
+(* Action.end_shape () *)
+
+(* let start_shape ev = *)
+(*   do_if_drawing @@ fun state -> *)
+(*   let id = get_id () in *)
+(*   let coord = coord_of_event ev in *)
+(*   Action.start_shape id state coord; *)
+(*   let state = state |> State.to_string in *)
+(*   Messaging.draw (Start { state; id; coord }) *)
+
+(* let continue_shape ev = *)
+(*   check_is_pressed ev @@ fun () -> *)
+(*   let coord = coord_of_event ev in *)
+(*   Action.continue_shape coord; *)
+(*   Messaging.draw (Continue { coord }) *)
+
+(* let end_shape () = *)
+(*   Messaging.draw End; *)
+(*   Action.end_shape () *)
 
 let clear () =
   Messaging.draw Clear;

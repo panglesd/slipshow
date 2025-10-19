@@ -1,3 +1,3 @@
   $ slipshow compile carousel.md
 
-$ cp carousel.html /tmp/
+  $ cp carousel.html /tmp/
