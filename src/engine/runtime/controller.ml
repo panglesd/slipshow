@@ -253,7 +253,7 @@ let message_setup window =
           let origin = Drawing.Tools.Sent window_id in
           match d with
           | End -> Drawing.Event.end_ origin ()
-          | Continue { coord } -> Drawing.Tools.Draw.continue origin ~coord
+          | Continue { coord } -> Drawing.Event.continue origin coord
           | Start { state; coord; id } ->
               if_state state @@ fun state ->
               Drawing.Event.start origin state coord id
