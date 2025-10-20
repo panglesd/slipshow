@@ -29,9 +29,9 @@ let get_id =
     incr id_number;
     String.concat "" [ name; string_of_int i; "_"; hash ]
 
-type current_situation = K : (module Tools.T) -> current_situation
+type current_situation = K : (module Tools.Stroker) -> current_situation
 
-let current_situation : (Tools.origin, current_situation) Hashtbl.t =
+let current_situation : (Types.origin, current_situation) Hashtbl.t =
   Hashtbl.create 10
 
 let start origin state coord id =
@@ -78,4 +78,4 @@ let end_shape origin () =
 
 let clear () =
   Messaging.draw Clear;
-  Action.clear ()
+  Tools.Clear.click Self All

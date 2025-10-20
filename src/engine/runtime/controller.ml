@@ -1,5 +1,3 @@
-let record = ref None
-
 module State = struct
   type mode = Normal | Drawing_editing
 
@@ -123,18 +121,17 @@ let keyboard_setup (window : Universe.Window.t) =
           ()
       | "r" ->
           Brr.Console.(log [ "Starting to record" ]);
-          Drawing.Action.Record.start_record ()
+          Drawing.Record.start_record ()
       | "R" -> (
           State.mode := Drawing_editing;
           (* TODO: we don't need this ref anymore since "p" shortcut was only for testing purpose *)
-          record := Drawing.Action.Record.stop_record ();
-          Drawing_editor.set_record !record;
-          Brr.Console.(log [ "NOW"; "Saving record"; !record ]);
-          match !record with
+          let record = Drawing.Record.stop_record () in
+          Drawing_editor.set_record record;
+          Brr.Console.(log [ "NOW"; "Saving record"; record ]);
+          match record with
           | None -> ()
           | Some r ->
-              Brr.Console.(
-                log [ "record is"; Drawing.Action.Record.to_string r ]))
+              Brr.Console.(log [ "record is"; Drawing.Record.to_string r ]))
       (* | "p" -> ( *)
       (*     match !record with *)
       (*     | None -> Brr.Console.(log [ "No record to replay" ]) *)
@@ -250,14 +247,14 @@ let message_setup window =
             | None -> ()
             | Some state -> f state
           in
-          let origin = Drawing.Tools.Sent window_id in
+          let origin = Drawing.Types.Sent window_id in
           match d with
           | End -> Drawing.Event.end_ origin ()
           | Continue { coord } -> Drawing.Event.continue origin coord
           | Start { state; coord; id } ->
               if_state state @@ fun state ->
               Drawing.Event.start origin state coord id
-          | Clear -> Drawing.Action.clear ())
+          | Clear -> Drawing.Tools.Clear.click origin All)
       | Some { payload = Send_all_drawing; id = _ } ->
           Drawing.send_all_strokes ()
       | Some { payload = Receive_all_drawing all_strokes; id = _ } ->

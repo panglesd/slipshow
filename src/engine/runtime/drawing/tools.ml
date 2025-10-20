@@ -1,14 +1,19 @@
 open Types
 
-type origin = Self | Sent of string
-
-module type T = sig
+module type Stroker = sig
   (* type state *)
   type start_args
 
   val start : origin -> start_args -> id:string -> coord:float * float -> unit
   val continue : origin -> coord:float * float -> unit
   val end_ : (* coord:float * float ->  *) origin -> unit
+end
+
+module type One_shot = sig
+  (* type state *)
+  type args
+
+  val click : origin -> args -> unit
 end
 
 module Draw (* : T with type start_args = Types.Tool.stroker *) = struct
@@ -105,7 +110,7 @@ module Draw (* : T with type start_args = Types.Tool.stroker *) = struct
         Hashtbl.add State.Strokes.all stroke.id state
 end
 
-module Erase : T with type start_args := unit = struct
+module Erase : Stroker with type start_args := unit = struct
   let states = Hashtbl.create 10
   let get_state origin = Hashtbl.find_opt states origin |> Option.join
   let set_state origin state = Hashtbl.replace states origin state
@@ -127,4 +132,16 @@ module Erase : T with type start_args := unit = struct
         set_state origin (Some coord)
 
   let end_ origin = (* ~coord:_ *) set_state origin None
+end
+
+module Clear = struct
+  type args = All | Origin of origin
+
+  let concerned origin who =
+    match who with All -> true | Origin o when o = origin -> true | _ -> false
+
+  let click (origin : origin) (who : args) =
+    Hashtbl.iter
+      (fun _ (elem, _) -> State.Strokes.remove_el elem)
+      State.Strokes.all
 end

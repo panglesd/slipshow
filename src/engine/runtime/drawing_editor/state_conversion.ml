@@ -3,7 +3,7 @@ open State_types
 let starts_at l = List.hd (List.rev l) |> snd
 let end_at l = List.hd l |> snd
 
-let record_of_record (evs : Drawing.Action.Record.t) : t =
+let record_of_record (evs : Drawing.Record.t) : t =
   let of_stroke
       { Drawing.Stroke.id; scale; path; end_at = _; color; opacity; options } =
     let color = Lwd.var color in
@@ -41,7 +41,7 @@ let record_of_record (evs : Drawing.Action.Record.t) : t =
   in
   let strokes =
     List.filter_map
-      (function Drawing.Action.Record.Stroke s -> Some s | Erase _ -> None)
+      (function Drawing.Record.Stroke s -> Some s | Erase _ -> None)
       evs
   in
   let total_time = Lwd.var @@ end_at (List.hd strokes).path in
@@ -89,6 +89,6 @@ let record_to_record (evs : t) =
       let event =
         { Drawing.Stroke.id; scale; path; end_at; color; opacity; options }
       in
-      Drawing.Action.Record.Stroke event)
+      Drawing.Record.Stroke event)
     strokes
 (* TODO: Sort by starting time *)

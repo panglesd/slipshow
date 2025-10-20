@@ -953,10 +953,10 @@ module Clear_draw = struct
 
   let parse_args = Parse.parse_only_els
 
-  let clear_record (record : Drawing.Action.Record.t) =
+  let clear_record (record : Drawing.Record.t) =
     List.iter
       (function
-        | Drawing.Action.Record.Stroke { id; _ } -> (
+        | Drawing.Record.Stroke { id; _ } -> (
             match Brr.El.find_first_by_selector (Jstr.v ("#" ^ id)) with
             | Some el -> Brr.El.remove el
             | None -> ())
@@ -971,15 +971,13 @@ module Clear_draw = struct
         match data with
         | None -> Undoable.return ()
         | Some data -> (
-            match Drawing.Action.Record.of_string (Jstr.to_string data) with
+            match Drawing.Record.of_string (Jstr.to_string data) with
             | Error e ->
                 Brr.Console.(log [ e ]);
                 Undoable.return ()
             | Ok record ->
                 clear_record record;
-                let undo () =
-                  Drawing.Action.Replay.replay ~speedup:10000. record
-                in
+                let undo () = Drawing.Replay.replay ~speedup:10000. record in
                 Undoable.return ~undo ()))
       elems
 end
@@ -1007,14 +1005,14 @@ module Draw = struct
         match data with
         | None -> Undoable.return ()
         | Some data -> (
-            match Drawing.Action.Record.of_string (Jstr.to_string data) with
+            match Drawing.Record.of_string (Jstr.to_string data) with
             | Error e ->
                 Brr.Console.(log [ e ]);
                 Undoable.return ()
             | Ok record ->
                 let undo () = Fut.return @@ Clear_draw.clear_record record in
                 let open Fut.Syntax in
-                let* () = Drawing.Action.Replay.replay ~speedup record in
+                let* () = Drawing.Replay.replay ~speedup record in
                 Undoable.return ~undo ()))
       elems
 end

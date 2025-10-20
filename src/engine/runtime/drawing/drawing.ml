@@ -1,3 +1,4 @@
+module Types = Types
 open Types
 module Width = Width
 module Tool = Tool
@@ -5,8 +6,9 @@ module Color = Color
 module State = State
 module Stroke = Stroke
 module Event = Event
-module Action = Action
 module Tools = Tools
+module Record = Record
+module Replay = Replay
 
 let send_all_strokes () =
   let all_strokes =

@@ -98,3 +98,5 @@ module V1 = struct
 end
 
 include V1
+
+type origin = Self | Sent of string

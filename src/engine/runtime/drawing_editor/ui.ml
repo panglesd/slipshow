@@ -252,7 +252,7 @@ let save_panel recording =
   let click =
     Brr_lwd.Elwd.handler Brr.Ev.click (fun _ ->
         let recording = State_conversion.record_to_record recording in
-        let s = Drawing.Action.Record.to_string recording in
+        let s = Drawing.Record.to_string recording in
         let blob =
           let init = Brr.Blob.init ~type':(Jstr.v "application/json") () in
           Brr.Blob.of_jstr ~init (Jstr.v s)
