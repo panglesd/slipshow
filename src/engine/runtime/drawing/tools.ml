@@ -9,7 +9,7 @@ module type Stroker = sig
   val start : start_args -> id:string -> coord:float * float -> event option
   val continue : coord:float * float -> event option
   val end_ : (* coord:float * float ->  *) event option
-  val execute : origin -> event -> unit
+  val execute : origin -> event -> Record.event option
   val send : event -> unit
 end
 
@@ -22,18 +22,19 @@ module type One_shot = sig
   val execute : event -> unit
 end
 
-module Draw : Stroker with type start_args = Types.Tool.stroker = struct
+type draw_start_args = {
+  stroker : Types.Tool.stroker;
+  width : Width.t;
+  color : Color.t;
+}
+[@@deriving yojson]
+
+module Draw : Stroker with type start_args = draw_start_args = struct
   (* type state = Brr.El.t * Stroke.t *)
-  type start_args = Types.Tool.stroker
+  type start_args = draw_start_args [@@deriving yojson]
 
   type event =
-    | Start of {
-        stroker : Types.Tool.stroker;
-        id : string;
-        coord : float * float;
-        width : Width.t;
-        color : Color.t;
-      }
+    | Start of { start_args : start_args; id : string; coord : float * float }
     | Continue of { coord : float * float }
     | End
   [@@deriving yojson]
@@ -53,11 +54,7 @@ module Draw : Stroker with type start_args = Types.Tool.stroker = struct
           log [ "Error when converting back a draw tool event:"; e; s ]);
         None
 
-  let start stroker ~id ~coord =
-    let state = State.get_state () in
-    let color = state.color and width = state.width in
-    Some (Start { stroker; id; coord; color; width })
-
+  let start start_args ~id ~coord = Some (Start { start_args; id; coord })
   let continue ~coord = Some (Continue { coord })
   let end_ = Some End
 
@@ -83,11 +80,12 @@ module Draw : Stroker with type start_args = Types.Tool.stroker = struct
       in
       let p = Strokes.create_elem_of_stroke stroke in
       Brr.El.append_children svg [ p ];
-      set_state origin (Some (p, stroke))
+      set_state origin (Some (p, stroke));
+      None
 
     let continue origin ~coord =
       match get_state origin with
-      | None -> ()
+      | None -> None
       | Some (el, stroke) ->
           let t = (* Record.now () *) 0. in
           let stroke =
@@ -98,7 +96,8 @@ module Draw : Stroker with type start_args = Types.Tool.stroker = struct
                (Jstr.v
                   (Strokes.svg_path stroke.options stroke.scale stroke.path)))
             el;
-          set_state origin (Some (el, stroke))
+          set_state origin (Some (el, stroke));
+          None
 
     let end_ origin =
       (* ~coord:_ *)
@@ -107,14 +106,15 @@ module Draw : Stroker with type start_args = Types.Tool.stroker = struct
       (* Brr.Console.(log [ "a stroke is: "; s ]); *)
       (* Record.record (Record.Stroke stroke); *)
       match get_state origin with
-      | None -> ()
+      | None -> None
       | Some ((_, stroke) as state) ->
           set_state origin None;
-          Hashtbl.add State.Strokes.all stroke.id state
+          Hashtbl.add State.Strokes.all stroke.id state;
+          Some (Record.Stroke stroke)
   end
 
   let execute origin = function
-    | Start { stroker; id; coord; color; width } ->
+    | Start { start_args = { stroker; width; color }; id; coord } ->
         Execute.start origin stroker ~id ~coord ~color ~width
     | Continue { coord } -> Execute.continue origin ~coord
     | End -> Execute.end_ origin
@@ -192,13 +192,15 @@ module Erase : Stroker with type start_args = unit = struct
   (* end *)
 
   let execute origin = function
+    | Erase [] -> None
     | Erase ids ->
         List.iter
           (fun id ->
             match Hashtbl.find_opt State.Strokes.all id with
             | None -> ()
             | Some (el, _) -> State.Strokes.remove_el el)
-          ids
+          ids;
+        Some (Record.Erase (ids, Record.now ()))
 
   let send event =
     let string = event_to_string event in

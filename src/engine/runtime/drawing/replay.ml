@@ -1,14 +1,12 @@
 open Types
 open Record
 
+let svg =
+  Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing-elem") |> Option.get
+
 let replay_stroke ?(speedup = 1.) (stroke : Stroke.t) =
-  Brr.Console.(log [ "Replaying stroke" ]);
   let start_time = now () in
   let el = Strokes.create_elem_of_stroke { stroke with path = [] } in
-  let svg =
-    Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing-elem")
-    |> Option.get
-  in
   Brr.El.append_children svg [ el ];
   let filter () =
     let time_elapsed = now () -. start_time in

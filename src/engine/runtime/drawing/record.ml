@@ -1,9 +1,12 @@
 open Types
 
-module V1 = struct
-  type event = Stroke of V1.Stroke.t | Erase of float [@@deriving yojson]
+type 'a timed = 'a * float [@@deriving yojson]
 
-  let _ = Erase 1.0
+module V1 = struct
+  type event = Stroke of V1.Stroke.t | Erase of string list timed
+  [@@deriving yojson]
+
+  let _ = Erase ([], 1.0)
 
   type t = event list [@@deriving yojson]
   (** Ordered by time *)
@@ -54,15 +57,16 @@ let to_string s =
   in
   concat "v1" with_comments
 
+type recording_in_progress = record ref
+
 let current_record = ref None
 let now () = Brr.Performance.now_ms Brr.G.performance
 let empty_record () = { start_time = now (); evs = [] }
-let start_record () = current_record := Some (empty_record ())
+let start_record () = ref (empty_record ())
 
-let stop_record () =
+let stop_record current_record =
   let res = !current_record in
-  current_record := None;
-  Option.map (fun res -> res.evs) res
+  res.evs
 
 let relativize_path starting_time path =
   List.map (fun (pos, t) -> (pos, t -. starting_time)) path
@@ -73,15 +77,13 @@ let relativize_event starting_time event =
       let path = relativize_path starting_time ev.path in
       let end_at = ev.end_at -. starting_time in
       Stroke { ev with path; end_at }
-  | Erase t -> Erase (t -. starting_time)
+  | Erase (ids, t) -> Erase (ids, t -. starting_time)
 
-let record (event : event) =
-  match !current_record with
-  | None -> ()
-  | Some current_record_val ->
-      let event = relativize_event current_record_val.start_time event in
-      let evs = event :: current_record_val.evs in
-      let current_record_val = { current_record_val with evs } in
-      current_record := Some current_record_val
+let record record (event : event) =
+  let current_record_val = !record in
+  let event = relativize_event current_record_val.start_time event in
+  let evs = event :: current_record_val.evs in
+  let current_record_val = { current_record_val with evs } in
+  record := current_record_val
 
 let () = ignore record

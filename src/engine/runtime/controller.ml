@@ -262,7 +262,7 @@ let message_setup window =
             | Erase d -> Some (d, (module Drawing.Tools.Erase))
           in
           let** ev = Tool.event_of_string s in
-          let () = Tool.execute origin ev in
+          let _ : Drawing.Record.event option = Tool.execute origin ev in
           ()
           (* match d with *)
           (* | End -> Drawing.Event.end_ origin () *)

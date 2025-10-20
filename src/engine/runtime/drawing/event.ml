@@ -57,7 +57,10 @@ let start_shape origin ev =
   let> (P (event, (module T))) =
     match state.State.tool with
     | Stroker stroker ->
-        let event = Tools.Draw.start stroker ~id ~coord in
+        let start_args =
+          { Tools.stroker; width = state.width; color = state.color }
+        in
+        let event = Tools.Draw.start start_args ~id ~coord in
         Some (P (event, (module Tools.Draw)))
         (* Option.iter Tools.Draw.execute event; *)
     | Eraser ->
@@ -67,8 +70,10 @@ let start_shape origin ev =
   in
   (* TODO: messaging *)
   Hashtbl.replace current_situation origin (K (module T));
-  Option.iter (T.execute origin) event;
-  Option.iter T.send event
+  event
+  |> Option.iter @@ fun event ->
+     T.send event;
+     T.execute origin event |> Option.iter Record.record
 (* let event = Tools.Draw.start origin stroker ~id ~coord in *)
 (* let () = *)
 (*   let state = state |> State.to_string in *)
@@ -94,8 +99,12 @@ let continue_shape origin ev =
   | Some (K (module Tool)) ->
       let ev = Tool.continue (* origin *) ~coord in
       (* Hashtbl.replace current_situation origin (K (module Tool)); *)
-      Option.iter (Tool.execute origin) ev;
-      Option.iter Tool.send ev
+      (* Option.iter (Tool.execute origin) ev; *)
+      (* Option.iter Tool.send ev *)
+      ev
+      |> Option.iter @@ fun event ->
+         Tool.send event;
+         Tool.execute origin event |> Option.iter Record.record
 
 let end_shape origin () =
   match Hashtbl.find_opt current_situation origin with
@@ -106,8 +115,12 @@ let end_shape origin () =
         (* origin *)
       in
       Hashtbl.remove current_situation origin;
-      Option.iter (Tool.execute origin) ev;
-      Option.iter Tool.send ev
+      (* Option.iter (Tool.execute origin) ev; *)
+      (* Option.iter Tool.send ev *)
+      ev
+      |> Option.iter @@ fun event ->
+         Tool.send event;
+         Tool.execute origin event |> Option.iter Record.record
 
 (* let end_shape origin () = *)
 (*   Messaging.draw End; *)
