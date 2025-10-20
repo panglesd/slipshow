@@ -30,6 +30,9 @@ let get_id =
     String.concat "" [ name; string_of_int i; "_"; hash ]
 
 type current_situation = K : (module Tools.Stroker) -> current_situation
+(* | *)
+(*   Drawing *)
+(* | Erasing *)
 
 let current_situation : (Types.origin, current_situation) Hashtbl.t =
   Hashtbl.create 10
@@ -54,17 +57,18 @@ let start_shape origin ev =
   let> (P (event, (module T))) =
     match state.State.tool with
     | Stroker stroker ->
-        let event = Tools.Draw.start origin stroker ~id ~coord in
+        let event = Tools.Draw.start stroker ~id ~coord in
         Some (P (event, (module Tools.Draw)))
         (* Option.iter Tools.Draw.execute event; *)
     | Eraser ->
-        let event = Tools.Erase.start origin () ~id ~coord in
+        let event = Tools.Erase.start () ~id ~coord in
         Some (P (event, (module Tools.Erase)))
     | Pointer | Select | Move -> None
   in
   (* TODO: messaging *)
   Hashtbl.replace current_situation origin (K (module T));
-  Option.iter T.execute event
+  Option.iter (T.execute origin) event;
+  Option.iter T.send event
 (* let event = Tools.Draw.start origin stroker ~id ~coord in *)
 (* let () = *)
 (*   let state = state |> State.to_string in *)
@@ -88,17 +92,22 @@ let continue_shape origin ev =
   match Hashtbl.find_opt current_situation origin with
   | None -> ()
   | Some (K (module Tool)) ->
-      let ev = Tool.continue origin ~coord in
+      let ev = Tool.continue (* origin *) ~coord in
       (* Hashtbl.replace current_situation origin (K (module Tool)); *)
-      Option.iter Tool.execute ev
+      Option.iter (Tool.execute origin) ev;
+      Option.iter Tool.send ev
 
 let end_shape origin () =
   match Hashtbl.find_opt current_situation origin with
   | None -> ()
   | Some (K (module Tool)) ->
-      let ev = Tool.end_ origin in
+      let ev =
+        Tool.end_
+        (* origin *)
+      in
       Hashtbl.remove current_situation origin;
-      Option.iter Tool.execute ev
+      Option.iter (Tool.execute origin) ev;
+      Option.iter Tool.send ev
 
 (* let end_shape origin () = *)
 (*   Messaging.draw End; *)

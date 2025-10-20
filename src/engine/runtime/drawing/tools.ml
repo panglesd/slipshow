@@ -5,12 +5,12 @@ module type Stroker = sig
   type start_args
   type event
 
-  val start :
-    origin -> start_args -> id:string -> coord:float * float -> event option
-
-  val continue : origin -> coord:float * float -> event option
-  val end_ : (* coord:float * float ->  *) origin -> event option
-  val execute : event -> unit
+  val event_of_string : string -> event option
+  val start : start_args -> id:string -> coord:float * float -> event option
+  val continue : coord:float * float -> event option
+  val end_ : (* coord:float * float ->  *) event option
+  val execute : origin -> event -> unit
+  val send : event -> unit
 end
 
 module type One_shot = sig
@@ -28,23 +28,38 @@ module Draw : Stroker with type start_args = Types.Tool.stroker = struct
 
   type event =
     | Start of {
-        origin : origin;
         stroker : Types.Tool.stroker;
         id : string;
         coord : float * float;
         width : Width.t;
         color : Color.t;
       }
-    | Continue of { origin : origin; coord : float * float }
-    | End of { origin : origin }
+    | Continue of { coord : float * float }
+    | End
+  [@@deriving yojson]
 
-  let start origin stroker ~id ~coord =
+  let event_to_string ev = ev |> event_to_yojson |> Yojson.Safe.to_string
+
+  let event_of_string s =
+    match Yojson.Safe.from_string s with
+    | r -> event_of_yojson r
+    | exception Yojson.Json_error e -> Error e
+
+  let event_of_string s =
+    match event_of_string s with
+    | Ok s -> Some s
+    | Error e ->
+        Brr.Console.(
+          log [ "Error when converting back a draw tool event:"; e; s ]);
+        None
+
+  let start stroker ~id ~coord =
     let state = State.get_state () in
     let color = state.color and width = state.width in
-    Some (Start { origin; stroker; id; coord; color; width })
+    Some (Start { stroker; id; coord; color; width })
 
-  let continue origin ~coord = Some (Continue { origin; coord })
-  let end_ origin = Some (End { origin })
+  let continue ~coord = Some (Continue { coord })
+  let end_ = Some End
 
   let states : (origin, (Brr.El.t * Stroke.t) option) Hashtbl.t =
     Hashtbl.create 10
@@ -98,11 +113,15 @@ module Draw : Stroker with type start_args = Types.Tool.stroker = struct
           Hashtbl.add State.Strokes.all stroke.id state
   end
 
-  let execute = function
-    | Start { origin; stroker; id; coord; color; width } ->
+  let execute origin = function
+    | Start { stroker; id; coord; color; width } ->
         Execute.start origin stroker ~id ~coord ~color ~width
-    | Continue { origin; coord } -> Execute.continue origin ~coord
-    | End { origin } -> Execute.end_ origin
+    | Continue { coord } -> Execute.continue origin ~coord
+    | End -> Execute.end_ origin
+
+  let send event =
+    let string = event_to_string event in
+    Messaging.draw (Draw string)
 end
 
 module Erase : Stroker with type start_args = unit = struct
@@ -112,15 +131,29 @@ module Erase : Stroker with type start_args = unit = struct
   let get_state origin = Hashtbl.find_opt states origin |> Option.join
   let set_state origin state = Hashtbl.replace states origin state
 
-  type event = Erase of string list
+  type event = Erase of string list [@@deriving yojson]
+
+  let event_to_string ev = ev |> event_to_yojson |> Yojson.Safe.to_string
+
+  let event_of_string s =
+    match Yojson.Safe.from_string s with
+    | r -> event_of_yojson r
+    | exception Yojson.Json_error e -> Error e
+
+  let event_of_string s =
+    match event_of_string s with
+    | Ok s -> Some s
+    | Error e ->
+        Brr.Console.(log [ "Error when converting back an erase event:"; e ]);
+        None
 
   (* type state = float * float *)
-  let start origin () ~id:_ ~coord =
-    set_state origin (Some coord);
+  let start () ~id:_ ~coord =
+    set_state Self (Some coord);
     None
 
-  let continue origin ~coord =
-    match get_state origin with
+  let continue ~coord =
+    match get_state Self with
     | None -> None
     | Some last_point ->
         let ids =
@@ -131,12 +164,12 @@ module Erase : Stroker with type start_args = unit = struct
               if intersect || close_enough then id :: acc else acc)
             State.Strokes.all []
         in
-        set_state origin (Some coord);
+        set_state Self (Some coord);
         if List.is_empty ids then None else Some (Erase ids)
 
-  let end_ origin =
+  let end_ =
     (* ~coord:_ *)
-    set_state origin None;
+    set_state Self None;
     None
 
   (* module Execute = struct *)
@@ -158,7 +191,7 @@ module Erase : Stroker with type start_args = unit = struct
   (* let end_ origin = (\* ~coord:_ *\) set_state origin None *)
   (* end *)
 
-  let execute = function
+  let execute origin = function
     | Erase ids ->
         List.iter
           (fun id ->
@@ -166,6 +199,10 @@ module Erase : Stroker with type start_args = unit = struct
             | None -> ()
             | Some (el, _) -> State.Strokes.remove_el el)
           ids
+
+  let send event =
+    let string = event_to_string event in
+    Messaging.draw (Erase string)
 end
 
 module Clear = struct

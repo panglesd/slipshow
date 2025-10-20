@@ -241,20 +241,36 @@ let message_setup window =
             else Step.Next.goto i window
           in
           ()
-      | Some { payload = Drawing d; id = window_id } -> (
-          let if_state state f =
-            match Drawing.State.of_string state with
-            | None -> ()
-            | Some state -> f state
+      | Some { payload = Drawing d; id = window_id } ->
+          (* let if_state state f = *)
+          (*   match Drawing.State.of_string state with *)
+          (*   | None -> () *)
+          (*   | Some state -> f state *)
+          (* in *)
+          let ( let** ) x f =
+            (* Option.iter *)
+            match x with
+            | None -> Brr.Console.(log [ "problem here" ])
+            | Some x -> f x
           in
           let origin = Drawing.Types.Sent window_id in
-          match d with
-          | End -> Drawing.Event.end_ origin ()
-          | Continue { coord } -> Drawing.Event.continue origin coord
-          | Start { state; coord; id } ->
-              if_state state @@ fun state ->
-              Drawing.Event.start origin state coord id
-          | Clear -> Drawing.Tools.Clear.click origin All)
+          let** modu = Messaging.Draw_event.of_string d in
+          let** s, (module Tool : Drawing.Tools.Stroker) =
+            match modu with
+            | Draw d ->
+                Some (d, (module Drawing.Tools.Draw : Drawing.Tools.Stroker))
+            | Erase d -> Some (d, (module Drawing.Tools.Erase))
+          in
+          let** ev = Tool.event_of_string s in
+          let () = Tool.execute origin ev in
+          ()
+          (* match d with *)
+          (* | End -> Drawing.Event.end_ origin () *)
+          (* | Continue { coord } -> Drawing.Event.continue origin coord *)
+          (* | Start { state; coord; id } -> *)
+          (*     if_state state @@ fun state -> *)
+          (*     Drawing.Event.start origin state coord id *)
+          (* | Clear -> Drawing.Tools.Clear.click origin All *)
       | Some { payload = Send_all_drawing; id = _ } ->
           Drawing.send_all_strokes ()
       | Some { payload = Receive_all_drawing all_strokes; id = _ } ->

@@ -99,7 +99,9 @@ end
 
 include V1
 
-type origin = Self | Sent of string
+type origin = Self | Sent of string [@@deriving yojson]
+
+let origin_to_string v = v |> origin_to_yojson |> Yojson.Safe.to_string
 
 module Draw_event = struct
   type t =
