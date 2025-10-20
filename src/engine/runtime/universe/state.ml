@@ -1,7 +1,9 @@
 open Constants
 
-let coordinates =
-  ref { Coordinates.x = width () /. 2.; y = height () /. 2.; scale = 1. }
+let coordinates = ref None
+let set_coord v = coordinates := Some v
 
-let set_coord v = coordinates := v
-let get_coord () = !coordinates
+let get_coord () =
+  match !coordinates with
+  | None -> { Coordinates.x = width () /. 2.; y = height () /. 2.; scale = 1. }
+  | Some v -> v
