@@ -4,7 +4,7 @@ open Record
 let replay_stroke ?(speedup = 1.) (stroke : Stroke.t) =
   Brr.Console.(log [ "Replaying stroke" ]);
   let start_time = now () in
-  let el = Tools.Draw.create_elem_of_stroke { stroke with path = [] } in
+  let el = Strokes.create_elem_of_stroke { stroke with path = [] } in
   let svg =
     Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing-elem")
     |> Option.get
@@ -23,7 +23,7 @@ let replay_stroke ?(speedup = 1.) (stroke : Stroke.t) =
   let rec draw_loop _ =
     let path, finished = filter () in
     Brr.El.set_at (Jstr.v "d")
-      (Some (Jstr.v (Tools.Draw.svg_path stroke.options stroke.scale path)))
+      (Some (Jstr.v (Strokes.svg_path stroke.options stroke.scale path)))
       el;
     if finished then ()
     else
@@ -76,7 +76,7 @@ let replay ?(speedup = 1.) (record : t (* record *)) =
 
 let stroke_until ~time_elapsed (stroke : Stroke.t) =
   let path = List.filter (fun (_, t) -> t <= time_elapsed) stroke.path in
-  let el = Tools.Draw.create_elem_of_stroke { stroke with path } in
+  let el = Strokes.create_elem_of_stroke { stroke with path } in
   el
 
 let draw_until ~elapsed_time (record : t) =

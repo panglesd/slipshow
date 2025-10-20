@@ -100,3 +100,12 @@ end
 include V1
 
 type origin = Self | Sent of string
+
+module Draw_event = struct
+  type t =
+    | End
+    | Start of { id : string; state : string; coord : float * float }
+    | Continue of { coord : float * float }
+    | Clear
+  (* [@@deriving sexp] *)
+end

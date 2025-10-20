@@ -1,19 +1,12 @@
 open Sexplib.Std
 
-type drawing_event =
-  | End
-  | Start of { id : string; state : string; coord : float * float }
-  | Continue of { coord : float * float }
-  | Clear
-[@@deriving sexp]
-
 type payload =
   | State of int * [ `Fast | `Normal ]
   | Ready
   | Open_speaker_notes
   | Close_speaker_notes
   | Speaker_notes of string
-  | Drawing of drawing_event
+  | Drawing of string
   | Send_all_drawing
   | Receive_all_drawing of string list
 [@@deriving sexp]

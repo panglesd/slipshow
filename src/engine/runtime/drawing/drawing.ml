@@ -9,6 +9,7 @@ module Event = Event
 module Tools = Tools
 module Record = Record
 module Replay = Replay
+module Strokes = Strokes
 
 let send_all_strokes () =
   let all_strokes =
@@ -24,7 +25,7 @@ let receive_all_strokes all_strokes =
       match Stroke.of_string s with
       | None -> ()
       | Some stroke ->
-          let el = Tools.Draw.create_elem_of_stroke stroke in
+          let el = Strokes.create_elem_of_stroke stroke in
           Hashtbl.add State.Strokes.all stroke.id (el, stroke);
           let svg =
             Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing-elem")

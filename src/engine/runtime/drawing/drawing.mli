@@ -9,6 +9,7 @@ module Stroke = Stroke
 module Tools = Tools
 module Record = Record
 module Replay = Replay
+module Strokes = Strokes
 
 val setup : Brr.El.t -> unit
 val send_all_strokes : unit -> unit

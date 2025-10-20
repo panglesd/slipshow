@@ -1,8 +1,7 @@
 ---
 dimension: 16:9
-toplevel-attributes: slide enter="~duration:0" draw=clo
 ---
 
-![](clo.draw){#clo}
+![](clo.draw){draw}
 
 {style=height:10000px}
