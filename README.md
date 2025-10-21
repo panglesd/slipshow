@@ -38,7 +38,7 @@ You can find several example of slip presentation, from different versions of sl
 
 - [The slips of my thesis](http://choum.net/panglesd/slides/slides-js/slides.html), the very first presentation that used (a very early version of) slipshow,
 - [Some other technical presentation](https://choum.net/panglesd/slides/WDCM-2021-slips/wdcm-ada.html) (that also used an early version of the engine)
-- [A presentation of slipshow](https://choum.net/panglesd/slides/campus_du_libre.html) in French. Source file [here](example/campus-du-libre/slipshow.md)!
+- [A presentation of slipshow](https://choum.net/panglesd/slides/campus_du_libre.html) in French. Source file [here](example/campus-du-libre/campus_du_libre.md)!
 - [A presentation on the BB(5) resolution](https://choum.net/panglesd/bbslides.html). See the [sources](https://github.com/meithecatte/bbslides/) (Disclaimer: I'm not the author of this presentation!)
 
 Use the arrows to navigate in the presentation.
