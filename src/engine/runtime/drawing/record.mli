@@ -10,5 +10,5 @@ val of_string : string -> (t, string) result
 val to_string : t -> string
 val start_record : unit -> recording_in_progress
 val stop_record : recording_in_progress -> t
-val record : recording_in_progress -> event -> unit
+val record : event -> recording_in_progress -> unit
 val now : unit -> float

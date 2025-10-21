@@ -9,6 +9,9 @@ let replay_stroke ?(speedup = 1.) (stroke : Stroke.t) =
   let el = Strokes.create_elem_of_stroke { stroke with path = [] } in
   Brr.El.append_children svg [ el ];
   let filter () =
+    let speedup =
+      match Fast.get_mode () with Normal -> speedup | _ -> 10000.
+    in
     let time_elapsed = now () -. start_time in
     let rec loop acc = function
       | [] -> (acc, true)
@@ -32,13 +35,18 @@ let replay_stroke ?(speedup = 1.) (stroke : Stroke.t) =
   ()
 
 let start_time = function
-  | Stroke { path = (_, t) :: _; _ } | Erase t -> t
-  | Stroke { path = []; _ } -> failwith "TODO" (* TODO: implement *)
+  | Stroke { path = (_, t) :: _; _ } | Erase (_, t) -> t
+  | Stroke { path = []; _ } -> assert false
+(* Paths cannot be empty *)
+(* failwith "TODO" (\* TODO: implement *\) *)
 
 let replay ?(speedup = 1.) (record : t (* record *)) =
   let fut, resolve_fut = Fut.create () in
   let start_replay = now () in
   let filter l speedup =
+    let speedup =
+      match Fast.get_mode () with Normal -> speedup | _ -> 10000.
+    in
     let time_elapsed = now () -. start_replay in
     let rec loop acc = function
       | [] -> (acc, [])

@@ -49,6 +49,11 @@ let current_situation : (Types.origin, current_situation) Hashtbl.t =
 type pack =
   | P : 'a option * (module Tools.Stroker with type event = 'a) -> pack
 
+let current_recording = ref None
+let start_recording () = current_recording := Some (Record.start_record ())
+let record event = Option.iter (Record.record event) !current_recording
+let end_recording () = Option.map Record.stop_record !current_recording
+
 let start_shape origin ev =
   let coord = coord_of_event ev in
   let state = State.get_state () in
@@ -73,7 +78,7 @@ let start_shape origin ev =
   event
   |> Option.iter @@ fun event ->
      T.send event;
-     T.execute origin event |> Option.iter Record.record
+     T.execute origin event |> Option.iter record
 (* let event = Tools.Draw.start origin stroker ~id ~coord in *)
 (* let () = *)
 (*   let state = state |> State.to_string in *)
@@ -104,7 +109,7 @@ let continue_shape origin ev =
       ev
       |> Option.iter @@ fun event ->
          Tool.send event;
-         Tool.execute origin event |> Option.iter Record.record
+         Tool.execute origin event |> Option.iter record
 
 let end_shape origin () =
   match Hashtbl.find_opt current_situation origin with
@@ -120,7 +125,7 @@ let end_shape origin () =
       ev
       |> Option.iter @@ fun event ->
          Tool.send event;
-         Tool.execute origin event |> Option.iter Record.record
+         Tool.execute origin event |> Option.iter record
 
 (* let end_shape origin () = *)
 (*   Messaging.draw End; *)

@@ -59,7 +59,7 @@ let to_string s =
 
 type recording_in_progress = record ref
 
-let current_record = ref None
+(* let current_record = ref None *)
 let now () = Brr.Performance.now_ms Brr.G.performance
 let empty_record () = { start_time = now (); evs = [] }
 let start_record () = ref (empty_record ())
@@ -79,7 +79,7 @@ let relativize_event starting_time event =
       Stroke { ev with path; end_at }
   | Erase (ids, t) -> Erase (ids, t -. starting_time)
 
-let record record (event : event) =
+let record (event : event) record =
   let current_record_val = !record in
   let event = relativize_event current_record_val.start_time event in
   let evs = event :: current_record_val.evs in

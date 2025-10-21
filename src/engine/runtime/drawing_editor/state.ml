@@ -30,13 +30,25 @@ module Recording = struct
     match c with
     | None as c -> Lwd.set current c
     | Some record_to_add -> (
+        let () =
+          List.iter
+            (function
+              | Drawing.Record.Stroke
+                  { id; scale; path; end_at; color; opacity; options } ->
+                  let _ =
+                    Drawing.Tools.Erase.execute Drawing.Types.Self
+                      (Erase [ id ])
+                  in
+                  ()
+              | Erase _ -> ())
+            record_to_add
+        in
         match Lwd.peek current with
         | None ->
             let record = State_conversion.record_of_record record_to_add in
             let total_time_recorded = Lwd.peek record.total_time in
             Lwd.set current (Some record);
-            Lwd.set time total_time_recorded;
-            Drawing.Event.clear ()
+            Lwd.set time total_time_recorded
         | Some current_recording ->
             let record_to_add =
               State_conversion.record_of_record record_to_add
@@ -64,8 +76,7 @@ module Recording = struct
             Lwd_table.iter
               (fun s -> Lwd_table.append' current_recording.strokes s)
               record_to_add.strokes;
-            Lwd.set time (Lwd.peek time +. total_time_recorded);
-            Drawing.Event.clear ())
+            Lwd.set time (Lwd.peek time +. total_time_recorded))
 
   let peek_current () = Lwd.peek current
   let current = Lwd.get current

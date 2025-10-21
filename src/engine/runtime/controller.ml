@@ -121,11 +121,11 @@ let keyboard_setup (window : Universe.Window.t) =
           ()
       | "r" ->
           Brr.Console.(log [ "Starting to record" ]);
-          Drawing.Record.start_record ()
+          Drawing.Event.start_recording ()
       | "R" -> (
           State.mode := Drawing_editing;
           (* TODO: we don't need this ref anymore since "p" shortcut was only for testing purpose *)
-          let record = Drawing.Record.stop_record () in
+          let record = Drawing.Event.end_recording () in
           Drawing_editor.set_record record;
           Brr.Console.(log [ "NOW"; "Saving record"; record ]);
           match record with

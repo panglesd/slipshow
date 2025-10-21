@@ -1,20 +1,18 @@
 open Types
 
 module type Stroker = sig
-  (* type state *)
   type start_args
   type event
 
   val event_of_string : string -> event option
   val start : start_args -> id:string -> coord:float * float -> event option
   val continue : coord:float * float -> event option
-  val end_ : (* coord:float * float ->  *) event option
+  val end_ : event option
   val execute : origin -> event -> Record.event option
   val send : event -> unit
 end
 
 module type One_shot = sig
-  (* type state *)
   type args
   type event
 
@@ -30,7 +28,6 @@ type draw_start_args = {
 [@@deriving yojson]
 
 module Draw : Stroker with type start_args = draw_start_args = struct
-  (* type state = Brr.El.t * Stroke.t *)
   type start_args = draw_start_args [@@deriving yojson]
 
   type event =
@@ -71,7 +68,7 @@ module Draw : Stroker with type start_args = draw_start_args = struct
   module Execute = struct
     let start origin stroker ~id ~coord ~color ~width =
       let opacity = match stroker with Tool.Highlighter -> 0.33 | Pen -> 1. in
-      let end_at = (* Record.now () *) 0. in
+      let end_at = Record.now () in
       let path = [ (coord, end_at) ] in
       let options = Strokes.options_of stroker width in
       let { Universe.Coordinates.scale; _ } = Universe.State.get_coord () in
@@ -87,7 +84,7 @@ module Draw : Stroker with type start_args = draw_start_args = struct
       match get_state origin with
       | None -> None
       | Some (el, stroke) ->
-          let t = (* Record.now () *) 0. in
+          let t = Record.now () in
           let stroke =
             { stroke with Stroke.path = (coord, t) :: stroke.path; end_at = t }
           in
@@ -100,11 +97,6 @@ module Draw : Stroker with type start_args = draw_start_args = struct
           None
 
     let end_ origin =
-      (* ~coord:_ *)
-      (* ((_, stroke) as state : state) *)
-      (* let s = Stroke.to_string stroke in *)
-      (* Brr.Console.(log [ "a stroke is: "; s ]); *)
-      (* Record.record (Record.Stroke stroke); *)
       match get_state origin with
       | None -> None
       | Some ((_, stroke) as state) ->
@@ -124,7 +116,7 @@ module Draw : Stroker with type start_args = draw_start_args = struct
     Messaging.draw (Draw string)
 end
 
-module Erase : Stroker with type start_args = unit = struct
+module Erase (* : Stroker with type start_args = unit *) = struct
   type start_args = unit
 
   let states = Hashtbl.create 10
@@ -147,7 +139,6 @@ module Erase : Stroker with type start_args = unit = struct
         Brr.Console.(log [ "Error when converting back an erase event:"; e ]);
         None
 
-  (* type state = float * float *)
   let start () ~id:_ ~coord =
     set_state Self (Some coord);
     None
@@ -168,30 +159,10 @@ module Erase : Stroker with type start_args = unit = struct
         if List.is_empty ids then None else Some (Erase ids)
 
   let end_ =
-    (* ~coord:_ *)
     set_state Self None;
     None
 
-  (* module Execute = struct *)
-  (* let start origin () ~id:_ ~coord = set_state origin (Some coord) *)
-
-  (* let continue origin ~coord = *)
-  (*   match  *)
-  (*   match get_state origin with *)
-  (*   | None -> () *)
-  (*   | Some last_point -> *)
-  (*       Hashtbl.iter *)
-  (*         (fun _id (elem, { Stroke.path; _ }) -> *)
-  (*           let intersect = Utils.intersect_poly path (coord, last_point) in *)
-  (*           let close_enough = Utils.close_enough_poly path coord in *)
-  (*           if intersect || close_enough then State.Strokes.remove_el elem) *)
-  (*         State.Strokes.all; *)
-  (*       set_state origin (Some coord) *)
-
-  (* let end_ origin = (\* ~coord:_ *\) set_state origin None *)
-  (* end *)
-
-  let execute origin = function
+  let execute _origin = function
     | Erase [] -> None
     | Erase ids ->
         List.iter
@@ -213,7 +184,7 @@ module Clear = struct
   let concerned origin who =
     match who with All -> true | Origin o when o = origin -> true | _ -> false
 
-  let click (origin : origin) (who : args) =
+  let click (_origin : origin) (_who : args) =
     Hashtbl.iter
       (fun _ (elem, _) -> State.Strokes.remove_el elem)
       State.Strokes.all
