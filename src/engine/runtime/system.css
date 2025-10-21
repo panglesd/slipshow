@@ -67,3 +67,7 @@ body.slipshow-drawing-mode {
   flex-grow: 1;
   flex-direction: row-reverse;
 }
+
+#slipshow-content {
+  border: 1px solid transparent;
+}
