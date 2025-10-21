@@ -25,6 +25,7 @@
 - Fix pauses not being scoped in slides (#179)
 - Fix exiting not where it should (#179)
 - Fix `unfocus` behavior to match the docs (#179)
+- Fix wrong position bug on custom dimensions (#182)
 
 ## [v0.6.0] The King's Slipshow (Monday 18th August, 2025)
 
