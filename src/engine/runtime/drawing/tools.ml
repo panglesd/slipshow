@@ -18,22 +18,6 @@ module type Stroker = sig
   val end_ : event option
 end
 
-module type Key_press = sig
-  type start_args
-
-  include Tool
-
-  val trigger : start_args -> event option
-end
-
-module type One_shot = sig
-  type args
-  type event
-
-  val click : origin -> args -> event option
-  val execute : event -> unit
-end
-
 type draw_start_args = {
   stroker : Types.Tool.stroker;
   width : Width.t;
