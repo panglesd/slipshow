@@ -33,14 +33,14 @@ module Recording = struct
         let () =
           List.iter
             (function
-              | Drawing.Record.Stroke
-                  { id; scale; path; end_at; color; opacity; options } ->
+              | Drawing.Record.Stroke stroke ->
                   let _ =
                     Drawing.Tools.Erase.execute Drawing.Types.Self
-                      (Erase [ id ])
+                      (Erase [ stroke.id ])
                   in
                   ()
-              | Erase _ -> ())
+              | Erase _ -> ()
+              | Clear _ -> ())
             record_to_add
         in
         match Lwd.peek current with

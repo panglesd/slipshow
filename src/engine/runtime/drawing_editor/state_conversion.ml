@@ -41,7 +41,7 @@ let record_of_record (evs : Drawing.Record.t) : t =
   in
   let strokes =
     List.filter_map
-      (function Drawing.Record.Stroke s -> Some s | Erase _ -> None)
+      (function Drawing.Record.Stroke s -> Some s | Erase _ | Clear _ -> None)
       evs
   in
   let total_time = Lwd.var @@ end_at (List.hd strokes).path in

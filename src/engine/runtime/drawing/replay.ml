@@ -36,9 +36,9 @@ let replay_stroke ?(speedup = 1.) (stroke : Stroke.t) =
 
 let start_time = function
   | Stroke { path = (_, t) :: _; _ } | Erase (_, t) -> t
+  (* Paths cannot be empty *)
   | Stroke { path = []; _ } -> assert false
-(* Paths cannot be empty *)
-(* failwith "TODO" (\* TODO: implement *\) *)
+  | Clear t -> t
 
 let replay ?(speedup = 1.) (record : t (* record *)) =
   let fut, resolve_fut = Fut.create () in
@@ -65,7 +65,8 @@ let replay ?(speedup = 1.) (record : t (* record *)) =
     List.iter
       (function
         | Stroke s -> replay_stroke ~speedup s
-        | Erase _ -> failwith "TODO" (* TODO: implement *))
+        | Erase _ -> failwith "TODO" (* TODO: implement *)
+        | Clear _ -> failwith "TODO")
       to_draw;
     match rest with
     | [] -> resolve_fut ()
