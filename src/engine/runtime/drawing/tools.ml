@@ -1,15 +1,29 @@
 open Types
 
-module type Stroker = sig
-  type start_args
+module type Tool = sig
   type event
 
   val event_of_string : string -> event option
+  val execute : origin -> event -> Record.event option
+  val send : event -> unit
+end
+
+module type Stroker = sig
+  type start_args
+
+  include Tool
+
   val start : start_args -> id:string -> coord:float * float -> event option
   val continue : coord:float * float -> event option
   val end_ : event option
-  val execute : origin -> event -> Record.event option
-  val send : event -> unit
+end
+
+module type Key_press = sig
+  type start_args
+
+  include Tool
+
+  val trigger : start_args -> event option
 end
 
 module type One_shot = sig
@@ -179,13 +193,19 @@ module Erase (* : Stroker with type start_args = unit *) = struct
 end
 
 module Clear = struct
-  type args = All | Origin of origin
+  type start_args = unit
+  type event = unit
 
-  let concerned origin who =
-    match who with All -> true | Origin o when o = origin -> true | _ -> false
+  let event_of_string _ = Some ()
+  let send () = Messaging.draw (Clear "")
+  let trigger _start_args = Some ()
 
-  let click (_origin : origin) (_who : args) =
+  (* let concerned origin who = *)
+  (*   match who with All -> true | Origin o when o = origin -> true | _ -> false *)
+
+  let execute (_origin : origin) () =
     Hashtbl.iter
       (fun _ (elem, _) -> State.Strokes.remove_el elem)
-      State.Strokes.all
+      State.Strokes.all;
+    Some (Clear (Record.now ()) : Record.event)
 end

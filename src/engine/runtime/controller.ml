@@ -59,7 +59,7 @@ let keyboard_setup (window : Universe.Window.t) =
       | "h" -> Drawing.State.set_tool (Stroker Highlighter)
       | "x" -> Drawing.State.set_tool Pointer
       | "e" -> Drawing.State.set_tool Eraser
-      | "X" -> Drawing.Event.clear ()
+      | "X" -> Drawing.Event.clear Self ()
       | "l" ->
           let _ : unit Fut.t =
             Step.Next.Excursion.start ();
@@ -124,7 +124,6 @@ let keyboard_setup (window : Universe.Window.t) =
           Drawing.Event.start_recording ()
       | "R" -> (
           State.mode := Drawing_editing;
-          (* TODO: we don't need this ref anymore since "p" shortcut was only for testing purpose *)
           let record = Drawing.Event.end_recording () in
           Drawing_editor.set_record record;
           Brr.Console.(log [ "NOW"; "Saving record"; record ]);
@@ -132,13 +131,6 @@ let keyboard_setup (window : Universe.Window.t) =
           | None -> ()
           | Some r ->
               Brr.Console.(log [ "record is"; Drawing.Record.to_string r ]))
-      (* | "p" -> ( *)
-      (*     match !record with *)
-      (*     | None -> Brr.Console.(log [ "No record to replay" ]) *)
-      (*     | Some record -> *)
-      (*         Brr.Console.(log [ "Replaying" ]); *)
-      (*         let _ = Drawing.Action.Replay.replay ~speedup:2. record in *)
-      (*         ()) *)
       | _ -> ()
     in
     Brr.Console.(log [ key ]);
@@ -242,35 +234,23 @@ let message_setup window =
           in
           ()
       | Some { payload = Drawing d; id = window_id } ->
-          (* let if_state state f = *)
-          (*   match Drawing.State.of_string state with *)
-          (*   | None -> () *)
-          (*   | Some state -> f state *)
-          (* in *)
           let ( let** ) x f =
-            (* Option.iter *)
             match x with
             | None -> Brr.Console.(log [ "problem here" ])
             | Some x -> f x
           in
           let origin = Drawing.Types.Sent window_id in
           let** modu = Messaging.Draw_event.of_string d in
-          let** s, (module Tool : Drawing.Tools.Stroker) =
+          let** s, (module Tool : Drawing.Tools.Tool) =
             match modu with
             | Draw d ->
-                Some (d, (module Drawing.Tools.Draw : Drawing.Tools.Stroker))
+                Some (d, (module Drawing.Tools.Draw : Drawing.Tools.Tool))
             | Erase d -> Some (d, (module Drawing.Tools.Erase))
+            | Clear d -> Some (d, (module Drawing.Tools.Clear))
           in
           let** ev = Tool.event_of_string s in
           let _ : Drawing.Record.event option = Tool.execute origin ev in
           ()
-          (* match d with *)
-          (* | End -> Drawing.Event.end_ origin () *)
-          (* | Continue { coord } -> Drawing.Event.continue origin coord *)
-          (* | Start { state; coord; id } -> *)
-          (*     if_state state @@ fun state -> *)
-          (*     Drawing.Event.start origin state coord id *)
-          (* | Clear -> Drawing.Tools.Clear.click origin All *)
       | Some { payload = Send_all_drawing; id = _ } ->
           Drawing.send_all_strokes ()
       | Some { payload = Receive_all_drawing all_strokes; id = _ } ->

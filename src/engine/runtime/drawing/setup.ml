@@ -82,7 +82,7 @@ let setup el =
     add_listener State.set_width State.Button.width Small;
     add_listener State.set_width State.Button.width Medium;
     add_listener State.set_width State.Button.width Large;
-    add_listener Event.clear State.Button.clear ()
+    add_listener (Event.clear Self) State.Button.clear ()
   in
   let () =
     State.set_width Medium;

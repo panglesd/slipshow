@@ -23,7 +23,8 @@ let send_step step mode =
   Brr.Window.post_message parent ~msg
 
 module Draw_event = struct
-  type t = Draw of string | Erase of string [@@deriving yojson]
+  type t = Draw of string | Erase of string | Clear of string
+  [@@deriving yojson]
 
   let to_string d = d |> to_yojson |> Yojson.Safe.to_string
 

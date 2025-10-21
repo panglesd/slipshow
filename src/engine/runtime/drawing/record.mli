@@ -1,5 +1,9 @@
 type 'a timed = 'a * float
-type event = Stroke of Types.Stroke.t | Erase of string list timed
+
+type event =
+  | Stroke of Types.Stroke.t
+  | Erase of string list timed
+  | Clear of float
 
 type t = event list
 (** Ordered by time *)

@@ -3,7 +3,10 @@ open Types
 type 'a timed = 'a * float [@@deriving yojson]
 
 module V1 = struct
-  type event = Stroke of V1.Stroke.t | Erase of string list timed
+  type event =
+    | Stroke of V1.Stroke.t
+    | Erase of string list timed
+    | Clear of float
   [@@deriving yojson]
 
   let _ = Erase ([], 1.0)
@@ -59,7 +62,6 @@ let to_string s =
 
 type recording_in_progress = record ref
 
-(* let current_record = ref None *)
 let now () = Brr.Performance.now_ms Brr.G.performance
 let empty_record () = { start_time = now (); evs = [] }
 let start_record () = ref (empty_record ())
@@ -78,6 +80,7 @@ let relativize_event starting_time event =
       let end_at = ev.end_at -. starting_time in
       Stroke { ev with path; end_at }
   | Erase (ids, t) -> Erase (ids, t -. starting_time)
+  | Clear t -> Clear (t -. starting_time)
 
 let record (event : event) record =
   let current_record_val = !record in

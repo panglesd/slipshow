@@ -30,21 +30,9 @@ let get_id =
     String.concat "" [ name; string_of_int i; "_"; hash ]
 
 type current_situation = K : (module Tools.Stroker) -> current_situation
-(* | *)
-(*   Drawing *)
-(* | Erasing *)
 
 let current_situation : (Types.origin, current_situation) Hashtbl.t =
   Hashtbl.create 10
-
-(* let start origin state coord id = *)
-(*   match state.State.tool with *)
-(*   | Stroker stroker -> *)
-(*       let event = Tools.Draw.start origin stroker ~id ~coord in *)
-(*       Option.iter Tools.Draw.execute event; *)
-(*       Hashtbl.replace current_situation origin (K (module Tools.Draw)) *)
-(*   | Eraser -> () *)
-(*   | Pointer | Select | Move -> () *)
 
 type pack =
   | P : 'a option * (module Tools.Stroker with type event = 'a) -> pack
@@ -67,45 +55,24 @@ let start_shape origin ev =
         in
         let event = Tools.Draw.start start_args ~id ~coord in
         Some (P (event, (module Tools.Draw)))
-        (* Option.iter Tools.Draw.execute event; *)
     | Eraser ->
         let event = Tools.Erase.start () ~id ~coord in
         Some (P (event, (module Tools.Erase)))
     | Pointer | Select | Move -> None
   in
-  (* TODO: messaging *)
   Hashtbl.replace current_situation origin (K (module T));
   event
   |> Option.iter @@ fun event ->
      T.send event;
      T.execute origin event |> Option.iter record
-(* let event = Tools.Draw.start origin stroker ~id ~coord in *)
-(* let () = *)
-(*   let state = state |> State.to_string in *)
-(*   Messaging.draw (Start { state; id; coord }) *)
-(* in *)
-(* start origin state coord id *)
-
-(* let continue origin coord = *)
-(*   match Hashtbl.find_opt current_situation origin with *)
-(*   | None -> () *)
-(*   | Some (K (module Tool)) -> *)
-(*       let ev = Tool.continue origin ~coord in *)
-(*       Hashtbl.replace current_situation origin (K (module Tool)); *)
-(*       Option.iter Tool.execute ev *)
 
 let continue_shape origin ev =
   check_is_pressed ev @@ fun () ->
   let coord = coord_of_event ev in
-  (* Messaging.draw (Continue { coord }); *)
-  (* continue origin coord *)
   match Hashtbl.find_opt current_situation origin with
   | None -> ()
   | Some (K (module Tool)) ->
-      let ev = Tool.continue (* origin *) ~coord in
-      (* Hashtbl.replace current_situation origin (K (module Tool)); *)
-      (* Option.iter (Tool.execute origin) ev; *)
-      (* Option.iter Tool.send ev *)
+      let ev = Tool.continue ~coord in
       ev
       |> Option.iter @@ fun event ->
          Tool.send event;
@@ -115,22 +82,16 @@ let end_shape origin () =
   match Hashtbl.find_opt current_situation origin with
   | None -> ()
   | Some (K (module Tool)) ->
-      let ev =
-        Tool.end_
-        (* origin *)
-      in
+      let ev = Tool.end_ in
       Hashtbl.remove current_situation origin;
-      (* Option.iter (Tool.execute origin) ev; *)
-      (* Option.iter Tool.send ev *)
       ev
       |> Option.iter @@ fun event ->
          Tool.send event;
          Tool.execute origin event |> Option.iter record
 
-(* let end_shape origin () = *)
-(*   Messaging.draw End; *)
-(*   end_ origin () *)
-
-let clear () =
-  (* Messaging.draw Clear; *)
-  Tools.Clear.click Self All
+let clear origin () =
+  let ev = Tools.Clear.trigger () in
+  ev
+  |> Option.iter @@ fun event ->
+     Tools.Clear.send event;
+     Tools.Clear.execute origin event |> Option.iter record
