@@ -7,6 +7,9 @@ let coord_of_event ev =
   let offset_x = Brr.El.bound_x main in
   (x -. offset_x, y)
   |> Normalization.translate_coords |> Universe.Window.translate_coords
+  (* See system.css: we add padding to be able to write on the side of the
+     content. *)
+  |> fun (x, y) -> (x -. 2000., y -. 2000.)
 
 let is_pressed = ( != ) 0
 
