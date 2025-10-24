@@ -131,13 +131,6 @@ module Move = struct
       (fun (old_path, old_track, stroke) ->
         let new_track = Int.max 0 (old_track + track_shift) in
         Lwd.set stroke.track new_track;
-        (* let time_shift = *)
-        (*   Float.min timeshift *)
-        (*     (Lwd.peek recording.total_time -. very_quick_sample stroke.end_at) *)
-        (* in *)
-        (* let time_shift = *)
-        (*   Float.max time_shift (0. -. very_quick_sample stroke.starts_at) *)
-        (* in *)
         let new_path = Path_editing.translate old_path time_shift in
         Lwd.set stroke.path new_path)
       strokes
@@ -155,11 +148,6 @@ module Move = struct
         move time_shift track_shift strokes
       in
       let start _x _y ev =
-        (* It would be nice to just pass the event itself, but outside of the
-           event handler the current target may be [null] unfortunately stupid
-           programming language... See
-           https://developer.mozilla.org/en-US/docs/Web/API/Event/currentTarget *)
-        (* let container = *)
         let strokes =
           Lwd_table.fold
             (fun acc stroke ->
@@ -171,29 +159,11 @@ module Move = struct
           ev |> Brr.Ev.current_target |> Brr.Ev.target_to_jv |> Brr.El.of_jv
         in
         (strokes, el)
-        (* in *)
-        (* let x = x -. Brr.El.bound_x container in *)
-        (* let y = y -. Brr.El.bound_y container in *)
-        (* let position_var = Lwd.var (x, y, 0., 0.) in *)
-        (* Lwd.set box_selection_var (Some position_var); *)
-        (* (x, y, container, position_var) *)
       in
       let drag ~dx ~dy (strokes, container) _ev =
-        (* let x, dx = if dx < 0. then (x +. dx, -.dx) else (x, dx) in *)
-        (* let y, dy = if dy < 0. then (y +. dy, -.dy) else (y, dy) in *)
         translate_of_coords strokes container ~dx ~dy
-        (* ; *)
-        (* Lwd.set position_var (x, y, dx, dy) *)
       in
-      let end_ _ _ =
-        ()
-        (* let x, y, dx, dy = Lwd.peek position_var in *)
-        (* Lwd_table.iter *)
-        (*   (fun { preselected; _ } -> Lwd.set preselected false) *)
-        (*   recording.strokes; *)
-        (* select_of_coords container ~x ~y ~dx ~dy ev; *)
-        (* Lwd.set box_selection_var None *)
-      in
+      let end_ _ _ = () in
       Ui_widgets.mouse_drag start drag end_
     in
     ev
