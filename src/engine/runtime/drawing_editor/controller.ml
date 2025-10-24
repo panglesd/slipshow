@@ -21,6 +21,12 @@ let handle ev =
       let new_time = Float.min (total_time ()) (Lwd.peek State.time +. 100.) in
       Lwd.set State.time new_time;
       true
+  | "m" ->
+      Lwd.set State.current_tool Move;
+      true
+  | "s" ->
+      Lwd.set State.current_tool Select;
+      true
   | " " ->
       if Lwd.peek State.is_playing then State.stop () else State.play ();
       true
