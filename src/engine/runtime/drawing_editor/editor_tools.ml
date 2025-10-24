@@ -55,9 +55,9 @@ module Selection = struct
     in
     let start x y ev =
       (* It would be nice to just pass the event itself, but outside of the
-           event handler the current target may be [null] unfortunately stupid
-           programming language... See
-           https://developer.mozilla.org/en-US/docs/Web/API/Event/currentTarget *)
+         event handler the current target may be [null] unfortunately, stupid
+         programming language... See
+         https://developer.mozilla.org/en-US/docs/Web/API/Event/currentTarget *)
       let container =
         ev |> Brr.Ev.current_target |> Brr.Ev.target_to_jv |> Brr.El.of_jv
       in
@@ -136,35 +136,32 @@ module Move = struct
       strokes
 
   let timeline_event recording stroke_height =
-    let ev =
-      let translate_of_coords strokes container ~dx ~dy =
-        let time_shift =
-          let total_length = Lwd.peek recording.total_time in
-          let width_in_pixel = Brr.El.bound_w container in
-          let scale = total_length /. width_in_pixel in
-          dx *. scale
-        in
-        let track_shift = int_of_float dy / stroke_height in
-        move time_shift track_shift strokes
+    let translate_of_coords strokes container ~dx ~dy =
+      let time_shift =
+        let total_length = Lwd.peek recording.total_time in
+        let width_in_pixel = Brr.El.bound_w container in
+        let scale = total_length /. width_in_pixel in
+        dx *. scale
       in
-      let start _x _y ev =
-        let strokes =
-          Lwd_table.fold
-            (fun acc stroke ->
-              if not (Lwd.peek stroke.selected) then acc
-              else (Lwd.peek stroke.path, Lwd.peek stroke.track, stroke) :: acc)
-            [] recording.strokes
-        in
-        let el =
-          ev |> Brr.Ev.current_target |> Brr.Ev.target_to_jv |> Brr.El.of_jv
-        in
-        (strokes, el)
-      in
-      let drag ~dx ~dy (strokes, container) _ev =
-        translate_of_coords strokes container ~dx ~dy
-      in
-      let end_ _ _ = () in
-      Ui_widgets.mouse_drag start drag end_
+      let track_shift = int_of_float dy / stroke_height in
+      move time_shift track_shift strokes
     in
-    ev
+    let start _x _y ev =
+      let strokes =
+        Lwd_table.fold
+          (fun acc stroke ->
+            if not (Lwd.peek stroke.selected) then acc
+            else (Lwd.peek stroke.path, Lwd.peek stroke.track, stroke) :: acc)
+          [] recording.strokes
+      in
+      let el =
+        ev |> Brr.Ev.current_target |> Brr.Ev.target_to_jv |> Brr.El.of_jv
+      in
+      (strokes, el)
+    in
+    let drag ~dx ~dy (strokes, container) _ev =
+      translate_of_coords strokes container ~dx ~dy
+    in
+    let end_ _ _ = () in
+    Ui_widgets.mouse_drag start drag end_
 end

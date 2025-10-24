@@ -131,7 +131,13 @@ let block_of_stroke recording (stroke : stro) =
         (* `R color; *)
       ]
     in
-    let ev = [ `R move_handler ] in
+    let ev_hover =
+      let$ current_tool = Lwd.get State.current_tool in
+      match current_tool with
+      | Move -> Lwd_seq.empty
+      | Select -> snd @@ Ui_widgets.hover ~var:stroke.preselected ()
+    in
+    let ev = [ `R move_handler; `S ev_hover ] in
     Brr_lwd.Elwd.div ~ev ~st []
   in
   let$ erased_block =
@@ -140,7 +146,15 @@ let block_of_stroke recording (stroke : stro) =
     | None -> Lwd_seq.empty
     | Some erased_at -> Lwd_seq.element @@ block_of_erased erased_at
   in
-  let ev = [] in
+  let ev =
+    let ev_hover =
+      let$ current_tool = Lwd.get State.current_tool in
+      match current_tool with
+      | Move -> Lwd_seq.empty
+      | Select -> snd @@ Ui_widgets.hover ~var:stroke.preselected ()
+    in
+    [ `S ev_hover ]
+  in
   Lwd_seq.concat (Lwd_seq.element @@ Brr_lwd.Elwd.div ~ev ~st []) erased_block
 
 let strokes recording =
