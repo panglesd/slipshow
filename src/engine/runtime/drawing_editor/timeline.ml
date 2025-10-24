@@ -5,9 +5,9 @@ let ( !! ) = Jstr.v
 let total_length (recording : t) = Lwd.get recording.total_time
 let px_int x = Jstr.append (Jstr.of_int x) !!"px"
 let px_float x = Jstr.append (Jstr.of_float x) !!"px"
+let stroke_height = 20
 
 let block_of_stroke recording (stroke : stro) =
-  let stroke_height = 20 in
   let selected =
     let$ selected = State.is_selected stroke
     and$ preselected = State.is_preselected stroke in
@@ -202,6 +202,24 @@ let strokes recording =
     Lwd_seq.lwd_monoid recording.strokes
   |> Lwd.join |> Lwd_seq.lift
 
+let very_quick_sample g =
+  let root = Lwd.observe g in
+  let res = Lwd.quick_sample root in
+  Lwd.quick_release root;
+  res
+
+let select t0 t1 track0 track1 recording =
+  Lwd_table.iter
+    (fun { end_at; starts_at; selected; preselected = _; track; _ } ->
+      let end_at = very_quick_sample end_at in
+      let starts_at = very_quick_sample starts_at in
+      let track = Lwd.peek track in
+      let is_selected =
+        track0 <= track && track <= track1 && t0 <= end_at && starts_at <= t1
+      in
+      Lwd.set selected is_selected)
+    recording.strokes
+
 let el recording =
   let strokes = strokes recording in
   let st =
@@ -215,29 +233,41 @@ let el recording =
   let box_selection_var = Lwd.var None in
   let ev =
     let click _ = Brr.Console.(log [ "HeLLLLLLo clik" ]) in
-    let drag ~x ~y ~dx ~dy ~current_target _ev =
-      let x =
-        let el_x =
-          current_target |> Brr.Ev.target_to_jv |> Brr.El.of_jv
-          |> Brr.El.bound_x
-        in
-        x -. el_x
-      in
-      let y =
-        let el_y =
-          current_target |> Brr.Ev.target_to_jv |> Brr.El.of_jv
-          |> Brr.El.bound_y
-        in
-        y -. el_y
-      in
+    let start ev =
+      (* It would be nice to just pass the event itself, but outside of the
+           event handler the current target may be [null] unfortunately stupid
+           programming language... See
+           https://developer.mozilla.org/en-US/docs/Web/API/Event/currentTarget *)
+      ev |> Brr.Ev.current_target |> Brr.Ev.target_to_jv |> Brr.El.of_jv
+    in
+    let drag ~x ~y ~dx ~dy acc _ev =
+      let x = x -. Brr.El.bound_x acc in
+      let y = y -. Brr.El.bound_y acc in
       let x, dx = if dx < 0. then (x +. dx, -.dx) else (x, dx) in
       let y, dy = if dy < 0. then (y +. dy, -.dy) else (y, dy) in
       match Lwd.peek box_selection_var with
       | None -> Lwd.set box_selection_var (Some (Lwd.var (x, y, dx, dy)))
       | Some v -> Lwd.set v (x, y, dx, dy)
     in
-    let end_ () = Lwd.set box_selection_var None in
-    Ui_widgets.mouse_drag click drag end_
+    let end_ acc =
+      match Lwd.peek box_selection_var with
+      | None -> ()
+      | Some v ->
+          let x, y, dx, dy = Lwd.peek v in
+          let x, dx =
+            let total_length = Lwd.peek recording.total_time in
+            let width_in_pixel = Brr.El.bound_w acc in
+            let scale = total_length /. width_in_pixel in
+            (x *. scale, dx *. scale)
+          in
+          let y, y' =
+            ( int_of_float y / stroke_height,
+              int_of_float (y +. dy) / stroke_height )
+          in
+          select x (x +. dx) y y' recording;
+          Lwd.set box_selection_var None
+    in
+    Ui_widgets.mouse_drag click start drag end_
   in
   let box =
     let$ box_selection = Lwd.get box_selection_var in
