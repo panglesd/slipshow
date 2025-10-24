@@ -67,28 +67,21 @@ let hover ?(var = Lwd.var false) () =
   in
   (Lwd.get selected, [ `P handler1; `P handler2 ])
 
-let mouse_drag click start drag end_ =
-  let has_moved = ref false in
-  let click_handler =
-    Brr_lwd.Elwd.handler Brr.Ev.click (fun ev ->
-        if !has_moved then () else click ev)
-  in
+let mouse_drag start drag end_ =
   let move_handler =
     let mouse_move x y acc =
      fun ev ->
-      has_moved := true;
       let mouse_ev = Brr.Ev.as_type ev in
       let x' = Brr.Ev.Mouse.page_x mouse_ev in
       let y' = Brr.Ev.Mouse.page_y mouse_ev in
-      drag ~x ~y ~dx:(x' -. x) ~dy:(y' -. y) acc ev
+      drag ~dx:(x' -. x) ~dy:(y' -. y) acc ev
     in
     Brr_lwd.Elwd.handler Brr.Ev.mousedown (fun ev ->
         Brr.Ev.prevent_default ev;
-        has_moved := false;
         let mouse_ev = Brr.Ev.as_type ev in
         let x = Brr.Ev.Mouse.page_x mouse_ev in
         let y = Brr.Ev.Mouse.page_y mouse_ev in
-        let acc = start ev in
+        let acc = start x y ev in
         let id =
           Brr.Ev.listen Brr.Ev.mousemove (mouse_move x y acc)
             (Brr.Document.body Brr.G.document |> Brr.El.as_target)
@@ -103,4 +96,4 @@ let mouse_drag click start drag end_ =
         in
         ())
   in
-  [ `P move_handler; `P click_handler ]
+  [ `P move_handler ]

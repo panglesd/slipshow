@@ -232,42 +232,40 @@ let el recording =
   in
   let box_selection_var = Lwd.var None in
   let ev =
-    let click _ = Brr.Console.(log [ "HeLLLLLLo clik" ]) in
-    let start ev =
+    let start x y ev =
       (* It would be nice to just pass the event itself, but outside of the
            event handler the current target may be [null] unfortunately stupid
            programming language... See
            https://developer.mozilla.org/en-US/docs/Web/API/Event/currentTarget *)
-      ev |> Brr.Ev.current_target |> Brr.Ev.target_to_jv |> Brr.El.of_jv
+      let container =
+        ev |> Brr.Ev.current_target |> Brr.Ev.target_to_jv |> Brr.El.of_jv
+      in
+      let x = x -. Brr.El.bound_x container in
+      let y = y -. Brr.El.bound_y container in
+      let position_var = Lwd.var (x, y, 0., 0.) in
+      Lwd.set box_selection_var (Some position_var);
+      (x, y, container, position_var)
     in
-    let drag ~x ~y ~dx ~dy acc _ev =
-      let x = x -. Brr.El.bound_x acc in
-      let y = y -. Brr.El.bound_y acc in
+    let drag ~dx ~dy (x, y, _container, position_var) _ev =
       let x, dx = if dx < 0. then (x +. dx, -.dx) else (x, dx) in
       let y, dy = if dy < 0. then (y +. dy, -.dy) else (y, dy) in
-      match Lwd.peek box_selection_var with
-      | None -> Lwd.set box_selection_var (Some (Lwd.var (x, y, dx, dy)))
-      | Some v -> Lwd.set v (x, y, dx, dy)
+      Lwd.set position_var (x, y, dx, dy)
     in
-    let end_ acc =
-      match Lwd.peek box_selection_var with
-      | None -> ()
-      | Some v ->
-          let x, y, dx, dy = Lwd.peek v in
-          let x, dx =
-            let total_length = Lwd.peek recording.total_time in
-            let width_in_pixel = Brr.El.bound_w acc in
-            let scale = total_length /. width_in_pixel in
-            (x *. scale, dx *. scale)
-          in
-          let y, y' =
-            ( int_of_float y / stroke_height,
-              int_of_float (y +. dy) / stroke_height )
-          in
-          select x (x +. dx) y y' recording;
-          Lwd.set box_selection_var None
+    let end_ (_, _, container, position_var) =
+      let x, y, dx, dy = Lwd.peek position_var in
+      let x, dx =
+        let total_length = Lwd.peek recording.total_time in
+        let width_in_pixel = Brr.El.bound_w container in
+        let scale = total_length /. width_in_pixel in
+        (x *. scale, dx *. scale)
+      in
+      let y, y' =
+        (int_of_float y / stroke_height, int_of_float (y +. dy) / stroke_height)
+      in
+      select x (x +. dx) y y' recording;
+      Lwd.set box_selection_var None
     in
-    Ui_widgets.mouse_drag click start drag end_
+    Ui_widgets.mouse_drag start drag end_
   in
   let box =
     let$ box_selection = Lwd.get box_selection_var in
