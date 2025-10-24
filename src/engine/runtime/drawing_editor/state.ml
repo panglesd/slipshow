@@ -87,9 +87,21 @@ module Recording = struct
 end
 
 module Track = struct
+  open Lwd_infix
+
   let n_track recording =
     Lwd_table.map_reduce
-      (fun _ (s : stro) -> Lwd.get s.track)
+      (fun _ (s : stro) ->
+        let$ s_track = Lwd.get s.track
+        and$ e_track =
+          let$* e = Lwd.get s.erased in
+          match e with
+          | None -> Lwd.pure None
+          | Some e -> Lwd.map ~f:(fun x -> Some x) @@ Lwd.get e.track
+        in
+        match e_track with
+        | None -> s_track
+        | Some e_track -> Int.max s_track e_track)
       (Lwd.pure 0, Lwd.map2 ~f:Int.max)
       recording
     |> Lwd.join
