@@ -129,10 +129,20 @@ let create_elem_of_stroke ~elapsed_time
 let draw_until ~elapsed_time (record : t) =
   Lwd_table.map_reduce
     (fun _ event ->
-      let res = create_elem_of_stroke ~elapsed_time event in
+      let res =
+        let$ elem = create_elem_of_stroke ~elapsed_time event
+        and$ track = Lwd.get event.track
+        and$ path = Lwd.get event.path in
+        (track, snd (List.hd path), elem)
+      in
       Lwd_seq.element res)
     Lwd_seq.monoid record.strokes
   |> Lwd_seq.lift
+  |> Lwd_seq.sort_uniq (fun (t1, t1', _) (t2, t2', _) ->
+         match Int.compare t1 t2 with
+         | (1 | -1) as res -> res
+         | _ -> Float.compare t1' t2')
+  |> Lwd_seq.map (fun (_, _, e) -> e)
 
 let el =
   let gs =

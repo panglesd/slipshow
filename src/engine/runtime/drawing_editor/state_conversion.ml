@@ -100,6 +100,16 @@ let record_to_record (evs : t) =
     in
     loop [] (Lwd_table.last evs.strokes)
   in
+  let strokes =
+    List.sort
+      (fun s1 s2 ->
+        match Int.compare (Lwd.peek s1.track) (Lwd.peek s2.track) with
+        | (1 | -1) as res -> res
+        | _ ->
+            let ends_at s = snd @@ List.hd (Lwd.peek s.path) in
+            Float.compare (ends_at s1) (ends_at s2))
+      strokes
+  in
   List.concat_map
     (fun {
            id;
