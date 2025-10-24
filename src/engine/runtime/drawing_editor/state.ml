@@ -111,3 +111,4 @@ let play () =
       loop 0.
 
 let stop () = Lwd.set is_playing false
+let current_tool = Lwd.var Select

@@ -47,7 +47,6 @@ let block_of_stroke recording (stroke : stro) =
       (Brr.El.Style.background_color, color)
     in
     [
-      `P (Brr.El.Style.cursor, !!"pointer");
       `R left;
       `R right;
       `R top;
@@ -56,58 +55,6 @@ let block_of_stroke recording (stroke : stro) =
       `R color;
     ]
   in
-  let _preselected, ev_hover = Ui_widgets.hover ~var:stroke.preselected () in
-  let has_moved = ref false in
-  let click_handler =
-    Brr_lwd.Elwd.handler Brr.Ev.click (fun _ ->
-        if !has_moved then () else Lwd.update not stroke.selected)
-  in
-  let move_handler =
-    let$ total_length = total_length recording in
-    let mouse_move x y parent path track =
-      let width_in_pixel = Brr.El.bound_w parent in
-      let scale = total_length /. width_in_pixel in
-      let end_ = List.hd path |> snd in
-      let start = List.hd (List.rev path) |> snd in
-      fun ev ->
-        has_moved := true;
-        let ev = Brr.Ev.as_type ev in
-        let x' = Brr.Ev.Mouse.client_x ev in
-        let y' = Brr.Ev.Mouse.client_y ev in
-        let translation = scale *. (x' -. x) in
-        let y_change = (y' -. y) /. float_of_int 20 |> int_of_float in
-        let new_track = Int.max 0 (track + y_change) in
-        Lwd.set stroke.track new_track;
-        let translation = Float.min translation (total_length -. end_) in
-        let translation = Float.max translation (0. -. start) in
-        let new_path = Path_editing.translate path translation in
-        Lwd.set stroke.path new_path
-    in
-    Brr_lwd.Elwd.handler Brr.Ev.mousedown (fun ev ->
-        Brr.Ev.prevent_default ev;
-        has_moved := false;
-        let path = Lwd.peek stroke.path in
-        let parent =
-          ev |> Brr.Ev.target |> Brr.Ev.target_to_jv |> Brr.El.of_jv
-          |> Brr.El.parent |> Option.get
-        in
-        let ev = Brr.Ev.as_type ev in
-        let x = Brr.Ev.Mouse.client_x ev in
-        let y = Brr.Ev.Mouse.client_y ev in
-        let id =
-          Brr.Ev.listen Brr.Ev.mousemove
-            (mouse_move x y parent path (Lwd.peek stroke.track))
-            (Brr.Document.body Brr.G.document |> Brr.El.as_target)
-        in
-        let opts = Brr.Ev.listen_opts ~once:true () in
-        let _id =
-          Brr.Ev.listen ~opts Brr.Ev.mouseup
-            (fun _ -> Brr.Ev.unlisten id)
-            (Brr.Document.body Brr.G.document |> Brr.El.as_target)
-        in
-        ())
-  in
-  let ev = `R move_handler :: `P click_handler :: ev_hover in
   let block_of_erased v =
     let move_handler =
       (* TODO: This move handler is duplicated with the selection one, they need
@@ -193,6 +140,7 @@ let block_of_stroke recording (stroke : stro) =
     | None -> Lwd_seq.empty
     | Some erased_at -> Lwd_seq.element @@ block_of_erased erased_at
   in
+  let ev = [] in
   Lwd_seq.concat (Lwd_seq.element @@ Brr_lwd.Elwd.div ~ev ~st []) erased_block
 
 let strokes recording =
@@ -209,7 +157,28 @@ let el recording =
       ( Brr.El.Style.height,
         Jstr.append (Jstr.of_int ((n_track + 1) * 20)) !!"px" )
     in
-    [ `P (Brr.El.Style.position, !!"relative"); `R height ]
+    let cursor =
+      let$ current_tool = Lwd.get State.current_tool in
+      match current_tool with
+      | Select -> (!!"cursor", !!"crosshair")
+      | Move -> (!!"cursor", !!"move")
+    in
+    [ `P (Brr.El.Style.position, !!"relative"); `R height; `R cursor ]
   in
-  let box, ev = Editor_tools.Selection.timeline recording stroke_height in
-  Brr_lwd.Elwd.div ~ev ~st [ `S strokes; `S box ]
+  let ev =
+    let$ current_tool = Lwd.get State.current_tool in
+    match current_tool with
+    | Select ->
+        Lwd_seq.element
+        @@ Editor_tools.Selection.timeline_event recording stroke_height
+    | Move ->
+        Lwd_seq.element
+        @@ Editor_tools.Move.timeline_event recording stroke_height
+  in
+  let box =
+    let$* current_tool = Lwd.get State.current_tool in
+    match current_tool with
+    | Select -> Editor_tools.Selection.box
+    | Move -> Lwd.return Lwd_seq.empty
+  in
+  Brr_lwd.Elwd.div ~ev:[ `S ev ] ~st [ `S strokes; `S box ]

@@ -68,32 +68,29 @@ let hover ?(var = Lwd.var false) () =
   (Lwd.get selected, [ `P handler1; `P handler2 ])
 
 let mouse_drag start drag end_ =
-  let move_handler =
-    let mouse_move x y acc =
-     fun ev ->
-      let mouse_ev = Brr.Ev.as_type ev in
-      let x' = Brr.Ev.Mouse.page_x mouse_ev in
-      let y' = Brr.Ev.Mouse.page_y mouse_ev in
-      drag ~dx:(x' -. x) ~dy:(y' -. y) acc ev
-    in
-    Brr_lwd.Elwd.handler Brr.Ev.mousedown (fun ev ->
-        Brr.Ev.prevent_default ev;
-        let mouse_ev = Brr.Ev.as_type ev in
-        let x = Brr.Ev.Mouse.page_x mouse_ev in
-        let y = Brr.Ev.Mouse.page_y mouse_ev in
-        let acc = start x y ev in
-        let id =
-          Brr.Ev.listen Brr.Ev.mousemove (mouse_move x y acc)
-            (Brr.Document.body Brr.G.document |> Brr.El.as_target)
-        in
-        let opts = Brr.Ev.listen_opts ~once:true () in
-        let _id =
-          Brr.Ev.listen ~opts Brr.Ev.mouseup
-            (fun ev ->
-              Brr.Ev.unlisten id;
-              end_ acc ev)
-            (Brr.Document.body Brr.G.document |> Brr.El.as_target)
-        in
-        ())
+  let mouse_move x y acc =
+   fun ev ->
+    let mouse_ev = Brr.Ev.as_type ev in
+    let x' = Brr.Ev.Mouse.page_x mouse_ev in
+    let y' = Brr.Ev.Mouse.page_y mouse_ev in
+    drag ~dx:(x' -. x) ~dy:(y' -. y) acc ev
   in
-  [ `P move_handler ]
+  Brr_lwd.Elwd.handler Brr.Ev.mousedown (fun ev ->
+      Brr.Ev.prevent_default ev;
+      let mouse_ev = Brr.Ev.as_type ev in
+      let x = Brr.Ev.Mouse.page_x mouse_ev in
+      let y = Brr.Ev.Mouse.page_y mouse_ev in
+      let acc = start x y ev in
+      let id =
+        Brr.Ev.listen Brr.Ev.mousemove (mouse_move x y acc)
+          (Brr.Document.body Brr.G.document |> Brr.El.as_target)
+      in
+      let opts = Brr.Ev.listen_opts ~once:true () in
+      let _id =
+        Brr.Ev.listen ~opts Brr.Ev.mouseup
+          (fun ev ->
+            Brr.Ev.unlisten id;
+            end_ acc ev)
+          (Brr.Document.body Brr.G.document |> Brr.El.as_target)
+      in
+      ())

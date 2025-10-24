@@ -166,6 +166,19 @@ let save_panel recording =
   in
   Brr_lwd.Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Save") ]
 
+let select_button =
+  let click =
+    Brr_lwd.Elwd.handler Brr.Ev.click (fun _ ->
+        Lwd.set State.current_tool Select)
+  in
+  Brr_lwd.Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Select") ]
+
+let move_button =
+  let click =
+    Brr_lwd.Elwd.handler Brr.Ev.click (fun _ -> Lwd.set State.current_tool Move)
+  in
+  Brr_lwd.Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Move") ]
+
 let el (recording : t) =
   let description =
     let$* s =
@@ -195,6 +208,8 @@ let el (recording : t) =
         `R ti;
         `R (play_panel ());
         `R (save_panel recording);
+        `R select_button;
+        `R move_button;
         `R (slider recording);
         `R strokes;
         `R (left_selection recording);
@@ -218,7 +233,8 @@ let el =
     | None -> Lwd.pure (Brr.El.div [])
     | Some recording -> el recording
   in
+  let st = [ `P (Brr.El.Style.height, !!"200px") ] in
   Brr_lwd.Elwd.div
     ~at:[ `P (Brr.At.id !!"slipshow-drawing-editor"); `S display ]
-    ~st:[ `P (Brr.El.Style.height, !!"200px") ]
+    ~st
     [ `R el ]
