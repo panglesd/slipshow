@@ -66,3 +66,46 @@ let hover ?(var = Lwd.var false) () =
     Brr_lwd.Elwd.handler Brr.Ev.mouseleave (fun _ -> Lwd.set selected false)
   in
   (Lwd.get selected, [ `P handler1; `P handler2 ])
+
+let mouse_drag click drag end_ =
+  let has_moved = ref false in
+  let click_handler =
+    Brr_lwd.Elwd.handler Brr.Ev.click (fun ev ->
+        if !has_moved then () else click ev)
+  in
+  let move_handler =
+    let mouse_move x y current_target =
+     fun ev ->
+      has_moved := true;
+      let mouse_ev = Brr.Ev.as_type ev in
+      let x' = Brr.Ev.Mouse.page_x mouse_ev in
+      let y' = Brr.Ev.Mouse.page_y mouse_ev in
+      drag ~x ~y ~dx:(x' -. x) ~dy:(y' -. y) ~current_target ev
+    in
+    Brr_lwd.Elwd.handler Brr.Ev.mousedown (fun ev ->
+        Brr.Ev.prevent_default ev;
+        has_moved := false;
+        let mouse_ev = Brr.Ev.as_type ev in
+        (* It would be nice to just pass the event itself, but outside of the
+           event handler the current target may be [null] unfortunately stupid
+           programming language... See
+           https://developer.mozilla.org/en-US/docs/Web/API/Event/currentTarget *)
+        let current_target = ev |> Brr.Ev.current_target in
+        let x = Brr.Ev.Mouse.page_x mouse_ev in
+        let y = Brr.Ev.Mouse.page_y mouse_ev in
+        let id =
+          Brr.Ev.listen Brr.Ev.mousemove
+            (mouse_move x y current_target)
+            (Brr.Document.body Brr.G.document |> Brr.El.as_target)
+        in
+        let opts = Brr.Ev.listen_opts ~once:true () in
+        let _id =
+          Brr.Ev.listen ~opts Brr.Ev.mouseup
+            (fun _ ->
+              Brr.Ev.unlisten id;
+              end_ ())
+            (Brr.Document.body Brr.G.document |> Brr.El.as_target)
+        in
+        ())
+  in
+  [ `P move_handler; `P click_handler ]

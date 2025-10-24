@@ -3,9 +3,10 @@ open State_types
 
 let ( !! ) = Jstr.v
 let total_length (recording : t) = Lwd.get recording.total_time
+let px_int x = Jstr.append (Jstr.of_int x) !!"px"
+let px_float x = Jstr.append (Jstr.of_float x) !!"px"
 
 let block_of_stroke recording (stroke : stro) =
-  let px_int x = Jstr.append (Jstr.of_int x) !!"px" in
   let stroke_height = 20 in
   let selected =
     let$ selected = State.is_selected stroke
@@ -203,15 +204,76 @@ let strokes recording =
 
 let el recording =
   let strokes = strokes recording in
-  let strokes =
-    let st =
-      let height =
-        let$ n_track = State.Track.n_track recording.strokes in
-        ( Brr.El.Style.height,
-          Jstr.append (Jstr.of_int ((n_track + 1) * 20)) !!"px" )
-      in
-      [ `P (Brr.El.Style.position, !!"relative"); `R height ]
+  let st =
+    let height =
+      let$ n_track = State.Track.n_track recording.strokes in
+      ( Brr.El.Style.height,
+        Jstr.append (Jstr.of_int ((n_track + 1) * 20)) !!"px" )
     in
-    Brr_lwd.Elwd.div ~st [ `S strokes ]
+    [ `P (Brr.El.Style.position, !!"relative"); `R height ]
   in
-  strokes
+  let box_selection_var = Lwd.var None in
+  let ev =
+    let click _ = Brr.Console.(log [ "HeLLLLLLo clik" ]) in
+    let drag ~x ~y ~dx ~dy ~current_target _ev =
+      let x =
+        let el_x =
+          current_target |> Brr.Ev.target_to_jv |> Brr.El.of_jv
+          |> Brr.El.bound_x
+        in
+        x -. el_x
+      in
+      let y =
+        let el_y =
+          current_target |> Brr.Ev.target_to_jv |> Brr.El.of_jv
+          |> Brr.El.bound_y
+        in
+        y -. el_y
+      in
+      let x, dx = if dx < 0. then (x +. dx, -.dx) else (x, dx) in
+      let y, dy = if dy < 0. then (y +. dy, -.dy) else (y, dy) in
+      match Lwd.peek box_selection_var with
+      | None -> Lwd.set box_selection_var (Some (Lwd.var (x, y, dx, dy)))
+      | Some v -> Lwd.set v (x, y, dx, dy)
+    in
+    let end_ () = Lwd.set box_selection_var None in
+    Ui_widgets.mouse_drag click drag end_
+  in
+  let box =
+    let$ box_selection = Lwd.get box_selection_var in
+    match box_selection with
+    | None -> Lwd_seq.empty
+    | Some var ->
+        let st =
+          let x =
+            let$ x, _, _, _ = Lwd.get var in
+            (Brr.El.Style.left, px_float x)
+          in
+          let y =
+            let$ _, y, _, _ = Lwd.get var in
+            (Brr.El.Style.top, px_float y)
+          in
+          let dx =
+            let$ _, _, dx, _ = Lwd.get var in
+            (Brr.El.Style.width, px_float dx)
+          in
+          let dy =
+            let$ _, _, _, dy = Lwd.get var in
+            (Brr.El.Style.height, px_float dy)
+          in
+          [
+            `R x;
+            `R y;
+            `R dx;
+            `R dy;
+            `P (Brr.El.Style.background_color, !!"lightgray");
+            `P (!!"opacity", !!"0.5");
+            `P (!!"border", !!"1px solid black");
+            `P (Brr.El.Style.position, !!"absolute");
+          ]
+        in
+        let div = Brr_lwd.Elwd.div ~st [] in
+        Lwd_seq.element div
+  in
+  let box = Lwd_seq.lift @@ box in
+  Brr_lwd.Elwd.div ~ev ~st [ `S strokes; `S box ]
