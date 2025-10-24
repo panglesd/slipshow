@@ -102,7 +102,11 @@ module Selection = struct
     let end_ (_, _, container, (x, y, dx, dy)) ev =
       let x, y, dx, dy = (Lwd.peek x, Lwd.peek y, Lwd.peek dx, Lwd.peek dy) in
       Lwd_table.iter
-        (fun { preselected; _ } -> Lwd.set preselected false)
+        (fun { preselected; erased; _ } ->
+          Lwd.set preselected false;
+          Option.iter
+            (fun (v : erased) -> Lwd.set v.preselected false)
+            (Lwd.peek erased))
         recording.strokes;
       select_of_coords container ~x ~y ~dx ~dy ev;
       Lwd.set box_selection_var None
