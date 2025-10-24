@@ -89,9 +89,9 @@ let mouse_drag start drag end_ =
         let opts = Brr.Ev.listen_opts ~once:true () in
         let _id =
           Brr.Ev.listen ~opts Brr.Ev.mouseup
-            (fun _ ->
+            (fun ev ->
               Brr.Ev.unlisten id;
-              end_ acc)
+              end_ acc ev)
             (Brr.Document.body Brr.G.document |> Brr.El.as_target)
         in
         ())

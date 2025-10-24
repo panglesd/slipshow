@@ -208,16 +208,25 @@ let very_quick_sample g =
   Lwd.quick_release root;
   res
 
-let select t0 t1 track0 track1 recording =
+let select ?(pre = false) t0 t1 track0 track1 recording mode =
   Lwd_table.iter
-    (fun { end_at; starts_at; selected; preselected = _; track; _ } ->
+    (fun { end_at; starts_at; selected; preselected; track; _ } ->
       let end_at = very_quick_sample end_at in
       let starts_at = very_quick_sample starts_at in
       let track = Lwd.peek track in
       let is_selected =
         track0 <= track && track <= track1 && t0 <= end_at && starts_at <= t1
       in
-      Lwd.set selected is_selected)
+      let var = if pre then preselected else selected in
+      let is_selected =
+        match mode with
+        | `Replace -> is_selected
+        | `Add -> is_selected || Lwd.peek var
+        | `Toggle ->
+            let xor a b = (a && not b) || ((not a) && b) in
+            xor is_selected (Lwd.peek var)
+      in
+      Lwd.set var is_selected)
     recording.strokes
 
 let el recording =
@@ -232,6 +241,24 @@ let el recording =
   in
   let box_selection_var = Lwd.var None in
   let ev =
+    let select_of_coords ?pre container ~x ~dx ~y ~dy ev =
+      let x, dx =
+        let total_length = Lwd.peek recording.total_time in
+        let width_in_pixel = Brr.El.bound_w container in
+        let scale = total_length /. width_in_pixel in
+        (x *. scale, dx *. scale)
+      in
+      let y, y' =
+        (int_of_float y / stroke_height, int_of_float (y +. dy) / stroke_height)
+      in
+      let mode =
+        let mouse_ev = Brr.Ev.as_type ev in
+        if Brr.Ev.Mouse.shift_key mouse_ev then `Add
+        else if Brr.Ev.Mouse.ctrl_key mouse_ev then `Toggle
+        else `Replace
+      in
+      select ?pre x (x +. dx) y y' recording mode
+    in
     let start x y ev =
       (* It would be nice to just pass the event itself, but outside of the
            event handler the current target may be [null] unfortunately stupid
@@ -246,23 +273,18 @@ let el recording =
       Lwd.set box_selection_var (Some position_var);
       (x, y, container, position_var)
     in
-    let drag ~dx ~dy (x, y, _container, position_var) _ev =
+    let drag ~dx ~dy (x, y, container, position_var) ev =
       let x, dx = if dx < 0. then (x +. dx, -.dx) else (x, dx) in
       let y, dy = if dy < 0. then (y +. dy, -.dy) else (y, dy) in
+      select_of_coords container ~pre:true ~x ~y ~dx ~dy ev;
       Lwd.set position_var (x, y, dx, dy)
     in
-    let end_ (_, _, container, position_var) =
+    let end_ (_, _, container, position_var) ev =
       let x, y, dx, dy = Lwd.peek position_var in
-      let x, dx =
-        let total_length = Lwd.peek recording.total_time in
-        let width_in_pixel = Brr.El.bound_w container in
-        let scale = total_length /. width_in_pixel in
-        (x *. scale, dx *. scale)
-      in
-      let y, y' =
-        (int_of_float y / stroke_height, int_of_float (y +. dy) / stroke_height)
-      in
-      select x (x +. dx) y y' recording;
+      Lwd_table.iter
+        (fun { preselected; _ } -> Lwd.set preselected false)
+        recording.strokes;
+      select_of_coords container ~x ~y ~dx ~dy ev;
       Lwd.set box_selection_var None
     in
     Ui_widgets.mouse_drag start drag end_
