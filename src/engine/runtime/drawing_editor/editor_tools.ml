@@ -157,13 +157,19 @@ module Move = struct
     let total_length = Lwd.peek recording.total_time in
     List.iter
       (function
-        | `Stroke (old_path, old_track, stroke) ->
+        | `Stroke (old_path, old_track, stroke, erase) ->
             let new_track = Int.max 0 (old_track + track_shift) in
             Lwd.set stroke.track new_track;
             let end_ = snd (List.hd old_path) in
             let start = snd (List.hd (List.rev old_path)) in
             let time_shift = Float.min time_shift (total_length -. end_) in
             let time_shift = Float.max time_shift (0. -. start) in
+            let () =
+              erase
+              |> Option.iter @@ fun e ->
+                 if Lwd.peek e.at < end_ +. time_shift then
+                   Lwd.set e.at (end_ +. time_shift)
+            in
             let new_path = Path_editing.translate old_path time_shift in
             Lwd.set stroke.path new_path
         | `Erase (old_t, old_track, (sel : erased), stroke) ->
@@ -195,7 +201,11 @@ module Move = struct
               if not (Lwd.peek stroke.selected) then []
               else
                 [
-                  `Stroke (Lwd.peek stroke.path, Lwd.peek stroke.track, stroke);
+                  `Stroke
+                    ( Lwd.peek stroke.path,
+                      Lwd.peek stroke.track,
+                      stroke,
+                      Lwd.peek stroke.erased );
                 ]
             in
             let sel =
