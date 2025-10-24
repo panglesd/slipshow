@@ -36,7 +36,7 @@ let of_stroke
     selected;
     preselected;
     track = Lwd.var 0;
-    erased_at = Lwd.var None;
+    erased = Lwd.var None;
   }
 
 let record_of_record (evs : Drawing.Record.t) : t =
@@ -73,7 +73,15 @@ let record_of_record (evs : Drawing.Record.t) : t =
        ids
        |> List.iter @@ fun id ->
           Hashtbl.find_opt h id
-          |> Option.iter @@ fun s -> Lwd.set s.erased_at (Some (Lwd.var t))
+          |> Option.iter @@ fun s ->
+             Lwd.set s.erased
+               (Some
+                  {
+                    at = Lwd.var t;
+                    track = Lwd.var (Lwd.peek s.track);
+                    selected = Lwd.var false;
+                    preselected = Lwd.var false;
+                  })
   in
   let table = Lwd_table.make () in
   List.iter (fun stroke -> Lwd_table.append' table stroke) strokes;
@@ -105,7 +113,7 @@ let record_to_record (evs : t) =
            selected = _;
            preselected = _;
            track = _;
-           erased_at;
+           erased;
          } ->
       let { size; thinning; smoothing; streamline } = options in
       let color = Lwd.peek color in
@@ -120,10 +128,9 @@ let record_to_record (evs : t) =
         { Drawing.Stroke.id; scale; path; end_at; color; opacity; options }
       in
       let erase =
-        match Lwd.peek erased_at with
+        match Lwd.peek erased with
         | None -> []
-        | Some erased_at ->
-            [ Drawing.Record.Erase ([ id ], Lwd.peek erased_at) ]
+        | Some { at; _ } -> [ Drawing.Record.Erase ([ id ], Lwd.peek at) ]
       in
       Drawing.Record.Stroke event :: erase)
     strokes

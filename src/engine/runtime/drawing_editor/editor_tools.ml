@@ -11,9 +11,9 @@ let ( !! ) = Jstr.v
 let px_float x = Jstr.append (Jstr.of_float x) !!"px"
 
 module Selection = struct
-  let select ?(pre = false) t0 t1 track0 track1 recording mode =
+  let select ~epsilon ?(pre = false) t0 t1 track0 track1 recording mode =
     Lwd_table.iter
-      (fun { end_at; starts_at; selected; preselected; track; _ } ->
+      (fun { end_at; starts_at; selected; preselected; track; erased; _ } ->
         let end_at = very_quick_sample end_at in
         let starts_at = very_quick_sample starts_at in
         let track = Lwd.peek track in
@@ -29,29 +29,52 @@ module Selection = struct
               let xor a b = (a && not b) || ((not a) && b) in
               xor is_selected (Lwd.peek var)
         in
-        Lwd.set var is_selected)
+        Lwd.set var is_selected;
+        let () =
+          match Lwd.peek erased with
+          | None -> ()
+          | Some { at; selected; preselected; track } ->
+              let at = Lwd.peek at in
+              let erase_selected_var = if pre then preselected else selected in
+              let track = Lwd.peek track in
+              let is_selected =
+                track0 <= track && track <= track1
+                && t0 -. epsilon <= at
+                && at <= t1 +. epsilon
+                (* For erase we are more lenient as they are discrete *)
+              in
+              let is_selected =
+                match mode with
+                | `Replace -> is_selected
+                | `Add -> is_selected || Lwd.peek erase_selected_var
+                | `Toggle ->
+                    let xor a b = (a && not b) || ((not a) && b) in
+                    xor is_selected (Lwd.peek erase_selected_var)
+              in
+              Lwd.set erase_selected_var is_selected
+        in
+        ())
       recording.strokes
 
   let box_selection_var = Lwd.var None
 
   let timeline_event recording stroke_height =
     let select_of_coords ?pre container ~x ~dx ~y ~dy ev =
-      let x, dx =
-        let total_length = Lwd.peek recording.total_time in
-        let width_in_pixel = Brr.El.bound_w container in
-        let scale = total_length /. width_in_pixel in
-        (x *. scale, dx *. scale)
-      in
+      let total_length = Lwd.peek recording.total_time in
+      let width_in_pixel = Brr.El.bound_w container in
+      let scale = total_length /. width_in_pixel in
+      let x, dx = (x *. scale, dx *. scale) in
       let y, y' =
         (int_of_float y / stroke_height, int_of_float (y +. dy) / stroke_height)
       in
+      let epsilon = 10. *. scale in
       let mode =
         let mouse_ev = Brr.Ev.as_type ev in
         if Brr.Ev.Mouse.shift_key mouse_ev then `Add
         else if Brr.Ev.Mouse.ctrl_key mouse_ev then `Toggle
         else `Replace
       in
-      select ?pre x (x +. dx) y y' recording mode
+      select ~epsilon ?pre x (x +. dx) y y' recording mode
     in
     let start x y ev =
       (* It would be nice to just pass the event itself, but outside of the
@@ -126,13 +149,26 @@ module Selection = struct
 end
 
 module Move = struct
-  let move time_shift track_shift strokes =
+  let move recording time_shift track_shift strokes =
+    let total_length = Lwd.peek recording.total_time in
     List.iter
-      (fun (old_path, old_track, stroke) ->
-        let new_track = Int.max 0 (old_track + track_shift) in
-        Lwd.set stroke.track new_track;
-        let new_path = Path_editing.translate old_path time_shift in
-        Lwd.set stroke.path new_path)
+      (function
+        | `Stroke (old_path, old_track, stroke) ->
+            let new_track = Int.max 0 (old_track + track_shift) in
+            Lwd.set stroke.track new_track;
+            let end_ = snd (List.hd old_path) in
+            let start = snd (List.hd (List.rev old_path)) in
+            let time_shift = Float.min time_shift (total_length -. end_) in
+            let time_shift = Float.max time_shift (0. -. start) in
+            let new_path = Path_editing.translate old_path time_shift in
+            Lwd.set stroke.path new_path
+        | `Erase (old_t, old_track, (sel : erased)) ->
+            let new_track = Int.max 0 (old_track + track_shift) in
+            let time_shift = Float.min time_shift (total_length -. old_t) in
+            let time_shift = Float.max time_shift (0. -. old_t) in
+            Lwd.set sel.track new_track;
+            Lwd.set sel.at (old_t +. time_shift);
+            ())
       strokes
 
   let timeline_event recording stroke_height =
@@ -144,14 +180,26 @@ module Move = struct
         dx *. scale
       in
       let track_shift = int_of_float dy / stroke_height in
-      move time_shift track_shift strokes
+      move recording time_shift track_shift strokes
     in
     let start _x _y ev =
       let strokes =
         Lwd_table.fold
           (fun acc stroke ->
-            if not (Lwd.peek stroke.selected) then acc
-            else (Lwd.peek stroke.path, Lwd.peek stroke.track, stroke) :: acc)
+            let s =
+              if not (Lwd.peek stroke.selected) then []
+              else
+                [
+                  `Stroke (Lwd.peek stroke.path, Lwd.peek stroke.track, stroke);
+                ]
+            in
+            let sel =
+              match Lwd.peek stroke.erased with
+              | Some sel when Lwd.peek sel.selected ->
+                  [ `Erase (Lwd.peek sel.at, Lwd.peek sel.track, sel) ]
+              | _ -> []
+            in
+            s @ sel @ acc)
           [] recording.strokes
       in
       let el =

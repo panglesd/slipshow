@@ -64,7 +64,11 @@ module Recording = struct
                 let path = Lwd.peek path_var in
                 Lwd.set path_var
                   (Path_editing.add_time path (Lwd.peek time)
-                     total_time_recorded))
+                     total_time_recorded);
+                Option.iter
+                  (fun erase ->
+                    Lwd.set erase.at (Lwd.peek erase.at +. total_time_recorded))
+                  (Lwd.peek s.erased))
               current_recording.strokes;
             Lwd_table.iter
               (fun s ->

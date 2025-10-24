@@ -55,47 +55,8 @@ let block_of_stroke recording (stroke : stro) =
       `R color;
     ]
   in
-  let block_of_erased v =
-    let move_handler =
-      (* TODO: This move handler is duplicated with the selection one, they need
-         to be factored out but I delay this because maybe they both will be
-         removed when I implement the select tool. *)
-      let$ total_length = total_length recording in
-      let mouse_move x parent =
-        let width_in_pixel = Brr.El.bound_w parent in
-        let scale = total_length /. width_in_pixel in
-        let current_pos = Lwd.peek v in
-        fun ev ->
-          let ev = Brr.Ev.as_type ev in
-          let x' = Brr.Ev.Mouse.client_x ev in
-          let translation = scale *. (x' -. x) in
-          let translation =
-            Float.min translation (total_length -. current_pos)
-          in
-          let translation = Float.max translation (0. -. current_pos) in
-          Lwd.set v (current_pos +. translation)
-      in
-      Brr_lwd.Elwd.handler Brr.Ev.mousedown (fun ev ->
-          Brr.Ev.prevent_default ev;
-          let parent =
-            ev |> Brr.Ev.target |> Brr.Ev.target_to_jv |> Brr.El.of_jv
-            |> Brr.El.parent |> Option.get
-          in
-          let ev = Brr.Ev.as_type ev in
-          let x = Brr.Ev.Mouse.client_x ev in
-          let id =
-            Brr.Ev.listen Brr.Ev.mousemove (mouse_move x parent)
-              (Brr.Document.body Brr.G.document |> Brr.El.as_target)
-          in
-          let opts = Brr.Ev.listen_opts ~once:true () in
-          let _id =
-            Brr.Ev.listen ~opts Brr.Ev.mouseup
-              (fun _ -> Brr.Ev.unlisten id)
-              (Brr.Document.body Brr.G.document |> Brr.El.as_target)
-          in
-          ())
-    in
-    let t = Lwd.get v in
+  let block_of_erased (v : erased) =
+    let t = Lwd.get v.at in
     let left =
       let$ start_time = t and$ total_length = total_length recording in
       let left = start_time *. 100. /. total_length in
@@ -106,21 +67,40 @@ let block_of_stroke recording (stroke : stro) =
       (Brr.El.Style.left, left)
     in
     let top =
-      let$ track = Lwd.get stroke.track in
+      let$ track = Lwd.get v.track in
       let top = px_int (track * stroke_height) in
       (Brr.El.Style.top, top)
     in
     let width =
       let$ selected = State.is_selected stroke
-      and$ preselected = State.is_preselected stroke in
+      and$ preselected = State.is_preselected stroke
+      and$ erase_selected = Lwd.get v.selected
+      and$ erase_preselected = Lwd.get v.preselected in
       let width =
-        if selected || preselected then stroke_height / 2 else stroke_height
+        if selected || preselected || erase_selected || erase_preselected then
+          stroke_height / 2
+        else stroke_height
       in
       (Brr.El.Style.width, px_int width)
     in
+    let selected =
+      let$ selected = State.is_selected stroke
+      and$ preselected = State.is_preselected stroke
+      and$ erase_selected = Lwd.get v.selected
+      and$ erase_preselected = Lwd.get v.preselected in
+      let l =
+        if selected || erase_selected then
+          let height = px_int (stroke_height - 10) in
+          [ (Brr.El.Style.height, height); (!!"border", !!"5px solid black") ]
+        else if preselected || erase_preselected then
+          let height = px_int (stroke_height - 10) in
+          [ (Brr.El.Style.height, height); (!!"border", !!"5px solid grey") ]
+        else [ (Brr.El.Style.height, px_int stroke_height) ]
+      in
+      Lwd_seq.of_list ((!!"min-width", !!"1px") :: l)
+    in
     let st =
       [
-        `P (Brr.El.Style.cursor, !!"pointer");
         `R left;
         `R top;
         `S selected;
@@ -137,12 +117,12 @@ let block_of_stroke recording (stroke : stro) =
       | Move -> Lwd_seq.empty
       | Select -> snd @@ Ui_widgets.hover ~var:stroke.preselected ()
     in
-    let ev = [ `R move_handler; `S ev_hover ] in
+    let ev = [ `S ev_hover ] in
     Brr_lwd.Elwd.div ~ev ~st []
   in
   let$ erased_block =
-    let$ erased_at = Lwd.get stroke.erased_at in
-    match erased_at with
+    let$ erased = Lwd.get stroke.erased in
+    match erased with
     | None -> Lwd_seq.empty
     | Some erased_at -> Lwd_seq.element @@ block_of_erased erased_at
   in

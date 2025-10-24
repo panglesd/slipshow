@@ -53,7 +53,7 @@ let create_elem_of_stroke ~elapsed_time
        selected;
        preselected;
        track = _;
-       erased_at;
+       erased;
      } as stroke) =
   let at =
     let d =
@@ -81,15 +81,16 @@ let create_elem_of_stroke ~elapsed_time
       else with_path path
     in
     let fill =
-      let$ color = Lwd.get color
-      and$ erased_at = Lwd.get erased_at
+      let$* color = Lwd.get color
+      and$ erased = Lwd.get erased
       and$ elapsed_time = elapsed_time in
-      let color =
-        match erased_at with
-        | Some erased_at ->
-            if elapsed_time > Lwd.peek erased_at then "transparent"
+      let$ color =
+        match erased with
+        | Some erased ->
+            let$ at = Lwd.get erased.at in
+            if elapsed_time > at then "transparent"
             else Drawing.Color.to_string color
-        | None -> Drawing.Color.to_string color
+        | None -> Lwd.pure @@ Drawing.Color.to_string color
       in
       Brr.At.v (Jstr.v "fill") (Jstr.v color)
     in
