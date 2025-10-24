@@ -166,10 +166,11 @@ module Move = struct
             let time_shift = Float.max time_shift (0. -. start) in
             let new_path = Path_editing.translate old_path time_shift in
             Lwd.set stroke.path new_path
-        | `Erase (old_t, old_track, (sel : erased)) ->
+        | `Erase (old_t, old_track, (sel : erased), stroke) ->
             let new_track = Int.max 0 (old_track + track_shift) in
             let time_shift = Float.min time_shift (total_length -. old_t) in
-            let time_shift = Float.max time_shift (0. -. old_t) in
+            let end_at = very_quick_sample stroke.end_at in
+            let time_shift = Float.max time_shift (end_at -. old_t) in
             Lwd.set sel.track new_track;
             Lwd.set sel.at (old_t +. time_shift);
             ())
@@ -200,7 +201,7 @@ module Move = struct
             let sel =
               match Lwd.peek stroke.erased with
               | Some sel when Lwd.peek sel.selected ->
-                  [ `Erase (Lwd.peek sel.at, Lwd.peek sel.track, sel) ]
+                  [ `Erase (Lwd.peek sel.at, Lwd.peek sel.track, sel, stroke) ]
               | _ -> []
             in
             s @ sel @ acc)
