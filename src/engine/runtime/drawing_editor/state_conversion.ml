@@ -3,49 +3,78 @@ open State_types
 let starts_at l = List.hd (List.rev l) |> snd
 let end_at l = List.hd l |> snd
 
-let record_of_record (evs : Drawing.Record.t) : t =
-  let of_stroke
-      { Drawing.Stroke.id; scale; path; end_at = _; color; opacity; options } =
-    let color = Lwd.var color in
-    let opacity = Lwd.var opacity in
-    let path = Lwd.var path in
-    let options =
-      let open Perfect_freehand.Options in
-      let thinning = thinning options in
-      let size =
-        Lwd.var @@ Option.get @@ size options
-        (* Size options is _always_ set in strokes. The option type comes from
+let of_stroke
+    { Drawing.Stroke.id; scale; path; end_at = _; color; opacity; options } =
+  let color = Lwd.var color in
+  let opacity = Lwd.var opacity in
+  let path = Lwd.var path in
+  let options =
+    let open Perfect_freehand.Options in
+    let thinning = thinning options in
+    let size =
+      Lwd.var @@ Option.get @@ size options
+      (* Size options is _always_ set in strokes. The option type comes from
            the Perfect_freehand binding. *)
-      in
-      let smoothing = smoothing options in
-      let streamline = streamline options in
-      { size; thinning; smoothing; streamline }
     in
-    let end_at = Lwd.map (Lwd.get path) ~f:end_at in
-    let starts_at = Lwd.map (Lwd.get path) ~f:starts_at in
-    let selected = Lwd.var false in
-    let preselected = Lwd.var false in
-    {
-      id;
-      scale;
-      path;
-      end_at;
-      starts_at;
-      color;
-      opacity;
-      options;
-      selected;
-      preselected;
-      track = Lwd.var 0;
-    }
+    let smoothing = smoothing options in
+    let streamline = streamline options in
+    { size; thinning; smoothing; streamline }
   in
-  let strokes =
-    List.filter_map
-      (function Drawing.Record.Stroke s -> Some s | Erase _ | Clear _ -> None)
+  let end_at = Lwd.map (Lwd.get path) ~f:end_at in
+  let starts_at = Lwd.map (Lwd.get path) ~f:starts_at in
+  let selected = Lwd.var false in
+  let preselected = Lwd.var false in
+  {
+    id;
+    scale;
+    path;
+    end_at;
+    starts_at;
+    color;
+    opacity;
+    options;
+    selected;
+    preselected;
+    track = Lwd.var 0;
+    erased_at = Lwd.var None;
+  }
+
+let record_of_record (evs : Drawing.Record.t) : t =
+  let strokes, rest =
+    List.partition_map
+      (function
+        | Drawing.Record.Stroke s -> Left s
+        | (Erase _ | Clear _) as s -> Right s)
       evs
   in
-  let total_time = Lwd.var @@ end_at (List.hd strokes).path in
+  let erases, _clear =
+    List.partition_map
+      (function
+        | Drawing.Record.Erase s -> Left s
+        | Clear _ as s -> Right s
+        | Stroke _ -> assert false (* Removed in the partition above *))
+      rest
+  in
+  let total_time =
+    let stroke_end = end_at (List.hd strokes).path
+    and erase_end = List.hd erases |> fun (_, t) -> t
+    and clear_end =
+      (* TODO: Clear end time *)
+      0.
+    in
+    Lwd.var @@ Float.max stroke_end (Float.max erase_end clear_end)
+  in
   let strokes = List.map of_stroke strokes in
+  let h = Hashtbl.create 10 in
+  let () = List.iter (fun s -> Hashtbl.add h s.id s) strokes in
+  let () =
+    erases
+    |> List.iter @@ fun (ids, t) ->
+       ids
+       |> List.iter @@ fun id ->
+          Hashtbl.find_opt h id
+          |> Option.iter @@ fun s -> Lwd.set s.erased_at (Some (Lwd.var t))
+  in
   let table = Lwd_table.make () in
   List.iter (fun stroke -> Lwd_table.append' table stroke) strokes;
   { strokes = table; total_time }
@@ -63,7 +92,7 @@ let record_to_record (evs : t) =
     in
     loop [] (Lwd_table.last evs.strokes)
   in
-  List.map
+  List.concat_map
     (fun {
            id;
            scale;
@@ -76,6 +105,7 @@ let record_to_record (evs : t) =
            selected = _;
            preselected = _;
            track = _;
+           erased_at;
          } ->
       let { size; thinning; smoothing; streamline } = options in
       let color = Lwd.peek color in
@@ -89,6 +119,12 @@ let record_to_record (evs : t) =
       let event =
         { Drawing.Stroke.id; scale; path; end_at; color; opacity; options }
       in
-      Drawing.Record.Stroke event)
+      let erase =
+        match Lwd.peek erased_at with
+        | None -> []
+        | Some erased_at ->
+            [ Drawing.Record.Erase ([ id ], Lwd.peek erased_at) ]
+      in
+      Drawing.Record.Stroke event :: erase)
     strokes
 (* TODO: Sort by starting time *)
