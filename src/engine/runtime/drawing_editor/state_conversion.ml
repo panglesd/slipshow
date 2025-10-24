@@ -56,8 +56,8 @@ let record_of_record (evs : Drawing.Record.t) : t =
       rest
   in
   let total_time =
-    let stroke_end = end_at (List.hd strokes).path
-    and erase_end = List.hd erases |> fun (_, t) -> t
+    let stroke_end = end_at (List.hd strokes).path in
+    let erase_end = match erases with [] -> stroke_end | (_, t) :: _ -> t
     and clear_end =
       (* TODO: Clear end time *)
       0.
