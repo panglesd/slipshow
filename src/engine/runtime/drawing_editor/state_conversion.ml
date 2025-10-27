@@ -44,14 +44,14 @@ let record_of_record (evs : Drawing.Record.t) : t =
     List.partition_map
       (function
         | Drawing.Record.Stroke s -> Left s
-        | (Erase _ | Clear _) as s -> Right s)
+        | Erase _ (* | Clear _ *) as s -> Right s)
       evs
   in
   let erases, _clear =
     List.partition_map
       (function
         | Drawing.Record.Erase s -> Left s
-        | Clear _ as s -> Right s
+        (* | Clear _ as s -> Right s *)
         | Stroke _ -> assert false (* Removed in the partition above *))
       rest
   in

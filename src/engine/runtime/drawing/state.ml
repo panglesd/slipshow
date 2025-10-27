@@ -87,7 +87,9 @@ let set_tool t =
 let get_tool () = !tool
 
 module Strokes = struct
-  type t = (string, Brr.El.t * Stroke.t) Hashtbl.t
+  type entry = { element : Brr.El.t; stroke : Stroke.t; origin : origin }
+
+  type t = (string, entry) Hashtbl.t
   (** The ID is the key. We include the element too to avoid having to query for
       it. *)
 
@@ -96,9 +98,9 @@ module Strokes = struct
   let remove_id id =
     match Hashtbl.find_opt all id with
     | None -> ()
-    | Some (el, _) ->
+    | Some { element; _ } ->
         Hashtbl.remove all id;
-        Brr.El.remove el
+        Brr.El.remove element
 
   let remove_el elem =
     match Brr.El.at (Jstr.v "id") elem with

@@ -36,11 +36,14 @@ module Recording = struct
               | Drawing.Record.Stroke stroke ->
                   let _ =
                     Drawing.Tools.Erase.execute Drawing.Types.Self
-                      (Erase [ stroke.id ])
+                      (Erase
+                         [
+                           (stroke.id, Self (* TODO: change to Record origin *));
+                         ])
                   in
                   ()
               | Erase _ -> ()
-              | Clear _ -> ())
+              (* | Clear _ -> () *))
             record_to_add
         in
         match Lwd.peek current with

@@ -16,7 +16,15 @@ val set_tool : Types.Tool.t -> unit
 val get_tool : unit -> Types.Tool.t
 
 module Strokes : sig
-  type t = (string, Brr.El.t * Types.Stroke.t) Hashtbl.t
+  type entry = {
+    element : Brr.El.t;
+    stroke : Types.Stroke.t;
+    origin : Types.origin;
+  }
+
+  type t = (string, entry) Hashtbl.t
+  (** The ID is the key. We include the element too to avoid having to query for
+      it. *)
 
   val all : t
   val remove_id : string -> unit

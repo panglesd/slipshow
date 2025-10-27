@@ -103,6 +103,12 @@ type origin = Self | Sent of string [@@deriving yojson]
 
 let origin_to_string v = v |> origin_to_yojson |> Yojson.Safe.to_string
 
+let origin_of_string v =
+  match Yojson.Safe.from_string v with
+  | json -> (
+      origin_of_yojson json |> function Ok s -> Some s | Error _ -> None)
+  | exception Yojson.Json_error _ -> None
+
 module Draw_event = struct
   type t =
     | End

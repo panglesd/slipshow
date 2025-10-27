@@ -97,9 +97,9 @@ module Draw : Stroker with type start_args = draw_start_args = struct
     let end_ origin =
       match get_state origin with
       | None -> None
-      | Some ((_, stroke) as state) ->
+      | Some (element, stroke) ->
           set_state origin None;
-          Hashtbl.add State.Strokes.all stroke.id state;
+          Hashtbl.add State.Strokes.all stroke.id { element; origin; stroke };
           Some (Record.Stroke stroke)
   end
 
@@ -121,7 +121,7 @@ module Erase (* : Stroker with type start_args = unit *) = struct
   let get_state origin = Hashtbl.find_opt states origin |> Option.join
   let set_state origin state = Hashtbl.replace states origin state
 
-  type event = Erase of string list [@@deriving yojson]
+  type event = Erase of (string * origin) list [@@deriving yojson]
 
   let event_to_string ev = ev |> event_to_yojson |> Yojson.Safe.to_string
 
@@ -147,10 +147,11 @@ module Erase (* : Stroker with type start_args = unit *) = struct
     | Some last_point ->
         let ids =
           Hashtbl.fold
-            (fun id (_elem, { Stroke.path; _ }) acc ->
+            (fun id { State.Strokes.stroke = { Stroke.path; _ }; origin; _ } acc
+               ->
               let intersect = Utils.intersect_poly path (coord, last_point) in
               let close_enough = Utils.close_enough_poly path coord in
-              if intersect || close_enough then id :: acc else acc)
+              if intersect || close_enough then (id, origin) :: acc else acc)
             State.Strokes.all []
         in
         set_state Self (Some coord);
@@ -160,14 +161,19 @@ module Erase (* : Stroker with type start_args = unit *) = struct
     set_state Self None;
     None
 
-  let execute _origin = function
+  let execute self_origin = function
     | Erase [] -> None
     | Erase ids ->
+        let ids =
+          List.filter_map
+            (fun (id, origin) -> if origin = self_origin then Some id else None)
+            ids
+        in
         List.iter
           (fun id ->
             match Hashtbl.find_opt State.Strokes.all id with
             | None -> ()
-            | Some (el, _) -> State.Strokes.remove_el el)
+            | Some { element; _ } -> State.Strokes.remove_el element)
           ids;
         Some (Record.Erase (ids, Record.now ()))
 
@@ -187,9 +193,15 @@ module Clear = struct
   (* let concerned origin who = *)
   (*   match who with All -> true | Origin o when o = origin -> true | _ -> false *)
 
-  let execute (_origin : origin) () =
-    Hashtbl.iter
-      (fun _ (elem, _) -> State.Strokes.remove_el elem)
-      State.Strokes.all;
-    Some (Clear (Record.now ()) : Record.event)
+  let execute (self_origin : origin) () =
+    let ids =
+      Hashtbl.fold
+        (fun id { State.Strokes.origin; _ } acc ->
+          if origin = self_origin then (
+            State.Strokes.remove_id id;
+            id :: acc)
+          else acc)
+        State.Strokes.all []
+    in
+    Some (Erase (ids, Record.now ()) : Record.event)
 end
