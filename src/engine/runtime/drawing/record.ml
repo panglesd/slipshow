@@ -1,14 +1,14 @@
-open Types
-
-type 'a timed = 'a * float [@@deriving yojson]
-
 module V1 = struct
-  type event = Stroke of V1.Stroke.t | Erase of string list timed
+  type 'a timed = 'a * float [@@deriving yojson]
+
+  type event =
+    (* Stroke of V1.Stroke.t | Erase of string list timed *)
+    [ `Draw of Tools.Draw.event
+    | `Erase of Tools.Erase.event
+    | `Clear of Tools.Clear.event ]
   [@@deriving yojson]
 
-  let _ = Erase ([], 1.0)
-
-  type t = event list [@@deriving yojson]
+  type t = { events : event timed list; record_id : int } [@@deriving yojson]
   (** Ordered by time *)
 
   type record = { start_time : float; evs : t } [@@deriving yojson]
@@ -60,29 +60,29 @@ let to_string s =
 type recording_in_progress = record ref
 
 let now () = Brr.Performance.now_ms Brr.G.performance
-let empty_record () = { start_time = now (); evs = [] }
-let start_record () = ref (empty_record ())
+
+let empty_record record_id =
+  { start_time = now (); evs = { events = []; record_id } }
+
+let new_id () = Random.int 1000000
+let start_record () = ref (empty_record (new_id ()))
 
 let stop_record current_record =
   let res = !current_record in
   res.evs
 
-let relativize_path starting_time path =
-  List.map (fun (pos, t) -> (pos, t -. starting_time)) path
-
-let relativize_event starting_time event =
-  match event with
-  | Stroke ev ->
-      let path = relativize_path starting_time ev.path in
-      let end_at = ev.end_at -. starting_time in
-      Stroke { ev with path; end_at }
-  | Erase (ids, t) -> Erase (ids, t -. starting_time)
-(* | Clear t -> Clear (t -. starting_time) *)
+let relativize_event starting_time (event, time) = (event, time -. starting_time)
 
 let record (event : event) record =
+  let event = (event, now ()) in
   let current_record_val = !record in
   let event = relativize_event current_record_val.start_time event in
-  let evs = event :: current_record_val.evs in
+  let evs =
+    {
+      current_record_val.evs with
+      events = event :: current_record_val.evs.events;
+    }
+  in
   let current_record_val = { current_record_val with evs } in
   record := current_record_val
 

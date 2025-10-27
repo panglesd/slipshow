@@ -74,6 +74,7 @@ let create_elem_of_stroke ~elapsed_time
         Brr.At.v (Jstr.v "d") v
       in
       let$* path = Lwd.get path in
+      let path = List.map fst path in
       if should_continue then
         let$* elapsed_time = elapsed_time in
         let path = List.filter (fun (_, t) -> t < elapsed_time) path in

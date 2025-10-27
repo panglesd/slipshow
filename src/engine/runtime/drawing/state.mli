@@ -37,3 +37,6 @@ type drawing_state =
   | Pointing
 
 val current_drawing_state : drawing_state ref
+val start_record : int -> unit
+val end_record : unit -> unit
+val get_origin : unit -> Types.origin

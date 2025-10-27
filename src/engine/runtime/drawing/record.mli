@@ -1,7 +1,11 @@
 type 'a timed = 'a * float
-type event = Stroke of Types.Stroke.t | Erase of string list timed
 
-type t = event list
+type event =
+  [ `Draw of Tools.Draw.event
+  | `Erase of Tools.Erase.event
+  | `Clear of Tools.Clear.event ]
+
+type t = { events : event timed list; record_id : int }
 (** Ordered by time *)
 
 type recording_in_progress

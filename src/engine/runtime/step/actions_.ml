@@ -956,12 +956,12 @@ module Clear_draw = struct
   let clear_record (record : Drawing.Record.t) =
     List.iter
       (function
-        | Drawing.Record.Stroke { id; _ } -> (
+        | `Draw (Drawing.Tools.Draw.End { id; _ }), _ -> (
             match Brr.El.find_first_by_selector (Jstr.v ("#" ^ id)) with
             | Some el -> Brr.El.remove el
             | None -> ())
         | _ -> ())
-      record
+      record.events
 
   let do_ _window elems =
     only_if_not_fast @@ fun () ->

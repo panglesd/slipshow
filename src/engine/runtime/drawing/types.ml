@@ -72,8 +72,7 @@ module V1 = struct
     type t = {
       id : string;
       scale : float;
-      path : ((float * float) * float) list (* TODO: (position * time) list *);
-      end_at : float;
+      path : (float * float) list;
       color : Color.t;
       opacity : float;
       options : Perfect_freehand.Options.t;
@@ -99,7 +98,7 @@ end
 
 include V1
 
-type origin = Self | Sent of string [@@deriving yojson]
+type origin = Self | Record of int | Sent of string [@@deriving yojson]
 
 let origin_to_string v = v |> origin_to_yojson |> Yojson.Safe.to_string
 

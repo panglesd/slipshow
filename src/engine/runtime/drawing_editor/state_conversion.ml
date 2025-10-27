@@ -3,11 +3,18 @@ open State_types
 let starts_at l = List.hd (List.rev l) |> snd
 let end_at l = List.hd l |> snd
 
-let of_stroke
-    { Drawing.Stroke.id; scale; path; end_at = _; color; opacity; options } =
+(** Here, we turn a record (as an event list) into something we can use in the
+    drawing editor *)
+let new_stroke ~coord ~time ~stroker ~color ~width ~id =
+  let path = Lwd.var [ (coord, time) ] in
+  let options = Drawing.Strokes.options_of stroker width in
+  let { Universe.Coordinates.scale; _ } = Universe.State.get_coord () in
+  let end_at = Lwd.map (Lwd.get path) ~f:end_at in
+  let starts_at = Lwd.map (Lwd.get path) ~f:starts_at in
+  (* TODO: turn path into a "relatively_timed" and make starts_at a var *)
   let color = Lwd.var color in
+  let opacity = match stroker with Highlighter -> 0.33 | Pen -> 1. in
   let opacity = Lwd.var opacity in
-  let path = Lwd.var path in
   let options =
     let open Perfect_freehand.Options in
     let thinning = thinning options in
@@ -20,8 +27,6 @@ let of_stroke
     let streamline = streamline options in
     { size; thinning; smoothing; streamline }
   in
-  let end_at = Lwd.map (Lwd.get path) ~f:end_at in
-  let starts_at = Lwd.map (Lwd.get path) ~f:starts_at in
   let selected = Lwd.var false in
   let preselected = Lwd.var false in
   {
@@ -39,55 +44,102 @@ let of_stroke
     erased = Lwd.var None;
   }
 
+let handle_draw_event h d time =
+  match d with
+  | Drawing.Tools.Draw.Start
+      { start_args = { stroker; width; color }; id; coord } ->
+      let new_stroke = new_stroke ~coord ~time ~stroker ~color ~width ~id in
+      Hashtbl.add h id new_stroke
+  | Continue { coord; id } -> (
+      match Hashtbl.find_opt h id with
+      | None -> ()
+      | Some stro -> Lwd.set stro.path ((coord, time) :: Lwd.peek stro.path))
+  | End { id = _ } -> ()
+
+let handle_erase_event h (Drawing.Tools.Erase.Erase ids) time =
+  List.iter
+    (fun (id, _origin) ->
+      match Hashtbl.find_opt h id with
+      | None -> ()
+      | Some s ->
+          Lwd.set s.erased
+            (Some
+               {
+                 at = Lwd.var time;
+                 track = Lwd.var (Lwd.peek s.track);
+                 selected = Lwd.var false;
+                 preselected = Lwd.var false;
+               }))
+    ids
+
 let record_of_record (evs : Drawing.Record.t) : t =
-  let strokes, rest =
-    List.partition_map
-      (function
-        | Drawing.Record.Stroke s -> Left s
-        | Erase _ (* | Clear _ *) as s -> Right s)
-      evs
-  in
-  let erases, _clear =
-    List.partition_map
-      (function
-        | Drawing.Record.Erase s -> Left s
-        (* | Clear _ as s -> Right s *)
-        | Stroke _ -> assert false (* Removed in the partition above *))
-      rest
-  in
-  let total_time =
-    let stroke_end = end_at (List.hd strokes).path in
-    let erase_end = match erases with [] -> stroke_end | (_, t) :: _ -> t
-    and clear_end =
-      (* TODO: Clear end time *)
-      0.
+  let total_time, strokes =
+    let h = Hashtbl.create 10 in
+    let total_time =
+      List.fold_left
+        (fun _acc (event, time) ->
+          match event with
+          | `Draw d ->
+              handle_draw_event h d time;
+              time
+          | `Erase e ->
+              handle_erase_event h e time;
+              time
+          | `Clear _e ->
+              (* TODO: handle_clear_event h e time; *)
+              time)
+        0. evs.events
     in
-    Lwd.var @@ Float.max stroke_end (Float.max erase_end clear_end)
-  in
-  let strokes = List.map of_stroke strokes in
-  let h = Hashtbl.create 10 in
-  let () = List.iter (fun s -> Hashtbl.add h s.id s) strokes in
-  let () =
-    erases
-    |> List.iter @@ fun (ids, t) ->
-       ids
-       |> List.iter @@ fun id ->
-          Hashtbl.find_opt h id
-          |> Option.iter @@ fun s ->
-             Lwd.set s.erased
-               (Some
-                  {
-                    at = Lwd.var t;
-                    track = Lwd.var (Lwd.peek s.track);
-                    selected = Lwd.var false;
-                    preselected = Lwd.var false;
-                  })
+    (total_time, Hashtbl.fold (fun _id stro acc -> stro :: acc) h [])
   in
   let table = Lwd_table.make () in
   List.iter (fun stroke -> Lwd_table.append' table stroke) strokes;
-  { strokes = table; total_time }
+  {
+    strokes = table;
+    total_time = Lwd.var total_time;
+    record_id = evs.record_id;
+  }
 
-let record_to_record (evs : t) =
+let record_to_record (evs : t) : Drawing.Record.t =
+  let of_stroke (stro : stro) : Drawing.Record.event Drawing.Record.timed list =
+    let draw (d, t) = (`Draw d, t) in
+    let path = Lwd.peek stro.path in
+    let id = stro.id in
+    let continue =
+      List.rev_map
+        (fun (coord, time) ->
+          draw (Drawing.Tools.Draw.Continue { coord; id }, time))
+        path
+    in
+    let stroke =
+      match continue with
+      | (`Draw (Continue { coord; id }), time) :: ev ->
+          let start_args =
+            {
+              Drawing.Tools.stroker =
+                Highlighter
+                (* TODO: do (probably change stroker to allow custom numerical values
+                 for width and opacity) *);
+              width = (* Lwd.peek stro.options.size *) Small (* TODO: do *);
+              color = Lwd.peek stro.color;
+            }
+          in
+          draw (Drawing.Tools.Draw.End { id }, time)
+          :: draw (Drawing.Tools.Draw.Start { coord; id; start_args }, time)
+          :: ev
+      | _ -> continue
+    in
+    let erase =
+      match Lwd.peek stro.erased with
+      | None -> []
+      | Some { at; _ } ->
+          [
+            ( `Erase (Drawing.Tools.Erase.Erase [ (id, Record evs.record_id) ]),
+              Lwd.peek at );
+          ]
+    in
+    erase @ stroke
+  in
   let strokes =
     let rec loop acc row =
       match row with
@@ -100,48 +152,8 @@ let record_to_record (evs : t) =
     in
     loop [] (Lwd_table.last evs.strokes)
   in
-  let strokes =
-    List.sort
-      (fun s1 s2 ->
-        match Int.compare (Lwd.peek s1.track) (Lwd.peek s2.track) with
-        | (1 | -1) as res -> res
-        | _ ->
-            let ends_at s = snd @@ List.hd (Lwd.peek s.path) in
-            Float.compare (ends_at s1) (ends_at s2))
-      strokes
+  let events =
+    strokes |> List.concat_map of_stroke
+    |> List.sort (fun (_, s1) (_, s2) -> Float.compare s1 s2)
   in
-  List.concat_map
-    (fun {
-           id;
-           scale;
-           path;
-           starts_at = _;
-           end_at = _;
-           color;
-           opacity;
-           options;
-           selected = _;
-           preselected = _;
-           track = _;
-           erased;
-         } ->
-      let { size; thinning; smoothing; streamline } = options in
-      let color = Lwd.peek color in
-      let opacity = Lwd.peek opacity in
-      let path = Lwd.peek path in
-      let options =
-        let size = Lwd.peek size in
-        Perfect_freehand.Options.v ~size ?thinning ?smoothing ?streamline ()
-      in
-      let end_at = end_at path in
-      let event =
-        { Drawing.Stroke.id; scale; path; end_at; color; opacity; options }
-      in
-      let erase =
-        match Lwd.peek erased with
-        | None -> []
-        | Some { at; _ } -> [ Drawing.Record.Erase ([ id ], Lwd.peek at) ]
-      in
-      Drawing.Record.Stroke event :: erase)
-    strokes
-(* TODO: Sort by starting time *)
+  { events; record_id = evs.record_id }

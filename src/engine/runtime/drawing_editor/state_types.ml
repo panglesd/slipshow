@@ -28,7 +28,11 @@ type stro = {
   erased : erased option Lwd.var;
 }
 
-type t = { strokes : stro Lwd_table.t; total_time : float Lwd.var }
+type t = {
+  strokes : stro Lwd_table.t;
+  total_time : float Lwd.var;
+  record_id : int;
+}
 (** Ordered by time *)
 
 type editing_tool = Select | Move

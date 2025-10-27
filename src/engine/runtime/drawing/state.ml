@@ -117,3 +117,7 @@ type drawing_state =
   | Pointing
 
 let current_drawing_state = ref Pointing
+let current_origin = ref Self
+let start_record id = current_origin := Record id
+let end_record () = current_origin := Self
+let get_origin () = !current_origin

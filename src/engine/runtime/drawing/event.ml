@@ -67,7 +67,8 @@ let start_shape origin ev =
   event
   |> Option.iter @@ fun event ->
      T.send event;
-     T.execute origin event |> Option.iter record
+     record (T.coerce_event event);
+     T.execute origin event (* |> Option.iter record *)
 
 let continue_shape origin ev =
   check_is_pressed ev @@ fun () ->
@@ -79,22 +80,25 @@ let continue_shape origin ev =
       ev
       |> Option.iter @@ fun event ->
          Tool.send event;
-         Tool.execute origin event |> Option.iter record
+         record (Tool.coerce_event event);
+         Tool.execute origin event
 
 let end_shape origin () =
   match Hashtbl.find_opt current_situation origin with
   | None -> ()
   | Some (K (module Tool)) ->
-      let ev = Tool.end_ in
+      let ev = Tool.end_ () in
       Hashtbl.remove current_situation origin;
       ev
       |> Option.iter @@ fun event ->
          Tool.send event;
-         Tool.execute origin event |> Option.iter record
+         record (Tool.coerce_event event);
+         Tool.execute origin event
 
 let clear origin () =
   let ev = Tools.Clear.trigger () in
   ev
   |> Option.iter @@ fun event ->
      Tools.Clear.send event;
-     Tools.Clear.execute origin event |> Option.iter record
+     (* TODO: record clear *)
+     Tools.Clear.execute origin event

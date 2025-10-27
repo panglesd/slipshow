@@ -26,25 +26,21 @@ let is_preselected stroke = Lwd.get stroke.preselected
 module Recording = struct
   let current = Lwd.var None
 
-  let set_current c =
+  let set_current (c : Drawing.Record.t option) =
     match c with
     | None as c -> Lwd.set current c
     | Some record_to_add -> (
         let () =
           List.iter
             (function
-              | Drawing.Record.Stroke stroke ->
+              | `Draw (Drawing.Tools.Draw.Start { id; _ }), _ ->
                   let _ =
                     Drawing.Tools.Erase.execute Drawing.Types.Self
-                      (Erase
-                         [
-                           (stroke.id, Self (* TODO: change to Record origin *));
-                         ])
+                      (Erase [ (id, Self (* TODO: change to Record origin *)) ])
                   in
                   ()
-              | Erase _ -> ()
-              (* | Clear _ -> () *))
-            record_to_add
+              | _ -> ())
+            record_to_add.events
         in
         match Lwd.peek current with
         | None ->

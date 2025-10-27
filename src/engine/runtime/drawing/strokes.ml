@@ -3,15 +3,14 @@ open Types
 let svg_path options scale path =
   let path =
     List.rev_map
-      (fun ((x, y), _) -> Perfect_freehand.Point.v (x *. scale) (y *. scale))
+      (fun (x, y) -> Perfect_freehand.Point.v (x *. scale) (y *. scale))
       path
   in
   let stroke = Perfect_freehand.get_stroke ~options path in
   let svg_path = Perfect_freehand.get_svg_path_from_stroke stroke in
   Jstr.to_string svg_path
 
-let create_elem_of_stroke
-    { Stroke.options; scale; color; opacity; id; path; end_at = _ } =
+let create_elem_of_stroke { Stroke.options; scale; color; opacity; id; path } =
   let p = Brr.El.v ~ns:`SVG (Jstr.v "path") [] in
   let set_at at v = Brr.El.set_at (Jstr.v at) (Some (Jstr.v v)) p in
   set_at "fill" (Color.to_string color);
