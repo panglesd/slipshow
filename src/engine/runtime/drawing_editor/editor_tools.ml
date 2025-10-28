@@ -227,4 +227,19 @@ module Move = struct
     in
     let end_ _ _ = () in
     Ui_widgets.mouse_drag start drag end_
+
+  let drawing_event recording =
+    let start _x _y _ev =
+      Lwd_table.fold
+        (fun acc s ->
+          if Lwd.peek s.selected then (Lwd.peek s.path, s.path) :: acc else acc)
+        [] recording.strokes
+    in
+    let drag ~dx ~dy paths _ev =
+      List.iter
+        (fun (p, v) -> Lwd.set v (Path_editing.translate_space p dx dy))
+        paths
+    in
+    let end_ _ _ev = () in
+    Ui_widgets.mouse_drag start drag end_
 end

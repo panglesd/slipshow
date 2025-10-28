@@ -8,4 +8,6 @@ end
 module Move : sig
   val timeline_event :
     State_types.t -> stroke_height:int -> Brr_lwd.Elwd.handler
+
+  val drawing_event : State_types.t -> Brr_lwd.Elwd.handler
 end
