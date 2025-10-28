@@ -65,6 +65,7 @@ let create_elem_of_stroke ~elapsed_time
         elapsed_time <= end_at
       in
       let with_path path =
+        let path = List.map fst path in
         let$ options =
           let$ size = Lwd.get options.size in
           Perfect_freehand.Options.v ~size ?thinning:options.thinning
@@ -74,7 +75,6 @@ let create_elem_of_stroke ~elapsed_time
         Brr.At.v (Jstr.v "d") v
       in
       let$* path = Lwd.get path in
-      let path = List.map fst path in
       if should_continue then
         let$* elapsed_time = elapsed_time in
         let path = List.filter (fun (_, t) -> t < elapsed_time) path in
@@ -129,11 +129,11 @@ let create_elem_of_stroke ~elapsed_time
 
 let draw_until ~elapsed_time (record : t) =
   Lwd_table.map_reduce
-    (fun _ event ->
+    (fun _ stro ->
       let res =
-        let$ elem = create_elem_of_stroke ~elapsed_time event
-        and$ track = Lwd.get event.track
-        and$ path = Lwd.get event.path in
+        let$ elem = create_elem_of_stroke ~elapsed_time stro
+        and$ track = Lwd.get stro.track
+        and$ path = Lwd.get stro.path in
         (track, snd (List.hd path), elem)
       in
       Lwd_seq.element res)

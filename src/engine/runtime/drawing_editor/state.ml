@@ -36,7 +36,7 @@ module Recording = struct
               | `Draw (Drawing.Tools.Draw.Start { id; _ }), _ ->
                   let _ =
                     Drawing.Tools.Erase.execute Drawing.Types.Self
-                      (Erase [ (id, Self (* TODO: change to Record origin *)) ])
+                      (Erase [ (id, Record record_to_add.record_id) ])
                   in
                   ()
               | _ -> ())

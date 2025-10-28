@@ -59,7 +59,7 @@ let keyboard_setup (window : Universe.Window.t) =
       | "h" -> Drawing.State.set_tool (Stroker Highlighter)
       | "x" -> Drawing.State.set_tool Pointer
       | "e" -> Drawing.State.set_tool Eraser
-      | "X" -> Drawing.Event.clear Self ()
+      | "X" -> Drawing.Event.clear ()
       | "l" ->
           let _ : unit Fut.t =
             Step.Next.Excursion.start ();

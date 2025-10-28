@@ -45,7 +45,8 @@ let start_recording () = current_recording := Some (Record.start_record ())
 let record event = Option.iter (Record.record event) !current_recording
 let end_recording () = Option.map Record.stop_record !current_recording
 
-let start_shape origin ev =
+let start_shape ev =
+  let origin = State.get_origin () in
   let coord = coord_of_event ev in
   let state = State.get_state () in
   let id = get_id () in
@@ -70,7 +71,8 @@ let start_shape origin ev =
      record (T.coerce_event event);
      T.execute origin event (* |> Option.iter record *)
 
-let continue_shape origin ev =
+let continue_shape ev =
+  let origin = State.get_origin () in
   check_is_pressed ev @@ fun () ->
   let coord = coord_of_event ev in
   match Hashtbl.find_opt current_situation origin with
@@ -83,7 +85,8 @@ let continue_shape origin ev =
          record (Tool.coerce_event event);
          Tool.execute origin event
 
-let end_shape origin () =
+let end_shape () =
+  let origin = State.get_origin () in
   match Hashtbl.find_opt current_situation origin with
   | None -> ()
   | Some (K (module Tool)) ->
@@ -95,7 +98,8 @@ let end_shape origin () =
          record (Tool.coerce_event event);
          Tool.execute origin event
 
-let clear origin () =
+let clear () =
+  let origin = State.get_origin () in
   let ev = Tools.Clear.trigger () in
   ev
   |> Option.iter @@ fun event ->

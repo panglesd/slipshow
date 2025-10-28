@@ -65,10 +65,15 @@ let empty_record record_id =
   { start_time = now (); evs = { events = []; record_id } }
 
 let new_id () = Random.int 1000000
-let start_record () = ref (empty_record (new_id ()))
+
+let start_record () =
+  let new_id = new_id () in
+  State.start_record new_id;
+  ref (empty_record new_id)
 
 let stop_record current_record =
   let res = !current_record in
+  State.end_record ();
   res.evs
 
 let relativize_event starting_time (event, time) = (event, time -. starting_time)

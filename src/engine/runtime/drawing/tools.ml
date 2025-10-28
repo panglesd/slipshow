@@ -159,19 +159,16 @@ module Erase = struct
     set_state Self None;
     None
 
-  let execute self_origin = function
+  let execute _self_origin = function
     | Erase [] -> ()
     | Erase ids ->
-        let ids =
-          List.filter_map
-            (fun (id, origin) -> if origin = self_origin then Some id else None)
-            ids
-        in
         List.iter
-          (fun id ->
+          (fun (id, origin) ->
             match Hashtbl.find_opt State.Strokes.all id with
-            | None -> ()
-            | Some { element; _ } -> State.Strokes.remove_el element)
+            | Some { element; origin = stroke_origin; _ }
+              when origin = stroke_origin ->
+                State.Strokes.remove_el element
+            | _ -> ())
           ids
 
   let send event =

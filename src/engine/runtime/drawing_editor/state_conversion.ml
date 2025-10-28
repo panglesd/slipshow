@@ -88,7 +88,7 @@ let record_of_record (evs : Drawing.Record.t) : t =
           | `Clear _e ->
               (* TODO: handle_clear_event h e time; *)
               time)
-        0. evs.events
+        0. (List.rev evs.events)
     in
     (total_time, Hashtbl.fold (fun _id stro acc -> stro :: acc) h [])
   in

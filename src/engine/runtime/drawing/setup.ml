@@ -4,16 +4,13 @@ let connect () =
     |> Option.get |> Brr.El.as_target
   in
   let _mousemove =
-    Brr.Ev.listen Brr.Ev.pointermove
-      (Event.continue_shape Self)
+    Brr.Ev.listen Brr.Ev.pointermove Event.continue_shape
       (Brr.Document.as_target Brr.G.document)
   in
-  let _pointerdown =
-    Brr.Ev.listen Brr.Ev.pointerdown (Event.start_shape Self) main
-  in
+  let _pointerdown = Brr.Ev.listen Brr.Ev.pointerdown Event.start_shape main in
   let _pointerup =
     Brr.Ev.listen Brr.Ev.pointerup
-      (fun _x -> Event.end_shape Self ())
+      (fun _x -> Event.end_shape ())
       (Brr.Document.as_target Brr.G.document)
   in
   ()
@@ -82,7 +79,7 @@ let setup el =
     add_listener State.set_width State.Button.width Small;
     add_listener State.set_width State.Button.width Medium;
     add_listener State.set_width State.Button.width Large;
-    add_listener (Event.clear Self) State.Button.clear ()
+    add_listener Event.clear State.Button.clear ()
   in
   let () =
     State.set_width Medium;
