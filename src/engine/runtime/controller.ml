@@ -233,13 +233,13 @@ let message_setup window =
             else Step.Next.goto i window
           in
           ()
-      | Some { payload = Drawing d; id = window_id } ->
+      | Some { payload = Drawing d; id = _window_id } ->
           let ( let** ) x f =
             match x with
             | None -> Brr.Console.(log [ "problem here" ])
             | Some x -> f x
           in
-          let origin = Drawing.Types.Sent window_id in
+          let origin = (* Drawing.Types.Sent window_id *) Drawing.Types.Self in
           let** modu = Messaging.Draw_event.of_string d in
           let** s, (module Tool : Drawing.Tools.Tool) =
             match modu with

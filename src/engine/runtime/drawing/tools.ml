@@ -250,3 +250,5 @@ module _ : Tool = Draw
 module _ : Stroker = Erase
 module _ : Tool = Erase
 module _ : Tool = Clear
+
+(* I feel I have used the module system to reinvent OOP... *)
