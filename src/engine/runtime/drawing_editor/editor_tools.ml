@@ -58,7 +58,7 @@ module Selection = struct
 
   let box_selection_var = Lwd.var None
 
-  let timeline_event recording stroke_height =
+  let timeline_event recording ~stroke_height =
     let select_of_coords ?pre container ~x ~dx ~y ~dy ev =
       let total_length = Lwd.peek recording.total_time in
       let width_in_pixel = Brr.El.bound_w container in
@@ -182,7 +182,7 @@ module Move = struct
             ())
       strokes
 
-  let timeline_event recording stroke_height =
+  let timeline_event recording ~stroke_height =
     let translate_of_coords strokes container ~dx ~dy =
       let time_shift =
         let total_length = Lwd.peek recording.total_time in

@@ -164,10 +164,10 @@ let el recording =
     match current_tool with
     | Select ->
         Lwd_seq.element
-        @@ Editor_tools.Selection.timeline_event recording stroke_height
+        @@ Editor_tools.Selection.timeline_event recording ~stroke_height
     | Move ->
         Lwd_seq.element
-        @@ Editor_tools.Move.timeline_event recording stroke_height
+        @@ Editor_tools.Move.timeline_event recording ~stroke_height
   in
   let box =
     let$* current_tool = Lwd.get State.current_tool in
