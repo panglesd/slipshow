@@ -90,6 +90,7 @@ let record_to_record (evs : t) : Drawing.Record.t =
     let draw (d, t) = (`Draw d, t) in
     let path = Lwd.peek stro.path in
     let id = stro.id in
+    let end_time = List.hd path |> snd in
     let continue =
       List.rev_map
         (fun (coord, time) ->
@@ -109,7 +110,7 @@ let record_to_record (evs : t) : Drawing.Record.t =
               color = Lwd.peek stro.color;
             }
           in
-          draw (Drawing.Tools.Draw.End { id }, time)
+          draw (Drawing.Tools.Draw.End { id }, end_time)
           :: draw (Drawing.Tools.Draw.Start { coord; id; start_args }, time)
           :: ev
       | _ -> continue
