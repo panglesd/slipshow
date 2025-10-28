@@ -61,11 +61,13 @@ body.slipshow-drawing-mode {
   display: flex;
   height: 100vh;
   flex-direction: column;
+  overflow: hidden;
 }
 #slipshow-horizontal-flex {
   display: flex;
   flex-grow: 1;
   flex-direction: row-reverse;
+  overflow: hidden;
 }
 
 #slipshow-content {
