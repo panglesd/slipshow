@@ -9,11 +9,14 @@ let connect () =
   let open Lwd_infix in
   let panel =
     let handler =
-      let$ recording = State.Recording.current in
-      match recording with
-      | None -> Lwd_seq.empty
-      | Some recording ->
+      let$ recording = State.Recording.current
+      and$ current_tool = Lwd.get State.current_tool in
+      match (recording, current_tool) with
+      | None, _ -> Lwd_seq.empty
+      | Some recording, Move ->
           Lwd_seq.element @@ Editor_tools.Move.drawing_event recording
+      | Some recording, Select ->
+          Lwd_seq.element @@ Editor_tools.Selection.drawing_event recording
     in
     let cursor =
       let$ tool = Lwd.get State.current_tool in
@@ -27,6 +30,7 @@ let connect () =
       | None -> (!!"display", !!"none")
       | Some _ -> (!!"display", !!"block")
     in
+    let preview_box = Editor_tools.Selection.preview_box in
     Brr_lwd.Elwd.div
       ~ev:[ `S handler ]
       ~at:[ `P (Brr.At.id !!"slipshow-drawing-editor-for-events") ]
@@ -40,7 +44,7 @@ let connect () =
           `P (!!"right", !!"0");
           `P (!!"bottom", !!"0");
         ]
-      []
+      [ `S preview_box ]
   in
   let ui = Lwd.observe panel in
   let on_invalidate _ =

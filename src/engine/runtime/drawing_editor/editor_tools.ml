@@ -150,6 +150,64 @@ module Selection = struct
         Lwd_seq.element div
 
   let box = Lwd_seq.lift box
+  let preview_selection_var = Lwd.var None
+
+  let drawing_event _recording =
+    let start x y _ev =
+      let position_var = (Lwd.var x, Lwd.var y, Lwd.var 0., Lwd.var 0.) in
+      Lwd.set preview_selection_var (Some position_var);
+      (x, y, position_var)
+    in
+    let drag ~dx ~dy (x, y, (vx, vy, vdx, vdy)) _ev =
+      let x, dx = if dx < 0. then (x +. dx, -.dx) else (x, dx) in
+      let y, dy = if dy < 0. then (y +. dy, -.dy) else (y, dy) in
+      Lwd.set vx x;
+      Lwd.set vy y;
+      Lwd.set vdx dx;
+      Lwd.set vdy dy
+    in
+    let end_ (_, _, (_x, _y, _dx, _dy)) _ev =
+      Lwd.set preview_selection_var None
+    in
+    Ui_widgets.mouse_drag start drag end_
+
+  let preview_box =
+    let$ box_selection = Lwd.get preview_selection_var in
+    match box_selection with
+    | None -> Lwd_seq.empty
+    | Some (x, y, dx, dy) ->
+        let st =
+          let x =
+            let$ x = Lwd.get x in
+            (Brr.El.Style.left, px_float x)
+          in
+          let y =
+            let$ y = Lwd.get y in
+            (Brr.El.Style.top, px_float y)
+          in
+          let dx =
+            let$ dx = Lwd.get dx in
+            (Brr.El.Style.width, px_float dx)
+          in
+          let dy =
+            let$ dy = Lwd.get dy in
+            (Brr.El.Style.height, px_float dy)
+          in
+          [
+            `R x;
+            `R y;
+            `R dx;
+            `R dy;
+            `P (Brr.El.Style.background_color, !!"lightgray");
+            `P (!!"opacity", !!"0.5");
+            `P (!!"border", !!"1px solid black");
+            `P (Brr.El.Style.position, !!"absolute");
+          ]
+        in
+        let div = Brr_lwd.Elwd.div ~st [] in
+        Lwd_seq.element div
+
+  let preview_box = Lwd_seq.lift preview_box
 end
 
 module Move = struct
