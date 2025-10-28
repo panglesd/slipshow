@@ -28,6 +28,7 @@
 - Fix wrong position bug on custom dimensions (#182)
 - Fix infinitely jiggling autoresizing
 - Fix not being able to draw outside of inner presentation
+- Fix permanent fast-moving bug
 
 ## [v0.6.0] The King's Slipshow (Monday 18th August, 2025)
 
