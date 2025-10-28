@@ -12,7 +12,7 @@ let replay ?(speedup = 1.) (record : t (* record *)) =
     in
     let time_elapsed = now () -. start_replay in
     let rec loop acc = function
-      | [] -> (acc, [])
+      | [] -> (List.rev acc, [])
       | ev :: tl when start_time ev <= speedup *. time_elapsed ->
           loop (ev :: acc) tl
       | rest -> (List.rev acc, rest)
@@ -23,7 +23,6 @@ let replay ?(speedup = 1.) (record : t (* record *)) =
     let speedup =
       match Fast.get_mode () with Normal -> speedup | _ -> 10000.
     in
-    Brr.Console.(log [ "l has length"; List.length l ]);
     let to_draw, rest = filter l speedup in
     List.iter
       (function
