@@ -155,5 +155,6 @@ let record_to_record (evs : t) : Drawing.Record.t =
   let events =
     strokes |> List.concat_map of_stroke
     |> List.sort (fun (_, s1) (_, s2) -> Float.compare s1 s2)
+    |> List.rev
   in
   { events; record_id = evs.record_id }
