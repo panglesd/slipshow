@@ -42,11 +42,11 @@ let move_handler stroke =
 
 let create_elem_of_stroke ~elapsed_time
     ({
-       options;
        scale;
        color;
-       opacity;
        id;
+       width;
+       stroker;
        path;
        end_at;
        starts_at = _;
@@ -66,20 +66,16 @@ let create_elem_of_stroke ~elapsed_time
       in
       let with_path path =
         let path = List.map fst path in
-        let$ options =
-          let$ size = Lwd.get options.size in
-          Perfect_freehand.Options.v ~size ?thinning:options.thinning
-            ?streamline:options.streamline ?smoothing:options.smoothing ()
-        in
+        let options = Drawing.Strokes.options_of stroker width in
         let v = Jstr.v (Drawing.Strokes.svg_path options scale path) in
         Brr.At.v (Jstr.v "d") v
       in
       let$* path = Lwd.get path in
       if should_continue then
-        let$* elapsed_time = elapsed_time in
+        let$ elapsed_time = elapsed_time in
         let path = List.filter (fun (_, t) -> t < elapsed_time) path in
         with_path path
-      else with_path path
+      else Lwd.pure @@ with_path path
     in
     let fill =
       let$* color = Lwd.get color
@@ -103,7 +99,7 @@ let create_elem_of_stroke ~elapsed_time
       Brr.At.style s
     in
     let opacity =
-      let$ opacity = Lwd.get opacity in
+      let opacity = match stroker with Highlighter -> 0.33 | Pen -> 1. in
       Brr.At.v (Jstr.v "opacity") (opacity |> Jstr.of_float)
     in
     let selected =
@@ -122,7 +118,7 @@ let create_elem_of_stroke ~elapsed_time
            ]
       else Lwd_seq.empty
     in
-    [ `R fill; `P id; `P style; `R opacity; `R d; `S selected ]
+    [ `R fill; `P id; `P style; `P opacity; `R d; `S selected ]
   in
   let ev = move_handler stroke in
   Brr_lwd.Elwd.v ~ns:`SVG ~at ~ev (Jstr.v "path") []

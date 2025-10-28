@@ -1,10 +1,3 @@
-type pfo = {
-  size : float Lwd.var;
-  thinning : float option;
-  smoothing : float option;
-  streamline : float option;
-}
-
 type erased = {
   at : float Lwd.var;
   track : int Lwd.var;
@@ -20,8 +13,8 @@ type stro = {
   end_at : float Lwd.t;
   starts_at : float Lwd.t;
   color : Drawing.Color.t Lwd.var;
-  opacity : float Lwd.var;
-  options : pfo;
+  stroker : Drawing.Types.Tool.stroker;
+  width : Drawing.Types.Width.t;
   selected : bool Lwd.var;
   preselected : bool Lwd.var;
   track : int Lwd.var;

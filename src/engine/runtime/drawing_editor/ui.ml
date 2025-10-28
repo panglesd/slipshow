@@ -75,12 +75,6 @@ let right_selection recording =
 let description_of_stroke row (stroke : stro) =
   let color = Ui_widgets.of_color stroke.color in
   let color = Brr_lwd.Elwd.div [ `P (Brr.El.txt' "Color: "); `R color ] in
-  let size =
-    Ui_widgets.float
-      ~st:[ `P (Brr.El.Style.width, !!"50px") ]
-      ~type':"number" stroke.options.size []
-  in
-  let size = Brr_lwd.Elwd.div [ `P (Brr.El.txt' "Size: "); `R size ] in
   let close =
     let click_handler =
       Brr_lwd.Elwd.handler Brr.Ev.click (fun _ -> Lwd.set stroke.selected false)
@@ -122,7 +116,7 @@ let description_of_stroke row (stroke : stro) =
     in
     Brr_lwd.Elwd.div [ `P (Brr.El.txt' "Duration: "); `R duration ]
   in
-  Brr_lwd.Elwd.div [ `R color; `R size; `R duration; `R delete; `R close ]
+  Brr_lwd.Elwd.div [ `R color; `R duration; `R delete; `R close ]
 
 let global_panel recording =
   let total_time = Ui_widgets.float ~type':"number" recording.total_time [] in

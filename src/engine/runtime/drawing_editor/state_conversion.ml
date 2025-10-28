@@ -7,26 +7,11 @@ let end_at l = List.hd l |> snd
     drawing editor *)
 let new_stroke ~coord ~time ~stroker ~color ~width ~id =
   let path = Lwd.var [ (coord, time) ] in
-  let options = Drawing.Strokes.options_of stroker width in
   let { Universe.Coordinates.scale; _ } = Universe.State.get_coord () in
   let end_at = Lwd.map (Lwd.get path) ~f:end_at in
   let starts_at = Lwd.map (Lwd.get path) ~f:starts_at in
   (* TODO: turn path into a "relatively_timed" and make starts_at a var *)
   let color = Lwd.var color in
-  let opacity = match stroker with Highlighter -> 0.33 | Pen -> 1. in
-  let opacity = Lwd.var opacity in
-  let options =
-    let open Perfect_freehand.Options in
-    let thinning = thinning options in
-    let size =
-      Lwd.var @@ Option.get @@ size options
-      (* Size options is _always_ set in strokes. The option type comes from
-           the Perfect_freehand binding. *)
-    in
-    let smoothing = smoothing options in
-    let streamline = streamline options in
-    { size; thinning; smoothing; streamline }
-  in
   let selected = Lwd.var false in
   let preselected = Lwd.var false in
   {
@@ -36,12 +21,12 @@ let new_stroke ~coord ~time ~stroker ~color ~width ~id =
     end_at;
     starts_at;
     color;
-    opacity;
-    options;
     selected;
     preselected;
     track = Lwd.var 0;
     erased = Lwd.var None;
+    stroker;
+    width;
   }
 
 let handle_draw_event h d time =
@@ -117,10 +102,10 @@ let record_to_record (evs : t) : Drawing.Record.t =
           let start_args =
             {
               Drawing.Tools.stroker =
-                Highlighter
-                (* TODO: do (probably change stroker to allow custom numerical values
-                 for width and opacity) *);
-              width = (* Lwd.peek stro.options.size *) Small (* TODO: do *);
+                stro.stroker
+                (* TODO: Change stroker to allow custom numerical values
+                 for width and opacity *);
+              width = stro.width;
               color = Lwd.peek stro.color;
             }
           in

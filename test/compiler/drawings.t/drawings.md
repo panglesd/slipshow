@@ -2,6 +2,5 @@
 dimension: 16:9
 ---
 
-![](clo.draw){draw}
+![](test2.draw){draw}
 
-{style=height:10000px}
