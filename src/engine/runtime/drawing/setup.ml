@@ -1,6 +1,6 @@
 let connect () =
   let main =
-    Brr.El.find_first_by_selector (Jstr.v "#slipshow-main")
+    Brr.El.find_first_by_selector (Jstr.v "#slipshow-open-window")
     |> Option.get |> Brr.El.as_target
   in
   let _mousemove =
