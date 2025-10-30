@@ -164,15 +164,15 @@ let el recording =
     match current_tool with
     | Select ->
         Lwd_seq.element
-        @@ Editor_tools.Selection.timeline_event recording ~stroke_height
+        @@ Editor_tools.Selection.Timeline.event recording ~stroke_height
     | Move ->
         Lwd_seq.element
-        @@ Editor_tools.Move.timeline_event recording ~stroke_height
+        @@ Editor_tools.Move.Timeline.event recording ~stroke_height
   in
   let box =
     let$* current_tool = Lwd.get State.current_tool in
     match current_tool with
-    | Select -> Editor_tools.Selection.box
+    | Select -> Editor_tools.Selection.Timeline.box
     | Move -> Lwd.return Lwd_seq.empty
   in
   Brr_lwd.Elwd.div ~ev:[ `S ev ] ~st [ `S strokes; `S box ]

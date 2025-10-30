@@ -92,12 +92,6 @@ let create_elem_of_stroke ~elapsed_time
       Brr.At.v (Jstr.v "fill") (Jstr.v color)
     in
     let id = Brr.At.id (Jstr.v id) in
-    let style =
-      let scale = 1. /. scale in
-      let scale = string_of_float scale in
-      let s = Jstr.v @@ "scale3d(" ^ scale ^ "," ^ scale ^ "," ^ scale ^ ")" in
-      Brr.At.style s
-    in
     let opacity =
       let opacity = match stroker with Highlighter -> 0.33 | Pen -> 1. in
       Brr.At.v (Jstr.v "opacity") (opacity |> Jstr.of_float)
@@ -118,10 +112,17 @@ let create_elem_of_stroke ~elapsed_time
            ]
       else Lwd_seq.empty
     in
-    [ `R fill; `P id; `P style; `P opacity; `R d; `S selected ]
+    [ `R fill; `P id; `P opacity; `R d; `S selected ]
   in
   let ev = move_handler stroke in
-  Brr_lwd.Elwd.v ~ns:`SVG ~at ~ev (Jstr.v "path") []
+  let st =
+    let scale = 1. /. scale in
+    let scale = string_of_float scale in
+    let ( !! ) = Jstr.v in
+    let s = "scale3d(" ^ scale ^ "," ^ scale ^ "," ^ scale ^ ")" in
+    [ `P (!!"transform", !!s) ]
+  in
+  Brr_lwd.Elwd.v ~ns:`SVG ~at ~ev ~st (Jstr.v "path") []
 
 let draw_until ~elapsed_time (record : t) =
   Lwd_table.map_reduce

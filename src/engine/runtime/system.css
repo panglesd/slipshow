@@ -74,7 +74,9 @@ body.slipshow-drawing-mode {
   border: 1px solid transparent;
 }
 
-/* See drawing/event.ml if you modify. So that you can draw on the side of your content */
+/* See drawing/event.ml and drawing_editor/editor_tools.ml if you modify.
+
+   Adds padding so that you can draw on the side of your content */
 #slipshow-universe {
   padding: 2000px;
   min-width: var(--page-width);

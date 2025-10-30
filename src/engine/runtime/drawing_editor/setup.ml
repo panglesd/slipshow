@@ -14,14 +14,14 @@ let connect () =
       match (recording, current_tool) with
       | None, _ -> Lwd_seq.empty
       | Some recording, Move ->
-          Lwd_seq.element @@ Editor_tools.Move.drawing_event recording
+          Lwd_seq.element @@ Editor_tools.Move.Preview.event recording
       | Some recording, Select ->
-          Lwd_seq.element @@ Editor_tools.Selection.drawing_event recording
+          Lwd_seq.element @@ Editor_tools.Selection.Preview.event recording
     in
     let cursor =
       let$ tool = Lwd.get State.current_tool in
       match tool with
-      | Select -> (!!"cursor", !!"pointer")
+      | Select -> (!!"cursor", !!"crosshair")
       | Move -> (!!"cursor", !!"move")
     in
     let display =
@@ -30,7 +30,7 @@ let connect () =
       | None -> (!!"display", !!"none")
       | Some _ -> (!!"display", !!"block")
     in
-    let preview_box = Editor_tools.Selection.preview_box in
+    let preview_box = Editor_tools.Selection.Preview.box in
     Brr_lwd.Elwd.div
       ~ev:[ `S handler ]
       ~at:[ `P (Brr.At.id !!"slipshow-drawing-editor-for-events") ]
