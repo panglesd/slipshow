@@ -19,3 +19,13 @@ module Move : sig
     val event : State_types.t -> Brr_lwd.Elwd.handler
   end
 end
+
+module Scale : sig
+  module Timeline : sig
+    val event : State_types.t -> Brr_lwd.Elwd.handler
+  end
+
+  module Preview : sig
+    val event : State_types.t -> Brr_lwd.Elwd.handler
+  end
+end

@@ -27,6 +27,9 @@ let handle ev =
   | "s" ->
       Lwd.set State.current_tool Select;
       true
+  | "r" ->
+      Lwd.set State.current_tool Scale;
+      true
   | " " ->
       if Lwd.peek State.is_playing then State.stop () else State.play ();
       true

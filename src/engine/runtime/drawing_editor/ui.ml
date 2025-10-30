@@ -173,6 +173,13 @@ let move_button =
   in
   Brr_lwd.Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Move") ]
 
+let scale_button =
+  let click =
+    Brr_lwd.Elwd.handler Brr.Ev.click (fun _ ->
+        Lwd.set State.current_tool Scale)
+  in
+  Brr_lwd.Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Resize") ]
+
 let el (recording : t) =
   let description =
     let$* s =
@@ -204,6 +211,7 @@ let el (recording : t) =
         `R (save_panel recording);
         `R select_button;
         `R move_button;
+        `R scale_button;
         `R (slider recording);
         `R strokes;
         `R (left_selection recording);

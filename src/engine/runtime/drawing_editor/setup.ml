@@ -17,12 +17,15 @@ let connect () =
           Lwd_seq.element @@ Editor_tools.Move.Preview.event recording
       | Some recording, Select ->
           Lwd_seq.element @@ Editor_tools.Selection.Preview.event recording
+      | Some recording, Scale ->
+          Lwd_seq.element @@ Editor_tools.Scale.Preview.event recording
     in
     let cursor =
       let$ tool = Lwd.get State.current_tool in
       match tool with
       | Select -> (!!"cursor", !!"crosshair")
       | Move -> (!!"cursor", !!"move")
+      | Scale -> (!!"cursor", !!"ne-resize")
     in
     let display =
       let$ tool = State.Recording.current in

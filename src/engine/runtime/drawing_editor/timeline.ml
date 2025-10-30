@@ -114,7 +114,7 @@ let block_of_stroke recording (stroke : stro) =
     let ev_hover =
       let$ current_tool = Lwd.get State.current_tool in
       match current_tool with
-      | Move -> Lwd_seq.empty
+      | Move | Scale -> Lwd_seq.empty
       | Select -> snd @@ Ui_widgets.hover ~var:stroke.preselected ()
     in
     let ev = [ `S ev_hover ] in
@@ -130,7 +130,7 @@ let block_of_stroke recording (stroke : stro) =
     let ev_hover =
       let$ current_tool = Lwd.get State.current_tool in
       match current_tool with
-      | Move -> Lwd_seq.empty
+      | Move | Scale -> Lwd_seq.empty
       | Select -> snd @@ Ui_widgets.hover ~var:stroke.preselected ()
     in
     [ `S ev_hover ]
@@ -156,6 +156,7 @@ let el recording =
       match current_tool with
       | Select -> (!!"cursor", !!"crosshair")
       | Move -> (!!"cursor", !!"move")
+      | Scale -> (!!"cursor", !!"ne-resize")
     in
     [ `P (Brr.El.Style.position, !!"relative"); `R height; `R cursor ]
   in
@@ -168,11 +169,12 @@ let el recording =
     | Move ->
         Lwd_seq.element
         @@ Editor_tools.Move.Timeline.event recording ~stroke_height
+    | Scale -> Lwd_seq.element @@ Editor_tools.Scale.Timeline.event recording
   in
   let box =
     let$* current_tool = Lwd.get State.current_tool in
     match current_tool with
     | Select -> Editor_tools.Selection.Timeline.box
-    | Move -> Lwd.return Lwd_seq.empty
+    | Move | Scale -> Lwd.return Lwd_seq.empty
   in
   Brr_lwd.Elwd.div ~ev:[ `S ev ] ~st [ `S strokes; `S box ]

@@ -351,3 +351,103 @@ module Move = struct
       Ui_widgets.mouse_drag start drag end_
   end
 end
+
+module Scale = struct
+  module Timeline = struct
+    let event recording =
+      let start _x _y ev =
+        let strokes =
+          Lwd_table.fold
+            (fun acc stroke ->
+              let s =
+                if not (Lwd.peek stroke.selected) then []
+                else [ `Stroke (Lwd.peek stroke.path, stroke) ]
+              in
+              let sel =
+                match Lwd.peek stroke.erased with
+                | Some sel when Lwd.peek sel.selected ->
+                    [ `Erase (Lwd.peek sel.at, sel, stroke) ]
+                | _ -> []
+              in
+              s @ sel @ acc)
+            [] recording.strokes
+        in
+        let el =
+          ev |> Brr.Ev.current_target |> Brr.Ev.target_to_jv |> Brr.El.of_jv
+        in
+        let t_begin =
+          List.fold_left
+            (fun t_begin -> function
+              | `Stroke (_, stroke) ->
+                  Float.min t_begin (very_quick_sample stroke.starts_at)
+              | `Erase (at, _, _) -> Float.min t_begin at)
+            Float.infinity strokes
+        in
+        let t_end =
+          List.fold_left
+            (fun t_end -> function
+              | `Stroke (_, stroke) ->
+                  Float.max t_end (very_quick_sample stroke.end_at)
+              | `Erase (at, _, _) -> Float.max t_end at)
+            0. strokes
+        in
+        (strokes, el, t_begin, t_end)
+      in
+      let map_time ~t_begin ~t_end ~scale t =
+        if t <= t_begin then t
+        else if t >= t_end then
+          t_begin +. ((t_end -. t_begin) *. scale) +. (t -. t_end)
+        else t_begin +. ((t -. t_begin) *. scale)
+      in
+      let map_stroke_times f = List.map (fun (pos, t) -> (pos, f t)) in
+      let drag ~dx ~dy:_ (strokes, _container, t_begin, t_end) _ev =
+        let scale = 1. +. (dx /. 400.) in
+        let map_time = map_time ~t_begin ~t_end ~scale in
+        let map_stroke path = map_stroke_times map_time path in
+        List.iter
+          (function
+            | `Stroke (path, stroke) -> Lwd.set stroke.path (map_stroke path)
+            | `Erase (at, erased, _stroke) -> Lwd.set erased.at (map_time at))
+          strokes
+      in
+      let end_ _ _ = () in
+      Ui_widgets.mouse_drag start drag end_
+  end
+
+  module Preview = struct
+    let event recording =
+      let start _x _y _ev =
+        let strokes =
+          Lwd_table.fold
+            (fun acc s ->
+              if Lwd.peek s.selected then (Lwd.peek s.path, s.path) :: acc
+              else acc)
+            [] recording.strokes
+        in
+        let minX, minY =
+          List.fold_left
+            (fun (mx, my) (path, _) ->
+              let mx =
+                List.fold_left (fun m ((x, _), _) -> Float.min m x) mx path
+              in
+              let my =
+                List.fold_left (fun m ((_, y), _) -> Float.min m y) my path
+              in
+              (mx, my))
+            (Float.infinity, Float.infinity)
+            strokes
+        in
+        (strokes, minX, minY)
+      in
+      let drag ~dx ~dy (paths, minX, minY) _ev =
+        List.iter
+          (fun (p, v) ->
+            Lwd.set v
+              (Path_editing.scale_space p minX minY
+                 (1. +. ((dx +. dy) /. 500.))))
+          paths
+      in
+      let end_ _ _ev = () in
+      Ui_widgets.mouse_drag start drag end_
+  end
+end

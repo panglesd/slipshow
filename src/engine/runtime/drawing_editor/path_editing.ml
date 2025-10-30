@@ -12,6 +12,12 @@ let translate path t0 = List.map (fun (pos, time) -> (pos, time +. t0)) path
 let translate_space path dx dy =
   List.map (fun ((x, y), time) -> ((x +. dx, y +. dy), time)) path
 
+let scale_space path minX minY scale =
+  List.map
+    (fun ((x, y), time) ->
+      ((minX +. ((x -. minX) *. scale), minY +. ((y -. minY) *. scale)), time))
+    path
+
 let add_time path from amount =
   match List.rev path with
   | (_, time) :: _ when time > from ->

@@ -28,4 +28,4 @@ type t = {
 }
 (** Ordered by time *)
 
-type editing_tool = Select | Move
+type editing_tool = Select | Move | Scale
