@@ -525,9 +525,10 @@ end)
 
 module Enter = struct
   type t = {
-    elem : Brr.El.t;
-    coord : Universe.Coordinates.window;
-    duration : float option;
+    element_entered : Brr.El.t;  (** The element we entered *)
+    coord_left : Universe.Coordinates.window;
+        (** The coordinate we left when entering *)
+    duration : float option;  (** The duration it took to enter entering *)
   }
 
   let stack = Stack.create ()
@@ -536,13 +537,12 @@ module Enter = struct
     let on = "enter-at-unpause"
     let action_name = "enter"
 
-    let move ?duration ?margin window elem =
+    let move ?duration ?margin window element_entered =
       let> () =
-        Undoable.Stack.push
-          { elem; coord = Universe.State.get_coord (); duration }
-          stack
+        let coord_left = Universe.State.get_coord () in
+        Undoable.Stack.push { element_entered; coord_left; duration } stack
       in
-      Universe.Move.enter ?duration ?margin window elem
+      Universe.Move.enter ?duration ?margin window element_entered
   end)
 end
 
@@ -551,18 +551,25 @@ let exit window to_elem =
     let coord = Undoable.Stack.peek Enter.stack in
     match coord with
     | None -> Undoable.return ()
-    | Some { elem; _ } when Brr.El.contains elem ~child:to_elem ->
+    | Some { element_entered; _ }
+      when Brr.El.contains element_entered ~child:to_elem ->
         Undoable.return ()
-    | Some { coord; duration; _ } -> (
+    | Some { coord_left; duration; _ } -> (
         let duration = Option.value duration ~default:1.0 in
         let> _ = Undoable.Stack.pop_opt Enter.stack in
         match Undoable.Stack.peek Enter.stack with
-        | None -> Universe.Move.move window coord ~duration
-        | Some { Enter.elem; coord; _ } when Brr.El.contains elem ~child:to_elem
-          ->
-            if Brr.El.at (Jstr.v "enter-at-unpause") to_elem |> Option.is_some
-            then Undoable.return ()
-            else Universe.Move.move window coord ~duration:1.0
+        | None -> Universe.Move.move window coord_left ~duration
+        | Some { Enter.element_entered; _ }
+          when Brr.El.contains element_entered ~child:to_elem ->
+            let duration =
+              match Brr.El.at (Jstr.v "enter-at-unpause") to_elem with
+              | None -> duration
+              | Some s -> (
+                  match Enter.parse_args to_elem (Jstr.to_string s) with
+                  | Error _ -> duration
+                  | Ok v -> Option.value ~default:duration v.duration)
+            in
+            Universe.Move.move window coord_left ~duration
         | Some _ -> exit ())
   in
   exit ()
