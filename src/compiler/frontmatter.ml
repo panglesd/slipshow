@@ -26,7 +26,12 @@ module Default = struct
 
   let toplevel_attributes =
     Cmarkit.Attributes.make
-      ~kv_attributes:[ (("slip", Cmarkit.Meta.none), None) ]
+      ~kv_attributes:
+        [
+          (("slip", Cmarkit.Meta.none), None);
+          ( ("enter", Cmarkit.Meta.none),
+            Some ({ v = "~duration:0"; delimiter = None }, Cmarkit.Meta.none) );
+        ]
       ()
 
   let theme = `Builtin Themes.Default
