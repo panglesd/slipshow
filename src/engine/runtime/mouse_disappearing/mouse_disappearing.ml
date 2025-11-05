@@ -19,7 +19,7 @@ let setup () =
   show_cursor ();
   let timeout_id = ref None in
   let _unlisten =
-    Brr.Ev.listen Brr.Ev.mousemove
+    Brr.Ev.listen Brr.Ev.pointermove
       (fun _ ->
         (match !timeout_id with None -> () | Some id -> Brr.G.stop_timer id);
         show_cursor ();

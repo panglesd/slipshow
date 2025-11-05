@@ -53,6 +53,9 @@ let setup el =
                   <!-- <div class="slip-toolbar-stop">✓</div> -->
                   <div class="slip-toolbar-clear">✗</div>
               </div>
+              <div class="slip-toolbar-record">
+                  <div class="slip-toolbar-start-record"><div></div></div>
+              </div>
           </div> |}
   in
   let d = Brr.El.div ~at:[ Brr.At.id (Jstr.v "slipshow-drawing-toolbar") ] [] in

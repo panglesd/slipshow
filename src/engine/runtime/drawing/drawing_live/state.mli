@@ -31,12 +31,6 @@ module Strokes : sig
   val remove_el : Brr.El.t -> unit
 end
 
-type drawing_state =
-  | Drawing of Brr.El.t * Types.Stroke.t
-  | Erasing of (float * float)
-  | Pointing
-
-val current_drawing_state : drawing_state ref
 val start_record : int -> unit
 val end_record : unit -> unit
 val get_origin : unit -> Types.origin

@@ -1,0 +1,3 @@
+(library
+ (name drawing_controller)
+ (libraries lwd brr-lwd drawing drawing_state drawing_editor))

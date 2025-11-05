@@ -12,12 +12,13 @@ let start ~width ~height ~step =
   let el =
     Brr.El.find_first_by_selector (Jstr.v "#slipshow-content") |> Option.get
   in
-  let body = Brr.El.find_first_by_selector (Jstr.v "body") |> Option.get in
+  (* let body = Brr.El.find_first_by_selector (Jstr.v "body") |> Option.get in *)
   let* () = Normalization.setup el in
   let* window = Universe.Window.setup el in
   (* TODO: move out of here (Later: Why?) *)
   let () = Rescale.setup_rescalers () in
-  let () = Drawing.setup body in
+  (* let () = Drawing.setup body in *)
+  let () = Drawing_controller.Setup.init_ui () in
   let () = Mouse_disappearing.setup () in
   let initial_step =
     match step with
@@ -48,7 +49,7 @@ let start ~width ~height ~step =
   in
   let () = Controller.setup window in
   let () = Messaging.send_ready () in
-  let () = Drawing_editor.init () in
+  (* let () = Drawing_editor.init () in *)
   Fut.return ()
 
 let () =

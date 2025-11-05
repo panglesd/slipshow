@@ -111,12 +111,6 @@ module Strokes = struct
         Brr.El.remove elem
 end
 
-type drawing_state =
-  | Drawing of Brr.El.t * Stroke.t
-  | Erasing of (float * float)
-  | Pointing
-
-let current_drawing_state = ref Pointing
 let current_origin = ref Self
 let start_record id = current_origin := Record id
 let end_record () = current_origin := Self

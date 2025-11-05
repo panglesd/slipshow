@@ -1,0 +1,62 @@
+type color = string
+type width = float
+type stroker = Pen | Highlighter
+
+type erased = {
+  at : float Lwd.var;
+  track : int Lwd.var;
+  selected : bool Lwd.var;
+  preselected : bool Lwd.var;
+}
+
+type stro = {
+  id : string;
+  scale : float;
+  path :
+    ((float * float) * float) list Lwd.var (* TODO: (position * time) list *);
+  end_at : float Lwd.t;
+  starts_at : float Lwd.t;
+  color : color Lwd.var;
+  stroker : stroker;
+  width : width;
+  selected : bool Lwd.var;
+  preselected : bool Lwd.var;
+  track : int Lwd.var;
+  erased : erased option Lwd.var;
+}
+
+type strokes = stro Lwd_table.t
+
+type recording = {
+  strokes : stro Lwd_table.t;
+  total_time : float Lwd.var;
+  record_id : int;
+}
+
+type workspaces = { recordings : recording Lwd_table.t; live_drawing : strokes }
+
+let workspaces : workspaces =
+  { recordings = Lwd_table.make (); live_drawing = Lwd_table.make () }
+
+type live_drawing_tool = Stroker of stroker | Eraser | Pointer
+
+type live_drawing_state = {
+  tool : live_drawing_tool Lwd.var;
+  color : color Lwd.var;
+  width : width Lwd.var;
+}
+
+type recording_state = {
+  live_drawing_state : live_drawing_state;
+  recording : recording;
+}
+
+type editing_tool = Select | Move | Rescale
+type editing_state = { tool : editing_tool Lwd.var; recording : recording }
+
+let live_drawing_state =
+  { tool = Lwd.var Pointer; color = Lwd.var "blue"; width = Lwd.var 10.0 }
+
+type status = Presenting | Recording of recording | Editing of editing_state
+
+let status = Lwd.var Presenting

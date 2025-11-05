@@ -66,30 +66,45 @@ let hover ?(var = Lwd.var false) () =
   in
   (Lwd.get var, Lwd_seq.of_list [ handler1; handler2 ])
 
+let is_pressed ev =
+  let is_pressed = ( != ) 0 in
+  is_pressed
+    (ev |> Brr.Ev.as_type |> Brr.Ev.Pointer.as_mouse |> Brr.Ev.Mouse.buttons)
+
 let mouse_drag start drag end_ =
   let mouse_move x y acc =
    fun ev ->
-    let mouse_ev = Brr.Ev.as_type ev in
+    let mouse_ev = Brr.Ev.as_type ev |> Brr.Ev.Pointer.as_mouse in
     let x' = Brr.Ev.Mouse.page_x mouse_ev in
     let y' = Brr.Ev.Mouse.page_y mouse_ev in
     drag ~dx:(x' -. x) ~dy:(y' -. y) acc ev
   in
-  Brr_lwd.Elwd.handler Brr.Ev.mousedown (fun ev ->
+  Brr_lwd.Elwd.handler Brr.Ev.pointerdown (fun ev ->
       Brr.Ev.prevent_default ev;
-      let mouse_ev = Brr.Ev.as_type ev in
+      let mouse_ev = Brr.Ev.as_type ev |> Brr.Ev.Pointer.as_mouse in
       let x = Brr.Ev.Mouse.page_x mouse_ev in
       let y = Brr.Ev.Mouse.page_y mouse_ev in
       let acc = start x y ev in
+      let acc = ref acc in
+      let mousemove_listener = ref None in
+      let mouseup_listener = ref None in
+      let unlisten () =
+        Option.iter Brr.Ev.unlisten !mousemove_listener;
+        Option.iter Brr.Ev.unlisten !mouseup_listener;
+        end_ !acc ev
+      in
       let id =
-        Brr.Ev.listen Brr.Ev.mousemove (mouse_move x y acc)
-          (Brr.Document.body Brr.G.document |> Brr.El.as_target)
-      in
-      let opts = Brr.Ev.listen_opts ~once:true () in
-      let _id =
-        Brr.Ev.listen ~opts Brr.Ev.mouseup
+        Brr.Ev.listen Brr.Ev.pointermove
           (fun ev ->
-            Brr.Ev.unlisten id;
-            end_ acc ev)
+            if is_pressed ev then acc := mouse_move x y !acc ev else unlisten ())
           (Brr.Document.body Brr.G.document |> Brr.El.as_target)
       in
+      mousemove_listener := Some id;
+      let opts = Brr.Ev.listen_opts ~once:true () in
+      let id =
+        Brr.Ev.listen ~opts Brr.Ev.pointerup
+          (fun _ev -> unlisten ())
+          (Brr.Document.body Brr.G.document |> Brr.El.as_target)
+      in
+      mouseup_listener := Some id;
       ())

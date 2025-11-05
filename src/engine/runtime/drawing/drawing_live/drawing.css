@@ -91,3 +91,17 @@
   border: 3px solid steelblue;
   border-radius: 5px;
 }
+
+.slip-writing-toolbar > .slip-toolbar-record > .slip-toolbar-start-record > * {
+  border: 4px solid red;
+  width: 5px;
+  height: 5px;
+  background: red;
+  border-radius: 10px;
+}
+.slip-writing-toolbar > .slip-toolbar-record > .slip-toolbar-stop-record > * {
+  border: 4px solid red;
+  width: 5px;
+  height: 5px;
+  background: red;
+}

@@ -10,6 +10,7 @@ module Tools = Tools
 module Record = Record
 module Replay = Replay
 module Strokes = Strokes
+module Utils = Utils
 
 let to_string (stroke, origin) =
   Yojson.Safe.to_string

@@ -1,0 +1,5 @@
+(library
+ (name drawing_state)
+ (libraries brr-lwd brr perfect_freehand)
+ (preprocess
+  (pps ppx_deriving_yojson)))

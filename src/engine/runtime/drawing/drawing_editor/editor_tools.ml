@@ -93,18 +93,19 @@ module Selection = struct
         select_of_coords container ~x ~y ~dx:0. ~dy:0.;
         (x, y, container, position_var)
       in
-      let drag ~dx ~dy (x, y, container, (vx, vy, vdx, vdy)) _ev =
+      let drag ~dx ~dy ((x, y, container, (vx, vy, vdx, vdy)) as acc) _ev =
         let x, dx = if dx < 0. then (x +. dx, -.dx) else (x, dx) in
         let y, dy = if dy < 0. then (y +. dy, -.dy) else (y, dy) in
         select_of_coords container ~x ~y ~dx ~dy;
         Lwd.set vx x;
         Lwd.set vy y;
         Lwd.set vdx dx;
-        Lwd.set vdy dy
+        Lwd.set vdy dy;
+        acc
       in
       let end_ _ ev =
         let mode =
-          let mouse_ev = Brr.Ev.as_type ev in
+          let mouse_ev = Brr.Ev.as_type ev |> Brr.Ev.Pointer.as_mouse in
           if Brr.Ev.Mouse.shift_key mouse_ev then `Add
           else if Brr.Ev.Mouse.ctrl_key mouse_ev then `Toggle
           else `Replace
@@ -189,18 +190,19 @@ module Selection = struct
         Lwd.set preview_selection_var (Some position_var);
         (x, y, position_var)
       in
-      let drag ~dx ~dy (x, y, (vx, vy, vdx, vdy)) _ev =
+      let drag ~dx ~dy ((x, y, (vx, vy, vdx, vdy)) as acc) _ev =
         let x, dx = if dx < 0. then (x +. dx, -.dx) else (x, dx) in
         let y, dy = if dy < 0. then (y +. dy, -.dy) else (y, dy) in
         Lwd.set vx x;
         Lwd.set vy y;
         Lwd.set vdx dx;
         Lwd.set vdy dy;
-        select (x, y, dx, dy) recording
+        select (x, y, dx, dy) recording;
+        acc
       in
       let end_ _ ev =
         let mode =
-          let mouse_ev = Brr.Ev.as_type ev in
+          let mouse_ev = Brr.Ev.as_type ev |> Brr.Ev.Pointer.as_mouse in
           if Brr.Ev.Mouse.shift_key mouse_ev then `Add
           else if Brr.Ev.Mouse.ctrl_key mouse_ev then `Toggle
           else `Replace
@@ -323,8 +325,9 @@ module Move = struct
         in
         (strokes, el)
       in
-      let drag ~dx ~dy (strokes, container) _ev =
-        translate_of_coords strokes container ~dx ~dy
+      let drag ~dx ~dy ((strokes, container) as acc) _ev =
+        translate_of_coords strokes container ~dx ~dy;
+        acc
       in
       let end_ _ _ = () in
       Ui_widgets.mouse_drag start drag end_
@@ -345,7 +348,8 @@ module Move = struct
           (fun (p, v, scale) ->
             Lwd.set v
               (Path_editing.translate_space p (dx /. scale) (dy /. scale)))
-          paths
+          paths;
+        paths
       in
       let end_ _ _ev = () in
       Ui_widgets.mouse_drag start drag end_
@@ -400,7 +404,7 @@ module Scale = struct
         else t_begin +. ((t -. t_begin) *. scale)
       in
       let map_stroke_times f = List.map (fun (pos, t) -> (pos, f t)) in
-      let drag ~dx ~dy:_ (strokes, _container, t_begin, t_end) _ev =
+      let drag ~dx ~dy:_ ((strokes, _container, t_begin, t_end) as acc) _ev =
         let scale = 1. +. (dx /. 400.) in
         let map_time = map_time ~t_begin ~t_end ~scale in
         let map_stroke path = map_stroke_times map_time path in
@@ -408,7 +412,8 @@ module Scale = struct
           (function
             | `Stroke (path, stroke) -> Lwd.set stroke.path (map_stroke path)
             | `Erase (at, erased, _stroke) -> Lwd.set erased.at (map_time at))
-          strokes
+          strokes;
+        acc
       in
       let end_ _ _ = () in
       Ui_widgets.mouse_drag start drag end_
@@ -439,13 +444,14 @@ module Scale = struct
         in
         (strokes, minX, minY)
       in
-      let drag ~dx ~dy (paths, minX, minY) _ev =
+      let drag ~dx ~dy ((paths, minX, minY) as acc) _ev =
         List.iter
           (fun (p, v) ->
             Lwd.set v
               (Path_editing.scale_space p minX minY
                  (1. +. ((dx +. dy) /. 500.))))
-          paths
+          paths;
+        acc
       in
       let end_ _ _ev = () in
       Ui_widgets.mouse_drag start drag end_
