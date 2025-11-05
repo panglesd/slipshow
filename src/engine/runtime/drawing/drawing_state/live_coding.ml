@@ -46,13 +46,16 @@ type live_drawing_state = {
   width : width Lwd.var;
 }
 
-type recording_state = {
-  live_drawing_state : live_drawing_state;
-  recording : recording;
-}
+(* type recording_state = { *)
+(* live_drawing_state : live_drawing_state; *)
+(* recording : recording; *)
+(* } *)
 
 type editing_tool = Select | Move | Rescale
-type editing_state = { tool : editing_tool Lwd.var; recording : recording }
+
+let editing_tool = Lwd.var Select
+
+type editing_state = { recording : recording }
 
 let live_drawing_state =
   { tool = Lwd.var Pointer; color = Lwd.var "blue"; width = Lwd.var 10.0 }

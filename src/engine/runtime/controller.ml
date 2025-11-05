@@ -48,6 +48,7 @@ let keyboard_setup (window : Universe.Window.t) =
         | Normal -> f ()
         | Drawing_editing -> try_handle Drawing_editor.Controller.handle f
       in
+      try_handle Drawing_controller.Controller.handle @@ fun () ->
       check_mode @@ fun () ->
       check_modif_key Brr.Ev.Keyboard.ctrl_key @@ fun () ->
       check_modif_key Brr.Ev.Keyboard.meta_key @@ fun () ->
