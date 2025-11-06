@@ -1002,7 +1002,7 @@ module Draw = struct
     only_if_not_fast @@ fun () ->
     let speedup =
       match Fast.get_mode () with
-      | Normal -> 3.
+      | Normal -> 1.
       | Fast_move -> 10000.
       | Counting_for_toc -> assert false (* See "only_if_not_fast" *)
     in

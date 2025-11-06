@@ -9,7 +9,7 @@ let coord_of_event ev =
   |> Normalization.translate_coords |> Universe.Window.translate_coords
   (* See system.css: we add padding to be able to write on the side of the
      content. *)
-  |> fun (x, y) -> (x -. 2000., y -. 2000.)
+  |> fun (x, y) -> (x -. 2001., y -. 2001.)
 
 let is_pressed = ( != ) 0
 
