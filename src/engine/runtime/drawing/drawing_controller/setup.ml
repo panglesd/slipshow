@@ -408,7 +408,8 @@ module Ui = struct
       ()
     in
     let content =
-      Brr.El.find_first_by_selector (Jstr.v "#slipshow-main") |> Option.get
+      Brr.El.find_first_by_selector (Jstr.v "#slipshow-vertical-flex")
+      |> Option.get
     in
     El.append_children content [ Lwd.quick_sample svg ];
     Lwd.set_on_invalidate svg on_invalidate;
@@ -421,4 +422,6 @@ let init_ui () =
   Rec_in_progress.init ();
   init_ui ();
   Garbage.g ();
-  Editing.el
+  Ui.init ()
+(* ; *)
+(* Time.el *)

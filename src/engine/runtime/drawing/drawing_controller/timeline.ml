@@ -2,9 +2,26 @@ open Lwd_infix
 open Drawing_state.Live_coding
 
 let ( !! ) = Jstr.v
-let total_length (recording : t) = Lwd.get recording.total_time
+let total_length (recording : recording) = Lwd.get recording.total_time
 let px_int x = Jstr.append (Jstr.of_int x) !!"px"
 let stroke_height = 20
+
+let n_track recording =
+  Lwd_table.map_reduce
+    (fun _ (s : stro) ->
+      let$ s_track = Lwd.get s.track
+      and$ e_track =
+        let$* e = Lwd.get s.erased in
+        match e with
+        | None -> Lwd.pure None
+        | Some e -> Lwd.map ~f:(fun x -> Some x) @@ Lwd.get e.track
+      in
+      match e_track with
+      | None -> s_track
+      | Some e_track -> Int.max s_track e_track)
+    (Lwd.pure 0, Lwd.map2 ~f:Int.max)
+    recording
+  |> Lwd.join
 
 let block_of_stroke recording (stroke : stro) =
   let selected =
@@ -112,10 +129,11 @@ let block_of_stroke recording (stroke : stro) =
       ]
     in
     let ev_hover =
-      let$ current_tool = Lwd.get State.current_tool in
+      let$ current_tool = Lwd.get Drawing_state.Live_coding.editing_tool in
       match current_tool with
-      | Move | Scale -> Lwd_seq.empty
-      | Select -> snd @@ Ui_widgets.hover ~var:stroke.preselected ()
+      | Move | Rescale -> Lwd_seq.empty
+      | Select ->
+          snd @@ Drawing_editor.Ui_widgets.hover ~var:stroke.preselected ()
     in
     let ev = [ `S ev_hover ] in
     Brr_lwd.Elwd.div ~ev ~st []
@@ -128,10 +146,11 @@ let block_of_stroke recording (stroke : stro) =
   in
   let ev =
     let ev_hover =
-      let$ current_tool = Lwd.get State.current_tool in
+      let$ current_tool = Lwd.get Drawing_state.Live_coding.editing_tool in
       match current_tool with
-      | Move | Scale -> Lwd_seq.empty
-      | Select -> snd @@ Ui_widgets.hover ~var:stroke.preselected ()
+      | Move | Rescale -> Lwd_seq.empty
+      | Select ->
+          snd @@ Drawing_editor.Ui_widgets.hover ~var:stroke.preselected ()
     in
     [ `S ev_hover ]
   in
@@ -147,34 +166,34 @@ let el recording =
   let strokes = strokes recording in
   let st =
     let height =
-      let$ n_track = State.Track.n_track recording.strokes in
+      let$ n_track = n_track recording.strokes in
       ( Brr.El.Style.height,
         Jstr.append (Jstr.of_int ((n_track + 1) * 20)) !!"px" )
     in
     let cursor =
-      let$ current_tool = Lwd.get State.current_tool in
+      let$ current_tool = Lwd.get Drawing_state.Live_coding.editing_tool in
       match current_tool with
       | Select -> (!!"cursor", !!"crosshair")
       | Move -> (!!"cursor", !!"move")
-      | Scale -> (!!"cursor", !!"ne-resize")
+      | Rescale -> (!!"cursor", !!"ne-resize")
     in
     [ `P (Brr.El.Style.position, !!"relative"); `R height; `R cursor ]
   in
   let ev =
-    let$ current_tool = Lwd.get State.current_tool in
+    let$ current_tool = Lwd.get Drawing_state.Live_coding.editing_tool in
     match current_tool with
     | Select ->
         Lwd_seq.element
-        @@ Editor_tools.Selection.Timeline.event recording ~stroke_height
+        @@ Editing_tools.Selection.Timeline.event recording ~stroke_height
     | Move ->
         Lwd_seq.element
-        @@ Editor_tools.Move.Timeline.event recording ~stroke_height
-    | Scale -> Lwd_seq.element @@ Editor_tools.Scale.Timeline.event recording
+        @@ Editing_tools.Move.Timeline.event recording ~stroke_height
+    | Rescale -> Lwd_seq.element @@ Editing_tools.Scale.Timeline.event recording
   in
   let box =
-    let$* current_tool = Lwd.get State.current_tool in
+    let$* current_tool = Lwd.get Drawing_state.Live_coding.editing_tool in
     match current_tool with
-    | Select -> Editor_tools.Selection.Timeline.box
-    | Move | Scale -> Lwd.return Lwd_seq.empty
+    | Select -> Editing_tools.Selection.Timeline.box
+    | Move | Rescale -> Lwd.return Lwd_seq.empty
   in
   Brr_lwd.Elwd.div ~ev:[ `S ev ] ~st [ `S strokes; `S box ]

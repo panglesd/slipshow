@@ -223,7 +223,7 @@ let el (editing_state : editing_state) =
   let description =
     Brr_lwd.Elwd.div ~st:[ `P (Brr.El.Style.width, !!"20%") ] [ `R description ]
   in
-  let strokes = Timeline.el recording in
+  let strokes = Timeline.el editing_state.recording in
   let time_panel =
     Brr_lwd.Elwd.div
       ~st:[ `P (!!"flex-grow", !!"1") ]
@@ -248,8 +248,8 @@ let el =
   let display =
     let$ status = Lwd.get Drawing_state.Live_coding.status in
     match status with
-    | Editing _ -> Lwd_seq.element @@ Brr.At.class' !!"slipshow-dont-display"
-    | _ -> Lwd_seq.empty
+    | Editing _ -> Lwd_seq.empty
+    | _ -> Lwd_seq.element @@ Brr.At.class' !!"slipshow-dont-display"
   in
   let el =
     let$* status = Lwd.get Drawing_state.Live_coding.status in
