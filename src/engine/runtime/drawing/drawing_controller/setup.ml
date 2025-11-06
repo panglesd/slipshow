@@ -393,6 +393,28 @@ module Garbage = struct
     ()
 end
 
+module Ui = struct
+  let init () =
+    let svg = Ui.el in
+    let svg = Lwd.observe svg in
+    let on_invalidate _ =
+      let _ : int =
+        G.request_animation_frame @@ fun _ ->
+        let _ui = Lwd.quick_sample svg in
+        (* Beware that due to this being ignored, a changed "root" element will
+         not be updated by Lwd, only its reactive attributes/children *)
+        ()
+      in
+      ()
+    in
+    let content =
+      Brr.El.find_first_by_selector (Jstr.v "#slipshow-main") |> Option.get
+    in
+    El.append_children content [ Lwd.quick_sample svg ];
+    Lwd.set_on_invalidate svg on_invalidate;
+    ()
+end
+
 let init_ui () =
   Preview.init_drawing_area ();
   Preview.for_events ();

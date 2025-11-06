@@ -141,6 +141,7 @@ let panel mode =
                      recording = recording.recording;
                      current_time =
                        Lwd.var (Tools.now () -. recording.started_at);
+                     is_playing = Lwd.var false;
                    }))
     in
     Brr_lwd.Elwd.div
