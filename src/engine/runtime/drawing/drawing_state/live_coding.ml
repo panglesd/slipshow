@@ -56,10 +56,12 @@ type editing_tool = Select | Move | Rescale
 let editing_tool = Lwd.var Select
 
 type editing_state = { recording : recording }
+type recording_state = { recording : recording; started_at : float }
 
 let live_drawing_state =
   { tool = Lwd.var Pointer; color = Lwd.var "blue"; width = Lwd.var 10.0 }
 
-type status = Presenting | Recording of recording | Editing of editing_state
+type drawing_status = Presenting | Recording of recording_state
+type status = Drawing of drawing_status | Editing of editing_state
 
-let status = Lwd.var Presenting
+let status = Lwd.var (Drawing Presenting)

@@ -1,3 +1,5 @@
+let now () = Brr.Performance.now_ms Brr.G.performance
+
 (* open Lwd_infix *)
 open Drawing_state.Live_coding
 
@@ -27,7 +29,7 @@ module Draw_stroke = struct
   let starts_at l = List.hd (List.rev l) |> snd
   let end_at l = List.hd l |> snd
 
-  let event strokes stroker color width =
+  let event ~started_time strokes stroker color width =
     let coord_of_event x y =
       let main =
         Brr.El.find_first_by_selector (Jstr.v "#slipshow-main") |> Option.get
@@ -47,7 +49,7 @@ module Draw_stroke = struct
         "id" ^ (Random.int 100000 |> string_of_int)
         (* TODO: id *)
       in
-      let path = [ ((x, y), 0. (* TODO: time *)) ] in
+      let path = [ ((x, y), now () -. started_time) ] in
       let el =
         (* let opacity = match tool with Highlighter -> 0.33 | Pen -> 1. in *)
         (* let options = Strokes.options_of stroker width in *)
@@ -95,7 +97,7 @@ module Draw_stroke = struct
 end
 
 module Erase = struct
-  let event strokes =
+  let event ~started_time strokes =
     let coord_of_event x y =
       let main =
         Brr.El.find_first_by_selector (Jstr.v "#slipshow-main") |> Option.get
@@ -128,7 +130,7 @@ module Erase = struct
                 Lwd.set stro.erased
                   (Some
                      {
-                       at = Lwd.var 0. (* TODO: time *);
+                       at = Lwd.var (now () -. started_time);
                        track = Lwd.var (Lwd.peek stro.track);
                        selected = Lwd.var false;
                        preselected = Lwd.var false;

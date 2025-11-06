@@ -135,7 +135,7 @@ module Preview = struct
     in
     Brr_lwd.Elwd.v ~ns:`SVG ~at (* ~ev *) ~st (Jstr.v "path") []
 
-  let draw (strokes : strokes) =
+  let draw strokes =
     Lwd_table.map_reduce
       (fun _ stro ->
         let res =
@@ -164,9 +164,10 @@ module Preview = struct
       let content =
         let$* status = Lwd.get Drawing_state.Live_coding.status in
         match status with
-        | Presenting ->
-            let strokes = Drawing_state.Live_coding.workspaces.live_drawing in
-            draw (* ~elapsed_time *) strokes
+        | Drawing Presenting ->
+            draw
+              (* ~elapsed_time *)
+              Drawing_state.Live_coding.workspaces.live_drawing
             (* let$* content = *)
             (*   let$ recording = State.Recording.current in *)
             (*   match recording with *)
@@ -178,9 +179,9 @@ module Preview = struct
             (* From what I remember when I did this, the reason for an intermediate
          "g" is that with the current "Lwd.observe" implementation, taken from
          the brr-lwd example, only the attributes/children will be updated, not
-         the element itself *)
-        | Recording { strokes; _ } -> draw (* ~elapsed_time *) strokes
-        | Editing _ -> Lwd.pure Lwd_seq.empty
+               the element itself *)
+        | Drawing (Recording { recording; _ }) -> draw recording.strokes
+        | Editing { recording } -> draw (* ~elapsed_time *) recording.strokes
       in
       Brr_lwd.Elwd.v ~ns:`SVG (Jstr.v "g") [ `S content ]
     in
@@ -221,7 +222,14 @@ module Preview = struct
           Lwd.get Drawing_state.Live_coding.status
           (* and$ current_tool = Lwd.get State.current_tool *)
         in
-        let draw_mode workspace =
+        let draw_mode d =
+          let strokes, started_time =
+            match d with
+            | Presenting ->
+                (Drawing_state.Live_coding.workspaces.live_drawing, Tools.now ())
+            | Recording { recording = { strokes; _ }; started_at } ->
+                (strokes, started_at)
+          in
           let { tool; color; width } =
             Drawing_state.Live_coding.live_drawing_state
           in
@@ -231,14 +239,13 @@ module Preview = struct
           match tool with
           | Stroker stroker ->
               Lwd_seq.element
-              @@ Tools.Draw_stroke.event workspace stroker color width
+              @@ Tools.Draw_stroke.event ~started_time strokes stroker color
+                   width
           | Pointer -> Lwd_seq.empty
-          | Eraser -> Lwd_seq.element @@ Tools.Erase.event workspace
+          | Eraser -> Lwd_seq.element @@ Tools.Erase.event ~started_time strokes
         in
         match status with
-        | Presenting ->
-            draw_mode Drawing_state.Live_coding.workspaces.live_drawing
-        | Recording { strokes; _ } -> draw_mode strokes
+        | Drawing d -> draw_mode d
         | Editing _ -> Lwd.pure Lwd_seq.empty
         (* match (recording, current_tool) with *)
         (* | None, _ -> Lwd_seq.empty *)
@@ -298,17 +305,20 @@ module Preview = struct
 end
 
 module Garbage = struct
+  (** Handle the slipshow-drawing-mode class added to the body depending on the
+      mode. *)
+
   let g () =
     let open Lwd_infix in
     let panel =
       let$* status = Lwd.get Drawing_state.Live_coding.status in
       match status with
-      | Presenting -> (
+      | Drawing Presenting -> (
           let$ tool =
             Lwd.get Drawing_state.Live_coding.live_drawing_state.tool
           in
           match tool with Pointer -> false | _ -> true)
-      | Recording _ -> Lwd.pure true
+      | Drawing (Recording _) -> Lwd.pure true
       | Editing _ -> Lwd.pure true
     in
     let ui = Lwd.observe panel in
@@ -316,7 +326,6 @@ module Garbage = struct
       let _ : int =
         G.request_animation_frame @@ fun _ ->
         let is_drawing = Lwd.quick_sample ui in
-        Brr.Console.(log [ "yooo!" ]);
         ignore
         @@ Brr.El.set_class !!"slipshow-drawing-mode" is_drawing
              (Brr.Document.body Brr.G.document)
