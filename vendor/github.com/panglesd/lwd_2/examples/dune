@@ -1,0 +1,29 @@
+(executable
+ (name minimal)
+ (modules minimal)
+ (modes byte exe)
+ (libraries notty notty.unix nottui nottui-unix))
+
+(executable
+ (name misc)
+ (modules misc)
+ (modes byte exe)
+ (libraries notty notty.unix nottui nottui-unix))
+
+(executable
+ (name reranger)
+ (modules reranger)
+ (modes byte exe)
+ (libraries notty notty.unix nottui nottui-unix))
+
+(executable
+ (name stress)
+ (modules stress)
+ (modes byte exe)
+ (libraries notty notty.unix nottui nottui-unix))
+
+(executable
+ (name pretty)
+ (modules pretty)
+ (modes byte exe)
+ (libraries nottui-pretty notty notty.unix nottui nottui-unix))

@@ -1,0 +1,4 @@
+(library
+ (name nottui_lwt)
+ (public_name nottui-lwt)
+ (libraries nottui notty.lwt))

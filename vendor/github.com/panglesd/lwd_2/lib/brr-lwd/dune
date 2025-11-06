@@ -1,0 +1,4 @@
+(library
+ (name brr_lwd)
+ (public_name brr-lwd)
+ (libraries brr lwd))
