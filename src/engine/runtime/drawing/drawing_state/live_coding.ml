@@ -55,7 +55,7 @@ type editing_tool = Select | Move | Rescale
 
 let editing_tool = Lwd.var Select
 
-type editing_state = { recording : recording }
+type editing_state = { recording : recording; current_time : float Lwd.var }
 type recording_state = { recording : recording; started_at : float }
 
 let live_drawing_state =

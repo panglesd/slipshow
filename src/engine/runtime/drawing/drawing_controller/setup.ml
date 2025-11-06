@@ -181,7 +181,7 @@ module Preview = struct
          the brr-lwd example, only the attributes/children will be updated, not
                the element itself *)
         | Drawing (Recording { recording; _ }) -> draw recording.strokes
-        | Editing { recording } -> draw (* ~elapsed_time *) recording.strokes
+        | Editing { recording; _ } -> draw (* ~elapsed_time *) recording.strokes
       in
       Brr_lwd.Elwd.v ~ns:`SVG (Jstr.v "g") [ `S content ]
     in
@@ -304,6 +304,62 @@ module Preview = struct
     ()
 end
 
+module Rec_in_progress = struct
+  let init () =
+    let visib =
+      let$ status = Lwd.get Drawing_state.Live_coding.status in
+      match status with
+      | Drawing (Recording _) -> (Brr.El.Style.display, !!"block")
+      | _ -> (Brr.El.Style.display, !!"none")
+    in
+    let svg =
+      Brr_lwd.Elwd.div
+        ~st:
+          [
+            `R visib;
+            `P (!!"position", !!"absolute");
+            `P (!!"right", !!"0");
+            `P (!!"font-size", !!"2em");
+            `P (!!"background", !!"rgba(255, 255, 255, 0.5)");
+            `P (!!"padding", !!"10px");
+            `P (!!"border-radius", !!"12px");
+          ]
+        [
+          `R
+            (Brr_lwd.Elwd.div
+               ~at:[ `P (Brr.At.class' !!"slipshow-blink") ]
+               ~st:
+                 [
+                   `P (!!"display", !!"inline-block");
+                   `P (!!"width", !!"40px");
+                   `P (!!"margin-right", !!"10px");
+                   `P (!!"height", !!"40px");
+                   `P (!!"background", !!"red");
+                   `P (!!"border-radius", !!"23px");
+                 ]
+               []);
+          `P (Brr.El.txt' "REC");
+        ]
+    in
+    let svg = Lwd.observe svg in
+    let on_invalidate _ =
+      let _ : int =
+        G.request_animation_frame @@ fun _ ->
+        let _ui = Lwd.quick_sample svg in
+        (* Beware that due to this being ignored, a changed "root" element will
+         not be updated by Lwd, only its reactive attributes/children *)
+        ()
+      in
+      ()
+    in
+    let content =
+      Brr.El.find_first_by_selector (Jstr.v "#slipshow-main") |> Option.get
+    in
+    El.append_children content [ Lwd.quick_sample svg ];
+    Lwd.set_on_invalidate svg on_invalidate;
+    ()
+end
+
 module Garbage = struct
   (** Handle the slipshow-drawing-mode class added to the body depending on the
       mode. *)
@@ -340,5 +396,7 @@ end
 let init_ui () =
   Preview.init_drawing_area ();
   Preview.for_events ();
+  Rec_in_progress.init ();
   init_ui ();
-  Garbage.g ()
+  Garbage.g ();
+  Editing.el

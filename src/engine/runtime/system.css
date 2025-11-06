@@ -82,3 +82,12 @@ body.slipshow-drawing-mode {
   min-width: var(--page-width);
   min-height: var(--page-height);
 }
+
+.slipshow-blink {
+  animation: blink 2s step-start 0s infinite;
+}
+@keyframes blink {
+  50% {
+    opacity: 0.0;
+  }
+}
