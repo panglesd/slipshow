@@ -1,9 +1,8 @@
 open Lwd_infix
 open Drawing_state.Live_coding
+open Brr_lwd
 
-let set_handler v value =
-  Brr_lwd.Elwd.handler Brr.Ev.click (fun _ -> Lwd.set v value)
-
+let set_handler v value = Elwd.handler Brr.Ev.click (fun _ -> Lwd.set v value)
 let ( !! ) = Jstr.v
 
 let svg_button v (value : live_drawing_tool) svg =
@@ -17,7 +16,7 @@ let svg_button v (value : live_drawing_tool) svg =
     [ `S class_ ]
   in
   let h = set_handler v value in
-  let$ button = Brr_lwd.Elwd.div ~at ~ev:[ `P h ] [] in
+  let$ button = Elwd.div ~at ~ev:[ `P h ] [] in
   Brr.Console.(log [ "button"; button ]);
   let _ = Jv.set (Brr.El.to_jv button) "innerHTML" (Jv.of_string svg) in
   button
@@ -49,7 +48,7 @@ let color_button var color =
     [ `S class_ ]
   in
   let ev = [ `P (set_handler var color) ] in
-  Brr_lwd.Elwd.div ~at ~ev ~st:[ `P (!!"background-color", !!color) ] []
+  Elwd.div ~at ~ev ~st:[ `P (!!"background-color", !!color) ] []
 
 let width_button var width c =
   let at =
@@ -62,7 +61,7 @@ let width_button var width c =
     [ `S class_; `P (Brr.At.class' !!c) ]
   in
   let ev = [ `P (set_handler var width) ] in
-  Brr_lwd.Elwd.div ~at ~ev [ `P (Brr.El.div []) ]
+  Elwd.div ~at ~ev [ `P (Brr.El.div []) ]
 
 let panel mode =
   let workspace =
@@ -76,7 +75,7 @@ let panel mode =
   let erase_button = erase_button lds.tool in
   let cursor_button = cursor_button lds.tool in
   let tool_buttons =
-    Brr_lwd.Elwd.div
+    Elwd.div
       [
         `R pen_button; `R highlighter_button; `R erase_button; `R cursor_button;
       ]
@@ -87,7 +86,7 @@ let panel mode =
     let red_button = color_button lds.color "red" in
     let green_button = color_button lds.color "green" in
     let yellow_button = color_button lds.color "yellow" in
-    Brr_lwd.Elwd.div
+    Elwd.div
       [
         `R black_button;
         `R blue_button;
@@ -100,19 +99,17 @@ let panel mode =
     let small_button = width_button lds.width 5. "slip-toolbar-small" in
     let medium_button = width_button lds.width 15. "slip-toolbar-medium" in
     let large_button = width_button lds.width 25. "slip-toolbar-large" in
-    Brr_lwd.Elwd.div
+    Elwd.div
       ~at:[ `P (Brr.At.class' !!"slip-toolbar-width") ]
       [ `R small_button; `R medium_button; `R large_button ]
   in
   let clear_button =
-    let c =
-      Brr_lwd.Elwd.handler Brr.Ev.click (fun _ -> Tools.Clear.event workspace)
-    in
-    Brr_lwd.Elwd.div
+    let c = Elwd.handler Brr.Ev.click (fun _ -> Tools.Clear.event workspace) in
+    Elwd.div
       ~at:[ `P (Brr.At.class' !!"slip-toolbar-control") ]
       [
         `R
-          (Brr_lwd.Elwd.div
+          (Elwd.div
              ~at:[ `P (Brr.At.class' !!"slip-toolbar-clear") ]
              ~ev:[ `P c ]
              [ `P (Brr.El.txt !!"✗") ]);
@@ -120,10 +117,10 @@ let panel mode =
   in
   let record_button =
     let c =
-      Brr_lwd.Elwd.handler Brr.Ev.click (fun _ ->
+      Elwd.handler Brr.Ev.click (fun _ ->
           Drawing_state.Live_coding.toggle_recording mode)
     in
-    Brr_lwd.Elwd.div
+    Elwd.div
       ~at:[ `P (Brr.At.class' !!"slip-toolbar-record") ]
       ~ev:[ `P c ]
       [
@@ -133,7 +130,7 @@ let panel mode =
              [ Brr.El.div [] ]);
       ]
   in
-  Brr_lwd.Elwd.div
+  Elwd.div
     ~at:[ `P (Brr.At.class' !!"slip-writing-toolbar") ]
     [
       `R tool_buttons;
@@ -151,6 +148,4 @@ let panel =
     | Editing _ -> Lwd_seq.empty
   in
   let content = Lwd_seq.lift content in
-  Brr_lwd.Elwd.div
-    ~at:[ `P (Brr.At.id !!"slipshow-drawing-toolbar") ]
-    [ `S content ]
+  Elwd.div ~at:[ `P (Brr.At.id !!"slipshow-drawing-toolbar") ] [ `S content ]

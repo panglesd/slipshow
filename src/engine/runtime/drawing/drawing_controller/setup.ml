@@ -1,9 +1,8 @@
 open Lwd_infix
 open Drawing_state.Live_coding
+open Brr_lwd
 
-let set_handler v value =
-  Brr_lwd.Elwd.handler Brr.Ev.click (fun _ -> Lwd.set v value)
-
+let set_handler v value = Elwd.handler Brr.Ev.click (fun _ -> Lwd.set v value)
 let ( !! ) = Jstr.v
 
 open Brr
@@ -43,7 +42,7 @@ module Rec_in_progress = struct
       | _ -> (Brr.El.Style.display, !!"none")
     in
     let svg =
-      Brr_lwd.Elwd.div
+      Elwd.div
         ~st:
           [
             `R visib;
@@ -56,7 +55,7 @@ module Rec_in_progress = struct
           ]
         [
           `R
-            (Brr_lwd.Elwd.div
+            (Elwd.div
                ~at:[ `P (Brr.At.class' !!"slipshow-blink") ]
                ~st:
                  [
@@ -180,7 +179,7 @@ let connect () =
       | _ -> (!!"display", !!"none")
     in
     let preview_box = Editing_tools.Selection.Preview.box in
-    Brr_lwd.Elwd.div
+    Elwd.div
       ~ev:[ `S handler ]
       ~at:[ `P (Brr.At.id !!"slipshow-drawing-editor-for-events") ]
       ~st:

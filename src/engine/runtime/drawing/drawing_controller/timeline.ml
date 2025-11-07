@@ -1,5 +1,6 @@
 open Lwd_infix
 open Drawing_state.Live_coding
+open Brr_lwd
 
 let ( !! ) = Jstr.v
 let total_length (recording : recording) = Lwd.get recording.total_time
@@ -136,7 +137,7 @@ let block_of_stroke recording (stroke : stro) =
           snd @@ Drawing_editor.Ui_widgets.hover ~var:stroke.preselected ()
     in
     let ev = [ `S ev_hover ] in
-    Brr_lwd.Elwd.div ~ev ~st []
+    Elwd.div ~ev ~st []
   in
   let$ erased_block =
     let$ erased = Lwd.get stroke.erased in
@@ -154,7 +155,7 @@ let block_of_stroke recording (stroke : stro) =
     in
     [ `S ev_hover ]
   in
-  Lwd_seq.concat (Lwd_seq.element @@ Brr_lwd.Elwd.div ~ev ~st []) erased_block
+  Lwd_seq.concat (Lwd_seq.element @@ Elwd.div ~ev ~st []) erased_block
 
 let strokes recording =
   Lwd_table.map_reduce
@@ -196,4 +197,4 @@ let el recording =
     | Select -> Editing_tools.Selection.Timeline.box
     | Move | Rescale -> Lwd.return Lwd_seq.empty
   in
-  Brr_lwd.Elwd.div ~ev:[ `S ev ] ~st [ `S strokes; `S box ]
+  Elwd.div ~ev:[ `S ev ] ~st [ `S strokes; `S box ]

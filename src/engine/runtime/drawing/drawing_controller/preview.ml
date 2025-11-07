@@ -1,5 +1,6 @@
 open Lwd_infix
 open Drawing_state.Live_coding
+open Brr_lwd
 
 let ( !! ) = Jstr.v
 
@@ -103,7 +104,7 @@ let create_elem_of_stroke ~elapsed_time
     let s = "scale3d(" ^ scale ^ "," ^ scale ^ "," ^ scale ^ ")" in
     [ `P (!!"transform", !!s) ]
   in
-  Brr_lwd.Elwd.v ~ns:`SVG ~at (* ~ev *) ~st (Jstr.v "path") []
+  Elwd.v ~ns:`SVG ~at (* ~ev *) ~st (Jstr.v "path") []
 
 let draw ~elapsed_time strokes =
   Lwd_table.map_reduce
@@ -155,9 +156,9 @@ let drawing_area =
           let elapsed_time = Some (Lwd.get current_time) in
           draw ~elapsed_time recording.strokes
     in
-    Brr_lwd.Elwd.v ~ns:`SVG (Jstr.v "g") [ `S content ]
+    Elwd.v ~ns:`SVG (Jstr.v "g") [ `S content ]
   in
-  Brr_lwd.Elwd.v ~ns:`SVG (Jstr.v "svg")
+  Elwd.v ~ns:`SVG (Jstr.v "svg")
     ~at:
       [
         `P
@@ -241,7 +242,7 @@ let for_events () =
     (*   | Some _ -> (!!"display", !!"block") *)
     (* in *)
     (* let preview_box = Editor_tools.Selection.Preview.box in *)
-    Brr_lwd.Elwd.div
+    Elwd.div
       ~ev:[ `S handler ]
       ~at:[ `P (Brr.At.id !!"slipshow-drawing-editor-for-events") ]
       ~st:
