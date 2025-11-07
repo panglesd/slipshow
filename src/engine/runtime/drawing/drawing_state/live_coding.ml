@@ -1,3 +1,5 @@
+let now () = Brr.Performance.now_ms Brr.G.performance
+
 type color = string
 type width = float
 type stroker = Pen | Highlighter
@@ -70,3 +72,29 @@ type drawing_status = Presenting | Recording of recording_state
 type status = Drawing of drawing_status | Editing of editing_state
 
 let status = Lwd.var (Drawing Presenting)
+
+let start_recording () =
+  let recording =
+    {
+      strokes = Lwd_table.make ();
+      total_time = Lwd.var 0.;
+      record_id = Random.bits ();
+    }
+  in
+  Lwd_table.append' workspaces.recordings recording;
+  Lwd.set status (Drawing (Recording { recording; started_at = now () }))
+
+let finish_recording recording =
+  Lwd.set recording.recording.total_time (now () -. recording.started_at);
+  Lwd.set status
+    (Editing
+       {
+         recording = recording.recording;
+         current_time = Lwd.var (now () -. recording.started_at);
+         is_playing = Lwd.var false;
+       })
+
+let toggle_recording mode =
+  match mode with
+  | Presenting -> start_recording ()
+  | Recording recording -> finish_recording recording

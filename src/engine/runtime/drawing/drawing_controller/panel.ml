@@ -121,30 +121,7 @@ let panel mode =
   let record_button =
     let c =
       Brr_lwd.Elwd.handler Brr.Ev.click (fun _ ->
-          match mode with
-          | Presenting ->
-              let recording =
-                {
-                  strokes = Lwd_table.make ();
-                  total_time = Lwd.var 0.;
-                  record_id = Random.bits ();
-                }
-              in
-              Lwd_table.append' Drawing_state.Live_coding.workspaces.recordings
-                recording;
-              Lwd.set Drawing_state.Live_coding.status
-                (Drawing (Recording { recording; started_at = Tools.now () }))
-          | Recording recording ->
-              Lwd.set recording.recording.total_time
-                (Tools.now () -. recording.started_at);
-              Lwd.set Drawing_state.Live_coding.status
-                (Editing
-                   {
-                     recording = recording.recording;
-                     current_time =
-                       Lwd.var (Tools.now () -. recording.started_at);
-                     is_playing = Lwd.var false;
-                   }))
+          Drawing_state.Live_coding.toggle_recording mode)
     in
     Brr_lwd.Elwd.div
       ~at:[ `P (Brr.At.class' !!"slip-toolbar-record") ]
