@@ -88,7 +88,7 @@ module Draw_stroke = struct
     let drag ~dx ~dy ((x0, y0, el) as acc) _ev =
       let path = Lwd.peek el.path in
       let c = coord_of_event (x0 +. dx) (y0 +. dy) in
-      let path = (c, 0. (* TODO: time *)) :: path in
+      let path = (c, now () -. started_time) :: path in
       Lwd.set el.path path;
       acc
     in

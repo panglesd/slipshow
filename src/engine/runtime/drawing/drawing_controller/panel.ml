@@ -135,6 +135,8 @@ let panel mode =
               Lwd.set Drawing_state.Live_coding.status
                 (Drawing (Recording { recording; started_at = Tools.now () }))
           | Recording recording ->
+              Lwd.set recording.recording.total_time
+                (Tools.now () -. recording.started_at);
               Lwd.set Drawing_state.Live_coding.status
                 (Editing
                    {
