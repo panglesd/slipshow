@@ -146,12 +146,80 @@ module Ui = struct
     ()
 end
 
+let connect () =
+  let open Lwd_infix in
+  let panel =
+    let handler =
+      let$ status = Lwd.get Drawing_state.Live_coding.status
+      and$ current_tool = Lwd.get Drawing_state.Live_coding.editing_tool in
+      match status with
+      | Editing editing_state -> (
+          match current_tool with
+          | Move ->
+              Lwd_seq.element
+              @@ Editing_tools.Move.Preview.event editing_state.recording
+          | Select ->
+              Lwd_seq.element
+              @@ Editing_tools.Selection.Preview.event editing_state.recording
+          | Rescale ->
+              Lwd_seq.element
+              @@ Editing_tools.Scale.Preview.event editing_state.recording)
+      | _ -> Lwd_seq.empty
+    in
+    let cursor =
+      let$ current_tool = Lwd.get Drawing_state.Live_coding.editing_tool in
+      match current_tool with
+      | Select -> (!!"cursor", !!"crosshair")
+      | Move -> (!!"cursor", !!"move")
+      | Rescale -> (!!"cursor", !!"ne-resize")
+    in
+    let display =
+      let$ status = Lwd.get Drawing_state.Live_coding.status in
+      match status with
+      | Editing _ -> (!!"display", !!"block")
+      | _ -> (!!"display", !!"none")
+    in
+    let preview_box = Editing_tools.Selection.Preview.box in
+    Brr_lwd.Elwd.div
+      ~ev:[ `S handler ]
+      ~at:[ `P (Brr.At.id !!"slipshow-drawing-editor-for-events") ]
+      ~st:
+        [
+          `R cursor;
+          `R display;
+          `P (!!"position", !!"absolute");
+          `P (!!"top", !!"0");
+          `P (!!"left", !!"0");
+          `P (!!"right", !!"0");
+          `P (!!"bottom", !!"0");
+        ]
+      [ `S preview_box ]
+  in
+  let ui = Lwd.observe panel in
+  let on_invalidate _ =
+    let _ : int =
+      G.request_animation_frame @@ fun _ ->
+      let _ui = Lwd.quick_sample ui in
+      (* Beware that due to this being ignored, a changed "root" element will
+         not be updated by Lwd, only its reactive attributes/children *)
+      ()
+    in
+    ()
+  in
+  let main =
+    Brr.El.find_first_by_selector (Jstr.v "#slipshow-main") |> Option.get
+  in
+  El.append_children main [ Lwd.quick_sample ui ];
+  Lwd.set_on_invalidate ui on_invalidate;
+  ()
+
 let init_ui () =
   Preview.init_drawing_area ();
   Preview.for_events ();
   Rec_in_progress.init ();
   init_ui ();
   Garbage.g ();
-  Ui.init ()
+  Ui.init ();
+  connect ()
 (* ; *)
 (* Time.el *)
