@@ -30,7 +30,7 @@ type stro = {
 type strokes = stro Lwd_table.t
 
 type recording = {
-  strokes : stro Lwd_table.t;
+  strokes : strokes;
   total_time : float Lwd.var;
   record_id : int;
 }

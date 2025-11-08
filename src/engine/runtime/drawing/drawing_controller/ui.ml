@@ -156,29 +156,31 @@ let play_panel editing_state =
     let click = Elwd.handler Brr.Ev.click (fun _ -> play editing_state) in
     Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Play") ]
 
-(* let save_panel recording = *)
-(*   let click = *)
-(*     Elwd.handler Brr.Ev.click (fun _ -> *)
-(*         let recording = State_conversion.record_to_record recording in *)
-(*         let s = Drawing.Record.to_string recording in *)
-(*         let blob = *)
-(*           let init = Brr.Blob.init ~type':(Jstr.v "application/json") () in *)
-(*           Brr.Blob.of_jstr ~init (Jstr.v s) *)
-(*         in *)
-(*         let a = Brr.El.a [] in *)
-(*         let revoke_url = *)
-(*           let url = Jv.get Jv.global "URL" in *)
-(*           let object_url = *)
-(*             Jv.call url "createObjectURL" [| Brr.Blob.to_jv blob |] *)
-(*           in *)
-(*           Jv.set (Brr.El.to_jv a) "href" object_url; *)
-(*           fun () -> Jv.call url "revokeObjectURL" [| object_url |] |> ignore *)
-(*         in *)
-(*         Jv.set (Brr.El.to_jv a) "download" (Jv.of_string "drawing.draw"); *)
-(*         Jv.call (Brr.El.to_jv a) "click" [||] |> ignore; *)
-(*         revoke_url ()) *)
-(*   in *)
-(*   Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Save") ] *)
+let save_panel recording =
+  let click =
+    Elwd.handler Brr.Ev.click (fun _ ->
+        let (* recording *) s =
+          Drawing_state.Json.string_of_recording recording
+        in
+        (* let s = Drawing.Record.to_string recording in *)
+        let blob =
+          let init = Brr.Blob.init ~type':(Jstr.v "application/json") () in
+          Brr.Blob.of_jstr ~init (Jstr.v s)
+        in
+        let a = Brr.El.a [] in
+        let revoke_url =
+          let url = Jv.get Jv.global "URL" in
+          let object_url =
+            Jv.call url "createObjectURL" [| Brr.Blob.to_jv blob |]
+          in
+          Jv.set (Brr.El.to_jv a) "href" object_url;
+          fun () -> Jv.call url "revokeObjectURL" [| object_url |] |> ignore
+        in
+        Jv.set (Brr.El.to_jv a) "download" (Jv.of_string "drawing.draw");
+        Jv.call (Brr.El.to_jv a) "click" [||] |> ignore;
+        revoke_url ())
+  in
+  Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Save") ]
 
 let select_button =
   let click =
@@ -229,7 +231,7 @@ let el (editing_state : editing_state) =
       [
         `R ti;
         `R (play_panel editing_state);
-        (* `R (save_panel recording); *)
+        `R (save_panel editing_state.recording);
         `R select_button;
         `R move_button;
         `R scale_button;
