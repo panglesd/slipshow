@@ -990,9 +990,31 @@ module Clear_draw = struct
 end
 
 module Draw = struct
+  let state = Hashtbl.create 10
   let on = "draw"
   let action_name = on
-  let setup = None
+
+  let setup elem =
+    let data = Brr.El.at (Jstr.v "x-data") elem in
+    (match data with
+    | None -> ()
+    | Some data -> (
+        let open Drawing_state.Live_coding in
+        match Drawing_state.Json.string_to_recording (Jstr.to_string data) with
+        | Error e -> Brr.Console.(log [ e ])
+        | Ok recording ->
+            let replaying_state = { recording; time = Lwd.var 0. } in
+            Hashtbl.add state elem replaying_state;
+            Lwd_table.append' Drawing_state.Live_coding.workspaces.recordings
+              replaying_state));
+    Fut.return ()
+
+  let setup elems =
+    List.fold_left
+      (fun acc elem -> Fut.bind acc (fun () -> setup elem))
+      (Fut.return ()) elems
+
+  let setup = Some setup
 
   type args = Brr.El.t list
 
@@ -1008,18 +1030,20 @@ module Draw = struct
     in
     Undoable.List.iter
       (fun elem ->
-        let data = Brr.El.at (Jstr.v "x-data") elem in
-        match data with
+        match Hashtbl.find_opt state elem with
         | None -> Undoable.return ()
-        | Some data -> (
-            match Drawing.Record.of_string (Jstr.to_string data) with
-            | Error e ->
-                Brr.Console.(log [ e ]);
-                Undoable.return ()
-            | Ok record ->
-                let undo () = Fut.return @@ Clear_draw.clear_record record in
-                let open Fut.Syntax in
-                let* () = Drawing.Replay.replay ~speedup record in
-                Undoable.return ~undo ()))
+        | Some record ->
+            ignore (record, speedup);
+            Brr.Console.(log [ "TOOODOOO" ]);
+            Lwd.set record.time (Lwd.peek record.recording.total_time);
+            let undo () =
+              Lwd.set record.time 0.;
+              Fut.return ()
+            in
+            Undoable.return ~undo ()
+        (* let undo () = Fut.return @@ Clear_draw.clear_record record in *)
+        (* let open Fut.Syntax in *)
+        (* let* () = Drawing.Replay.replay ~speedup record in *)
+        (* Undoable.return ~undo () *))
       elems
 end

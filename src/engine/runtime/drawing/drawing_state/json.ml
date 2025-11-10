@@ -1,0 +1,191 @@
+open Live_coding
+
+module V1 = struct
+  let list_map_r f l =
+    let rec aux acc f l =
+      match l with
+      | [] -> Ok (List.rev acc)
+      | t :: l -> (
+          match f t with Ok t -> aux (t :: acc) f l | Error _ as e -> e)
+    in
+    aux [] f l
+
+  let of_path path =
+    let of_point ((x, y), t) = `List [ `Float x; `Float y; `Float t ] in
+    `List (List.map of_point path)
+
+  let to_path = function
+    | `List l ->
+        let of_point = function
+          | `List [ `Float x; `Float y; `Float t ] -> Ok ((x, y), t)
+          | _ -> Error ()
+        in
+        list_map_r of_point l
+    | _ -> Error ()
+
+  let of_stroker = function
+    | Pen -> `String "pen"
+    | Highlighter -> `String "highlighter"
+
+  let to_stroker = function
+    | `String "pen" -> Ok Pen
+    | `String "highlighter" -> Ok Highlighter
+    | _ -> Error ()
+
+  let of_erased = function
+    | None -> `Null
+    | Some { at; track; selected = _; preselected = _ } ->
+        `List [ `Float (Lwd.peek at); `Int (Lwd.peek track) ]
+
+  let to_erased = function
+    | `Null -> Ok None
+    | `List [ `Float at; `Int track ] ->
+        Ok
+          (Some
+             {
+               at = Lwd.var at;
+               track = Lwd.var track;
+               selected = Lwd.var false;
+               preselected = Lwd.var false;
+             })
+    | _ -> Error ()
+
+  let of_stro
+      {
+        id;
+        scale;
+        path;
+        end_at = _;
+        starts_at = _;
+        color;
+        stroker;
+        width;
+        selected = _;
+        preselected = _;
+        track;
+        erased;
+      } =
+    `List
+      [
+        `String id;
+        `Float scale;
+        of_path (Lwd.peek path);
+        `String (Lwd.peek color);
+        of_stroker stroker;
+        `Float width;
+        `Int (Lwd.peek track);
+        of_erased (Lwd.peek erased);
+      ]
+
+  let to_stro : Yojson.Safe.t -> _ = function
+    | `List
+        [
+          `String id;
+          `Float scale;
+          path;
+          `String color;
+          stroker;
+          `Float width;
+          `Int track;
+          erased;
+        ] ->
+        let ( let* ) x y = Result.bind x y in
+        let* path = to_path path in
+        let path = Lwd.var path in
+        let starts_at l = List.hd (List.rev l) |> snd in
+        let end_at l = List.hd l |> snd in
+        let end_at = Lwd.map (Lwd.get path) ~f:end_at in
+        let starts_at = Lwd.map (Lwd.get path) ~f:starts_at in
+        let* stroker = to_stroker stroker in
+        let* erased = to_erased erased in
+        Ok
+          {
+            id;
+            scale;
+            path;
+            end_at;
+            starts_at;
+            color = Lwd.var color;
+            stroker;
+            width;
+            selected = Lwd.var false;
+            preselected = Lwd.var false;
+            track = Lwd.var track;
+            erased = Lwd.var erased;
+          }
+    | _ -> Error ()
+
+  let of_strokes strokes =
+    let arr = Lwd_table.fold (fun acc stro -> of_stro stro :: acc) [] strokes in
+    `List (List.rev arr)
+
+  let to_strokes : Yojson.Safe.t -> _ = function
+    | `List l ->
+        let tbl = Lwd_table.make () in
+        let ( let* ) x y = Result.bind x y in
+        let* () =
+          List.fold_left
+            (fun acc el ->
+              let* () = acc in
+              let* stro = to_stro el in
+              Lwd_table.append' tbl stro;
+              Ok ())
+            (Ok ()) l
+        in
+        Ok tbl
+    | _ -> Error ()
+
+  let of_recording { strokes; total_time; record_id } =
+    `List [ of_strokes strokes; `Float (Lwd.peek total_time); `Int record_id ]
+
+  let to_recording : Yojson.Safe.t -> _ = function
+    | `List [ strokes; `Float total_time; `Int record_id ] ->
+        let ( let* ) x y = Result.bind x y in
+        let* strokes = to_strokes strokes in
+        Ok { strokes; total_time = Lwd.var total_time; record_id }
+    | _ -> Error ()
+
+  let string_of_recording x =
+    let json = of_recording x in
+    Yojson.Safe.to_string json
+
+  let string_to_recording x =
+    try
+      let json = Yojson.Safe.from_string x in
+      to_recording json
+    with Yojson.Json_error _ -> Error ()
+end
+
+let string_to_recording s =
+  let ( let* ) = Result.bind in
+
+  let sep s =
+    match String.index_from_opt s 0 '\n' with
+    | None ->
+        Error
+          "Badly formed draw file. Must contain at least two lines: the first \
+           with the version, the rest with the content."
+    | Some i ->
+        Ok (String.sub s 0 i, String.sub s (i + 1) (String.length s - (i + 1)))
+  in
+  let* version, content = sep s in
+  match version with
+  | "v1" ->
+      let* _comment, content = sep content in
+      V1.string_to_recording content |> Result.map_error (fun () -> "Problem!")
+  | v ->
+      Error
+        ("Draw files must start with their version. But I found an unknown \
+          version: " ^ v)
+
+let string_of_recording s =
+  let concat v s = v ^ "\n" ^ s in
+  let s = V1.string_of_recording s in
+  let with_comments =
+    concat
+      "This file has been generated by slipshow! The line above gives the \
+       version of the syntax for the file, the line below is the actual \
+       content. Beware when modifying!"
+      s
+  in
+  concat "v1" with_comments

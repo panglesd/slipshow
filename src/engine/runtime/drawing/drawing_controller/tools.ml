@@ -44,7 +44,6 @@ module Draw_stroke = struct
     let start x y _ev =
       let x0, y0 = (x, y) in
       let x, y = coord_of_event x y in
-      Brr.Console.(log [ "ABCDE" ]);
       let id =
         "id" ^ (Random.int 100000 |> string_of_int)
         (* TODO: id *)

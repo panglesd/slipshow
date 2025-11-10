@@ -66,8 +66,9 @@ let width_button var width c =
 let panel mode =
   let workspace =
     match mode with
-    | Recording s -> s.Drawing_state.Live_coding.recording.strokes
     | Presenting -> Drawing_state.Live_coding.workspaces.live_drawing
+    | Recording _ ->
+        Drawing_state.Live_coding.workspaces.current_recording.recording.strokes
   in
   let lds = Drawing_state.Live_coding.live_drawing_state in
   let pen_button = pen_button lds.tool in

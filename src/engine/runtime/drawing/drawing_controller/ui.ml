@@ -15,14 +15,14 @@ let slider (editing_state : editing_state) =
   in
   let prop =
     let max =
-      let$ max = total_length editing_state.recording in
+      let$ max = total_length editing_state.replaying_state.recording in
       (!!"max", Jv.of_float max)
     in
     [ `R max ]
   in
   let el =
     Drawing_editor.Ui_widgets.float ~prop ~type':"range" ~kind:`Input
-      editing_state.current_time attrs
+      editing_state.replaying_state.time attrs
   in
   Elwd.div [ `R el ]
 
@@ -132,11 +132,11 @@ let global_panel recording =
 let play (editing_state : editing_state) =
   Lwd.set editing_state.is_playing true;
   let now () = Brr.Performance.now_ms Brr.G.performance in
-  let max = Lwd.peek editing_state.recording.total_time in
-  let start_time = now () -. Lwd.peek editing_state.current_time in
+  let max = Lwd.peek editing_state.replaying_state.recording.total_time in
+  let start_time = now () -. Lwd.peek editing_state.replaying_state.time in
   let rec loop _ =
     let now = now () -. start_time in
-    Lwd.set editing_state.current_time now;
+    Lwd.set editing_state.replaying_state.time now;
     if now <= max && Lwd.peek editing_state.is_playing then
       let _animation_frame_id = Brr.G.request_animation_frame loop in
       ()
@@ -144,7 +144,7 @@ let play (editing_state : editing_state) =
   in
   loop 0.
 
-let play_panel editing_state =
+let play_button editing_state =
   let$* is_playing = Lwd.get editing_state.is_playing in
   if is_playing then
     let click =
@@ -156,7 +156,7 @@ let play_panel editing_state =
     let click = Elwd.handler Brr.Ev.click (fun _ -> play editing_state) in
     Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Play") ]
 
-let save_panel recording =
+let save_button recording =
   let click =
     Elwd.handler Brr.Ev.click (fun _ ->
         let (* recording *) s =
@@ -184,26 +184,28 @@ let save_panel recording =
 
 let select_button =
   let click =
-    Elwd.handler Brr.Ev.click (fun _ ->
-        Lwd.set Drawing_state.Live_coding.editing_tool Select)
+    Elwd.handler Brr.Ev.click (fun _ -> Lwd.set editing_tool Select)
   in
   Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Select") ]
 
 let move_button =
-  let click =
-    Elwd.handler Brr.Ev.click (fun _ ->
-        Lwd.set Drawing_state.Live_coding.editing_tool Move)
-  in
+  let click = Elwd.handler Brr.Ev.click (fun _ -> Lwd.set editing_tool Move) in
   Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Move") ]
 
 let scale_button =
   let click =
-    Elwd.handler Brr.Ev.click (fun _ ->
-        Lwd.set Drawing_state.Live_coding.editing_tool Rescale)
+    Elwd.handler Brr.Ev.click (fun _ -> Lwd.set editing_tool Rescale)
   in
   Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Resize") ]
 
+let close_button =
+  let click =
+    Elwd.handler Brr.Ev.click (fun _ -> Lwd.set status (Drawing Presenting))
+  in
+  Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Close") ]
+
 let el (editing_state : editing_state) =
+  let recording = editing_state.replaying_state.recording in
   let description =
     let$* s =
       Lwd_table.map_reduce
@@ -211,30 +213,33 @@ let el (editing_state : editing_state) =
           Lwd.get s.selected
           |> Lwd.map ~f:(fun x ->
                  if x then Lwd_seq.element (row, s) else Lwd_seq.empty))
-        Lwd_seq.lwd_monoid editing_state.recording.strokes
+        Lwd_seq.lwd_monoid recording.strokes
       |> Lwd.join
     in
     let l = Lwd_seq.to_list s in
     match l with
-    | [] -> global_panel editing_state.recording
+    | [] -> global_panel recording
     | [ (row, current_stroke) ] -> description_of_stroke row current_stroke
     | _ :: _ :: _ -> Elwd.div [ `P (Brr.El.txt' "Not implemented") ]
   in
-  let ti = Drawing_editor.Ui_widgets.float editing_state.current_time [] in
+  let ti =
+    Drawing_editor.Ui_widgets.float editing_state.replaying_state.time []
+  in
   let description =
     Elwd.div ~st:[ `P (Brr.El.Style.width, !!"20%") ] [ `R description ]
   in
-  let strokes = Timeline.el editing_state.recording in
+  let strokes = Timeline.el recording in
   let time_panel =
     Elwd.div
       ~st:[ `P (!!"flex-grow", !!"1") ]
       [
         `R ti;
-        `R (play_panel editing_state);
-        `R (save_panel editing_state.recording);
+        `R (play_button editing_state);
+        `R (save_button recording);
         `R select_button;
         `R move_button;
         `R scale_button;
+        `R close_button;
         `R (slider editing_state);
         `R strokes;
         (* `R (left_selection recording); *)
@@ -247,13 +252,13 @@ let el (editing_state : editing_state) =
 
 let el =
   let display =
-    let$ status = Lwd.get Drawing_state.Live_coding.status in
+    let$ status = Lwd.get status in
     match status with
     | Editing _ -> Lwd_seq.empty
     | _ -> Lwd_seq.element @@ Brr.At.class' !!"slipshow-dont-display"
   in
   let el =
-    let$* status = Lwd.get Drawing_state.Live_coding.status in
+    let$* status = Lwd.get status in
     match status with
     | Editing editing_state -> el editing_state
     | _ -> Lwd.pure (Brr.El.div [])

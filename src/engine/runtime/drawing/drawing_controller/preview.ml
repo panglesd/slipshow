@@ -127,45 +127,72 @@ let draw ~elapsed_time strokes =
              | _ -> compare el1 el2))
   |> Lwd_seq.map (fun (_, _, e) -> e)
 
-let count_member (strokes : strokes) =
-  Lwd_table.map_reduce (fun _ _ -> 1) (0, ( + )) strokes
-
 let drawing_area =
-  let gs =
-    let content =
-      let$* status = Lwd.get Drawing_state.Live_coding.status in
-      match status with
-      | Drawing Presenting ->
-          draw ~elapsed_time:None
-            Drawing_state.Live_coding.workspaces.live_drawing
-          (* let$* content = *)
-          (*   let$ recording = State.Recording.current in *)
-          (*   match recording with *)
-          (*   | Some recording -> *)
-          (*       let elapsed_time = Lwd.get State.time in *)
-          (*       draw_until ~elapsed_time recording *)
-          (*   | None -> Lwd.pure Lwd_seq.empty *)
-          (* in *)
-          (* From what I remember when I did this, the reason for an intermediate
-         "g" is that with the current "Lwd.observe" implementation, taken from
-         the brr-lwd example, only the attributes/children will be updated, not
-               the element itself *)
-      | Drawing (Recording { recording; _ }) ->
-          draw ~elapsed_time:None recording.strokes
-      | Editing { recording; current_time; _ } ->
-          let elapsed_time = Some (Lwd.get current_time) in
-          draw ~elapsed_time recording.strokes
-    in
+  (* let gs = *)
+  let act ~time strokes =
+    let content = draw ~elapsed_time:time strokes in
     Elwd.v ~ns:`SVG (Jstr.v "g") [ `S content ]
   in
-  Elwd.v ~ns:`SVG (Jstr.v "svg")
-    ~at:
-      [
-        `P
-          (Brr.At.style
-             (Jstr.v "overflow:visible; position: absolute; z-index:1001"));
-      ]
-    [ `R gs ]
+  let all_drawings =
+    let$ all_replayed =
+      Lwd_table.map_reduce
+        (fun _row { recording; time } ->
+          Lwd_seq.element @@ act ~time:(Some (Lwd.get time)) recording.strokes)
+        Lwd_seq.monoid workspaces.recordings
+      |> Lwd_seq.lift
+    and$ recorded_drawing =
+      let strokes = workspaces.current_recording.recording.strokes in
+      let$ u =
+        let$* time =
+          let$ status = Lwd.get status in
+          match status with
+          | Drawing _ -> None
+          | Editing { replaying_state = { time; _ }; _ } -> Some (Lwd.get time)
+        in
+        act ~time (* recording. *) strokes
+      in
+      Lwd_seq.element u
+    in
+    Lwd_seq.concat all_replayed recorded_drawing
+  in
+  let drawn_live_drawing =
+    act ~time:None Drawing_state.Live_coding.workspaces.live_drawing
+  in
+  (* let content = *)
+  (*   let$* status = Lwd.get Drawing_state.Live_coding.status in *)
+  (*   match status with *)
+  (*   | Drawing Presenting -> *)
+  (*       draw ~elapsed_time:None *)
+  (*         Drawing_state.Live_coding.workspaces.live_drawing *)
+  (*       (\* let$* content = *\) *)
+  (*       (\*   let$ recording = State.Recording.current in *\) *)
+  (*       (\*   match recording with *\) *)
+  (*       (\*   | Some recording -> *\) *)
+  (*       (\*       let elapsed_time = Lwd.get State.time in *\) *)
+  (*       (\*       draw_until ~elapsed_time recording *\) *)
+  (*       (\*   | None -> Lwd.pure Lwd_seq.empty *\) *)
+  (*       (\* in *\) *)
+  (*       (\* From what I remember when I did this, the reason for an intermediate *)
+  (*        "g" is that with the current "Lwd.observe" implementation, taken from *)
+  (*        the brr-lwd example, only the attributes/children will be updated, not *)
+  (*              the element itself *\) *)
+  (*   | Drawing (Recording { recording; _ }) -> *)
+  (*       draw ~elapsed_time:None recording.strokes *)
+  (*   | Editing { replaying_state; _ } -> *)
+  (*       let elapsed_time = Some (Lwd.get replaying_state.time) in *)
+  (*       draw ~elapsed_time replaying_state.recording.strokes *)
+  (* in *)
+  (* Elwd.v ~ns:`SVG (Jstr.v "g") [ `S content ] *)
+  Elwd.v ~ns:`SVG (Jstr.v "g") [ `S all_drawings; `R drawn_live_drawing ]
+(* in *)
+(* Elwd.v ~ns:`SVG (Jstr.v "svg") *)
+(*   ~at: *)
+(*     [ *)
+(*       `P *)
+(*         (Brr.At.style *)
+(*            (Jstr.v "overflow:visible; position: absolute; z-index:1001")); *)
+(*     ] *)
+(*   [ `R gs ] *)
 
 let init_drawing_area () =
   let svg = drawing_area in
@@ -181,7 +208,8 @@ let init_drawing_area () =
     ()
   in
   let content =
-    Brr.El.find_first_by_selector (Jstr.v "#slipshow-content") |> Option.get
+    Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing-elem")
+    |> Option.get
   in
   Brr.El.prepend_children content [ Lwd.quick_sample svg ];
   Lwd.set_on_invalidate svg on_invalidate;
@@ -192,20 +220,18 @@ let for_events () =
   let panel =
     let handler =
       let$* status =
-        Lwd.get Drawing_state.Live_coding.status
+        Lwd.get status
         (* and$ current_tool = Lwd.get State.current_tool *)
       in
       let draw_mode d =
         let strokes, started_time =
           match d with
-          | Presenting ->
-              (Drawing_state.Live_coding.workspaces.live_drawing, Tools.now ())
-          | Recording { recording = { strokes; _ }; started_at } ->
+          | Presenting -> (workspaces.live_drawing, Tools.now ())
+          | Recording { (* recording = { strokes; _ };  *) started_at } ->
+              let strokes = workspaces.current_recording.recording.strokes in
               (strokes, started_at)
         in
-        let { tool; color; width } =
-          Drawing_state.Live_coding.live_drawing_state
-        in
+        let { tool; color; width } = live_drawing_state in
         let$ tool = Lwd.get tool
         and$ color = Lwd.get color
         and$ width = Lwd.get width in

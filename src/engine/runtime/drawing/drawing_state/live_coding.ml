@@ -35,10 +35,29 @@ type recording = {
   record_id : int;
 }
 
-type workspaces = { recordings : recording Lwd_table.t; live_drawing : strokes }
+type replaying_state = { recording : recording; time : float Lwd.var }
+
+type workspaces = {
+  recordings : replaying_state Lwd_table.t;
+  live_drawing : strokes;
+  current_recording : replaying_state;
+}
 
 let workspaces : workspaces =
-  { recordings = Lwd_table.make (); live_drawing = Lwd_table.make () }
+  {
+    recordings = Lwd_table.make ();
+    live_drawing = Lwd_table.make ();
+    current_recording =
+      {
+        recording =
+          {
+            strokes = Lwd_table.make ();
+            total_time = Lwd.var 0.;
+            record_id = Random.bits ();
+          };
+        time = Lwd.var 0.;
+      };
+  }
 
 type live_drawing_tool = Stroker of stroker | Eraser | Pointer
 
@@ -58,12 +77,11 @@ type editing_tool = Select | Move | Rescale
 let editing_tool = Lwd.var Select
 
 type editing_state = {
-  recording : recording;
-  current_time : float Lwd.var;
+  replaying_state : replaying_state;
   is_playing : bool Lwd.var;
 }
 
-type recording_state = { recording : recording; started_at : float }
+type recording_state = { (* strokes : strokes;  *) started_at : float }
 
 let live_drawing_state =
   { tool = Lwd.var Pointer; color = Lwd.var "blue"; width = Lwd.var 10.0 }
@@ -74,25 +92,32 @@ type status = Drawing of drawing_status | Editing of editing_state
 let status = Lwd.var (Drawing Presenting)
 
 let start_recording () =
-  let recording =
+  (* let strokes = Lwd_table.make () in *)
+  Lwd.set status
+    (Drawing
+       (Recording
+          {
+            (* strokes; *)
+            started_at =
+              now ()
+              -. Lwd.peek workspaces.current_recording.recording.total_time;
+          }))
+
+let finish_recording recording_state =
+  let new_total_time = now () -. recording_state.started_at in
+  (* let new_strokes = recording_state.strokes in *)
+  let current_recording = workspaces.current_recording.recording in
+  (* Lwd_table.concat current_recording.strokes new_strokes; *)
+  Lwd.set current_recording.total_time
+    (* Lwd.peek current_recording.total_time +.  *) new_total_time;
+  let replaying_state =
     {
-      strokes = Lwd_table.make ();
-      total_time = Lwd.var 0.;
-      record_id = Random.bits ();
+      recording = workspaces.current_recording.recording;
+      time = Lwd.var new_total_time;
     }
   in
-  Lwd_table.append' workspaces.recordings recording;
-  Lwd.set status (Drawing (Recording { recording; started_at = now () }))
-
-let finish_recording recording =
-  Lwd.set recording.recording.total_time (now () -. recording.started_at);
-  Lwd.set status
-    (Editing
-       {
-         recording = recording.recording;
-         current_time = Lwd.var (now () -. recording.started_at);
-         is_playing = Lwd.var false;
-       })
+  (* Lwd.set recording_state.recording.total_time total_time; *)
+  Lwd.set status (Editing { replaying_state; is_playing = Lwd.var false })
 
 let toggle_recording mode =
   match mode with

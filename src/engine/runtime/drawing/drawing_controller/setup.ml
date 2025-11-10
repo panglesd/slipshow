@@ -153,16 +153,14 @@ let connect () =
       and$ current_tool = Lwd.get Drawing_state.Live_coding.editing_tool in
       match status with
       | Editing editing_state -> (
+          let recording = editing_state.replaying_state.recording in
           match current_tool with
           | Move ->
-              Lwd_seq.element
-              @@ Editing_tools.Move.Preview.event editing_state.recording
+              Lwd_seq.element @@ Editing_tools.Move.Preview.event recording
           | Select ->
-              Lwd_seq.element
-              @@ Editing_tools.Selection.Preview.event editing_state.recording
+              Lwd_seq.element @@ Editing_tools.Selection.Preview.event recording
           | Rescale ->
-              Lwd_seq.element
-              @@ Editing_tools.Scale.Preview.event editing_state.recording)
+              Lwd_seq.element @@ Editing_tools.Scale.Preview.event recording)
       | _ -> Lwd_seq.empty
     in
     let cursor =
