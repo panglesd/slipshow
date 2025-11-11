@@ -135,14 +135,26 @@ module V1 = struct
         Ok tbl
     | _ -> Error ()
 
-  let of_recording { strokes; total_time; record_id } =
-    `List [ of_strokes strokes; `Float (Lwd.peek total_time); `Int record_id ]
+  let of_recording { strokes; total_time; record_id; name } =
+    `List
+      [
+        of_strokes strokes;
+        `Float (Lwd.peek total_time);
+        `Int record_id;
+        `String (Lwd.peek name);
+      ]
 
   let to_recording : Yojson.Safe.t -> _ = function
-    | `List [ strokes; `Float total_time; `Int record_id ] ->
+    | `List [ strokes; `Float total_time; `Int record_id; `String name ] ->
         let ( let* ) x y = Result.bind x y in
         let* strokes = to_strokes strokes in
-        Ok { strokes; total_time = Lwd.var total_time; record_id }
+        Ok
+          {
+            strokes;
+            total_time = Lwd.var total_time;
+            record_id;
+            name = Lwd.var name;
+          }
     | _ -> Error ()
 
   let string_of_recording x =

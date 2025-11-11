@@ -52,7 +52,7 @@ let shortcuts key =
             workspaces.current_recording.recording.strokes
       in
       shortcut_drawing strokes mode key
-  | Editing editing_state -> shortcut_editing editing_state key
+  | Editing -> shortcut_editing (Lwd.peek current_editing_state) key
 
 let handle ev =
   let key = ev |> Brr.Ev.as_type |> Brr.Ev.Keyboard.key |> Jstr.to_string in

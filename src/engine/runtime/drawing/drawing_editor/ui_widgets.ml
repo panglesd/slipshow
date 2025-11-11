@@ -30,6 +30,38 @@ let float ?(callback = fun _ -> ()) ?(ev = []) ?st ?(prop = []) ?type'
   in
   Brr_lwd.Elwd.input ?st ~at ~ev ~prop ()
 
+let string ?(callback = fun _ -> ()) ?(ev = []) ?st ?(prop = []) ?type'
+    ?(kind = `Change) var attrs =
+  let ev =
+    let set =
+      let h =
+       fun ev ->
+        let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv in
+        let new_value = Jv.get el "value" |> Jv.to_string in
+        callback new_value;
+        Lwd.set var new_value
+      in
+      match kind with
+      | `Change -> Brr_lwd.Elwd.handler Brr.Ev.change h
+      | `Input -> Brr_lwd.Elwd.handler Brr.Ev.input h
+    in
+    `P set :: ev
+  in
+  let at =
+    let type' =
+      match type' with None -> [] | Some t -> [ `P (Brr.At.type' (Jstr.v t)) ]
+    in
+    type' @ attrs
+  in
+  let prop =
+    let v =
+      let$ v = Lwd.get var in
+      (Jstr.v "value", Jv.of_string v)
+    in
+    `R v :: prop
+  in
+  Brr_lwd.Elwd.input ?st ~at ~ev ~prop ()
+
 let of_color (c : Drawing.Color.t Lwd.var) =
   let set =
     Brr_lwd.Elwd.handler Brr.Ev.change (fun ev ->

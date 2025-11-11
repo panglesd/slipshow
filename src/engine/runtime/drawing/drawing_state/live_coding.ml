@@ -32,6 +32,7 @@ type strokes = stro Lwd_table.t
 type recording = {
   strokes : strokes;
   total_time : float Lwd.var;
+  name : string Lwd.var;
   record_id : int;
 }
 
@@ -54,6 +55,7 @@ let workspaces : workspaces =
             strokes = Lwd_table.make ();
             total_time = Lwd.var 0.;
             record_id = Random.bits ();
+            name = Lwd.var "New recording";
           };
         time = Lwd.var 0.;
       };
@@ -81,13 +83,20 @@ type editing_state = {
   is_playing : bool Lwd.var;
 }
 
+let current_editing_state =
+  Lwd.var
+    {
+      replaying_state = workspaces.current_recording;
+      is_playing = Lwd.var false;
+    }
+
 type recording_state = { (* strokes : strokes;  *) started_at : float }
 
 let live_drawing_state =
   { tool = Lwd.var Pointer; color = Lwd.var "blue"; width = Lwd.var 10.0 }
 
 type drawing_status = Presenting | Recording of recording_state
-type status = Drawing of drawing_status | Editing of editing_state
+type status = Drawing of drawing_status | Editing
 
 let status = Lwd.var (Drawing Presenting)
 
@@ -106,18 +115,19 @@ let start_recording () =
 let finish_recording recording_state =
   let new_total_time = now () -. recording_state.started_at in
   (* let new_strokes = recording_state.strokes in *)
-  let current_recording = workspaces.current_recording.recording in
+  let current_editing_state = Lwd.peek current_editing_state in
   (* Lwd_table.concat current_recording.strokes new_strokes; *)
-  Lwd.set current_recording.total_time
+  Lwd.set current_editing_state.replaying_state.recording.total_time
     (* Lwd.peek current_recording.total_time +.  *) new_total_time;
-  let replaying_state =
-    {
-      recording = workspaces.current_recording.recording;
-      time = Lwd.var new_total_time;
-    }
-  in
+  Lwd.set current_editing_state.replaying_state.time new_total_time;
+  (* let replaying_state = *)
+  (*   { *)
+  (*     recording = workspaces.current_recording.recording; *)
+  (*     time = Lwd.var new_total_time; *)
+  (*   } *)
+  (* in *)
   (* Lwd.set recording_state.recording.total_time total_time; *)
-  Lwd.set status (Editing { replaying_state; is_playing = Lwd.var false })
+  Lwd.set status Editing (* { replaying_state; is_playing = Lwd.var false } *)
 
 let toggle_recording mode =
   match mode with

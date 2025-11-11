@@ -122,12 +122,70 @@ let description_of_stroke row (stroke : stro) =
 
 let global_panel recording =
   let total_time =
-    Drawing_editor.Ui_widgets.float ~type':"number" recording.total_time []
-  in
-  let total_time =
+    let total_time =
+      Drawing_editor.Ui_widgets.float ~type':"number" recording.total_time []
+    in
     Elwd.div [ `P (Brr.El.txt' "Total duration: "); `R total_time ]
   in
-  Elwd.div [ `R total_time ]
+  let name_title =
+    let$ name = Lwd.get recording.name in
+    Brr.El.txt' name
+  in
+  let change_title =
+    Drawing_editor.Ui_widgets.string ~kind:`Input recording.name []
+  in
+  let select =
+    let options =
+      Lwd_table.map_reduce
+        (fun _row workspace ->
+          let name =
+            let$ name = Lwd.get workspace.recording.name in
+            Brr.El.txt' name
+          in
+          let recording_id = string_of_int workspace.recording.record_id in
+          let value = Brr.At.value (Jstr.v recording_id) in
+          let selected =
+            let$ current_editing_state = Lwd.get current_editing_state in
+            if
+              workspace.recording.record_id
+              = current_editing_state.replaying_state.recording.record_id
+            then Lwd_seq.element Brr.At.selected
+            else Lwd_seq.empty
+          in
+          Lwd_seq.element
+          @@ Elwd.option ~at:[ `P value; `S selected ] [ `R name ])
+        Lwd_seq.monoid workspaces.recordings
+      |> Lwd_seq.lift
+    in
+    let current_recording =
+      let$ name = Lwd.get workspaces.current_recording.recording.name in
+      Brr.El.option [ Brr.El.txt' name ]
+    in
+    let change =
+      Elwd.handler Brr.Ev.change (fun ev ->
+          let record_id =
+            let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv in
+            Jv.get el "value" |> Jv.to_string |> int_of_string
+          in
+          Brr.Console.(log [ "BBB Setting record id"; record_id ]);
+          let replaying_state =
+            let exception Found of Drawing_state.Live_coding.replaying_state in
+            try
+              Lwd_table.iter
+                (fun replaying_state ->
+                  if Int.equal replaying_state.recording.record_id record_id
+                  then raise (Found replaying_state)
+                  else ())
+                workspaces.recordings;
+              workspaces.current_recording
+            with Found r -> r
+          in
+          Lwd.set current_editing_state
+            { replaying_state; is_playing = Lwd.var false })
+    in
+    Elwd.select ~ev:[ `P change ] [ `S options; `R current_recording ]
+  in
+  Elwd.div [ `R select; `R name_title; `R total_time; `R change_title ]
 
 let play (editing_state : editing_state) =
   Lwd.set editing_state.is_playing true;
@@ -204,7 +262,8 @@ let close_button =
   in
   Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Close") ]
 
-let el (editing_state : editing_state) =
+let el =
+  let$* editing_state = Lwd.get current_editing_state in
   let recording = editing_state.replaying_state.recording in
   let description =
     let$* s =
@@ -254,14 +313,12 @@ let el =
   let display =
     let$ status = Lwd.get status in
     match status with
-    | Editing _ -> Lwd_seq.empty
+    | Editing -> Lwd_seq.empty
     | _ -> Lwd_seq.element @@ Brr.At.class' !!"slipshow-dont-display"
   in
   let el =
     let$* status = Lwd.get status in
-    match status with
-    | Editing editing_state -> el editing_state
-    | _ -> Lwd.pure (Brr.El.div [])
+    match status with Editing -> el | _ -> Lwd.pure (Brr.El.div [])
   in
   let st = [ `P (Brr.El.Style.height, !!"200px") ] in
   Elwd.div

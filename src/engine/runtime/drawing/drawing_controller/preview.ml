@@ -147,7 +147,9 @@ let drawing_area =
           let$ status = Lwd.get status in
           match status with
           | Drawing _ -> None
-          | Editing { replaying_state = { time; _ }; _ } -> Some (Lwd.get time)
+          | Editing ->
+              let time = workspaces.current_recording.time in
+              Some (Lwd.get time)
         in
         act ~time (* recording. *) strokes
       in
@@ -244,7 +246,7 @@ let for_events () =
       in
       match status with
       | Drawing d -> draw_mode d
-      | Editing _ -> Lwd.pure Lwd_seq.empty
+      | Editing -> Lwd.pure Lwd_seq.empty
       (* match (recording, current_tool) with *)
       (* | None, _ -> Lwd_seq.empty *)
       (* | Some recording, Move -> *)

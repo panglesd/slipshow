@@ -146,7 +146,7 @@ let panel =
     let$ status = Lwd.get Drawing_state.Live_coding.status in
     match status with
     | Drawing d -> Lwd_seq.element @@ panel d
-    | Editing _ -> Lwd_seq.empty
+    | Editing -> Lwd_seq.empty
   in
   let content = Lwd_seq.lift content in
   Elwd.div ~at:[ `P (Brr.At.id !!"slipshow-drawing-toolbar") ] [ `S content ]

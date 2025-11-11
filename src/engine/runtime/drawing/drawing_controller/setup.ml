@@ -104,7 +104,7 @@ module Garbage = struct
           in
           match tool with Pointer -> false | _ -> true)
       | Drawing (Recording _) -> Lwd.pure true
-      | Editing _ -> Lwd.pure true
+      | Editing -> Lwd.pure true
     in
     let ui = Lwd.observe panel in
     let on_invalidate _ =
@@ -149,10 +149,11 @@ let connect () =
   let open Lwd_infix in
   let panel =
     let handler =
-      let$ status = Lwd.get Drawing_state.Live_coding.status
+      let$* status = Lwd.get Drawing_state.Live_coding.status
       and$ current_tool = Lwd.get Drawing_state.Live_coding.editing_tool in
       match status with
-      | Editing editing_state -> (
+      | Editing -> (
+          let$ editing_state = Lwd.get current_editing_state in
           let recording = editing_state.replaying_state.recording in
           match current_tool with
           | Move ->
@@ -161,7 +162,7 @@ let connect () =
               Lwd_seq.element @@ Editing_tools.Selection.Preview.event recording
           | Rescale ->
               Lwd_seq.element @@ Editing_tools.Scale.Preview.event recording)
-      | _ -> Lwd_seq.empty
+      | _ -> Lwd.pure Lwd_seq.empty
     in
     let cursor =
       let$ current_tool = Lwd.get Drawing_state.Live_coding.editing_tool in
@@ -173,7 +174,7 @@ let connect () =
     let display =
       let$ status = Lwd.get Drawing_state.Live_coding.status in
       match status with
-      | Editing _ -> (!!"display", !!"block")
+      | Editing -> (!!"display", !!"block")
       | _ -> (!!"display", !!"none")
     in
     let preview_box = Editing_tools.Selection.Preview.box in
