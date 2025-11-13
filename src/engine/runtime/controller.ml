@@ -1,9 +1,3 @@
-module State = struct
-  type mode = Normal | Drawing_editing
-
-  let mode = ref Normal
-end
-
 let keyboard_setup (window : Universe.Window.t) =
   let target = Brr.Window.as_target Brr.G.window in
   let callback ev =
@@ -43,24 +37,13 @@ let keyboard_setup (window : Universe.Window.t) =
       let try_handle handler k =
         match handler ev with true -> () | false -> k ()
       in
-      let check_mode f =
-        match !State.mode with
-        | Normal -> f ()
-        | Drawing_editing -> try_handle Drawing_editor.Controller.handle f
-      in
       try_handle Drawing_controller.Controller.handle @@ fun () ->
-      check_mode @@ fun () ->
       check_modif_key Brr.Ev.Keyboard.ctrl_key @@ fun () ->
       check_modif_key Brr.Ev.Keyboard.meta_key @@ fun () ->
       check_textarea @@ fun () ->
       match key with
       | "s" -> Messaging.open_speaker_notes ()
       | "t" -> Table_of_content.toggle_visibility ()
-      | "w" -> Drawing.State.set_tool (Stroker Pen)
-      | "h" -> Drawing.State.set_tool (Stroker Highlighter)
-      | "x" -> Drawing.State.set_tool Pointer
-      | "e" -> Drawing.State.set_tool Eraser
-      | "X" -> Drawing.Event.clear ()
       | "l" ->
           let _ : unit Fut.t =
             Step.Next.Excursion.start ();
@@ -120,18 +103,6 @@ let keyboard_setup (window : Universe.Window.t) =
               ~duration:0.
           in
           ()
-      | "r" ->
-          Brr.Console.(log [ "Starting to record" ]);
-          Drawing.Event.start_recording ()
-      | "R" -> (
-          State.mode := Drawing_editing;
-          let record = Drawing.Event.end_recording () in
-          Drawing_editor.set_record record;
-          Brr.Console.(log [ "NOW"; "Saving record"; record ]);
-          match record with
-          | None -> ()
-          | Some r ->
-              Brr.Console.(log [ "record is"; Drawing.Record.to_string r ]))
       | _ -> ()
     in
     Brr.Console.(log [ key ]);
