@@ -79,10 +79,6 @@ module Selection = struct
         select ~epsilon x (x +. dx) y y' recording
       in
       let start x y ev =
-        (* It would be nice to just pass the event itself, but outside of the
-            event handler the current target may be [null] unfortunately, stupid
-            programming language... See
-            https://developer.mozilla.org/en-US/docs/Web/API/Event/currentTarget *)
         let container =
           ev |> Brr.Ev.current_target |> Brr.Ev.target_to_jv |> Brr.El.of_jv
         in
@@ -93,7 +89,8 @@ module Selection = struct
         select_of_coords container ~x ~y ~dx:0. ~dy:0.;
         (x, y, container, position_var)
       in
-      let drag ~dx ~dy ((x, y, container, (vx, vy, vdx, vdy)) as acc) _ev =
+      let drag ~x:_ ~y:_ ~dx ~dy ((x, y, container, (vx, vy, vdx, vdy)) as acc)
+          _ev =
         let x, dx = if dx < 0. then (x +. dx, -.dx) else (x, dx) in
         let y, dy = if dy < 0. then (y +. dy, -.dy) else (y, dy) in
         select_of_coords container ~x ~y ~dx ~dy;
@@ -159,20 +156,8 @@ module Selection = struct
     let preview_selection_var = Lwd.var None
 
     let select (x, y, dx, dy) recording =
-      (* TODO: Factor with Drawing.Event.coord_of_event *)
-      let coord_of_event x y =
-        let main =
-          Brr.El.find_first_by_selector (Jstr.v "#slipshow-main") |> Option.get
-        in
-        let offset_x = Brr.El.bound_x main in
-        (x -. offset_x, y)
-        |> Normalization.translate_coords |> Universe.Window.translate_coords
-        (* See system.css: we add padding to be able to write on the side of the
-     content. *)
-        |> fun (x, y) -> (x -. 2000., y -. 2000.)
-      in
-      let x', y' = coord_of_event (x +. dx) (y +. dy) in
-      let x, y = coord_of_event x y in
+      let x', y' = Tools.window_coord_in_universe (x +. dx) (y +. dy) in
+      let x, y = Tools.window_coord_in_universe x y in
       Lwd_table.iter
         (fun { preselected; path; _ } ->
           let path = Lwd.peek path in
@@ -188,9 +173,9 @@ module Selection = struct
       let start x y _ev =
         let position_var = (Lwd.var x, Lwd.var y, Lwd.var 0., Lwd.var 0.) in
         Lwd.set preview_selection_var (Some position_var);
-        (x, y, position_var)
+        position_var
       in
-      let drag ~dx ~dy ((x, y, (vx, vy, vdx, vdy)) as acc) _ev =
+      let drag ~x ~y ~dx ~dy ((vx, vy, vdx, vdy) as acc) _ev =
         let x, dx = if dx < 0. then (x +. dx, -.dx) else (x, dx) in
         let y, dy = if dy < 0. then (y +. dy, -.dy) else (y, dy) in
         Lwd.set vx x;
@@ -327,7 +312,7 @@ module Move = struct
         in
         (strokes, el)
       in
-      let drag ~dx ~dy ((strokes, container) as acc) _ev =
+      let drag ~x:_ ~y:_ ~dx ~dy ((strokes, container) as acc) _ev =
         translate_of_coords strokes container ~dx ~dy;
         acc
       in
@@ -345,7 +330,7 @@ module Move = struct
             else acc)
           [] recording.strokes
       in
-      let drag ~dx ~dy paths _ev =
+      let drag ~x:_ ~y:_ ~dx ~dy paths _ev =
         List.iter
           (fun (p, v, scale) ->
             Lwd.set v
@@ -407,7 +392,8 @@ module Scale = struct
         else t_begin +. ((t -. t_begin) *. scale)
       in
       let map_stroke_times f = List.map (fun (pos, t) -> (pos, f t)) in
-      let drag ~dx ~dy:_ ((strokes, _container, t_begin, t_end) as acc) _ev =
+      let drag ~x:_ ~y:_ ~dx ~dy:_
+          ((strokes, _container, t_begin, t_end) as acc) _ev =
         let scale = 1. +. (dx /. 400.) in
         let map_time = map_time ~t_begin ~t_end ~scale in
         let map_stroke path = map_stroke_times map_time path in
@@ -447,7 +433,7 @@ module Scale = struct
         in
         (strokes, minX, minY)
       in
-      let drag ~dx ~dy ((paths, minX, minY) as acc) _ev =
+      let drag ~x:_ ~y:_ ~dx ~dy ((paths, minX, minY) as acc) _ev =
         List.iter
           (fun (p, v) ->
             Lwd.set v

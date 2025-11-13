@@ -109,7 +109,7 @@ let mouse_drag start drag end_ =
     let mouse_ev = Brr.Ev.as_type ev |> Brr.Ev.Pointer.as_mouse in
     let x' = Brr.Ev.Mouse.page_x mouse_ev in
     let y' = Brr.Ev.Mouse.page_y mouse_ev in
-    drag ~dx:(x' -. x) ~dy:(y' -. y) acc ev
+    drag ~x ~y ~dx:(x' -. x) ~dy:(y' -. y) acc ev
   in
   Brr_lwd.Elwd.handler Brr.Ev.pointerdown (fun ev ->
       Brr.Ev.prevent_default ev;

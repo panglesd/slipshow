@@ -113,7 +113,10 @@ module Selection = struct
         promote mode recording;
         Lwd.set box_selection_var None
       in
-      Ui_widgets.mouse_drag start drag end_
+      Ui_widgets.mouse_drag start
+        (ignore drag;
+         fun ~x:_ -> failwith "TODO")
+        end_
 
     let box =
       let$ box_selection = Lwd.get box_selection_var in
@@ -210,7 +213,10 @@ module Selection = struct
         promote mode recording;
         Lwd.set preview_selection_var None
       in
-      Ui_widgets.mouse_drag start drag end_
+      Ui_widgets.mouse_drag start
+        (ignore drag;
+         fun ~x:_ -> failwith "TODO")
+        end_
 
     let box =
       let$ box_selection = Lwd.get preview_selection_var in
@@ -330,7 +336,10 @@ module Move = struct
         acc
       in
       let end_ _ _ = () in
-      Ui_widgets.mouse_drag start drag end_
+      Ui_widgets.mouse_drag start
+        (ignore drag;
+         fun ~x:_ -> failwith "TODO")
+        end_
   end
 
   module Preview = struct
@@ -352,7 +361,10 @@ module Move = struct
         paths
       in
       let end_ _ _ev = () in
-      Ui_widgets.mouse_drag start drag end_
+      Ui_widgets.mouse_drag start
+        (ignore drag;
+         fun ~x:_ -> failwith "TODO")
+        end_
   end
 end
 
@@ -416,7 +428,10 @@ module Scale = struct
         acc
       in
       let end_ _ _ = () in
-      Ui_widgets.mouse_drag start drag end_
+      Ui_widgets.mouse_drag start
+        (ignore drag;
+         fun ~x:_ -> failwith "TODO")
+        end_
   end
 
   module Preview = struct
@@ -454,6 +469,9 @@ module Scale = struct
         acc
       in
       let end_ _ _ev = () in
-      Ui_widgets.mouse_drag start drag end_
+      Ui_widgets.mouse_drag start
+        (ignore drag;
+         fun ~x:_ -> failwith "TODO")
+        end_
   end
 end
