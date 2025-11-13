@@ -2,6 +2,7 @@ let now () = Brr.Performance.now_ms Brr.G.performance
 
 (* open Lwd_infix *)
 open Drawing_state.Live_coding
+open Messages
 
 let very_quick_sample g =
   let root = Lwd.observe g in
@@ -41,14 +42,7 @@ module Draw_stroke = struct
   let starts_at l = List.hd (List.rev l) |> snd
   let end_at l = List.hd l |> snd
 
-  let args ~started_time strokes stroker color width =
-    (started_time, strokes, stroker, color, width)
-
-  let start ~started_time strokes stroker color width x y _ev =
-    let id =
-      "id" ^ (Random.int 100000 |> string_of_int)
-      (* TODO: id *)
-    in
+  let start strokes { started_time; stroker; color; width; id } x y =
     let path = [ ((x, y), now () -. started_time) ] in
     let el =
       (* let opacity = match tool with Highlighter -> 0.33 | Pen -> 1. in *)
@@ -85,27 +79,43 @@ module Draw_stroke = struct
   (* Lwd.set preview_selection_var (Some position_var); *)
   (* (x, y, position_var) *)
 
-  let drag ~x ~y ~dx ~dy ((started_time, el) as acc) _ev =
+  let drag ~x ~y ~dx ~dy ((started_time, el) as acc) =
     let path = Lwd.peek el.path in
     (* let c = coord_of_event (x0 +. dx) (y0 +. dy) in *)
     let path = ((x +. dx, y +. dy), now () -. started_time) :: path in
     Lwd.set el.path path;
     acc
 
-  let end_ _ _ev = ()
+  let end_ _ = ()
 
   let event ~started_time strokes stroker color width =
-    let start = start ~started_time strokes stroker color width in
+    let start x y _ev =
+      let id =
+        "id" ^ (Random.int 100000 |> string_of_int)
+        (* TODO: id *)
+      in
+      let arg = { started_time; stroker; color; width; id } in
+      Messages.send @@ Draw (Start (arg, x, y));
+      start strokes arg x y
+    in
+    let drag ~x ~y ~dx ~dy acc _ev =
+      Messages.send @@ Draw (Drag { x; y; dx; dy });
+      drag ~x ~y ~dx ~dy acc
+    in
+    let end_ acc _ev =
+      Messages.send @@ Draw End;
+      end_ acc
+    in
     mouse_drag_in_universe start drag end_
 end
 
 module Erase = struct
-  let start ~started_time strokes x y _ev = (started_time, strokes, (x, y))
+  let start strokes { started_time } x y = (started_time, strokes, (x, y))
   (* let position_var = (Lwd.var x, Lwd.var y, Lwd.var 0., Lwd.var 0.) in *)
   (* Lwd.set preview_selection_var (Some position_var); *)
   (* (x, y, position_var) *)
 
-  let drag ~x:_ ~y:_ ~dx ~dy (started_time, strokes, ((x, y) as c0)) _ev =
+  let drag ~x ~y ~dx ~dy (started_time, strokes, c0) =
     let c1 = (x +. dx, y +. dy) in
     let _strokes_to_erase =
       Lwd_table.iter
@@ -129,15 +139,26 @@ module Erase = struct
     in
     (started_time, strokes, c1)
 
-  let end_ _ _ev = ()
+  let end_ _ = ()
 
   let event ~started_time strokes =
-    let start = start ~started_time strokes in
+    let start x y _ev =
+      Messages.send @@ Erase (Start ({ started_time }, x, y));
+      start strokes { started_time } x y
+    in
+    let drag ~x ~y ~dx ~dy acc _ev =
+      Messages.send @@ Erase (Drag { x; y; dx; dy });
+      drag ~x ~y ~dx ~dy acc
+    in
+    let end_ acc _ev =
+      Messages.send @@ Erase End;
+      end_ acc
+    in
     mouse_drag_in_universe start drag end_
 end
 
 module Clear = struct
-  let event strokes =
+  let clear strokes =
     Lwd_table.iter
       (fun stro ->
         if Lwd.peek stro.erased |> Option.is_some then ()
@@ -151,4 +172,8 @@ module Clear = struct
                  preselected = Lwd.var false;
                }))
       strokes
+
+  let event strokes =
+    Messages.send (Clear ());
+    clear strokes
 end

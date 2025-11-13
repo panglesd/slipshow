@@ -99,8 +99,9 @@ module Draw = struct
     | End { id } -> Execute.end_ origin ~id
 
   let send event =
-    let string = event_to_string event in
-    Messaging.draw (Draw string)
+    let _string = event_to_string event in
+    ()
+  (* Messaging.draw (Draw string) *)
 
   let coerce_event x = `Draw x
 end
@@ -172,8 +173,8 @@ module Erase = struct
           ids
 
   let send event =
-    let string = event_to_string event in
-    Messaging.draw (Erase string)
+    let _string = event_to_string event in
+    (* Messaging.draw (Erase string) *) ()
 
   let coerce_event x = `Erase x
 end
@@ -189,7 +190,7 @@ module Clear = struct
 
   include V1
 
-  let send () = Messaging.draw (Clear "")
+  let send () = (* Messaging.draw (Clear "") *) ()
   let trigger _start_args = Some ()
 
   (* let concerned origin who = *)

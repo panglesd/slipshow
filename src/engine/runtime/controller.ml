@@ -192,6 +192,56 @@ let touch_setup (window : Universe.Window.t) =
 
 let comm_of_jv m = m |> Jv.to_string |> Communication.of_string
 
+type ('a, 'b) dragger = {
+  start : Drawing_state.Live_coding.strokes -> 'a -> float -> float -> 'b;
+  drag : x:float -> y:float -> dx:float -> dy:float -> 'b -> 'b;
+  end_ : 'b -> unit;
+}
+
+let handle_drag (dragger : (_, 'b) dragger) =
+  let acc : 'b option ref = ref None in
+  let strokes = Drawing_state.Live_coding.workspaces.live_drawing in
+  fun (s : 'a Drawing_controller.Messages.drag_event) ->
+    match s with
+    | Start (arg, x, y) ->
+        let res = dragger.start strokes arg x y in
+        acc := Some res
+    | Drag { x; y; dx; dy } -> (
+        match !acc with
+        | None -> ()
+        | Some acc' ->
+            let res = dragger.drag ~x ~y ~dx ~dy acc' in
+            acc := Some res)
+    | End -> (
+        match !acc with
+        | None -> ()
+        | Some acc' ->
+            dragger.end_ acc';
+            acc := None)
+
+let draw_stroke_dragger =
+  let open Drawing_controller.Tools.Draw_stroke in
+  { start; drag; end_ }
+
+let erase_dragger =
+  let open Drawing_controller.Tools.Erase in
+  { start; drag; end_ }
+
+let handle_erase = handle_drag erase_dragger
+let handle_draw_stroke = handle_drag draw_stroke_dragger
+
+let handle_drawing d =
+  let modu = Drawing_controller.Messages.event_of_string d in
+  match modu with
+  | Some (Draw s) -> handle_draw_stroke s
+  | Some (Erase s) -> handle_erase s
+  | Some (Clear ()) ->
+      Drawing_controller.Tools.Clear.clear
+        Drawing_state.Live_coding.workspaces.live_drawing
+  | None ->
+      Brr.Console.(
+        error [ "There was an error when decoding a drawing message: "; d ])
+
 let message_setup window =
   Brr.Ev.listen Brr_io.Message.Ev.message
     (fun event ->
@@ -205,24 +255,7 @@ let message_setup window =
             else Step.Next.goto i window
           in
           ()
-      | Some { payload = Drawing d; id = _window_id } ->
-          let ( let** ) x f =
-            match x with
-            | None -> Brr.Console.(log [ "problem here" ])
-            | Some x -> f x
-          in
-          let origin = (* Drawing.Types.Sent window_id *) Drawing.Types.Self in
-          let** modu = Messaging.Draw_event.of_string d in
-          let** s, (module Tool : Drawing.Tools.Tool) =
-            match modu with
-            | Draw d ->
-                Some (d, (module Drawing.Tools.Draw : Drawing.Tools.Tool))
-            | Erase d -> Some (d, (module Drawing.Tools.Erase))
-            | Clear d -> Some (d, (module Drawing.Tools.Clear))
-          in
-          let** ev = Tool.event_of_string s in
-          let () = Tool.execute origin ev in
-          ()
+      | Some { payload = Drawing d; id = _window_id } -> handle_drawing d
       | Some { payload = Send_all_drawing; id = _ } ->
           Drawing.send_all_strokes ()
       | Some { payload = Receive_all_drawing all_strokes; id = _ } ->
