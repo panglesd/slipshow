@@ -1,5 +1,0 @@
-; (library
-;  (name drawing)
-;  (libraries brr universe normalization messaging perfect_freehand)
-;  (preprocess
-;   (pps ppx_deriving_yojson)))

@@ -35,7 +35,7 @@
   (with-stdout-to
    slipshow-system.css
    (progn
-    (cat drawing/drawing_live/drawing.css)
-    (cat drawing/drawing_editor/drawing_editor.css)
+    (cat drawing/drawing_controller/drawing.css)
+    (cat drawing/drawing_controller/drawing_editor.css)
     (cat table_of_content/table_of_content.css)
     (cat system.css)))))
