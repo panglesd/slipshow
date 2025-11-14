@@ -51,3 +51,28 @@ let event_of_string s =
       None
 
 let send event = Messaging.draw (event_to_string event)
+
+let send_all_strokes () =
+  let strokes =
+    Lwd_table.fold
+      (fun acc e ->
+        Yojson.Safe.to_string (Drawing_state.Json.V1.of_stro e) :: acc)
+      [] Drawing_state.Live_coding.workspaces.live_drawing
+  in
+  Messaging.send_all_strokes strokes
+
+let receive_all_strokes strokes =
+  let ( let* ) x f =
+    match x with
+    | Error s -> Brr.Console.(error [ ("Error when converting strokes", s) ])
+    | Ok x -> f x
+  in
+  List.iter
+    (fun stro ->
+      let* json =
+        try Ok (Yojson.Safe.from_string stro)
+        with Yojson.Json_error s -> Error s
+      in
+      let* stro = Drawing_state.Json.V1.to_stro json in
+      Lwd_table.append' Drawing_state.Live_coding.workspaces.live_drawing stro)
+    strokes

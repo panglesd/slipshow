@@ -257,11 +257,9 @@ let message_setup window =
           ()
       | Some { payload = Drawing d; id = _window_id } -> handle_drawing d
       | Some { payload = Send_all_drawing; id = _ } ->
-          (* Drawing_controller.send_all_strokes () *) () (* TODO: DO *)
-      | Some { payload = Receive_all_drawing _all_strokes; id = _ } ->
-          (* Drawing_controller.receive_all_strokes all_strokes *)
-          ()
-          (* TODO: DO *)
+          Drawing_controller.Messages.send_all_strokes ()
+      | Some { payload = Receive_all_drawing all_strokes; id = _ } ->
+          Drawing_controller.Messages.receive_all_strokes all_strokes
       | _ -> ())
     (Brr.Window.as_target Brr.G.window)
   |> ignore
