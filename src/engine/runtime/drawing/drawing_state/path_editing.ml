@@ -84,9 +84,9 @@ let close_enough_poly p coord =
   in
   List.exists (fun p1 -> close_enough p1 coord) p
 
-let close_enough_poly2 p coord =
+let close_enough_poly2 scale p coord =
   let close_enough (x1, y1) (x2, y2) =
-    abs_float (x1 -. x2) < 10. && abs_float (y1 -. y2) < 10.
+    abs_float (x1 -. x2) < 10. /. scale && abs_float (y1 -. y2) < 10. /. scale
   in
   List.exists (fun (p1, _) -> close_enough p1 coord) p
 
@@ -99,7 +99,8 @@ let pfo_svg_path options scale path =
   let stroke = Perfect_freehand.get_stroke ~options path in
   Perfect_freehand.get_svg_path_from_stroke stroke
 
-let svg_path path =
+let svg_path scale path =
+  let path = List.rev_map (fun (x, y) -> (x *. scale, y *. scale)) path in
   let res =
     match path with
     | [] -> []

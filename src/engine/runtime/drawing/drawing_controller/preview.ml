@@ -87,7 +87,7 @@ let highlight_attributes ~elapsed_time ~width ~path ~color ~selected
   let at =
     let d =
       make_d ~elapsed_time path @@ fun path ->
-      Drawing_state.Path_editing.svg_path path
+      Drawing_state.Path_editing.svg_path scale path
     in
     let stroke =
       let width = Jstr.append (Jstr.of_float (width *. 3.)) (Jstr.v "px") in

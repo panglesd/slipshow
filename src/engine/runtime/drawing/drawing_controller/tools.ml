@@ -127,7 +127,10 @@ module Erase = struct
               Drawing_state.Path_editing.intersect_poly2 path (c0, c1)
             in
             let close_enough =
-              Drawing_state.Path_editing.close_enough_poly2 path c1
+              let { Universe.Coordinates.scale; _ } =
+                Universe.State.get_coord ()
+              in
+              Drawing_state.Path_editing.close_enough_poly2 scale path c1
             in
             if intersect || close_enough then
               Lwd.set stro.erased
