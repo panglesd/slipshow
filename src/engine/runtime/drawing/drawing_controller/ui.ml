@@ -21,7 +21,7 @@ let slider (editing_state : editing_state) =
     [ `R max ]
   in
   let el =
-    Drawing_editor.Ui_widgets.float ~prop ~type':"range" ~kind:`Input
+    Ui_widgets.float ~prop ~type':"range" ~kind:`Input
       editing_state.replaying_state.time attrs
   in
   Elwd.div [ `R el ]
@@ -109,7 +109,7 @@ let description_of_stroke row (stroke : stro) =
               Jv.get el "value" |> Jv.to_string |> float_of_string
             in
             let new_path =
-              Drawing_editor.Path_editing.change_path path begin_ end_ new_value
+              Drawing_state.Path_editing.change_path path begin_ end_ new_value
             in
             Lwd.set stroke.path new_path)
       in
@@ -122,18 +122,14 @@ let description_of_stroke row (stroke : stro) =
 
 let global_panel recording =
   let total_time =
-    let total_time =
-      Drawing_editor.Ui_widgets.float ~type':"number" recording.total_time []
-    in
+    let total_time = Ui_widgets.float ~type':"number" recording.total_time [] in
     Elwd.div [ `P (Brr.El.txt' "Total duration: "); `R total_time ]
   in
   let name_title =
     let$ name = Lwd.get recording.name in
     Brr.El.txt' name
   in
-  let change_title =
-    Drawing_editor.Ui_widgets.string ~kind:`Input recording.name []
-  in
+  let change_title = Ui_widgets.string ~kind:`Input recording.name [] in
   let select =
     let options =
       Lwd_table.map_reduce
@@ -217,10 +213,7 @@ let play_button editing_state =
 let save_button recording =
   let click =
     Elwd.handler Brr.Ev.click (fun _ ->
-        let (* recording *) s =
-          Drawing_state.Json.string_of_recording recording
-        in
-        (* let s = Drawing.Record.to_string recording in *)
+        let s = Drawing_state.Json.string_of_recording recording in
         let blob =
           let init = Brr.Blob.init ~type':(Jstr.v "application/json") () in
           Brr.Blob.of_jstr ~init (Jstr.v s)
@@ -281,9 +274,7 @@ let el =
     | [ (row, current_stroke) ] -> description_of_stroke row current_stroke
     | _ :: _ :: _ -> Elwd.div [ `P (Brr.El.txt' "Not implemented") ]
   in
-  let ti =
-    Drawing_editor.Ui_widgets.float editing_state.replaying_state.time []
-  in
+  let ti = Ui_widgets.float editing_state.replaying_state.time [] in
   let description =
     Elwd.div ~st:[ `P (Brr.El.Style.width, !!"20%") ] [ `R description ]
   in

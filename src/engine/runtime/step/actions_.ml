@@ -1038,16 +1038,6 @@ module Clear_draw = struct
 
   let parse_args = Parse.parse_only_els
 
-  let clear_record (record : Drawing.Record.t) =
-    List.iter
-      (function
-        | `Draw (Drawing.Tools.Draw.End { id; _ }), _ -> (
-            match Brr.El.find_first_by_selector (Jstr.v ("#" ^ id)) with
-            | Some el -> Brr.El.remove el
-            | None -> ())
-        | _ -> ())
-      record.events
-
   let do_ _window elems =
     only_if_not_fast @@ fun () ->
     Undoable.List.iter

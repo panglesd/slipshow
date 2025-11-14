@@ -110,7 +110,7 @@ module Selection = struct
         promote mode recording;
         Lwd.set box_selection_var None
       in
-      Drawing_editor.Ui_widgets.mouse_drag start drag end_
+      Ui_widgets.mouse_drag start drag end_
 
     let box =
       let$ box_selection = Lwd.get box_selection_var in
@@ -195,7 +195,7 @@ module Selection = struct
         promote mode recording;
         Lwd.set preview_selection_var None
       in
-      Drawing_editor.Ui_widgets.mouse_drag start drag end_
+      Ui_widgets.mouse_drag start drag end_
 
     let box =
       let$ box_selection = Lwd.get preview_selection_var in
@@ -257,7 +257,7 @@ module Move = struct
                      Lwd.set e.at (end_ +. time_shift)
               in
               let new_path =
-                Drawing_editor.Path_editing.translate old_path time_shift
+                Drawing_state.Path_editing.translate old_path time_shift
               in
               Lwd.set stroke.path new_path
           | `Erase (old_t, old_track, (sel : erased), stroke) ->
@@ -317,7 +317,7 @@ module Move = struct
         acc
       in
       let end_ _ _ = () in
-      Drawing_editor.Ui_widgets.mouse_drag start drag end_
+      Ui_widgets.mouse_drag start drag end_
   end
 
   module Preview = struct
@@ -334,13 +334,13 @@ module Move = struct
         List.iter
           (fun (p, v, scale) ->
             Lwd.set v
-              (Drawing_editor.Path_editing.translate_space p (dx /. scale)
+              (Drawing_state.Path_editing.translate_space p (dx /. scale)
                  (dy /. scale)))
           paths;
         paths
       in
       let end_ _ _ev = () in
-      Drawing_editor.Ui_widgets.mouse_drag start drag end_
+      Ui_widgets.mouse_drag start drag end_
   end
 end
 
@@ -405,7 +405,7 @@ module Scale = struct
         acc
       in
       let end_ _ _ = () in
-      Drawing_editor.Ui_widgets.mouse_drag start drag end_
+      Ui_widgets.mouse_drag start drag end_
   end
 
   module Preview = struct
@@ -437,12 +437,12 @@ module Scale = struct
         List.iter
           (fun (p, v) ->
             Lwd.set v
-              (Drawing_editor.Path_editing.scale_space p minX minY
+              (Drawing_state.Path_editing.scale_space p minX minY
                  (1. +. ((dx +. dy) /. 500.))))
           paths;
         acc
       in
       let end_ _ _ev = () in
-      Drawing_editor.Ui_widgets.mouse_drag start drag end_
+      Ui_widgets.mouse_drag start drag end_
   end
 end

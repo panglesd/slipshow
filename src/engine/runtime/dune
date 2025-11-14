@@ -11,8 +11,6 @@
   undoable
   step
   universe
-  drawing
-  drawing_editor
   drawing_controller
   messaging
   fast

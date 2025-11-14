@@ -36,7 +36,7 @@ let mouse_drag_in_universe start drag end_ =
     let dx, dy = (x' -. x, y' -. y) in
     drag ~x ~y ~dx ~dy
   in
-  Drawing_editor.Ui_widgets.mouse_drag start drag end_
+  Ui_widgets.mouse_drag start drag end_
 
 module Draw_stroke = struct
   let starts_at l = List.hd (List.rev l) |> snd
@@ -123,8 +123,12 @@ module Erase = struct
           if Lwd.peek stro.erased |> Option.is_some then ()
           else
             let path = Lwd.peek stro.path in
-            let intersect = Drawing.Utils.intersect_poly2 path (c0, c1) in
-            let close_enough = Drawing.Utils.close_enough_poly2 path c1 in
+            let intersect =
+              Drawing_state.Path_editing.intersect_poly2 path (c0, c1)
+            in
+            let close_enough =
+              Drawing_state.Path_editing.close_enough_poly2 path c1
+            in
             if intersect || close_enough then
               Lwd.set stro.erased
                 (Some

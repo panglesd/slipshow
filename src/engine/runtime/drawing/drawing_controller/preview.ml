@@ -36,7 +36,9 @@ let create_elem_of_stroke ~elapsed_time
       let with_path path =
         let path = List.map fst path in
         let options = options_of stroker width in
-        let v = Jstr.v (Drawing.Strokes.svg_path options scale path) in
+        let v =
+          Jstr.v (Drawing_state.Path_editing.svg_path options scale path)
+        in
         Brr.At.v (Jstr.v "d") v
       in
       let$* path = Lwd.get path in
@@ -49,27 +51,15 @@ let create_elem_of_stroke ~elapsed_time
     in
     let fill =
       let$ color =
-        let$* erased = Lwd.get erased
-        (* and$ elapsed_time = elapsed_time *)
-        and$ color = Lwd.get color in
+        let$* erased = Lwd.get erased and$ color = Lwd.get color in
         match erased with
         | Some erased -> (
             match elapsed_time with
             | None -> Lwd.pure "transparent"
             | Some elapsed_time ->
                 let$ elapsed_time = elapsed_time and$ at = Lwd.get erased.at in
-                if elapsed_time > at then "transparent" else color
-                (* let$ at = Lwd.get erased.at in *)
-                (* if elapsed_time > at then "transparent" *)
-                (* else *)
-                (* Drawing.Color.to_string *)
-                (* color *)
-                (* "transparent" *))
-        | None ->
-            Lwd.pure
-            @@
-            (* Drawing.Color.to_string *)
-            color
+                if elapsed_time > at then "transparent" else color)
+        | None -> Lwd.pure color
       in
       Brr.At.v (Jstr.v "fill") (Jstr.v color)
     in

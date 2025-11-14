@@ -61,7 +61,6 @@ let block_of_stroke recording (stroke : stro) =
     in
     let color =
       let$ color = Lwd.get stroke.color in
-      (* let color = color |> Drawing.Color.to_string |> ( !! ) in *)
       (Brr.El.Style.background_color, !!color)
     in
     [
@@ -133,8 +132,7 @@ let block_of_stroke recording (stroke : stro) =
       let$ current_tool = Lwd.get Drawing_state.Live_coding.editing_tool in
       match current_tool with
       | Move | Rescale -> Lwd_seq.empty
-      | Select ->
-          snd @@ Drawing_editor.Ui_widgets.hover ~var:stroke.preselected ()
+      | Select -> snd @@ Ui_widgets.hover ~var:stroke.preselected ()
     in
     let ev = [ `S ev_hover ] in
     Elwd.div ~ev ~st []
@@ -150,8 +148,7 @@ let block_of_stroke recording (stroke : stro) =
       let$ current_tool = Lwd.get Drawing_state.Live_coding.editing_tool in
       match current_tool with
       | Move | Rescale -> Lwd_seq.empty
-      | Select ->
-          snd @@ Drawing_editor.Ui_widgets.hover ~var:stroke.preselected ()
+      | Select -> snd @@ Ui_widgets.hover ~var:stroke.preselected ()
     in
     [ `S ev_hover ]
   in

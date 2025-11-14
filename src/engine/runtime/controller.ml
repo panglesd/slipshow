@@ -170,7 +170,7 @@ let touch_setup (window : Universe.Window.t) =
     in
     if
       String.equal "touch" type_
-      && Drawing.State.get_tool () = Drawing.Tool.Pointer
+      && Lwd.peek Drawing_state.Live_coding.live_drawing_state.tool = Pointer
     then stop_here ()
   in
   let opts = Brr.Ev.listen_opts ~passive:false () in
@@ -184,7 +184,7 @@ let touch_setup (window : Universe.Window.t) =
     in
     if
       String.equal "touch" type_
-      && Drawing.State.get_tool () = Drawing.Tool.Pointer
+      && Lwd.peek Drawing_state.Live_coding.live_drawing_state.tool = Pointer
     then stop_here ()
   in
   let _listener = Brr.Ev.listen ~opts Brr.Ev.pointerup touchend target in
@@ -257,9 +257,11 @@ let message_setup window =
           ()
       | Some { payload = Drawing d; id = _window_id } -> handle_drawing d
       | Some { payload = Send_all_drawing; id = _ } ->
-          Drawing.send_all_strokes ()
-      | Some { payload = Receive_all_drawing all_strokes; id = _ } ->
-          Drawing.receive_all_strokes all_strokes
+          (* Drawing_controller.send_all_strokes () *) () (* TODO: DO *)
+      | Some { payload = Receive_all_drawing _all_strokes; id = _ } ->
+          (* Drawing_controller.receive_all_strokes all_strokes *)
+          ()
+          (* TODO: DO *)
       | _ -> ())
     (Brr.Window.as_target Brr.G.window)
   |> ignore

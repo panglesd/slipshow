@@ -17,7 +17,6 @@ let start ~width ~height ~step =
   let* window = Universe.Window.setup el in
   (* TODO: move out of here (Later: Why?) *)
   let () = Rescale.setup_rescalers () in
-  (* let () = Drawing.setup body in *)
   let () = Drawing_controller.Setup.init_ui () in
   let () = Mouse_disappearing.setup () in
   let initial_step =
