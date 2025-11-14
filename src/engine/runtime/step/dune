@@ -1,3 +1,3 @@
 (library
  (name step)
- (libraries drawing messaging undoable universe communication logs fast drawing_state))
+ (libraries drawing messaging undoable universe communication logs fast drawing_state drawing_controller))

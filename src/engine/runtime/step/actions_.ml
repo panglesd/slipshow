@@ -951,44 +951,6 @@ module Change_page = struct
   let setup = None
 end
 
-module Clear_draw = struct
-  let on = "clear"
-  let action_name = on
-  let setup = None
-
-  type args = Brr.El.t list
-
-  let parse_args = Parse.parse_only_els
-
-  let clear_record (record : Drawing.Record.t) =
-    List.iter
-      (function
-        | `Draw (Drawing.Tools.Draw.End { id; _ }), _ -> (
-            match Brr.El.find_first_by_selector (Jstr.v ("#" ^ id)) with
-            | Some el -> Brr.El.remove el
-            | None -> ())
-        | _ -> ())
-      record.events
-
-  let do_ _window elems =
-    only_if_not_fast @@ fun () ->
-    Undoable.List.iter
-      (fun elem ->
-        let data = Brr.El.at (Jstr.v "x-data") elem in
-        match data with
-        | None -> Undoable.return ()
-        | Some data -> (
-            match Drawing.Record.of_string (Jstr.to_string data) with
-            | Error e ->
-                Brr.Console.(log [ e ]);
-                Undoable.return ()
-            | Ok record ->
-                clear_record record;
-                let undo () = Drawing.Replay.replay ~speedup:10000. record in
-                Undoable.return ~undo ()))
-      elems
-end
-
 module Draw = struct
   let state = Hashtbl.create 10
   let on = "draw"
@@ -1020,30 +982,85 @@ module Draw = struct
 
   let parse_args = Parse.parse_only_els
 
+  let update_speedup speedup =
+    match Fast.get_mode () with
+    | Normal -> speedup
+    | Fast_move -> 10000.
+    | Counting_for_toc -> assert false (* See "only_if_not_fast" *)
+
+  let replay ?(speedup = 1.)
+      (record : Drawing_state.Live_coding.replaying_state) =
+    let fut, resolve_fut = Fut.create () in
+    let start_replay = Drawing_controller.Tools.now () in
+    let original_time = Lwd.peek record.time in
+    let max_time = Lwd.peek record.recording.total_time in
+    let rec draw_loop _ =
+      let speedup = update_speedup speedup in
+      let new_time =
+        original_time
+        +. ((Drawing_controller.Tools.now () -. start_replay) *. speedup)
+      in
+      if new_time >= max_time then (
+        Lwd.set record.time max_time;
+        resolve_fut ())
+      else (
+        Lwd.set record.time new_time;
+        let _animation_frame_id = Brr.G.request_animation_frame draw_loop in
+        ())
+    in
+    let _animation_frame_id = Brr.G.request_animation_frame draw_loop in
+    fut
+
   let do_ _window elems =
     only_if_not_fast @@ fun () ->
-    let speedup =
-      match Fast.get_mode () with
-      | Normal -> 3.
-      | Fast_move -> 10000.
-      | Counting_for_toc -> assert false (* See "only_if_not_fast" *)
-    in
+    let speedup = update_speedup 1. in
     Undoable.List.iter
       (fun elem ->
         match Hashtbl.find_opt state elem with
         | None -> Undoable.return ()
         | Some record ->
-            ignore (record, speedup);
-            Brr.Console.(log [ "TOOODOOO" ]);
-            Lwd.set record.time (Lwd.peek record.recording.total_time);
+            let open Fut.Syntax in
+            let* () = replay ~speedup record in
             let undo () =
               Lwd.set record.time 0.;
               Fut.return ()
             in
-            Undoable.return ~undo ()
-        (* let undo () = Fut.return @@ Clear_draw.clear_record record in *)
-        (* let open Fut.Syntax in *)
-        (* let* () = Drawing.Replay.replay ~speedup record in *)
-        (* Undoable.return ~undo () *))
+            Undoable.return ~undo ())
+      elems
+end
+
+module Clear_draw = struct
+  let on = "clear"
+  let action_name = on
+  let setup = None
+
+  type args = Brr.El.t list
+
+  let parse_args = Parse.parse_only_els
+
+  let clear_record (record : Drawing.Record.t) =
+    List.iter
+      (function
+        | `Draw (Drawing.Tools.Draw.End { id; _ }), _ -> (
+            match Brr.El.find_first_by_selector (Jstr.v ("#" ^ id)) with
+            | Some el -> Brr.El.remove el
+            | None -> ())
+        | _ -> ())
+      record.events
+
+  let do_ _window elems =
+    only_if_not_fast @@ fun () ->
+    Undoable.List.iter
+      (fun elem ->
+        match Hashtbl.find_opt Draw.state elem with
+        | None -> Undoable.return ()
+        | Some record ->
+            let old_time = Lwd.peek record.time in
+            Lwd.set record.time (Lwd.peek record.recording.total_time);
+            let undo () =
+              Lwd.set record.time old_time;
+              Fut.return ()
+            in
+            Undoable.return ~undo ())
       elems
 end
