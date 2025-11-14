@@ -26,6 +26,7 @@ let create_elem_of_stroke ~elapsed_time
      } as _stroke) =
   let at =
     let d =
+      (* DO NOT DELETE THIS COMMENT! *)
       (* let$* end_at = end_at in *)
       (* let$* should_continue = *)
       (*   (\* I was hoping that when a value does not change, the recomputation *)
@@ -86,7 +87,6 @@ let create_elem_of_stroke ~elapsed_time
     in
     [ `R fill; `P id; `P opacity; `R d; `S selected ]
   in
-  (* let ev = move_handler stroke in *)
   let st =
     let scale = 1. /. scale in
     let scale = string_of_float scale in
@@ -94,7 +94,7 @@ let create_elem_of_stroke ~elapsed_time
     let s = "scale3d(" ^ scale ^ "," ^ scale ^ "," ^ scale ^ ")" in
     [ `P (!!"transform", !!s) ]
   in
-  Elwd.v ~ns:`SVG ~at (* ~ev *) ~st (Jstr.v "path") []
+  Elwd.v ~ns:`SVG ~at ~st (Jstr.v "path") []
 
 let draw ~elapsed_time strokes =
   Lwd_table.map_reduce
@@ -118,7 +118,6 @@ let draw ~elapsed_time strokes =
   |> Lwd_seq.map (fun (_, _, e) -> e)
 
 let drawing_area =
-  (* let gs = *)
   let act ~time strokes =
     let content = draw ~elapsed_time:time strokes in
     Elwd.v ~ns:`SVG (Jstr.v "g") [ `S content ]
@@ -141,7 +140,7 @@ let drawing_area =
               let time = workspaces.current_recording.time in
               Some (Lwd.get time)
         in
-        act ~time (* recording. *) strokes
+        act ~time strokes
       in
       Lwd_seq.element u
     in
@@ -150,41 +149,7 @@ let drawing_area =
   let drawn_live_drawing =
     act ~time:None Drawing_state.Live_coding.workspaces.live_drawing
   in
-  (* let content = *)
-  (*   let$* status = Lwd.get Drawing_state.Live_coding.status in *)
-  (*   match status with *)
-  (*   | Drawing Presenting -> *)
-  (*       draw ~elapsed_time:None *)
-  (*         Drawing_state.Live_coding.workspaces.live_drawing *)
-  (*       (\* let$* content = *\) *)
-  (*       (\*   let$ recording = State.Recording.current in *\) *)
-  (*       (\*   match recording with *\) *)
-  (*       (\*   | Some recording -> *\) *)
-  (*       (\*       let elapsed_time = Lwd.get State.time in *\) *)
-  (*       (\*       draw_until ~elapsed_time recording *\) *)
-  (*       (\*   | None -> Lwd.pure Lwd_seq.empty *\) *)
-  (*       (\* in *\) *)
-  (*       (\* From what I remember when I did this, the reason for an intermediate *)
-  (*        "g" is that with the current "Lwd.observe" implementation, taken from *)
-  (*        the brr-lwd example, only the attributes/children will be updated, not *)
-  (*              the element itself *\) *)
-  (*   | Drawing (Recording { recording; _ }) -> *)
-  (*       draw ~elapsed_time:None recording.strokes *)
-  (*   | Editing { replaying_state; _ } -> *)
-  (*       let elapsed_time = Some (Lwd.get replaying_state.time) in *)
-  (*       draw ~elapsed_time replaying_state.recording.strokes *)
-  (* in *)
-  (* Elwd.v ~ns:`SVG (Jstr.v "g") [ `S content ] *)
   Elwd.v ~ns:`SVG (Jstr.v "g") [ `S all_drawings; `R drawn_live_drawing ]
-(* in *)
-(* Elwd.v ~ns:`SVG (Jstr.v "svg") *)
-(*   ~at: *)
-(*     [ *)
-(*       `P *)
-(*         (Brr.At.style *)
-(*            (Jstr.v "overflow:visible; position: absolute; z-index:1001")); *)
-(*     ] *)
-(*   [ `R gs ] *)
 
 let init_drawing_area () =
   let svg = drawing_area in
@@ -211,15 +176,12 @@ let for_events () =
   let open Lwd_infix in
   let panel =
     let handler =
-      let$* status =
-        Lwd.get status
-        (* and$ current_tool = Lwd.get State.current_tool *)
-      in
+      let$* status = Lwd.get status in
       let draw_mode d =
         let strokes, started_time =
           match d with
           | Presenting -> (workspaces.live_drawing, Tools.now ())
-          | Recording { (* recording = { strokes; _ };  *) started_at } ->
+          | Recording { started_at } ->
               let strokes = workspaces.current_recording.recording.strokes in
               (strokes, started_at)
         in
@@ -237,29 +199,7 @@ let for_events () =
       match status with
       | Drawing d -> draw_mode d
       | Editing -> Lwd.pure Lwd_seq.empty
-      (* match (recording, current_tool) with *)
-      (* | None, _ -> Lwd_seq.empty *)
-      (* | Some recording, Move -> *)
-      (*     Lwd_seq.element @@ Editor_tools.Move.Preview.event recording *)
-      (* | Some recording, Select -> *)
-      (*     Lwd_seq.element @@ Editor_tools.Selection.Preview.event recording *)
-      (* | Some recording, Scale -> *)
-      (*     Lwd_seq.element @@ Editor_tools.Scale.Preview.event recording *)
     in
-    (* let cursor = *)
-    (*   let$ tool = Lwd.get State.current_tool in *)
-    (*   match tool with *)
-    (*   | Select -> (!!"cursor", !!"crosshair") *)
-    (*   | Move -> (!!"cursor", !!"move") *)
-    (*   | Scale -> (!!"cursor", !!"ne-resize") *)
-    (* in *)
-    (* TODO: what's below but with pointer-events *)
-    (* let display = *)
-    (*   match tool with *)
-    (*   | None -> (!!"display", !!"none") *)
-    (*   | Some _ -> (!!"display", !!"block") *)
-    (* in *)
-    (* let preview_box = Editor_tools.Selection.Preview.box in *)
     Elwd.div
       ~ev:[ `S handler ]
       ~at:[ `P (Brr.At.id !!"slipshow-drawing-editor-for-events") ]
