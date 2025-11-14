@@ -103,9 +103,8 @@ let svg_path path =
   let res =
     match path with
     | [] -> []
-    (* TODO: This does not work due to being impossible to delete... *)
-    (* | [ (x, y) ] -> *)
-    (*     [ Format.sprintf "M %f,%f L %f,%f " x y (x +. 1.) (y +. 1.) ] *)
+    | [ (x, y) ] ->
+        [ Format.sprintf "M %f,%f L %f,%f " x y (x +. 1.) (y +. 1.) ]
     | (x, y) :: rest ->
         Format.sprintf "M %f,%f" x y
         :: List.map (fun (x, y) -> Format.sprintf "L %f,%f" x y) rest
