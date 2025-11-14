@@ -90,12 +90,24 @@ let close_enough_poly2 p coord =
   in
   List.exists (fun (p1, _) -> close_enough p1 coord) p
 
-let svg_path options scale path =
+let pfo_svg_path options scale path =
   let path =
     List.rev_map
       (fun (x, y) -> Perfect_freehand.Point.v (x *. scale) (y *. scale))
       path
   in
   let stroke = Perfect_freehand.get_stroke ~options path in
-  let svg_path = Perfect_freehand.get_svg_path_from_stroke stroke in
-  Jstr.to_string svg_path
+  Perfect_freehand.get_svg_path_from_stroke stroke
+
+let svg_path path =
+  let res =
+    match path with
+    | [] -> []
+    (* TODO: This does not work due to being impossible to delete... *)
+    (* | [ (x, y) ] -> *)
+    (*     [ Format.sprintf "M %f,%f L %f,%f " x y (x +. 1.) (y +. 1.) ] *)
+    | (x, y) :: rest ->
+        Format.sprintf "M %f,%f" x y
+        :: List.map (fun (x, y) -> Format.sprintf "L %f,%f" x y) rest
+  in
+  String.concat " " res |> Jstr.of_string

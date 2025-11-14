@@ -74,5 +74,9 @@ let receive_all_strokes strokes =
         with Yojson.Json_error s -> Error s
       in
       let* stro = Drawing_state.Json.V1.to_stro json in
+      Lwd.set stro.track (-1);
+      (* This is a hack so that strokes keep their order, even though the time
+         received are relative to the main window, not relative to the receiving
+         window. TODO: find a better fix *)
       Lwd_table.append' Drawing_state.Live_coding.workspaces.live_drawing stro)
     strokes

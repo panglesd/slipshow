@@ -93,7 +93,7 @@ let current_editing_state =
 type recording_state = { (* strokes : strokes;  *) started_at : float }
 
 let live_drawing_state =
-  { tool = Lwd.var Pointer; color = Lwd.var "blue"; width = Lwd.var 10.0 }
+  { tool = Lwd.var Pointer; color = Lwd.var "blue"; width = Lwd.var 15.0 }
 
 type drawing_status = Presenting | Recording of recording_state
 type status = Drawing of drawing_status | Editing
