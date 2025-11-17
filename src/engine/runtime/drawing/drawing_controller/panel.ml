@@ -8,13 +8,13 @@ let ( !! ) = Jstr.v
 let panel_icon ?(at = []) ?(st = []) el =
   Elwd.div ~at:(`P (Brr.At.class' !!"slipshow-icon") :: at) ~st el
 
-let panel_button c icon text =
+let panel_button c ~icon text =
   Elwd.div
     ~at:[ `P (Brr.At.class' !!"slipshow-button") ]
     ~ev:[ `P c ]
     [ `R icon; `P (Brr.El.txt' text) ]
 
-let panel_block ?class_ buttons =
+let panel_block ?class_ ~buttons () =
   Elwd.div
     ~at:
       ((match class_ with None -> [] | Some c -> [ `P (Brr.At.class' !!c) ])
@@ -36,7 +36,7 @@ let svg_button v (value : live_drawing_tool) svg name =
     [ `S class_ ]
   in
   let icon = panel_icon ~at [ `P button ] in
-  panel_button h icon name
+  panel_button h ~icon name
 
 let pen_button v =
   svg_button v (Stroker Pen)
@@ -55,7 +55,7 @@ let cursor_button v =
     {|<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" width="20" height="20" style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);" preserveAspectRatio="xMidYMid meet" viewBox="0 0 36 36"><path class="clr-i-outline clr-i-outline-path-1" d="M14.58 32.31a1 1 0 0 1-.94-.65L4 5.65a1 1 0 0 1 1.25-1.28l26 9.68a1 1 0 0 1-.05 1.89l-8.36 2.57l8.3 8.3a1 1 0 0 1 0 1.41l-3.26 3.26a1 1 0 0 1-.71.29a1 1 0 0 1-.71-.29l-8.33-8.33l-2.6 8.45a1 1 0 0 1-.93.71zm3.09-12a1 1 0 0 1 .71.29l8.79 8.79L29 27.51l-8.76-8.76a1 1 0 0 1 .41-1.66l7.13-2.2L6.6 7l7.89 21.2l2.22-7.2a1 1 0 0 1 .71-.68z" fill="#000000"/><rect x="0" y="0" width="36" height="36" fill="rgba(0, 0, 0, 0)" /></svg>|}
 
 let color_button var color =
-  let panel_icon =
+  let icon =
     let at =
       let class_ =
         let$ current_color = Lwd.get var in
@@ -68,8 +68,7 @@ let color_button var color =
     let st = [ `P (Brr.El.Style.background_color, !!color) ] in
     panel_icon ~at ~st []
   in
-  panel_button (set_handler var color) panel_icon
-    (String.capitalize_ascii color)
+  panel_button (set_handler var color) ~icon (String.capitalize_ascii color)
 
 let width_button var width c name =
   let icon =
@@ -146,14 +145,15 @@ let drawing_panel mode =
   in
   let clear_button =
     let c = Elwd.handler Brr.Ev.click (fun _ -> Tools.Clear.event workspace) in
-    let panel_icon = panel_icon [ `P (Brr.El.txt !!"✗") ] in
-    panel_block @@ [ `R (panel_button c panel_icon "Clear") ]
+    let icon = panel_icon [ `P (Brr.El.txt !!"✗") ] in
+    panel_block ~buttons:[ `R (panel_button c ~icon "Clear") ] ()
   in
   let record_button =
     let c = Elwd.handler Brr.Ev.click (fun _ -> Lwd.set status Editing) in
-    let panel_icon = panel_icon [ `P (Brr.El.txt !!"") ] in
+    let icon = panel_icon [ `P (Brr.El.txt !!"") ] in
     panel_block ~class_:"slipshow-manage-recording-block"
-    @@ [ `R (panel_button c panel_icon "Manage recordings") ]
+      ~buttons:[ `R (panel_button c ~icon "Manage recordings") ]
+      ()
   in
   toplevel_panel_el
     [
