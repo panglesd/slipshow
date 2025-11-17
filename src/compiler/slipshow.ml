@@ -102,7 +102,7 @@ let embed_in_page content ~has ~math_link ~css_links ~theme ~dimension =
       <div id="slipshow-horizontal-flex">
         <div id="slipshow-main">
           <div id="slipshow-content">
-            <svg id="slipshow-drawing-elem" style="overflow:visible; position: absolute; z-index:1000"></svg>
+            <svg id="slipshow-drawing-elem" style="overflow:visible; position: absolute; z-index:1000; pointer-events: none"></svg>
             %s
           </div>
           <div id="slip-touch-controls">
