@@ -11,6 +11,9 @@ let shortcut_editing editing_state key =
   | "r" ->
       Lwd.set editing_tool Rescale;
       true
+  | "R" ->
+      start_recording ();
+      true
   | " " ->
       (match Lwd.peek editing_state.is_playing with
       | true -> Lwd.set editing_state.is_playing false
@@ -22,7 +25,7 @@ let shortcut_editing editing_state key =
 
 let shortcut_drawing strokes mode key =
   match key with
-  | "w" ->
+  | "p" | "w" ->
       Lwd.set live_drawing_state.tool (Stroker Pen);
       true
   | "h" ->
@@ -31,15 +34,18 @@ let shortcut_drawing strokes mode key =
   | "e" ->
       Lwd.set live_drawing_state.tool Eraser;
       true
-  | "x" ->
+  | "c" | "x" ->
       Lwd.set live_drawing_state.tool Pointer;
       true
   | "X" ->
       Tools.Clear.event strokes;
       true
-  | "r" ->
-      toggle_recording mode;
-      true
+  | "R" -> (
+      match mode with
+      | Presenting -> false
+      | Recording state ->
+          finish_recording state;
+          true)
   | _ -> false
 
 let shortcuts key =

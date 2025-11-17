@@ -8,11 +8,27 @@ let ( !! ) = Jstr.v
 let panel_icon ?(at = []) ?(st = []) el =
   Elwd.div ~at:(`P (Brr.At.class' !!"slipshow-icon") :: at) ~st el
 
-let panel_button c ~icon text =
+let panel_button ?shortcut c ~icon text =
+  let shortcut =
+    match shortcut with
+    | None -> []
+    | Some shortcut ->
+        [
+          `P
+            (Brr.El.kbd
+               ~at:[ Brr.At.class' !!"slipshow-key" ]
+               [ Brr.El.txt' shortcut ]);
+        ]
+  in
   Elwd.div
     ~at:[ `P (Brr.At.class' !!"slipshow-button") ]
     ~ev:[ `P c ]
-    [ `R icon; `P (Brr.El.txt' text) ]
+    ([
+       `R icon;
+       `P
+         (Brr.El.div ~at:[ Brr.At.style !!"flex-grow:11" ] [ Brr.El.txt' text ]);
+     ]
+    @ shortcut)
 
 let panel_block ?class_ ~buttons () =
   Elwd.div
@@ -21,7 +37,7 @@ let panel_block ?class_ ~buttons () =
       @ [ `P (Brr.At.class' !!"tool-block") ])
     buttons
 
-let svg_button v (value : live_drawing_tool) svg name =
+let svg_button v (value : live_drawing_tool) svg name shortcut =
   let h = set_handler v value in
   let button = Brr.El.div [] in
   let _ = Jv.set (Brr.El.to_jv button) "innerHTML" (Jv.of_string svg) in
@@ -35,7 +51,7 @@ let svg_button v (value : live_drawing_tool) svg name =
     [ `S class_ ]
   in
   let icon = panel_icon ~at [ `P button ] in
-  panel_button h ~icon name
+  panel_button h ~icon name ~shortcut
 
 let pen_button v =
   svg_button v (Stroker Pen)
@@ -99,10 +115,10 @@ let drawing_panel mode =
         Drawing_state.Live_coding.workspaces.current_recording.recording.strokes
   in
   let lds = Drawing_state.Live_coding.live_drawing_state in
-  let pen_button = pen_button lds.tool "Pen" in
-  let highlighter_button = highlighter_button lds.tool "Highlighter" in
-  let erase_button = erase_button lds.tool "Erase" in
-  let cursor_button = cursor_button lds.tool "Cursor" in
+  let pen_button = pen_button lds.tool "Pen" "p" in
+  let highlighter_button = highlighter_button lds.tool "Highlighter" "h" in
+  let erase_button = erase_button lds.tool "Erase" "e" in
+  let cursor_button = cursor_button lds.tool "Cursor" "c" in
   let tool_buttons =
     Elwd.div
       ~at:[ `P (Brr.At.class' !!"tool-block") ]
@@ -145,7 +161,7 @@ let drawing_panel mode =
   let clear_button =
     let c = Elwd.handler Brr.Ev.click (fun _ -> Tools.Clear.event workspace) in
     let icon = panel_icon [ `P (Brr.El.txt !!"✗") ] in
-    panel_block ~buttons:[ `R (panel_button c ~icon "Clear") ] ()
+    panel_block ~buttons:[ `R (panel_button c ~icon "Clear" ~shortcut:"X") ] ()
   in
   let record_button =
     let c = Elwd.handler Brr.Ev.click (fun _ -> Lwd.set status Editing) in
@@ -164,7 +180,7 @@ let drawing_panel mode =
     ]
 
 let editing_panel =
-  let editing_tool v icon name =
+  let editing_tool v icon name shortcut =
     let c = Elwd.handler Brr.Ev.click (fun _ -> Lwd.set editing_tool v) in
     let class_ =
       let$ current_tool = Lwd.get editing_tool in
@@ -173,13 +189,33 @@ let editing_panel =
       else Lwd_seq.of_list []
     in
     let icon = panel_icon ~at:[ `S class_ ] [ `P (Brr.El.txt' icon) ] in
-    panel_button c ~icon name
+    panel_button c ~icon name ~shortcut
   in
-  let select = editing_tool Select "☝" "Select" in
-  let move = editing_tool Move "⌖" "Move" in
-  let resize = editing_tool Rescale "⇲" "Resize" in
+  let select = editing_tool Select "☝" "Select" "s" in
+  let move = editing_tool Move "⌖" "Move" "m" in
+  let resize = editing_tool Rescale "⇲" "Resize" "r" in
   let block = panel_block ~buttons:[ `R select; `R move; `R resize ] () in
-  toplevel_panel_el [ `R block ]
+  let recording_block =
+    let record =
+      let c =
+        Elwd.handler Brr.Ev.click (fun _ ->
+            Drawing_state.Live_coding.start_recording ())
+      in
+      let icon =
+        Brr.El.div
+          ~at:
+            [
+              Brr.At.style
+                !!"width:10px;height:10px;background:red;border-radius:5px";
+            ]
+          []
+      in
+      let icon = panel_icon [ `P icon ] in
+      panel_button c ~icon "Record" ~shortcut:"R"
+    in
+    panel_block ~buttons:[ `R record ] ()
+  in
+  toplevel_panel_el [ `R block; `R recording_block ]
 
 let panel =
   let content =

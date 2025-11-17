@@ -122,3 +122,12 @@
   border: 2px solid steelblue;
   border-radius: 5px;
 }
+
+kbd.slipshow-key {
+  border: 1px solid black;
+  padding: 2px;
+  border-radius: 6px;
+  margin-left: 15px;
+  background: rgb(225, 225, 225);
+  font-size: 0.75em;
+}
