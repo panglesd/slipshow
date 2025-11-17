@@ -102,9 +102,9 @@ module Garbage = struct
           let$ tool =
             Lwd.get Drawing_state.Live_coding.live_drawing_state.tool
           in
-          match tool with Pointer -> false | _ -> true)
-      | Drawing (Recording _) -> Lwd.pure true
-      | Editing -> Lwd.pure true
+          match tool with Pointer -> `Presenting | _ -> `Drawing)
+      | Drawing (Recording _) -> Lwd.pure `Drawing
+      | Editing -> Lwd.pure `Editing
     in
     let ui = Lwd.observe panel in
     let on_invalidate _ =
@@ -112,8 +112,23 @@ module Garbage = struct
         G.request_animation_frame @@ fun _ ->
         let is_drawing = Lwd.quick_sample ui in
         ignore
-        @@ Brr.El.set_class !!"slipshow-drawing-mode" is_drawing
-             (Brr.Document.body Brr.G.document)
+        @@
+        match is_drawing with
+        | `Presenting ->
+            Brr.El.set_class !!"slipshow-drawing-mode" false
+              (Brr.Document.body Brr.G.document);
+            Brr.El.set_class !!"slipshow-editing-mode" false
+              (Brr.Document.body Brr.G.document)
+        | `Drawing ->
+            Brr.El.set_class !!"slipshow-drawing-mode" true
+              (Brr.Document.body Brr.G.document);
+            Brr.El.set_class !!"slipshow-editing-mode" false
+              (Brr.Document.body Brr.G.document)
+        | `Editing ->
+            Brr.El.set_class !!"slipshow-drawing-mode" false
+              (Brr.Document.body Brr.G.document);
+            Brr.El.set_class !!"slipshow-editing-mode" true
+              (Brr.Document.body Brr.G.document)
       in
       ()
     in
@@ -213,11 +228,11 @@ let connect () =
 
 let init_ui () =
   Preview.init_drawing_area ();
+  connect ();
   Preview.for_events ();
   Rec_in_progress.init ();
   init_ui ();
   Garbage.g ();
-  Ui.init ();
-  connect ()
+  Ui.init ()
 (* ; *)
 (* Time.el *)

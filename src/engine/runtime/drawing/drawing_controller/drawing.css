@@ -1,4 +1,5 @@
-.slipshow-drawing-mode #slipshow-open-window > * {
+.slipshow-drawing-mode #slipshow-open-window > *,
+.slipshow-editing-mode #slipshow-open-window > *{
   pointer-events: none;
 }
 
@@ -8,7 +9,8 @@
   left: 0;
 }
 
-#slipshow-drawing-toolbar:hover {
+#slipshow-drawing-toolbar:hover,
+.slipshow-editing-mode #slipshow-drawing-toolbar {
   max-width: 50%;
   max-height: 100vh;
 }

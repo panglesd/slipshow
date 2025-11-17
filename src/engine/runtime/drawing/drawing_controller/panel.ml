@@ -29,9 +29,8 @@ let svg_button v (value : live_drawing_tool) svg name =
     let class_ =
       let$ current_tool = Lwd.get v in
       if current_tool = value then
-        Lwd_seq.of_list
-          [ Brr.At.class' !!"slip-set-tool"; Brr.At.class' !!"slipshow-icon" ]
-      else Lwd_seq.of_list [ Brr.At.class' !!"slipshow-icon" ]
+        Lwd_seq.of_list [ Brr.At.class' !!"slip-set-tool" ]
+      else Lwd_seq.of_list []
     in
     [ `S class_ ]
   in
@@ -63,7 +62,7 @@ let color_button var color =
           Lwd_seq.element (Brr.At.class' !!"slip-set-color")
         else Lwd_seq.empty
       in
-      [ `S class_; `P (Brr.At.class' !!"slipshow-icon") ]
+      [ `S class_ ]
     in
     let st = [ `P (Brr.El.Style.background_color, !!color) ] in
     panel_icon ~at ~st []
@@ -164,9 +163,23 @@ let drawing_panel mode =
       `R record_button;
     ]
 
-let editing_panel = Elwd.div []
-(* let select = _ in *)
-(* toplevel_panel_el [ `R select; `R move; `R resize ] *)
+let editing_panel =
+  let editing_tool v icon name =
+    let c = Elwd.handler Brr.Ev.click (fun _ -> Lwd.set editing_tool v) in
+    let class_ =
+      let$ current_tool = Lwd.get editing_tool in
+      if current_tool = v then
+        Lwd_seq.of_list [ Brr.At.class' !!"slip-set-tool" ]
+      else Lwd_seq.of_list []
+    in
+    let icon = panel_icon ~at:[ `S class_ ] [ `P (Brr.El.txt' icon) ] in
+    panel_button c ~icon name
+  in
+  let select = editing_tool Select "☝" "Select" in
+  let move = editing_tool Move "⌖" "Move" in
+  let resize = editing_tool Rescale "⇲" "Resize" in
+  let block = panel_block ~buttons:[ `R select; `R move; `R resize ] () in
+  toplevel_panel_el [ `R block ]
 
 let panel =
   let content =

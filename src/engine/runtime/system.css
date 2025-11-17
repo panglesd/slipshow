@@ -53,7 +53,8 @@
 }
 
 
-body.slipshow-drawing-mode {
+body.slipshow-drawing-mode,
+body.slipshow-editing-mode{
   touch-action: pinch-zoom;
 }
 
