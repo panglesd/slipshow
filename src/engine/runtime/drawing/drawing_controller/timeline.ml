@@ -5,7 +5,7 @@ open Brr_lwd
 let ( !! ) = Jstr.v
 let total_length (recording : recording) = Lwd.get recording.total_time
 let px_int x = Jstr.append (Jstr.of_int x) !!"px"
-let stroke_height = 20
+let stroke_height = 30
 
 let n_track recording =
   Lwd_table.map_reduce
@@ -166,7 +166,7 @@ let el recording =
     let height =
       let$ n_track = n_track recording.strokes in
       ( Brr.El.Style.height,
-        Jstr.append (Jstr.of_int ((n_track + 1) * 20)) !!"px" )
+        Jstr.append (Jstr.of_int ((n_track + 1) * stroke_height)) !!"px" )
     in
     let cursor =
       let$ current_tool = Lwd.get Drawing_state.Live_coding.editing_tool in
@@ -175,7 +175,14 @@ let el recording =
       | Move -> (!!"cursor", !!"move")
       | Rescale -> (!!"cursor", !!"ne-resize")
     in
-    [ `P (Brr.El.Style.position, !!"relative"); `R height; `R cursor ]
+    [
+      `P (Brr.El.Style.position, !!"relative");
+      `R height;
+      `R cursor;
+      `P (!!"padding-bottom", !!"10px");
+      `P (!!"padding-top", !!"10px");
+      `P (!!"background", !!"#2a9d8f");
+    ]
   in
   let ev =
     let$ current_tool = Lwd.get Drawing_state.Live_coding.editing_tool in

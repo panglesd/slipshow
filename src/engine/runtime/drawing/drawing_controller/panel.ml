@@ -164,11 +164,24 @@ let drawing_panel mode =
     panel_block ~buttons:[ `R (panel_button c ~icon "Clear" ~shortcut:"X") ] ()
   in
   let record_button =
-    let c = Elwd.handler Brr.Ev.click (fun _ -> Lwd.set status Editing) in
-    let icon = panel_icon [ `P (Brr.El.txt !!"") ] in
-    panel_block ~class_:"slipshow-manage-recording-block"
-      ~buttons:[ `R (panel_button c ~icon "Manage recordings") ]
-      ()
+    match mode with
+    | Presenting ->
+        let c = Elwd.handler Brr.Ev.click (fun _ -> Lwd.set status Editing) in
+        let icon = panel_icon [ `P (Brr.El.txt !!"") ] in
+        panel_block ~class_:"slipshow-manage-recording-block"
+          ~buttons:[ `R (panel_button c ~icon "Manage recordings") ]
+          ()
+    | Recording state ->
+        let c = Elwd.handler Brr.Ev.click (fun _ -> finish_recording state) in
+        let icon =
+          Brr.El.div
+            ~at:[ Brr.At.style !!"width:10px;height:10px;background:red;" ]
+            []
+        in
+        let icon = panel_icon [ `P icon ] in
+        panel_block
+          ~buttons:[ `R (panel_button ~shortcut:"R" c ~icon "Stop recording") ]
+          ()
   in
   toplevel_panel_el
     [
@@ -211,7 +224,7 @@ let editing_panel =
           []
       in
       let icon = panel_icon [ `P icon ] in
-      panel_button c ~icon "Record" ~shortcut:"R"
+      panel_button c ~icon "Record a drawing" ~shortcut:"R"
     in
     panel_block ~buttons:[ `R record ] ()
   in

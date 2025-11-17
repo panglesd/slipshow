@@ -55,7 +55,7 @@ let workspaces : workspaces =
             strokes = Lwd_table.make ();
             total_time = Lwd.var 0.;
             record_id = Random.bits ();
-            name = Lwd.var "New recording";
+            name = Lwd.var "Unnamed recording";
           };
         time = Lwd.var 0.;
       };

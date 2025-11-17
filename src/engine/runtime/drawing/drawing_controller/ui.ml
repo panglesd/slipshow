@@ -26,54 +26,6 @@ let slider (editing_state : editing_state) =
   in
   Elwd.div [ `R el ]
 
-(* let left_selection recording = *)
-(*   let attrs = *)
-(*     let max = *)
-(*       let$ max = total_length recording in *)
-(*       Brr.At.v !!"max" (Jstr.of_float max) *)
-(*     in *)
-(*     [ *)
-(*       `P (Brr.At.id !!"slipshow-right-selection-slider"); *)
-(*       `P (Brr.At.class' !!"time-slider"); *)
-(*       `P (Brr.At.v !!"min" !!"0"); *)
-(*       `R max; *)
-(*     ] *)
-(*   in *)
-(*   let callback n = *)
-(*     Lwd.may_update *)
-(*       (fun m -> if m >= n then None else Some n) *)
-(*       State.right_selection *)
-(*   in *)
-(*   let el = *)
-(*     Drawing_editor.Ui_widgets.float ~callback ~type':"range" ~kind:`Input *)
-(*       State.left_selection attrs *)
-(*   in *)
-(*   Elwd.div [ `R el ] *)
-
-(* let right_selection recording = *)
-(*   let attrs = *)
-(*     let max = *)
-(*       let$ max = total_length recording in *)
-(*       Brr.At.v !!"max" (Jstr.of_float max) *)
-(*     in *)
-(*     [ *)
-(*       `P (Brr.At.id !!"slipshow-right-selection-slider"); *)
-(*       `P (Brr.At.class' !!"time-slider"); *)
-(*       `P (Brr.At.v !!"min" !!"0"); *)
-(*       `R max; *)
-(*     ] *)
-(*   in *)
-(*   let callback n = *)
-(*     Lwd.may_update *)
-(*       (fun m -> if m <= n then None else Some n) *)
-(*       State.left_selection *)
-(*   in *)
-(*   let el = *)
-(*     Ui_widgets.float ~callback ~type':"range" ~kind:`Input State.right_selection *)
-(*       attrs *)
-(*   in *)
-(*   Elwd.div [ `R el ] *)
-
 let description_of_stroke row (stroke : stro) =
   (* let color = Drawing_editor.Ui_widgets.of_color stroke.color in *)
   (* let color = Elwd.div [ `P (Brr.El.txt' "Color: "); `R color ] in *)
@@ -121,15 +73,21 @@ let description_of_stroke row (stroke : stro) =
   Elwd.div [ (* `R color; *) `R duration; `R delete; `R close ]
 
 let global_panel recording =
-  let total_time =
-    let total_time = Ui_widgets.float ~type':"number" recording.total_time [] in
-    Elwd.div [ `P (Brr.El.txt' "Total duration: "); `R total_time ]
-  in
+  (* let total_time = *)
+  (*   let total_time = Ui_widgets.float ~type':"number" recording.total_time [] in *)
+  (*   Elwd.div [ `P (Brr.El.txt' "Total duration: "); `R total_time ] *)
+  (* in *)
   let name_title =
     let$ name = Lwd.get recording.name in
-    Brr.El.txt' name
+    Brr.El.h3 [ Brr.El.txt' name ]
   in
-  let change_title = Ui_widgets.string ~kind:`Input recording.name [] in
+  let change_title =
+    Elwd.div
+      [
+        `P (Brr.El.txt' "Rename recording");
+        `R (Ui_widgets.string ~kind:`Input recording.name []);
+      ]
+  in
   let select =
     let options =
       Lwd_table.map_reduce
@@ -154,8 +112,20 @@ let global_panel recording =
       |> Lwd_seq.lift
     in
     let current_recording =
-      let$ name = Lwd.get workspaces.current_recording.recording.name in
-      Brr.El.option [ Brr.El.txt' name ]
+      let$* name = Lwd.get workspaces.current_recording.recording.name in
+      let recording_id =
+        string_of_int workspaces.current_recording.recording.record_id
+      in
+      let value = Brr.At.value (Jstr.v recording_id) in
+      let selected =
+        let$ current_editing_state = Lwd.get current_editing_state in
+        if
+          workspaces.current_recording.recording.record_id
+          = current_editing_state.replaying_state.recording.record_id
+        then Lwd_seq.element Brr.At.selected
+        else Lwd_seq.empty
+      in
+      Elwd.option ~at:[ `P value; `S selected ] [ `P (Brr.El.txt' name) ]
     in
     let change =
       Elwd.handler Brr.Ev.change (fun ev ->
@@ -163,7 +133,6 @@ let global_panel recording =
             let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv in
             Jv.get el "value" |> Jv.to_string |> int_of_string
           in
-          Brr.Console.(log [ "BBB Setting record id"; record_id ]);
           let replaying_state =
             let exception Found of Drawing_state.Live_coding.replaying_state in
             try
@@ -179,9 +148,13 @@ let global_panel recording =
           Lwd.set current_editing_state
             { replaying_state; is_playing = Lwd.var false })
     in
-    Elwd.select ~ev:[ `P change ] [ `S options; `R current_recording ]
+    let select =
+      Elwd.select ~ev:[ `P change ] [ `S options; `R current_recording ]
+    in
+    let label = Brr.El.txt' "List of recordings: " in
+    Elwd.div [ `P label; `R select ]
   in
-  Elwd.div [ `R select; `R name_title; `R total_time; `R change_title ]
+  Elwd.div [ `R name_title; `R select (* ; `R total_time *); `R change_title ]
 
 let play (editing_state : editing_state) =
   Lwd.set editing_state.is_playing true;
@@ -276,7 +249,9 @@ let el =
   in
   let ti = Ui_widgets.float editing_state.replaying_state.time [] in
   let description =
-    Elwd.div ~st:[ `P (Brr.El.Style.width, !!"20%") ] [ `R description ]
+    Elwd.div
+      ~st:[ `P (Brr.El.Style.width, !!"20%"); `P (!!"overflow", !!"auto") ]
+      [ `R description ]
   in
   let strokes = Timeline.el recording in
   let time_panel =
@@ -297,7 +272,10 @@ let el =
       ]
   in
   Elwd.div
-    ~st:[ `P (Brr.El.Style.display, !!"flex") ]
+    ~st:
+      [
+        `P (Brr.El.Style.display, !!"flex"); `P (Brr.El.Style.height, !!"300px");
+      ]
     [ `R description; `R time_panel ]
 
 let el =
@@ -311,7 +289,7 @@ let el =
     let$* status = Lwd.get status in
     match status with Editing -> el | _ -> Lwd.pure (Brr.El.div [])
   in
-  let st = [ `P (Brr.El.Style.height, !!"200px") ] in
+  let st = [ `P (Brr.El.Style.height, !!"300px") ] in
   Elwd.div
     ~at:[ `P (Brr.At.id !!"slipshow-drawing-editor"); `S display ]
     ~st

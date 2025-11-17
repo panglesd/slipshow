@@ -17,10 +17,15 @@
 .slipshow-drawing-mode #slipshow-drawing-toolbar {
   max-height: 100vh;
 }
-#slipshow-drawing-toolbar {
+#slipshow-drawing-toolbar:hover {
   transition:
     max-width 0.3s,
     max-height 0.3s;
+}
+#slipshow-drawing-toolbar {
+  transition:
+    max-width 0.3s 0.5s,
+    max-height 0.3s 0.5s;
   overflow: hidden;
   max-width: 32px;
   max-height: 32px;
