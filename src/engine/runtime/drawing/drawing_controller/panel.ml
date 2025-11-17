@@ -5,25 +5,38 @@ open Brr_lwd
 let set_handler v value = Elwd.handler Brr.Ev.click (fun _ -> Lwd.set v value)
 let ( !! ) = Jstr.v
 
+let panel_icon ?(at = []) ?(st = []) el =
+  Elwd.div ~at:(`P (Brr.At.class' !!"slipshow-icon") :: at) ~st el
+
+let panel_button c icon text =
+  Elwd.div
+    ~at:[ `P (Brr.At.class' !!"slipshow-button") ]
+    ~ev:[ `P c ]
+    [ `R icon; `P (Brr.El.txt' text) ]
+
+let panel_block ?class_ buttons =
+  Elwd.div
+    ~at:
+      ((match class_ with None -> [] | Some c -> [ `P (Brr.At.class' !!c) ])
+      @ [ `P (Brr.At.class' !!"tool-block") ])
+    buttons
+
 let svg_button v (value : live_drawing_tool) svg name =
   let h = set_handler v value in
-  let svg_button =
-    let at =
-      let class_ =
-        let$ current_tool = Lwd.get v in
-        if current_tool = value then
-          Lwd_seq.of_list
-            [ Brr.At.class' !!"slip-set-tool"; Brr.At.class' !!"slipshow-icon" ]
-        else Lwd_seq.of_list [ Brr.At.class' !!"slipshow-icon" ]
-      in
-      [ `S class_ ]
+  let button = Brr.El.div [] in
+  let _ = Jv.set (Brr.El.to_jv button) "innerHTML" (Jv.of_string svg) in
+  let at =
+    let class_ =
+      let$ current_tool = Lwd.get v in
+      if current_tool = value then
+        Lwd_seq.of_list
+          [ Brr.At.class' !!"slip-set-tool"; Brr.At.class' !!"slipshow-icon" ]
+      else Lwd_seq.of_list [ Brr.At.class' !!"slipshow-icon" ]
     in
-    let$ button = Elwd.div ~at [] in
-    let _ = Jv.set (Brr.El.to_jv button) "innerHTML" (Jv.of_string svg) in
-    button
+    [ `S class_ ]
   in
-  let at = [ `P (Brr.At.class' !!"slipshow-button") ] in
-  Elwd.div ~at ~ev:[ `P h ] [ `R svg_button; `P (Brr.El.txt' name) ]
+  let icon = panel_icon ~at [ `P button ] in
+  panel_button h icon name
 
 let pen_button v =
   svg_button v (Stroker Pen)
@@ -42,7 +55,7 @@ let cursor_button v =
     {|<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" width="20" height="20" style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);" preserveAspectRatio="xMidYMid meet" viewBox="0 0 36 36"><path class="clr-i-outline clr-i-outline-path-1" d="M14.58 32.31a1 1 0 0 1-.94-.65L4 5.65a1 1 0 0 1 1.25-1.28l26 9.68a1 1 0 0 1-.05 1.89l-8.36 2.57l8.3 8.3a1 1 0 0 1 0 1.41l-3.26 3.26a1 1 0 0 1-.71.29a1 1 0 0 1-.71-.29l-8.33-8.33l-2.6 8.45a1 1 0 0 1-.93.71zm3.09-12a1 1 0 0 1 .71.29l8.79 8.79L29 27.51l-8.76-8.76a1 1 0 0 1 .41-1.66l7.13-2.2L6.6 7l7.89 21.2l2.22-7.2a1 1 0 0 1 .71-.68z" fill="#000000"/><rect x="0" y="0" width="36" height="36" fill="rgba(0, 0, 0, 0)" /></svg>|}
 
 let color_button var color =
-  let icon =
+  let panel_icon =
     let at =
       let class_ =
         let$ current_color = Lwd.get var in
@@ -52,11 +65,11 @@ let color_button var color =
       in
       [ `S class_; `P (Brr.At.class' !!"slipshow-icon") ]
     in
-    Elwd.div ~at ~st:[ `P (!!"background-color", !!color) ] []
+    let st = [ `P (Brr.El.Style.background_color, !!color) ] in
+    panel_icon ~at ~st []
   in
-  let at = [ `P (Brr.At.class' !!"slipshow-button") ] in
-  let ev = [ `P (set_handler var color) ] in
-  Elwd.div ~at ~ev [ `R icon; `P (Brr.El.txt' (String.capitalize_ascii color)) ]
+  panel_button (set_handler var color) panel_icon
+    (String.capitalize_ascii color)
 
 let width_button var width c name =
   let icon =
@@ -77,7 +90,10 @@ let width_button var width c name =
   let at = [ `P (Brr.At.class' !!"slipshow-button") ] in
   Elwd.div ~at ~ev [ `R icon; `P (Brr.El.txt' name) ]
 
-let panel mode =
+let toplevel_panel_el =
+  Elwd.div ~at:[ `P (Brr.At.class' !!"slip-writing-toolbar") ]
+
+let drawing_panel mode =
   let workspace =
     match mode with
     | Presenting -> Drawing_state.Live_coding.workspaces.live_drawing
@@ -130,68 +146,16 @@ let panel mode =
   in
   let clear_button =
     let c = Elwd.handler Brr.Ev.click (fun _ -> Tools.Clear.event workspace) in
-    Elwd.div
-      ~at:
-        [
-          `P (Brr.At.class' !!"slip-toolbar-control");
-          `P (Brr.At.class' !!"tool-block");
-        ]
-      [
-        `R
-          (Elwd.div
-             ~at:[ `P (Brr.At.class' !!"slipshow-button") ]
-             ~ev:[ `P c ]
-             [
-               `R
-                 (Elwd.div
-                    ~at:
-                      [
-                        `P (Brr.At.class' !!"slip-toolbar-clear");
-                        `P (Brr.At.class' !!"slipshow-icon");
-                      ]
-                    [ `P (Brr.El.txt !!"✗") ]);
-               `P (Brr.El.txt' "Clear");
-             ]);
-      ]
+    let panel_icon = panel_icon [ `P (Brr.El.txt !!"✗") ] in
+    panel_block @@ [ `R (panel_button c panel_icon "Clear") ]
   in
   let record_button =
-    let c =
-      Elwd.handler Brr.Ev.click (fun _ ->
-          Drawing_state.Live_coding.toggle_recording mode)
-    in
-    Elwd.div
-      ~at:[ `P (Brr.At.class' !!"tool-block") ]
-      [
-        `R
-          (Elwd.div
-             ~at:[ `P (Brr.At.class' !!"slipshow-button") ]
-             ~ev:[ `P c ]
-             [
-               `R
-                 (Elwd.div
-                    ~st:[ `P (!!"border", !!"0px") ]
-                    ~at:[ `P (Brr.At.class' !!"slipshow-icon") ]
-                    []);
-               `P (Brr.El.txt' "Manage recordings");
-             ]);
-      ]
+    let c = Elwd.handler Brr.Ev.click (fun _ -> Lwd.set status Editing) in
+    let panel_icon = panel_icon [ `P (Brr.El.txt !!"") ] in
+    panel_block ~class_:"slipshow-manage-recording-block"
+    @@ [ `R (panel_button c panel_icon "Manage recordings") ]
   in
-  (* let record_button = *)
-  (*   let c = *)
-  (*     Elwd.handler Brr.Ev.click (fun _ -> *)
-  (*         Drawing_state.Live_coding.toggle_recording mode) *)
-  (*   in *)
-  (*   Elwd.div *)
-  (*     ~at: *)
-  (*       [ *)
-  (*         `P (Brr.At.class' !!"slipshow-button"); *)
-  (*         `P (Brr.At.class' !!"slipshow-manage-recording"); *)
-  (*       ] *)
-  (*     ~ev:[ `P c ] *)
-  (*     [ `P (Brr.El.txt' "Manage recordings") ] *)
-  (* in *)
-  Elwd.div
-    ~at:[ `P (Brr.At.class' !!"slip-writing-toolbar") ]
+  toplevel_panel_el
     [
       `R tool_buttons;
       `R color_buttons;
@@ -200,12 +164,13 @@ let panel mode =
       `R record_button;
     ]
 
+let editing_panel = Elwd.div []
+(* let select = _ in *)
+(* toplevel_panel_el [ `R select; `R move; `R resize ] *)
+
 let panel =
   let content =
-    let$ status = Lwd.get Drawing_state.Live_coding.status in
-    match status with
-    | Drawing d -> Lwd_seq.element @@ panel d
-    | Editing -> Lwd_seq.empty
+    let$* status = Lwd.get Drawing_state.Live_coding.status in
+    match status with Drawing d -> drawing_panel d | Editing -> editing_panel
   in
-  let content = Lwd_seq.lift content in
-  Elwd.div ~at:[ `P (Brr.At.id !!"slipshow-drawing-toolbar") ] [ `S content ]
+  Elwd.div ~at:[ `P (Brr.At.id !!"slipshow-drawing-toolbar") ] [ `R content ]
