@@ -8,42 +8,67 @@
   left: 0;
 }
 
-.slip-writing-toolbar:hover,
-.slipshow-drawing-mode .slip-writing-toolbar {
-  width: 32px;
-  height: min(640px, 100vh);
-  overflow: auto;
+#slipshow-drawing-toolbar:hover {
+  max-width: 50%;
+  max-height: 100vh;
+}
+.slipshow-drawing-mode #slipshow-drawing-toolbar {
+  max-height: 100vh;
+}
+#slipshow-drawing-toolbar {
+  transition:
+    max-width 0.3s,
+    max-height 0.3s;
+  overflow: hidden;
+  max-width: 32px;
+  max-height: 32px;
+  border-radius: 0px 0px 16px 16px;
+  background-color: white;
+  border-right: 1px solid black;
+  border-bottom: 1px solid black;
 }
 .slip-writing-toolbar {
-  background-color: white;
-  overflow: hidden;
-  transition:
-    width 0.5s,
-    height 0.5s;
   display: flex;
   flex-direction: column;
-  position: absolute;
-  left: 0;
-  width: 32px;
-  height: 32px;
+  max-width: 100vw;
+  max-height: 100vh;
+  flex-wrap: wrap;
   z-index: 10;
-  border-radius: 0px 0px 16px 16px;
   user-select: none;
 }
 
-.slip-writing-toolbar > * {
+.slip-writing-toolbar > .tool-block {
   display: flex;
   flex-direction: column;
   margin-bottom: 10px;
+  gap:2px;
+  padding-right: 10px;
 }
-.slip-writing-toolbar > * > * {
+.slip-writing-toolbar > .tool-block:not(:last-child) {
+  border-bottom: 1px solid black;
+  padding-bottom: 10px;
+  padding-right: 10px;
+}
+.slip-writing-toolbar .slipshow-icon {
   width: 30px;
   height: 30px;
   border: 1px solid black;
   border-radius: 30px;
   transition: border-radius 0.5s;
-  cursor: pointer;
+  display:flex;
+  align-items: center;
+  justify-content: center;
 }
+.slipshow-manage-recording {
+  padding-left: 10px;;
+  padding-right: 10px;
+  padding-bottom: 10px;
+}
+.slipshow-button {
+  cursor: pointer;
+  white-space: nowrap;
+}
+
 .slip-writing-toolbar > .slip-toolbar-color > .slip-toolbar-red {
   background-color: red;
 }
@@ -59,46 +84,48 @@
 .slip-writing-toolbar > .slip-toolbar-color > .slip-toolbar-yellow {
   background-color: yellow;
 }
-.slip-writing-toolbar > * > * {
+.slip-writing-toolbar .slipshow-button {
   display: flex;
-  justify-content: center;
+  justify-content: left;
   align-items: center;
+  gap: 5px;
+  font-size: 25px;
 }
-.slip-writing-toolbar > .slip-toolbar-width > * > * {
+.slip-writing-toolbar > .slip-toolbar-width .slipshow-icon > * {
   width: 14px;
   border-radius: 16px;
 }
 
-.slip-writing-toolbar > .slip-toolbar-width > .slip-toolbar-small > * {
+.slip-writing-toolbar > .slip-toolbar-width .slip-toolbar-small.slipshow-icon > * {
   border: 1px solid black;
 }
-.slip-writing-toolbar > .slip-toolbar-width > .slip-toolbar-medium > * {
+.slip-writing-toolbar > .slip-toolbar-width .slip-toolbar-medium.slipshow-icon > * {
   border: 2px solid black;
 }
-.slip-writing-toolbar > .slip-toolbar-width > .slip-toolbar-large > * {
+.slip-writing-toolbar > .slip-toolbar-width .slip-toolbar-large.slipshow-icon > * {
   border: 4px solid black;
 }
-.slip-set-tool,
-.slip-set-width {
+.slip-writing-toolbar .slipshow-icon.slip-set-tool,
+.slip-writing-toolbar .slipshow-icon.slip-set-width {
   background-color: lightsteelblue;
   border-radius: 5px;
 }
 
-.slip-set-color {
-  height: 25px;
-  width: 25px;
-  border: 3px solid steelblue;
+.slip-writing-toolbar .slip-set-color {
+  height: 28px;
+  width: 28px;
+  border: 2px solid steelblue;
   border-radius: 5px;
 }
 
-.slip-writing-toolbar > .slip-toolbar-record > .slip-toolbar-start-record > * {
+.slip-writing-toolbar > .slip-toolbar-record .slip-toolbar-start-record > * {
   border: 4px solid red;
   width: 5px;
   height: 5px;
   background: red;
   border-radius: 10px;
 }
-.slip-writing-toolbar > .slip-toolbar-record > .slip-toolbar-stop-record > * {
+.slip-writing-toolbar > .slip-toolbar-record .slip-toolbar-stop-record > * {
   border: 4px solid red;
   width: 5px;
   height: 5px;

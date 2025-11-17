@@ -276,13 +276,20 @@ let for_events () =
       | Drawing d -> draw_mode d
       | Editing -> Lwd.pure Lwd_seq.empty
     in
+    let display =
+      let$* status = Lwd.get Drawing_state.Live_coding.status in
+      let$ tool = Lwd.get live_drawing_state.tool in
+      match (status, tool) with
+      | Drawing _, (Stroker _ | Eraser) -> (!!"display", !!"block")
+      | _ -> (!!"display", !!"none")
+    in
     Elwd.div
       ~ev:[ `S handler ]
-      ~at:[ `P (Brr.At.id !!"slipshow-drawing-editor-for-events") ]
+      ~at:[ `P (Brr.At.id !!"slipshow-drawing-recording-for-events") ]
       ~st:
         [
           (* `R cursor; *)
-          (* `R display; *)
+          `R display;
           `P (!!"position", !!"absolute");
           `P (!!"top", !!"0");
           `P (!!"left", !!"0");

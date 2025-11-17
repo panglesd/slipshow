@@ -5,21 +5,25 @@ open Brr_lwd
 let set_handler v value = Elwd.handler Brr.Ev.click (fun _ -> Lwd.set v value)
 let ( !! ) = Jstr.v
 
-let svg_button v (value : live_drawing_tool) svg =
-  let at =
-    let class_ =
-      let$ current_tool = Lwd.get v in
-      if current_tool = value then
-        Lwd_seq.element (Brr.At.class' !!"slip-set-tool")
-      else Lwd_seq.empty
-    in
-    [ `S class_ ]
-  in
+let svg_button v (value : live_drawing_tool) svg name =
   let h = set_handler v value in
-  let$ button = Elwd.div ~at ~ev:[ `P h ] [] in
-  Brr.Console.(log [ "button"; button ]);
-  let _ = Jv.set (Brr.El.to_jv button) "innerHTML" (Jv.of_string svg) in
-  button
+  let svg_button =
+    let at =
+      let class_ =
+        let$ current_tool = Lwd.get v in
+        if current_tool = value then
+          Lwd_seq.of_list
+            [ Brr.At.class' !!"slip-set-tool"; Brr.At.class' !!"slipshow-icon" ]
+        else Lwd_seq.of_list [ Brr.At.class' !!"slipshow-icon" ]
+      in
+      [ `S class_ ]
+    in
+    let$ button = Elwd.div ~at [] in
+    let _ = Jv.set (Brr.El.to_jv button) "innerHTML" (Jv.of_string svg) in
+    button
+  in
+  let at = [ `P (Brr.At.class' !!"slipshow-button") ] in
+  Elwd.div ~at ~ev:[ `P h ] [ `R svg_button; `P (Brr.El.txt' name) ]
 
 let pen_button v =
   svg_button v (Stroker Pen)
@@ -38,30 +42,40 @@ let cursor_button v =
     {|<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" width="20" height="20" style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);" preserveAspectRatio="xMidYMid meet" viewBox="0 0 36 36"><path class="clr-i-outline clr-i-outline-path-1" d="M14.58 32.31a1 1 0 0 1-.94-.65L4 5.65a1 1 0 0 1 1.25-1.28l26 9.68a1 1 0 0 1-.05 1.89l-8.36 2.57l8.3 8.3a1 1 0 0 1 0 1.41l-3.26 3.26a1 1 0 0 1-.71.29a1 1 0 0 1-.71-.29l-8.33-8.33l-2.6 8.45a1 1 0 0 1-.93.71zm3.09-12a1 1 0 0 1 .71.29l8.79 8.79L29 27.51l-8.76-8.76a1 1 0 0 1 .41-1.66l7.13-2.2L6.6 7l7.89 21.2l2.22-7.2a1 1 0 0 1 .71-.68z" fill="#000000"/><rect x="0" y="0" width="36" height="36" fill="rgba(0, 0, 0, 0)" /></svg>|}
 
 let color_button var color =
-  let at =
-    let class_ =
-      let$ current_color = Lwd.get var in
-      if current_color = color then
-        Lwd_seq.element (Brr.At.class' !!"slip-set-color")
-      else Lwd_seq.empty
+  let icon =
+    let at =
+      let class_ =
+        let$ current_color = Lwd.get var in
+        if current_color = color then
+          Lwd_seq.element (Brr.At.class' !!"slip-set-color")
+        else Lwd_seq.empty
+      in
+      [ `S class_; `P (Brr.At.class' !!"slipshow-icon") ]
     in
-    [ `S class_ ]
+    Elwd.div ~at ~st:[ `P (!!"background-color", !!color) ] []
   in
+  let at = [ `P (Brr.At.class' !!"slipshow-button") ] in
   let ev = [ `P (set_handler var color) ] in
-  Elwd.div ~at ~ev ~st:[ `P (!!"background-color", !!color) ] []
+  Elwd.div ~at ~ev [ `R icon; `P (Brr.El.txt' (String.capitalize_ascii color)) ]
 
-let width_button var width c =
-  let at =
-    let class_ =
-      let$ current_width = Lwd.get var in
-      if current_width = width then
-        Lwd_seq.element (Brr.At.class' !!"slip-set-width")
-      else Lwd_seq.empty
+let width_button var width c name =
+  let icon =
+    let at =
+      let class_ =
+        let$ current_width = Lwd.get var in
+        if current_width = width then
+          Lwd_seq.element (Brr.At.class' !!"slip-set-width")
+        else Lwd_seq.empty
+      in
+      [
+        `S class_; `P (Brr.At.class' !!c); `P (Brr.At.class' !!"slipshow-icon");
+      ]
     in
-    [ `S class_; `P (Brr.At.class' !!c) ]
+    Elwd.div ~at [ `P (Brr.El.div []) ]
   in
   let ev = [ `P (set_handler var width) ] in
-  Elwd.div ~at ~ev [ `P (Brr.El.div []) ]
+  let at = [ `P (Brr.At.class' !!"slipshow-button") ] in
+  Elwd.div ~at ~ev [ `R icon; `P (Brr.El.txt' name) ]
 
 let panel mode =
   let workspace =
@@ -71,12 +85,13 @@ let panel mode =
         Drawing_state.Live_coding.workspaces.current_recording.recording.strokes
   in
   let lds = Drawing_state.Live_coding.live_drawing_state in
-  let pen_button = pen_button lds.tool in
-  let highlighter_button = highlighter_button lds.tool in
-  let erase_button = erase_button lds.tool in
-  let cursor_button = cursor_button lds.tool in
+  let pen_button = pen_button lds.tool "Pen" in
+  let highlighter_button = highlighter_button lds.tool "Highlighter" in
+  let erase_button = erase_button lds.tool "Erase" in
+  let cursor_button = cursor_button lds.tool "Cursor" in
   let tool_buttons =
     Elwd.div
+      ~at:[ `P (Brr.At.class' !!"tool-block") ]
       [
         `R pen_button; `R highlighter_button; `R erase_button; `R cursor_button;
       ]
@@ -88,6 +103,7 @@ let panel mode =
     let green_button = color_button lds.color "green" in
     let yellow_button = color_button lds.color "yellow" in
     Elwd.div
+      ~at:[ `P (Brr.At.class' !!"tool-block") ]
       [
         `R black_button;
         `R blue_button;
@@ -97,23 +113,45 @@ let panel mode =
       ]
   in
   let width_buttons =
-    let small_button = width_button lds.width 5. "slip-toolbar-small" in
-    let medium_button = width_button lds.width 15. "slip-toolbar-medium" in
-    let large_button = width_button lds.width 25. "slip-toolbar-large" in
+    let small_button = width_button lds.width 5. "slip-toolbar-small" "Small" in
+    let medium_button =
+      width_button lds.width 15. "slip-toolbar-medium" "Medium"
+    in
+    let large_button =
+      width_button lds.width 25. "slip-toolbar-large" "Large"
+    in
     Elwd.div
-      ~at:[ `P (Brr.At.class' !!"slip-toolbar-width") ]
+      ~at:
+        [
+          `P (Brr.At.class' !!"slip-toolbar-width");
+          `P (Brr.At.class' !!"tool-block");
+        ]
       [ `R small_button; `R medium_button; `R large_button ]
   in
   let clear_button =
     let c = Elwd.handler Brr.Ev.click (fun _ -> Tools.Clear.event workspace) in
     Elwd.div
-      ~at:[ `P (Brr.At.class' !!"slip-toolbar-control") ]
+      ~at:
+        [
+          `P (Brr.At.class' !!"slip-toolbar-control");
+          `P (Brr.At.class' !!"tool-block");
+        ]
       [
         `R
           (Elwd.div
-             ~at:[ `P (Brr.At.class' !!"slip-toolbar-clear") ]
+             ~at:[ `P (Brr.At.class' !!"slipshow-button") ]
              ~ev:[ `P c ]
-             [ `P (Brr.El.txt !!"✗") ]);
+             [
+               `R
+                 (Elwd.div
+                    ~at:
+                      [
+                        `P (Brr.At.class' !!"slip-toolbar-clear");
+                        `P (Brr.At.class' !!"slipshow-icon");
+                      ]
+                    [ `P (Brr.El.txt !!"✗") ]);
+               `P (Brr.El.txt' "Clear");
+             ]);
       ]
   in
   let record_button =
@@ -122,15 +160,36 @@ let panel mode =
           Drawing_state.Live_coding.toggle_recording mode)
     in
     Elwd.div
-      ~at:[ `P (Brr.At.class' !!"slip-toolbar-record") ]
-      ~ev:[ `P c ]
+      ~at:[ `P (Brr.At.class' !!"tool-block") ]
       [
-        `P
-          (Brr.El.div
-             ~at:[ Brr.At.class' !!"slip-toolbar-start-record" ]
-             [ Brr.El.div [] ]);
+        `R
+          (Elwd.div
+             ~at:[ `P (Brr.At.class' !!"slipshow-button") ]
+             ~ev:[ `P c ]
+             [
+               `R
+                 (Elwd.div
+                    ~st:[ `P (!!"border", !!"0px") ]
+                    ~at:[ `P (Brr.At.class' !!"slipshow-icon") ]
+                    []);
+               `P (Brr.El.txt' "Manage recordings");
+             ]);
       ]
   in
+  (* let record_button = *)
+  (*   let c = *)
+  (*     Elwd.handler Brr.Ev.click (fun _ -> *)
+  (*         Drawing_state.Live_coding.toggle_recording mode) *)
+  (*   in *)
+  (*   Elwd.div *)
+  (*     ~at: *)
+  (*       [ *)
+  (*         `P (Brr.At.class' !!"slipshow-button"); *)
+  (*         `P (Brr.At.class' !!"slipshow-manage-recording"); *)
+  (*       ] *)
+  (*     ~ev:[ `P c ] *)
+  (*     [ `P (Brr.El.txt' "Manage recordings") ] *)
+  (* in *)
   Elwd.div
     ~at:[ `P (Brr.At.class' !!"slip-writing-toolbar") ]
     [
