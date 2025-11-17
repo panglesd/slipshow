@@ -84,7 +84,7 @@ let global_panel recording =
   let change_title =
     Elwd.div
       [
-        `P (Brr.El.txt' "Rename recording");
+        `P (Brr.El.txt' "Rename recording: ");
         `R (Ui_widgets.string ~kind:`Input recording.name []);
       ]
   in
@@ -178,10 +178,10 @@ let play_button editing_state =
       Elwd.handler Brr.Ev.click (fun _ ->
           Lwd.set editing_state.is_playing false)
     in
-    Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Pause") ]
+    Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "⏸ Pause") ]
   else
     let click = Elwd.handler Brr.Ev.click (fun _ -> play editing_state) in
-    Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Play") ]
+    Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "▶ Play") ]
 
 let save_button recording =
   let click =
@@ -204,29 +204,29 @@ let save_button recording =
         Jv.call (Brr.El.to_jv a) "click" [||] |> ignore;
         revoke_url ())
   in
-  Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Save") ]
+  Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "💾 Save") ]
 
-let select_button =
-  let click =
-    Elwd.handler Brr.Ev.click (fun _ -> Lwd.set editing_tool Select)
-  in
-  Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Select") ]
+(* let select_button = *)
+(*   let click = *)
+(*     Elwd.handler Brr.Ev.click (fun _ -> Lwd.set editing_tool Select) *)
+(*   in *)
+(*   Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Select") ] *)
 
-let move_button =
-  let click = Elwd.handler Brr.Ev.click (fun _ -> Lwd.set editing_tool Move) in
-  Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Move") ]
+(* let move_button = *)
+(*   let click = Elwd.handler Brr.Ev.click (fun _ -> Lwd.set editing_tool Move) in *)
+(*   Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Move") ] *)
 
-let scale_button =
-  let click =
-    Elwd.handler Brr.Ev.click (fun _ -> Lwd.set editing_tool Rescale)
-  in
-  Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Resize") ]
+(* let scale_button = *)
+(*   let click = *)
+(*     Elwd.handler Brr.Ev.click (fun _ -> Lwd.set editing_tool Rescale) *)
+(*   in *)
+(*   Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Resize") ] *)
 
 let close_button =
   let click =
     Elwd.handler Brr.Ev.click (fun _ -> Lwd.set status (Drawing Presenting))
   in
-  Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Close") ]
+  Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Close editing panel") ]
 
 let el =
   let$* editing_state = Lwd.get current_editing_state in
@@ -255,21 +255,41 @@ let el =
   in
   let strokes = Timeline.el recording in
   let time_panel =
-    Elwd.div
-      ~st:[ `P (!!"flex-grow", !!"1") ]
-      [
-        `R ti;
-        `R (play_button editing_state);
-        `R (save_button recording);
-        `R select_button;
-        `R move_button;
-        `R scale_button;
-        `R close_button;
-        `R (slider editing_state);
-        `R strokes;
-        (* `R (left_selection recording); *)
-        (* `R (right_selection recording); *)
-      ]
+    let$* is_non_empty =
+      Lwd_table.map_reduce
+        (fun _ _ -> true)
+        (false, fun _ _ -> true)
+        recording.strokes
+    in
+    if is_non_empty then
+      Elwd.div
+        ~st:[ `P (!!"flex-grow", !!"1") ]
+        [
+          `R ti;
+          `R (play_button editing_state);
+          `R (save_button recording);
+          (* `R select_button; *)
+          (* `R move_button; *)
+          (* `R scale_button; *)
+          `R close_button;
+          `R (slider editing_state);
+          `R strokes;
+          (* `R (left_selection recording); *)
+          (* `R (right_selection recording); *)
+        ]
+    else
+      Elwd.div
+        ~st:
+          [
+            `P (Brr.El.Style.display, !!"flex");
+            `P (Brr.El.Style.height, !!"300px");
+          ]
+        [
+          `P
+            (Brr.El.txt'
+               "Empty recording. Record one of your drawing to see its \
+                timeline here.");
+        ]
   in
   Elwd.div
     ~st:
