@@ -241,15 +241,22 @@ module Move = struct
   module Timeline = struct
     let move recording time_shift track_shift strokes =
       let total_length = Lwd.peek recording.total_time in
+      let time_shift =
+        List.fold_left
+          (fun time_shift -> function
+            | `Stroke (old_path, old_track, stroke, erase, end_, start) ->
+                let time_shift = Float.min time_shift (total_length -. end_) in
+                Float.max time_shift (0. -. start)
+            | `Erase (old_t, old_track, (sel : erased), stroke, end_at) ->
+                let time_shift = Float.min time_shift (total_length -. old_t) in
+                Float.max time_shift (end_at -. old_t))
+          time_shift strokes
+      in
       List.iter
         (function
-          | `Stroke (old_path, old_track, stroke, erase) ->
+          | `Stroke (old_path, old_track, stroke, erase, end_, start) ->
               let new_track = Int.max 0 (old_track + track_shift) in
               Lwd.set stroke.track new_track;
-              let end_ = snd (List.hd old_path) in
-              let start = snd (List.hd (List.rev old_path)) in
-              let time_shift = Float.min time_shift (total_length -. end_) in
-              let time_shift = Float.max time_shift (0. -. start) in
               let () =
                 erase
                 |> Option.iter @@ fun e ->
@@ -260,11 +267,8 @@ module Move = struct
                 Drawing_state.Path_editing.translate old_path time_shift
               in
               Lwd.set stroke.path new_path
-          | `Erase (old_t, old_track, (sel : erased), stroke) ->
+          | `Erase (old_t, old_track, (sel : erased), stroke, _) ->
               let new_track = Int.max 0 (old_track + track_shift) in
-              let time_shift = Float.min time_shift (total_length -. old_t) in
-              let end_at = very_quick_sample stroke.end_at in
-              let time_shift = Float.max time_shift (end_at -. old_t) in
               Lwd.set sel.track new_track;
               Lwd.set sel.at (old_t +. time_shift);
               ())
@@ -285,22 +289,34 @@ module Move = struct
         let strokes =
           Lwd_table.fold
             (fun acc stroke ->
+              let old_path = Lwd.peek stroke.path in
+              let end_at =
+                if not (Lwd.peek stroke.selected) then snd (List.hd old_path)
+                else 0.
+              in
               let s =
                 if not (Lwd.peek stroke.selected) then []
                 else
                   [
                     `Stroke
-                      ( Lwd.peek stroke.path,
+                      ( old_path,
                         Lwd.peek stroke.track,
                         stroke,
-                        Lwd.peek stroke.erased );
+                        Lwd.peek stroke.erased,
+                        end_at,
+                        snd (List.hd (List.rev old_path)) );
                   ]
               in
               let sel =
                 match Lwd.peek stroke.erased with
                 | Some sel when Lwd.peek sel.selected ->
                     [
-                      `Erase (Lwd.peek sel.at, Lwd.peek sel.track, sel, stroke);
+                      `Erase
+                        ( Lwd.peek sel.at,
+                          Lwd.peek sel.track,
+                          sel,
+                          stroke,
+                          end_at );
                     ]
                 | _ -> []
               in
