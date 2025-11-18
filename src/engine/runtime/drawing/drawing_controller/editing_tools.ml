@@ -385,7 +385,11 @@ module Scale = struct
         in
         (strokes, el, t_begin, t_end)
       in
-      let map_time ~t_begin ~t_end ~scale t =
+      let map_time ~t_begin ~t_end ~scale ~t_max t =
+        let scale = Float.max scale 0. in
+        let scale =
+          Float.min scale ((t_max -. t_begin) /. (t_end -. t_begin))
+        in
         if t <= t_begin then t
         else if t >= t_end then
           t_begin +. ((t_end -. t_begin) *. scale) +. (t -. t_end)
@@ -395,7 +399,8 @@ module Scale = struct
       let drag ~x:_ ~y:_ ~dx ~dy:_
           ((strokes, _container, t_begin, t_end) as acc) _ev =
         let scale = 1. +. (dx /. 400.) in
-        let map_time = map_time ~t_begin ~t_end ~scale in
+        let t_max = Lwd.peek recording.total_time in
+        let map_time = map_time ~t_begin ~t_end ~scale ~t_max in
         let map_stroke path = map_stroke_times map_time path in
         List.iter
           (function
