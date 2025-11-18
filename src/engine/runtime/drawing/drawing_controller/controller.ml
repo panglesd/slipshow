@@ -38,7 +38,12 @@ let shortcut_drawing strokes mode key =
       Lwd.set live_drawing_state.tool Pointer;
       true
   | "X" ->
-      Tools.Clear.event strokes;
+      let started_at =
+        match mode with
+        | Presenting -> Tools.now ()
+        | Recording { started_at } -> started_at
+      in
+      Tools.Clear.event started_at strokes;
       true
   | "R" ->
       (match mode with

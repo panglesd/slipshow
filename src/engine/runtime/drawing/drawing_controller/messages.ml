@@ -31,7 +31,7 @@ type draw_stroke_arg = {
 type draw_event = draw_stroke_arg drag_event [@@deriving yojson]
 type erase_arg = { started_time : float } [@@deriving yojson]
 type erase_event = erase_arg drag_event [@@deriving yojson]
-type clear_event = unit [@@deriving yojson]
+type clear_event = float (* = started_time *) [@@deriving yojson]
 
 type event = Draw of draw_event | Erase of erase_event | Clear of clear_event
 [@@deriving yojson]

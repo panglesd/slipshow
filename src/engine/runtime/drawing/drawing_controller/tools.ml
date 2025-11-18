@@ -1,6 +1,5 @@
 let now () = Brr.Performance.now_ms Brr.G.performance
 
-(* open Lwd_infix *)
 open Drawing_state.Live_coding
 open Messages
 
@@ -165,7 +164,7 @@ module Erase = struct
 end
 
 module Clear = struct
-  let clear strokes =
+  let clear started_time strokes =
     Lwd_table.iter
       (fun stro ->
         if Lwd.peek stro.erased |> Option.is_some then ()
@@ -173,14 +172,14 @@ module Clear = struct
           Lwd.set stro.erased
             (Some
                {
-                 at = Lwd.var 0. (* TODO: time *);
+                 at = Lwd.var (now () -. started_time);
                  track = Lwd.var (Lwd.peek stro.track);
                  selected = Lwd.var false;
                  preselected = Lwd.var false;
                }))
       strokes
 
-  let event strokes =
-    Messages.send (Clear ());
-    clear strokes
+  let event started_time strokes =
+    Messages.send (Clear started_time);
+    clear started_time strokes
 end

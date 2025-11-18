@@ -235,8 +235,8 @@ let handle_drawing d =
   match modu with
   | Some (Draw s) -> handle_draw_stroke s
   | Some (Erase s) -> handle_erase s
-  | Some (Clear ()) ->
-      Drawing_controller.Tools.Clear.clear
+  | Some (Clear started_time) ->
+      Drawing_controller.Tools.Clear.clear started_time
         Drawing_state.Live_coding.workspaces.live_drawing
   | None ->
       Brr.Console.(

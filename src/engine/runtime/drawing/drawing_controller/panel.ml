@@ -197,7 +197,13 @@ let drawing_panel mode =
   in
   let clear_button =
     let handler =
-      Elwd.handler Brr.Ev.click (fun _ -> Tools.Clear.event workspace)
+      Elwd.handler Brr.Ev.click (fun _ ->
+          let started_at =
+            match mode with
+            | Presenting -> Tools.now ()
+            | Recording { started_at } -> started_at
+          in
+          Tools.Clear.event started_at workspace)
     in
     let icon = panel_icon [ `P (Brr.El.txt !!"✗") ] in
     panel_block
