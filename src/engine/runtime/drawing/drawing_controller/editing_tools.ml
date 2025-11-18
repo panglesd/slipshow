@@ -65,17 +65,21 @@ module Selection = struct
 
     let box_selection_var = Lwd.var None
 
+    let translate_timeline_coord container recording =
+      let total_length = Lwd.peek recording.total_time in
+      let width_in_pixel = Brr.El.bound_w container in
+      let scale = total_length /. width_in_pixel in
+      fun x -> x *. scale
+
     let event recording ~stroke_height =
       let select_of_coords container ~x ~dx ~y ~dy =
-        let total_length = Lwd.peek recording.total_time in
-        let width_in_pixel = Brr.El.bound_w container in
-        let scale = total_length /. width_in_pixel in
-        let x, dx = (x *. scale, dx *. scale) in
+        let t = translate_timeline_coord container recording in
+        let x, dx = (t x, t dx) in
         let y, y' =
           ( int_of_float y / stroke_height,
             int_of_float (y +. dy) / stroke_height )
         in
-        let epsilon = 10. *. scale in
+        let epsilon = t 10. in
         select ~epsilon x (x +. dx) y y' recording
       in
       let start x y ev =
@@ -275,49 +279,46 @@ module Move = struct
         strokes
 
     let event recording ~stroke_height =
+      let scale container =
+        let total_length = Lwd.peek recording.total_time in
+        let width_in_pixel = Brr.El.bound_w container in
+        total_length /. width_in_pixel
+      in
       let translate_of_coords strokes container ~dx ~dy =
-        let time_shift =
-          let total_length = Lwd.peek recording.total_time in
-          let width_in_pixel = Brr.El.bound_w container in
-          let scale = total_length /. width_in_pixel in
-          dx *. scale
-        in
         let track_shift = int_of_float dy / stroke_height in
+        let time_shift = dx *. scale container in
         move recording time_shift track_shift strokes
       in
-      let start _x _y ev =
+      let add_stroke stroke =
+        let old_path = Lwd.peek stroke.path in
+        let end_at = snd (List.hd old_path) in
+        `Stroke
+          ( old_path,
+            Lwd.peek stroke.track,
+            stroke,
+            Lwd.peek stroke.erased,
+            end_at,
+            snd (List.hd (List.rev old_path)) )
+      in
+      let add_erase stroke sel =
+        let old_path = Lwd.peek stroke.path in
+        let end_at =
+          if not (Lwd.peek stroke.selected) then snd (List.hd old_path) else 0.
+        in
+        `Erase (Lwd.peek sel.at, Lwd.peek sel.track, sel, stroke, end_at)
+      in
+      let start x _y ev =
         let strokes =
           Lwd_table.fold
             (fun acc stroke ->
-              let old_path = Lwd.peek stroke.path in
-              let end_at =
-                if not (Lwd.peek stroke.selected) then snd (List.hd old_path)
-                else 0.
-              in
               let s =
                 if not (Lwd.peek stroke.selected) then []
-                else
-                  [
-                    `Stroke
-                      ( old_path,
-                        Lwd.peek stroke.track,
-                        stroke,
-                        Lwd.peek stroke.erased,
-                        end_at,
-                        snd (List.hd (List.rev old_path)) );
-                  ]
+                else [ add_stroke stroke ]
               in
               let sel =
                 match Lwd.peek stroke.erased with
                 | Some sel when Lwd.peek sel.selected ->
-                    [
-                      `Erase
-                        ( Lwd.peek sel.at,
-                          Lwd.peek sel.track,
-                          sel,
-                          stroke,
-                          end_at );
-                    ]
+                    [ add_erase stroke sel ]
                 | _ -> []
               in
               s @ sel @ acc)
@@ -326,7 +327,30 @@ module Move = struct
         let el =
           ev |> Brr.Ev.current_target |> Brr.Ev.target_to_jv |> Brr.El.of_jv
         in
-        (strokes, el)
+        let x = x -. Brr.El.bound_x el in
+        let select_after_time () =
+          let time2 = x *. scale el in
+          Brr.Console.(log [ "time_shift"; el; x; Jv.of_float time2 ]);
+          let strokes =
+            Lwd_table.fold
+              (fun acc stroke ->
+                let acc =
+                  if Lwd.peek stroke.path |> List.hd |> fun (_, x) -> x >= time2
+                  then add_stroke stroke :: acc
+                  else acc
+                in
+                let acc =
+                  match Lwd.peek stroke.erased with
+                  | Some sel when Lwd.peek sel.at >= time2 ->
+                      add_erase stroke sel :: acc
+                  | _ -> acc
+                in
+                acc)
+              [] recording.strokes
+          in
+          (strokes, el)
+        in
+        match strokes with [] -> select_after_time () | _ :: _ -> (strokes, el)
       in
       let drag ~x:_ ~y:_ ~dx ~dy ((strokes, container) as acc) _ev =
         translate_of_coords strokes container ~dx ~dy;
