@@ -60,7 +60,7 @@ module Draw_stroke = struct
         starts_at;
         color = Lwd.var color;
         stroker;
-        width;
+        width = Lwd.var width;
         selected = Lwd.var false;
         preselected = Lwd.var false;
         track = Lwd.var 0;

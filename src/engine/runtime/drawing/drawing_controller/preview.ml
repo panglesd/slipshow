@@ -35,6 +35,7 @@ let pen_attributes ~width ~elapsed_time ~scale ~path ~erased ~color ~id
     ~selected ~preselected =
   let at =
     let d =
+      let$* width = Lwd.get width in
       make_d ~elapsed_time path @@ fun path ->
       let options = pfo_options width in
       Drawing_state.Path_editing.pfo_svg_path options scale path
@@ -90,8 +91,10 @@ let highlight_attributes ~elapsed_time ~width ~path ~color ~selected
       Drawing_state.Path_editing.svg_path scale path
     in
     let stroke =
-      let width = Jstr.append (Jstr.of_float (width *. 3.)) (Jstr.v "px") in
-      let$ selected = Lwd.get selected
+      let$ width =
+        let$ width = Lwd.get width in
+        Jstr.append (Jstr.of_float (width *. 3.)) (Jstr.v "px")
+      and$ selected = Lwd.get selected
       and$ preselected = Lwd.get preselected
       and$ color =
         let$* erased = Lwd.get erased and$ color = Lwd.get color in

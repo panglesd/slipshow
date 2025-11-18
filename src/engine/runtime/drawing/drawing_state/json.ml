@@ -72,7 +72,7 @@ module V1 = struct
         of_path (Lwd.peek path);
         `String (Lwd.peek color);
         of_stroker stroker;
-        `Float width;
+        `Float (Lwd.peek width);
         `Int (Lwd.peek track);
         of_erased (Lwd.peek erased);
       ]
@@ -107,7 +107,7 @@ module V1 = struct
             starts_at;
             color = Lwd.var color;
             stroker;
-            width;
+            width = Lwd.var width;
             selected = Lwd.var false;
             preselected = Lwd.var false;
             track = Lwd.var track;

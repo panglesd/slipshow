@@ -40,12 +40,11 @@ let shortcut_drawing strokes mode key =
   | "X" ->
       Tools.Clear.event strokes;
       true
-  | "R" -> (
-      match mode with
-      | Presenting -> false
-      | Recording state ->
-          finish_recording state;
-          true)
+  | "R" ->
+      (match mode with
+      | Presenting -> Lwd.set status Editing
+      | Recording state -> finish_recording state);
+      true
   | _ -> false
 
 let shortcuts key =

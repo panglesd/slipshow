@@ -20,7 +20,7 @@ type stro = {
   starts_at : float Lwd.t;
   color : color Lwd.var;
   stroker : stroker;
-  width : width;
+  width : width Lwd.var;
   selected : bool Lwd.var;
   preselected : bool Lwd.var;
   track : int Lwd.var;

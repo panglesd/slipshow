@@ -5,10 +5,10 @@ open Brr_lwd
 let set_handler v value = Elwd.handler Brr.Ev.click (fun _ -> Lwd.set v value)
 let ( !! ) = Jstr.v
 
-let panel_icon ?(at = []) ?(st = []) el =
-  Elwd.div ~at:(`P (Brr.At.class' !!"slipshow-icon") :: at) ~st el
+let panel_icon ?ev ?(at = []) ?st el =
+  Elwd.div ?ev ~at:(`P (Brr.At.class' !!"slipshow-icon") :: at) ?st el
 
-let panel_button ?shortcut c ~icon text =
+let panel_button ?label_for ?shortcut ?handler ?(at = []) ~icon text =
   let shortcut =
     match shortcut with
     | None -> []
@@ -20,15 +20,21 @@ let panel_button ?shortcut c ~icon text =
                [ Brr.El.txt' shortcut ]);
         ]
   in
+  let text =
+    let txt =
+      match label_for with
+      | None -> Brr.El.txt' text
+      | Some lbl ->
+          Brr.El.label
+            ~at:[ Brr.At.style !!"cursor:pointer"; Brr.At.for' !!lbl ]
+            [ Brr.El.txt' text ]
+    in
+    Brr.El.div ~at:[ Brr.At.style !!"flex-grow:11" ] [ txt ]
+  in
   Elwd.div
-    ~at:[ `P (Brr.At.class' !!"slipshow-button") ]
-    ~ev:[ `P c ]
-    ([
-       `R icon;
-       `P
-         (Brr.El.div ~at:[ Brr.At.style !!"flex-grow:11" ] [ Brr.El.txt' text ]);
-     ]
-    @ shortcut)
+    ~at:(`P (Brr.At.class' !!"slipshow-button") :: at)
+    ~ev:(match handler with None -> [] | Some c -> [ `P c ])
+    ([ `R icon; `P text ] @ shortcut)
 
 let panel_block ?class_ ~buttons () =
   Elwd.div
@@ -38,7 +44,7 @@ let panel_block ?class_ ~buttons () =
     buttons
 
 let svg_button v (value : live_drawing_tool) svg name shortcut =
-  let h = set_handler v value in
+  let handler = set_handler v value in
   let button = Brr.El.div [] in
   let _ = Jv.set (Brr.El.to_jv button) "innerHTML" (Jv.of_string svg) in
   let at =
@@ -51,7 +57,7 @@ let svg_button v (value : live_drawing_tool) svg name shortcut =
     [ `S class_ ]
   in
   let icon = panel_icon ~at [ `P button ] in
-  panel_button h ~icon name ~shortcut
+  panel_button ~handler ~icon name ~shortcut
 
 let pen_button v =
   svg_button v (Stroker Pen)
@@ -69,7 +75,7 @@ let cursor_button v =
   svg_button v Pointer
     {|<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" width="20" height="20" style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);" preserveAspectRatio="xMidYMid meet" viewBox="0 0 36 36"><path class="clr-i-outline clr-i-outline-path-1" d="M14.58 32.31a1 1 0 0 1-.94-.65L4 5.65a1 1 0 0 1 1.25-1.28l26 9.68a1 1 0 0 1-.05 1.89l-8.36 2.57l8.3 8.3a1 1 0 0 1 0 1.41l-3.26 3.26a1 1 0 0 1-.71.29a1 1 0 0 1-.71-.29l-8.33-8.33l-2.6 8.45a1 1 0 0 1-.93.71zm3.09-12a1 1 0 0 1 .71.29l8.79 8.79L29 27.51l-8.76-8.76a1 1 0 0 1 .41-1.66l7.13-2.2L6.6 7l7.89 21.2l2.22-7.2a1 1 0 0 1 .71-.68z" fill="#000000"/><rect x="0" y="0" width="36" height="36" fill="rgba(0, 0, 0, 0)" /></svg>|}
 
-let color_button var color =
+let color_button var color color_name =
   let icon =
     let at =
       let class_ =
@@ -83,7 +89,35 @@ let color_button var color =
     let st = [ `P (Brr.El.Style.background_color, !!color) ] in
     panel_icon ~at ~st []
   in
-  panel_button (set_handler var color) ~icon (String.capitalize_ascii color)
+  panel_button ~handler:(set_handler var color) ~icon color_name
+
+let custom_color_button var =
+  let label = "slipshow-custom-color-name" in
+  let icon =
+    let at =
+      let class_ =
+        let$ current_color = Lwd.get var in
+        let normal_colors =
+          [ "#000000"; "#0000ff"; "#ff0000"; "#008000"; "#ffff00" ]
+        in
+        if not (List.exists (fun color -> color = current_color) normal_colors)
+        then Lwd_seq.element (Brr.At.class' !!"slip-set-color")
+        else Lwd_seq.empty
+      in
+      [ `S class_ ]
+    in
+    let ev =
+      let callback ev =
+        let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv in
+        let color = Jv.get el "value" |> Jv.to_string in
+        Lwd.set var color
+      in
+      [ `P (Elwd.handler Brr.Ev.change callback) ]
+    in
+    panel_icon ~ev ~at
+      [ `P (Brr.El.input ~at:[ Brr.At.type' !!"color"; Brr.At.id !!label ] ()) ]
+  in
+  panel_button ~label_for:label ~icon "Custom color"
 
 let width_button var width c name =
   let icon =
@@ -127,11 +161,13 @@ let drawing_panel mode =
       ]
   in
   let color_buttons =
-    let black_button = color_button lds.color "black" in
-    let blue_button = color_button lds.color "blue" in
-    let red_button = color_button lds.color "red" in
-    let green_button = color_button lds.color "green" in
-    let yellow_button = color_button lds.color "yellow" in
+    let black_button = color_button lds.color "#000000" "Black" in
+    let blue_button = color_button lds.color "#0000ff" "Blue" in
+    let red_button = color_button lds.color "#ff0000" "Red" in
+    let green_button = color_button lds.color "#008000" "Green" in
+    let yellow_button = color_button lds.color "#ffff00" "Yellow" in
+    let custom_color_button = custom_color_button lds.color in
+
     Elwd.div
       ~at:[ `P (Brr.At.class' !!"tool-block") ]
       [
@@ -140,6 +176,7 @@ let drawing_panel mode =
         `R red_button;
         `R green_button;
         `R yellow_button;
+        `R custom_color_button;
       ]
   in
   let width_buttons =
@@ -159,20 +196,31 @@ let drawing_panel mode =
       [ `R small_button; `R medium_button; `R large_button ]
   in
   let clear_button =
-    let c = Elwd.handler Brr.Ev.click (fun _ -> Tools.Clear.event workspace) in
+    let handler =
+      Elwd.handler Brr.Ev.click (fun _ -> Tools.Clear.event workspace)
+    in
     let icon = panel_icon [ `P (Brr.El.txt !!"✗") ] in
-    panel_block ~buttons:[ `R (panel_button c ~icon "Clear" ~shortcut:"X") ] ()
+    panel_block
+      ~buttons:[ `R (panel_button ~handler ~icon "Clear" ~shortcut:"X") ]
+      ()
   in
   let record_button =
     match mode with
     | Presenting ->
-        let c = Elwd.handler Brr.Ev.click (fun _ -> Lwd.set status Editing) in
+        let handler =
+          Elwd.handler Brr.Ev.click (fun _ -> Lwd.set status Editing)
+        in
         let icon = panel_icon [ `P (Brr.El.txt !!"") ] in
         panel_block ~class_:"slipshow-manage-recording-block"
-          ~buttons:[ `R (panel_button c ~icon "Manage recordings") ]
+          ~buttons:
+            [
+              `R (panel_button ~handler ~icon "Manage recordings" ~shortcut:"R");
+            ]
           ()
     | Recording state ->
-        let c = Elwd.handler Brr.Ev.click (fun _ -> finish_recording state) in
+        let handler =
+          Elwd.handler Brr.Ev.click (fun _ -> finish_recording state)
+        in
         let icon =
           Brr.El.div
             ~at:[ Brr.At.style !!"width:10px;height:10px;background:red;" ]
@@ -180,7 +228,8 @@ let drawing_panel mode =
         in
         let icon = panel_icon [ `P icon ] in
         panel_block
-          ~buttons:[ `R (panel_button ~shortcut:"R" c ~icon "Stop recording") ]
+          ~buttons:
+            [ `R (panel_button ~shortcut:"R" ~handler ~icon "Stop recording") ]
           ()
   in
   toplevel_panel_el
@@ -194,7 +243,7 @@ let drawing_panel mode =
 
 let editing_panel =
   let editing_tool v icon name shortcut =
-    let c = Elwd.handler Brr.Ev.click (fun _ -> Lwd.set editing_tool v) in
+    let handler = Elwd.handler Brr.Ev.click (fun _ -> Lwd.set editing_tool v) in
     let class_ =
       let$ current_tool = Lwd.get editing_tool in
       if current_tool = v then
@@ -202,7 +251,7 @@ let editing_panel =
       else Lwd_seq.of_list []
     in
     let icon = panel_icon ~at:[ `S class_ ] [ `P (Brr.El.txt' icon) ] in
-    panel_button c ~icon name ~shortcut
+    panel_button ~handler ~icon name ~shortcut
   in
   let select = editing_tool Select "☝" "Select" "s" in
   let move = editing_tool Move "⌖" "Move" "m" in
@@ -210,7 +259,7 @@ let editing_panel =
   let block = panel_block ~buttons:[ `R select; `R move; `R resize ] () in
   let recording_block =
     let record =
-      let c =
+      let handler =
         Elwd.handler Brr.Ev.click (fun _ ->
             Drawing_state.Live_coding.start_recording ())
       in
@@ -224,7 +273,7 @@ let editing_panel =
           []
       in
       let icon = panel_icon [ `P icon ] in
-      panel_button c ~icon "Record a drawing" ~shortcut:"R"
+      panel_button ~handler ~icon "Record a drawing" ~shortcut:"R"
     in
     panel_block ~buttons:[ `R record ] ()
   in
