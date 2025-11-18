@@ -103,13 +103,20 @@ let global_panel recording =
   (* in *)
   let name_title =
     let$ name = Lwd.get recording.name in
-    Brr.El.h3 [ Brr.El.txt' name ]
+    Brr.El.h3 ~at:[ Brr.At.style !!"margin-top:0" ] [ Brr.El.txt' name ]
   in
   let change_title =
     Elwd.div
       [
         `P (Brr.El.txt' "Rename recording: ");
         `R (Ui_widgets.string ~kind:`Input recording.name []);
+        `P
+          (Brr.El.div
+             [
+               Brr.El.a
+                 ~at:[ Brr.At.href !!"TODO" ] (* TODO *)
+                 [ Brr.El.txt' "Get help in the documentation" ];
+             ]);
       ]
   in
   let select =
@@ -310,8 +317,8 @@ let el =
         [
           `P
             (Brr.El.txt'
-               "Empty recording. Record one of your drawing to see its \
-                timeline here.");
+               "Empty recording. Select another recording, or add to this one \
+                a record of one of your drawing.");
         ]
   in
   Elwd.div
