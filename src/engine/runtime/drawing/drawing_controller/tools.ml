@@ -44,13 +44,10 @@ module Draw_stroke = struct
   let start strokes { started_time; stroker; color; width; id } x y =
     let path = [ ((x, y), now () -. started_time) ] in
     let el =
-      (* let opacity = match tool with Highlighter -> 0.33 | Pen -> 1. in *)
-      (* let options = Strokes.options_of stroker width in *)
       let path = Lwd.var path in
       let { Universe.Coordinates.scale; _ } = Universe.State.get_coord () in
       let end_at = Lwd.map (Lwd.get path) ~f:end_at in
       let starts_at = Lwd.map (Lwd.get path) ~f:starts_at in
-      (* let stroke = *)
       {
         id;
         scale;
@@ -64,23 +61,13 @@ module Draw_stroke = struct
         preselected = Lwd.var false;
         track = Lwd.var 0;
         erased = Lwd.var None;
-        (* options; opacity; id; color; scale *)
       }
-      (* in *)
-      (* let p = Strokes.create_elem_of_stroke stroke in *)
-      (* Brr.El.append_children svg [ p ]; *)
-      (* set_state id (Some (p, stroke)); *)
-      (* _ *)
     in
     Lwd_table.append' strokes el;
     (started_time, el)
-  (* let position_var = (Lwd.var x, Lwd.var y, Lwd.var 0., Lwd.var 0.) in *)
-  (* Lwd.set preview_selection_var (Some position_var); *)
-  (* (x, y, position_var) *)
 
   let drag ~x ~y ~dx ~dy ((started_time, el) as acc) =
     let path = Lwd.peek el.path in
-    (* let c = coord_of_event (x0 +. dx) (y0 +. dy) in *)
     let path = ((x +. dx, y +. dy), now () -. started_time) :: path in
     Lwd.set el.path path;
     acc
@@ -110,9 +97,6 @@ end
 
 module Erase = struct
   let start strokes { started_time } x y = (started_time, strokes, (x, y))
-  (* let position_var = (Lwd.var x, Lwd.var y, Lwd.var 0., Lwd.var 0.) in *)
-  (* Lwd.set preview_selection_var (Some position_var); *)
-  (* (x, y, position_var) *)
 
   let drag ~x ~y ~dx ~dy (started_time, strokes, c0) =
     let c1 = (x +. dx, y +. dy) in
