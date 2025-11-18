@@ -388,9 +388,9 @@ module Scale = struct
   module Timeline = struct
     let event recording =
       let start _x _y ev =
-        let strokes =
+        let strokes, max_time =
           Lwd_table.fold
-            (fun acc stroke ->
+            (fun (acc, max_time) stroke ->
               let s =
                 if not (Lwd.peek stroke.selected) then []
                 else [ `Stroke (Lwd.peek stroke.path, stroke) ]
@@ -401,8 +401,16 @@ module Scale = struct
                     [ `Erase (Lwd.peek sel.at, sel, stroke) ]
                 | _ -> []
               in
-              s @ sel @ acc)
-            [] recording.strokes
+              let max_time =
+                Float.max max_time (Lwd.peek stroke.path |> List.hd |> snd)
+              in
+              let max_time =
+                match Lwd.peek stroke.erased with
+                | Some sel -> Float.max max_time (Lwd.peek sel.at)
+                | _ -> max_time
+              in
+              (s @ sel @ acc, max_time))
+            ([], 0.) recording.strokes
         in
         let el =
           ev |> Brr.Ev.current_target |> Brr.Ev.target_to_jv |> Brr.El.of_jv
@@ -423,7 +431,9 @@ module Scale = struct
               | `Erase (at, _, _) -> Float.max t_end at)
             0. strokes
         in
-        (strokes, el, t_begin, t_end)
+        match strokes with
+        | [] -> `Rescale_recording (Lwd.peek recording.total_time, max_time)
+        | _ :: _ -> `Selection (strokes, el, t_begin, t_end)
       in
       let map_time ~t_begin ~t_end ~scale ~t_max t =
         let scale = Float.max scale 0. in
@@ -436,18 +446,26 @@ module Scale = struct
         else t_begin +. ((t -. t_begin) *. scale)
       in
       let map_stroke_times f = List.map (fun (pos, t) -> (pos, f t)) in
-      let drag ~x:_ ~y:_ ~dx ~dy:_
-          ((strokes, _container, t_begin, t_end) as acc) _ev =
-        let scale = 1. +. (dx /. 400.) in
-        let t_max = Lwd.peek recording.total_time in
-        let map_time = map_time ~t_begin ~t_end ~scale ~t_max in
-        let map_stroke path = map_stroke_times map_time path in
-        List.iter
-          (function
-            | `Stroke (path, stroke) -> Lwd.set stroke.path (map_stroke path)
-            | `Erase (at, erased, _stroke) -> Lwd.set erased.at (map_time at))
-          strokes;
-        acc
+      let drag ~x:_ ~y:_ ~dx ~dy:_ acc _ev =
+        match acc with
+        | `Selection (strokes, _container, t_begin, t_end) ->
+            let scale = 1. +. (dx /. 400.) in
+            let t_max = Lwd.peek recording.total_time in
+            let map_time = map_time ~t_begin ~t_end ~scale ~t_max in
+            let map_stroke path = map_stroke_times map_time path in
+            List.iter
+              (function
+                | `Stroke (path, stroke) ->
+                    Lwd.set stroke.path (map_stroke path)
+                | `Erase (at, erased, _stroke) ->
+                    Lwd.set erased.at (map_time at))
+              strokes;
+            acc
+        | `Rescale_recording (original_time, max_time) ->
+            let scale = 1. +. (dx /. 400.) in
+            Lwd.set recording.total_time
+              (Float.max max_time (original_time *. scale));
+            acc
       in
       let end_ _ _ = () in
       Ui_widgets.mouse_drag start drag end_
