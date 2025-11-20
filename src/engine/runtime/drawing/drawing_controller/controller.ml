@@ -21,6 +21,22 @@ let shortcut_editing editing_state key =
           Ui.play editing_state;
           Lwd.set editing_state.is_playing true);
       true
+  | "ArrowRight" ->
+      Lwd.update
+        (fun t ->
+          t
+          +. Lwd.peek editing_state.replaying_state.recording.total_time
+             /. 100.)
+        editing_state.replaying_state.time;
+      true
+  | "ArrowLeft" ->
+      Lwd.update
+        (fun t ->
+          t
+          -. Lwd.peek editing_state.replaying_state.recording.total_time
+             /. 100.)
+        editing_state.replaying_state.time;
+      true
   | _ -> false
 
 let shortcut_drawing strokes mode key =
