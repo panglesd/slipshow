@@ -180,12 +180,14 @@ let drawing_panel mode =
       ]
   in
   let width_buttons =
-    let small_button = width_button lds.width 5. "slip-toolbar-small" "Small" in
+    let small_button =
+      width_button lds.width Width.small "slip-toolbar-small" "Small"
+    in
     let medium_button =
-      width_button lds.width 15. "slip-toolbar-medium" "Medium"
+      width_button lds.width Width.medium "slip-toolbar-medium" "Medium"
     in
     let large_button =
-      width_button lds.width 25. "slip-toolbar-large" "Large"
+      width_button lds.width Width.large "slip-toolbar-large" "Large"
     in
     Elwd.div
       ~at:

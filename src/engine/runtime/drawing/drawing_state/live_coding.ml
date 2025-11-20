@@ -1,7 +1,16 @@
 let now () = Brr.Performance.now_ms Brr.G.performance
 
 type color = string
-type width = float
+
+module Width = struct
+  type t = float
+
+  let small = 5.
+  let medium = 10.
+  let large = 20.
+end
+
+type width = Width.t
 type stroker = Pen | Highlighter
 
 type erased = {
@@ -93,7 +102,11 @@ let current_editing_state =
 type recording_state = { (* strokes : strokes;  *) started_at : float }
 
 let live_drawing_state =
-  { tool = Lwd.var Pointer; color = Lwd.var "blue"; width = Lwd.var 15.0 }
+  {
+    tool = Lwd.var Pointer;
+    color = Lwd.var "blue";
+    width = Lwd.var Width.medium;
+  }
 
 type drawing_status = Presenting | Recording of recording_state
 type status = Drawing of drawing_status | Editing
