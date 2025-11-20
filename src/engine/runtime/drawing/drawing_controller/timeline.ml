@@ -25,16 +25,18 @@ let n_track recording =
   |> Lwd.join
 
 let block_of_stroke recording (stroke : stro) =
+  let border_width = 5 in
+  let border color = Jstr.(px_int border_width + v " solid " + v color) in
   let selected =
     let$ selected = Lwd.get stroke.selected
     and$ preselected = Lwd.get stroke.preselected in
     let l =
       if selected then
-        let height = px_int (stroke_height - 10) in
-        [ (Brr.El.Style.height, height); (!!"border", !!"5px solid black") ]
+        let height = px_int (stroke_height - (border_width * 2)) in
+        [ (Brr.El.Style.height, height); (!!"border", border "black") ]
       else if preselected then
-        let height = px_int (stroke_height - 10) in
-        [ (Brr.El.Style.height, height); (!!"border", !!"5px solid grey") ]
+        let height = px_int (stroke_height - (border_width * 2)) in
+        [ (Brr.El.Style.height, height); (!!"border", border "grey") ]
       else [ (Brr.El.Style.height, px_int stroke_height) ]
     in
     Lwd_seq.of_list ((!!"min-width", !!"1px") :: l)
@@ -95,7 +97,7 @@ let block_of_stroke recording (stroke : stro) =
       and$ erase_preselected = Lwd.get v.preselected in
       let width =
         if selected || preselected || erase_selected || erase_preselected then
-          stroke_height / 2
+          stroke_height - (2 * border_width)
         else stroke_height
       in
       (Brr.El.Style.width, px_int width)
@@ -106,15 +108,21 @@ let block_of_stroke recording (stroke : stro) =
       and$ erase_selected = Lwd.get v.selected
       and$ erase_preselected = Lwd.get v.preselected in
       let l =
-        if selected || erase_selected then
-          let height = px_int (stroke_height - 10) in
-          [ (Brr.El.Style.height, height); (!!"border", !!"5px solid black") ]
-        else if preselected || erase_preselected then
-          let height = px_int (stroke_height - 10) in
-          [ (Brr.El.Style.height, height); (!!"border", !!"5px solid grey") ]
+        if erase_selected then
+          let height = px_int (stroke_height - (border_width * 2)) in
+          [ (Brr.El.Style.height, height); (!!"border", border "black") ]
+        else if erase_preselected then
+          let height = px_int (stroke_height - (border_width * 2)) in
+          [ (Brr.El.Style.height, height); (!!"border", border "grey") ]
+        else if selected || preselected then
+          let height = px_int (stroke_height - (border_width * 2)) in
+          [
+            (Brr.El.Style.height, height);
+            (!!"border", !!"5px solid rgb(165,165,165)");
+          ]
         else [ (Brr.El.Style.height, px_int stroke_height) ]
       in
-      Lwd_seq.of_list ((!!"min-width", !!"1px") :: l)
+      Lwd_seq.of_list l
     in
     let st =
       [
