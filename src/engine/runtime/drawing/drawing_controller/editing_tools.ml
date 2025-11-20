@@ -248,17 +248,17 @@ module Move = struct
       let time_shift =
         List.fold_left
           (fun time_shift -> function
-            | `Stroke (old_path, old_track, stroke, erase, end_, start) ->
+            | `Stroke (_, _, _, _, end_, start) ->
                 let time_shift = Float.min time_shift (total_length -. end_) in
                 Float.max time_shift (0. -. start)
-            | `Erase (old_t, old_track, (sel : erased), stroke, end_at) ->
+            | `Erase (old_t, _, _, _, end_at) ->
                 let time_shift = Float.min time_shift (total_length -. old_t) in
                 Float.max time_shift (end_at -. old_t))
           time_shift strokes
       in
       List.iter
         (function
-          | `Stroke (old_path, old_track, stroke, erase, end_, start) ->
+          | `Stroke (old_path, old_track, stroke, erase, end_, _) ->
               let new_track = Int.max 0 (old_track + track_shift) in
               Lwd.set stroke.track new_track;
               let () =
@@ -271,7 +271,7 @@ module Move = struct
                 Drawing_state.Path_editing.translate old_path time_shift
               in
               Lwd.set stroke.path new_path
-          | `Erase (old_t, old_track, (sel : erased), stroke, _) ->
+          | `Erase (old_t, old_track, (sel : erased), _, _) ->
               let new_track = Int.max 0 (old_track + track_shift) in
               Lwd.set sel.track new_track;
               Lwd.set sel.at (old_t +. time_shift);
