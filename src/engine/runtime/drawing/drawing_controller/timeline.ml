@@ -29,7 +29,16 @@ let block_of_stroke recording (stroke : stro) =
   let border color = Jstr.(px_int border_width + v " solid " + v color) in
   let selected =
     let$ selected = Lwd.get stroke.selected
-    and$ preselected = Lwd.get stroke.preselected in
+    and$ preselected = Lwd.get stroke.preselected
+    and$ erased =
+      let$* v = Lwd.get stroke.erased in
+      match v with
+      | None -> Lwd.pure None
+      | Some { selected; preselected; _ } ->
+          let$ selected = Lwd.get selected
+          and$ preselected = Lwd.get preselected in
+          Some (selected, preselected)
+    in
     let l =
       if selected then
         let height = px_int (stroke_height - (border_width * 2)) in
@@ -37,7 +46,15 @@ let block_of_stroke recording (stroke : stro) =
       else if preselected then
         let height = px_int (stroke_height - (border_width * 2)) in
         [ (Brr.El.Style.height, height); (!!"border", border "grey") ]
-      else [ (Brr.El.Style.height, px_int stroke_height) ]
+      else
+        match erased with
+        | Some (true, _) | Some (_, true) ->
+            let height = px_int (stroke_height - (border_width * 2)) in
+            [
+              (Brr.El.Style.height, height);
+              (!!"border", border "rgb(165,165,165)");
+            ]
+        | _ -> [ (Brr.El.Style.height, px_int stroke_height) ]
     in
     Lwd_seq.of_list ((!!"min-width", !!"1px") :: l)
   in
@@ -118,7 +135,7 @@ let block_of_stroke recording (stroke : stro) =
           let height = px_int (stroke_height - (border_width * 2)) in
           [
             (Brr.El.Style.height, height);
-            (!!"border", !!"5px solid rgb(165,165,165)");
+            (!!"border", border "rgb(165,165,165)");
           ]
         else [ (Brr.El.Style.height, px_int stroke_height) ]
       in
@@ -140,7 +157,7 @@ let block_of_stroke recording (stroke : stro) =
       let$ current_tool = Lwd.get Drawing_state.Live_coding.editing_tool in
       match current_tool with
       | Move | Rescale -> Lwd_seq.empty
-      | Select -> snd @@ Ui_widgets.hover ~var:stroke.preselected ()
+      | Select -> snd @@ Ui_widgets.hover ~var:v.preselected ()
     in
     let ev = [ `S ev_hover ] in
     Elwd.div ~ev ~st []

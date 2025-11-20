@@ -159,21 +159,33 @@ module Selection = struct
   module Preview = struct
     let preview_selection_var = Lwd.var None
 
-    let select (x, y, dx, dy) recording =
+    let select (x, y, dx, dy) recording time =
       let x', y' = Tools.window_coord_in_universe (x +. dx) (y +. dy) in
       let x, y = Tools.window_coord_in_universe x y in
       Lwd_table.iter
-        (fun { preselected; path; _ } ->
-          let path = Lwd.peek path in
+        (fun { preselected; path; erased; _ } ->
           let is_selected =
-            List.exists
-              (fun ((a, b), _) -> x <= a && a <= x' && y <= b && b <= y')
-              path
+            match Lwd.peek erased with
+            | Some { at; _ } when Lwd.peek at <= time -> false
+            | _ ->
+                let path = Lwd.peek path in
+                let path = List.filter (fun (_, t) -> t <= time) path in
+                let has_point_in =
+                  List.exists
+                    (fun ((a, b), t) -> x <= a && a <= x' && y <= b && b <= y')
+                    path
+                in
+                let intersect () =
+                  Drawing_state.Path_editing.intersect_poly2 path
+                    ((x, y), (x', y'))
+                in
+                has_point_in || intersect ()
           in
           Lwd.set preselected is_selected)
         recording.strokes
 
-    let event recording =
+    let event replaying_state =
+      let recording = replaying_state.recording in
       let start x y _ev =
         let position_var = (Lwd.var x, Lwd.var y, Lwd.var 0., Lwd.var 0.) in
         Lwd.set preview_selection_var (Some position_var);
@@ -186,7 +198,7 @@ module Selection = struct
         Lwd.set vy y;
         Lwd.set vdx dx;
         Lwd.set vdy dy;
-        select (x, y, dx, dy) recording;
+        select (x, y, dx, dy) recording (Lwd.peek replaying_state.time);
         acc
       in
       let end_ _ ev =
@@ -361,7 +373,8 @@ module Move = struct
   end
 
   module Preview = struct
-    let event recording =
+    let event replaying_state =
+      let recording = replaying_state.recording in
       let start _x _y _ev =
         Lwd_table.fold
           (fun acc s ->
@@ -472,7 +485,8 @@ module Scale = struct
   end
 
   module Preview = struct
-    let event recording =
+    let event replaying_state =
+      let recording = replaying_state.recording in
       let start _x _y _ev =
         let strokes =
           Lwd_table.fold
