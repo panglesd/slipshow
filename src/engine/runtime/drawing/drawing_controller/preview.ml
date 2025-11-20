@@ -57,7 +57,17 @@ let pen_attributes ~width ~elapsed_time ~scale ~path ~erased ~color ~id
     let id = Brr.At.id (Jstr.v id) in
     let opacity = Brr.At.v (Jstr.v "opacity") (Jstr.of_float 1.) in
     let selected =
-      let$ selected = Lwd.get selected and$ preselected = Lwd.get preselected in
+      let$ selected = Lwd.get selected
+      and$ preselected = Lwd.get preselected
+      and$ erased =
+        let$* v = Lwd.get erased in
+        match v with
+        | None -> Lwd.pure None
+        | Some { selected; preselected; _ } ->
+            let$ selected = Lwd.get selected
+            and$ preselected = Lwd.get preselected in
+            Some (selected, preselected)
+      in
       if selected then
         Lwd_seq.of_list
         @@ [
@@ -70,7 +80,15 @@ let pen_attributes ~width ~elapsed_time ~scale ~path ~erased ~color ~id
              Brr.At.v (Jstr.v "stroke") (Jstr.v "orange");
              Brr.At.v (Jstr.v "stroke-width") (Jstr.v "4px");
            ]
-      else Lwd_seq.empty
+      else
+        match erased with
+        | Some (true, _) | Some (_, true) ->
+            Lwd_seq.of_list
+            @@ [
+                 Brr.At.v (Jstr.v "stroke") (Jstr.v "orange");
+                 Brr.At.v (Jstr.v "stroke-width") (Jstr.v "4px");
+               ]
+        | _ -> Lwd_seq.empty
     in
     [ `R fill; `P id; `P opacity; `R d; `S selected ]
   in
