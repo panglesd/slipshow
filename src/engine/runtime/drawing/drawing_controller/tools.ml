@@ -41,7 +41,8 @@ module Draw_stroke = struct
   let starts_at l = List.hd (List.rev l) |> snd
   let end_at l = List.hd l |> snd
 
-  let start strokes { started_time; stroker; color; width; id } x y =
+  let start ~replaying_state:_ strokes
+      { started_time; stroker; color; width; id } x y =
     let path = [ ((x, y), now () -. started_time) ] in
     let el =
       let path = Lwd.var path in
@@ -82,7 +83,7 @@ module Draw_stroke = struct
       in
       let arg = { started_time; stroker; color; width; id } in
       Messages.send @@ Draw (Start (arg, x, y));
-      start strokes arg x y
+      start ~replaying_state:None strokes arg x y
     in
     let drag ~x ~y ~dx ~dy acc _ev =
       Messages.send @@ Draw (Drag { x; y; dx; dy });
@@ -96,45 +97,62 @@ module Draw_stroke = struct
 end
 
 module Erase = struct
-  let start strokes { started_time } x y = (started_time, strokes, (x, y))
+  let start ~replayed_strokes strokes { started_time } x y =
+    (started_time, strokes, replayed_strokes, (x, y))
 
-  let drag ~x ~y ~dx ~dy (started_time, strokes, c0) =
+  let drag ~x ~y ~dx ~dy (started_time, strokes, replayed_strokes, c0) =
     let c1 = (x +. dx, y +. dy) in
-    let _strokes_to_erase =
-      Lwd_table.iter
-        (fun stro ->
-          if Lwd.peek stro.erased |> Option.is_some then ()
-          else
-            let path = Lwd.peek stro.path in
-            let intersect =
-              Drawing_state.Path_editing.intersect_poly2 path (c0, c1)
+    let try_erase stro time =
+      let time = Option.value ~default:Float.infinity time in
+      match Lwd.peek stro.erased with
+      | Some { at; _ } when Lwd.peek at <= time -> ()
+      | _ ->
+          let path = Lwd.peek stro.path in
+          let intersect =
+            Drawing_state.Path_editing.intersect_poly2 path time (c0, c1)
+          in
+          let close_enough =
+            let { Universe.Coordinates.scale; _ } =
+              Universe.State.get_coord ()
             in
-            let close_enough =
-              let { Universe.Coordinates.scale; _ } =
-                Universe.State.get_coord ()
-              in
-              Drawing_state.Path_editing.close_enough_poly2 scale path c1
-            in
-            if intersect || close_enough then
-              Lwd.set stro.erased
-                (Some
-                   {
-                     at = Lwd.var (now () -. started_time);
-                     track = Lwd.var (Lwd.peek stro.track);
-                     selected = Lwd.var false;
-                     preselected = Lwd.var false;
-                   })
-            else ())
-        strokes
+            Drawing_state.Path_editing.close_enough_poly2 scale path c1
+          in
+          if intersect || close_enough then
+            Lwd.set stro.erased
+              (Some
+                 {
+                   at = Lwd.var (now () -. started_time);
+                   track = Lwd.var (Lwd.peek stro.track);
+                   selected = Lwd.var false;
+                   preselected = Lwd.var false;
+                 })
+          else ()
     in
-    (started_time, strokes, c1)
+    let _strokes_to_erase =
+      Lwd_table.iter (fun stro -> try_erase stro None) strokes
+    in
+    let _strokes_to_erase =
+      replayed_strokes
+      |> Option.iter
+         @@ Lwd_table.iter (fun (stro : stro) -> try_erase stro None)
+    in
+    (started_time, strokes, replayed_strokes, c1)
 
   let end_ _ = ()
 
-  let event ~started_time strokes =
+  let event ~started_time ~replayed_strokes strokes =
+    let () =
+      replayed_strokes
+      |> Option.iter @@ fun (strokes : strokes) ->
+         Brr.Console.(log [ "This important for me12" ]);
+         Lwd_table.iter
+           (fun (stro : stro) ->
+             Brr.Console.(log [ "This is an included stro"; stro.id ]))
+           strokes
+    in
     let start x y _ev =
       Messages.send @@ Erase (Start ({ started_time }, x, y));
-      start strokes { started_time } x y
+      start ~replayed_strokes strokes { started_time } x y
     in
     let drag ~x ~y ~dx ~dy acc _ev =
       Messages.send @@ Erase (Drag { x; y; dx; dy });

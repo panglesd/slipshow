@@ -300,7 +300,7 @@ let el =
   let ti = Ui_widgets.float editing_state.replaying_state.time [] in
   let description =
     Elwd.div
-      ~st:[ `P (Brr.El.Style.width, !!"20%"); `P (!!"overflow", !!"auto") ]
+      ~st:[ `P (Brr.El.Style.width, !!"480px"); `P (!!"overflow", !!"auto") ]
       [ `R description ]
   in
   let strokes = Timeline.el recording in

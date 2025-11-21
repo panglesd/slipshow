@@ -64,19 +64,21 @@ let intersect_poly p segment =
         false
       with Not_found -> true)
 
-let intersect_poly2 p segment =
+let intersect_poly2 p time segment =
+  let exception Found of bool in
   match p with
   | [] -> false
   | (first, _) :: rest -> (
       try
         let _last_point =
           List.fold_left
-            (fun p1 (p2, _) ->
-              if intersect (p1, p2) segment then raise Not_found else p2)
+            (fun p1 (p2, t) ->
+              if t > time then raise (Found false);
+              if intersect (p1, p2) segment then raise (Found true) else p2)
             first rest
         in
         false
-      with Not_found -> true)
+      with Found b -> b)
 
 let close_enough_poly p coord =
   let close_enough (x1, y1) (x2, y2) =

@@ -176,7 +176,7 @@ module Selection = struct
                     path
                 in
                 let intersect () =
-                  Drawing_state.Path_editing.intersect_poly2 path
+                  Drawing_state.Path_editing.intersect_poly2 path Float.infinity
                     ((x, y), (x', y'))
                 in
                 has_point_in || intersect ()

@@ -221,10 +221,12 @@ let handle_drag (dragger : (_, 'b) dragger) =
 
 let draw_stroke_dragger =
   let open Drawing_controller.Tools.Draw_stroke in
+  let start = start ~replaying_state:None in
   { start; drag; end_ }
 
 let erase_dragger =
   let open Drawing_controller.Tools.Erase in
+  let start = start ~replayed_strokes:None in
   { start; drag; end_ }
 
 let handle_erase = handle_drag erase_dragger

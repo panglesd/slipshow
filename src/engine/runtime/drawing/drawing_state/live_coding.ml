@@ -94,8 +94,12 @@ let current_editing_state =
       is_playing = Lwd.var false;
     }
 
+module StringMap = Map.Make (String)
+
 type recording_state = {
   replaying_state : replaying_state;
+  replayed_part : strokes;
+  unplayed_erasure : erased StringMap.t;
   recording_temp : strokes;
   started_at : float;
 }
@@ -113,39 +117,75 @@ type status = Drawing of drawing_status | Editing
 let status = Lwd.var (Drawing Presenting)
 
 let start_recording replaying_state =
-  (* let strokes = Lwd_table.make () in *)
+  let replayed_part, unplayed_erasure =
+    let tbl = Lwd_table.make () in
+    let unplayed_erasure =
+      Lwd_table.fold
+        (fun acc stro ->
+          let first_time = Lwd.peek stro.path |> List.rev |> List.hd |> snd in
+          if Lwd.peek replaying_state.time >= first_time then (
+            Lwd_table.append' tbl stro;
+            match Lwd.peek stro.erased with
+            | None -> acc
+            | Some ({ at; _ } as erased) ->
+                if Lwd.peek at >= Lwd.peek replaying_state.time then (
+                  Lwd.set stro.erased None;
+                  StringMap.add stro.id erased acc)
+                else acc)
+          else acc)
+        StringMap.empty replaying_state.recording.strokes
+    in
+    (tbl, unplayed_erasure)
+  in
   Lwd.set status
     (Drawing
        (Recording
           {
             replaying_state;
-            started_at =
-              now () (* -. Lwd.peek replaying_state.recording.total_time *);
+            replayed_part;
+            unplayed_erasure;
+            started_at = now () -. Lwd.peek replaying_state.time;
             recording_temp = Lwd_table.make ();
           }))
 
-let finish_recording { replaying_state; started_at; recording_temp } =
-  let additional_time = now () -. started_at in
+let finish_recording
+    {
+      replaying_state;
+      started_at;
+      recording_temp;
+      replayed_part = _;
+      unplayed_erasure;
+    } =
+  let additional_time = now () -. started_at -. Lwd.peek replaying_state.time in
   Lwd_table.iter
     (fun stro ->
-      if Lwd.peek stro.path |> List.hd |> snd >= Lwd.peek replaying_state.time
-      then
+      let first = Lwd.peek stro.path |> List.rev |> List.hd |> snd in
+      (* First case: the stroke was fully after the recording *)
+      if first >= Lwd.peek replaying_state.time then (
         Lwd.update
           (List.map @@ fun (pos, t) -> (pos, t +. additional_time))
-          stro.path
-      else ();
-      match Lwd.peek stro.erased with
-      | None -> ()
-      | Some { at; _ } ->
-          if Lwd.peek at >= Lwd.peek replaying_state.time then
-            Lwd.update (( +. ) additional_time) at)
+          stro.path;
+        match Lwd.peek stro.erased with
+        | None -> ()
+        | Some { at; _ } ->
+            if Lwd.peek at >= Lwd.peek replaying_state.time then
+              Lwd.update (( +. ) additional_time) at)
+      else
+        (* Second case: it was included in the recording. But maybe not its
+           erasure time! *)
+        match Lwd.peek stro.erased with
+        | Some _ ->
+            (* It was erased in the new recording, that takes precedence over a
+               saved value *)
+            ()
+        | None -> (
+            (* Maybe there was a "saved" value? *)
+            match StringMap.find_opt stro.id unplayed_erasure with
+            | None -> ()
+            | Some erased ->
+                Lwd.update (( +. ) additional_time) erased.at;
+                Lwd.set stro.erased (Some erased)))
     replaying_state.recording.strokes;
-  Lwd_table.iter
-    (fun stro ->
-      Lwd.update
-        (List.map @@ fun (x, t) -> (x, t +. Lwd.peek replaying_state.time))
-        stro.path)
-    recording_temp;
   Lwd.update (( +. ) additional_time) replaying_state.recording.total_time;
   Lwd.update (( +. ) additional_time) replaying_state.time;
   Lwd_table.iter

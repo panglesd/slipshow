@@ -220,14 +220,21 @@ let drawing_area =
     Elwd.v ~ns:`SVG (Jstr.v "g") [ `S content ]
   in
   let all_drawings =
+    let$* status = Lwd.get status in
     let$* all_replayed =
       Lwd_table.map_reduce
         (fun _row { recording; time } ->
-          Lwd_seq.element @@ act ~time:(Some (Lwd.get time)) recording.strokes)
+          match status with
+          | Drawing (Recording { replaying_state; _ })
+            when replaying_state.recording.record_id = recording.record_id ->
+              Lwd_seq.empty
+          | _ ->
+              Lwd_seq.element
+              @@ act ~time:(Some (Lwd.get time)) recording.strokes)
         Lwd_seq.monoid workspaces.recordings
       |> Lwd_seq.lift
-    and$ recorded_drawing =
-      let$ status = Lwd.get status in
+    in
+    let recorded_drawing =
       let new_rec time =
         let strokes = workspaces.current_recording.recording.strokes in
         act ~time strokes
@@ -238,13 +245,21 @@ let drawing_area =
           let time = Lwd.get workspaces.current_recording.time in
           Lwd_seq.element @@ new_rec (Some time)
       | Drawing
-          (Recording { recording_temp; replaying_state = _; started_at = _ }) ->
+          (Recording
+             {
+               recording_temp;
+               replaying_state = _;
+               started_at = _;
+               replayed_part;
+               unplayed_erasure = _;
+             }) ->
           let new_rec =
             let time = Lwd.get workspaces.current_recording.time in
             new_rec (Some time)
           in
           let tmp_rec = act ~time:None recording_temp in
-          Lwd_seq.of_list [ new_rec; tmp_rec ]
+          let replayed_part = act ~time:None replayed_part in
+          Lwd_seq.of_list [ new_rec; replayed_part; tmp_rec ]
     in
     let$ recorded_drawing = Lwd_seq.lift (Lwd.pure recorded_drawing) in
     Lwd_seq.concat all_replayed recorded_drawing
@@ -281,22 +296,39 @@ let for_events () =
     let handler =
       let$* status = Lwd.get status in
       let draw_mode d =
-        let strokes, started_time =
-          match d with
-          | Presenting -> (workspaces.live_drawing, Tools.now ())
-          | Recording { started_at; replaying_state = _; recording_temp } ->
-              (recording_temp, started_at)
-        in
         let { tool; color; width } = live_drawing_state in
         let$ tool = Lwd.get tool
         and$ color = Lwd.get color
         and$ width = Lwd.get width in
         match tool with
         | Stroker stroker ->
+            let strokes, started_time =
+              match d with
+              | Presenting -> (workspaces.live_drawing, Tools.now ())
+              | Recording { started_at; replaying_state = _; recording_temp; _ }
+                ->
+                  (recording_temp, started_at)
+            in
             Lwd_seq.element
             @@ Tools.Draw_stroke.event ~started_time strokes stroker color width
         | Pointer -> Lwd_seq.empty
-        | Eraser -> Lwd_seq.element @@ Tools.Erase.event ~started_time strokes
+        | Eraser ->
+            let strokes, started_time, replayed_part =
+              match d with
+              | Recording
+                  {
+                    replaying_state = _;
+                    recording_temp;
+                    started_at;
+                    unplayed_erasure = _;
+                    replayed_part;
+                  } ->
+                  (recording_temp, started_at, Some replayed_part)
+              | Presenting -> (workspaces.live_drawing, Tools.now (), None)
+            in
+            Lwd_seq.element
+            @@ Tools.Erase.event ~started_time ~replayed_strokes:replayed_part
+                 strokes
       in
       match status with
       | Drawing d -> draw_mode d
