@@ -145,15 +145,6 @@ module Erase = struct
   let end_ _ = ()
 
   let event ~started_time ~replayed_strokes strokes =
-    let () =
-      replayed_strokes
-      |> Option.iter @@ fun (strokes : strokes) ->
-         Brr.Console.(log [ "This important for me12" ]);
-         Lwd_table.iter
-           (fun (stro : stro) ->
-             Brr.Console.(log [ "This is an included stro"; stro.id ]))
-           strokes
-    in
     let start x y _ev =
       Messages.send @@ Erase (Start ({ started_time }, x, y));
       start ~replayed_strokes strokes { started_time } x y

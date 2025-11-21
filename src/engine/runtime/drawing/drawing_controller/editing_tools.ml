@@ -448,11 +448,7 @@ module Scale = struct
         | [] -> `Rescale_recording (Lwd.peek recording.total_time, max_time)
         | _ :: _ -> `Selection (strokes, el, t_begin, t_end)
       in
-      let map_time ~t_begin ~t_end ~scale ~t_max t =
-        let scale = Float.max scale 0. in
-        let scale =
-          Float.min scale ((t_max -. t_begin) /. (t_end -. t_begin))
-        in
+      let map_time ~t_begin ~t_end ~scale t =
         if t <= t_begin then t
         else if t >= t_end then
           t_begin +. ((t_end -. t_begin) *. scale) +. (t -. t_end)
@@ -462,9 +458,34 @@ module Scale = struct
       let drag ~x:_ ~y:_ ~dx ~dy:_ acc _ev =
         match acc with
         | `Selection (strokes, _container, t_begin, t_end) ->
-            let scale = 1. +. (dx /. 400.) in
             let t_max = Lwd.peek recording.total_time in
-            let map_time = map_time ~t_begin ~t_end ~scale ~t_max in
+            let scale =
+              let scale = 1. +. (dx /. 400.) in
+              let scale = Float.max scale 0. in
+              let scale =
+                Float.min scale ((t_max -. t_begin) /. (t_end -. t_begin))
+              in
+              let scale_stro scale (path, stro) =
+                let strokend = List.hd path |> snd in
+                match Lwd.peek stro.erased with
+                | Some { at; selected; _ } when not (Lwd.peek selected) ->
+                    Float.min scale
+                      ((Lwd.peek at -. t_begin) /. (strokend -. t_begin))
+                | _ -> scale
+              in
+              let scale_erase scale (time, _erased, stro) =
+                if Lwd.peek stro.selected then scale
+                else
+                  let strokend = List.hd (Lwd.peek stro.path) |> snd in
+                  Float.max scale ((strokend -. t_begin) /. (time -. t_begin))
+              in
+              List.fold_left
+                (fun scale -> function
+                  | `Stroke s -> scale_stro scale s
+                  | `Erase e -> scale_erase scale e)
+                scale strokes
+            in
+            let map_time = map_time ~t_begin ~t_end ~scale in
             let map_stroke path = map_stroke_times map_time path in
             List.iter
               (function
