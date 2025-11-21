@@ -26,75 +26,84 @@ let slider (editing_state : editing_state) =
   in
   Elwd.div [ `R el ]
 
-let description_of_stroke (strokes : (_ Lwd_table.row * stro) list) =
-  (* let color = Drawing_editor.Ui_widgets.of_color stroke.color in *)
-  (* let color = Elwd.div [ `P (Brr.El.txt' "Color: "); `R color ] in *)
+let description_of_selection
+    (strokes_and_erases :
+      [ `Stroke of _ Lwd_table.row * stro | `Erasure of stro * erased ] list) =
+  let strokes, erasures =
+    List.partition_map
+      (function `Stroke x -> Left x | `Erasure x -> Right x)
+      strokes_and_erases
+  in
   let n_selected =
     Brr.El.div
       [
-        Brr.El.txt' (string_of_int (List.length strokes) ^ " strokes selected");
+        Brr.El.txt'
+          (string_of_int (List.length strokes)
+          ^ " stroke(s) and "
+          ^ string_of_int (List.length erasures)
+          ^ " erasure(s) selected");
       ]
   in
   let delete =
     let click_handler =
       Elwd.handler Brr.Ev.click (fun _ ->
-          List.iter (fun (row, _) -> Lwd_table.remove row) strokes)
-    in
-    Elwd.button
-      ~ev:[ `P click_handler ]
-      [
-        `P
-          (Brr.El.txt'
-             ("Delete all " ^ string_of_int (List.length strokes) ^ " strokes"));
-      ]
-  in
-  let set_color =
-    let click_handler =
-      Elwd.handler Brr.Ev.change (fun ev ->
-          let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv in
-          let color = Jv.get el "value" |> Jv.to_string in
           List.iter
-            (fun (_, (stroke : stro)) -> Lwd.set stroke.color color)
-            strokes)
+            (function
+              | `Stroke (row, _) -> Lwd_table.remove row
+              | `Erasure (stro, _) -> Lwd.set stro.erased None)
+            strokes_and_erases)
     in
-    let input =
-      let current_value =
-        let _, stro = List.hd strokes in
-        Lwd.peek stro.color
-      in
-      let at =
-        [ `P (Brr.At.type' !!"color"); `P (Brr.At.value !!current_value) ]
-      in
-      Elwd.input ~at ~ev:[ `P click_handler ] ()
-    in
-    Elwd.div [ `P (Brr.El.txt' "Set color: "); `R input ]
+    Elwd.button ~ev:[ `P click_handler ] [ `P (Brr.El.txt' "Delete") ]
   in
-  let set_width =
-    let click_handler =
-      Elwd.handler Brr.Ev.change (fun ev ->
-          let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv in
-          let width = Jv.get el "value" |> Jv.to_string in
-          match float_of_string_opt width with
-          | None -> ()
-          | Some width ->
-              List.iter
-                (fun (_, (stroke : stro)) -> Lwd.set stroke.width width)
-                strokes)
-    in
-    let input =
-      let current_value =
-        let _, stro = List.hd strokes in
-        Lwd.peek stro.width |> Jv.of_float |> Jv.to_jstr
-      in
-      let at =
-        [ `P (Brr.At.type' !!"number"); `P (Brr.At.value current_value) ]
-      in
-      Elwd.input ~at ~ev:[ `P click_handler ] ()
-    in
-    Elwd.div [ `P (Brr.El.txt' "Set width: "); `R input ]
+  let description_of_strokes strokes =
+    match strokes with
+    | [] -> Elwd.div []
+    | (_, stro) :: _ ->
+        let set_color =
+          let click_handler =
+            Elwd.handler Brr.Ev.change (fun ev ->
+                let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv in
+                let color = Jv.get el "value" |> Jv.to_string in
+                List.iter
+                  (fun (_, (stroke : stro)) -> Lwd.set stroke.color color)
+                  strokes)
+          in
+          let input =
+            let current_value = Lwd.peek stro.color in
+            let at =
+              [ `P (Brr.At.type' !!"color"); `P (Brr.At.value !!current_value) ]
+            in
+            Elwd.input ~at ~ev:[ `P click_handler ] ()
+          in
+          Elwd.div [ `P (Brr.El.txt' "Set color: "); `R input ]
+        in
+        let set_width =
+          let click_handler =
+            Elwd.handler Brr.Ev.change (fun ev ->
+                let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv in
+                let width = Jv.get el "value" |> Jv.to_string in
+                match float_of_string_opt width with
+                | None -> ()
+                | Some width ->
+                    List.iter
+                      (fun (_, (stroke : stro)) -> Lwd.set stroke.width width)
+                      strokes)
+          in
+          let input =
+            let current_value =
+              let _, stro = List.hd strokes in
+              Lwd.peek stro.width |> Jv.of_float |> Jv.to_jstr
+            in
+            let at =
+              [ `P (Brr.At.type' !!"number"); `P (Brr.At.value current_value) ]
+            in
+            Elwd.input ~at ~ev:[ `P click_handler ] ()
+          in
+          Elwd.div [ `P (Brr.El.txt' "Set width: "); `R input ]
+        in
+        Elwd.div [ `R set_width; `R set_color ]
   in
-  Elwd.div
-    [ `P n_selected; (* `R color; *) `R set_width; `R set_color; `R delete ]
+  Elwd.div [ `P n_selected; `R (description_of_strokes strokes); `R delete ]
 
 let global_panel recording =
   (* let total_time = *)
@@ -266,16 +275,27 @@ let el =
     let$* s =
       Lwd_table.map_reduce
         (fun row s ->
-          Lwd.get s.selected
-          |> Lwd.map ~f:(fun x ->
-                 if x then Lwd_seq.element (row, s) else Lwd_seq.empty))
+          let$ selected =
+            let$ selected = Lwd.get s.selected in
+            if selected then Lwd_seq.element (`Stroke (row, s))
+            else Lwd_seq.empty
+          and$ erase_selected =
+            let$* erased = Lwd.get s.erased in
+            match erased with
+            | None -> Lwd.pure Lwd_seq.empty
+            | Some erased ->
+                let$ selected = Lwd.get erased.selected in
+                if selected then Lwd_seq.element (`Erasure (s, erased))
+                else Lwd_seq.empty
+          in
+          Lwd_seq.concat selected erase_selected)
         Lwd_seq.lwd_monoid recording.strokes
       |> Lwd.join
     in
     let l = Lwd_seq.to_list s in
     match l with
     | [] -> global_panel recording
-    | strokes -> description_of_stroke strokes
+    | strokes -> description_of_selection strokes
   in
   let ti = Ui_widgets.float editing_state.replaying_state.time [] in
   let description =

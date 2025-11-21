@@ -203,7 +203,8 @@ let drawing_panel mode =
           let started_at =
             match mode with
             | Presenting -> Tools.now ()
-            | Recording { started_at } -> started_at
+            | Recording { started_at; _ } ->
+                started_at (* TODO: probably use replaying_state *)
           in
           Tools.Clear.event started_at workspace)
     in
@@ -269,7 +270,8 @@ let editing_panel =
     let record =
       let handler =
         Elwd.handler Brr.Ev.click (fun _ ->
-            Drawing_state.Live_coding.start_recording ())
+            Drawing_state.Live_coding.start_recording
+              (Lwd.peek current_editing_state).replaying_state)
       in
       let icon =
         Brr.El.div

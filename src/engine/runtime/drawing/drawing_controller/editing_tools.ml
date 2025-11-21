@@ -172,7 +172,7 @@ module Selection = struct
                 let path = List.filter (fun (_, t) -> t <= time) path in
                 let has_point_in =
                   List.exists
-                    (fun ((a, b), t) -> x <= a && a <= x' && y <= b && b <= y')
+                    (fun ((a, b), _) -> x <= a && a <= x' && y <= b && b <= y')
                     path
                 in
                 let intersect () =

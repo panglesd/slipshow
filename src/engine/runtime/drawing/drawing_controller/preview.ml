@@ -220,27 +220,33 @@ let drawing_area =
     Elwd.v ~ns:`SVG (Jstr.v "g") [ `S content ]
   in
   let all_drawings =
-    let$ all_replayed =
+    let$* all_replayed =
       Lwd_table.map_reduce
         (fun _row { recording; time } ->
           Lwd_seq.element @@ act ~time:(Some (Lwd.get time)) recording.strokes)
         Lwd_seq.monoid workspaces.recordings
       |> Lwd_seq.lift
     and$ recorded_drawing =
-      let strokes = workspaces.current_recording.recording.strokes in
-      let$ u =
-        let$* time =
-          let$ status = Lwd.get status in
-          match status with
-          | Drawing _ -> None
-          | Editing ->
-              let time = workspaces.current_recording.time in
-              Some (Lwd.get time)
-        in
+      let$ status = Lwd.get status in
+      let new_rec time =
+        let strokes = workspaces.current_recording.recording.strokes in
         act ~time strokes
       in
-      Lwd_seq.element u
+      match status with
+      | Drawing Presenting -> Lwd_seq.element @@ new_rec None
+      | Editing ->
+          let time = Lwd.get workspaces.current_recording.time in
+          Lwd_seq.element @@ new_rec (Some time)
+      | Drawing
+          (Recording { recording_temp; replaying_state = _; started_at = _ }) ->
+          let new_rec =
+            let time = Lwd.get workspaces.current_recording.time in
+            new_rec (Some time)
+          in
+          let tmp_rec = act ~time:None recording_temp in
+          Lwd_seq.of_list [ new_rec; tmp_rec ]
     in
+    let$ recorded_drawing = Lwd_seq.lift (Lwd.pure recorded_drawing) in
     Lwd_seq.concat all_replayed recorded_drawing
   in
   let drawn_live_drawing =
@@ -278,9 +284,8 @@ let for_events () =
         let strokes, started_time =
           match d with
           | Presenting -> (workspaces.live_drawing, Tools.now ())
-          | Recording { started_at } ->
-              let strokes = workspaces.current_recording.recording.strokes in
-              (strokes, started_at)
+          | Recording { started_at; replaying_state = _; recording_temp } ->
+              (recording_temp, started_at)
         in
         let { tool; color; width } = live_drawing_state in
         let$ tool = Lwd.get tool

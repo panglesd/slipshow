@@ -1,6 +1,6 @@
 open Drawing_state.Live_coding
 
-let shortcut_editing editing_state key =
+let shortcut_editing (editing_state : editing_state) key =
   match key with
   | "m" ->
       Lwd.set editing_tool Move;
@@ -12,7 +12,7 @@ let shortcut_editing editing_state key =
       Lwd.set editing_tool Rescale;
       true
   | "R" ->
-      start_recording ();
+      start_recording editing_state.replaying_state;
       true
   | " " ->
       (match Lwd.peek editing_state.is_playing with
@@ -57,7 +57,8 @@ let shortcut_drawing strokes mode key =
       let started_at =
         match mode with
         | Presenting -> Tools.now ()
-        | Recording { started_at } -> started_at
+        | Recording { started_at; _ } ->
+            started_at (* TODO: probably use replaying_state *)
       in
       Tools.Clear.event started_at strokes;
       true

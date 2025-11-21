@@ -78,11 +78,6 @@ type live_drawing_state = {
   width : width Lwd.var;
 }
 
-(* type recording_state = { *)
-(* live_drawing_state : live_drawing_state; *)
-(* recording : recording; *)
-(* } *)
-
 type editing_tool = Select | Move | Rescale
 
 let editing_tool = Lwd.var Select
@@ -99,7 +94,11 @@ let current_editing_state =
       is_playing = Lwd.var false;
     }
 
-type recording_state = { (* strokes : strokes;  *) started_at : float }
+type recording_state = {
+  replaying_state : replaying_state;
+  recording_temp : strokes;
+  started_at : float;
+}
 
 let live_drawing_state =
   {
@@ -113,36 +112,43 @@ type status = Drawing of drawing_status | Editing
 
 let status = Lwd.var (Drawing Presenting)
 
-let start_recording () =
+let start_recording replaying_state =
   (* let strokes = Lwd_table.make () in *)
   Lwd.set status
     (Drawing
        (Recording
           {
-            (* strokes; *)
+            replaying_state;
             started_at =
-              now ()
-              -. Lwd.peek workspaces.current_recording.recording.total_time;
+              now () (* -. Lwd.peek replaying_state.recording.total_time *);
+            recording_temp = Lwd_table.make ();
           }))
 
-let finish_recording recording_state =
-  let new_total_time = now () -. recording_state.started_at in
-  (* let new_strokes = recording_state.strokes in *)
-  let current_editing_state = Lwd.peek current_editing_state in
-  (* Lwd_table.concat current_recording.strokes new_strokes; *)
-  Lwd.set current_editing_state.replaying_state.recording.total_time
-    (* Lwd.peek current_recording.total_time +.  *) new_total_time;
-  Lwd.set current_editing_state.replaying_state.time new_total_time;
-  (* let replaying_state = *)
-  (*   { *)
-  (*     recording = workspaces.current_recording.recording; *)
-  (*     time = Lwd.var new_total_time; *)
-  (*   } *)
-  (* in *)
-  (* Lwd.set recording_state.recording.total_time total_time; *)
-  Lwd.set status Editing (* { replaying_state; is_playing = Lwd.var false } *)
-
-let toggle_recording mode =
-  match mode with
-  | Presenting -> start_recording ()
-  | Recording recording -> finish_recording recording
+let finish_recording { replaying_state; started_at; recording_temp } =
+  let additional_time = now () -. started_at in
+  Lwd_table.iter
+    (fun stro ->
+      if Lwd.peek stro.path |> List.hd |> snd >= Lwd.peek replaying_state.time
+      then
+        Lwd.update
+          (List.map @@ fun (pos, t) -> (pos, t +. additional_time))
+          stro.path
+      else ();
+      match Lwd.peek stro.erased with
+      | None -> ()
+      | Some { at; _ } ->
+          if Lwd.peek at >= Lwd.peek replaying_state.time then
+            Lwd.update (( +. ) additional_time) at)
+    replaying_state.recording.strokes;
+  Lwd_table.iter
+    (fun stro ->
+      Lwd.update
+        (List.map @@ fun (x, t) -> (x, t +. Lwd.peek replaying_state.time))
+        stro.path)
+    recording_temp;
+  Lwd.update (( +. ) additional_time) replaying_state.recording.total_time;
+  Lwd.update (( +. ) additional_time) replaying_state.time;
+  Lwd_table.iter
+    (fun stro -> Lwd_table.append' replaying_state.recording.strokes stro)
+    recording_temp;
+  Lwd.set status Editing
