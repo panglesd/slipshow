@@ -121,7 +121,11 @@ module Erase = struct
             Lwd.set stro.erased
               (Some
                  {
-                   at = Lwd.var (now () -. started_time);
+                   at =
+                     Lwd.var
+                       (Float.max
+                          (List.hd path |> snd)
+                          (now () -. started_time));
                    track = Lwd.var (Lwd.peek stro.track);
                    selected = Lwd.var false;
                    preselected = Lwd.var false;
