@@ -161,22 +161,26 @@ module Erase = struct
 end
 
 module Clear = struct
-  let clear started_time strokes =
-    Lwd_table.iter
-      (fun stro ->
-        if Lwd.peek stro.erased |> Option.is_some then ()
-        else
-          Lwd.set stro.erased
-            (Some
-               {
-                 at = Lwd.var (now () -. started_time);
-                 track = Lwd.var (Lwd.peek stro.track);
-                 selected = Lwd.var false;
-                 preselected = Lwd.var false;
-               }))
-      strokes
+  let clear ~replayed_strokes started_time strokes =
+    let clear strokes =
+      Lwd_table.iter
+        (fun stro ->
+          if Lwd.peek stro.erased |> Option.is_some then ()
+          else
+            Lwd.set stro.erased
+              (Some
+                 {
+                   at = Lwd.var (now () -. started_time);
+                   track = Lwd.var (Lwd.peek stro.track);
+                   selected = Lwd.var false;
+                   preselected = Lwd.var false;
+                 }))
+        strokes
+    in
+    clear strokes;
+    Option.iter clear replayed_strokes
 
-  let event started_time strokes =
+  let event ~replayed_strokes started_time strokes =
     Messages.send (Clear started_time);
-    clear started_time strokes
+    clear ~replayed_strokes started_time strokes
 end

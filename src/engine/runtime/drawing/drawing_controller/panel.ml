@@ -200,13 +200,14 @@ let drawing_panel mode =
   let clear_button =
     let handler =
       Elwd.handler Brr.Ev.click (fun _ ->
-          let started_at =
+          let started_at, replayed_strokes =
             match mode with
-            | Presenting -> Tools.now ()
-            | Recording { started_at; _ } ->
-                started_at (* TODO: probably use replaying_state *)
+            | Presenting -> (Tools.now (), None)
+            | Recording { started_at; replayed_part; _ } ->
+                ( started_at,
+                  Some replayed_part (* TODO: probably use replaying_state *) )
           in
-          Tools.Clear.event started_at workspace)
+          Tools.Clear.event ~replayed_strokes started_at workspace)
     in
     let icon = panel_icon [ `P (Brr.El.txt !!"✗") ] in
     panel_block

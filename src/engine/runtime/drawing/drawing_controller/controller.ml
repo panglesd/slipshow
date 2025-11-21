@@ -24,17 +24,20 @@ let shortcut_editing (editing_state : editing_state) key =
   | "ArrowRight" ->
       Lwd.update
         (fun t ->
-          t
-          +. Lwd.peek editing_state.replaying_state.recording.total_time
-             /. 100.)
+          let total_time =
+            Lwd.peek editing_state.replaying_state.recording.total_time
+          in
+          let res = t +. (total_time /. 100.) in
+          Float.min res total_time)
         editing_state.replaying_state.time;
       true
   | "ArrowLeft" ->
       Lwd.update
         (fun t ->
-          t
-          -. Lwd.peek editing_state.replaying_state.recording.total_time
-             /. 100.)
+          let total_time =
+            Lwd.peek editing_state.replaying_state.recording.total_time
+          in
+          Float.max (t -. (total_time /. 100.)) 0.)
         editing_state.replaying_state.time;
       true
   | _ -> false
@@ -54,13 +57,14 @@ let shortcut_drawing strokes mode key =
       Lwd.set live_drawing_state.tool Pointer;
       true
   | "X" ->
-      let started_at =
+      let started_at, replayed_strokes =
         match mode with
-        | Presenting -> Tools.now ()
-        | Recording { started_at; _ } ->
-            started_at (* TODO: probably use replaying_state *)
+        | Presenting -> (Tools.now (), None)
+        | Recording { started_at; replayed_part; _ } ->
+            ( started_at,
+              Some replayed_part (* TODO: probably use replaying_state *) )
       in
-      Tools.Clear.event started_at strokes;
+      Tools.Clear.event ~replayed_strokes started_at strokes;
       true
   | "R" ->
       (match mode with
