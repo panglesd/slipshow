@@ -308,7 +308,7 @@ let el =
         ]
       [ `R description ]
   in
-  let strokes = Timeline.el recording in
+  let strokes = Timeline.el editing_state.replaying_state in
   let time_panel =
     let$* is_non_empty =
       Lwd_table.map_reduce

@@ -1,1 +1,1 @@
-val el : Drawing_state.Live_coding.recording -> Brr.El.t Lwd.t
+val el : Drawing_state.Live_coding.replaying_state -> Brr.El.t Lwd.t

@@ -185,8 +185,29 @@ let strokes recording =
     Lwd_seq.lwd_monoid recording.strokes
   |> Lwd.join |> Lwd_seq.lift
 
-let el recording =
+let el replaying_state =
+  let recording = replaying_state.recording in
   let strokes = strokes recording in
+  let time_line =
+    let st =
+      let left =
+        let$ start_time = Lwd.get replaying_state.time
+        and$ total_length = total_length recording in
+        let left = start_time *. 100. /. total_length in
+        let left = Jstr.append (Jstr.of_float left) !!"%" in
+        (Brr.El.Style.left, left)
+      in
+      [
+        `P (Brr.El.Style.background_color, !!"black");
+        `P (Brr.El.Style.width, !!"1px");
+        `P (Brr.El.Style.position, !!"absolute");
+        `R left;
+        `P (Brr.El.Style.top, !!"0");
+        `P (Brr.El.Style.bottom, !!"0");
+      ]
+    in
+    Elwd.div ~st []
+  in
   let st =
     let height =
       let$ n_track = n_track recording.strokes in
@@ -226,4 +247,4 @@ let el recording =
     | Select -> Editing_tools.Selection.Timeline.box
     | Move | Rescale -> Lwd.return Lwd_seq.empty
   in
-  Elwd.div ~ev:[ `S ev ] ~st [ `S strokes; `S box ]
+  Elwd.div ~ev:[ `S ev ] ~st [ `S strokes; `R time_line; `S box ]
