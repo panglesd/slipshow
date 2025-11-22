@@ -248,18 +248,24 @@ let drawing_area =
           (Recording
              {
                recording_temp;
-               replaying_state = _;
+               replaying_state;
                started_at = _;
                replayed_part;
                unplayed_erasure = _;
              }) ->
           let new_rec =
-            let time = Lwd.get workspaces.current_recording.time in
-            new_rec (Some time)
+            if
+              replaying_state.recording.record_id
+              = workspaces.current_recording.recording.record_id
+            then Lwd_seq.empty
+            else
+              let time = Lwd.get workspaces.current_recording.time in
+              Lwd_seq.element @@ new_rec (Some time)
           in
           let tmp_rec = act ~time:None recording_temp in
           let replayed_part = act ~time:None replayed_part in
-          Lwd_seq.of_list [ new_rec; replayed_part; tmp_rec ]
+          let first = Lwd_seq.concat new_rec @@ Lwd_seq.element replayed_part in
+          Lwd_seq.concat first @@ Lwd_seq.element tmp_rec
     in
     let$ recorded_drawing = Lwd_seq.lift (Lwd.pure recorded_drawing) in
     Lwd_seq.concat all_replayed recorded_drawing

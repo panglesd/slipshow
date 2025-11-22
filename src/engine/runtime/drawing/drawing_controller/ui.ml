@@ -118,7 +118,7 @@ let global_panel recording =
     Elwd.div
       [
         `P (Brr.El.txt' "Rename recording: ");
-        `R (Ui_widgets.string ~kind:`Input recording.name []);
+        `R (Ui_widgets.string ~type':"text" ~kind:`Input recording.name []);
         `P
           (Brr.El.div
              [
@@ -334,22 +334,20 @@ let el =
         ]
     else
       Elwd.div
-        ~st:
-          [
-            `P (Brr.El.Style.display, !!"flex");
-            `P (Brr.El.Style.height, !!"300px");
-          ]
+        ~st:[ `P (Brr.El.Style.height, !!"300px") ]
         [
+          `P (Brr.El.txt' "Empty recording. Start recording with ");
           `P
-            (Brr.El.txt'
-               "Empty recording. Select another recording, or add to this one \
-                a record of one of your drawing.");
+            (Brr.El.kbd
+               ~at:[ Brr.At.class' !!"slipshow-key-panel" ]
+               [ Brr.El.txt' "R" ]);
+          `P (Brr.El.txt' " (or select another recording to edit).");
         ]
   in
   Elwd.div
     ~st:
       [
-        `P (Brr.El.Style.display, !!"flex"); `P (Brr.El.Style.height, !!"300px");
+        `P (Brr.El.Style.height, !!"300px"); `P (Brr.El.Style.display, !!"flex");
       ]
     [ `R description; `R time_panel ]
 

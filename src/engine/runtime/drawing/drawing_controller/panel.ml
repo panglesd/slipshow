@@ -23,18 +23,21 @@ let panel_button ?label_for ?shortcut ?handler ?(at = []) ~icon text =
   let text =
     let txt =
       match label_for with
-      | None -> Brr.El.txt' text
+      | None ->
+          let$ text = text in
+          Brr.El.txt' text
       | Some lbl ->
+          let$ text = text in
           Brr.El.label
             ~at:[ Brr.At.style !!"cursor:pointer"; Brr.At.for' !!lbl ]
             [ Brr.El.txt' text ]
     in
-    Brr.El.div ~at:[ Brr.At.style !!"flex-grow:11" ] [ txt ]
+    Elwd.div ~at:[ `P (Brr.At.style !!"flex-grow:11") ] [ `R txt ]
   in
   Elwd.div
     ~at:(`P (Brr.At.class' !!"slipshow-button") :: at)
     ~ev:(match handler with None -> [] | Some c -> [ `P c ])
-    ([ `R icon; `P text ] @ shortcut)
+    ([ `R icon; `R text ] @ shortcut)
 
 let panel_block ?class_ ~buttons () =
   Elwd.div
@@ -117,7 +120,7 @@ let custom_color_button var =
     panel_icon ~ev ~at
       [ `P (Brr.El.input ~at:[ Brr.At.type' !!"color"; Brr.At.id !!label ] ()) ]
   in
-  panel_button ~label_for:label ~icon "Custom color"
+  panel_button ~label_for:label ~icon (Lwd.pure "Custom color")
 
 let width_button var width c name =
   let icon =
@@ -142,17 +145,13 @@ let toplevel_panel_el =
   Elwd.div ~at:[ `P (Brr.At.class' !!"slip-writing-toolbar") ]
 
 let drawing_panel mode =
-  let workspace =
-    match mode with
-    | Presenting -> Drawing_state.Live_coding.workspaces.live_drawing
-    | Recording _ ->
-        Drawing_state.Live_coding.workspaces.current_recording.recording.strokes
-  in
   let lds = Drawing_state.Live_coding.live_drawing_state in
-  let pen_button = pen_button lds.tool "Pen" "p" in
-  let highlighter_button = highlighter_button lds.tool "Highlighter" "h" in
-  let erase_button = erase_button lds.tool "Erase" "e" in
-  let cursor_button = cursor_button lds.tool "Cursor" "c" in
+  let pen_button = pen_button lds.tool (Lwd.pure "Pen") "p" in
+  let highlighter_button =
+    highlighter_button lds.tool (Lwd.pure "Highlighter") "h"
+  in
+  let erase_button = erase_button lds.tool (Lwd.pure "Erase") "e" in
+  let cursor_button = cursor_button lds.tool (Lwd.pure "Cursor") "c" in
   let tool_buttons =
     Elwd.div
       ~at:[ `P (Brr.At.class' !!"tool-block") ]
@@ -161,11 +160,11 @@ let drawing_panel mode =
       ]
   in
   let color_buttons =
-    let black_button = color_button lds.color "#000000" "Black" in
-    let blue_button = color_button lds.color "#0000ff" "Blue" in
-    let red_button = color_button lds.color "#ff0000" "Red" in
-    let green_button = color_button lds.color "#008000" "Green" in
-    let yellow_button = color_button lds.color "#ffff00" "Yellow" in
+    let black_button = color_button lds.color "#000000" (Lwd.pure "Black") in
+    let blue_button = color_button lds.color "#0000ff" (Lwd.pure "Blue") in
+    let red_button = color_button lds.color "#ff0000" (Lwd.pure "Red") in
+    let green_button = color_button lds.color "#008000" (Lwd.pure "Green") in
+    let yellow_button = color_button lds.color "#ffff00" (Lwd.pure "Yellow") in
     let custom_color_button = custom_color_button lds.color in
 
     Elwd.div
@@ -200,18 +199,18 @@ let drawing_panel mode =
   let clear_button =
     let handler =
       Elwd.handler Brr.Ev.click (fun _ ->
-          let started_at, replayed_strokes =
+          let strokes, started_at, replayed_strokes =
             match mode with
-            | Presenting -> (Tools.now (), None)
-            | Recording { started_at; replayed_part; _ } ->
-                ( started_at,
-                  Some replayed_part (* TODO: probably use replaying_state *) )
+            | Presenting -> (workspaces.live_drawing, Tools.now (), None)
+            | Recording { started_at; replayed_part; recording_temp; _ } ->
+                (recording_temp, started_at, Some replayed_part)
           in
-          Tools.Clear.event ~replayed_strokes started_at workspace)
+          Tools.Clear.event ~replayed_strokes started_at strokes)
     in
     let icon = panel_icon [ `P (Brr.El.txt !!"✗") ] in
     panel_block
-      ~buttons:[ `R (panel_button ~handler ~icon "Clear" ~shortcut:"X") ]
+      ~buttons:
+        [ `R (panel_button ~handler ~icon (Lwd.pure "Clear") ~shortcut:"X") ]
       ()
   in
   let record_button =
@@ -224,7 +223,10 @@ let drawing_panel mode =
         panel_block ~class_:"slipshow-manage-recording-block"
           ~buttons:
             [
-              `R (panel_button ~handler ~icon "Manage recordings" ~shortcut:"R");
+              `R
+                (panel_button ~handler ~icon
+                   (Lwd.pure "Manage recordings")
+                   ~shortcut:"R");
             ]
           ()
     | Recording state ->
@@ -239,7 +241,11 @@ let drawing_panel mode =
         let icon = panel_icon [ `P icon ] in
         panel_block
           ~buttons:
-            [ `R (panel_button ~shortcut:"R" ~handler ~icon "Stop recording") ]
+            [
+              `R
+                (panel_button ~shortcut:"R" ~handler ~icon
+                   (Lwd.pure "Stop recording"));
+            ]
           ()
   in
   toplevel_panel_el
@@ -263,9 +269,9 @@ let editing_panel =
     let icon = panel_icon ~at:[ `S class_ ] [ `P (Brr.El.txt' icon) ] in
     panel_button ~handler ~icon name ~shortcut
   in
-  let select = editing_tool Select "☝" "Select" "s" in
-  let move = editing_tool Move "⌖" "Move" "m" in
-  let resize = editing_tool Rescale "⇲" "Resize" "r" in
+  let select = editing_tool Select "☝" (Lwd.pure "Select") "s" in
+  let move = editing_tool Move "⌖" (Lwd.pure "Move") "m" in
+  let resize = editing_tool Rescale "⇲" (Lwd.pure "Resize") "r" in
   let block = panel_block ~buttons:[ `R select; `R move; `R resize ] () in
   let recording_block =
     let record =
@@ -284,7 +290,20 @@ let editing_panel =
           []
       in
       let icon = panel_icon [ `P icon ] in
-      panel_button ~handler ~icon "Record a drawing" ~shortcut:"R"
+      let txt =
+        let$* strokes =
+          let$ c = Lwd.get current_editing_state in
+          c.replaying_state.recording.strokes
+        in
+        let$ is_empty =
+          Lwd_table.map_reduce
+            (fun _ _ -> false)
+            (true, fun _ _ -> false)
+            strokes
+        in
+        if is_empty then "Start recording" else "Continue recording"
+      in
+      panel_button ~handler ~icon txt ~shortcut:"R"
     in
     panel_block ~buttons:[ `R record ] ()
   in

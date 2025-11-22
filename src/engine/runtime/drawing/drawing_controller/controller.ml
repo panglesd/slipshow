@@ -57,12 +57,11 @@ let shortcut_drawing strokes mode key =
       Lwd.set live_drawing_state.tool Pointer;
       true
   | "X" ->
-      let started_at, replayed_strokes =
+      let strokes, started_at, replayed_strokes =
         match mode with
-        | Presenting -> (Tools.now (), None)
-        | Recording { started_at; replayed_part; _ } ->
-            ( started_at,
-              Some replayed_part (* TODO: probably use replaying_state *) )
+        | Presenting -> (workspaces.live_drawing, Tools.now (), None)
+        | Recording { started_at; replayed_part; recording_temp; _ } ->
+            (recording_temp, started_at, Some replayed_part)
       in
       Tools.Clear.event ~replayed_strokes started_at strokes;
       true

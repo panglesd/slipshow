@@ -136,3 +136,22 @@ kbd.slipshow-key {
   background: rgb(225, 225, 225);
   font-size: 0.75em;
 }
+
+kbd.slipshow-key-panel {
+  border: 1px solid black;
+  border-radius: 6px;
+  background: rgb(225, 225, 225);
+  padding: 5px;
+}
+
+#slipshow-drawing-editor {
+  font-size: 24px;
+}
+
+#slipshow-drawing-editor select {
+  font-size: 24px;
+}
+
+#slipshow-drawing-editor input[type="text"] {
+  font-size: 20px;
+}
