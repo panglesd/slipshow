@@ -428,7 +428,7 @@ These attributes are actions that will be executed when a ``pause`` or ``step`` 
 
   Also takes a ``~n:"<pages>"`` argument, which allows to specify the list of pages changes to do, by absolute number (e.g. ``4``), relative number (e.g. ``+1``, ``-2``), range (``3-10`` or ``5-3``), or ``all`` which displays one by one the page until completion. Default for ``~n`` is ``+1``.
 
-  For instance, ``{change-page='~n:"2-4 6-4 7 -1 +2 all"}`` will change pages to ``2``, ``3``, ``4``, ``6``, ``5``, ``4``, ``7``, ``6``, ``8`` and then all further pages that the pdf/carousel contains. It will always initially start with page 1.
+  For instance, ``{change-page='~n:"2-4 6-4 7 -1 +2 all"'}`` will change pages to ``2``, ``3``, ``4``, ``6``, ``5``, ``4``, ``7``, ``6``, ``8`` and then all further pages that the pdf/carousel contains. It will always initially start with page 1.
 
 ``speaker-note``
   Hides the targeted element (either with given ID, or self). When the action is executed, send the targeted element to the "Notes" section of the speaker notes (that you can open with ``s``).
