@@ -79,7 +79,7 @@ let keyboard_setup (window : Universe.Window.t) =
       | "ArrowRight" | "ArrowDown" | "PageDown" | " " ->
           let _ : unit Fut.t =
             let open Fut.Syntax in
-            let+ () = Step.Next.go_next window in
+            let+ _ : unit Fut.t = Step.Next.go_next window in
             Messaging.send_step (Step.State.get_step ()) `Normal
           in
           ()
@@ -112,6 +112,7 @@ let keyboard_setup (window : Universe.Window.t) =
   ()
 
 let touch_setup (window : Universe.Window.t) =
+  let open Fut.Syntax in
   let () =
     let next =
       Brr.El.find_first_by_selector (Jstr.v "#slip-touch-controls .slip-next")
@@ -120,7 +121,10 @@ let touch_setup (window : Universe.Window.t) =
     let _unlisten =
       Brr.Ev.listen Brr.Ev.click
         (fun _ ->
-          let _ : unit Fut.t = Step.Next.go_next window in
+          let _ : unit Fut.t =
+            let+ _ : unit Fut.t = Step.Next.go_next window in
+            Messaging.send_step (Step.State.get_step ()) `Normal
+          in
           ())
         (Brr.El.as_target next)
     in

@@ -71,29 +71,13 @@ let setup_actions window () =
   in
   ()
 
-let update_history () =
-  let prev_step = State.get_step () in
-  let> () = State.incr_step () in
-  let n = State.get_step () in
-  (* let> () = *)
-  let counter =
-    Brr.El.find_first_by_selector (Jstr.v "#slipshow-counter") |> Option.get
-  in
-  Undoable.return ~undo:(fun () ->
-      Fut.return
-      @@ Brr.El.set_children counter [ Brr.El.txt' (string_of_int prev_step) ])
-  @@ Brr.El.set_children counter [ Brr.El.txt' (string_of_int n) ]
-(* in *)
-(* Undoable.Browser.History.set_hash (string_of_int n) *)
-
-let next ?(init = false) window () =
+let next window () =
   match find_next_pause_or_step () with
   | None -> None
   | Some pause ->
       let res =
         let> () = Actions.exit window pause in
         let> () = AttributeActions.do_ window pause in
-        let> () = if not init then update_history () else Undoable.return () in
         Undoable.return ()
       in
       Some res

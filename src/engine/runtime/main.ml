@@ -31,7 +31,7 @@ let start ~width ~height ~step =
   (* We do one step first, without recording it/updating the hash, to enter in
      the first slip *)
   let* _ =
-    Step.Action_scheduler.next ~init:true window ()
+    Step.Action_scheduler.next window ()
     |> Option.value ~default:(Undoable.return ())
     |> Undoable.discard
   in
