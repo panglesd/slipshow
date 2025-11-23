@@ -117,6 +117,7 @@ type status = Drawing of drawing_status | Editing
 let status = Lwd.var (Drawing Presenting)
 
 let start_recording replaying_state =
+  Lwd.set live_drawing_state.tool (Stroker Pen);
   let replayed_part, unplayed_erasure =
     let tbl = Lwd_table.make () in
     let unplayed_erasure =
