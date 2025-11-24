@@ -1,5 +1,5 @@
 (library
  (name drawing_controller)
- (libraries messaging lwd brr-lwd drawing_state universe)
+ (libraries messaging lwd brr-lwd drawing_state universe base64 zipc)
  (preprocess
   (pps ppx_deriving_yojson)))

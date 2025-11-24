@@ -168,6 +168,10 @@ module V1 = struct
     with Yojson.Json_error _ -> Error ()
 end
 
+(* let find_max_time (s : Live_coding.recording) = *)
+(*   let max = _ in *)
+(*   _ *)
+
 let string_to_recording s =
   let ( let* ) = Result.bind in
 

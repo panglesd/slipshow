@@ -4,6 +4,8 @@
  (libraries
   communication
   brr
+  base64
+  zipc
   normalization
   browser
   rescale

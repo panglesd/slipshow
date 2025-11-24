@@ -123,7 +123,13 @@ let global_panel recording =
           (Brr.El.div
              [
                Brr.El.a
-                 ~at:[ Brr.At.href !!"TODO" ] (* TODO *)
+                 ~at:
+                   [
+                     Brr.At.href
+                       !!"https://choum.net/panglesd/temporary_doc/html/record-and-replay.html";
+                     Brr.At.v !!"target" !!"_blank";
+                   ]
+                   (* TODO *)
                  [ Brr.El.txt' "Get help in the documentation" ];
              ]);
       ]
@@ -227,22 +233,42 @@ let save_button recording =
   let click =
     Elwd.handler Brr.Ev.click (fun _ ->
         let s = Drawing_state.Json.string_of_recording recording in
-        let blob =
-          let init = Brr.Blob.init ~type':(Jstr.v "application/json") () in
-          Brr.Blob.of_jstr ~init (Jstr.v s)
+        let window = Brr.G.window |> Brr.Window.parent |> Option.get in
+        let uri = Brr.Window.location window in
+        let fragment =
+          s |> Zipc_deflate.deflate |> Result.get_ok |> Base64.encode
+          |> Result.get_ok |> Jstr.v
         in
-        let a = Brr.El.a [] in
-        let revoke_url =
-          let url = Jv.get Jv.global "URL" in
-          let object_url =
-            Jv.call url "createObjectURL" [| Brr.Blob.to_jv blob |]
-          in
-          Jv.set (Brr.El.to_jv a) "href" object_url;
-          fun () -> Jv.call url "revokeObjectURL" [| object_url |] |> ignore
+        let new_uri = Brr.Uri.with_uri ~fragment uri |> Result.get_ok in
+        let history = Brr.Window.history window in
+        Brr.Window.History.replace_state ~uri:new_uri history;
+        let new_uri = Brr.Uri.to_jstr new_uri in
+        let _ =
+          Brr_io.Clipboard.write_text
+            (Brr_io.Clipboard.of_navigator Brr.G.navigator)
+            new_uri
         in
-        Jv.set (Brr.El.to_jv a) "download" (Jv.of_string "drawing.draw");
-        Jv.call (Brr.El.to_jv a) "click" [||] |> ignore;
-        revoke_url ())
+        ignore
+        @@ Jv.call Jv.global "alert"
+             [|
+               Jv.of_string "The URL to share has been copied to the clipboard!";
+             |]
+        (* let blob = *)
+        (*   let init = Brr.Blob.init ~type':(Jstr.v "application/json") () in *)
+        (*   Brr.Blob.of_jstr ~init (Jstr.v s) *)
+        (* in *)
+        (* let a = Brr.El.a [] in *)
+        (* let revoke_url = *)
+        (*   let url = Jv.get Jv.global "URL" in *)
+        (*   let object_url = *)
+        (*     Jv.call url "createObjectURL" [| Brr.Blob.to_jv blob |] *)
+        (*   in *)
+        (*   Jv.set (Brr.El.to_jv a) "href" object_url; *)
+        (*   fun () -> Jv.call url "revokeObjectURL" [| object_url |] |> ignore *)
+        (* in *)
+        (* Jv.set (Brr.El.to_jv a) "download" (Jv.of_string "drawing.draw"); *)
+        (* Jv.call (Brr.El.to_jv a) "click" [||] |> ignore; *)
+        (* revoke_url () *))
   in
   Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "💾 Save") ]
 
