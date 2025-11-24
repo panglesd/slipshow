@@ -342,6 +342,7 @@ module type S = sig
   type args
 
   val setup : (args -> unit Fut.t) option
+  val setup_all : (unit -> unit Fut.t) option
   val on : string
   val action_name : string
   val parse_args : Brr.El.t -> string -> (args, [> `Msg of string ]) result
@@ -412,11 +413,28 @@ module Pause = struct
     update_single elem (f n)
 
   let setup elem =
-    let> () = set_class "pauseTarget" true elem in
-    update elem (( + ) 1)
+    let open Fut.Syntax in
+    let* (), _ = set_class "pauseTarget" true elem in
+    update elem (( + ) 1) |> Undoable.discard
 
-  let setup elems = Undoable.List.iter setup elems |> Undoable.discard
+  let setup_all () =
+    let open Fut.Syntax in
+    Brr.El.fold_find_by_selector
+      (fun elem acc ->
+        let* () = acc in
+        setup elem)
+      (Jstr.v "pause-target") (Fut.return ())
+
+  let setup elems =
+    let open Fut.Syntax in
+    List.fold_left
+      (fun acc elem ->
+        let* () = acc in
+        setup elem)
+      (Fut.return ()) elems
+
   let setup = Some setup
+  let setup_all = Some setup_all
 
   type args = Brr.El.t list
 
@@ -445,6 +463,7 @@ struct
   let on = X.on
   let action_name = X.action_name
   let setup = None
+  let setup_all = None
 
   type args = {
     margin : float option;
@@ -489,6 +508,7 @@ struct
   let on = X.on
   let action_name = X.action_name
   let setup = None
+  let setup_all = None
 
   type args = Brr.El.t list
 
@@ -637,12 +657,14 @@ module Focus = struct
     Universe.Move.focus ~margin ~duration window elems
 
   let setup = None
+  let setup_all = None
 end
 
 module Unfocus = struct
   type args = unit
 
   let setup = None
+  let setup_all = None
   let on = "unfocus-at-unpause"
   let action_name = "unfocus"
   let parse_args elem s = Parse.no_args ~action_name elem s
@@ -687,6 +709,7 @@ module Step = struct
   type args = unit
 
   let setup = None
+  let setup_all = None
   let on = "step"
   let action_name = "step"
   let parse_args elem s = Parse.no_args ~action_name elem s
@@ -706,6 +729,7 @@ module Speaker_note : S = struct
     Fut.return @@ Brr.El.set_class (Jstr.v "__slipshow__speaker_note") true elem
 
   let setup = Some setup
+  let setup_all = None
 
   let do_ (_ : Universe.Window.t) (el : args) =
     let innerHTML =
@@ -778,6 +802,7 @@ module Play_media = struct
       elems
 
   let setup = None
+  let setup_all = None
 end
 
 module Change_page = struct
@@ -949,6 +974,7 @@ module Change_page = struct
     Undoable.return ()
 
   let setup = None
+  let setup_all = None
 end
 
 module Draw = struct
@@ -970,6 +996,14 @@ module Draw = struct
             Lwd_table.append' Drawing_state.Live_coding.workspaces.recordings
               replaying_state));
     Fut.return ()
+
+  let setup_all () =
+    Brr.El.fold_find_by_selector
+      (fun elem acc -> Fut.bind acc (fun () -> setup elem))
+      (Jstr.v ".slipshow-hand-drawn")
+      (Fut.return ())
+
+  let setup_all = Some setup_all
 
   let setup elems =
     List.fold_left
@@ -1033,6 +1067,7 @@ module Clear_draw = struct
   let on = "clear"
   let action_name = on
   let setup = None
+  let setup_all = None
 
   type args = Brr.El.t list
 

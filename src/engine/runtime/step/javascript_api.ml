@@ -60,6 +60,11 @@ let play_media window undos_ref =
   let elems = Jv.to_list Brr.El.of_jv elems in
   register_undo undos_ref @@ fun () -> Actions.Play_media.do_ window elems
 
+let draw window undos_ref =
+  Jv.callback ~arity:1 @@ fun elems ->
+  let elems = Jv.to_list Brr.El.of_jv elems in
+  register_undo undos_ref @@ fun () -> Actions.Draw.do_ window elems
+
 let change_page _window undos_ref =
   Jv.callback ~arity:2 @@ fun elem change ->
   let target_elem = Brr.El.of_jv elem in
@@ -120,6 +125,7 @@ let slip window undos_ref =
       ("setClass", set_class undos_ref);
       ("setProp", set_prop undos_ref);
       ("playMedia", play_media window undos_ref);
+      ("draw", draw window undos_ref);
       ("isFast", is_fast);
       ("changePage", change_page window undos_ref);
     |]

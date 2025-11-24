@@ -46,6 +46,9 @@ let setup_actions window () =
     Fut.of_list
     @@ List.filter_map
          (fun (module X : Actions.S) ->
+           let _ =
+             match X.setup_all with None -> Fut.return () | Some f -> f ()
+           in
            match X.setup with
            | None -> None
            | Some setup2 ->

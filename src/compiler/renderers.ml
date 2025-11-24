@@ -212,6 +212,9 @@ let custom_html_renderer (files : Ast.Files.map) =
           media ~media_name:"audio" c ~uri ~id ~files l attrs;
           true
       | Ast.Hand_drawn { uri; id = _; origin = (_, (attrs, _)), _ } ->
+          let attrs =
+            Attributes.add_class attrs ("slipshow-hand-drawn", Meta.none)
+          in
           pure_embed c uri files attrs;
           true
       | _ -> false (* let the default HTML renderer handle that *)

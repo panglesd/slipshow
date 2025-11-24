@@ -45,6 +45,7 @@ module Execute = struct
 
   let do_ window elems = Undoable.List.iter (do_ window) elems
   let setup = None
+  let setup_all = None
 end
 
 (* Note: the order is important, it's going to be applied in this order *)
