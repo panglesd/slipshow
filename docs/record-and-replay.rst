@@ -1,6 +1,6 @@
-=========================
-Drawing record and replay
-=========================
+==========================
+Record and replay drawings
+==========================
 
 Slipshow has an experimental feature, where you can record a drawing, and replay it during you presentation.
 

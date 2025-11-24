@@ -436,6 +436,9 @@ These attributes are actions that will be executed when a ``pause`` or ``step`` 
 ``exec``
   Execute the slipscript. Possible to specify multiple ids.
 
+``draw``
+  Replay the drawing. Possible to specify multiple ids. See :ref:`Record and replay drawings`.
+
 Custom scripts
 ==============
 
