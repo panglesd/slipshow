@@ -983,19 +983,25 @@ module Draw = struct
   let action_name = on
 
   let setup elem =
-    let data = Brr.El.at (Jstr.v "x-data") elem in
-    (match data with
-    | None -> ()
-    | Some data -> (
-        let open Drawing_state.Live_coding in
-        match Drawing_state.Json.string_to_recording (Jstr.to_string data) with
-        | Error e -> Brr.Console.(log [ e ])
-        | Ok recording ->
-            let replaying_state = { recording; time = Lwd.var 0. } in
-            Hashtbl.add state elem replaying_state;
-            Lwd_table.append' Drawing_state.Live_coding.workspaces.recordings
-              replaying_state));
-    Fut.return ()
+    match Hashtbl.find_opt state elem with
+    | Some _ -> Fut.return ()
+    | None ->
+        let data = Brr.El.at (Jstr.v "x-data") elem in
+        (match data with
+        | None -> ()
+        | Some data -> (
+            let open Drawing_state.Live_coding in
+            match
+              Drawing_state.Json.string_to_recording (Jstr.to_string data)
+            with
+            | Error e -> Brr.Console.(log [ e ])
+            | Ok recording ->
+                let replaying_state = { recording; time = Lwd.var 0. } in
+                Hashtbl.add state elem replaying_state;
+                Lwd_table.append'
+                  Drawing_state.Live_coding.workspaces.recordings
+                  replaying_state));
+        Fut.return ()
 
   let setup_all () =
     Brr.El.fold_find_by_selector
