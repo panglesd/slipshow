@@ -38,7 +38,6 @@ let entry_action window step =
     let _unlistener =
       Brr.Ev.listen Brr.Ev.click
         (fun _ ->
-          let open Fut.Syntax in
           let _ : unit Fut.t =
             Fast.with_fast @@ fun () -> Step.Next.goto step window
           in

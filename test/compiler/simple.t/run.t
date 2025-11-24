@@ -2,12 +2,14 @@ We can compile the file using the slip_of_mark binary
 
   $ slipshow compile -o file.html file.md
 
-  $ show_source file.html | grep "<body>" -A 11
+  $ show_source file.html | grep "<body>" -A 13
     <body>
-      <div id="slipshow-main">
-        <div id="slipshow-content">
-          <svg id="slipshow-drawing-elem" style="overflow:visible; position: absolute; z-index:1000"></svg>
-          <div class="slipshow-rescaler" slip enter-at-unpause>
+      <div id="slipshow-vertical-flex">
+        <div id="slipshow-horizontal-flex">
+          <div id="slipshow-main">
+            <div id="slipshow-content">
+              <svg id="slipshow-drawing-elem" style="overflow:visible; position: absolute; z-index:1000; pointer-events: none"></svg>
+              <div class="slipshow-rescaler" slip enter-at-unpause=~duration:0>
   <div class="slip">
   <div class="slip-body">
   <div>
@@ -42,17 +44,17 @@ If we do not pass an input file, it gets its value from stdin
 
   $ show_source file.html | grep "<body>" -A 11
     <body>
-      <div id="slipshow-main">
-        <div id="slipshow-content">
-          <svg id="slipshow-drawing-elem" style="overflow:visible; position: absolute; z-index:1000"></svg>
-          <div class="slipshow-rescaler" slip enter-at-unpause>
+      <div id="slipshow-vertical-flex">
+        <div id="slipshow-horizontal-flex">
+          <div id="slipshow-main">
+            <div id="slipshow-content">
+              <svg id="slipshow-drawing-elem" style="overflow:visible; position: absolute; z-index:1000; pointer-events: none"></svg>
+              <div class="slipshow-rescaler" slip enter-at-unpause=~duration:0>
   <div class="slip">
   <div class="slip-body">
   <div>
   <h1 id="title"><a class="anchor" aria-hidden="true" href="#title"></a><span>Title</span></h1>
   <p><span>Paragraph</span></p>
-  </div>
-  </div>
 
 If we give neither the input nor the output, stdin and stdout are used:
 

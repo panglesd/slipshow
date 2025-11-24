@@ -42,7 +42,7 @@ let shortcut_editing (editing_state : editing_state) key =
       true
   | _ -> false
 
-let shortcut_drawing strokes mode key =
+let shortcut_drawing mode key =
   match key with
   | "p" | "w" ->
       Lwd.set live_drawing_state.tool (Stroker Pen);
@@ -74,14 +74,7 @@ let shortcut_drawing strokes mode key =
 
 let shortcuts key =
   match Lwd.peek status with
-  | Drawing mode ->
-      let strokes =
-        match mode with
-        | Presenting -> workspaces.live_drawing
-        | Recording (* { recording = { strokes; _ }; _ } *) _ ->
-            workspaces.current_recording.recording.strokes
-      in
-      shortcut_drawing strokes mode key
+  | Drawing mode -> shortcut_drawing mode key
   | Editing -> shortcut_editing (Lwd.peek current_editing_state) key
 
 let handle ev =

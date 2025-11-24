@@ -94,7 +94,7 @@ let go_next window n =
   let+ () = loop n in
   actualize ()
 
-let go_prev window n =
+let go_prev n =
   in_queue @@ fun () ->
   let rec loop n =
     if n <= 0 then Fut.return ()
@@ -111,7 +111,7 @@ let go_prev window n =
 let goto step window =
   let current_step = State.get_step () in
   let* () = Excursion.end_ window () in
-  if current_step > step then go_prev window (current_step - step)
+  if current_step > step then go_prev (current_step - step)
   else if current_step < step then go_next window (step - current_step)
   else Fut.return ()
 
