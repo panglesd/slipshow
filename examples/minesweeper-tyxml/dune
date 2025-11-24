@@ -1,0 +1,26 @@
+(executables
+ (names main)
+ (libraries js_of_ocaml-lwt lwd tyxml_lwd)
+ (modes byte)
+ (preprocess
+  (pps js_of_ocaml-ppx)))
+
+(rule
+ (targets main.js)
+ (action
+  (run
+   %{bin:js_of_ocaml}
+   --noruntime
+   %{lib:js_of_ocaml-compiler:runtime.js}
+   --source-map
+   %{dep:main.bc}
+   -o
+   %{targets}
+   --pretty)))
+
+(alias
+ (name default)
+ (deps
+  main.js
+  index.html
+  (glob_files sprites/*.{png,svg})))
