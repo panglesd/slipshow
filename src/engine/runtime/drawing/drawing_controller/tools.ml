@@ -78,7 +78,7 @@ module Draw_stroke = struct
   let event ~started_time strokes stroker color width =
     let start x y _ev =
       let id =
-        "id" ^ (Random.int 100000 |> string_of_int)
+        "id" ^ (Random.int (Int.max_int - 1) |> string_of_int)
         (* TODO: id *)
       in
       let arg = { started_time; stroker; color; width; id } in
