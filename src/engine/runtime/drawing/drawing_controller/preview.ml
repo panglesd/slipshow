@@ -223,7 +223,7 @@ let drawing_area =
     let$* status = Lwd.get status in
     let$* all_replayed =
       Lwd_table.map_reduce
-        (fun _row { recording; time } ->
+        (fun _row { recording; time; is_playing = _ } ->
           match status with
           | Drawing (Recording { replaying_state; _ })
             when replaying_state.recording.record_id = recording.record_id ->

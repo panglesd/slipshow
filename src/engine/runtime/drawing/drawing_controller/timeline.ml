@@ -185,9 +185,99 @@ let strokes recording =
     Lwd_seq.lwd_monoid recording.strokes
   |> Lwd.join |> Lwd_seq.lift
 
+let block_of_pause recording (pause : pause) =
+  let border_width = 5 in
+  let border color = Jstr.(px_int border_width + v " solid " + v color) in
+  (* let selected = *)
+  (*   let$ selected = Lwd.get pause.p_selected *)
+  (*   and$ preselected = Lwd.get pause.p_preselected in *)
+  (*   let l = *)
+  (*     if selected then *)
+  (*       let height = px_int (stroke_height - (border_width * 2)) in *)
+  (*       [ (Brr.El.Style.height, height); (!!"border", border "black") ] *)
+  (*     else if preselected then *)
+  (*       let height = px_int (stroke_height - (border_width * 2)) in *)
+  (*       [ (Brr.El.Style.height, height); (!!"border", border "grey") ] *)
+  (*     else [ (Brr.El.Style.height, px_int stroke_height) ] *)
+  (*   in *)
+  (*   Lwd_seq.of_list ((!!"min-width", !!"1px") :: l) *)
+  (* in *)
+  let t = Lwd.get pause.p_at in
+  let left =
+    let$ start_time = t and$ total_length = total_length recording in
+    let left = start_time *. 100. /. total_length in
+    let left = Jstr.append (Jstr.of_float left) !!"%" in
+    (* let left = *)
+    (*   Jstr.(v "calc(" + left + v " - " + of_int (stroke_height / 2) + v "px)") *)
+    (* in *)
+    (Brr.El.Style.left, left)
+  in
+  let top = (Brr.El.Style.top, !!"0") in
+  let bottom = (Brr.El.Style.bottom, !!"0") in
+  let width = (Brr.El.Style.width, px_int 3) in
+  let selected =
+    let$ selected = Lwd.get pause.p_selected
+    and$ preselected = Lwd.get pause.p_preselected in
+    let l =
+      if selected || preselected then
+        (* let height = px_int (stroke_height - (border_width * 2)) in *)
+        [
+          (* (Brr.El.Style.height, height); *)
+          (!!"border", border "rgb(165,165,165)");
+        ]
+      else [ (* (Brr.El.Style.height, px_int stroke_height) *) ]
+    in
+    Lwd_seq.of_list l
+  in
+  let st =
+    [
+      `R left;
+      `P top;
+      `P bottom;
+      `S selected;
+      `P (Brr.El.Style.position, !!"absolute");
+      `P width;
+      `P (Brr.El.Style.background_color, !!"lightgrey");
+      `P (!!"border-radius", px_int (stroke_height / 2));
+      (* `R color; *)
+    ]
+  in
+  (* let ev_hover = *)
+  (*   let$ current_tool = Lwd.get Drawing_state.editing_tool in *)
+  (*   match current_tool with *)
+  (*   | Move | Rescale -> Lwd_seq.empty *)
+  (*   | Select -> snd @@ Ui_widgets.hover ~var:v.preselected () *)
+  (* in *)
+  (* let ev = [ `S ev_hover ] in *)
+  let res = Elwd.div (* ~ev *) ~st [] in
+  Lwd_seq.element res
+(* let$ erased_block = *)
+(*   let$ erased = Lwd.get stroke.erased in *)
+(*   match erased with *)
+(*   | None -> Lwd_seq.empty *)
+(*   | Some erased_at -> Lwd_seq.element @@ block_of_erased erased_at *)
+(* in *)
+(* let ev = *)
+(*   let ev_hover = *)
+(*     let$ current_tool = Lwd.get Drawing_state.editing_tool in *)
+(*     match current_tool with *)
+(*     | Move | Rescale -> Lwd_seq.empty *)
+(*     | Select -> snd @@ Ui_widgets.hover ~var:stroke.preselected () *)
+(*   in *)
+(*   [ `S ev_hover ] *)
+(* in *)
+(* Lwd_seq.concat (Lwd_seq.element @@ Elwd.div ~ev ~st []) erased_block *)
+
+let pauses recording =
+  Lwd_table.map_reduce
+    (fun _ s -> block_of_pause recording s)
+    Lwd_seq.monoid recording.pauses
+  (* |> Lwd.join *) |> Lwd_seq.lift
+
 let el replaying_state =
   let recording = replaying_state.recording in
   let strokes = strokes recording in
+  let pauses = pauses recording in
   let time_line =
     let st =
       let left =
@@ -247,4 +337,4 @@ let el replaying_state =
     | Select -> Editing_tools.Selection.Timeline.box
     | Move | Rescale -> Lwd.return Lwd_seq.empty
   in
-  Elwd.div ~ev:[ `S ev ] ~st [ `S strokes; `R time_line; `S box ]
+  Elwd.div ~ev:[ `S ev ] ~st [ `S strokes; `S pauses; `R time_line; `S box ]

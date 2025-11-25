@@ -36,14 +36,27 @@ type stro = {
 
 type strokes = stro Lwd_table.t
 
+type pause = {
+  p_selected : bool Lwd.var;
+  p_preselected : bool Lwd.var;
+  p_at : float Lwd.var;
+}
+
+type pauses = pause Lwd_table.t
+
 type recording = {
   strokes : strokes;
+  pauses : pauses;
   total_time : float Lwd.var;
   name : string Lwd.var;
   record_id : int;
 }
 
-type replaying_state = { recording : recording; time : float Lwd.var }
+type replaying_state = {
+  recording : recording;
+  time : float Lwd.var;
+  is_playing : bool Lwd.var;
+}
 
 type workspaces = {
   recordings : replaying_state Lwd_table.t;
@@ -60,11 +73,6 @@ type live_drawing_state = {
 }
 
 type editing_tool = Select | Move | Rescale
-
-type editing_state = {
-  replaying_state : replaying_state;
-  is_playing : bool Lwd.var;
-}
 
 module StringMap = Map.Make (String)
 

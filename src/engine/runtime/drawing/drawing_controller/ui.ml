@@ -5,7 +5,7 @@ open Brr_lwd
 let ( !! ) = Jstr.v
 let total_length (recording : recording) = Lwd.get recording.total_time
 
-let slider (editing_state : editing_state) =
+let slider (replaying_state : replaying_state) =
   let attrs =
     [
       `P (Brr.At.id !!"slipshow-time-slider");
@@ -15,14 +15,14 @@ let slider (editing_state : editing_state) =
   in
   let prop =
     let max =
-      let$ max = total_length editing_state.replaying_state.recording in
+      let$ max = total_length replaying_state.recording in
       (!!"max", Jv.of_float max)
     in
     [ `R max ]
   in
   let el =
-    Ui_widgets.float ~prop ~type':"range" ~kind:`Input
-      editing_state.replaying_state.time attrs
+    Ui_widgets.float ~prop ~type':"range" ~kind:`Input replaying_state.time
+      attrs
   in
   Elwd.div [ `R el ]
 
@@ -139,10 +139,10 @@ let global_panel recording =
           let recording_id = string_of_int workspace.recording.record_id in
           let value = Brr.At.value (Jstr.v recording_id) in
           let selected =
-            let$ current_editing_state = Lwd.get current_editing_state in
+            let$ current_replaying_state = Lwd.get current_replaying_state in
             if
               workspace.recording.record_id
-              = current_editing_state.replaying_state.recording.record_id
+              = current_replaying_state.recording.record_id
             then Lwd_seq.element Brr.At.selected
             else Lwd_seq.empty
           in
@@ -158,10 +158,10 @@ let global_panel recording =
       in
       let value = Brr.At.value (Jstr.v recording_id) in
       let selected =
-        let$ current_editing_state = Lwd.get current_editing_state in
+        let$ current_replaying_state = Lwd.get current_replaying_state in
         if
           workspaces.current_recording.recording.record_id
-          = current_editing_state.replaying_state.recording.record_id
+          = current_replaying_state.recording.record_id
         then Lwd_seq.element Brr.At.selected
         else Lwd_seq.empty
       in
@@ -185,8 +185,7 @@ let global_panel recording =
               workspaces.current_recording
             with Found r -> r
           in
-          Lwd.set current_editing_state
-            { replaying_state; is_playing = Lwd.var false })
+          Lwd.set current_replaying_state replaying_state)
     in
     let select =
       Elwd.select ~ev:[ `P change ] [ `S options; `R current_recording ]
@@ -196,18 +195,33 @@ let global_panel recording =
   in
   Elwd.div [ `R name_title; `R select (* ; `R total_time *); `R change_title ]
 
-let play (editing_state : editing_state) =
-  Lwd.set editing_state.is_playing true;
-  let now () = Brr.Performance.now_ms Brr.G.performance in
-  let max = Lwd.peek editing_state.replaying_state.recording.total_time in
-  let start_time = now () -. Lwd.peek editing_state.replaying_state.time in
+let play (replaying_state : replaying_state) =
+  Lwd.set replaying_state.is_playing true;
+  let max = Lwd.peek replaying_state.recording.total_time in
+  let start_time = now () -. Lwd.peek replaying_state.time in
+  let current_time = ref @@ Tools.now () in
   let rec loop _ =
-    let now = now () -. start_time in
-    Lwd.set editing_state.replaying_state.time now;
-    if now <= max && Lwd.peek editing_state.is_playing then
+    let now = Tools.now () in
+    let increment = now -. !current_time in
+    current_time := now;
+    let now = now -. start_time in
+    let before = now -. increment in
+    let has_crossed_pause =
+      Lwd_table.fold
+        (fun b pause ->
+          b
+          ||
+          let at = Lwd.peek pause.p_at in
+          before <= at && at < now)
+        false replaying_state.recording.pauses
+    in
+    Lwd.set replaying_state.time now;
+    if
+      now <= max && Lwd.peek replaying_state.is_playing && not has_crossed_pause
+    then
       let _animation_frame_id = Brr.G.request_animation_frame loop in
       ()
-    else Lwd.set editing_state.is_playing false
+    else Lwd.set replaying_state.is_playing false
   in
   loop 0.
 
@@ -246,6 +260,21 @@ let save_button recording =
   in
   Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "💾 Save") ]
 
+let add_pause_button (replaying_state : replaying_state) =
+  let click =
+    Elwd.handler Brr.Ev.click (fun _ ->
+        let current_time = Lwd.peek replaying_state.time in
+        let new_pause =
+          {
+            p_at = Lwd.var current_time;
+            p_preselected = Lwd.var false;
+            p_selected = Lwd.var false;
+          }
+        in
+        Lwd_table.append' replaying_state.recording.pauses new_pause)
+  in
+  Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Add pause") ]
+
 (* let select_button = *)
 (*   let click = *)
 (*     Elwd.handler Brr.Ev.click (fun _ -> Lwd.set editing_tool Select) *)
@@ -269,8 +298,8 @@ let close_button =
   Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Close editing panel") ]
 
 let el =
-  let$* editing_state = Lwd.get current_editing_state in
-  let recording = editing_state.replaying_state.recording in
+  let$* replaying_state = Lwd.get current_replaying_state in
+  let recording = replaying_state.recording in
   let description =
     let$* s =
       Lwd_table.map_reduce
@@ -297,7 +326,7 @@ let el =
     | [] -> global_panel recording
     | strokes -> description_of_selection strokes
   in
-  let ti = Ui_widgets.float editing_state.replaying_state.time [] in
+  let ti = Ui_widgets.float replaying_state.time [] in
   let description =
     Elwd.div
       ~st:
@@ -308,7 +337,7 @@ let el =
         ]
       [ `R description ]
   in
-  let strokes = Timeline.el editing_state.replaying_state in
+  let strokes = Timeline.el replaying_state in
   let time_panel =
     let$* is_non_empty =
       Lwd_table.map_reduce
@@ -321,13 +350,14 @@ let el =
         ~st:[ `P (!!"flex-grow", !!"1") ]
         [
           `R ti;
-          `R (play_button editing_state);
+          `R (play_button replaying_state);
           `R (save_button recording);
           (* `R select_button; *)
           (* `R move_button; *)
           (* `R scale_button; *)
+          `R (add_pause_button replaying_state);
           `R close_button;
-          `R (slider editing_state);
+          `R (slider replaying_state);
           `R strokes;
           (* `R (left_selection recording); *)
           (* `R (right_selection recording); *)

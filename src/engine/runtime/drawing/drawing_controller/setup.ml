@@ -166,8 +166,7 @@ let connect () =
       and$ current_tool = Lwd.get Drawing_state.editing_tool in
       match status with
       | Editing -> (
-          let$ editing_state = Lwd.get current_editing_state in
-          let replaying_state = editing_state.replaying_state in
+          let$ replaying_state = Lwd.get current_replaying_state in
           match current_tool with
           | Move ->
               Lwd_seq.element

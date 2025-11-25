@@ -135,25 +135,63 @@ module V1 = struct
         Ok tbl
     | _ -> Error ()
 
-  let of_recording { strokes; total_time; record_id; name } =
+  let of_pause pause = `Float (Lwd.peek pause.p_at)
+
+  let to_pause : Yojson.Safe.t -> (pause, _) result = function
+    | `Float f ->
+        Ok
+          {
+            p_at = Lwd.var f;
+            p_selected = Lwd.var false;
+            p_preselected = Lwd.var false;
+          }
+    | _ -> Error ()
+
+  let of_pauses pauses =
+    let arr =
+      Lwd_table.fold (fun acc pause -> of_pause pause :: acc) [] pauses
+    in
+    `List (List.rev arr)
+
+  let to_pauses : Yojson.Safe.t -> _ = function
+    | `List l ->
+        let tbl = Lwd_table.make () in
+        let ( let* ) x y = Result.bind x y in
+        let* () =
+          List.fold_left
+            (fun acc el ->
+              let* () = acc in
+              let* pause = to_pause el in
+              Lwd_table.append' tbl pause;
+              Ok ())
+            (Ok ()) l
+        in
+        Ok tbl
+    | _ -> Error ()
+
+  let of_recording { strokes; total_time; record_id; name; pauses } =
     `List
       [
         of_strokes strokes;
         `Float (Lwd.peek total_time);
         `Int record_id;
         `String (Lwd.peek name);
+        of_pauses pauses;
       ]
 
   let to_recording : Yojson.Safe.t -> _ = function
-    | `List [ strokes; `Float total_time; `Int record_id; `String name ] ->
+    | `List [ strokes; `Float total_time; `Int record_id; `String name; pauses ]
+      ->
         let ( let* ) x y = Result.bind x y in
         let* strokes = to_strokes strokes in
+        let* pauses = to_pauses pauses in
         Ok
           {
             strokes;
             total_time = Lwd.var total_time;
             record_id;
             name = Lwd.var name;
+            pauses;
           }
     | _ -> Error ()
 

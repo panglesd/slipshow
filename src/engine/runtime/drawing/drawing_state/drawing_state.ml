@@ -16,19 +16,15 @@ let workspaces : workspaces =
             total_time = Lwd.var 0.;
             record_id = Random.bits ();
             name = Lwd.var "Unnamed recording";
+            pauses = Lwd_table.make ();
           };
         time = Lwd.var 0.;
+        is_playing = Lwd.var false;
       };
   }
 
 let editing_tool = Lwd.var Select
-
-let current_editing_state =
-  Lwd.var
-    {
-      replaying_state = workspaces.current_recording;
-      is_playing = Lwd.var false;
-    }
+let current_replaying_state = Lwd.var workspaces.current_recording
 
 let live_drawing_state =
   {

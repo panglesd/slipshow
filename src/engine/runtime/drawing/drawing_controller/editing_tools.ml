@@ -342,7 +342,6 @@ module Move = struct
         let x = x -. Brr.El.bound_x el in
         let select_after_time () =
           let time2 = x *. scale el in
-          Brr.Console.(log [ "time_shift"; el; x; Jv.of_float time2 ]);
           let strokes =
             Lwd_table.fold
               (fun acc stroke ->

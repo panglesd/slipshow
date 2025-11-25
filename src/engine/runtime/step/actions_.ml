@@ -996,7 +996,9 @@ module Draw = struct
             with
             | Error e -> Brr.Console.(log [ e ])
             | Ok recording ->
-                let replaying_state = { recording; time = Lwd.var 0. } in
+                let replaying_state =
+                  { recording; time = Lwd.var 0.; is_playing = Lwd.var false }
+                in
                 Hashtbl.add state elem replaying_state;
                 Lwd_table.append' workspaces.recordings replaying_state));
         Fut.return ()
@@ -1031,19 +1033,34 @@ module Draw = struct
     let start_replay = Drawing_controller.Tools.now () in
     let original_time = Lwd.peek record.time in
     let max_time = Lwd.peek record.recording.total_time in
+    let current_time = ref @@ Drawing_controller.Tools.now () in
     let rec draw_loop _ =
       let speedup = update_speedup speedup in
-      let new_time =
-        original_time
-        +. ((Drawing_controller.Tools.now () -. start_replay) *. speedup)
+      let now = Drawing_controller.Tools.now () in
+      let increment = now -. !current_time in
+      current_time := now;
+      let before = now -. increment in
+      let new_time = original_time +. ((now -. start_replay) *. speedup) in
+      let time_before =
+        original_time +. ((before -. start_replay) *. speedup)
       in
-      if new_time >= max_time then (
+      let has_crossed_pause =
+        Lwd_table.fold
+          (fun b (pause : Drawing_state.pause) ->
+            b
+            ||
+            let at = Lwd.peek pause.p_at in
+            time_before <= at && at < new_time)
+          false record.recording.pauses
+      in
+      Lwd.set record.time new_time;
+      if has_crossed_pause then resolve_fut ()
+      else if new_time >= max_time then (
         Lwd.set record.time max_time;
         resolve_fut ())
-      else (
-        Lwd.set record.time new_time;
+      else
         let _animation_frame_id = Brr.G.request_animation_frame draw_loop in
-        ())
+        ()
     in
     let _animation_frame_id = Brr.G.request_animation_frame draw_loop in
     fut

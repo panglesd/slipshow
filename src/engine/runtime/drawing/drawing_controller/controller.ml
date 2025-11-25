@@ -1,6 +1,6 @@
 open Drawing_state
 
-let shortcut_editing (editing_state : editing_state) key =
+let shortcut_editing (replaying_state : replaying_state) key =
   match key with
   | "m" ->
       Lwd.set editing_tool Move;
@@ -12,33 +12,29 @@ let shortcut_editing (editing_state : editing_state) key =
       Lwd.set editing_tool Rescale;
       true
   | "R" ->
-      start_recording editing_state.replaying_state;
+      start_recording replaying_state;
       true
   | " " ->
-      (match Lwd.peek editing_state.is_playing with
-      | true -> Lwd.set editing_state.is_playing false
+      (match Lwd.peek replaying_state.is_playing with
+      | true -> Lwd.set replaying_state.is_playing false
       | false ->
-          Ui.play editing_state;
-          Lwd.set editing_state.is_playing true);
+          Ui.play replaying_state;
+          Lwd.set replaying_state.is_playing true);
       true
   | "ArrowRight" ->
       Lwd.update
         (fun t ->
-          let total_time =
-            Lwd.peek editing_state.replaying_state.recording.total_time
-          in
+          let total_time = Lwd.peek replaying_state.recording.total_time in
           let res = t +. (total_time /. 100.) in
           Float.min res total_time)
-        editing_state.replaying_state.time;
+        replaying_state.time;
       true
   | "ArrowLeft" ->
       Lwd.update
         (fun t ->
-          let total_time =
-            Lwd.peek editing_state.replaying_state.recording.total_time
-          in
+          let total_time = Lwd.peek replaying_state.recording.total_time in
           Float.max (t -. (total_time /. 100.)) 0.)
-        editing_state.replaying_state.time;
+        replaying_state.time;
       true
   | _ -> false
 
@@ -75,7 +71,7 @@ let shortcut_drawing mode key =
 let shortcuts key =
   match Lwd.peek status with
   | Drawing mode -> shortcut_drawing mode key
-  | Editing -> shortcut_editing (Lwd.peek current_editing_state) key
+  | Editing -> shortcut_editing (Lwd.peek current_replaying_state) key
 
 let handle ev =
   let key = ev |> Brr.Ev.as_type |> Brr.Ev.Keyboard.key |> Jstr.to_string in
