@@ -154,7 +154,7 @@ let finish_recording
       replaying_state;
       started_at;
       recording_temp;
-      replayed_part = _;
+      replayed_part;
       unplayed_erasure;
     } =
   let additional_time = now () -. started_at -. Lwd.peek replaying_state.time in
@@ -189,7 +189,14 @@ let finish_recording
     replaying_state.recording.strokes;
   Lwd.update (( +. ) additional_time) replaying_state.recording.total_time;
   Lwd.update (( +. ) additional_time) replaying_state.time;
+  let max_track =
+    Lwd_table.fold
+      (fun max_track stro -> Int.max max_track (Lwd.peek stro.track))
+      0 replayed_part
+  in
   Lwd_table.iter
-    (fun stro -> Lwd_table.append' replaying_state.recording.strokes stro)
+    (fun stro ->
+      Lwd.set stro.track max_track;
+      Lwd_table.append' replaying_state.recording.strokes stro)
     recording_temp;
   Lwd.set status Editing
