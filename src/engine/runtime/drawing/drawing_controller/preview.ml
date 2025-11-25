@@ -296,7 +296,10 @@ let init_drawing_area () =
   Lwd.set_on_invalidate svg on_invalidate;
   ()
 
-let for_events () =
+let for_events =
+  let drawing_started_time = Tools.now () in
+  (* Just to avoid one level of indentation... *)
+  Fun.id @@ fun () ->
   let open Lwd_infix in
   let panel =
     let handler =
@@ -310,7 +313,7 @@ let for_events () =
         | Stroker stroker ->
             let strokes, started_time =
               match d with
-              | Presenting -> (workspaces.live_drawing, Tools.now ())
+              | Presenting -> (workspaces.live_drawing, drawing_started_time)
               | Recording { started_at; replaying_state = _; recording_temp; _ }
                 ->
                   (recording_temp, started_at)
