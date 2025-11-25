@@ -20,6 +20,7 @@ let send_speaker_view oc panel =
   in
   let window = content_window panel in
   let msg =
+    (* Currently, the ID does not matter... *)
     { payload; id = "TODO" } |> Communication.to_string |> Jv.of_string
   in
   Brr.Window.post_message window ~msg
