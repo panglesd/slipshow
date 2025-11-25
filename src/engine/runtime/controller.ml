@@ -174,7 +174,7 @@ let touch_setup (window : Universe.Window.t) =
     in
     if
       String.equal "touch" type_
-      && Lwd.peek Drawing_state.Live_coding.live_drawing_state.tool = Pointer
+      && Lwd.peek Drawing_state.live_drawing_state.tool = Pointer
     then stop_here ()
   in
   let opts = Brr.Ev.listen_opts ~passive:false () in
@@ -188,7 +188,7 @@ let touch_setup (window : Universe.Window.t) =
     in
     if
       String.equal "touch" type_
-      && Lwd.peek Drawing_state.Live_coding.live_drawing_state.tool = Pointer
+      && Lwd.peek Drawing_state.live_drawing_state.tool = Pointer
     then stop_here ()
   in
   let _listener = Brr.Ev.listen ~opts Brr.Ev.pointerup touchend target in
@@ -197,14 +197,14 @@ let touch_setup (window : Universe.Window.t) =
 let comm_of_jv m = m |> Jv.to_string |> Communication.of_string
 
 type ('a, 'b) dragger = {
-  start : Drawing_state.Live_coding.strokes -> 'a -> float -> float -> 'b;
+  start : Drawing_state.strokes -> 'a -> float -> float -> 'b;
   drag : x:float -> y:float -> dx:float -> dy:float -> 'b -> 'b;
   end_ : 'b -> unit;
 }
 
 let handle_drag (dragger : (_, 'b) dragger) =
   let acc : 'b option ref = ref None in
-  let strokes = Drawing_state.Live_coding.workspaces.live_drawing in
+  let strokes = Drawing_state.workspaces.live_drawing in
   fun (s : 'a Drawing_controller.Messages.drag_event) ->
     match s with
     | Start (arg, x, y) ->
@@ -243,7 +243,7 @@ let handle_drawing d =
   | Some (Erase s) -> handle_erase s
   | Some (Clear started_time) ->
       Drawing_controller.Tools.Clear.clear ~replayed_strokes:None started_time
-        Drawing_state.Live_coding.workspaces.live_drawing
+        Drawing_state.workspaces.live_drawing
   | None ->
       Brr.Console.(
         error [ "There was an error when decoding a drawing message: "; d ])

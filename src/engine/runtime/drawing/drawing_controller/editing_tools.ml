@@ -1,4 +1,4 @@
-open Drawing_state.Live_coding
+open Drawing_state
 open Lwd_infix
 
 let very_quick_sample g =

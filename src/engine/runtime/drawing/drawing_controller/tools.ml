@@ -1,6 +1,6 @@
 let now () = Brr.Performance.now_ms Brr.G.performance
 
-open Drawing_state.Live_coding
+open Drawing_state
 open Messages
 
 let very_quick_sample g =

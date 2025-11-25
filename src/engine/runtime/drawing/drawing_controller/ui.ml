@@ -1,4 +1,4 @@
-open Drawing_state.Live_coding
+open Drawing_state
 open Lwd_infix
 open Brr_lwd
 
@@ -174,7 +174,7 @@ let global_panel recording =
             Jv.get el "value" |> Jv.to_string |> int_of_string
           in
           let replaying_state =
-            let exception Found of Drawing_state.Live_coding.replaying_state in
+            let exception Found of Drawing_state.replaying_state in
             try
               Lwd_table.iter
                 (fun replaying_state ->

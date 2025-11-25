@@ -1,5 +1,5 @@
 open Lwd_infix
-open Drawing_state.Live_coding
+open Drawing_state
 open Brr_lwd
 
 let set_handler v value = Elwd.handler Brr.Ev.click (fun _ -> Lwd.set v value)
@@ -36,7 +36,7 @@ let init_ui () =
 module Rec_in_progress = struct
   let init () =
     let visib =
-      let$ status = Lwd.get Drawing_state.Live_coding.status in
+      let$ status = Lwd.get Drawing_state.status in
       match status with
       | Drawing (Recording _) -> (Brr.El.Style.display, !!"block")
       | _ -> (Brr.El.Style.display, !!"none")
@@ -96,12 +96,10 @@ module Garbage = struct
   let g () =
     let open Lwd_infix in
     let panel =
-      let$* status = Lwd.get Drawing_state.Live_coding.status in
+      let$* status = Lwd.get Drawing_state.status in
       match status with
       | Drawing Presenting -> (
-          let$ tool =
-            Lwd.get Drawing_state.Live_coding.live_drawing_state.tool
-          in
+          let$ tool = Lwd.get Drawing_state.live_drawing_state.tool in
           match tool with Pointer -> `Presenting | _ -> `Drawing)
       | Drawing (Recording _) -> Lwd.pure `Drawing
       | Editing -> Lwd.pure `Editing
@@ -164,8 +162,8 @@ let connect () =
   let open Lwd_infix in
   let panel =
     let handler =
-      let$* status = Lwd.get Drawing_state.Live_coding.status
-      and$ current_tool = Lwd.get Drawing_state.Live_coding.editing_tool in
+      let$* status = Lwd.get Drawing_state.status
+      and$ current_tool = Lwd.get Drawing_state.editing_tool in
       match status with
       | Editing -> (
           let$ editing_state = Lwd.get current_editing_state in
@@ -183,14 +181,14 @@ let connect () =
       | _ -> Lwd.pure Lwd_seq.empty
     in
     let cursor =
-      let$ current_tool = Lwd.get Drawing_state.Live_coding.editing_tool in
+      let$ current_tool = Lwd.get Drawing_state.editing_tool in
       match current_tool with
       | Select -> (!!"cursor", !!"crosshair")
       | Move -> (!!"cursor", !!"move")
       | Rescale -> (!!"cursor", !!"ne-resize")
     in
     let display =
-      let$ status = Lwd.get Drawing_state.Live_coding.status in
+      let$ status = Lwd.get Drawing_state.status in
       match status with
       | Editing -> (!!"display", !!"block")
       | _ -> (!!"display", !!"none")

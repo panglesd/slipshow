@@ -1,5 +1,5 @@
 open Lwd_infix
-open Drawing_state.Live_coding
+open Drawing_state
 open Brr_lwd
 
 let set_handler v value = Elwd.handler Brr.Ev.click (fun _ -> Lwd.set v value)
@@ -145,7 +145,7 @@ let toplevel_panel_el =
   Elwd.div ~at:[ `P (Brr.At.class' !!"slip-writing-toolbar") ]
 
 let drawing_panel mode =
-  let lds = Drawing_state.Live_coding.live_drawing_state in
+  let lds = Drawing_state.live_drawing_state in
   let pen_button = pen_button lds.tool (Lwd.pure "Pen") "p" in
   let highlighter_button =
     highlighter_button lds.tool (Lwd.pure "Highlighter") "h"
@@ -277,7 +277,7 @@ let editing_panel =
     let record =
       let handler =
         Elwd.handler Brr.Ev.click (fun _ ->
-            Drawing_state.Live_coding.start_recording
+            Drawing_state.start_recording
               (Lwd.peek current_editing_state).replaying_state)
       in
       let icon =
@@ -311,7 +311,7 @@ let editing_panel =
 
 let panel =
   let content =
-    let$* status = Lwd.get Drawing_state.Live_coding.status in
+    let$* status = Lwd.get Drawing_state.status in
     match status with Drawing d -> drawing_panel d | Editing -> editing_panel
   in
   Elwd.div ~at:[ `P (Brr.At.id !!"slipshow-drawing-toolbar") ] [ `R content ]

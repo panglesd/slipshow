@@ -990,7 +990,7 @@ module Draw = struct
         (match data with
         | None -> ()
         | Some data -> (
-            let open Drawing_state.Live_coding in
+            let open Drawing_state in
             match
               Drawing_state.Json.string_to_recording (Jstr.to_string data)
             with
@@ -998,9 +998,7 @@ module Draw = struct
             | Ok recording ->
                 let replaying_state = { recording; time = Lwd.var 0. } in
                 Hashtbl.add state elem replaying_state;
-                Lwd_table.append'
-                  Drawing_state.Live_coding.workspaces.recordings
-                  replaying_state));
+                Lwd_table.append' workspaces.recordings replaying_state));
         Fut.return ()
 
   let setup_all () =
@@ -1028,8 +1026,7 @@ module Draw = struct
     | Fast_move -> 10000.
     | Counting_for_toc -> assert false (* See "only_if_not_fast" *)
 
-  let replay ?(speedup = 1.)
-      (record : Drawing_state.Live_coding.replaying_state) =
+  let replay ?(speedup = 1.) (record : Drawing_state.replaying_state) =
     let fut, resolve_fut = Fut.create () in
     let start_replay = Drawing_controller.Tools.now () in
     let original_time = Lwd.peek record.time in

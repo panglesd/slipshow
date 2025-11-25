@@ -1,5 +1,5 @@
 open Lwd_infix
-open Drawing_state.Live_coding
+open Drawing_state
 open Brr_lwd
 
 let ( !! ) = Jstr.v
@@ -154,7 +154,7 @@ let block_of_stroke recording (stroke : stro) =
       ]
     in
     let ev_hover =
-      let$ current_tool = Lwd.get Drawing_state.Live_coding.editing_tool in
+      let$ current_tool = Lwd.get Drawing_state.editing_tool in
       match current_tool with
       | Move | Rescale -> Lwd_seq.empty
       | Select -> snd @@ Ui_widgets.hover ~var:v.preselected ()
@@ -170,7 +170,7 @@ let block_of_stroke recording (stroke : stro) =
   in
   let ev =
     let ev_hover =
-      let$ current_tool = Lwd.get Drawing_state.Live_coding.editing_tool in
+      let$ current_tool = Lwd.get Drawing_state.editing_tool in
       match current_tool with
       | Move | Rescale -> Lwd_seq.empty
       | Select -> snd @@ Ui_widgets.hover ~var:stroke.preselected ()
@@ -215,7 +215,7 @@ let el replaying_state =
         Jstr.append (Jstr.of_int ((n_track + 1) * stroke_height)) !!"px" )
     in
     let cursor =
-      let$ current_tool = Lwd.get Drawing_state.Live_coding.editing_tool in
+      let$ current_tool = Lwd.get Drawing_state.editing_tool in
       match current_tool with
       | Select -> (!!"cursor", !!"crosshair")
       | Move -> (!!"cursor", !!"move")
@@ -231,7 +231,7 @@ let el replaying_state =
     ]
   in
   let ev =
-    let$ current_tool = Lwd.get Drawing_state.Live_coding.editing_tool in
+    let$ current_tool = Lwd.get Drawing_state.editing_tool in
     match current_tool with
     | Select ->
         Lwd_seq.element
@@ -242,7 +242,7 @@ let el replaying_state =
     | Rescale -> Lwd_seq.element @@ Editing_tools.Scale.Timeline.event recording
   in
   let box =
-    let$* current_tool = Lwd.get Drawing_state.Live_coding.editing_tool in
+    let$* current_tool = Lwd.get Drawing_state.editing_tool in
     match current_tool with
     | Select -> Editing_tools.Selection.Timeline.box
     | Move | Rescale -> Lwd.return Lwd_seq.empty

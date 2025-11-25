@@ -1,5 +1,5 @@
 open Lwd_infix
-open Drawing_state.Live_coding
+open Drawing_state
 open Brr_lwd
 
 let ( !! ) = Jstr.v
@@ -271,7 +271,7 @@ let drawing_area =
     Lwd_seq.concat all_replayed recorded_drawing
   in
   let drawn_live_drawing =
-    act ~time:None Drawing_state.Live_coding.workspaces.live_drawing
+    act ~time:None Drawing_state.workspaces.live_drawing
   in
   Elwd.v ~ns:`SVG (Jstr.v "g") [ `S all_drawings; `R drawn_live_drawing ]
 
@@ -344,7 +344,7 @@ let for_events =
       | Editing -> Lwd.pure Lwd_seq.empty
     in
     let display =
-      let$* status = Lwd.get Drawing_state.Live_coding.status in
+      let$* status = Lwd.get Drawing_state.status in
       let$ tool = Lwd.get live_drawing_state.tool in
       match (status, tool) with
       | Drawing _, (Stroker _ | Eraser) -> (!!"display", !!"block")

@@ -1,4 +1,4 @@
-open Drawing_state.Live_coding
+open Drawing_state
 
 let width_to_yojson x = `Float x
 let width_of_yojson = function `Float x -> Ok x | _ -> Error ""
@@ -57,7 +57,7 @@ let send_all_strokes () =
     Lwd_table.fold
       (fun acc e ->
         Yojson.Safe.to_string (Drawing_state.Json.V1.of_stro e) :: acc)
-      [] Drawing_state.Live_coding.workspaces.live_drawing
+      [] Drawing_state.workspaces.live_drawing
   in
   Messaging.send_all_strokes strokes
 
@@ -78,5 +78,5 @@ let receive_all_strokes strokes =
       (* This is a hack so that strokes keep their order, even though the time
          received are relative to the main window, not relative to the receiving
          window. TODO: find a better fix *)
-      Lwd_table.append' Drawing_state.Live_coding.workspaces.live_drawing stro)
+      Lwd_table.append' Drawing_state.workspaces.live_drawing stro)
     strokes

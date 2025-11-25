@@ -1,4 +1,4 @@
-open Drawing_state.Live_coding
+open Drawing_state
 
 let shortcut_editing (editing_state : editing_state) key =
   match key with
