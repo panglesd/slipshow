@@ -1087,7 +1087,7 @@ module Clear_draw = struct
         | None -> Undoable.return ()
         | Some record ->
             let old_time = Lwd.peek record.time in
-            Lwd.set record.time (Lwd.peek record.recording.total_time);
+            Lwd.set record.time 0.;
             let undo () =
               Lwd.set record.time old_time;
               Fut.return ()
