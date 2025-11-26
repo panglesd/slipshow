@@ -130,3 +130,4 @@ As I've mentioned already several time, this feature is pretty experimental, so 
 - Save often, see point above! You can either save in a file the presentation does not depend upon, or accept the refresh and reopen the recording you are working on with ``R``.
 - Use the key shortcuts! Otherwise, it'll rapidly be very cumbersome.
 - It's easy to edit afterward, so do not hesitate to stop and resume recording.
+- Unfortunately, there is not yet any possible zoom on the timeline. It's a planned feature. When you recording becomes too long, consider breaking it into several.
