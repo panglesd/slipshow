@@ -62,33 +62,6 @@ let string ?(callback = fun _ -> ()) ?(ev = []) ?st ?(prop = []) ?type'
   in
   Brr_lwd.Elwd.input ?st ~at ~ev ~prop ()
 
-(* let of_color (c : Drawing_state.Types.Color.t Lwd.var) = *)
-(*   let set = *)
-(*     Brr_lwd.Elwd.handler Brr.Ev.change (fun ev -> *)
-(*         let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv in *)
-(*         let new_value = *)
-(*           Jv.get el "value" |> Jv.to_string |> Drawing.Color.of_string *)
-(*         in *)
-(*         Brr.Console.(log [ new_value ]); *)
-(*         Lwd.set c new_value) *)
-(*   in *)
-(*   let ev = [ `P set ] in *)
-(*   let at = *)
-(*     let v = *)
-(*       let$ v = Lwd.get c in *)
-(*       Brr.At.value (v |> Drawing.Color.to_string |> Jstr.of_string) *)
-(*     in *)
-(*     [ `R v ] *)
-(*   in *)
-(*   let children = *)
-(*     List.map *)
-(*       (fun col -> *)
-(*         let at = if col = Lwd.peek c then [ Brr.At.selected ] else [] in *)
-(*         `P (Brr.El.option ~at [ Brr.El.txt' (Drawing.Color.to_string col) ])) *)
-(*       Drawing.Color.all *)
-(*   in *)
-(*   Brr_lwd.Elwd.select ~at ~ev children *)
-
 let hover ?(var = Lwd.var false) () =
   let handler1 =
     Brr_lwd.Elwd.handler Brr.Ev.mouseenter (fun _ -> Lwd.set var true)

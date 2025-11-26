@@ -156,5 +156,3 @@ let go_prev window =
   | Some fut ->
       let* () = Fast.with_fast @@ fun () -> fut in
       do_the_undo ()
-
-(* let go_prev _ = failwith "TODO" *)
