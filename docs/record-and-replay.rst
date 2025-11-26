@@ -6,6 +6,8 @@ Slipshow has an experimental feature, where you can record a drawing, and replay
 
 This allows to easily make a diagram, a graph, or provide recorded sketching during an explanation, freeing you from having to draw it live.
 
+An example of presentation using such feature can be found here TODO:.
+
 This feature is still experimental, and time will tell how useful it is, what are its limitations and how to improve it. Do not hesitate to reach out if you use it, and write about how it went.
 
 Starting a recording
@@ -76,6 +78,12 @@ Extending a recording
 
 You can extend your recording with new strokes and erasure by clicking "Continue recording" or pressing the shortcut ``R``. It will put you back in drawing mode, at the selected time. The new recording will be inserted at the time set.
 
+Adding pauses
+-------------
+
+If you want to add pauses in the replay, you can do so using the "Add pause" button, which will create a pause at the current time, materialized in the timeline by a grey bar.
+
+When replayed, the replay will stop at each pause you added, giving you more control on the timing.
 
 Saving a recording
 ==================
@@ -112,3 +120,13 @@ Editing an included recording
 If you have included a recording, you can edit it by selecting it on the left of the bottom panel, while having no selection.
 
 Once you have edited the recording, save it the same way, overwriting the old recording file.
+
+Advices on this kind of presentation
+===================================
+
+As I've mentioned already several time, this feature is pretty experimental, so I don't have much experience. However I already played a bit with it, so I can give a few advices on how to make presentation with it!
+
+- Be careful, in ``serve`` mode, modifying any file the presentation depends on will make the page refresh, potentially discarding your unsaved changes,
+- Save often, see point above! You can either save in a file the presentation does not depend upon, or accept the refresh and reopen the recording you are working on with ``R``.
+- Use the key shortcuts! Otherwise, it'll rapidly be very cumbersome.
+- It's easy to edit afterward, so do not hesitate to stop and resume recording.
