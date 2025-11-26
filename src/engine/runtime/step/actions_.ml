@@ -1022,12 +1022,6 @@ module Draw = struct
 
   let parse_args = Parse.parse_only_els
 
-  let update_speedup speedup =
-    match Fast.get_mode () with
-    | Normal -> speedup
-    | Fast_move -> 10000.
-    | Counting_for_toc -> assert false (* See "only_if_not_fast" *)
-
   let replay ?(speedup = 1.) (record : Drawing_state.replaying_state) =
     let fut, resolve_fut = Fut.create () in
     let start_replay = Drawing_controller.Tools.now () in
@@ -1035,39 +1029,60 @@ module Draw = struct
     let max_time = Lwd.peek record.recording.total_time in
     let current_time = ref @@ Drawing_controller.Tools.now () in
     let rec draw_loop _ =
-      let speedup = update_speedup speedup in
-      let now = Drawing_controller.Tools.now () in
-      let increment = now -. !current_time in
-      current_time := now;
-      let before = now -. increment in
-      let new_time = original_time +. ((now -. start_replay) *. speedup) in
-      let time_before =
-        original_time +. ((before -. start_replay) *. speedup)
-      in
-      let has_crossed_pause =
-        Lwd_table.fold
-          (fun b (pause : Drawing_state.pause) ->
-            b
-            ||
-            let at = Lwd.peek pause.p_at in
-            time_before <= at && at < new_time)
-          false record.recording.pauses
-      in
-      Lwd.set record.time new_time;
-      if has_crossed_pause then resolve_fut ()
-      else if new_time >= max_time then (
-        Lwd.set record.time max_time;
-        resolve_fut ())
-      else
-        let _animation_frame_id = Brr.G.request_animation_frame draw_loop in
-        ()
+      match Fast.get_mode () with
+      | Normal ->
+          let now = Drawing_controller.Tools.now () in
+          let increment = now -. !current_time in
+          current_time := now;
+          let before = now -. increment in
+          let new_time = original_time +. ((now -. start_replay) *. speedup) in
+          let time_before =
+            original_time +. ((before -. start_replay) *. speedup)
+          in
+          let has_crossed_pause =
+            Lwd_table.fold
+              (fun b (pause : Drawing_state.pause) ->
+                b
+                ||
+                let at = Lwd.peek pause.p_at in
+                time_before <= at && at < new_time)
+              false record.recording.pauses
+          in
+          Lwd.set record.time new_time;
+          if has_crossed_pause then resolve_fut ()
+          else if new_time >= max_time then (
+            Lwd.set record.time max_time;
+            resolve_fut ())
+          else
+            let _animation_frame_id = Brr.G.request_animation_frame draw_loop in
+            ()
+      | Fast_move ->
+          let now = Drawing_controller.Tools.now () in
+          let increment = now -. !current_time in
+          current_time := now;
+          let before = now -. increment in
+          let time_before =
+            original_time +. ((before -. start_replay) *. speedup)
+          in
+          let next_time =
+            Lwd_table.fold
+              (fun acc (pause : Drawing_state.pause) ->
+                let at = Lwd.peek pause.p_at in
+                if at < time_before then acc
+                else Float.min acc (Float.next_after at (at +. 1.)))
+              (Lwd.peek record.recording.total_time)
+              record.recording.pauses
+          in
+          Lwd.set record.time next_time;
+          resolve_fut ()
+      | Counting_for_toc -> assert false (* See "only_if_not_fast" *)
     in
     let _animation_frame_id = Brr.G.request_animation_frame draw_loop in
     fut
 
   let do_ _window elems =
     only_if_not_fast @@ fun () ->
-    let speedup = update_speedup 1. in
+    (* let speedup = update_speedup 1. in *)
     Undoable.List.iter
       (fun elem ->
         match Hashtbl.find_opt state elem with
@@ -1075,7 +1090,7 @@ module Draw = struct
         | Some record ->
             let open Fut.Syntax in
             let old_time = Lwd.peek record.time in
-            let* () = replay ~speedup record in
+            let* () = replay ?speedup:None record in
             let undo () =
               Lwd.set record.time old_time;
               Fut.return ()
