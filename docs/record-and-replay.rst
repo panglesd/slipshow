@@ -6,7 +6,7 @@ Slipshow has an experimental feature, where you can record a drawing, and replay
 
 This allows to easily make a diagram, a graph, or provide recorded sketching during an explanation, freeing you from having to draw it live.
 
-An example of presentation using such feature can be found here TODO:.
+An example of presentation using such feature can be found `here <https://choum.net/panglesd/hb.html>`_ (press right to start the animation/go to the next one).
 
 This feature is still experimental, and time will tell how useful it is, what are its limitations and how to improve it. Do not hesitate to reach out if you use it, and write about how it went.
 
@@ -122,7 +122,7 @@ If you have included a recording, you can edit it by selecting it on the left of
 Once you have edited the recording, save it the same way, overwriting the old recording file.
 
 Advices on this kind of presentation
-===================================
+====================================
 
 As I've mentioned already several time, this feature is pretty experimental, so I don't have much experience. However I already played a bit with it, so I can give a few advices on how to make presentation with it!
 
