@@ -127,7 +127,11 @@ let global_panel recording =
           (Brr.El.div
              [
                Brr.El.a
-                 ~at:[ Brr.At.href !!"TODO" ] (* TODO *)
+                 ~at:
+                   [
+                     Brr.At.href
+                       !!"https://slipshow.readthedocs.io/en/stable/record-and-replay.html";
+                   ]
                  [ Brr.El.txt' "Get help in the documentation" ];
              ]);
       ]
