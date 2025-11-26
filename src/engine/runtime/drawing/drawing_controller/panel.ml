@@ -226,7 +226,7 @@ let drawing_panel mode =
               `R
                 (panel_button ~handler ~icon
                    (Lwd.pure "Manage recordings")
-                   ~shortcut:"R");
+                   ~shortcut:"Shift + R");
             ]
           ()
     | Recording state ->
@@ -243,7 +243,7 @@ let drawing_panel mode =
           ~buttons:
             [
               `R
-                (panel_button ~shortcut:"R" ~handler ~icon
+                (panel_button ~shortcut:"Shift + R" ~handler ~icon
                    (Lwd.pure "Stop recording"));
             ]
           ()
@@ -302,7 +302,7 @@ let editing_panel =
         in
         if is_empty then "Start recording" else "Continue recording"
       in
-      panel_button ~handler ~icon txt ~shortcut:"R"
+      panel_button ~handler ~icon txt ~shortcut:"Shift + R"
     in
     panel_block ~buttons:[ `R record ] ()
   in

@@ -383,7 +383,7 @@ let el =
           `P
             (Brr.El.kbd
                ~at:[ Brr.At.class' !!"slipshow-key-panel" ]
-               [ Brr.El.txt' "R" ]);
+               [ Brr.El.txt' "Shift + R" ]);
           `P (Brr.El.txt' " (or select another recording to edit).");
         ]
   in
