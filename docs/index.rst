@@ -29,6 +29,7 @@ We advise you to start by reading the :ref:`tutorial`. You can also peek at the 
    tutorial
    syntax
    themes
+   record-and-replay
    faq
    examples
 

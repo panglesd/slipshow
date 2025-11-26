@@ -1,0 +1,45 @@
+v0.4 - Alpha 0.4 UNRELEASED
+======
+
+- Add Lwd.update (by @OlivierNicole and @Julow) and Lwd.may_update functions
+- Lwd.set: change binding before invalidation, otherwise the old value could be re-observed (reported by @voodoos)
+- brr-lwd: support declarative events and set of css classes
+- Nottui: fix treatment of some terminal events that were delayed because of improper buffer flushing, reported by @darrenldl
+
+v0.3 - Alpha 0.3
+======
+Mon Sep  5 10:57:53 JST 2022
+
+- Add [Lwd_seq.sort_uniq] function
+- Make [Lwd_seq.t] injective
+- Fix a bug breaking invariants in Lwd_table.remove
+- Documentation update contributed by @shubhamkumar13
+- Option to disable the default Quit behavior of Nottui contributed by @OhadRau 
+
+v0.2 - Alpha 0.2
+======
+Sun Feb 20 20:49:47 JST 2022
+
+- Lwd.fix operator helps working with graphs that cannot be evaluated in a
+  single pass
+- brr-lwd library integrates Lwd with Brr library, for writing javascript
+  applications
+
+Bug fixes:
+- fixed invalidation in Lwd
+- restored some internal invariants in Lwd_seq
+- fixed behavior of Notty sensors
+
+v0.1 - Alpha 0.1
+======
+Wed Sep 23 14:51:17 CEST 2020
+
+Preview release, the API is not yet stabilized.
+Most features are there, except support for overlays (menu, dialog windows,
+popup, ...) in Nottui.
+
+Libraries included in this release:
+- Lwd, the definition of reactive documents
+- Nottui, reactive terminal interfaces using Notty & Lwd
+- Nottui-lwt, an asynchronous mainloop for Nottui
+- Tyxml-lwd, strongly-typed reactive webpages in Jsoo using Tyxml & Lwd

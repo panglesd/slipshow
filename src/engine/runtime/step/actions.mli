@@ -2,6 +2,7 @@ module type S = sig
   type args
 
   val setup : (args -> unit Fut.t) option
+  val setup_all : (unit -> unit Fut.t) option
   val on : string
   val action_name : string
   val parse_args : Brr.El.t -> string -> (args, [> `Msg of string ]) result

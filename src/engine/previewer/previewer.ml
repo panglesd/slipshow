@@ -19,7 +19,10 @@ let send_speaker_view oc panel =
     Jv.get (Brr.El.to_jv w) "contentWindow" |> Brr.Window.of_jv
   in
   let window = content_window panel in
-  let msg = { payload } |> Communication.to_string |> Jv.of_string in
+  let msg =
+    (* Currently, the ID does not matter... *)
+    { payload; id = "TODO" } |> Communication.to_string |> Jv.of_string
+  in
   Brr.Window.post_message window ~msg
 
 let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ()) root =
@@ -42,19 +45,20 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ()) root =
         let raw_data : Jv.t = Brr_io.Message.Ev.data (Brr.Ev.as_type event) in
         let msg = Msg.of_jv raw_data in
         match msg with
-        | Some { payload = State (new_stage, _mode) }
+        | Some { payload = State (new_stage, _mode); id = _ }
           when String.equal source_name ids.(!index) ->
             callback new_stage;
             stage := new_stage
-        | Some { payload = Open_speaker_notes }
+        | Some { payload = Open_speaker_notes; id = _ }
           when String.equal source_name ids.(!index) ->
             is_speaker_view_open := true
-        | Some { payload = Close_speaker_notes }
+        | Some { payload = Close_speaker_notes; id = _ }
           when String.equal source_name ids.(!index) ->
             is_speaker_view_open := false
-        | Some { payload = Ready } when String.equal source_name ids.(!index) ->
+        | Some { payload = Ready; id = _ }
+          when String.equal source_name ids.(!index) ->
             ()
-        | Some { payload = Ready } ->
+        | Some { payload = Ready; id = _ } ->
             if !is_speaker_view_open then (
               send_speaker_view `Close panels.(!index);
               send_speaker_view `Open panels.(1 - !index));

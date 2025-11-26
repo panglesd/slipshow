@@ -1,0 +1,5 @@
+(library
+ (name nottui_unix)
+ (public_name nottui-unix)
+ (wrapped false)
+ (libraries lwd nottui notty.unix))

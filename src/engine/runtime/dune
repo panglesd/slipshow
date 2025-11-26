@@ -11,7 +11,7 @@
   undoable
   step
   universe
-  drawing
+  drawing_controller
   messaging
   fast
   mouse_disappearing))
@@ -35,6 +35,7 @@
   (with-stdout-to
    slipshow-system.css
    (progn
-    (cat drawing/drawing.css)
+    (cat drawing/drawing_controller/drawing.css)
+    (cat drawing/drawing_controller/drawing_editor.css)
     (cat table_of_content/table_of_content.css)
     (cat system.css)))))

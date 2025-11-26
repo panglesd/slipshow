@@ -169,6 +169,21 @@ let media ?(close = " >") ~media_name c ~uri ~id:_ ~files i attrs =
   RenderAttrs.add_attrs c attrs;
   C.string c close
 
+let pure_embed c uri files attrs =
+  let open Cmarkit_renderer in
+  let open Cmarkit_html in
+  match uri with
+  | Asset.Uri.Link _ -> Logs.err (fun m -> m "Could not embed a pure embed")
+  | Path p -> (
+      match Fpath.Map.find_opt p (files : Ast.Files.map) with
+      | None -> Logs.err (fun m -> m "Could not embed a pure embed v2")
+      | Some { content; mode = `Base64; _ } ->
+          Context.string c "<span x-data=\"";
+          html_escaped_string c content;
+          Context.string c "\" ";
+          RenderAttrs.add_attrs c attrs;
+          Context.string c "></span>")
+
 let custom_html_renderer (files : Ast.Files.map) =
   let open Cmarkit_renderer in
   let open Cmarkit in
@@ -195,6 +210,12 @@ let custom_html_renderer (files : Ast.Files.map) =
           true
       | Ast.Audio { uri; id; origin = (l, (attrs, _)), _ } ->
           media ~media_name:"audio" c ~uri ~id ~files l attrs;
+          true
+      | Ast.Hand_drawn { uri; id = _; origin = (_, (attrs, _)), _ } ->
+          let attrs =
+            Attributes.add_class attrs ("slipshow-hand-drawn", Meta.none)
+          in
+          pure_embed c uri files attrs;
           true
       | _ -> false (* let the default HTML renderer handle that *)
     in

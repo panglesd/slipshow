@@ -53,6 +53,42 @@
 }
 
 
-body.slipshow-drawing-mode {
+body.slipshow-drawing-mode,
+body.slipshow-editing-mode{
   touch-action: pinch-zoom;
+}
+
+#slipshow-vertical-flex {
+  display: flex;
+  height: 100vh;
+  flex-direction: column;
+  overflow: hidden;
+}
+#slipshow-horizontal-flex {
+  display: flex;
+  flex-grow: 1;
+  flex-direction: row-reverse;
+  overflow: hidden;
+}
+
+#slipshow-content {
+  border: 1px solid transparent;
+}
+
+/* See drawing/event.ml and drawing_editor/editor_tools.ml if you modify.
+
+   Adds padding so that you can draw on the side of your content */
+#slipshow-universe {
+  padding: 2000px;
+  min-width: var(--page-width);
+  min-height: var(--page-height);
+}
+
+.slipshow-blink {
+  animation: blink 2s step-start 0s infinite;
+}
+@keyframes blink {
+  50% {
+    opacity: 0.0;
+  }
 }

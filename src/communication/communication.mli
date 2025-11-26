@@ -1,22 +1,14 @@
-type drawing_event =
-  | End of { state : string }
-  | Start of { id : string; state : string; coord : float * float }
-  | Continue of { state : string; coord : float * float }
-  | Clear
-
-type stroke = { id : string; state : string; path : (float * float) list }
-
 type payload =
   | State of int * [ `Fast | `Normal ]
   | Ready
   | Open_speaker_notes
   | Close_speaker_notes
   | Speaker_notes of string
-  | Drawing of drawing_event
+  | Drawing of string
   | Send_all_drawing
-  | Receive_all_drawing of stroke list
+  | Receive_all_drawing of string list
 
-type t = { payload : payload }
+type t = { payload : payload; id : string }
 
 val of_string : string -> t option
 val to_string : t -> string

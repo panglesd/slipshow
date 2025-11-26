@@ -5,6 +5,7 @@ let in_queue =
   let queue = Queue.create () in
   let wait_in_queue () =
     if !running then (
+      Fast.with_fast @@ fun () ->
       let fut, cont = Fut.create () in
       Queue.add cont queue;
       fut)
@@ -63,32 +64,45 @@ module Excursion = struct
         Universe.Window.move_pure window last_pos ~duration:1.
 end
 
+let counter =
+  Brr.El.find_first_by_selector (Jstr.v "#slipshow-counter") |> Option.get
+
+let set_counter s = Brr.El.set_children counter [ Brr.El.txt' s ]
+
+let with_step_transition =
+ fun diff f ->
+  let from = State.get_step () in
+  let to_ = from + diff in
+  set_counter (string_of_int from ^ "→" ^ string_of_int to_);
+  let () = State.set_step to_ in
+  let+ res = f () in
+  set_counter (string_of_int to_);
+  res
+
 let go_next window n =
   in_queue @@ fun () ->
-  let* () = Excursion.end_ window () in
   let rec loop n =
     if n <= 0 then Fut.return ()
     else
       match Action_scheduler.next window () with
       | None -> Fut.return ()
       | Some undos ->
-          let* (), undos = undos in
+          let* (), undos = with_step_transition 1 @@ fun () -> undos in
           Stack.push undos all_undos;
           loop (n - 1)
   in
   let+ () = loop n in
   actualize ()
 
-let go_prev window n =
+let go_prev n =
   in_queue @@ fun () ->
-  let* () = Excursion.end_ window () in
   let rec loop n =
     if n <= 0 then Fut.return ()
     else
       match Stack.pop_opt all_undos with
       | None -> Fut.return ()
       | Some undo ->
-          let* () = undo () in
+          let* () = with_step_transition (-1) undo in
           loop (n - 1)
   in
   let+ () = loop n in
@@ -96,8 +110,49 @@ let go_prev window n =
 
 let goto step window =
   let current_step = State.get_step () in
-  if current_step > step then go_prev window (current_step - step)
+  let* () = Excursion.end_ window () in
+  if current_step > step then go_prev (current_step - step)
   else if current_step < step then go_next window (step - current_step)
-  else
-    let+ () = Excursion.end_ window () in
-    ()
+  else Fut.return ()
+
+let current_execution = ref None
+
+let go_next window =
+  (* We return a Fut.t Fut.t here to allow to wait for [with_step_transition] to
+     update the state, without waiting for the actual transition to be
+     finished. *)
+  let+ () = Excursion.end_ window () in
+  match !current_execution with
+  | None -> (
+      match Action_scheduler.next window () with
+      | None -> Fut.return ()
+      | Some fut ->
+          let fut =
+            let+ (), undos = with_step_transition 1 @@ fun () -> fut in
+            Stack.push undos all_undos;
+            actualize ();
+            current_execution := None
+          in
+          current_execution := Some fut;
+          fut)
+  | Some fut -> Fast.with_fast @@ fun () -> fut
+
+let go_prev window =
+  let do_the_undo () =
+    match Stack.pop_opt all_undos with
+    | None -> Fut.return ()
+    | Some undo ->
+        let fut =
+          let+ () = with_step_transition (-1) undo in
+          actualize ();
+          current_execution := None
+        in
+        current_execution := Some fut;
+        Fut.return ()
+  in
+  let* () = Excursion.end_ window () in
+  match !current_execution with
+  | None -> do_the_undo ()
+  | Some fut ->
+      let* () = Fast.with_fast @@ fun () -> fut in
+      do_the_undo ()

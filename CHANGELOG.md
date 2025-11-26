@@ -19,11 +19,16 @@
 - Hide paused/unrevealed elems also for mouse (#150)
 - Don't execute scripts when computing toc (#150)
 - Mute medias in speaker view (#152)
+- Use the [perfect-freehand](https://github.com/steveruizok/perfect-freehand)
+  library to generate strokes. (#151)
 - Fix order of execution of actions (`center` after `enter`) (#171)
 - Fix pauses not being scoped in slides (#179)
 - Fix exiting not where it should (#179)
 - Fix `unfocus` behavior to match the docs (#179)
 - Fix wrong position bug on custom dimensions (#182)
+- Fix infinitely jiggling autoresizing
+- Fix not being able to draw outside of inner presentation
+- Fix permanent fast-moving bug
 
 ## [v0.6.0] The King's Slipshow (Monday 18th August, 2025)
 

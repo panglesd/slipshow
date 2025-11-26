@@ -39,14 +39,9 @@ let entry_action window step =
       Brr.Ev.listen Brr.Ev.click
         (fun _ ->
           let _ : unit Fut.t =
-            let open Fut.Syntax in
-            let+ () = Step.Next.goto step window in
-            Messaging.send_step step
-              (match Fast.get_mode () with
-              | Normal | Counting_for_toc -> `Normal
-              | Fast.Fast_move -> `Fast)
+            Fast.with_fast @@ fun () -> Step.Next.goto step window
           in
-          ())
+          Messaging.send_step step `Fast)
         (Brr.El.as_target el)
     in
     ()
@@ -90,7 +85,11 @@ let generate window root =
   let+ () = undo () in
   let els = entry_action window 0 :: entries in
   let toc_el = Brr.El.div ~at:[ Brr.At.id !!"slipshow-toc" ] els in
-  Brr.El.append_children (Brr.Document.body Brr.G.document) [ toc_el ];
+  let horizontal_container =
+    Brr.El.find_first_by_selector (Jstr.v "#slipshow-horizontal-flex")
+    |> Option.get
+  in
+  Brr.El.append_children horizontal_container [ toc_el ];
   let _unlisten =
     Brr.Ev.listen Brr.Ev.click
       (fun _ -> toggle_visibility ())

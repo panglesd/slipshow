@@ -1,0 +1,21 @@
+(library
+ (name lwd)
+ (public_name lwd)
+ (modules lwd lwd_seq lwd_table lwd_infix lwd_utils)
+ (libraries seq)
+ (inline_tests
+  (backend qtest.lib)
+  (executable
+   (flags
+    (-w -33))))
+ (wrapped false)
+ (preprocess
+  (per_module
+   ((action
+     (run %{dep:pp.exe} %{input-file}))
+    lwd_infix
+    lwd_seq))))
+
+(executable
+ (name pp)
+ (modules pp))

@@ -83,6 +83,7 @@ let classify_image p =
   | ".png" | ".svg" | ".webp" ->
       (* https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types#image_types *)
       `Image
+  | ".draw" -> `Draw
   | _ -> `Image
 
 let resolve_file ps s =
@@ -184,6 +185,7 @@ module Stage1 = struct
     | `Image -> Mapper.ret @@ Ast.Image { Ast.uri; origin; id = Id.gen () }
     | `Video -> Mapper.ret @@ Ast.Video { Ast.uri; origin; id = Id.gen () }
     | `Audio -> Mapper.ret @@ Ast.Audio { Ast.uri; origin; id = Id.gen () }
+    | `Draw -> Mapper.ret @@ Ast.Hand_drawn { Ast.uri; origin; id = Id.gen () }
     | `Pdf -> Mapper.ret @@ Ast.Pdf { Ast.uri; origin; id = Id.gen () }
 
   let handle_dash_separated_blocks m (blocks, meta) =
@@ -548,6 +550,7 @@ module Stage4 = struct
       | Ast.Video { uri = Path p; id; _ }
       | Ast.Pdf { uri = Path p; id; _ }
       | Ast.Audio { uri = Path p; id; _ }
+      | Ast.Hand_drawn { uri = Path p; id; _ }
       | Ast.Image { uri = Path p; id; _ } ->
           Folder.ret @@ fpath_map_add_to_list p id acc
       | _ -> Folder.default
@@ -625,6 +628,7 @@ let to_cmarkit =
     | Ast.Video { origin; _ }
     | Ast.Audio { origin; _ }
     | Ast.Pdf { origin; _ }
+    | Ast.Hand_drawn { origin; _ }
     | Ast.Image { origin; _ } ->
         `Map (Mapper.map_inline m (Inline.Image origin))
     | _ -> Mapper.default

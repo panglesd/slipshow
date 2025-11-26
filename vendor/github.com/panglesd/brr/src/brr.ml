@@ -1198,40 +1198,43 @@ module El = struct
 
   let append_child e n = ignore (Jv.call e "appendChild" [| n |])
 
-  let rec set_atts e ss clss = function
+  let string_of_ns ns =
+    match ns with
+    | `HTML -> "http://www.w3.org/1999/xhtml"
+    | `SVG -> "http://www.w3.org/2000/svg"
+    | `MathML -> "http://www.w3.org/1998/Math/MathML"
+
+  let or_ns ?ns e c a =
+    match ns with
+    | None -> Jv.call e c a
+    | Some ns ->
+        let ns = string_of_ns ns in
+        Jv.call e (c ^ "NS") (Array.append [|Jv.of_string ns|] a)
+
+  let rec set_atts ?ns e ss clss = function
   | (a, v) :: at ->
       if Jstr.is_empty a then set_atts e ss clss at else
       if Jstr.equal a At.Name.style then set_atts e (v :: ss) clss at else
       if Jstr.equal a At.Name.class' then
         set_atts e ss (if Jstr.is_empty v then clss else v :: clss) at
       else begin
-        ignore (Jv.call e "setAttribute" Jv.[|of_jstr a; of_jstr v|]);
+        ignore (or_ns ?ns e "setAttribute" Jv.[|of_jstr a; of_jstr v|]);
         set_atts e ss clss at
       end
   | [] ->
       if ss <> [] then begin
         let a = At.Name.style in
         let v = Jstr.concat ~sep:(Jstr.v ";") (List.rev ss) in
-        ignore (Jv.call e "setAttribute" Jv.[|of_jstr a; of_jstr v|]);
+        ignore (or_ns ?ns e "setAttribute" Jv.[|of_jstr a; of_jstr v|]);
       end;
       if clss <> [] then begin
         let a = At.Name.class' in
         let v = Jstr.concat ~sep:(Jstr.v " ") (List.rev clss) in
-        ignore (Jv.call e "setAttribute" Jv.[|of_jstr a; of_jstr v|])
+        ignore (or_ns ?ns e "setAttribute" Jv.[|of_jstr a; of_jstr v|])
       end
 
   let v ?ns ?(d = global_document) ?(at = []) name cs =
-    let e =
-      match ns with
-      | None -> Jv.call d "createElement" [| Jv.of_jstr name |]
-      | Some ns ->
-         let ns = match ns with
-           | `HTML -> "http://www.w3.org/1999/xhtml"
-           | `SVG -> "http://www.w3.org/2000/svg"
-           | `MathML -> "http://www.w3.org/1998/Math/MathML"
-         in
-         Jv.call d "createElementNS" [| Jv.of_string ns ; Jv.of_jstr name |]
-    in
+    let e = or_ns ?ns d "createElement" [| Jv.of_jstr name |] in
     set_atts e [] [] at;
     List.iter (append_child e) cs;
     e
@@ -1314,11 +1317,11 @@ module El = struct
   let at a e =
     Jv.to_option Jv.to_jstr (Jv.call e "getAttribute" [|Jv.of_jstr a|])
 
-  let set_at a v e =
+  let set_at ?ns a v e =
     if Jstr.is_empty a then () else
     match v with
-    | None -> ignore (Jv.call e "removeAttribute" Jv.[|of_jstr a|])
-    | Some v -> ignore (Jv.call e "setAttribute" Jv.[|of_jstr a; of_jstr v|])
+    | None -> ignore (or_ns ?ns e "removeAttribute" Jv.[|of_jstr a|])
+    | Some v -> ignore (or_ns ?ns e "setAttribute" Jv.[|of_jstr a; of_jstr v|])
 
   (* Properties *)
 

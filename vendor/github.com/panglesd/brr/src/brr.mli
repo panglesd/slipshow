@@ -2184,7 +2184,7 @@ module El : sig
   val at : At.name -> t -> Jstr.t option
   (** [at a e] is the attribute [a] of [e] (if any). *)
 
-  val set_at : At.name -> Jstr.t option -> t -> unit
+  val set_at : ?ns:[`HTML | `SVG | `MathML] -> At.name -> Jstr.t option -> t -> unit
   (** [set_at a v e] sets the attribute [a] of [e] to [v]. If [v]
       is [None] the attribute is removed. If [a] is empty, this has not
       effect. *)

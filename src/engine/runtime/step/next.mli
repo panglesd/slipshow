@@ -1,6 +1,11 @@
 val actualize : unit -> unit
-val go_next : Universe.Window.t -> int -> unit Fut.t
-val go_prev : Universe.Window.t -> int -> unit Fut.t
+
+val go_next : Universe.Window.t -> unit Fut.t Fut.t
+(** We return a [_ Fut.t Fut.t] here to allow to wait for [with_step_transition]
+    to update the state, without waiting for the actual transition to be
+    finished. *)
+
+val go_prev : Universe.Window.t -> unit Fut.t
 val goto : int -> Universe.Window.t -> unit Fut.t
 
 module Excursion : sig

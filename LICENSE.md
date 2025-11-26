@@ -11,6 +11,11 @@
   directory](https://github.com/panglesd/slipshow/tree/main/vendor/github.com/panglesd/cmarkit)
   contains a vendored and slightly modified copy of [cmarkit](https://erratique.ch/software/cmarkit). It is licensed
   under the [ISC license](#cmarkit-copyrights).
+- The [`vendor/github.com/panglesd/lwd`
+  directory](https://github.com/panglesd/slipshow/tree/main/vendor/github.com/panglesd/cmarkit)
+  contains a vendored and slightly modified copy of
+  [lwd](https://github.com/let-def/lwd). It is licensed under the [MIT
+  license](#lwd-copyrights).
 - The [`src/static_data`
   directory](https://github.com/panglesd/slipshow/tree/main/src/static_data/)
   contains various (compiled) javascript libraries:
@@ -30,6 +35,11 @@
   contains a base64 distribution of the [Dosis
   font](https://fonts.google.com/specimen/Dosis/license), under the [SIL OPEN
   FONT LICENSE Version 1.1](#dosis-font-copyrights).
+- The `perfect_freehand` library in
+  `vendor/github.com/panglesd/perfect-freehand-ocaml` bundles a (compiled)
+  version of the
+  [perfect-freehand](https://github.com/steveruizok/perfect-freehand) JS
+  library, under the [MIT licence](#perfect-freehand-copyrights).
 
 The rest of the code, and the slipshow project in general, is licensed under the
 GPL v3 license:
@@ -747,6 +757,32 @@ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ```
 
+# `Lwd` copyrights
+
+```
+MIT License
+
+Copyright (c) 2019 Frédéric Bour
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
 # Highlight.js copyrights
 
 ```
@@ -1190,4 +1226,30 @@ INCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL
 DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
 OTHER DEALINGS IN THE FONT SOFTWARE.
+```
+
+# Perfect-freehand copyrights
+
+```
+MIT License
+
+Copyright (c) 2021 Stephen Ruiz Ltd
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 ```

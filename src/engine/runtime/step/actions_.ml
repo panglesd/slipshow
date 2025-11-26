@@ -342,6 +342,7 @@ module type S = sig
   type args
 
   val setup : (args -> unit Fut.t) option
+  val setup_all : (unit -> unit Fut.t) option
   val on : string
   val action_name : string
   val parse_args : Brr.El.t -> string -> (args, [> `Msg of string ]) result
@@ -412,11 +413,28 @@ module Pause = struct
     update_single elem (f n)
 
   let setup elem =
-    let> () = set_class "pauseTarget" true elem in
-    update elem (( + ) 1)
+    let open Fut.Syntax in
+    let* (), _ = set_class "pauseTarget" true elem in
+    update elem (( + ) 1) |> Undoable.discard
 
-  let setup elems = Undoable.List.iter setup elems |> Undoable.discard
+  let setup_all () =
+    let open Fut.Syntax in
+    Brr.El.fold_find_by_selector
+      (fun elem acc ->
+        let* () = acc in
+        setup elem)
+      (Jstr.v "pause-target") (Fut.return ())
+
+  let setup elems =
+    let open Fut.Syntax in
+    List.fold_left
+      (fun acc elem ->
+        let* () = acc in
+        setup elem)
+      (Fut.return ()) elems
+
   let setup = Some setup
+  let setup_all = Some setup_all
 
   type args = Brr.El.t list
 
@@ -445,6 +463,7 @@ struct
   let on = X.on
   let action_name = X.action_name
   let setup = None
+  let setup_all = None
 
   type args = {
     margin : float option;
@@ -489,6 +508,7 @@ struct
   let on = X.on
   let action_name = X.action_name
   let setup = None
+  let setup_all = None
 
   type args = Brr.El.t list
 
@@ -525,9 +545,10 @@ end)
 
 module Enter = struct
   type t = {
-    elem : Brr.El.t;
-    coord : Universe.Coordinates.window;
-    duration : float option;
+    element_entered : Brr.El.t;  (** The element we entered *)
+    coord_left : Universe.Coordinates.window;
+        (** The coordinate we left when entering *)
+    duration : float option;  (** The duration it took to enter entering *)
   }
 
   let stack = Stack.create ()
@@ -536,13 +557,12 @@ module Enter = struct
     let on = "enter-at-unpause"
     let action_name = "enter"
 
-    let move ?duration ?margin window elem =
+    let move ?duration ?margin window element_entered =
       let> () =
-        Undoable.Stack.push
-          { elem; coord = Universe.State.get_coord (); duration }
-          stack
+        let coord_left = Universe.State.get_coord () in
+        Undoable.Stack.push { element_entered; coord_left; duration } stack
       in
-      Universe.Move.enter ?duration ?margin window elem
+      Universe.Move.enter ?duration ?margin window element_entered
   end)
 end
 
@@ -551,18 +571,25 @@ let exit window to_elem =
     let coord = Undoable.Stack.peek Enter.stack in
     match coord with
     | None -> Undoable.return ()
-    | Some { elem; _ } when Brr.El.contains elem ~child:to_elem ->
+    | Some { element_entered; _ }
+      when Brr.El.contains element_entered ~child:to_elem ->
         Undoable.return ()
-    | Some { coord; duration; _ } -> (
+    | Some { coord_left; duration; _ } -> (
         let duration = Option.value duration ~default:1.0 in
         let> _ = Undoable.Stack.pop_opt Enter.stack in
         match Undoable.Stack.peek Enter.stack with
-        | None -> Universe.Move.move window coord ~duration
-        | Some { Enter.elem; coord; _ } when Brr.El.contains elem ~child:to_elem
-          ->
-            if Brr.El.at (Jstr.v "enter-at-unpause") to_elem |> Option.is_some
-            then Undoable.return ()
-            else Universe.Move.move window coord ~duration:1.0
+        | None -> Universe.Move.move window coord_left ~duration
+        | Some { Enter.element_entered; _ }
+          when Brr.El.contains element_entered ~child:to_elem ->
+            let duration =
+              match Brr.El.at (Jstr.v "enter-at-unpause") to_elem with
+              | None -> duration
+              | Some s -> (
+                  match Enter.parse_args to_elem (Jstr.to_string s) with
+                  | Error _ -> duration
+                  | Ok v -> Option.value ~default:duration v.duration)
+            in
+            Universe.Move.move window coord_left ~duration
         | Some _ -> exit ())
   in
   exit ()
@@ -630,12 +657,14 @@ module Focus = struct
     Universe.Move.focus ~margin ~duration window elems
 
   let setup = None
+  let setup_all = None
 end
 
 module Unfocus = struct
   type args = unit
 
   let setup = None
+  let setup_all = None
   let on = "unfocus-at-unpause"
   let action_name = "unfocus"
   let parse_args elem s = Parse.no_args ~action_name elem s
@@ -680,6 +709,7 @@ module Step = struct
   type args = unit
 
   let setup = None
+  let setup_all = None
   let on = "step"
   let action_name = "step"
   let parse_args elem s = Parse.no_args ~action_name elem s
@@ -699,6 +729,7 @@ module Speaker_note : S = struct
     Fut.return @@ Brr.El.set_class (Jstr.v "__slipshow__speaker_note") true elem
 
   let setup = Some setup
+  let setup_all = None
 
   let do_ (_ : Universe.Window.t) (el : args) =
     let innerHTML =
@@ -771,6 +802,7 @@ module Play_media = struct
       elems
 
   let setup = None
+  let setup_all = None
 end
 
 module Change_page = struct
@@ -942,4 +974,154 @@ module Change_page = struct
     Undoable.return ()
 
   let setup = None
+  let setup_all = None
+end
+
+module Draw = struct
+  let state = Hashtbl.create 10
+  let on = "draw"
+  let action_name = on
+
+  let setup elem =
+    match Hashtbl.find_opt state elem with
+    | Some _ -> Fut.return ()
+    | None ->
+        let data = Brr.El.at (Jstr.v "x-data") elem in
+        (match data with
+        | None -> ()
+        | Some data -> (
+            let open Drawing_state in
+            match
+              Drawing_state.Json.string_to_recording (Jstr.to_string data)
+            with
+            | Error e -> Brr.Console.(log [ e ])
+            | Ok recording ->
+                let replaying_state =
+                  { recording; time = Lwd.var 0.; is_playing = Lwd.var false }
+                in
+                Hashtbl.add state elem replaying_state;
+                Lwd_table.append' workspaces.recordings replaying_state));
+        Fut.return ()
+
+  let setup_all () =
+    Brr.El.fold_find_by_selector
+      (fun elem acc -> Fut.bind acc (fun () -> setup elem))
+      (Jstr.v ".slipshow-hand-drawn")
+      (Fut.return ())
+
+  let setup_all = Some setup_all
+
+  let setup elems =
+    List.fold_left
+      (fun acc elem -> Fut.bind acc (fun () -> setup elem))
+      (Fut.return ()) elems
+
+  let setup = Some setup
+
+  type args = Brr.El.t list
+
+  let parse_args = Parse.parse_only_els
+
+  let replay ?(speedup = 1.) (record : Drawing_state.replaying_state) =
+    let fut, resolve_fut = Fut.create () in
+    let start_replay = Drawing_controller.Tools.now () in
+    let original_time = Lwd.peek record.time in
+    let max_time = Lwd.peek record.recording.total_time in
+    let current_time = ref @@ Drawing_controller.Tools.now () in
+    let rec draw_loop _ =
+      match Fast.get_mode () with
+      | Normal ->
+          let now = Drawing_controller.Tools.now () in
+          let increment = now -. !current_time in
+          current_time := now;
+          let before = now -. increment in
+          let new_time = original_time +. ((now -. start_replay) *. speedup) in
+          let time_before =
+            original_time +. ((before -. start_replay) *. speedup)
+          in
+          let has_crossed_pause =
+            Lwd_table.fold
+              (fun b (pause : Drawing_state.pause) ->
+                b
+                ||
+                let at = Lwd.peek pause.p_at in
+                time_before <= at && at < new_time)
+              false record.recording.pauses
+          in
+          Lwd.set record.time new_time;
+          if has_crossed_pause then resolve_fut ()
+          else if new_time >= max_time then (
+            Lwd.set record.time max_time;
+            resolve_fut ())
+          else
+            let _animation_frame_id = Brr.G.request_animation_frame draw_loop in
+            ()
+      | Fast_move ->
+          let now = Drawing_controller.Tools.now () in
+          let increment = now -. !current_time in
+          current_time := now;
+          let before = now -. increment in
+          let time_before =
+            original_time +. ((before -. start_replay) *. speedup)
+          in
+          let next_time =
+            Lwd_table.fold
+              (fun acc (pause : Drawing_state.pause) ->
+                let at = Lwd.peek pause.p_at in
+                if at < time_before then acc
+                else Float.min acc (Float.next_after at (at +. 1.)))
+              (Lwd.peek record.recording.total_time)
+              record.recording.pauses
+          in
+          Lwd.set record.time next_time;
+          resolve_fut ()
+      | Counting_for_toc -> assert false (* See "only_if_not_fast" *)
+    in
+    let _animation_frame_id = Brr.G.request_animation_frame draw_loop in
+    fut
+
+  let do_ _window elems =
+    only_if_not_fast @@ fun () ->
+    (* let speedup = update_speedup 1. in *)
+    Undoable.List.iter
+      (fun elem ->
+        match Hashtbl.find_opt state elem with
+        | None -> Undoable.return ()
+        | Some record ->
+            let open Fut.Syntax in
+            let old_time = Lwd.peek record.time in
+            let* () = replay ?speedup:None record in
+            let undo () =
+              Lwd.set record.time old_time;
+              Fut.return ()
+            in
+            Undoable.return ~undo ())
+      elems
+end
+
+module Clear_draw = struct
+  let on = "clear"
+  let action_name = on
+  let setup = None
+  let setup_all = None
+
+  type args = Brr.El.t list
+
+  let parse_args = Parse.parse_only_els
+
+  let do_ _window elems =
+    only_if_not_fast @@ fun () ->
+    Undoable.List.iter
+      (fun elem ->
+        match Hashtbl.find_opt Draw.state elem with
+        | None -> Undoable.return ()
+        | Some record ->
+            let old_time = Lwd.peek record.time in
+            Lwd.set record.time 0.;
+            let undo () =
+              Lwd.set record.time old_time;
+              Fut.return ()
+            in
+            Undoable.return ~undo ())
+      elems
 end
