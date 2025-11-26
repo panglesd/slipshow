@@ -325,10 +325,10 @@ module Move = struct
             end_at,
             snd (List.hd (List.rev old_path)) )
       in
-      let add_erase stroke sel =
+      let add_erase not_selected stroke sel =
         let old_path = Lwd.peek stroke.path in
         let end_at =
-          if not (Lwd.peek stroke.selected) then snd (List.hd old_path) else 0.
+          if not_selected stroke then snd (List.hd old_path) else 0.
         in
         `Erase (Lwd.peek sel.at, Lwd.peek sel.track, sel, stroke, end_at)
       in
@@ -344,7 +344,11 @@ module Move = struct
               let sel =
                 match Lwd.peek stroke.erased with
                 | Some sel when Lwd.peek sel.selected ->
-                    [ add_erase stroke sel ]
+                    [
+                      add_erase
+                        (fun stroke -> not (Lwd.peek stroke.selected))
+                        stroke sel;
+                    ]
                 | _ -> []
               in
               s @ sel @ acc)
@@ -365,15 +369,15 @@ module Move = struct
           let selection =
             Lwd_table.fold
               (fun acc stroke ->
-                let acc =
+                let acc, is_selected =
                   if Lwd.peek stroke.path |> List.hd |> fun (_, x) -> x >= time2
-                  then add_stroke stroke :: acc
-                  else acc
+                  then (add_stroke stroke :: acc, true)
+                  else (acc, false)
                 in
                 let acc =
                   match Lwd.peek stroke.erased with
                   | Some sel when Lwd.peek sel.at >= time2 ->
-                      add_erase stroke sel :: acc
+                      add_erase (fun _ -> not is_selected) stroke sel :: acc
                   | _ -> acc
                 in
                 acc)
