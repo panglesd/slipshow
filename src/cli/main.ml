@@ -1,7 +1,7 @@
 open Cmdliner
 
 (* Update this on every release! *)
-let version_title = "The King's Slipshow"
+let version_title = "The Slipshow of Dorian Gray"
 
 let setup_log style_renderer level =
   Fmt_tty.setup_std_outputs ?style_renderer ();
