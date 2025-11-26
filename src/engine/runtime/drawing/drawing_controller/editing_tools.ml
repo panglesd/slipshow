@@ -362,7 +362,7 @@ module Move = struct
         let x = x -. Brr.El.bound_x el in
         let select_after_time () =
           let time2 = x *. scale el in
-          let strokes =
+          let selection =
             Lwd_table.fold
               (fun acc stroke ->
                 let acc =
@@ -379,7 +379,14 @@ module Move = struct
                 acc)
               [] recording.strokes
           in
-          (strokes, el)
+          let selection =
+            Lwd_table.fold
+              (fun acc pause ->
+                if Lwd.peek pause.p_at >= time2 then add_pause pause :: acc
+                else acc)
+              selection recording.pauses
+          in
+          (selection, el)
         in
         match selection with
         | [] -> select_after_time ()

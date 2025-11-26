@@ -1074,9 +1074,10 @@ module Draw = struct
         | None -> Undoable.return ()
         | Some record ->
             let open Fut.Syntax in
+            let old_time = Lwd.peek record.time in
             let* () = replay ~speedup record in
             let undo () =
-              Lwd.set record.time 0.;
+              Lwd.set record.time old_time;
               Fut.return ()
             in
             Undoable.return ~undo ())

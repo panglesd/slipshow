@@ -28,7 +28,8 @@ let slider (replaying_state : replaying_state) =
 
 let description_of_selection
     (strokes_and_erases :
-      [ `Stroke of _ Lwd_table.row * stro | `Erasure of stro * erased ] list) =
+      [ `Stroke of _ Lwd_table.row * stro | `Erasure of stro * erased ] list)
+    (pauses : (_ Lwd_table.row * pause) list) =
   let strokes, erasures =
     List.partition_map
       (function `Stroke x -> Left x | `Erasure x -> Right x)
@@ -41,7 +42,9 @@ let description_of_selection
           (string_of_int (List.length strokes)
           ^ " stroke(s) and "
           ^ string_of_int (List.length erasures)
-          ^ " erasure(s) selected");
+          ^ " erasure(s) and "
+          ^ string_of_int (List.length pauses)
+          ^ " pause(s) selected");
       ]
   in
   let delete =
@@ -51,7 +54,8 @@ let description_of_selection
             (function
               | `Stroke (row, _) -> Lwd_table.remove row
               | `Erasure (stro, _) -> Lwd.set stro.erased None)
-            strokes_and_erases)
+            strokes_and_erases;
+          List.iter (fun (row, _) -> Lwd_table.remove row) pauses)
     in
     Elwd.button ~ev:[ `P click_handler ] [ `P (Brr.El.txt' "Delete") ]
   in
@@ -322,9 +326,18 @@ let el =
       |> Lwd.join
     in
     let l = Lwd_seq.to_list s in
-    match l with
-    | [] -> global_panel recording
-    | strokes -> description_of_selection strokes
+    let$* pauses =
+      Lwd_table.map_reduce
+        (fun row pause ->
+          let$ selected = Lwd.get pause.p_selected in
+          if selected then Lwd_seq.element (row, pause) else Lwd_seq.empty)
+        Lwd_seq.lwd_monoid recording.pauses
+      |> Lwd.join
+    in
+    let pauses = Lwd_seq.to_list pauses in
+    match (l, pauses) with
+    | [], [] -> global_panel recording
+    | strokes, pauses -> description_of_selection strokes pauses
   in
   let ti = Ui_widgets.float replaying_state.time [] in
   let description =
