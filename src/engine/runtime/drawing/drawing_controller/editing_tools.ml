@@ -32,7 +32,11 @@ module Selection = struct
           (fun ({ selected; preselected; _ } : erased) ->
             promote mode ~selected ~preselected)
           (Lwd.peek erased))
-      recording.strokes
+      recording.strokes;
+    Lwd_table.iter
+      (fun { p_selected = selected; p_preselected = preselected; _ } ->
+        promote mode ~selected ~preselected)
+      recording.pauses
 
   module Timeline = struct
     let select ~epsilon t0 t1 track0 track1 recording =
@@ -46,22 +50,25 @@ module Selection = struct
             && starts_at <= t1
           in
           Lwd.set preselected is_selected;
-          let () =
-            match Lwd.peek erased with
-            | None -> ()
-            | Some { at; preselected; track; _ } ->
-                let at = Lwd.peek at in
-                let track = Lwd.peek track in
-                let is_selected =
-                  track0 <= track && track <= track1
-                  && t0 -. epsilon <= at
-                  && at <= t1 +. epsilon
-                  (* For erase we are more lenient as they are discrete *)
-                in
-                Lwd.set preselected is_selected
-          in
-          ())
-        recording.strokes
+          match Lwd.peek erased with
+          | None -> ()
+          | Some { at; preselected; track; _ } ->
+              let at = Lwd.peek at in
+              let track = Lwd.peek track in
+              let is_selected =
+                track0 <= track && track <= track1
+                && t0 -. epsilon <= at
+                && at <= t1 +. epsilon
+                (* For erase we are more lenient as they are discrete *)
+              in
+              Lwd.set preselected is_selected)
+        recording.strokes;
+      Lwd_table.iter
+        (fun { p_at; p_preselected; _ } ->
+          let at = Lwd.peek p_at in
+          let is_selected = t0 <= at && at <= t1 in
+          Lwd.set p_preselected is_selected)
+        recording.pauses
 
     let box_selection_var = Lwd.var None
 
@@ -265,7 +272,12 @@ module Move = struct
                 Float.max time_shift (0. -. start)
             | `Erase (old_t, _, _, _, end_at) ->
                 let time_shift = Float.min time_shift (total_length -. old_t) in
-                Float.max time_shift (end_at -. old_t))
+                Float.max time_shift (end_at -. old_t)
+            | `Pause (initial_at, _) ->
+                let time_shift =
+                  Float.min time_shift (total_length -. initial_at)
+                in
+                Float.max time_shift (0. -. initial_at))
           time_shift strokes
       in
       List.iter
@@ -286,8 +298,9 @@ module Move = struct
           | `Erase (old_t, old_track, (sel : erased), _, _) ->
               let new_track = Int.max 0 (old_track + track_shift) in
               Lwd.set sel.track new_track;
-              Lwd.set sel.at (old_t +. time_shift);
-              ())
+              Lwd.set sel.at (old_t +. time_shift)
+          | `Pause (initial_at, pause) ->
+              Lwd.set pause.p_at (initial_at +. time_shift))
         strokes
 
     let event recording ~stroke_height =
@@ -319,8 +332,9 @@ module Move = struct
         in
         `Erase (Lwd.peek sel.at, Lwd.peek sel.track, sel, stroke, end_at)
       in
+      let add_pause pause = `Pause (Lwd.peek pause.p_at, pause) in
       let start x _y ev =
-        let strokes =
+        let selection =
           Lwd_table.fold
             (fun acc stroke ->
               let s =
@@ -335,6 +349,12 @@ module Move = struct
               in
               s @ sel @ acc)
             [] recording.strokes
+        in
+        let selection =
+          Lwd_table.fold
+            (fun acc pause ->
+              if Lwd.peek pause.p_selected then add_pause pause :: acc else acc)
+            selection recording.pauses
         in
         let el =
           ev |> Brr.Ev.current_target |> Brr.Ev.target_to_jv |> Brr.El.of_jv
@@ -361,7 +381,9 @@ module Move = struct
           in
           (strokes, el)
         in
-        match strokes with [] -> select_after_time () | _ :: _ -> (strokes, el)
+        match selection with
+        | [] -> select_after_time ()
+        | _ :: _ -> (selection, el)
       in
       let drag ~x:_ ~y:_ ~dx ~dy ((strokes, container) as acc) _ev =
         translate_of_coords strokes container ~dx ~dy;
@@ -400,7 +422,7 @@ module Scale = struct
   module Timeline = struct
     let event recording =
       let start _x _y ev =
-        let strokes, max_time =
+        let selection, max_time =
           Lwd_table.fold
             (fun (acc, max_time) stroke ->
               let s =
@@ -424,6 +446,17 @@ module Scale = struct
               (s @ sel @ acc, max_time))
             ([], 0.) recording.strokes
         in
+        let selection, max_time =
+          Lwd_table.fold
+            (fun (acc, max_time) pause ->
+              let acc =
+                if not (Lwd.peek pause.p_selected) then acc
+                else `Pause (Lwd.peek pause.p_at, pause) :: acc
+              in
+              let max_time = Float.max max_time (Lwd.peek pause.p_at) in
+              (acc, max_time))
+            (selection, max_time) recording.pauses
+        in
         let el =
           ev |> Brr.Ev.current_target |> Brr.Ev.target_to_jv |> Brr.El.of_jv
         in
@@ -432,20 +465,22 @@ module Scale = struct
             (fun t_begin -> function
               | `Stroke (_, stroke) ->
                   Float.min t_begin (very_quick_sample stroke.starts_at)
-              | `Erase (at, _, _) -> Float.min t_begin at)
-            Float.infinity strokes
+              | `Erase (at, _, _) -> Float.min t_begin at
+              | `Pause (at, _) -> Float.min t_begin at)
+            Float.infinity selection
         in
         let t_end =
           List.fold_left
             (fun t_end -> function
               | `Stroke (_, stroke) ->
                   Float.max t_end (very_quick_sample stroke.end_at)
-              | `Erase (at, _, _) -> Float.max t_end at)
-            0. strokes
+              | `Erase (at, _, _) -> Float.max t_end at
+              | `Pause (at, _) -> Float.max t_end at)
+            0. selection
         in
-        match strokes with
+        match selection with
         | [] -> `Rescale_recording (Lwd.peek recording.total_time, max_time)
-        | _ :: _ -> `Selection (strokes, el, t_begin, t_end)
+        | _ :: _ -> `Selection (selection, el, t_begin, t_end)
       in
       let map_time ~t_begin ~t_end ~scale t =
         if t <= t_begin then t
@@ -481,7 +516,8 @@ module Scale = struct
               List.fold_left
                 (fun scale -> function
                   | `Stroke s -> scale_stro scale s
-                  | `Erase e -> scale_erase scale e)
+                  | `Erase e -> scale_erase scale e
+                  | `Pause _ -> scale)
                 scale strokes
             in
             let map_time = map_time ~t_begin ~t_end ~scale in
@@ -491,7 +527,8 @@ module Scale = struct
                 | `Stroke (path, stroke) ->
                     Lwd.set stroke.path (map_stroke path)
                 | `Erase (at, erased, _stroke) ->
-                    Lwd.set erased.at (map_time at))
+                    Lwd.set erased.at (map_time at)
+                | `Pause (at, pause) -> Lwd.set pause.p_at (map_time at))
               strokes;
             acc
         | `Rescale_recording (original_time, max_time) ->
