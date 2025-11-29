@@ -1,8 +1,20 @@
-.slip, .slide {
-  width: calc(var(--page-width) - 2px);
+.slip, .slide, .h-slip {
   transform-origin: top left;
   /* Borders make margin of inner elements not leak outside */
   border: 1px solid transparent;
+}
+
+.slip {
+  width: calc(var(--page-width) - 2px);
+}
+
+.h-slip {
+  height: calc(var(--page-height) - 2px);
+}
+
+.h-slip > * {
+  width: calc((var(--page-width) - 2px) / 2);
+  height: calc(var(--page-height) - 2px);
 }
 
 .slide {

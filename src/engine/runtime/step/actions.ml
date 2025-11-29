@@ -61,9 +61,11 @@ let all =
     (module Reveal : S);
     (module Unfocus : S);
     (module Enter : S);
+    (module H_enter : S);
     (module Center : S);
     (module Down : S);
     (module Up : S);
+    (module Right : S);
     (module Scroll : S);
     (module Focus : S);
     (module Emph : S);

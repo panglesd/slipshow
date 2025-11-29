@@ -356,6 +356,12 @@ module Stage2 = struct
               "Slips should not appear here, this is an error on slipshow's \
                side. Please report!");
         Some (Ast.Slip ((slip, no_attrs), meta), attrs)
+    | Ast.HSlip ((slip, attrs), meta) ->
+        Logs.err (fun m ->
+            m
+              "Slips should not appear here, this is an error on slipshow's \
+               side. Please report!");
+        Some (Ast.HSlip ((slip, no_attrs), meta), attrs)
     | Ast.SlipScript ((slscr, attrs), meta) ->
         Some (Ast.SlipScript ((slscr, no_attrs), meta), attrs)
     | Ast.Carousel ((c, attrs), meta) ->
@@ -412,6 +418,12 @@ module Stage2 = struct
               "Slips should not appear here, this is an error on slipshow's \
                side. Please report!");
         Ast.Slip ((slip, (merge attrs, meta_a)), meta)
+    | Ast.HSlip ((slip, (attrs, meta_a)), meta) ->
+        Logs.err (fun m ->
+            m
+              "Slips should not appear here, this is an error on slipshow's \
+               side. Please report!");
+        Ast.HSlip ((slip, (merge attrs, meta_a)), meta)
     | Ast.SlipScript ((slscr, (attrs, meta_a)), meta) ->
         Ast.SlipScript ((slscr, (merge attrs, meta_a)), meta)
     | Ast.Carousel ((c, (attrs, meta_a)), meta) ->
@@ -504,6 +516,23 @@ module Stage3 = struct
         let attrs = Mapper.map_attrs m attrs in
         (b, (attrs, meta2))
       in
+      let h_map ~may_enter block (attrs, meta2) =
+        let b =
+          match Mapper.map_block m block with
+          | None -> Block.empty
+          | Some b -> b
+        in
+        let attrs =
+          if
+            (Attributes.mem "no-enter" attrs
+            || Attributes.mem "h-enter-at-unpause" attrs)
+            || not may_enter
+          then attrs
+          else Attributes.add ("h-enter-at-unpause", Meta.none) None attrs
+        in
+        let attrs = Mapper.map_attrs m attrs in
+        (b, (attrs, meta2))
+      in
       match Stage2.get_attribute c with
       | None -> Mapper.default
       | Some (block, (attrs, meta2)) when Attributes.mem "blockquote" attrs ->
@@ -518,6 +547,20 @@ module Stage3 = struct
       | Some (block, (attrs, meta2)) when Attributes.mem "slip" attrs ->
           let block, (attrs, meta) = map ~may_enter:true block (attrs, meta2) in
           Mapper.ret @@ Ast.Slip ((block, (attrs, meta)), Meta.none)
+      | Some (block, (attrs, meta2)) when Attributes.mem "h-slip" attrs ->
+          let block, (attrs, meta) =
+            h_map ~may_enter:true block (attrs, meta2)
+          in
+          let res =
+            match block with
+            | Block.Blocks (l, _) ->
+                Mapper.ret @@ Ast.HSlip ((l, (attrs, meta)), Meta.none)
+            | Ast.Div ((Block.Blocks (l, _), _), _) ->
+                Mapper.ret @@ Ast.HSlip ((l, (attrs, meta)), Meta.none)
+            | _ ->
+                Mapper.ret @@ Ast.HSlip (([ block ], (attrs, meta)), Meta.none)
+          in
+          res
       | Some (block, (attrs, meta2)) when Attributes.mem "carousel" attrs ->
           let block, attrs = map ~may_enter:false block (attrs, meta2) in
           let children =
@@ -612,6 +655,11 @@ let to_cmarkit =
           | Some b -> b
         in
         Mapper.ret (Block.Blocks (title @ [ b ], meta))
+    | Ast.HSlip ((bq, _), meta) ->
+        let b =
+          match List.filter_map (Mapper.map_block m) bq with [] -> [] | b -> b
+        in
+        Mapper.ret (Block.Blocks (b, meta))
     | Ast.Div ((bq, _), meta)
     | Ast.Slip ((bq, _), meta)
     | Ast.Included ((bq, _), meta) ->

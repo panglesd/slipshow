@@ -99,6 +99,7 @@ let to_string = function
   | Ast.Div _ -> "Div"
   | Ast.Slide _ -> "Slide"
   | Ast.Slip _ -> "Slip"
+  | Ast.HSlip _ -> "HSlip"
   | Ast.SlipScript _ -> "SlipScript"
   | _ -> "other"
 
@@ -293,6 +294,16 @@ let custom_html_renderer (files : Ast.Files.map) =
             RenderAttrs.in_block c "div"
               (Attributes.make ~class':[ ("slip-body", Meta.none) ] ())
             @@ fun () -> Context.block c slip
+          in
+          true
+      | Ast.HSlip ((slip, (attrs, _)), _) ->
+          let () =
+            RenderAttrs.in_block c "div"
+              (Attributes.add_class attrs ("slipshow-rescaler", Meta.none))
+            @@ fun () ->
+            RenderAttrs.in_block c "div"
+              (Attributes.make ~class':[ ("h-slip", Meta.none) ] ())
+            @@ fun () -> List.iter (Context.block c) slip
           in
           true
       | Ast.SlipScript ((cb, (attrs, _)), _) ->

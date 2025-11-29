@@ -9,6 +9,7 @@ type Block.t +=
   | Div of Block.t attributed node
   | Slide of slide attributed node
   | Slip of Block.t attributed node
+  | HSlip of Block.t list attributed node
   | SlipScript of Block.Code_block.t attributed node
   | Carousel of Block.t list attributed node
 
@@ -50,6 +51,7 @@ module Folder = struct
     | Included ((b, _), _)
     | Slip ((b, _), _) ->
         Folder.fold_block f acc b
+    | HSlip ((b, _), _) -> List.fold_left (Folder.fold_block f) acc b
     | SlipScript _ -> acc
     | Carousel ((l, _), _) ->
         List.fold_left (fun acc x -> Folder.fold_block f acc x) acc l
@@ -94,6 +96,12 @@ module Mapper = struct
         let* b = Mapper.map_block m b in
         let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
         Some (Slip ((b, attrs), meta))
+    | HSlip ((b, attrs), meta) -> (
+        match List.filter_map (Mapper.map_block m) b with
+        | [] -> None
+        | l ->
+            let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
+            Some (HSlip ((l, attrs), meta)))
     | SlipScript ((s, attrs), meta) ->
         let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
         Some (SlipScript ((s, attrs), meta))

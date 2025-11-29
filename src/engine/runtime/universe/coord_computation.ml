@@ -86,4 +86,13 @@ module Window = struct
     { current with y }
 
   let center ~(current : window) (elem : element) = { current with y = elem.y }
+
+  let right ?(margin = 13.5) ~current elem =
+    let margin = margin /. current.scale in
+    let x =
+      elem.x +. (elem.width /. 2.)
+      -. (width () /. 2. /. current.scale)
+      +. margin
+    in
+    { current with x }
 end

@@ -48,6 +48,12 @@ let enter ?(duration = 1.) ?(margin = 0.) window elem =
   let coords_w = Coord_computation.Window.enter coords_e in
   move window coords_w ~duration
 
+let h_enter ?(duration = 1.) ?(margin = 0.) window elem =
+  let coords_e = Coord_computation.elem window elem in
+  let coords_e = add_margin margin coords_e in
+  let coords_w = Coord_computation.Window.h_enter coords_e in
+  move window coords_w ~duration
+
 let up ?(duration = 1.) ?(margin = 0.) window elem =
   let coords_e = Coord_computation.elem window elem in
   let coords_e = add_margin margin coords_e in
@@ -67,6 +73,13 @@ let center ?(duration = 1.) ?(margin = 0.) window elem =
   let coords_e = add_margin margin coords_e in
   let current = State.get_coord () in
   let coords_w = Coord_computation.Window.center ~current coords_e in
+  move window coords_w ~duration
+
+let right ?(duration = 1.) ?(margin = 0.) window elem =
+  let coords_e = Coord_computation.elem window elem in
+  let coords_e = add_margin margin coords_e in
+  let current = State.get_coord () in
+  let coords_w = Coord_computation.Window.right ~current coords_e in
   move window coords_w ~duration
 
 let scroll ?(duration = 1.) ?(margin = 0.) window elem =

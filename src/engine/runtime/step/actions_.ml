@@ -537,6 +537,12 @@ module Center = Move (struct
   let move = Universe.Move.center
 end)
 
+module Right = Move (struct
+  let on = "right-at-unpause"
+  let action_name = "right"
+  let move = Universe.Move.right
+end)
+
 module Scroll = Move (struct
   let on = "scroll-at-unpause"
   let action_name = "scroll"
@@ -563,6 +569,22 @@ module Enter = struct
         Undoable.Stack.push { element_entered; coord_left; duration } stack
       in
       Universe.Move.enter ?duration ?margin window element_entered
+  end)
+end
+
+module H_enter = struct
+  open Enter
+
+  include Move (struct
+    let on = "h-enter-at-unpause"
+    let action_name = "h-enter"
+
+    let move ?duration ?margin window element_entered =
+      let> () =
+        let coord_left = Universe.State.get_coord () in
+        Undoable.Stack.push { element_entered; coord_left; duration } stack
+      in
+      Universe.Move.h_enter ?duration ?margin window element_entered
   end)
 end
 

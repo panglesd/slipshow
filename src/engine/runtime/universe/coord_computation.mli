@@ -9,4 +9,5 @@ module Window : sig
   val up : ?margin:float -> current:window -> element -> window
   val center : current:window -> element -> window
   val down : ?margin:float -> current:window -> element -> window
+  val right : ?margin:float -> current:window -> element -> window
 end
