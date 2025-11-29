@@ -1,77 +1,3 @@
-module Date = struct
-  let date = Jv.get Jv.global "Date"
-  let now () = Jv.call date "now" [||] |> Jv.to_int
-
-  let soi i =
-    if i = 0 then "00"
-    else if i < 10 then "0" ^ string_of_int i
-    else string_of_int i
-
-  let string_of_t ms =
-    let t = ms / 1000 in
-    let s = t mod 60 in
-    let m = t / 60 in
-    let h = m / 60 in
-    let m = m mod 60 in
-    soi h ^ ":" ^ soi m ^ ":" ^ soi s
-
-  let setup_timer el =
-    let timer_mode = ref (`Since (now ())) in
-    let timer = Brr.El.span [] in
-    let restart =
-      Brr.El.input
-        ~at:[ Brr.At.type' (Jstr.v "button"); Brr.At.value (Jstr.v "Restart") ]
-        ()
-    in
-    let pause =
-      Brr.El.input
-        ~at:
-          [
-            Brr.At.type' (Jstr.v "button");
-            Brr.At.value (Jstr.v "Play/Pause");
-            Brr.At.style (Jstr.v "margin-left: 20px");
-          ]
-        ()
-    in
-    let current_time = ref "" in
-    let _ =
-      Brr.Ev.listen Brr.Ev.click
-        (fun _ ->
-          match !timer_mode with
-          | `Since _ -> timer_mode := `Since (now ())
-          | `Paused_at _ -> timer_mode := `Paused_at 0)
-        (Brr.El.as_target restart)
-    in
-    let _ =
-      Brr.Ev.listen Brr.Ev.click
-        (fun _ ->
-          match !timer_mode with
-          | `Since n -> timer_mode := `Paused_at (now () - n)
-          | `Paused_at n -> timer_mode := `Since (now () - n))
-        (Brr.El.as_target pause)
-    in
-    Brr.El.set_children el [ timer; pause; restart ];
-    Brr.G.set_interval ~ms:100 (fun () ->
-        let v =
-          match !timer_mode with `Since n -> now () - n | `Paused_at n -> n
-        in
-        let new_current_time = "⏱️ " ^ string_of_t v in
-        if not (String.equal !current_time new_current_time) then (
-          Brr.El.set_children timer [ Brr.El.txt' new_current_time ];
-          current_time := new_current_time))
-
-  let clock el =
-    let write_date () =
-      let now = Jv.new' date [||] in
-      let hours = Jv.call now "getHours" [||] |> Jv.to_int in
-      let minutes = Jv.call now "getMinutes" [||] |> Jv.to_int in
-      Brr.El.set_children el
-        [ Brr.El.txt' ("⏰ " ^ soi hours ^ ":" ^ soi minutes) ]
-    in
-    write_date ();
-    Brr.G.set_interval ~ms:20000 write_date
-end
-
 module Msg = struct
   type msg = Communication.t
 
@@ -91,8 +17,9 @@ let html =
 <!doctype html>
 <html>
   <body>
+    <div id=slipshow__mirror-view><video></video></div>
     <iframe name="slipshow_speaker_view" id="speaker-view"></iframe>
-    <div id="speaker-notes"><div id="slswrapper"><div id="timer"></div><div id="clock"></div><h2>Notes</h2><div id="notes_div"></div></div></div>
+    <div id="speaker-notes"><button id="slipshow__mirror-view-button">Mirror view</button><div id="slswrapper"><div id="timer"></div><div id="clock"></div><h2>Notes</h2><div id="notes_div"></div></div></div>
 <script>
 document.getElementById('speaker-view').addEventListener('load', function () {
     // Ensure iframe gets focus
@@ -195,6 +122,33 @@ let open_window handle_msg =
           in
           speaker_view_ref := Some (child, child_iframe);
           Brr.El.set_at (Jstr.v "srcdoc") (Some src) child_iframe;
+          let mirror_button =
+            Brr.El.find_first_by_selector ~root:el
+              (Jstr.v "#slipshow__mirror-view-button")
+            |> Option.get
+          in
+          let mirror_video =
+            Brr.El.find_first_by_selector ~root:el
+              (Jstr.v "#slipshow__mirror-view video")
+            |> Option.get |> Brr_io.Media.El.of_el
+          in
+          let _unlisten =
+            Brr.Ev.listen Brr.Ev.click
+              (fun _ ->
+                let open Fut.Syntax in
+                let _ : unit Fut.t =
+                  let devices =
+                    Brr_io.Media.Devices.of_navigator Brr.G.navigator
+                  in
+                  let constraints = Brr_io.Media.Stream.Constraints.av () in
+                  let* media =
+                    Brr_io.Media.Devices.get_display_media devices constraints
+                  in
+                  match media with Ok stream -> _ | Error _ -> _
+                in
+                ())
+              (Brr.El.as_target mirror_button)
+          in
           let timer =
             Brr.El.find_first_by_selector ~root:el (Jstr.v "#timer")
             |> Option.get
