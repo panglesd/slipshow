@@ -62,6 +62,11 @@ module Window = struct
     let y = elem.y -. (elem.height /. 2.) +. (height () /. 2. /. scale) in
     { scale; x = elem.x; y }
 
+  let h_enter elem =
+    let scale = height () /. elem.height in
+    let x = elem.x -. (elem.width /. 2.) +. (width () /. 2. /. scale) in
+    { scale; y = elem.y; x }
+
   let up ?(margin = 13.5) ~current elem =
     let margin = margin /. current.scale in
     let y =
