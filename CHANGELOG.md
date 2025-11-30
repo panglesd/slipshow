@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Features
+
+- Add a "mirror mode" to the speaker view, which mirrors the entire screen you
+  are sharing with the audience (#188)
+
+### Fix
+
 ## [v0.7.0] The Slipshow of Dorian Gray (Wednesday 26th November, 2025)
 
 ## Compiler
