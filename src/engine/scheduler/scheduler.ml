@@ -16,17 +16,59 @@ let html =
   {|
 <!doctype html>
 <html>
-  <body>
-    <div id=slipshow__mirror-view><video></video></div>
+  <body class="clone-mode">
+    <div id=slipshow__mirror-view><video autoplay></video></div>
     <iframe name="slipshow_speaker_view" id="speaker-view"></iframe>
-    <div id="speaker-notes"><button id="slipshow__mirror-view-button">Mirror view</button><div id="slswrapper"><div id="timer"></div><div id="clock"></div><h2>Notes</h2><div id="notes_div"></div></div></div>
-<script>
-document.getElementById('speaker-view').addEventListener('load', function () {
-    // Ensure iframe gets focus
-    this.contentWindow.focus();
-});
-</script>
+    <div id="speaker-notes">
+      <div id="slswrapper">
+        <div id="timer"></div>
+        <div id="clock"></div>
+        <p id=mirror-button-div>
+          <button id="slipshow__mirror-view-button">Use Mirror view</button>
+          <span>Mirror an other screen. Select the screen your audience sees, and move the mouse there. Useful if you need to interact with the presentation, or another window, but still want to see your notes.</span>
+        </p>
+        <p id=clone-button-div>
+          <button id="slipshow__cloned-view-button">Stop Mirror view</button>
+          <span>Stop mirroring another screen, and go back to a synchronized clone.</span>
+        </p>
+        <h2>Notes</h2>
+        <div id="notes_div"></div>
+      </div>
+    </div>
+    <script>
+    document.getElementById('speaker-view').addEventListener('load', function () {
+        // Ensure iframe gets focus
+        this.contentWindow.focus();
+    });
+    </script>
     <style>
+    #slipshow__mirror-view {
+      background: black;
+    }
+    button, input[type=button] {
+      font-size: 20px;
+    }
+    .mirror-mode #slipshow__mirror-view {
+      display: flex;
+      width: 100%;
+    }
+    .mirror-mode #slipshow__mirror-view video {
+      width: 100%;
+    }
+    .clone-mode #slipshow__mirror-view {
+      display: none;
+    }
+    .mirror-mode #speaker-view {
+      display: none;
+    }
+    .clone-mode #speaker-view {
+    }
+    .mirror-mode #mirror-button-div {
+      display: none;
+    }
+    .clone-mode #clone-button-div {
+      display: none;
+    }
     #timer {
       font-size: 2em;
     }
@@ -127,6 +169,11 @@ let open_window handle_msg =
               (Jstr.v "#slipshow__mirror-view-button")
             |> Option.get
           in
+          let clone_button =
+            Brr.El.find_first_by_selector ~root:el
+              (Jstr.v "#slipshow__cloned-view-button")
+            |> Option.get
+          in
           let mirror_video =
             Brr.El.find_first_by_selector ~root:el
               (Jstr.v "#slipshow__mirror-view video")
@@ -137,17 +184,49 @@ let open_window handle_msg =
               (fun _ ->
                 let open Fut.Syntax in
                 let _ : unit Fut.t =
+                  let ( !! ) = Jstr.v in
+                  Brr.El.set_class !!"clone-mode" false
+                    (Brr.Document.body (Brr.Window.document child));
+                  Brr.El.set_class !!"mirror-mode" true
+                    (Brr.Document.body (Brr.Window.document child));
+                  let child_navigator =
+                    Jv.get (Brr.Window.to_jv child) "navigator"
+                    |> Brr.Navigator.of_jv
+                  in
                   let devices =
-                    Brr_io.Media.Devices.of_navigator Brr.G.navigator
+                    Brr_io.Media.Devices.of_navigator child_navigator
                   in
                   let constraints = Brr_io.Media.Stream.Constraints.av () in
-                  let* media =
+                  let+ media =
                     Brr_io.Media.Devices.get_display_media devices constraints
                   in
-                  match media with Ok stream -> _ | Error _ -> _
+                  match media with
+                  | Ok stream ->
+                      let provider =
+                        Brr_io.Media.El.Provider.of_media_stream stream
+                      in
+                      Brr_io.Media.El.set_src_object mirror_video
+                        (Some provider)
+                  | Error e -> Brr.Console.(error [ e ])
                 in
                 ())
               (Brr.El.as_target mirror_button)
+          in
+          let _unlisten =
+            Brr.Ev.listen Brr.Ev.click
+              (fun _ ->
+                let ( !! ) = Jstr.v in
+                Brr.El.set_class !!"clone-mode" true
+                  (Brr.Document.body (Brr.Window.document child));
+                Brr.El.set_class !!"mirror-mode" false
+                  (Brr.Document.body (Brr.Window.document child));
+                let tracks =
+                  let stream = Brr_io.Media.El.capture_stream mirror_video in
+                  Brr_io.Media.Stream.get_tracks stream
+                in
+                List.iter (fun t -> Brr_io.Media.Track.stop t) tracks;
+                Brr_io.Media.El.set_src_object mirror_video None)
+              (Brr.El.as_target clone_button)
           in
           let timer =
             Brr.El.find_first_by_selector ~root:el (Jstr.v "#timer")
