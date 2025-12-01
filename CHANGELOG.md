@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+## Fix
+
+- Fix the fact that the margin depended on the zoom factor
+
 ## [v0.7.0] The Slipshow of Dorian Gray (Wednesday 26th November, 2025)
 
 ## Compiler
