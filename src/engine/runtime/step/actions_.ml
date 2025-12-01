@@ -453,8 +453,8 @@ module Move (X : sig
   val action_name : string
 
   val move :
-    ?duration:float ->
     ?margin:float ->
+    ?duration:float ->
     Universe.Window.t ->
     Brr.El.t ->
     unit Undoable.t
@@ -492,10 +492,7 @@ struct
             | Some elem -> Ok { elem; duration; margin }))
 
   let do_ window { margin; duration; elem } =
-    only_if_not_fast @@ fun () ->
-    let margin = Option.value ~default:0. margin in
-    let duration = Option.value ~default:1. duration in
-    X.move ~margin ~duration window elem
+    only_if_not_fast @@ fun () -> X.move ?margin ?duration window elem
 end
 
 module SetClass (X : sig
@@ -534,13 +531,19 @@ end)
 module Center = Move (struct
   let on = "center-at-unpause"
   let action_name = "center"
-  let move = Universe.Move.center
+  let move ?margin:_ = Universe.Move.center
 end)
 
 module Right = Move (struct
-  let on = "right-at-unpause"
+  let on = "right"
   let action_name = "right"
   let move = Universe.Move.right
+end)
+
+module Left = Move (struct
+  let on = "left"
+  let action_name = "left"
+  let move = Universe.Move.left
 end)
 
 module Scroll = Move (struct
@@ -563,12 +566,12 @@ module Enter = struct
     let on = "enter-at-unpause"
     let action_name = "enter"
 
-    let move ?duration ?margin window element_entered =
+    let move ?margin:_ ?duration window element_entered =
       let> () =
         let coord_left = Universe.State.get_coord () in
         Undoable.Stack.push { element_entered; coord_left; duration } stack
       in
-      Universe.Move.enter ?duration ?margin window element_entered
+      Universe.Move.enter ?duration window element_entered
   end)
 end
 
@@ -576,15 +579,15 @@ module H_enter = struct
   open Enter
 
   include Move (struct
-    let on = "h-enter-at-unpause"
+    let on = "h-enter"
     let action_name = "h-enter"
 
-    let move ?duration ?margin window element_entered =
+    let move ?margin:_ ?duration window element_entered =
       let> () =
         let coord_left = Universe.State.get_coord () in
         Undoable.Stack.push { element_entered; coord_left; duration } stack
       in
-      Universe.Move.h_enter ?duration ?margin window element_entered
+      Universe.Move.h_enter ?duration window element_entered
   end)
 end
 

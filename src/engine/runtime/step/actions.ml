@@ -66,6 +66,7 @@ let all =
     (module Down : S);
     (module Up : S);
     (module Right : S);
+    (module Left : S);
     (module Scroll : S);
     (module Focus : S);
     (module Emph : S);

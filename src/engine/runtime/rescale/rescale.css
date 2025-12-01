@@ -15,6 +15,7 @@
 .h-slip > * {
   width: calc((var(--page-width) - 2px) / 2);
   height: calc(var(--page-height) - 2px);
+  flex-shrink: 0;
 }
 
 .slide {

@@ -27,7 +27,7 @@ let elem window elem =
   }
 
 module Window = struct
-  let focus ~current elems =
+  let focus ?(margin = 0.) ~current elems =
     let box (b1 : element) (b2 : element) =
       let left_x =
         Float.min (b1.x -. (b1.width /. 2.)) (b2.x -. (b2.width /. 2.))
@@ -55,6 +55,7 @@ module Window = struct
         let scale1 = width () /. box.width
         and scale2 = height () /. box.height in
         let scale = Float.min scale1 scale2 in
+        let scale = scale /. (1. +. (margin /. 100.)) in
         { scale; x = box.x; y = box.y }
 
   let enter elem =
@@ -67,32 +68,37 @@ module Window = struct
     let x = elem.x -. (elem.width /. 2.) +. (width () /. 2. /. scale) in
     { scale; y = elem.y; x }
 
-  let up ?(margin = 13.5) ~current elem =
-    let margin = margin /. current.scale in
+  let up ?(margin = 0.) ~current elem =
     let y =
       elem.y -. (elem.height /. 2.)
       +. (height () /. 2. /. current.scale)
-      -. margin
+      -. (margin /. current.scale *. height () /. 100.)
     in
     { current with y }
 
-  let down ?(margin = 13.5) ~current elem =
-    let margin = margin /. current.scale in
+  let down ?(margin = 0.) ~current elem =
     let y =
       elem.y +. (elem.height /. 2.)
       -. (height () /. 2. /. current.scale)
-      +. margin
+      +. (margin /. current.scale *. height () /. 100.)
     in
     { current with y }
 
   let center ~(current : window) (elem : element) = { current with y = elem.y }
 
-  let right ?(margin = 13.5) ~current elem =
-    let margin = margin /. current.scale in
+  let right ?(margin = 0.) ~current elem =
     let x =
       elem.x +. (elem.width /. 2.)
       -. (width () /. 2. /. current.scale)
-      +. margin
+      -. (margin /. current.scale *. width () /. 100.)
+    in
+    { current with x }
+
+  let left ?(margin = 0.) ~current elem =
+    let x =
+      elem.x -. (elem.width /. 2.)
+      +. (width () /. 2. /. current.scale)
+      +. (margin /. current.scale *. width () /. 100.)
     in
     { current with x }
 end
