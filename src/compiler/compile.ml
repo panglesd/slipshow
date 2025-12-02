@@ -304,7 +304,15 @@ module Stage1 = struct
     Ast.Mapper.make ~block ~inline ~attrs ()
 
   let execute defs read_file md =
-    Cmarkit.Mapper.map_doc (execute defs read_file) md
+    let res = Cmarkit.Mapper.map_doc (execute defs read_file) md in
+    let () =
+      Logs.debug @@ fun m ->
+      let t = Cmarkit.Doc.block res in
+      let node = Debug.of_ast t in
+      m "Stage 1:%a %a%a%!" Format.pp_force_newline () Debug.pp_node node
+        Format.pp_force_newline ()
+    in
+    res
 end
 
 module Stage2 = struct
@@ -473,7 +481,16 @@ module Stage2 = struct
     in
     Ast.Mapper.make ~block ()
 
-  let execute md = Cmarkit.Mapper.map_doc execute md
+  let execute md =
+    let res = Cmarkit.Mapper.map_doc execute md in
+    let () =
+      Logs.debug @@ fun m ->
+      let t = Cmarkit.Doc.block res in
+      let node = Debug.of_ast t in
+      m "Stage 2:%a%a%a%!" Format.pp_force_newline () Debug.pp_node node
+        Format.pp_force_newline ()
+    in
+    res
 end
 
 module Stage3 = struct
@@ -578,7 +595,16 @@ module Stage3 = struct
     in
     Ast.Mapper.make ~block ()
 
-  let execute md = Cmarkit.Mapper.map_doc execute md
+  let execute md =
+    let res = Cmarkit.Mapper.map_doc execute md in
+    let () =
+      Logs.debug @@ fun m ->
+      let t = Cmarkit.Doc.block res in
+      let node = Debug.of_ast t in
+      m "Stage 3:%a%a%a%!" Format.pp_force_newline () Debug.pp_node node
+        Format.pp_force_newline ()
+    in
+    res
 end
 
 module Stage4 = struct
