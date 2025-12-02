@@ -6,7 +6,7 @@
   margin-right: 110px;
 }
 
-.slide {
+.slide, .hslip-body {
   display: flex;
   flex-direction: column;
 }
@@ -27,7 +27,7 @@
     width: calc(var(--page-width) - 60px - 10px + 1px);
 }
 
-.slide-body {
+.slide-body, .hslip-body {
   font-size: 1.4em;
     /* flex-grow: 1; */
     /* padding-top: 100px; */

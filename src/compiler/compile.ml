@@ -26,6 +26,7 @@ type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
     The third stage is doing the following:
     - [blockquote] attributed elements are turned into block quotes
     - [slip] attributed elements are turned into slips
+    - [h-slip] attributed elements are turned into hslips
     - [slide] attributed elements are turned into slides
     - [carousel] attributed elements are turned into carousels
 
@@ -541,11 +542,10 @@ module Stage3 = struct
         in
         let attrs =
           if
-            (Attributes.mem "no-enter" attrs
-            || Attributes.mem "h-enter-at-unpause" attrs)
+            (Attributes.mem "no-enter" attrs || Attributes.mem "h-enter" attrs)
             || not may_enter
           then attrs
-          else Attributes.add ("h-enter-at-unpause", Meta.none) None attrs
+          else Attributes.add ("h-enter", Meta.none) None attrs
         in
         let attrs = Mapper.map_attrs m attrs in
         (b, (attrs, meta2))
@@ -563,19 +563,70 @@ module Stage3 = struct
           @@ Ast.Slide (({ content = block; title }, attrs), Meta.none)
       | Some (block, (attrs, meta2)) when Attributes.mem "slip" attrs ->
           let block, (attrs, meta) = map ~may_enter:true block (attrs, meta2) in
-          Mapper.ret @@ Ast.Slip ((block, (attrs, meta)), Meta.none)
+          let res =
+            match block with
+            | Ast.Div ((block, _), _) ->
+                Mapper.ret @@ Ast.Slip ((block, (attrs, meta)), Meta.none)
+            | _ -> Mapper.ret @@ Ast.Slip ((block, (attrs, meta)), Meta.none)
+          in
+          res
       | Some (block, (attrs, meta2)) when Attributes.mem "h-slip" attrs ->
           let block, (attrs, meta) =
             h_map ~may_enter:true block (attrs, meta2)
           in
+          let merge_attribute c =
+            let n x = (x, Meta.none) in
+            let new_attrs attrs =
+              let attrs = Attributes.add_class attrs (n "hslip-body") in
+              let add_to_style attrs d =
+                match Attributes.find "style" attrs with
+                | Some (style, Some ({ v; _ }, m)) ->
+                    Attributes.add style
+                      (Some
+                         ( {
+                             Attributes.v =
+                               "--divisor:" ^ string_of_int d ^ ";" ^ v;
+                             delimiter = None;
+                           },
+                           m ))
+                      attrs
+                | _ ->
+                    Attributes.add (n "style")
+                      (Some
+                         (n
+                            {
+                              Attributes.v = "--divisor:" ^ string_of_int d;
+                              delimiter = None;
+                            }))
+                      attrs
+              in
+              match Cmarkit.Attributes.find "hslip-slice" attrs with
+              | Some (_, Some (n, _)) -> (
+                  match int_of_string_opt n.v with
+                  | Some i -> add_to_style attrs i
+                  | None -> add_to_style attrs 2)
+              | _ -> add_to_style attrs 2
+            in
+
+            match Stage2.get_attribute c with
+            | Some (Ast.Div ((c, _), _), (attrs, meta)) ->
+                let attrs = new_attrs attrs in
+                Ast.Div (n (c, (attrs, meta)))
+            | _ ->
+                let attrs = new_attrs Attributes.empty in
+                Ast.Div (n (c, (attrs, Meta.none)))
+          in
           let res =
             match block with
             | Block.Blocks (l, _) ->
+                let l = List.map merge_attribute l in
                 Mapper.ret @@ Ast.HSlip ((l, (attrs, meta)), Meta.none)
             | Ast.Div ((Block.Blocks (l, _), _), _) ->
+                let l = List.map merge_attribute l in
                 Mapper.ret @@ Ast.HSlip ((l, (attrs, meta)), Meta.none)
             | _ ->
-                Mapper.ret @@ Ast.HSlip (([ block ], (attrs, meta)), Meta.none)
+                let l = List.map merge_attribute [ block ] in
+                Mapper.ret @@ Ast.HSlip ((l, (attrs, meta)), Meta.none)
           in
           res
       | Some (block, (attrs, meta2)) when Attributes.mem "carousel" attrs ->

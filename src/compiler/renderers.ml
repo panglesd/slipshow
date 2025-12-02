@@ -221,7 +221,7 @@ let custom_html_renderer (files : Ast.Files.map) =
       | _ -> false (* let the default HTML renderer handle that *)
     in
     let block c = function
-      | Ast.Included ((b, (attrs, _)), _) | Ast.Div ((b, (attrs, _)), _) ->
+      | Ast.Included ((b, (attrs, _)), _) ->
           let should_include_div =
             let attrs_is_not_empty = not @@ Attributes.is_empty attrs in
             let contains_multiple_blocks =
@@ -242,6 +242,8 @@ let custom_html_renderer (files : Ast.Files.map) =
             RenderAttrs.in_block c "div" attrs (fun () -> Context.block c b)
           else Context.block c b;
           true
+      | Ast.Div ((b, (attrs, _)), _) ->
+          RenderAttrs.in_block c "div" attrs (fun () -> Context.block c b) true
       | Ast.Carousel ((l, (attrs, _)), _) ->
           let attrs =
             Attributes.add_class attrs ("slipshow__carousel", Meta.none)

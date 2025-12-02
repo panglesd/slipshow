@@ -3,31 +3,68 @@ dimension: 16:9
 ---
 
 {h-slip #yoyo}
-> Hello
->
-> This is something
->
-> {pause}
-> ---
-> This is in a horizontal slip
->
-> {right-at-unpause}
-> ---
-> And this too
+----
+Hello
 
-<!-- {h-enter-at-unpause=yoyo} -->
+This is something
 
-<!-- {h-enter-at-unpause=first} -->
+{pause}
+---
+This is in a horizontal slip
 
-<!-- {h-enter-at-unpause=second} -->
+{right #theleft}
+---
+And this too
 
-<!-- {h-enter-at-unpause=third} -->
+{right hslip-slice=3}
+---
+One third
 
-<style>
-.h-slip {
-  display: flex;
-  width: calc(var(--page-width) * 1.5);
-}
-</style>
+{left=theleft hslip-slice=3}
+---
+And this too one third
+
+{right hslip-slice=3}
+---
+And this too is one third
+
+{right}
+---
+And this too
+
+{right}
+---
+And this too
+
+{right}
+---
+And this too
+
+{right}
+---
+And this too
+
+{right}
+---
+And this too
+
+{right}
+---
+And this too
+
+{right}
+---
+And this too
+
+----
+
+<!-- {h-enter=yoyo} -->
+
+<!-- {h-enter=first} -->
+
+<!-- {h-enter=second} -->
+
+<!-- {h-enter=third} -->
+
 
 {step}

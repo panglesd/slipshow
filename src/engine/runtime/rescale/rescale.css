@@ -10,12 +10,20 @@
 
 .h-slip {
   height: calc(var(--page-height) - 2px);
+  display: flex;
+  width: max-content;
 }
 
 .h-slip > * {
-  width: calc((var(--page-width) - 2px) / 2);
+  width: calc((var(--page-width) - 2px - 220px) / var(--divisor));
   height: calc(var(--page-height) - 2px);
   flex-shrink: 0;
+}
+
+.hslip-body {
+  justify-content: center;
+  padding-left: calc(110px / var(--divisor));
+  padding-right: calc(110px / var(--divisor));
 }
 
 .slide {
