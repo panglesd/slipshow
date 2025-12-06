@@ -1,3 +1,17 @@
+Trying directory output
+
+  $ touch f.md
+  $ slipshow compile --output dist/ f.md
+  slipshow: Sys_error("dist/: No such file or directory")
+  [123]
+
+  $ mkdir dist/
+  $ slipshow compile --output dist f.md
+  slipshow: Sys_error("dist: Is a directory")
+  [123]
+
+  $ slipshow compile --output dist/ f.md
+
 Trying a UX for slipshow server mode
 
   $ slipshow compile --web-mode <path1> <options> file.md
