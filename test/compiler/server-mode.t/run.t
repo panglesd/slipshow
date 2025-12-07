@@ -39,7 +39,36 @@ Probably:
 
 So for instance:
 
-  $ slipshow compile --web-mode assets/ -o dist/ src/file.md
+  $ slipshow compile --web-mode assets/ -o root/ src/file.md
   ***** UNREACHABLE *****
-  $ slipshow web-assets dist/assets/
+  $ slipshow web-assets root/assets/
   ***** UNREACHABLE *****
+
+What about managing everything under a web root?
+
+  $ slipshow compile --web-mode root/ --assets assets/ -o pres1/ file.md
+  ***** UNREACHABLE *****
+  $ slipshow web-assets --web-mode root/ assets/
+  ***** UNREACHABLE *****
+
+Where the end hierarchy is:
+
+  $ tree root/
+  root/
+  root/pres1/file.html
+  root/assets/...
+
+What about the assets such as images etc? For instance `![](img/a.png)`?
+
+- They are copied under the webroot. For instance in the example above:
+
+  $ tree root/
+  root/
+  root/pres1/file.html
+  root/pres/img/a.png
+  root/assets/...
+
+
+Interesting, I think I like that better.
+
+Not sure if it is helpful for examples.slipshow.org though
