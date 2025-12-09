@@ -18,6 +18,7 @@ type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
       [Ok None]). *)
 
 val delayed :
+  ?slipshow_js:Asset.t ->
   ?frontmatter:Frontmatter.resolved Frontmatter.t ->
   ?read_file:file_reader ->
   string ->
@@ -31,6 +32,7 @@ val add_starting_state :
 
 val convert :
   ?autofocus:bool ->
+  ?slipshow_js:Asset.t ->
   ?frontmatter:Frontmatter.resolved Frontmatter.t ->
   ?starting_state:starting_state ->
   ?read_file:Compile.file_reader ->

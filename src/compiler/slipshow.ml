@@ -84,10 +84,11 @@ let head ~width ~height ~theme ~(has : Has.t) ~math_link ~css_links =
       highlight_js_ocaml_element;
     ]
 
-let embed_in_page content ~has ~math_link ~css_links ~theme ~dimension =
+let embed_in_page ~slipshow_js content ~has ~math_link ~css_links ~theme
+    ~dimension =
   let width, height = dimension in
   let head = head ~has ~math_link ~css_links ~theme ~width ~height in
-  let slipshow_js_element = slipshow_js_element None in
+  let slipshow_js_element = slipshow_js_element slipshow_js in
   let start =
     Format.sprintf
       {|
@@ -143,8 +144,8 @@ let convert_to_md ~read_file content =
   let sd = Compile.to_cmarkit sd in
   Cmarkit_commonmark.of_doc ~include_attributes:false sd
 
-let delayed ?(frontmatter = Frontmatter.empty) ?(read_file = fun _ -> Ok None) s
-    =
+let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty)
+    ?(read_file = fun _ -> Ok None) s =
   let Frontmatter.Resolved frontmatter, s =
     let ( let* ) x f =
       match x with
@@ -186,7 +187,8 @@ let delayed ?(frontmatter = Frontmatter.empty) ?(read_file = fun _ -> Ok None) s
   let md = Compile.compile ~attrs:toplevel_attributes ~read_file s in
   let content = Renderers.to_html_string md in
   let has = Has.find_out md in
-  embed_in_page ~dimension ~has ~math_link ~theme ~css_links content
+  embed_in_page ~slipshow_js ~dimension ~has ~math_link ~theme ~css_links
+    content
 
 let add_starting_state ?(autofocus = true) (start, end_)
     (starting_state : starting_state option) =
@@ -240,6 +242,6 @@ let add_starting_state ?(autofocus = true) (start, end_)
   in
   if true then html else orig_html
 
-let convert ?autofocus ?frontmatter ?starting_state ?read_file s =
-  let delayed = delayed ?frontmatter ?read_file s in
+let convert ?autofocus ?slipshow_js ?frontmatter ?starting_state ?read_file s =
+  let delayed = delayed ?slipshow_js ?frontmatter ?read_file s in
   add_starting_state ?autofocus delayed starting_state
