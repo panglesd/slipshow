@@ -26,9 +26,11 @@ val delayed :
     to run [convert] server-side (which is useful to get images and so on) but
     let the previewer decide on the starting state. *)
 
-val add_starting_state : delayed -> starting_state option -> string
+val add_starting_state :
+  ?autofocus:bool -> delayed -> starting_state option -> string
 
 val convert :
+  ?autofocus:bool ->
   ?frontmatter:Frontmatter.resolved Frontmatter.t ->
   ?starting_state:starting_state ->
   ?read_file:Compile.file_reader ->

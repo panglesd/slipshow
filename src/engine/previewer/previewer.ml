@@ -58,21 +58,23 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ()) root =
         | Some { payload = Ready; id = _ }
           when String.equal source_name ids.(!index) ->
             ()
-        | Some { payload = Ready; id = _ } ->
+        | Some { payload = Ready; id }
+          when String.equal source_name ids.(1 - !index) ->
+            Brr.Console.(log [ "Getting a strange input"; id ]);
             if !is_speaker_view_open then (
               send_speaker_view `Close panels.(!index);
               send_speaker_view `Open panels.(1 - !index));
             index := 1 - !index;
             Brr.El.set_class (Jstr.v "active_panel") true panels.(!index);
-            let contentDocument el =
-              Jv.get (Brr.El.to_jv el) "contentDocument" |> Brr.Document.of_jv
-            in
-            let inner_iframe =
-              panels.(!index) |> contentDocument |> fun d ->
-              Brr.Document.find_el_by_id d (Jstr.v "slipshow__internal_iframe")
-              |> Option.get
-            in
-            let () = Brr.El.set_has_focus true inner_iframe in
+            (* let contentDocument el = *)
+            (*   Jv.get (Brr.El.to_jv el) "contentDocument" |> Brr.Document.of_jv *)
+            (* in *)
+            (* let inner_iframe = *)
+            (*   panels.(!index) |> contentDocument |> fun d -> *)
+            (*   Brr.Document.find_el_by_id d (Jstr.v "slipshow__internal_iframe") *)
+            (*   |> Option.get *)
+            (* in *)
+            (* let () = Brr.El.set_has_focus true inner_iframe in *)
             Brr.El.set_class (Jstr.v "active_panel") false panels.(1 - !index)
         | _ -> ())
       (Brr.Window.as_target Brr.G.window)
@@ -84,7 +86,7 @@ let set_srcdoc { index; panels; _ } slipshow =
 
 let preview previewer source =
   let starting_state = !(previewer.stage) in
-  let slipshow = Slipshow.convert ~starting_state source in
+  let slipshow = Slipshow.convert ~autofocus:false ~starting_state source in
   set_srcdoc previewer slipshow
 
 let preview_compiled previewer delayed =

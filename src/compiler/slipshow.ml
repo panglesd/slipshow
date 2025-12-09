@@ -188,7 +188,9 @@ let delayed ?(frontmatter = Frontmatter.empty) ?(read_file = fun _ -> Ok None) s
   let has = Has.find_out md in
   embed_in_page ~dimension ~has ~math_link ~theme ~css_links content
 
-let add_starting_state (start, end_) (starting_state : starting_state option) =
+let add_starting_state ?(autofocus = true) (start, end_)
+    (starting_state : starting_state option) =
+  let autofocus = if autofocus then "autofocus" else "" in
   let starting_state =
     match starting_state with None -> "0" | Some st -> string_of_int st
   in
@@ -217,7 +219,7 @@ let add_starting_state (start, end_) (starting_state : starting_state option) =
 %s
 </head>
   <body>
-          <iframe autofocus name="slipshow_main_pres" id="slipshow__internal_iframe" srcdoc="%s" style="
+          <iframe %s name="slipshow_main_pres" id="slipshow__internal_iframe" srcdoc="%s" style="
     width: 100%%;
     height: 100%%;
     position: fixed;
@@ -233,11 +235,11 @@ let add_starting_state (start, end_) (starting_state : starting_state option) =
       </script>
   </body>
                    </html>|}
-      favicon_element html
+      favicon_element autofocus html
       Data_files.(read Scheduler_js)
   in
   if true then html else orig_html
 
-let convert ?frontmatter ?starting_state ?read_file s =
+let convert ?autofocus ?frontmatter ?starting_state ?read_file s =
   let delayed = delayed ?frontmatter ?read_file s in
-  add_starting_state delayed starting_state
+  add_starting_state ?autofocus delayed starting_state
