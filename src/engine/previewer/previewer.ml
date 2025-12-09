@@ -6,9 +6,6 @@ end
 
 type previewer = { stage : int ref; index : int ref; panels : Brr.El.t array }
 
-let ids = [| "slipshow-frame-1"; "slipshow-frame-2" |]
-let is_speaker_view_open = ref false
-
 let send_speaker_view oc panel =
   let payload =
     match oc with
@@ -25,16 +22,25 @@ let send_speaker_view oc panel =
   in
   Brr.Window.post_message window ~msg
 
+let () = Random.self_init ()
+
 let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ()) root =
+  let ( !! ) = Jstr.v in
+  let name1 = Random.int 1000000 |> string_of_int |> fun s -> "id" ^ s in
+  let name2 = Random.int 1000000 |> string_of_int |> fun s -> "id" ^ s in
+  let ids = [| name1; name2 |] in
   let panel1 =
-    Brr.El.find_first_by_selector ~root (Jstr.v "#right-panel1") |> Option.get
+    Brr.El.iframe ~at:[ Brr.At.name !!name1; Brr.At.class' !!"right-panel1" ] []
   in
   let panel2 =
-    Brr.El.find_first_by_selector ~root (Jstr.v "#right-panel2") |> Option.get
+    Brr.El.iframe ~at:[ Brr.At.name !!name2; Brr.At.class' !!"right-panel2" ] []
   in
+  let () = Brr.El.append_children root [ panel1; panel2 ] in
   let panels = [| panel1; panel2 |] in
   let index = ref 0 in
   let stage = ref initial_stage in
+  let is_speaker_view_open = ref false in
+
   let _ =
     Brr.Ev.listen Brr_io.Message.Ev.message
       (fun event ->

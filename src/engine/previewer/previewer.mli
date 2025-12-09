@@ -4,8 +4,7 @@ type previewer
 
     To create a previewer, you {e need} to provide an HTML element that contains
     exactly:
-    - An iframe with the [right-panel1] ID
-    - An iframe with the [right-panel2] ID.
+    - Nothing
 
     When you have a previewer, you can preview a source. For the moment, it has
     to be a {e source}: you cannot pass it a compiled file. *)
