@@ -1,0 +1,32 @@
+.right-panel1.active_panel, .right-panel2.active_panel {
+  z-index: 1;
+}
+.right-panel1, .right-panel2 {
+    z-index: 0;
+    width:100%;
+    position:absolute;
+    top:0;
+    bottom:0;
+    left:0;
+    right:0;
+    border:0;
+}
+
+.preview {
+    position: relative;
+}
+.entry {
+    display: flex;
+}
+.entry > * {
+    width: 50%;
+}
+/* The iframes need to be absolutely positioned so their height and width need
+   to be manually set */
+.entry .preview, .entry .preview > * {
+    height:500px;
+}
+
+.cm-content {
+    font-size: 18px;
+}
