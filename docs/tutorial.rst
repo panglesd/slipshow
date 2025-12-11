@@ -1,5 +1,5 @@
-Tutorial
-========
+Your first presentation
+=======================
 
 This tutorial assumes you have access to the slipshow compiler. If you are only
 interested in trying out slipshow before deciding to install it (or not), you

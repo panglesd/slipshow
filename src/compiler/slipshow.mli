@@ -35,8 +35,8 @@ val convert :
   ?slipshow_js:Asset.t ->
   ?frontmatter:Frontmatter.resolved Frontmatter.t ->
   ?starting_state:starting_state ->
-  ?read_file:Compile.file_reader ->
+  ?read_file:file_reader ->
   string ->
   string
 
-val convert_to_md : read_file:Compile.file_reader -> string -> string
+val convert_to_md : read_file:file_reader -> string -> string

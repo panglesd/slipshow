@@ -1,9 +1,6 @@
 .. _getting-started:
 
-=================
- Getting Started
-=================
-
+============
 Installation
 ============
 
@@ -26,7 +23,7 @@ In addition to this, you also have the following options:
      :local:
 
 Precompiled binaries
---------------------
+====================
 
 Precompiled binaries are available to download in the `release
 <https://github.com/panglesd/slipshow/releases/latest>`_ page of the
@@ -51,7 +48,7 @@ Then, you can use ``slipshow`` to compile your documents:
    $ slipshow serve presentation.md      # Compiles to `presentation.html` and serves a live-preview on 127.0.0.1:8080
 
 The VS Code plugin
-------------------
+==================
 
 The VS Code plugin can be downloaded from the `official marketplace
 <https://marketplace.visualstudio.com/items?itemName=Slipshow.slipshow>`_ as
@@ -67,7 +64,7 @@ slipshow". This should open a new window with a live preview of your
 presentation!
 
 The sliphub online editor
--------------------------
+=========================
 
 The `sliphub online editor <https://sliphub.choum.net/new>`_ is a quick way to
 try out slipshow, as it does not require any setup. This link will open a page with
@@ -80,7 +77,7 @@ Remember the link to be able to come back to your document later! And save your
 work locally: This is still experimental.
 
 The slipshow editor
--------------------
+===================
 
 The slipshow editor is an editor specialized in writing slipshow
 presentations. It provides live-previewing of your presentation.
@@ -89,7 +86,7 @@ However, since the project is very new compared to most editors, you might miss
 features from eg VS Code, Emacs or Vim.
 
 Compiling from source
----------------------
+=====================
 
 This requires ``opam``.
 

@@ -6,37 +6,85 @@
 Welcome to slipshow's documentation!
 ====================================
 
-**Slipshow is a tool specifically designed for technical presentations where traditional slides are not enough.**
+**Slipshow is a presentation tool that unlocks new ways of presenting.**
 
-In a slipshow presentation, the equivalent of a slide is called a *slip*. Each slip is like a slide, but with no bottom limit. That is, the content can be arbitrarily long! During the presentation, the camera will "scroll" down to reveal the hidden content, following a script given by the presenter!
+Slipshow allows several presentation styles, that can easily be mixed-and-matched. One of them is the traditional slide-based presentation, but the following two are more interesting. I call them "typed presentation" and "drawn presentation".
 
-Here are the goals of slipshow, in no specific orders:
+In a typed presentation, the equivalent of a slide is called a *slip*. Each slip is like a slide, but with no bottom limit. That is, the content can be arbitrarily long! During the presentation, the camera will "scroll" down to reveal the hidden content, following a script given by the presenter!
 
-- Lift restrictions from traditional slide-based presentation. In particular, make it closer to a blackboard presentation!
-- Easy to write and readable syntax: markdown with few extensions. No manual placement like in powerpoint. No crazy syntax like in latex.
-- Source of the presentation is plain text: much better for source control, sharing with people, using your favorite editor, readability, compatibility.
-- Open the possibility for a dynamic presentation. Watching scientific popularization video demonstrates how well-chosen animations can make a difficult subject more understandable.
+In a drawn presentation, the content consists of replaying a recorded drawing made by the author. It makes presentation such as the one made by TODO links 2-minute physics, RSA animate or Suckerpinch much more accessible, and note that there is no need for drawing skill to make such a presentation more didactic, entertaining, more satisfying to create, or just feeling more human.
 
 Slipshow compiles files written in an extension of markdown, to a standalone html file viewable offline in any web browser.
 
+This documentation can be read linearly. It alternates between more in-depth explanations, hands-on tutorial and technical references. If you know what you are looking for, each section tries to be focus and reasonably self-contained, so you can directly go to what you are looking for.
+
 We advise you to start by reading the :ref:`tutorial`. You can also peek at the :ref:`examples`.
+
+
+..
+   .. slipshow-example::
+
+      Hello this is a test
+
+..
+   .. raw:: html
+
+      <div class="running-example">This is a first paragraph.
+
+      This is a second paragraph.
+      This is part of the second paragraph.</div>
 
 .. toctree::
    :maxdepth: 1
-   :caption: Contents:
+   :caption: Getting started
 
+   Introduction <self>
    quick-start
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Typing your presentation
+
+   anatomy
    tutorial
-   syntax
-   themes
+   The Slipshow syntax <cli>
+   The differences with Markdown <cli>
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Drawing your presentation
+
    record-and-replay
-   faq
+   record-tutorial
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Actions
+
+   How actions work <cli>
+   Executing custom scripts <cli>
+   Examples <cli>
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Layouts
+
+   Layouts in Slipshow <cli>
+   Grouping <cli>
+   Including HTML <cli>
+   Examples <cli>
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Reference
+
+   syntax
+   All actions <cli>
+   cli
+   themes
+
+.. toctree::
+   :caption: Zoo of examples
+
    examples
-
-..
-   Indices and tables
-   ==================
-
-   * :ref:`genindex`
-   * :ref:`modindex`
-   * :ref:`search`
+   faq

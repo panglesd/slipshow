@@ -14,6 +14,12 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
+import sys
+from pathlib import Path
+
+# I need to add my own extension and it needs to be found (from sphinx tuto)
+sys.path.append(str(Path('_ext').resolve()))
+
 
 # -- Project information -----------------------------------------------------
 

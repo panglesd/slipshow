@@ -1,7 +1,7 @@
 Anatomy of a Slipshow presentation
 ==================================
 
-In this page, the goal is to give a precise idea of what Slipshow allows to do, and in which way, without bothering with unnecessary details. It consists of an explanation, so you won't get your hand dirty here!
+In this page, the goal is to give a precise idea of how a Slipshow presentation is constructed, without bothering with unnecessary details. It consists of an explanation, so you won't get your hand dirty here! But it helps a lot to understand the picture. The tutorial is a more hands-on introduction, if that is what you are looking for.
 
 Let's start with a concrete example. We'll use this simple presentation as a running example. Here it is:
 
