@@ -58,6 +58,19 @@ If, even after ``opam`` claims to have successfully installed it, ``slipshow`` i
 
 This updates your environment to include the packages installed by ``opam``.
 
+The sliphub online editor
+=========================
+
+The `sliphub online editor <https://sliphub.choum.net/new>`_ is a quick way to
+try out slipshow, as it does not require any setup. This link will open a page with
+an editor on the left, and a preview on the right.
+
+Currently, the interface is quite minimal. Your progress is saved "live" and you
+can even do collaborative editing: two people editing the same document.
+
+Remember the link to be able to come back to your document later! And save your
+work locally: This is still experimental.
+
 The VS Code plugin
 ==================
 
@@ -73,19 +86,6 @@ The VS Code plugin provides two commands:
 - Preview presentation.  Open the command palette, and type "Preview
 slipshow". This should open a new window with a live preview of your
 presentation!
-
-The sliphub online editor
-=========================
-
-The `sliphub online editor <https://sliphub.choum.net/new>`_ is a quick way to
-try out slipshow, as it does not require any setup. This link will open a page with
-an editor on the left, and a preview on the right.
-
-Currently, the interface is quite minimal. Your progress is saved "live" and you
-can even do collaborative editing: two people editing the same document.
-
-Remember the link to be able to come back to your document later! And save your
-work locally: This is still experimental.
 
 Compiling from source
 =====================
