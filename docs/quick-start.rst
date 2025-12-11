@@ -6,21 +6,15 @@ Installation
 
 There are different ways to have access to the slipshow compiler:
 
-- **Linux or Mac user**, reasonably comfortable with the command line: Use
-  :ref:`precompiled binaries<Precompiled binaries>`.
-- **VSCode user**: If you don't want to use the CLI, use the :ref:`VSCode
-  extension<The VS Code plugin>`.
-- For **online-only use**, consider the :ref:`online sliphub editor<the sliphub online editor>`.
-- Otherwise, use the :ref:`slipshow editor<the slipshow editor>`.
+**The best option** for people comfortable with it is to use the command line interface. It is distributed through various mediums:
 
-In addition to this, you also have the following options:
+- You can download :ref:`precompiled binaries<Precompiled binaries>` for Mac and Linux, and Windows through WSL
+- Slipshow is packaged in the ``opam`` package manager, if you have it all it takes is ``opam install slipshow``.
+- You can always :ref:`compile from source<compiling from source>`!
 
-- You can always :ref:`compile from source<compiling from source>`! This
-  solution is convenient for ``opam`` users.
+For **online-only use**, consider the :ref:`online sliphub editor<the sliphub online editor>`. It is great for trying the tool but is currently limited for more advanced uses, such as anything that requires multiple files.
 
-..
-   .. contents:: Installation methods
-     :local:
+There are other options that currently are lagging behind in terms of version, but that I might revisit some day: the :ref:`VSCode extension<The VS Code plugin>` and the slipshow editor.
 
 Precompiled binaries
 ====================
@@ -40,12 +34,29 @@ You can test that the ``slipshow`` binary is available by running:
 
 If the help shows up, you successfully installed slipshow!
 
-Then, you can use ``slipshow`` to compile your documents:
+Using ``opam``
+==============
+
+Slipshow is packaged in the default ``opam`` repository so you can install it simply with
 
 .. code-block:: shell
 
-   $ slipshow compile presentation.md    # Compiles to `presentation.html`
-   $ slipshow serve presentation.md      # Compiles to `presentation.html` and serves a live-preview on 127.0.0.1:8080
+   $ opam install slipshow
+
+You can test that the ``slipshow`` binary is available by running:
+
+.. code-block:: shell
+
+   $ slipshow --help
+
+If the help shows up, you successfully installed slipshow!
+If, even after ``opam`` claims to have successfully installed it, ``slipshow`` is not available, it might be that you need to do:
+
+.. code-block:: shell
+
+   $ eval $(opam env)
+
+This updates your environment to include the packages installed by ``opam``.
 
 The VS Code plugin
 ==================
@@ -76,59 +87,14 @@ can even do collaborative editing: two people editing the same document.
 Remember the link to be able to come back to your document later! And save your
 work locally: This is still experimental.
 
-The slipshow editor
-===================
-
-The slipshow editor is an editor specialized in writing slipshow
-presentations. It provides live-previewing of your presentation.
-
-However, since the project is very new compared to most editors, you might miss
-features from eg VS Code, Emacs or Vim.
-
 Compiling from source
 =====================
 
-This requires ``opam``.
+Follow the instructions available in the ``CONTRIBUTING.md`` file on the `github repository<https://github.com/panglesd/slipshow>`_.
 
-Run the following command:
+Upgrading
+=========
 
-.. code-block:: shell
+Upgrading is made just by repeating the installation process when a new version is available.
 
-   $ opam pin slipshow git+https://github.com/panglesd/slipshow.git
-   $ # test your installation:
-   $ slipshow --help
-
-
-and you are done!
-
-Your first presentation
-=======================
-
-Copy and paste the following example file in ``my-first-slipshow.md``:
-
-.. code-block:: markdown
-
-		# My first presentation!
-
-		Here is a paragraph.
-
-		{pause}
-
-		- some items
-		- and some others!
-
-		{.definition pause up}
-		This is a definition
-
-
-This is the source file that you can edit when writing your presentation. For the syntax, see the syntax reference.
-
-Now, compile the file:
-
-.. code-block:: shell
-
-		$ slipshow compile my-first-slipshow.md
-
-Your presentation has been compiled to a standalone file named ``my-first-slipshow.html``! You can open it in your favorite browser to see the result. You can send the file to anyone, they can open it and it will work, even without internet connection!
-
-For a description of the syntax, you can read the syntax reference. For a tutorial on the many features of slipshow, you can have a look at the tutorial.
+If you are using a new version to compile an old presentation, make sure to read the release notes and fully verify the output before presenting! Slipshow has not yet reached a stable state and releases often contains small breaking changes (most of the time, easy to fix).

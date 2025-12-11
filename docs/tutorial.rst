@@ -1,13 +1,12 @@
 Your first presentation
 =======================
 
-This tutorial assumes you have access to the slipshow compiler. If you are only
-interested in trying out slipshow before deciding to install it (or not), you
-can use the `sliphub editor <https://sliphub.choum.net/new>`_: it requires no installation
-on your computer, nor to create any account!
+This tutorial assumes you have access to the slipshow compiler. We encourage you not just to read, but to actually create the presentation this tutorial is describing. It is even better if you modify it to make it your own!
 
-If you do want to use slipshow, we recommend completing the
-:ref:`getting-started` part of the document.
+For that, you can use the `sliphub editor <https://sliphub.choum.net/new>`_: it
+requires no installation on your computer, nor to create any account! However,
+if you actually want to use slipshow for the future, we strongly recommend
+completing the :ref:`getting-started` part of the document.
 
 .. contents:: Outline of the tutorial
    :local:
@@ -33,9 +32,8 @@ any OS with a web browser (virtually all of them!).
 
 In this tutorial, you will create your first slipshow presentation. It is
 entirely self-contained, and introduces both the usage, the syntax and the
-different features of slipshow. Once you are familiar with the basics, for a
-complete overview of each of these, you should refer to the reference: the
-:ref:`Syntax reference`.
+different features of slipshow. The :ref:`Anatomy of a Slipshow presentation` is
+a good complementary read, both can be read in any order.
 
 ..
    Writing slips should not differ too much from writing beamer presentation, when not using any of the advanced functionalities: there an delimiters for . The syntax is different, and there are 
@@ -209,8 +207,8 @@ elements using ``>``. For instance, try the following in the examples:
 Your presentation as a papyrus
 ------------------------------
 
-In the minimal example, we haven't yet touched the *core* of slipshow. But we
-are close to that!
+In this minimal example, we haven't yet touched the *core* of slipshow's typed
+presentations. But we are close to that!
 
 Let's expand our basic example with the fact and proof that there are infinitely
 many prime numbers. This is one of the first important fact to know!
@@ -258,6 +256,22 @@ disappointing. There is too many content for the space available, and the last
 part of the proof overflows and is invisible. Most presentations would solve
 this problem by creating a new slide, but slipshow does it very differently,
 which is what makes it unique!
+
+.. note::
+
+   Slipshow supports several ways of grouping. Instead of ``>``, you can enclose the proof with ``---``. In this case, it would become:
+
+   .. code-block::
+
+      {.theorem}
+      There are infinitely many prime numbers.
+
+      {pause .proof}
+      ---
+      Suppose there are finitely many prime numbers.
+      [...]
+      **Therefore, there must exists infinitely many prime numbers.**
+      ---
 
 The problem of uncovering new content
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -422,8 +436,8 @@ a mirror of your main presentation.
 Writing on the screen
 ~~~~~~~~~~~~~~~~~~~~~
 
-One of the design goal of slipshow is to make digital presentations "less bad"
-compared to the blackboard ones.
+One of the goal of slipshow is to make digital presentations "less bad" compared
+to the blackboard ones.
 
 One of the great features of blackboards is that you can write on them while
 explaining, doodle, make arrows all over the place. To try to do something
@@ -438,80 +452,9 @@ The best is still to use the shortcuts:
 - ``x`` to go back to a normal cursor,
 - ``X`` to clear all annotations.
 
-Add the following content to your presentation, which creates a table in
-slipshow, following markdown "GFM" syntax:
-
-.. code-block::
-
-   |1|2|3|4|5|6|7|8|9|10|
-   |11|12|13|14|15|16|17|18|19|20|
-   |21|22|23|24|25|26|27|28|29|30|
-   |31|32|33|34|35|36|37|38|39|40|
-   |41|42|43|44|45|46|47|48|49|50|
-   |51|52|53|54|55|56|57|58|59|60|
-   |61|62|63|64|65|66|67|68|69|70|
-   |71|72|73|74|75|76|77|78|79|80|
-   |81|82|83|84|85|86|87|88|89|90|
-   |91|92|93|94|95|96|97|98|99|100|
-
-and explain the Eratosthenes schema by executing it live!
-
-Starting animations
-~~~~~~~~~~~~~~~~~~~
-
-Many concepts are much easier to understand with animations. I have always been
-impressed at how scientific popularization video can make very difficult
-concepts much easier to understand, and also much more fun to learn. There is no
-point in not using this in our presentations!
-
-Although slipshow itself does not provide any support for defining animations, it
-allows you to embed a video, or use any javascript library. For a scripted start
-and stepping of your animation, you can use the ``exec`` attribute,
-combined with the special ``slip-script`` codeblock!
-
-Here is a minimal example of an Eratosthenes animation. It is very badly written,
-in JS/CSS/HTML, so you need some basic skills on these to understand it, but you
-can use libraries to make it less tedious.
-
-.. code-block:: markdown
-
-   {#container}
-
-   {pause exec}
-   ```slip-script
-   let d = document.querySelector("#container");
-   d.style="display: grid; grid-template-columns: repeat(10, auto)";
-   for(i=1; i<=50 ; i++) {
-     let e = document.createElement("div")
-     e.style = "border: 1px solid black; padding: 5px ; margin: 5px";
-     e.textContent = i;
-     d.appendChild(e)
-   }
-   ```
-
-   {pause exec}
-   ```slip-script
-   let array = document.querySelectorAll("#container > *");
-   function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms))
-   }
-   async function do_(start, w) {
-     array[start - 1].style.background="green";
-     await sleep(w);
-     for(j = start * 2 ; j <= 50 ; j += start) {
-       await sleep(125);
-       array[j-1].style.background="red";
-     }
-   }
-   slip.do_ = do_
-   do_(2, 50)
-   ```
-
-   {pause exec}
-   ```slip-script
-   slip.do_(3, 100)
-   ```
-
+See TODO and :ref:`record-and-replay` for more information on drawing, and in
+particular for recording your drawings beforehand and replaying them during the
+presentation!
 
 Using the table of content
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -525,3 +468,12 @@ Moving freely
 During a presentation, it is important to not be too tied to the original
 program. You can move the window freely, using the ``i``, ``j``, ``k`` and ``l``
 keys. Change the "zoom" factor using the ``z`` and ``Z`` keys.
+
+What next?
+----------
+
+Congratulation, you've finished the tutorial for typed presentations! There are however many more things to learn:
+
+- We only briefly touched on the syntax. When you face new situations, you'll quickly need a more thorough presentation of Slipshow's syntax.
+- While predefined actions such as ``pause`` or ``up`` can bring you quite far, if you want more custom animations it is nice to know how to write your own scripts.
+- Typed presentations are great but some part of your presentation might benefit from being handwritten.
