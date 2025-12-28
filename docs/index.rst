@@ -43,47 +43,46 @@ We advise you to start by reading the :ref:`tutorial`. You can also peek at the 
 
 .. toctree::
    :maxdepth: 1
-   :caption: Typing your presentation
+   :caption: Tutorials
+
+   Typing your presentation <tutorial>
+   Drawing your presentation <record-tutorial>
+   A visual structure for the presentation <tutorial>
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Explanations
 
    anatomy
-   tutorial
+   Actions <tutorial>
+   Groups and layouts <tutorial>
+   Custom scripts <tutorial>
 
 .. toctree::
    :maxdepth: 1
-   :caption: Drawing your presentation
+   :caption: How to ...
 
-   record-and-replay
-   record-tutorial
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Actions
-
-   How actions work <cli>
-   Executing custom scripts <cli>
-   Examples <cli>
+   Do a slide-based presentation <tutorial>
+   Split in multiple files <tutorial>
+   Write your own theme <tutorial>
+   Use a carousel <cli>
+   Embed SVG, mermaid, Tikz or Manim <tutorial>
 
 .. toctree::
    :maxdepth: 1
-   :caption: Layouts
-
-   Layouts in Slipshow <cli>
-   Grouping <cli>
-   Including HTML <cli>
-   Examples <cli>
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Reference
+   :caption: References
 
    Markup <slipshow-syntax>
    Attributes <syntax>
-   Actions <cli>
-   cli
-   themes
+   Special elements <syntax>
+   Actions API <cli>
+   Frontmatter <cli>
+   Shortcuts during a presentation <cli>
+   The Command Line Interface <cli>
 
 .. toctree::
-   :caption: Zoo of examples
+   :maxdepth: 1
+   :caption: Zoo
 
    examples
    faq
