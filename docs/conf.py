@@ -36,7 +36,7 @@ author = 'Paul-Elliot'
 extensions = [
     'sphinx_rtd_theme',
     'sphinx.ext.autosectionlabel',
-    'sphinx_tabs.tabs'
+    'slipshowexample'
 ]
 extensions.append('sphinx.ext.todo')
 todo_include_todos=True
@@ -69,3 +69,6 @@ html_theme = 'sphinx_rtd_theme'
 # Read The Doc uses a different version of sphinx by default, which has
 # a different default for master_doc
 master_doc = 'index'
+
+html_js_files = ["main.js"]
+html_css_files = ["style.css"]

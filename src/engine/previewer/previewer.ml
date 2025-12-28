@@ -90,9 +90,12 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ()) root =
 let set_srcdoc { index; panels; _ } slipshow =
   Jv.set (Brr.El.to_jv panels.(1 - !index)) "srcdoc" (Jv.of_string slipshow)
 
-let preview previewer source =
+let preview ?slipshow_js ?frontmatter ?read_file previewer source =
   let starting_state = !(previewer.stage) in
-  let slipshow = Slipshow.convert ~autofocus:false ~starting_state source in
+  let slipshow =
+    Slipshow.convert ?slipshow_js ?frontmatter ?read_file ~autofocus:false
+      ~starting_state source
+  in
   set_srcdoc previewer slipshow
 
 let preview_compiled previewer delayed =

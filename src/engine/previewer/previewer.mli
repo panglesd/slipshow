@@ -12,5 +12,12 @@ type previewer
 val create_previewer :
   ?initial_stage:int -> ?callback:(int -> unit) -> Brr.El.t -> previewer
 
-val preview : previewer -> string -> unit
+val preview :
+  ?slipshow_js:Slipshow.Asset.t ->
+  ?frontmatter:Slipshow.Frontmatter.resolved Slipshow.Frontmatter.t ->
+  ?read_file:Slipshow.file_reader ->
+  previewer ->
+  string ->
+  unit
+
 val preview_compiled : previewer -> Slipshow.delayed -> unit
