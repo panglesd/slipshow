@@ -17,10 +17,11 @@
 }
 .entry {
     display: flex;
+    flex-direction: column;
 }
-.entry > * {
-    width: 50%;
-}
+/* .entry > * { */
+/*     width: 50%; */
+/* } */
 /* The iframes need to be absolutely positioned so their height and width need
    to be manually set */
 .entry .preview, .entry .preview > * {
@@ -28,5 +29,5 @@
 }
 
 .cm-content {
-    font-size: 18px;
+    font-size: 13px;
 }

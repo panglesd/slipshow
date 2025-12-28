@@ -47,8 +47,6 @@ We advise you to start by reading the :ref:`tutorial`. You can also peek at the 
 
    anatomy
    tutorial
-   The Slipshow syntax <cli>
-   The differences with Markdown <cli>
 
 .. toctree::
    :maxdepth: 1
@@ -78,8 +76,9 @@ We advise you to start by reading the :ref:`tutorial`. You can also peek at the 
    :maxdepth: 1
    :caption: Reference
 
-   syntax
-   All actions <cli>
+   Markup <slipshow-syntax>
+   Attributes <syntax>
+   Actions <cli>
    cli
    themes
 

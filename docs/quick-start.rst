@@ -90,7 +90,7 @@ presentation!
 Compiling from source
 =====================
 
-Follow the instructions available in the ``CONTRIBUTING.md`` file on the `github repository<https://github.com/panglesd/slipshow>`_.
+Follow the instructions available in the ``CONTRIBUTING.md`` file on the `github repository <https://github.com/panglesd/slipshow>`_.
 
 Upgrading
 =========
