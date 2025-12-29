@@ -45,40 +45,40 @@ We advise you to start by reading the :ref:`tutorial`. You can also peek at the 
    :maxdepth: 1
    :caption: Tutorials
 
-   Typing your presentation <tutorial>
-   Drawing your presentation <record-tutorial>
-   A visual structure for the presentation <tutorial>
+   tutorial
+   record-tutorial
+   visual-structure
 
 .. toctree::
    :maxdepth: 1
    :caption: Explanations
 
    anatomy
-   Actions <tutorial>
-   Groups and layouts <tutorial>
-   Custom scripts <tutorial>
+   actions
+   groups-and-layouts
+   custom-scripts
 
 .. toctree::
    :maxdepth: 1
    :caption: How to ...
 
-   Do a slide-based presentation <tutorial>
-   Split in multiple files <tutorial>
-   Write your own theme <tutorial>
-   Use a carousel <cli>
-   Embed SVG, mermaid, Tikz or Manim <tutorial>
+   do-a-slide-based-presentation
+   split-in-multiple-files
+   write-your-own-theme
+   use-a-carousel
+   embed-things
 
 .. toctree::
    :maxdepth: 1
    :caption: References
 
-   Markup <slipshow-syntax>
-   Attributes <syntax>
-   Special elements <syntax>
-   Actions API <cli>
-   Frontmatter <cli>
-   Shortcuts during a presentation <cli>
-   The Command Line Interface <cli>
+   slipshow-syntax
+   attributes-ref
+   special-elements
+   actions-api
+   frontmatter
+   shortcuts
+   cli
 
 .. toctree::
    :maxdepth: 1

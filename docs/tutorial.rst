@@ -1,5 +1,5 @@
-Your first presentation
-=======================
+Typing your presentation
+========================
 
 This tutorial assumes you have access to the slipshow compiler. We encourage you not just to read, but to actually create the presentation this tutorial is describing. It is even better if you modify it to make it your own!
 

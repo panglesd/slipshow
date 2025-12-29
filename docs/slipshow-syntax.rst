@@ -1,6 +1,6 @@
-===============================
- Slipshow's syntax for content
-===============================
+======
+Markup
+======
 
 Slipshow's presentation are written in a "What You See Is What You Mean", compared to presentation tools such as PowerPoint, which are "What You See Is What You Get".
 
