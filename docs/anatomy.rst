@@ -86,7 +86,7 @@ Let's first recall the static content of our example:
 
 Those familiar with the Markdown syntax may have recognized it. It is a widely spread syntax for describing documents: For instance, the ``#`` character allows to introduce a title. Which is why ``What is Slipshow`` is rendered as a title!
 
-The Markdown syntax tries to be natural to write, and easy to read. For instance, a list is made simply by prefixing each item with a dash and a space, more or less just like one would naturally do. Beware that this goal forces to introduce some corner-cases and footguns into the syntax. You can find an overview of the Markdown syntax TODO.
+The Markdown syntax tries to be natural to write, and easy to read. For instance, a list is made simply by prefixing each item with a dash and a space, more or less just like one would naturally do. Beware that this goal forces to introduce some corner-cases and footguns into the syntax. You can find an overview of the Markdown syntax TODO: do.
 
 However, the block above has more than Markdown syntax. The parts that are inside curly braces, ``{...}``, may be new to you. This is how you introduce *metadata*: some information that won't be directly displayed, but that will influence the presentation in some ways.
 
