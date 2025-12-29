@@ -11,7 +11,7 @@ In this page, we describe the syntax used to describe this intent. You'll write 
 
 .. note::
 
-   This syntax is very close to Markdown's syntax, however subtly different. If you are familiar with Markdown, jump to this section TODO
+   This syntax is very close to Markdown's syntax, however subtly different. If you are familiar with Markdown, jump to this section TODO: do
 
 .. contents:: Outline
    :local:
@@ -65,11 +65,11 @@ Images, videos, audios, PDFs, drawings
 
 Images and the like are included with the following syntax: ``![alternative text](link to file)``.
 
-Videos must either have the ``video`` attribute (TODO) or the file must have one of the following extension:   ``.3gp``, ``.mpg``, ``.mpeg``, ``.mp4``, ``.m4v``, ``.m4p``, ``.ogv``, ``.ogg``,  ``.mov``, ``.webm``.
+Videos must either have the ``video`` attribute (TODO: do) or the file must have one of the following extension:   ``.3gp``, ``.mpg``, ``.mpeg``, ``.mp4``, ``.m4v``, ``.m4p``, ``.ogv``, ``.ogg``,  ``.mov``, ``.webm``.
 
-Audios must either have the ``audio`` attribute (TODO) or the file must have one of the following extension:   ``.aac``, ``.flac``, ``.mp3``, ``.oga``, ``.wav``.
+Audios must either have the ``audio`` attribute (TODO: do) or the file must have one of the following extension:   ``.aac``, ``.flac``, ``.mp3``, ``.oga``, ``.wav``.
 
-Pdfs must either have the ``pdf`` attribute (TODO) or the file must have the ``.pdf`` extension.
+Pdfs must either have the ``pdf`` attribute (TODO: do) or the file must have the ``.pdf`` extension.
 
 Drawings must have the file have the ``.draw`` extension.
 
@@ -209,7 +209,7 @@ Incompatibilities with Markdown
 Quotes
 ======
 
-Since in Slipshow, the ``>`` character is used for grouping (see TODO the relevant section), quotes are not made like in Commonmark. Instead, they are a special element. TODO
+Since in Slipshow, the ``>`` character is used for grouping (see TODO: the relevant section), quotes are not made like in Commonmark. Instead, they are a special element. TODO: special elements
 
 .. slipshow-example2::
 

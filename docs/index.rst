@@ -12,7 +12,7 @@ Slipshow allows several presentation styles, that can easily be mixed-and-matche
 
 In a typed presentation, the equivalent of a slide is called a *slip*. Each slip is like a slide, but with no bottom limit. That is, the content can be arbitrarily long! During the presentation, the camera will "scroll" down to reveal the hidden content, following a script given by the presenter!
 
-In a drawn presentation, the content consists of replaying a recorded drawing made by the author. It makes presentation such as the one made by TODO links 2-minute physics, RSA animate or Suckerpinch much more accessible, and note that there is no need for drawing skill to make such a presentation more didactic, entertaining, more satisfying to create, or just feeling more human.
+In a drawn presentation, the content consists of replaying a recorded drawing made by the author. It makes presentation such as the one made by TODO: links 2-minute physics, RSA animate or Suckerpinch much more accessible, and note that there is no need for drawing skill to make such a presentation more didactic, entertaining, more satisfying to create, or just feeling more human.
 
 Slipshow compiles files written in an extension of markdown, to a standalone html file viewable offline in any web browser.
 

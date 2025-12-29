@@ -452,7 +452,7 @@ The best is still to use the shortcuts:
 - ``x`` to go back to a normal cursor,
 - ``X`` to clear all annotations.
 
-See TODO and :ref:`record-and-replay` for more information on drawing, and in
+See TODO: and :ref:`record-and-replay` for more information on drawing, and in
 particular for recording your drawings beforehand and replaying them during the
 presentation!
 

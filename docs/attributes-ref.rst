@@ -11,6 +11,6 @@ Inlines are the elements that are inside the flow of the text. For instance, bol
 
 Blocks, on the contrary, make the structure of the text. For instance paragraphs, titles, bullet lists, are blocks, as well as columns in a multi-column layout.
 
-This distinction will be important when styling with attributes (TODO).
+This distinction will be important when styling with attributes (TODO: do).
 
 
