@@ -62,11 +62,11 @@ We advise you to start by reading the :ref:`tutorial`. You can also peek at the 
    :maxdepth: 1
    :caption: How to ...
 
-   do-a-slide-based-presentation
    split-in-multiple-files
    write-your-own-theme
    use-a-carousel
    embed-things
+   do-a-slide-based-presentation
 
 .. toctree::
    :maxdepth: 1
