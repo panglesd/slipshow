@@ -40,6 +40,8 @@ We advise you to start by reading the :ref:`tutorial`. You can also peek at the 
 
    Introduction <self>
    quick-start
+   examples
+   faq
 
 .. toctree::
    :maxdepth: 1
@@ -74,15 +76,9 @@ We advise you to start by reading the :ref:`tutorial`. You can also peek at the 
 
    slipshow-syntax
    attributes-ref
+   grouping
    special-elements
    actions-api
    frontmatter
    shortcuts
    cli
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Zoo
-
-   examples
-   faq

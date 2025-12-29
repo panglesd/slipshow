@@ -10,7 +10,6 @@ completing the :ref:`getting-started` part of the document.
 
 .. contents:: Outline of the tutorial
    :local:
-   
 
 Introduction
 -----------------
