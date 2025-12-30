@@ -79,6 +79,7 @@ We advise you to start by reading the :ref:`tutorial`. You can also peek at the 
    grouping
    special-elements
    actions-api
+   custom-scripts-ref
    frontmatter
    shortcuts
    cli

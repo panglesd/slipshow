@@ -6,7 +6,7 @@ Using a theme
 
 Theme support is pretty recent in Slipshow. As a consequence, there aren't many themes to choose from... yet!
 
-To choose a theme, use the ``--theme`` argument. It can take the name of a builtin theme, a path to a css file, or a URL pointing to a CSS file.
+To choose a theme, use the ``--theme`` argument, or specify it in the frontmatter. It can take the name of a builtin theme, a path to a css file, or a URL pointing to a CSS file.
 
 Example:
 
