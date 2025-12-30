@@ -103,7 +103,7 @@ This step depends on the way you have access to the slipshow compiler.
 
    .. tab:: In VS Code
 
-      In the command palette (``Cmd + Maj + P``), write ``Compile slipshow``. This will create a file in the same directory, with the same name but the ``.html`` extension.
+      In the command palette (:kbd:`Ctrl` + :kbd:`Shift` + :kbd:`P`), write ``Compile slipshow``. This will create a file in the same directory, with the same name but the ``.html`` extension.
 
       To view this file, opening it in a browser is sufficient! However, the file won't automatically update to new modifications on your source file. For this, open the command palette again and this time, write ``Preview slipshow``. This will open a preview of the presentation, which will automatically update to the newest changes!
 
@@ -135,7 +135,7 @@ steps: the initial one, and the last one.
 Try to make a modification in ``prime-numbers.md`` and save the file. The
 preview should refresh automatically with the new content!
 
-Also, type ``s``: this opens the speaker view, with a timer, notes you might
+Also, type :kbd:`s`: this opens the speaker view, with a timer, notes you might
 want to add, and a synced view of the presentation.
 
 The syntax used
@@ -428,7 +428,7 @@ presentation in itself!
 Using the speaker view
 ~~~~~~~~~~~~~~~~~~~~~~
 
-You can open the speaker view with the ``s`` keybinding. The speaker view has a
+You can open the speaker view with the :kbd:`s` keybinding. The speaker view has a
 timer and a clock, speaker notes (filled using the ``speaker-note`` action) and
 a mirror of your main presentation.
 
@@ -445,11 +445,11 @@ using the tools present on the top left of your presentation.
 
 The best is still to use the shortcuts:
 
-- ``w`` to write,
-- ``h`` to highlight,
-- ``e`` to erase,
-- ``x`` to go back to a normal cursor,
-- ``X`` to clear all annotations.
+- :kbd:`w` to write,
+- :kbd:`h` to highlight,
+- :kbd:`e` to erase,
+- :kbd:`x` to go back to a normal cursor,
+- :kbd:`X` to clear all annotations.
 
 See TODO: and :ref:`record-and-replay` for more information on drawing, and in
 particular for recording your drawings beforehand and replaying them during the
@@ -458,15 +458,15 @@ presentation!
 Using the table of content
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Press ``t`` during a presentation to open the table of content, with fast jump
+Press :kbd:`t` during a presentation to open the table of content, with fast jump
 to any part of your presentation!
 
 Moving freely
 ~~~~~~~~~~~~~
 
 During a presentation, it is important to not be too tied to the original
-program. You can move the window freely, using the ``i``, ``j``, ``k`` and ``l``
-keys. Change the "zoom" factor using the ``z`` and ``Z`` keys.
+program. You can move the window freely, using the :kbd:`i`, :kbd:`j`, :kbd:`k` and :kbd:`l`
+keys. Change the "zoom" factor using the :kbd:`z` and :kbd:`Z` keys.
 
 What next?
 ----------
