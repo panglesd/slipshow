@@ -1,6 +1,6 @@
-==============
-Custom scripts
-==============
+=========================================
+Custom scripts for ultimate extensibility
+=========================================
 
 Slipshow allows to execute a custom script at any step of a presentation.
 
