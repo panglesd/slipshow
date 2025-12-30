@@ -56,7 +56,6 @@ We advise you to start by reading the :ref:`tutorial`. You can also peek at the 
    :caption: Explanations
 
    anatomy
-   actions
    groups-and-layouts
    custom-scripts
 
