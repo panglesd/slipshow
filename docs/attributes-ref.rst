@@ -138,11 +138,11 @@ We illustrate these two possibilities by adding borders to the element on which 
    In the following image, the attribute is attached to its containing block:
 
    {.with-border}
-   ![](https://picsum.photos/id/29/500/500)
+   ![](https://picsum.photos/id/29/500/225)
 
    In the following image, the attribute is attached to the image:
 
-   ![](https://picsum.photos/id/29/500/500){.with-border}
+   ![](https://picsum.photos/id/29/500/225){.with-border}
 
 Both versions can be useful. For instance, centering the image is a property of the containing block, while the width of the image is a property of itself. So pay attention when assigning attributes to images!
 

@@ -11,9 +11,10 @@
 }
 
 .slipshow-rescaler {
-  /* overflow-x: hidden; */
-  /* overflow-y: hidden; */
-  /* Whether or not to hide what's outside of rescalers is not clear. */
+  overflow-x: hidden;
+  overflow-y: hidden;
+  /* Whether or not to hide what's outside of rescalers is not clear. I decided to
+   hide to avoid having the shadow of the title leak outside. */
   width: unset;
   height: unset;
   min-width: 0;

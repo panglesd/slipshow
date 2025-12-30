@@ -21,7 +21,7 @@ Paragraphs
 
 A paragraph is made just by writing text. They should be separated by a blank line.
 
-.. slipshow-example2::
+.. slipshow-example::
 
    This is a paragraph. Lorem ipsum dolor sit amet, consectetuer adipiscing elit.  Donec hendrerit tempor tellus.  Donec pretium posuere tellus.  Proin quam nisl, tincidunt et, mattis eget, convallis nec, purus.  Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.  Nulla posuere.  Donec vitae dolor.  Nullam tristique diam non turpis.  Cras placerat accumsan nulla.  Nullam rutrum.  Nam vestibulum accumsan nisl.
 
@@ -35,7 +35,7 @@ Headings
 
 Titles are made by prefixing the text with ``#``. The more you add ``#``, the smaller the title.
 
-.. slipshow-example2::
+.. slipshow-example::
 
    # Title 1
 
@@ -50,7 +50,7 @@ Bold and italic
 
 Bold is made by enclosing with ``**`` characters and italic by enclosing with ``*``.
 
-.. slipshow-example2::
+.. slipshow-example::
 
    This is **bold**, *italic*, and ***bold and italic at the same time***.
 
@@ -73,7 +73,7 @@ Pdfs must either have the ``pdf`` attribute (TODO: do) or the file must have the
 
 Drawings must have the file have the ``.draw`` extension.
 
-.. slipshow-example2::
+.. slipshow-example::
 
    The [slipshow documentation](slipshow.readthedocs.io) should be consulted in case of doubt.
 
@@ -86,7 +86,7 @@ Lists
 
 Lists can be started with a dash. Indentation allows to put other blocks in the list. Lists can be numbered too.
 
-.. slipshow-example2::
+.. slipshow-example::
 
    - This is a list
    - This is another item in the list
@@ -115,7 +115,7 @@ The syntax for mathematical formulas is the same as the one in Latex. You can in
 You can insert a mathematical block either by enclosing with ``$$`` or with a codeblock with the math language.
 To add some inline mathematics, enclose with a single ``$``.
 
-.. slipshow-example2::
+.. slipshow-example::
 
    This is a mathematic block $$ \left( \sum_{k=1}^n a_k b_k \right)^2  < \Phi$$ which will render in its own line.
    A math block may also be more convenient:
@@ -134,7 +134,7 @@ Snippets of source code can be included either inline (in the flow of the text) 
 Inline code are inserted by enclosing with `````.
 Code blocks are blocks containing code to display verbatim, and syntax highlighted. They are created with ```````.
 
-.. slipshow-example2::
+.. slipshow-example::
 
    This is a code-block:
 
@@ -170,7 +170,7 @@ Tables
 
 Tables follow the `GFM syntax <https://github.github.com/gfm/#tables-extension->`_:
 
-.. slipshow-example2::
+.. slipshow-example::
 
    | foo | bar |
    | --- | --- |
@@ -187,7 +187,7 @@ To add a thematic break, use either ``___``, ``***`` or (directly the HTML: ``<h
 
 Beware that horizontal lines may not render in the rendered example (due to being too small). You can add ``hr { border-width: 2px}`` in the editor if that happens.
 
-.. slipshow-example2::
+.. slipshow-example::
 
    Some thing.
 
@@ -211,7 +211,7 @@ Quotes
 
 Since in Slipshow, the ``>`` character is used for grouping (see TODO: the relevant section), quotes are not made like in Commonmark. Instead, they are a special element. TODO: special elements
 
-.. slipshow-example2::
+.. slipshow-example::
 
    > This is not a quote
 
