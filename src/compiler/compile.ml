@@ -124,7 +124,7 @@ module Stage1 = struct
         | Ok None -> Mapper.default
         | Ok (Some contents) -> (
             let md =
-              Cmarkit.Doc.of_string ~heading_auto_ids:true ~strict:false
+              Cmarkit.Doc.of_string ~heading_auto_ids:false ~strict:false
                 contents
             in
             Path_entering.in_path current_path (Fpath.parent (Fpath.v src))

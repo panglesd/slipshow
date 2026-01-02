@@ -27,7 +27,16 @@
 .entry .preview, .entry .preview > * {
     height:500px;
 }
-
+.running-example {
+  margin-top: 24px;
+  margin-bottom: 24px;
+  padding: 0px;
+  border: 6px solid #2980b9;
+  border-radius: 12px;
+}
+.editor {
+  border-bottom: 3px solid #2980b9;
+}
 .cm-content {
     font-size: 13px;
 }

@@ -160,7 +160,7 @@ let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty)
         let* txt_frontmatter = Frontmatter.of_string yaml in
         let to_asset = Asset.of_string ~read_file in
         let txt_frontmatter = Frontmatter.resolve txt_frontmatter ~to_asset in
-        let frontmatter = Frontmatter.combine frontmatter txt_frontmatter in
+        let frontmatter = Frontmatter.combine txt_frontmatter frontmatter in
         (frontmatter, s)
   in
   let toplevel_attributes =
