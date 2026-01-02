@@ -2,10 +2,19 @@
  A visual structure for the presentation
 =========================================
 
-In this tutorial, we'll learn to layout our presentation, so that the structure
-of your presentation (the different parts and how they organize) is visually
-obvious. That hopefully helps the audience get the big picture, and get back on
-board if some part goes too deep!
+In this tutorial, we'll learn to :
+
+- Lay out the presentation, using CSS,
+- Use subslips to "enter" a part of the big-picture for a deep-dive,
+- Organize a Slipshow presentation in multiple files.
+
+We'll use those to make the structure of the presentation (the different parts
+and how they organize) visually obvious. That hopefully helps the audience get
+the big picture, and get back on board if some part goes too deep!
+
+This is a more advanced tutorial, which requires to know the basics of
+Slipshow. Some familiarity with CSS will help, do not hesitate to learn a bit of
+it in a specialized resource if you feel you need it.
 
 The topic of today
 ==================
@@ -54,12 +63,6 @@ tutorial.
    presentation. 16:9 is very often the best fit, but here we are going with the
    4:3 default.
 
-.. note::
-
-   While it should be possible to follow the tutorial without prior experience
-   with CSS, it is very advisable to learn at least the basics of it, in a
-   CSS-specialized resource, to be able to style your own presentations!
-
 So, let's start with the small clock at the top. We could use an image... But
 let's simply add an emoji: ``🕰️``! Create a ``gnome.md`` file with the following
 content:
@@ -75,7 +78,8 @@ content:
 
 .. note::
 
-   If you are compiling the slipshow presentation we are building on your own computer, which I advise to do, use hot-reload with slipshow serve:
+   If you compile the slipshow presentation we are building on your own
+   computer, which I advise to do, use hot-reload with slipshow serve:
 
    .. code-block::
 
@@ -238,7 +242,7 @@ have already seen in previous tutorials. This time, we are going to add
 something very specific to Slipshow: a slip (also called subslip, as it is
 itself inside a slip).
 
-Slips are similar to slides, but with no bottom limit. We scroll through them with actions such as ``up``. This should sound familiar, as up until now, we've always being in a slip. What is new is that we will now have slips *inside* slips.
+Slips are similar to slides, but with no bottom limit. We scroll through them with actions such as ``up``. This should sound familiar, as up until now, we've always been in a slip. What is new is that we will now have slips *inside* slips.
 
 Including a subslip is done by giving the ``slip`` attribute. This attribute has two effects:
 
@@ -484,7 +488,7 @@ In this section, we are going to polish the whole presentation.
 
 We are going to do the following:
 
-- Remove the text that appear below the titles before when enter the slide,
+- Remove the text that appear below the titles before we enter the slide,
 - Unzoom to show the big picture in between phases,
 - Show "Phase ..." when entering the slide,
 - Make the presentation more similar to the original image,
@@ -1109,7 +1113,7 @@ position of the sliding window:
 Splitting the source in multiple files
 --------------------------------------
 
-As you probably have though, the current file is starting to be difficult to edit, due to its length, the grouping of elements... It is a good idea to split your sourcec in multiple files to improve readability. In our case, we'll have several files:
+As you probably have thought, the current file is starting to be difficult to edit, due to its length, the grouping of elements... It is a good idea to split your source in multiple files to improve readability. In our case, we'll have several files:
 
 - One "entry" file, with the structure of the talk (``gnome.md``),
 - One file for ``Phase 1``, and one file for ``Phase 2``,
