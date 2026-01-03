@@ -17,6 +17,7 @@ build:
     - opam
     - build-essential
     - m4
+    - libev-dev
   jobs:
     pre_build:
       # Sandboxing must be disabled in Docker
