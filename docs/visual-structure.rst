@@ -27,7 +27,7 @@ Suppose you are a Gnome, and you want to present your `genius business plan
 very close to Slipshow's business plan, only the first phase being different.)
 
 .. figure:: gnomes.png
-   :scale: 50 %
+   :scale: 75 %
    :align: center
    :alt: A gnome presenting his business plan: Phase 1: Collect underpants,
          Phase 2: ?, Phase 3: Profit.
@@ -54,27 +54,27 @@ The initial Gnome layout
 ========================
 
 Let's recreate the Gnome layout in Slipshow. We'll make a simplified version,
-and learn a lot along the way. We'll improve the details at the end of this
-tutorial.
+and learn a lot along the way.
 
 .. note::
 
-   Usually, it is a good idea to *first* decide the dimension of your
+   Usually, it is a good idea to decide on the dimension of your
    presentation. 16:9 is very often the best fit, but here we are going with the
-   4:3 default.
+   4:3 default. Even though it is the default, we specify it.
 
 So, let's start with the small clock at the top. We could use an image... But
 let's simply add an emoji: ``🕰️``! Create a ``gnome.md`` file with the following
 content:
 
 .. slipshow-example::
+   :visible: both
+   :dimension: 4:3
 
    ---
-   dimension:4:3
+   dimension: 4:3
    ---
 
    # 🕰️
-
 
 .. note::
 
@@ -94,10 +94,7 @@ language. Let's give an attribute to the clock, setting the ``style`` attribute
 to be ``font-size:150px``.
 
 .. slipshow-example::
-
-   ---
-   dimension:4:3
-   ---
+   :dimension: 4:3
 
    # 🕰️{style="font-size:150px"}
 
@@ -151,9 +148,10 @@ a large bottom border: ``border-bottom: 10px solid black``.
 Which gives us:
 
 .. slipshow-example::
+   :dimension: 4:3
 
    ---
-   dimension:4:3
+   dimension: 4:3
    ---
 
    # 🕰️{style="font-size:150px"}
@@ -186,9 +184,10 @@ of the phases in red. We'll layout them as columns, using the ``columns-3``
 class we have defined.
 
 .. slipshow-example::
+   :dimension: 4:3
 
    ---
-   dimension:4:3
+   dimension: 4:3
    ---
 
    # 🕰️{style="font-size:150px"}
@@ -205,14 +204,14 @@ class we have defined.
    {.columns-3}
    ---
 
-   {.super-title}
-   # Collect underpants
+   > {.super-title}
+   > # Collect underpants
 
-   {.super-title}
-   # ?
+   > {.super-title}
+   > # ?
 
-   {.super-title}
-   # Profit
+   > {.super-title}
+   > # Profit
    ---
 
    <style>
@@ -252,34 +251,32 @@ Including a subslip is done by giving the ``slip`` attribute. This attribute has
 
 This is a lot of explanation, but in practice it is actually relatively easy. Let's just replace our three details with three subslips.
 
-.. code-block::
+.. code-block:: diff
 
-   {.columns-3 #details}
-   ---
+    {.columns-3}
+    ---
 
-   {slip}
-   > {.super-title}
-   > # Collect underpants
-   >
-   > More details here to be added later
+   +{slip}
+    > {.super-title}
+    > # Collect underpants
 
-   {slip}
-   > {.super-title}
-   > # ?
+   +{slip}
+    > {.super-title}
+    > # ?
 
-   {slip}
-   > {.super-title}
-   > # Profit
-   >
-   > More details here to be added later
+   +{slip}
+    > {.super-title}
+    > # Profit
    ---
 
 And that's it! Let's look at the result. Click on the presentation to focus it and use the arrow keys to navigate the presentation.
 
 .. slipshow-example::
+   :dimension: 4:3
+   :visible: presentation
 
    ---
-   dimension:4:3
+   dimension: 4:3
    ---
 
    # 🕰️{style="font-size:150px"}
@@ -293,14 +290,12 @@ And that's it! Let's look at the result. Click on the presentation to focus it a
 
    # Phase 3
 
-   {.columns-3 #details}
+   {.columns-3}
    ---
 
    {slip}
    > {.super-title}
    > # Collect underpants
-   >
-   > More details here to be added later
 
    {slip}
    > {.super-title}
@@ -309,8 +304,6 @@ And that's it! Let's look at the result. Click on the presentation to focus it a
    {slip}
    > {.super-title}
    > # Profit
-   >
-   > More details here to be added later
    ---
 
    <style>
@@ -339,10 +332,46 @@ What to notice here?
 Let's make the titles bigger (using ``font-size``) and adds some "LLoreM ipsum"
 text to fill the empty subslips.
 
+.. code-block:: diff
+
+    {slip}
+    > {.super-title}
+    > # Collect underpants
+   +>
+   +> {#overview}
+   +> # Overview
+   +>
+   +> - Equipment
+   +> - The heist
+   +> - Common mistakes
+   +>
+   +> [...]
+   +> - Arguing about lace vs. cotton
+
+    [...]
+
+    {slip}
+    > {.super-title}
+    > # Profit
+   +>
+   +> # What Is Profit?
+   +>
+   +> [...]
+   +> - Proceed as planned
+
+    [...]
+
+    .super-title {
+      color: red;
+   +  font-size: 200px;
+    }
+
 .. slipshow-example::
+   :dimension: 4:3
+   :visible: presentation
 
    ---
-   dimension:4:3
+   dimension: 4:3
    ---
 
    # 🕰️{style="font-size:150px"}
@@ -356,7 +385,7 @@ text to fill the empty subslips.
 
    # Phase 3
 
-   {.columns-3 #details}
+   {.columns-3}
    ---
 
    {slip}
@@ -481,8 +510,8 @@ text to fill the empty subslips.
    }
    </style>
 
-Polishing the details
-=====================
+Polishing the presentation
+==========================
 
 In this section, we are going to polish the whole presentation.
 
@@ -501,11 +530,34 @@ You probably have noticed that the first step of the presentation does not look
 like the original image anymore: it has the first paragraph of the subslips
 already written. We would like to have it shown when we enter the slip. A first step is to add a ``pause`` action.
 
+.. code-block:: diff
+
+   {slip}
+    > {.super-title}
+    > # Collect underpants
+    >
+   -> {#overview}
+   +> {#overview pause}
+    > # Overview
+
+and
+
+.. code-block:: diff
+
+    {slip}
+    > {.super-title}
+    > # Profit
+    >
+   +> {pause}
+    > # What Is Profit?
+
 
 .. slipshow-example::
+   :dimension: 4:3
+   :visible: presentation
 
    ---
-   dimension:4:3
+   dimension: 4:3
    ---
 
    # 🕰️{style="font-size:150px"}
@@ -519,7 +571,7 @@ already written. We would like to have it shown when we enter the slip. A first 
 
    # Phase 3
 
-   {.columns-3 #details}
+   {.columns-3}
    ---
 
    {slip}
@@ -650,11 +702,36 @@ enter the slips, once to show the first paragraph. We can change that by simply
 *moving the pause action to execute at the same time as the enter action*. To do
 that, we have to give an argument to the ``pause`` action.
 
+.. code-block:: diff
+
+   -{slip}
+   +{slip pause=overview}
+    > {.super-title}
+    > # Collect underpants
+    >
+   -> {#overview pause}
+   +> {#overview}
+    > # Overview
+
+and
+
+.. code-block:: diff
+
+   -{slip}
+   +{slip pause=wat-profit}
+    > {.super-title}
+    > # Profit
+    >
+   +> {#wat-profit}
+    > # What Is Profit?
+
 
 .. slipshow-example::
+   :dimension: 4:3
+   :visible: presentation
 
    ---
-   dimension:4:3
+   dimension: 4:3
    ---
 
    # 🕰️{style="font-size:150px"}
@@ -668,7 +745,7 @@ that, we have to give an argument to the ``pause`` action.
 
    # Phase 3
 
-   {.columns-3 #details}
+   {.columns-3}
    ---
 
    {slip pause=overview}
@@ -802,10 +879,55 @@ it. In this case, we can thus just add ``step`` actions (which do nothing on
 their own) to exit to the containing slip in between the subslips. We can also
 add one step at the end to end on the big picture.
 
+For the two steps in between the subslips:
+
+.. code-block:: diff
+
+    > {pause down=mistakes}
+    > # Common Mistakes
+    >
+    > {.block title=Warnings #mistakes}
+    > - Confusing socks with underpants
+    > - Tickling the human *(never do this)*
+    > - Arguing about lace vs. cotton
+
+   +{step style=width:0}
+
+    {slip}
+    > {.super-title}
+    > # ?{style=font-size:400px}
+
+   +{step style=width:0}
+
+    {slip pause=wat-profit}
+    > {.super-title}
+    > # Profit
+    >
+    > {#wat-profit}
+    > # What Is Profit?
+
+
+And for the last step back to the main slip:
+
+.. code-block:: diff
+
+    > # Ethics & Responsibility
+    >
+    > - Publish a mission statement
+    > - Use words like “sustainable”
+    > - Proceed as planned
+
+    ---
+
+   +{step}
+
+
 .. slipshow-example::
+   :dimension: 4:3
+   :visible: presentation
 
    ---
-   dimension:4:3
+   dimension: 4:3
    ---
 
    # 🕰️{style="font-size:150px"}
@@ -819,7 +941,7 @@ add one step at the end to end on the big picture.
 
    # Phase 3
 
-   {.columns-3 #details}
+   {.columns-3}
    ---
 
    {slip pause=overview}
@@ -958,10 +1080,27 @@ Similarly as when we are using ``pause`` action at the same time as the
 ``enter`` action, we can also use the ``up`` action to modify the target
 position of the sliding window:
 
+.. code-block:: diff
+
+   -{slip pause=overview}
+   +{slip pause=overview up=phase-1}
+
+    [...]
+
+   -{slip}
+   +{slip up=phase-2}
+
+    [...]
+
+   -{slip pause=wat-profit}
+   +{slip pause=wat-profit up=phase-3}
+
 .. slipshow-example::
+   :dimension: 4:3
+   :visible: presentation
 
    ---
-   dimension:4:3
+   dimension: 4:3
    ---
 
    # 🕰️{style="font-size:150px"}
@@ -978,7 +1117,7 @@ position of the sliding window:
    {#phase-3}
    # Phase 3
 
-   {.columns-3 #details}
+   {.columns-3}
    ---
 
    {slip pause=overview up=phase-1}
@@ -1113,59 +1252,65 @@ position of the sliding window:
 Splitting the source in multiple files
 --------------------------------------
 
-As you probably have thought, the current file is starting to be difficult to edit, due to its length, the grouping of elements... It is a good idea to split your source in multiple files to improve readability. In our case, we'll have several files:
+As you probably have thought, the current file is starting to be difficult to
+edit, due to its length, the grouping of elements... It is a good idea to split
+your source in multiple files to improve readability. In our case, we'll have
+several files:
 
 - One "entry" file, with the structure of the talk (``gnome.md``),
 - One file for ``Phase 1``, and one file for ``Phase 2``,
 - One file for the CSS styling.
 
-Let's start with the entry point file. In this file, we are going to include ``phase-1.md`` and ``phase-3.md`` with the ``include`` attribute, and we'll include the style by adding the ``css`` field to the frontmatter.
+Let's start with the entry point file. In this file, we are going to include
+``phase-1.md`` and ``phase-3.md`` with the ``include`` attribute, and we'll
+include the style by adding the ``css`` field to the frontmatter.
 
 Modify ``gnome.md`` to be:
 
-.. code-block::
+.. code-block:: diff
 
-   ---
-   dimension:4:3
-   css: style.css
-   ---
+   +---
+   +css: style.css
+   +---
 
-   # 🕰️{style="font-size:150px"}
+    # 🕰️{style="font-size:150px"}
 
-   {.columns-3 #phases}
-   ---
+    {.columns-3 #phases}
+    ---
 
-   {#phase-1}
-   # Phase 1
+    {#phase-1}
+    # Phase 1
 
-   {#phase-2}
-   # Phase 2
+    {#phase-2}
+    # Phase 2
 
-   {#phase-3}
-   # Phase 3
+    {#phase-3}
+    # Phase 3
 
-   {.columns-3 #details}
-   ---
+    {.columns-3}
+    ---
 
-   {slip pause=overview up=phase-1}
-   {include src=phase-1.md}
+    {slip pause=overview up=phase-1}
+   -> [...]
+   +{include src=phase-1.md}
 
-   {step style=width:0}
+    {step style=width:0}
 
-   {slip up=phase-2}
-   > {.super-title}
-   > # ?{style=font-size:400px}
+    {slip up=phase-2}
+    > {.super-title}
+    > # ?{style=font-size:400px}
 
-   {step style=width:0}
+    {step style=width:0}
 
-   {slip pause=wat-profit up=phase-3}
-   {include src=phase-3.md}
+    {slip pause=wat-profit up=phase-3}
+   -> [...]
+   +{include src=phase-3.md}
 
    ---
 
    {step}
 
-Now, create ``style.css` containing:
+Now, create ``style.css` containing exactly what used to be inside the ``<style>`` element:
 
 .. code-block::
 
@@ -1184,7 +1329,7 @@ Now, create ``style.css` containing:
    }
 
 
-Now, ``phase-1.md``:
+Now, ``phase-1.md`` with an unchanged LLoreM ipsum:
 
 .. code-block::
 
@@ -1220,7 +1365,7 @@ Now, ``phase-1.md``:
    - Tickling the human *(never do this)*
    - Arguing about lace vs. cotton
 
-And, finally ``phase-3.md``:
+And, finally ``phase-3.md`` also with an unchanged LLoreM ipsum:
 
 .. code-block::
 

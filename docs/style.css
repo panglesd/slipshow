@@ -40,3 +40,35 @@
 .cm-content {
     font-size: 13px;
 }
+.tabs {
+  display: flex;
+  justify-content: space-around;
+}
+.tabs > * {
+  flex-grow: 1;
+  text-align: center;
+  border: 1px solid purple;
+  background: lightgray;
+  cursor: pointer;
+}
+
+.entry .editor, .entry .preview {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  pointer-events: none;
+}
+.entry.show-presentation .preview,
+.entry.show-editor .editor,
+.entry.show-both .preview,
+.entry.show-both .editor {
+  opacity: 1;
+  position: relative;
+  pointer-events: all;
+}
+
+.show-editor       > .tabs > .editor-button,
+.show-presentation > .tabs > .pres-button,
+.show-both         > .tabs > .both-button {
+    background: aliceblue;
+}
