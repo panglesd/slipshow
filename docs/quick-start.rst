@@ -12,7 +12,7 @@ There are different ways to have access to the slipshow compiler:
 - Slipshow is packaged in the ``opam`` package manager, if you have it all it takes is ``opam install slipshow``.
 - You can always :ref:`compile from source<compiling from source>`!
 
-For **online-only use**, consider the :ref:`online sliphub editor<the sliphub online editor>`. It is great for trying the tool but is currently limited for more advanced uses, such as anything that requires multiple files.
+For **online-only use**, consider the :ref:`online sliphub editor<the sliphub online editor>`. It is great for trying the tool but is currently limited, for instance for anything that requires multiple files.
 
 There are other options that currently are lagging behind in terms of version, but that I might revisit some day: the :ref:`VSCode extension<The VS Code plugin>` and the slipshow editor.
 
