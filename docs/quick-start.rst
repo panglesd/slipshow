@@ -24,7 +24,7 @@ Precompiled binaries are available to download in the `release
 project. Save the file corresponding to your architecture, and make it available
 by moving to a directory included in your ``$PATH``, e.g. ``/usr/local/bin``.
 
-Note that Mac user needs to have a homebrew installation until `this bug <https://github.com/panglesd/slipshow/issues/145>`_ is fixed.
+Note that Mac user needs to have a homebrew installation until `this bug <https://github.com/panglesd/slipshow/issues/145>`_ is fixed. They also need some libraries, eg ``libffi``.
 
 You can test that the ``slipshow`` binary is available by running:
 
