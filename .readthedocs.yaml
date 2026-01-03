@@ -13,6 +13,16 @@ build:
     # nodejs: "20"
     # rust: "1.70"
     # golang: "1.20"
+  apt_packages:
+    - opam
+    - build-essential
+    - m4
+  jobs:
+    pre_build:
+      # Sandboxing must be disabled in Docker
+      - opam init --disable-sandboxing -y
+      - opam install --deps-only .
+      - opam exec -- dune build
 
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:
