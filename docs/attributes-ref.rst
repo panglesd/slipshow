@@ -5,11 +5,11 @@ Attributes
 The Attribute Syntax
 ====================
 
-Attributes are metadata that you can add to an existing element. They will always be enclosed in the ``{`` and ``}`` characters, and are very heavily inspired by pandoc's attributes (TODO: link).
+Attributes are metadata that you can add to an existing element. They will always be enclosed in the ``{`` and ``}`` characters, and are very heavily inspired by `pandoc's attributes <https://pandoc.org/MANUAL.html#extension-attributes>`_.
 
 Here is a typical metadata:
 
-.. code-block::
+.. code-block:: markdown
 
    {#example .definition title="Hello there" focus}
 
@@ -23,7 +23,7 @@ Attributes can be one of the following:
 
 - A key-value attribute. This is represented by ``key=value``. For instance ``title=Hello`` is such an attribute. Simple and double quotes can be to use spaces in the value.
 
-- A boolean attribute. It is an attribute that does not have a value, only a name. For instance, ``focus`` is such an attribute.
+- A flag attribute. It is an attribute that does not have a value, only a name. For instance, ``focus`` is such an attribute.
 
 A single identifier must be given to an element, and it must be unique amongst other elements. Multiple classes can be given to an element, and classes can be shared between elements.
 
@@ -53,9 +53,21 @@ An important distinction needs to be made between inline, and block, elements.
 
 Inlines are the elements that are inside the flow of the text. For instance, bold text, links, italic, mathematic formulas.
 
-Blocks, on the contrary, make the structure of the text. For instance paragraphs, titles, bullet lists, are blocks, as well as columns in a multi-column layout.
+Blocks, on the contrary, make the structure of the text. For instance paragraphs, titles, bullet lists, are blocks, as well as columns in a multi-column layout. Most of the time, they take the full horizontal space.
 
-This distinction is relevant here, as the way to add attributes will be specific for each of the two cases. See TODO: the example for images.
+This distinction is relevant here, as the way to add attributes will be specific for each of the two cases. And sometime, it will be important to distinguish the two cases:
+
+Here is an example where you set the background of an element to red, through an attribute. In the first case, you attach it to the paragraph. In the second case, you attach it to the text of the paragraph.
+
+.. slipshow-example::
+
+   {style="background:red"}
+   The attribute is attached to the paragraph.
+
+
+   [The attribute is attached to the text.]{style="background:red"}
+
+This confusion happens often with :ref:`metadata for images <image-metadata>`.
 
 .. _block-metadata:
 
@@ -113,6 +125,10 @@ However, sometimes putting long attributes in the middle of the text can hurt re
 
 
 Not perfect, but much better than the version where all words are given the attributes separately.
+
+
+.. _image-metadata:
+
 
 Metadata for images
 -------------------

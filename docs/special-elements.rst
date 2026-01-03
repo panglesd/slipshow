@@ -106,7 +106,7 @@ A carousel is created simply by giving it a ``carousel`` attribute. Carousels ar
 Includes
 --------
 
-Includes are a way to include external markdown files, just as if they were inlined in the file. An include must be a standalone attribute (TODO: link). It must have the ``include`` boolean attribute and ``src="path/to/file.md"`` key-value attribute. It is possible to add other attributes as well.
+Includes are a way to include external markdown files, just as if they were inlined in the file. An include must be a standalone attribute. It must have the ``include`` boolean attribute and ``src="path/to/file.md"`` key-value attribute. It is possible to add other attributes as well.
 
 .. code-block::
 
