@@ -1,0 +1,4 @@
+(library
+ (name autocomplete)
+ (public_name code-mirror.autocomplete)
+ (libraries code-mirror))
