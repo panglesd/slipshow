@@ -24,6 +24,9 @@ build:
       - opam --version
       - opam init --disable-sandboxing -y
       - opam install --deps-only -y .
+      - opam exec dune -- build --profile release doc-repl/main.js
+      - mkdir -p _static
+      - cp doc-repl/main.js _static/main.js
 
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:
