@@ -2,3 +2,8 @@
  (modes js)
  (name main)
  (libraries slipshow slipshow_communication code-mirror))
+
+(rule
+ (mode promote)
+ (action
+  (copy main.bc.js main.js)))
