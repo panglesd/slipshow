@@ -24,7 +24,6 @@ build:
       - opam --version
       - opam init --disable-sandboxing -y
       - opam install --deps-only -y .
-      - opam exec -- dune build --profile release
 
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:

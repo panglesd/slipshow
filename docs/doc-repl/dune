@@ -1,0 +1,4 @@
+(executable
+ (modes js)
+ (name main)
+ (libraries slipshow slipshow_communication code-mirror))
