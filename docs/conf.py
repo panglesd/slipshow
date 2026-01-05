@@ -82,5 +82,5 @@ commit_sha = subprocess.check_output(
 ).decode().strip()
 
 extlinks = {
-    'github_src': (f'https://github.com/user/repo/blob/{commit_sha}/src/%s', '%s')
+    'github_src': (f'https://github.com/panglesd/slipshow/blob/{commit_sha}/%s', '%s')
 }
