@@ -56,7 +56,6 @@ We advise you to start by reading the :ref:`tutorial`. You can also peek at the 
    :caption: Explanations
 
    anatomy
-   groups-and-layouts
 
 .. toctree::
    :maxdepth: 1
@@ -64,7 +63,7 @@ We advise you to start by reading the :ref:`tutorial`. You can also peek at the 
 
    record-and-replay
    split-in-multiple-files
-   use-a-carousel
+   use-speaker-view
    embed-things
    do-a-slide-based-presentation
 
