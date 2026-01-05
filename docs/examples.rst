@@ -1,6 +1,9 @@
 Examples
 ==============
 
+See: :github_src:`example/`
+
+
 
 You can find examples of slipshows here. Do not hesitate to look at the source code, although it might use a different version of slipshow. And moreover, do not hesitate to send me your slipshow!
 

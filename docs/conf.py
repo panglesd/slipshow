@@ -36,6 +36,7 @@ author = 'Paul-Elliot'
 extensions = [
     'sphinx_rtd_theme',
     'sphinx.ext.autosectionlabel',
+    'sphinx.ext.extlinks',
     'slipshowexample'
 ]
 extensions.append('sphinx.ext.todo')
@@ -73,3 +74,13 @@ html_css_files = ["style.css"]
 # Read The Doc uses a different version of sphinx by default, which has
 # a different default for master_doc
 master_doc = 'index'
+
+import subprocess
+
+commit_sha = subprocess.check_output(
+    ["git", "rev-parse", "HEAD"]
+).decode().strip()
+
+extlinks = {
+    'github_src': (f'https://github.com/user/repo/blob/{commit_sha}/src/%s', '%s')
+}
