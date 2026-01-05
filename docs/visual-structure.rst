@@ -1444,4 +1444,4 @@ changes on any of the dependent files.
 Profit
 ======
 
-If you'd like to contribute, I accept donations through Github Sponsor!
+If you'd like to contribute, I accept donations through `Github Sponsor <https://github.com/sponsors/panglesd>`_!
