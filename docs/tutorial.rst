@@ -451,9 +451,9 @@ The best is still to use the shortcuts:
 - :kbd:`x` to go back to a normal cursor,
 - :kbd:`X` to clear all annotations.
 
-See TODO: and :ref:`record-and-replay` for more information on drawing, and in
-particular for recording your drawings beforehand and replaying them during the
-presentation!
+See :doc:`record-tutorial` and :doc:`record-and-replay` for more information on
+drawing, and in particular for recording your drawings beforehand and replaying
+them during the presentation!
 
 Using the table of content
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

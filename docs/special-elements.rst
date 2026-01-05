@@ -2,9 +2,8 @@
 Special elements
 ================
 
-In addition to the elements described in TODO: link and have a special markup,
-attributes can be used to define more elements, such as boxes, subslips,
-carousel, ...
+In addition to the :ref:`elements with a dedicated markup <markup>`, attributes
+can be used to define more elements, such as boxes, subslips, carousel, ...
 
 This page provides a reference for all such elements.
 
@@ -115,3 +114,24 @@ Includes are a way to include external markdown files, just as if they were inli
    {include slip src="part1.md"}
 
    {include slip src="part2.md"}
+
+.. _blockquote-in-special-elements:
+
+Blockquotes
+-----------
+
+Since ``>`` is used for :ref:`grouping`, we can create them by assigning the ``blockquote`` attribute.
+
+.. code-block::
+
+   {blockquote}
+   This is a blockquote.
+
+   {blockquote}
+   > This is a blockquote.
+   >
+   > With multiple paragraphs.
+
+   > This is NOT a blockquote.
+   >
+   > Even with multiple paragraphs.

@@ -11,7 +11,7 @@ In this page, we describe the syntax used to describe this intent. You'll write 
 
 .. note::
 
-   This syntax is very close to Markdown's syntax, however subtly different. If you are familiar with Markdown, jump to this section TODO: do
+   This syntax is very close to Markdown's syntax, however subtly different. If you are familiar with Markdown, see :ref:`where it differs <markdown>`
 
 .. contents:: Outline
    :local:
@@ -203,13 +203,15 @@ Beware that horizontal lines may not render in the rendered example (due to bein
 
    Something else.
 
+.. _markdown:
+
 Incompatibilities with Markdown
 -------------------------------
 
 Quotes
 ======
 
-Since in Slipshow, the ``>`` character is used for grouping (see TODO: the relevant section), quotes are not made like in Commonmark. Instead, they are a special element. TODO: special elements
+Since in Slipshow, the ``>`` character is used for :ref:`grouping <grouping>`, quotes are not made like in Commonmark. Instead, they can be added as :ref:`special elements <blockquote-in-special-elements>`.
 
 .. slipshow-example::
 
@@ -219,7 +221,7 @@ Since in Slipshow, the ``>`` character is used for grouping (see TODO: the relev
    > Cogito Ergo Sum
 
 
-Headings
-========
+Setext Headings
+===============
 
-Markdown's Setext headings cannot be used in Slipshow. Use ATX headings TODO: links.
+Markdown's `Setext headings <https://spec.commonmark.org/0.31.2/#setext-headings>`_ cannot be used in Slipshow. Use :ref:`ATX headings <headings>`.
