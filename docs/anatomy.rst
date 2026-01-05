@@ -1,3 +1,5 @@
+.. _anatomy:
+
 Anatomy of a Slipshow presentation
 ==================================
 
@@ -141,7 +143,7 @@ and
 
    {up=many}
 
-Note that each is read from top to bottom, making it fit for merging them in a single file. And it has many advantages!
+Note that each is read from top to bottom, making it fit for merging them in a single file. And the single file solution has many advantages!
 First, for readability, it is good to have some sort of locality: when the actions are located close to the static content visible on screen when they are executed.
 
 Moreover the actions often needs an argument. If they don't have one, but are attached to a specific block, they can be given a default argument! This is how ``pause`` does not need an argument.
