@@ -207,9 +207,9 @@ let play global (replaying_state : replaying_state) =
   Lwd.set replaying_state.is_playing true;
   let max = Lwd.peek replaying_state.recording.total_time in
   let start_time = now global () -. Lwd.peek replaying_state.time in
-  let current_time = ref @@ Tools.now () in
+  let current_time = ref @@ Tools.now global () in
   let rec loop _ =
-    let now = Tools.now () in
+    let now = Tools.now global () in
     let increment = now -. !current_time in
     current_time := now;
     let now = now -. start_time in
@@ -358,7 +358,7 @@ let el global =
         ]
       [ `R description ]
   in
-  let strokes = Timeline.el replaying_state in
+  let strokes = Timeline.el global replaying_state in
   let time_panel =
     let$* is_non_empty =
       Lwd_table.map_reduce

@@ -78,7 +78,7 @@ module Selection = struct
       let scale = total_length /. width_in_pixel in
       fun x -> x *. scale
 
-    let event recording ~stroke_height =
+    let event global recording ~stroke_height =
       let select_of_coords container ~x ~dx ~y ~dy =
         let t = translate_timeline_coord container recording in
         let x, dx = (t x, t dx) in
@@ -121,7 +121,7 @@ module Selection = struct
         promote mode recording;
         Lwd.set box_selection_var None
       in
-      Ui_widgets.mouse_drag start drag end_
+      Ui_widgets.mouse_drag global start drag end_
 
     let box =
       let$ box_selection = Lwd.get box_selection_var in
@@ -191,7 +191,7 @@ module Selection = struct
           Lwd.set preselected is_selected)
         recording.strokes
 
-    let event replaying_state =
+    let event global replaying_state =
       let recording = replaying_state.recording in
       let start x y _ev =
         let position_var = (Lwd.var x, Lwd.var y, Lwd.var 0., Lwd.var 0.) in
@@ -218,7 +218,7 @@ module Selection = struct
         promote mode recording;
         Lwd.set preview_selection_var None
       in
-      Ui_widgets.mouse_drag start drag end_
+      Ui_widgets.mouse_drag global start drag end_
 
     let box =
       let$ box_selection = Lwd.get preview_selection_var in
@@ -303,7 +303,7 @@ module Move = struct
               Lwd.set pause.p_at (initial_at +. time_shift))
         strokes
 
-    let event recording ~stroke_height =
+    let event global recording ~stroke_height =
       let scale container =
         let total_length = Lwd.peek recording.total_time in
         let width_in_pixel = Brr.El.bound_w container in
@@ -401,11 +401,11 @@ module Move = struct
         acc
       in
       let end_ _ _ = () in
-      Ui_widgets.mouse_drag start drag end_
+      Ui_widgets.mouse_drag global start drag end_
   end
 
   module Preview = struct
-    let event replaying_state =
+    let event global replaying_state =
       let recording = replaying_state.recording in
       let start _x _y _ev =
         Lwd_table.fold
@@ -425,13 +425,13 @@ module Move = struct
         paths
       in
       let end_ _ _ev = () in
-      Ui_widgets.mouse_drag start drag end_
+      Ui_widgets.mouse_drag global start drag end_
   end
 end
 
 module Scale = struct
   module Timeline = struct
-    let event recording =
+    let event global recording =
       let start _x _y ev =
         let selection, max_time =
           Lwd_table.fold
@@ -549,11 +549,11 @@ module Scale = struct
             acc
       in
       let end_ _ _ = () in
-      Ui_widgets.mouse_drag start drag end_
+      Ui_widgets.mouse_drag global start drag end_
   end
 
   module Preview = struct
-    let event replaying_state =
+    let event global replaying_state =
       let recording = replaying_state.recording in
       let start _x _y _ev =
         let strokes =
@@ -588,6 +588,6 @@ module Scale = struct
         acc
       in
       let end_ _ _ev = () in
-      Ui_widgets.mouse_drag start drag end_
+      Ui_widgets.mouse_drag global start drag end_
   end
 end

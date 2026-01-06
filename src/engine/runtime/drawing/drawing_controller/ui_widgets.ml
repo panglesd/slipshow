@@ -76,7 +76,7 @@ let is_pressed ev =
   is_pressed
     (ev |> Brr.Ev.as_type |> Brr.Ev.Pointer.as_mouse |> Brr.Ev.Mouse.buttons)
 
-let mouse_drag start drag end_ =
+let mouse_drag global start drag end_ =
   let mouse_move x y acc =
    fun ev ->
     let mouse_ev = Brr.Ev.as_type ev |> Brr.Ev.Pointer.as_mouse in
@@ -93,6 +93,9 @@ let mouse_drag start drag end_ =
       let acc = ref acc in
       let mousemove_listener = ref None in
       let mouseup_listener = ref None in
+      let target =
+        global |> Brr.Window.document |> Brr.Document.body |> Brr.El.as_target
+      in
       let unlisten () =
         Option.iter Brr.Ev.unlisten !mousemove_listener;
         Option.iter Brr.Ev.unlisten !mouseup_listener;
@@ -102,14 +105,12 @@ let mouse_drag start drag end_ =
         Brr.Ev.listen Brr.Ev.pointermove
           (fun ev ->
             if is_pressed ev then acc := mouse_move x y !acc ev else unlisten ())
-          (Brr.Document.body Brr.G.document |> Brr.El.as_target)
+          target
       in
       mousemove_listener := Some id;
       let opts = Brr.Ev.listen_opts ~once:true () in
       let id =
-        Brr.Ev.listen ~opts Brr.Ev.pointerup
-          (fun _ev -> unlisten ())
-          (Brr.Document.body Brr.G.document |> Brr.El.as_target)
+        Brr.Ev.listen ~opts Brr.Ev.pointerup (fun _ev -> unlisten ()) target
       in
       mouseup_listener := Some id;
       ())

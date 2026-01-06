@@ -1,1 +1,1 @@
-val el : Drawing_state.replaying_state -> Brr.El.t Lwd.t
+val el : Brr.Window.t -> Drawing_state.replaying_state -> Brr.El.t Lwd.t

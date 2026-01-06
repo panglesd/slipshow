@@ -229,7 +229,7 @@ let pauses recording =
     Lwd_seq.monoid recording.pauses
   |> Lwd_seq.lift
 
-let el replaying_state =
+let el global replaying_state =
   let recording = replaying_state.recording in
   let strokes = strokes recording in
   let pauses = pauses recording in
@@ -280,11 +280,13 @@ let el replaying_state =
     match current_tool with
     | Select ->
         Lwd_seq.element
-        @@ Editing_tools.Selection.Timeline.event recording ~stroke_height
+        @@ Editing_tools.Selection.Timeline.event global recording
+             ~stroke_height
     | Move ->
         Lwd_seq.element
-        @@ Editing_tools.Move.Timeline.event recording ~stroke_height
-    | Rescale -> Lwd_seq.element @@ Editing_tools.Scale.Timeline.event recording
+        @@ Editing_tools.Move.Timeline.event global recording ~stroke_height
+    | Rescale ->
+        Lwd_seq.element @@ Editing_tools.Scale.Timeline.event global recording
   in
   let box =
     let$* current_tool = Lwd.get Drawing_state.editing_tool in

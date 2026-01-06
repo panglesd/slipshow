@@ -201,7 +201,7 @@ let drawing_panel global mode =
       Elwd.handler Brr.Ev.click (fun _ ->
           let strokes, started_at, replayed_strokes =
             match mode with
-            | Presenting -> (workspaces.live_drawing, Tools.now (), None)
+            | Presenting -> (workspaces.live_drawing, Tools.now global (), None)
             | Recording { started_at; replayed_part; recording_temp; _ } ->
                 (recording_temp, started_at, Some replayed_part)
           in

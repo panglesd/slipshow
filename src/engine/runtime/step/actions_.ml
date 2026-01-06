@@ -1029,14 +1029,14 @@ module Draw = struct
            [| Jv.callback ~arity:1 f |]
     in
     let fut, resolve_fut = Fut.create () in
-    let start_replay = Drawing_controller.Tools.now () in
+    let start_replay = Drawing_controller.Tools.now global () in
     let original_time = Lwd.peek record.time in
     let max_time = Lwd.peek record.recording.total_time in
-    let current_time = ref @@ Drawing_controller.Tools.now () in
+    let current_time = ref @@ Drawing_controller.Tools.now global () in
     let rec draw_loop _ =
       match Fast.get_mode () with
       | Normal ->
-          let now = Drawing_controller.Tools.now () in
+          let now = Drawing_controller.Tools.now global () in
           let increment = now -. !current_time in
           current_time := now;
           let before = now -. increment in
@@ -1062,7 +1062,7 @@ module Draw = struct
             let _animation_frame_id = request_animation_frame draw_loop in
             ()
       | Fast_move ->
-          let now = Drawing_controller.Tools.now () in
+          let now = Drawing_controller.Tools.now global () in
           let increment = now -. !current_time in
           current_time := now;
           let before = now -. increment in

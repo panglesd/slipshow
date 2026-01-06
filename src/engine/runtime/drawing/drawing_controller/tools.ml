@@ -1,4 +1,8 @@
-let now () = Brr.Performance.now_ms Brr.G.performance
+let now global () =
+  let performance =
+    Jv.get (Brr.Window.to_jv global) "performance" |> Brr.Performance.of_jv
+  in
+  Brr.Performance.now_ms performance
 
 open Drawing_state
 open Messages
@@ -23,7 +27,7 @@ let window_coord_in_universe x y =
      content. *)
   |> fun (x, y) -> (x -. 2000., y -. 2000.)
 
-let mouse_drag_in_universe start drag end_ =
+let mouse_drag_in_universe global start drag end_ =
   let start x y =
     let x, y = window_coord_in_universe x y in
     start x y
@@ -35,7 +39,7 @@ let mouse_drag_in_universe start drag end_ =
     let dx, dy = (x' -. x, y' -. y) in
     drag ~x ~y ~dx ~dy
   in
-  Ui_widgets.mouse_drag start drag end_
+  Ui_widgets.mouse_drag global start drag end_
 
 module Draw_stroke = struct
   let starts_at l = List.hd (List.rev l) |> snd
@@ -95,7 +99,7 @@ module Draw_stroke = struct
       Messages.send global @@ Draw End;
       end_ acc
     in
-    mouse_drag_in_universe start drag end_
+    mouse_drag_in_universe global start drag end_
 end
 
 module Erase = struct
@@ -160,7 +164,7 @@ module Erase = struct
       Messages.send global @@ Erase End;
       end_ acc
     in
-    mouse_drag_in_universe start drag end_
+    mouse_drag_in_universe global start drag end_
 end
 
 module Clear = struct

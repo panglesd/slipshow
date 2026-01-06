@@ -301,7 +301,7 @@ let init_drawing_area global () =
   ()
 
 let for_events global =
-  let drawing_started_time = Tools.now () in
+  let drawing_started_time = Tools.now global () in
   (* Just to avoid one level of indentation... *)
   Fun.id @@ fun () ->
   let open Lwd_infix in
@@ -338,7 +338,8 @@ let for_events global =
                     replayed_part;
                   } ->
                   (recording_temp, started_at, Some replayed_part)
-              | Presenting -> (workspaces.live_drawing, Tools.now (), None)
+              | Presenting ->
+                  (workspaces.live_drawing, Tools.now global (), None)
             in
             Lwd_seq.element
             @@ Tools.Erase.event global ~started_time

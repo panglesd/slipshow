@@ -165,13 +165,13 @@ let connect global () =
           match current_tool with
           | Move ->
               Lwd_seq.element
-              @@ Editing_tools.Move.Preview.event replaying_state
+              @@ Editing_tools.Move.Preview.event global replaying_state
           | Select ->
               Lwd_seq.element
-              @@ Editing_tools.Selection.Preview.event replaying_state
+              @@ Editing_tools.Selection.Preview.event global replaying_state
           | Rescale ->
               Lwd_seq.element
-              @@ Editing_tools.Scale.Preview.event replaying_state)
+              @@ Editing_tools.Scale.Preview.event global replaying_state)
       | _ -> Lwd.pure Lwd_seq.empty
     in
     let cursor =
