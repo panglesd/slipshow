@@ -49,20 +49,23 @@ module Parse : sig
   val require_single_positional : action_name:string -> 'a list -> 'a option
 
   val no_args :
-    Brr.Window.t ->
+    Global_state.t ->
     action_name:string ->
     'a ->
     string ->
     (unit, [> `Msg of string ]) result
 
   val parse_only_els :
-    Brr.Window.t ->
+    Global_state.t ->
     Brr.El.t ->
     string ->
     (Brr.El.t list, [> `Msg of string ]) result
 
   val parse_only_el :
-    Brr.Window.t -> Brr.El.t -> string -> (Brr.El.t, [> `Msg of string ]) result
+    Global_state.t ->
+    Brr.El.t ->
+    string ->
+    (Brr.El.t, [> `Msg of string ]) result
 
   val option_to_error : 'a -> 'b option -> ('b, [> `Msg of 'a ]) result
   val duration : string * (string -> (float, [> `Msg of string ]) result)
@@ -312,21 +315,21 @@ end = struct
         Logs.warn (fun m ->
             m "The %s action does not accept any argument" action_name)
 
-  let parse_only_els global elem s =
+  let parse_only_els (global : Global_state.t) elem s =
     let ( let$ ) = Fun.flip Result.map in
     let$ x = parse ~named:[] ~positional:id s in
     match merge_positional x with
     | [] -> List.[ elem ]
-    | x -> List.filter_map (find_first_by_selector ~root:global) x
+    | x -> List.filter_map (find_first_by_selector ~root:global.window) x
 
-  let parse_only_el global elem s =
+  let parse_only_el (global : Global_state.t) elem s =
     let ( let$ ) = Result.bind in
     let$ x = parse ~named:[] ~positional:id s in
     match merge_positional x with
     | [] -> Ok elem
     | _ :: _ :: _ -> Error (`Msg "Expected a single ID")
     | [ x ] -> (
-        match find_first_by_selector ~root:global x with
+        match find_first_by_selector ~root:global.window x with
         | Some x -> Ok x
         | None ->
             Error (`Msg ("Could not find element with ID " ^ Jstr.to_string x)))
@@ -352,14 +355,14 @@ module type S = sig
   type args
 
   val setup : (args -> unit Fut.t) option
-  val setup_all : (Brr.Window.t -> unit -> unit Fut.t) option
+  val setup_all : (Global_state.t -> unit -> unit Fut.t) option
   val on : string
   val action_name : string
 
   val parse_args :
-    Brr.Window.t -> Brr.El.t -> string -> (args, [> `Msg of string ]) result
+    Global_state.t -> Brr.El.t -> string -> (args, [> `Msg of string ]) result
 
-  val do_ : Brr.Window.t -> Universe.Window.t -> args -> unit Undoable.t
+  val do_ : Global_state.t -> Universe.Window.t -> args -> unit Undoable.t
 end
 
 module type Move = sig
@@ -430,8 +433,8 @@ module Pause = struct
     let* (), _ = set_class "pauseTarget" true elem in
     update elem (( + ) 1) |> Undoable.discard
 
-  let setup_all global () =
-    let root = global |> Brr.Window.document |> Brr.Document.body in
+  let setup_all (global : Global_state.t) () =
+    let root = global.window |> Brr.Window.document |> Brr.Document.body in
     let open Fut.Syntax in
     Brr.El.fold_find_by_selector ~root
       (fun elem acc ->
@@ -485,7 +488,7 @@ struct
     elem : Brr.El.t;
   }
 
-  let parse_args global elem s =
+  let parse_args (global : Global_state.t) elem s =
     let ( let* ) = Result.bind in
     let* x =
       Parse.parse ~named:[ Parse.duration; Parse.margin ] ~positional:Parse.id s
@@ -497,7 +500,7 @@ struct
         with
         | None -> Ok { elem; duration; margin }
         | Some positional -> (
-            match find_first_by_selector ~root:global positional with
+            match find_first_by_selector ~root:global.window positional with
             | None ->
                 Error
                   (`Msg
@@ -624,21 +627,22 @@ end)
 
 module Focus = struct
   module State = struct
-    let stack = ref None
+    let setup global =
+      global.Global_state.focus <- (None : Universe.Coordinates.window option)
 
-    let push c =
-      match !stack with
+    let push global c =
+      match global.Global_state.focus with
       | None ->
-          let undo () = Fut.return @@ (stack := None) in
-          Undoable.return ~undo (stack := Some c)
+          let undo () = Fut.return @@ (global.Global_state.focus <- None) in
+          Undoable.return ~undo (global.focus <- Some c)
       | Some _ -> Undoable.return ()
 
-    let pop () =
-      match !stack with
-      | None -> Undoable.return !stack
+    let pop global () =
+      match global.Global_state.focus with
+      | None as n -> Undoable.return n
       | Some v as ret ->
-          let undo () = Fut.return @@ (stack := Some v) in
-          stack := None;
+          let undo () = Fut.return @@ (global.Global_state.focus <- Some v) in
+          global.focus <- None;
           Undoable.return ~undo ret
   end
 
@@ -651,7 +655,7 @@ module Focus = struct
   let on = "focus-at-unpause"
   let action_name = "focus"
 
-  let parse_args global elem s =
+  let parse_args (global : Global_state.t) elem s =
     let ( let$ ) = Fun.flip Result.map in
     let$ x =
       Parse.parse ~named:[ Parse.duration; Parse.margin ] ~positional:Parse.id s
@@ -661,13 +665,15 @@ module Focus = struct
         { elems = [ elem ]; duration; margin }
     | { p_named = [ duration; margin ]; p_pos = positional } ->
         let elems =
-          List.filter_map (find_first_by_selector ~root:global) positional
+          List.filter_map
+            (find_first_by_selector ~root:global.window)
+            positional
         in
         { elems; duration; margin }
 
-  let do_ _global window { margin; duration; elems } =
+  let do_ global window { margin; duration; elems } =
     only_if_not_fast @@ fun () ->
-    let> () = State.push (Universe.State.get_coord ()) in
+    let> () = State.push global (Universe.State.get_coord ()) in
     let margin = Option.value ~default:0. margin in
     let duration = Option.value ~default:1. duration in
     Universe.Move.focus ~margin ~duration window elems
@@ -685,9 +691,9 @@ module Unfocus = struct
   let action_name = "unfocus"
   let parse_args elem s = Parse.no_args ~action_name elem s
 
-  let do_ _global window () =
+  let do_ global window () =
     only_if_not_fast @@ fun () ->
-    let> coord = Focus.State.pop () in
+    let> coord = Focus.State.pop global () in
     match coord with
     | None -> Undoable.return ()
     | Some coord -> Universe.Move.move window coord ~duration:1.0
@@ -771,10 +777,10 @@ module Play_media = struct
   let parse_args = Parse.parse_only_els
   let log_error = function Ok x -> x | Error x -> Brr.Console.(log [ x ])
 
-  let do_ global _window elems =
+  let do_ (global : Global_state.t) _window elems =
     only_if_not_fast @@ fun () ->
     let is_speaker_note =
-      match Brr.Window.name global |> Jstr.to_string with
+      match Brr.Window.name global.window |> Jstr.to_string with
       | "slipshow_speaker_view" -> true
       | _ -> false
     in
@@ -1038,10 +1044,13 @@ module Draw = struct
 
   let parse_args = Parse.parse_only_els
 
-  let replay global ?(speedup = 1.) (record : Drawing_state.replaying_state) =
+  let replay (global : Global_state.t) ?(speedup = 1.)
+      (record : Drawing_state.replaying_state) =
     let request_animation_frame f =
       Jv.to_int
-      @@ Jv.call (Brr.Window.to_jv global) "requestAnimationFrame"
+      @@ Jv.call
+           (Brr.Window.to_jv global.window)
+           "requestAnimationFrame"
            [| Jv.callback ~arity:1 f |]
     in
     let fut, resolve_fut = Fut.create () in

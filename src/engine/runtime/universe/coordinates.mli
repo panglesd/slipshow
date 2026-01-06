@@ -1,4 +1,8 @@
-type window = { x : float; y : float; scale : float }
+type window = Global_state.Predef.window_coordinates = {
+  x : float;
+  y : float;
+  scale : float;
+}
 (** Represent the position of the window. Since scaling happens with origin the
     center of the screen, x and y have to to the coordinate of the center as
     well.

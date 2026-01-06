@@ -28,15 +28,16 @@ let in_queue =
 let all_undos = Stack.create ()
 let ( !! ) = Jstr.v
 
-let actualize () =
+let actualize (global : Global_state.t) () =
+  let root = global.window |> Brr.Window.document |> Brr.Document.body in
   let () =
-    Brr.El.fold_find_by_selector
+    Brr.El.fold_find_by_selector ~root
       (fun el () -> Brr.El.set_class !!"slipshow-toc-current-step" false el)
       !!".slipshow-toc-current-step"
       ()
   in
   match
-    Brr.El.find_first_by_selector
+    Brr.El.find_first_by_selector ~root
       !!(".slipshow-toc-step-" ^ string_of_int (State.get_step ()))
   with
   | None -> ()
@@ -64,19 +65,21 @@ module Excursion = struct
         Universe.Window.move_pure window last_pos ~duration:1.
 end
 
-let counter =
-  Brr.El.find_first_by_selector (Jstr.v "#slipshow-counter") |> Option.get
+let counter (global : Global_state.t) =
+  let root = global.window |> Brr.Window.document |> Brr.Document.body in
+  Brr.El.find_first_by_selector ~root (Jstr.v "#slipshow-counter") |> Option.get
 
-let set_counter s = Brr.El.set_children counter [ Brr.El.txt' s ]
+let set_counter global s =
+  Brr.El.set_children (counter global) [ Brr.El.txt' s ]
 
-let with_step_transition =
+let with_step_transition global =
  fun diff f ->
   let from = State.get_step () in
   let to_ = from + diff in
-  set_counter (string_of_int from ^ "→" ^ string_of_int to_);
+  set_counter global (string_of_int from ^ "→" ^ string_of_int to_);
   let () = State.set_step to_ in
   let+ res = f () in
-  set_counter (string_of_int to_);
+  set_counter global (string_of_int to_);
   res
 
 let go_next global window n =
@@ -87,14 +90,14 @@ let go_next global window n =
       match Action_scheduler.next global window () with
       | None -> Fut.return ()
       | Some undos ->
-          let* (), undos = with_step_transition 1 @@ fun () -> undos in
+          let* (), undos = with_step_transition global 1 @@ fun () -> undos in
           Stack.push undos all_undos;
           loop (n - 1)
   in
   let+ () = loop n in
-  actualize ()
+  actualize global ()
 
-let go_prev n =
+let go_prev global n =
   in_queue @@ fun () ->
   let rec loop n =
     if n <= 0 then Fut.return ()
@@ -102,16 +105,16 @@ let go_prev n =
       match Stack.pop_opt all_undos with
       | None -> Fut.return ()
       | Some undo ->
-          let* () = with_step_transition (-1) undo in
+          let* () = with_step_transition global (-1) undo in
           loop (n - 1)
   in
   let+ () = loop n in
-  actualize ()
+  actualize global ()
 
 let goto global step window =
   let current_step = State.get_step () in
   let* () = Excursion.end_ window () in
-  if current_step > step then go_prev (current_step - step)
+  if current_step > step then go_prev global (current_step - step)
   else if current_step < step then go_next global window (step - current_step)
   else Fut.return ()
 
@@ -128,23 +131,23 @@ let go_next global window =
       | None -> Fut.return ()
       | Some fut ->
           let fut =
-            let+ (), undos = with_step_transition 1 @@ fun () -> fut in
+            let+ (), undos = with_step_transition global 1 @@ fun () -> fut in
             Stack.push undos all_undos;
-            actualize ();
+            actualize global ();
             current_execution := None
           in
           current_execution := Some fut;
           fut)
   | Some fut -> Fast.with_fast @@ fun () -> fut
 
-let go_prev window =
+let go_prev global window =
   let do_the_undo () =
     match Stack.pop_opt all_undos with
     | None -> Fut.return ()
     | Some undo ->
         let fut =
-          let+ () = with_step_transition (-1) undo in
-          actualize ();
+          let+ () = with_step_transition global (-1) undo in
+          actualize global ();
           current_execution := None
         in
         current_execution := Some fut;

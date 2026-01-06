@@ -279,12 +279,12 @@ let drawing_area =
   in
   Elwd.v ~ns:`SVG (Jstr.v "g") [ `S all_drawings; `R drawn_live_drawing ]
 
-let init_drawing_area global () =
+let init_drawing_area (global : Global_state.t) () =
   let svg = drawing_area in
   let svg = Lwd.observe svg in
   let on_invalidate _ =
     let _ : int =
-      request_animation_frame (Brr.Window.to_jv global) @@ fun _ ->
+      request_animation_frame (Brr.Window.to_jv global.window) @@ fun _ ->
       let _ui = Lwd.quick_sample svg in
       (* Beware that due to this being ignored, a changed "root" element will
          not be updated by Lwd, only its reactive attributes/children *)
@@ -292,8 +292,9 @@ let init_drawing_area global () =
     in
     ()
   in
+  let root = global.window |> Brr.Window.document |> Brr.Document.body in
   let content =
-    Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing-elem")
+    Brr.El.find_first_by_selector ~root (Jstr.v "#slipshow-drawing-elem")
     |> Option.get
   in
   Brr.El.prepend_children content [ Lwd.quick_sample svg ];
@@ -374,7 +375,7 @@ let for_events global =
   let ui = Lwd.observe panel in
   let on_invalidate _ =
     let _ : int =
-      request_animation_frame (Brr.Window.to_jv global) @@ fun _ ->
+      request_animation_frame (Brr.Window.to_jv global.window) @@ fun _ ->
       let _ui = Lwd.quick_sample ui in
       (* Beware that due to this being ignored, a changed "root" element will
          not be updated by Lwd, only its reactive attributes/children *)
@@ -383,7 +384,8 @@ let for_events global =
     ()
   in
   let main =
-    Brr.El.find_first_by_selector (Jstr.v "#slipshow-main") |> Option.get
+    let root = global.window |> Brr.Window.document |> Brr.Document.body in
+    Brr.El.find_first_by_selector ~root (Jstr.v "#slipshow-main") |> Option.get
   in
   Brr.El.append_children main [ Lwd.quick_sample ui ];
   Lwd.set_on_invalidate ui on_invalidate;

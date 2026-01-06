@@ -16,11 +16,11 @@ let start ~window ~width ~height ~step =
     El.find_first_by_selector ~root (Jstr.v "#slipshow-content") |> Option.get
   in
   (* let body = Brr.El.find_first_by_selector (Jstr.v "body") |> Option.get in *)
-  let global = window in
+  let global = { Global_state.window; focus = None } in
   let* () = Normalization.setup global el in
   let* sliding_window = Universe.Window.setup el in
   (* TODO: move out of here (Later: Why?) *)
-  let () = Rescale.setup_rescalers () in
+  let () = Rescale.setup_rescalers global.window () in
   let () = Drawing_controller.Setup.init_ui global () in
   let () = Mouse_disappearing.setup window in
   let initial_step =
@@ -30,7 +30,7 @@ let start ~window ~width ~height ~step =
         window |> Window.location |> Uri.fragment |> Jstr.to_string
         |> int_of_string_opt
   in
-  let _history = Browser.History.set_hash global "" in
+  let _history = Browser.History.set_hash global.window "" in
   let* () = Step.Action_scheduler.setup_actions global sliding_window () in
   (* We do one step first, without recording it/updating the hash, to enter in
      the first slip *)
@@ -44,14 +44,14 @@ let start ~window ~width ~height ~step =
        the toc computation *)
     Fut.tick ~ms:0
   in
-  let* () = Table_of_content.generate window sliding_window el in
+  let* () = Table_of_content.generate global sliding_window el in
   let* () =
     match initial_step with
-    | None -> Fut.return @@ Step.Next.actualize ()
+    | None -> Fut.return @@ Step.Next.actualize global ()
     | Some step ->
         Fast.with_fast @@ fun () -> Step.Next.goto global step sliding_window
   in
-  let () = Controller.setup window sliding_window in
+  let () = Controller.setup global sliding_window in
   let () = Messaging.send_ready global () in
   (* let () = Drawing_editor.init () in *)
   Fut.return ()

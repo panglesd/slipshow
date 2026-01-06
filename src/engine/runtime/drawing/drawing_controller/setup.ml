@@ -11,7 +11,7 @@ let init_ui global () =
   let ui = Lwd.observe (Panel.panel global) in
   let on_invalidate _ =
     let _ : int =
-      Preview.request_animation_frame (Window.to_jv global) @@ fun _ ->
+      Preview.request_animation_frame (Window.to_jv global.window) @@ fun _ ->
       let _ui = Lwd.quick_sample ui in
       (* Beware that due to this being ignored, a changed "root" element will
          not be updated by Lwd, only its reactive attributes/children *)
@@ -19,8 +19,9 @@ let init_ui global () =
     in
     ()
   in
+  let root = global.window |> Brr.Window.document |> Brr.Document.body in
   let body =
-    Brr.El.find_first_by_selector (Jstr.v "#slipshow-main") |> Option.get
+    Brr.El.find_first_by_selector ~root (Jstr.v "#slipshow-main") |> Option.get
   in
   El.append_children body [ Lwd.quick_sample ui ];
   Lwd.set_on_invalidate ui on_invalidate;
@@ -34,7 +35,7 @@ let init_ui global () =
 (*   (ignore content, ignore el) *)
 
 module Rec_in_progress = struct
-  let init global () =
+  let init (global : Global_state.t) () =
     let visib =
       let$ status = Lwd.get Drawing_state.status in
       match status with
@@ -73,7 +74,7 @@ module Rec_in_progress = struct
     let svg = Lwd.observe svg in
     let on_invalidate _ =
       let _ : int =
-        Preview.request_animation_frame (Window.to_jv global) @@ fun _ ->
+        Preview.request_animation_frame (Window.to_jv global.window) @@ fun _ ->
         let _ui = Lwd.quick_sample svg in
         (* Beware that due to this being ignored, a changed "root" element will
          not be updated by Lwd, only its reactive attributes/children *)
@@ -81,8 +82,10 @@ module Rec_in_progress = struct
       in
       ()
     in
+    let root = global.window |> Brr.Window.document |> Brr.Document.body in
     let content =
-      Brr.El.find_first_by_selector (Jstr.v "#slipshow-main") |> Option.get
+      Brr.El.find_first_by_selector ~root (Jstr.v "#slipshow-main")
+      |> Option.get
     in
     El.append_children content [ Lwd.quick_sample svg ];
     Lwd.set_on_invalidate svg on_invalidate;
@@ -93,7 +96,7 @@ module Garbage = struct
   (** Handle the slipshow-drawing-mode class added to the body depending on the
       mode. *)
 
-  let g global () =
+  let g (global : Global_state.t) () =
     let open Lwd_infix in
     let panel =
       let$* status = Lwd.get Drawing_state.status in
@@ -107,9 +110,9 @@ module Garbage = struct
     let ui = Lwd.observe panel in
     let on_invalidate _ =
       let _ : int =
-        Preview.request_animation_frame (Window.to_jv global) @@ fun _ ->
+        Preview.request_animation_frame (Window.to_jv global.window) @@ fun _ ->
         let is_drawing = Lwd.quick_sample ui in
-        let body = global |> Window.document |> Document.body in
+        let body = global.window |> Window.document |> Document.body in
         ignore
         @@
         match is_drawing with
@@ -136,7 +139,7 @@ module Ui = struct
     let svg = Lwd.observe svg in
     let on_invalidate _ =
       let _ : int =
-        Preview.request_animation_frame (Window.to_jv global) @@ fun _ ->
+        Preview.request_animation_frame (Window.to_jv global.window) @@ fun _ ->
         let _ui = Lwd.quick_sample svg in
         (* Beware that due to this being ignored, a changed "root" element will
          not be updated by Lwd, only its reactive attributes/children *)
@@ -145,7 +148,8 @@ module Ui = struct
       ()
     in
     let content =
-      Brr.El.find_first_by_selector (Jstr.v "#slipshow-vertical-flex")
+      let root = global.window |> Brr.Window.document |> Brr.Document.body in
+      Brr.El.find_first_by_selector ~root (Jstr.v "#slipshow-vertical-flex")
       |> Option.get
     in
     El.append_children content [ Lwd.quick_sample svg ];
@@ -206,7 +210,7 @@ let connect global () =
   let ui = Lwd.observe panel in
   let on_invalidate _ =
     let _ : int =
-      Preview.request_animation_frame (Window.to_jv global) @@ fun _ ->
+      Preview.request_animation_frame (Window.to_jv global.window) @@ fun _ ->
       let _ui = Lwd.quick_sample ui in
       (* Beware that due to this being ignored, a changed "root" element will
          not be updated by Lwd, only its reactive attributes/children *)
@@ -215,13 +219,14 @@ let connect global () =
     ()
   in
   let main =
-    Brr.El.find_first_by_selector (Jstr.v "#slipshow-main") |> Option.get
+    let root = global.window |> Brr.Window.document |> Brr.Document.body in
+    Brr.El.find_first_by_selector ~root (Jstr.v "#slipshow-main") |> Option.get
   in
   El.append_children main [ Lwd.quick_sample ui ];
   Lwd.set_on_invalidate ui on_invalidate;
   ()
 
-let init_ui global () =
+let init_ui (global : Global_state.t) () =
   Preview.init_drawing_area global ();
   connect global ();
   Preview.for_events global ();

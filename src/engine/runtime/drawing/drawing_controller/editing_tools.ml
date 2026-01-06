@@ -166,9 +166,9 @@ module Selection = struct
   module Preview = struct
     let preview_selection_var = Lwd.var None
 
-    let select (x, y, dx, dy) recording time =
-      let x', y' = Tools.window_coord_in_universe (x +. dx) (y +. dy) in
-      let x, y = Tools.window_coord_in_universe x y in
+    let select global (x, y, dx, dy) recording time =
+      let x', y' = Tools.window_coord_in_universe global (x +. dx) (y +. dy) in
+      let x, y = Tools.window_coord_in_universe global x y in
       Lwd_table.iter
         (fun { preselected; path; erased; _ } ->
           let is_selected =
@@ -205,7 +205,7 @@ module Selection = struct
         Lwd.set vy y;
         Lwd.set vdx dx;
         Lwd.set vdy dy;
-        select (x, y, dx, dy) recording (Lwd.peek replaying_state.time);
+        select global (x, y, dx, dy) recording (Lwd.peek replaying_state.time);
         acc
       in
       let end_ _ ev =

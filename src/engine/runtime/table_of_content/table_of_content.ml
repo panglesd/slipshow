@@ -90,14 +90,14 @@ let generate global window root =
   let els = entry_action global window 0 :: entries in
   let toc_el = Brr.El.div ~at:[ Brr.At.id !!"slipshow-toc" ] els in
   let horizontal_container =
-    Brr.El.find_first_by_selector (Jstr.v "#slipshow-horizontal-flex")
+    Brr.El.find_first_by_selector ~root (Jstr.v "#slipshow-horizontal-flex")
     |> Option.get
   in
   Brr.El.append_children horizontal_container [ toc_el ];
   let _unlisten =
     Brr.Ev.listen Brr.Ev.click
-      (fun _ -> toggle_visibility global)
-      (Brr.El.find_first_by_selector (Jstr.v "#slipshow-counter")
+      (fun _ -> toggle_visibility global.window)
+      (Brr.El.find_first_by_selector ~root (Jstr.v "#slipshow-counter")
       |> Option.get |> Brr.El.as_target)
   in
   ()

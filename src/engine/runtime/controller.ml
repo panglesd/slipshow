@@ -1,5 +1,5 @@
-let keyboard_setup global (window : Universe.Window.t) =
-  let target = Brr.Window.as_target global in
+let keyboard_setup (global : Global_state.t) (window : Universe.Window.t) =
+  let target = Brr.Window.as_target global.window in
   let callback ev =
     let key = ev |> Brr.Ev.as_type |> Brr.Ev.Keyboard.key |> Jstr.to_string in
     let current_coord = Universe.State.get_coord () in
@@ -19,7 +19,9 @@ let keyboard_setup global (window : Universe.Window.t) =
             | "input" | "textarea" | "select" | "button" -> true
             | _ -> false
         in
-        let active_elem = Brr.Document.active_el (Brr.Window.document global) in
+        let active_elem =
+          Brr.Document.active_el (Brr.Window.document global.window)
+        in
         (* We need to go inside shadow roots to check if focused content is editable *)
         let rec check active_elem =
           match active_elem with
@@ -43,7 +45,7 @@ let keyboard_setup global (window : Universe.Window.t) =
       check_textarea @@ fun () ->
       match key with
       | "s" -> Messaging.open_speaker_notes global ()
-      | "t" -> Table_of_content.toggle_visibility global
+      | "t" -> Table_of_content.toggle_visibility global.window
       | "l" ->
           let _ : unit Fut.t =
             Step.Next.Excursion.start ();
@@ -86,7 +88,7 @@ let keyboard_setup global (window : Universe.Window.t) =
       | "ArrowLeft" | "PageUp" | "ArrowUp" ->
           let _ : unit Fut.t =
             let open Fut.Syntax in
-            let+ () = Step.Next.go_prev window in
+            let+ () = Step.Next.go_prev global window in
             Messaging.send_step global (Step.State.get_step ()) `Normal
           in
           ()
@@ -111,8 +113,8 @@ let keyboard_setup global (window : Universe.Window.t) =
   let _listener = Brr.Ev.listen Brr.Ev.keydown callback target in
   ()
 
-let touch_setup global (window : Universe.Window.t) =
-  let global_root = global |> Brr.Window.document |> Brr.Document.body in
+let touch_setup (global : Global_state.t) (window : Universe.Window.t) =
+  let global_root = global.window |> Brr.Window.document |> Brr.Document.body in
   let open Fut.Syntax in
   let () =
     let next =
@@ -141,7 +143,7 @@ let touch_setup global (window : Universe.Window.t) =
     let _unlisten =
       Brr.Ev.listen Brr.Ev.click
         (fun _ ->
-          let _ : unit Fut.t = Step.Next.go_prev window in
+          let _ : unit Fut.t = Step.Next.go_prev global window in
           ())
         (Brr.El.as_target prev)
     in
@@ -156,14 +158,14 @@ let touch_setup global (window : Universe.Window.t) =
     let _unlisten =
       Brr.Ev.listen Brr.Ev.click
         (fun _ ->
-          let body = Brr.Document.body (Brr.Window.document global) in
+          let body = Brr.Document.body (Brr.Window.document global.window) in
           let _ = Brr.El.request_fullscreen body in
           ())
         (Brr.El.as_target fullscreen)
     in
     ()
   in
-  let body = global |> Brr.Window.document |> Brr.Document.body in
+  let body = global.window |> Brr.Window.document |> Brr.Document.body in
   let target = Brr.El.as_target body in
   let touchstart (ev : Brr.Ev.Pointer.t Brr.Ev.t) =
     let type_ = Brr.Ev.Pointer.type' (Brr.Ev.as_type ev) |> Jstr.to_string in
@@ -272,7 +274,7 @@ let message_setup global window =
       | Some { payload = Receive_all_drawing all_strokes; id = _ } ->
           Drawing_controller.Messages.receive_all_strokes all_strokes
       | _ -> ())
-    (Brr.Window.as_target global)
+    (Brr.Window.as_target global.window)
   |> ignore
 
 let setup global (window : Universe.Window.t) =

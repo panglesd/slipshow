@@ -5,5 +5,5 @@
 
 val request_animation_frame : Jv.t -> (float -> unit) -> int
 val drawing_area : Brr.El.t Lwd.t
-val init_drawing_area : Brr.Window.t -> unit -> unit
-val for_events : Brr.Window.t -> unit -> unit
+val init_drawing_area : Global_state.t -> unit -> unit
+val for_events : Global_state.t -> unit -> unit

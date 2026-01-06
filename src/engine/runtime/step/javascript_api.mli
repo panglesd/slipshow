@@ -1,1 +1,1 @@
-val slip : Brr.Window.t -> Universe.Window.t -> Undoable.undo list ref -> Jv.t
+val slip : Global_state.t -> Universe.Window.t -> Undoable.undo list ref -> Jv.t

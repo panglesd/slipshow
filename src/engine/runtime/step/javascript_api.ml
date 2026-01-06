@@ -105,7 +105,7 @@ let set_prop undos_ref =
 
 let is_fast = Jv.callback ~arity:1 (fun _ -> Jv.of_bool @@ Fast.is_fast ())
 
-let slip global window undos_ref =
+let slip (global : Global_state.t) window undos_ref =
   Jv.obj
     [|
       (* Actions *)

@@ -1,5 +1,5 @@
 (library
  (name messaging)
- (libraries brr communication)
+ (libraries brr communication global_state)
  (preprocess
   (pps ppx_deriving_yojson)))

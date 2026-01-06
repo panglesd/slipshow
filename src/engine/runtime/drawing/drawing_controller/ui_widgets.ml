@@ -76,7 +76,7 @@ let is_pressed ev =
   is_pressed
     (ev |> Brr.Ev.as_type |> Brr.Ev.Pointer.as_mouse |> Brr.Ev.Mouse.buttons)
 
-let mouse_drag global start drag end_ =
+let mouse_drag (global : Global_state.t) start drag end_ =
   let mouse_move x y acc =
    fun ev ->
     let mouse_ev = Brr.Ev.as_type ev |> Brr.Ev.Pointer.as_mouse in
@@ -94,7 +94,8 @@ let mouse_drag global start drag end_ =
       let mousemove_listener = ref None in
       let mouseup_listener = ref None in
       let target =
-        global |> Brr.Window.document |> Brr.Document.body |> Brr.El.as_target
+        global.window |> Brr.Window.document |> Brr.Document.body
+        |> Brr.El.as_target
       in
       let unlisten () =
         Option.iter Brr.Ev.unlisten !mousemove_listener;

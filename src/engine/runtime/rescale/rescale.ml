@@ -1,9 +1,10 @@
 open Brr
 
 (* We need to listen on resize for both slipshow-rescalers (the containers) as well as their only child. *)
-let setup_rescalers () =
+let setup_rescalers window () =
+  let root = window |> Window.document |> Document.body in
   let slip_rescalers =
-    El.fold_find_by_selector
+    El.fold_find_by_selector ~root
       (fun x a -> x :: a)
       (Jstr.v ".slipshow-rescaler")
       []

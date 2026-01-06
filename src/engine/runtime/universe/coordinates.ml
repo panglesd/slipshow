@@ -1,4 +1,8 @@
-type window = { x : float; y : float; scale : float }
+type window = Global_state.Predef.window_coordinates = {
+  x : float;
+  y : float;
+  scale : float;
+}
 
 let log_window { x; y; scale } =
   let s =

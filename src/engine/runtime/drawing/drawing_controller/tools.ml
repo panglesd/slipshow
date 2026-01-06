@@ -1,6 +1,7 @@
-let now global () =
+let now (global : Global_state.t) () =
   let performance =
-    Jv.get (Brr.Window.to_jv global) "performance" |> Brr.Performance.of_jv
+    Jv.get (Brr.Window.to_jv global.window) "performance"
+    |> Brr.Performance.of_jv
   in
   Brr.Performance.now_ms performance
 
@@ -16,9 +17,10 @@ let very_quick_sample g =
 let ( !! ) = Jstr.v
 let px_float x = Jstr.append (Jstr.of_float x) !!"px"
 
-let window_coord_in_universe x y =
+let window_coord_in_universe (global : Global_state.t) x y =
+  let root = global.window |> Brr.Window.document |> Brr.Document.body in
   let main =
-    Brr.El.find_first_by_selector (Jstr.v "#slipshow-main") |> Option.get
+    Brr.El.find_first_by_selector ~root (Jstr.v "#slipshow-main") |> Option.get
   in
   let offset_x = Brr.El.bound_x main in
   (x -. offset_x, y)
@@ -29,13 +31,13 @@ let window_coord_in_universe x y =
 
 let mouse_drag_in_universe global start drag end_ =
   let start x y =
-    let x, y = window_coord_in_universe x y in
+    let x, y = window_coord_in_universe global x y in
     start x y
   in
   let drag ~x ~y ~dx ~dy =
     let x', y' = (x +. dx, y +. dy) in
-    let x, y = window_coord_in_universe x y in
-    let x', y' = window_coord_in_universe x' y' in
+    let x, y = window_coord_in_universe global x y in
+    let x', y' = window_coord_in_universe global x' y' in
     let dx, dy = (x' -. x, y' -. y) in
     drag ~x ~y ~dx ~dy
   in
@@ -45,7 +47,7 @@ module Draw_stroke = struct
   let starts_at l = List.hd (List.rev l) |> snd
   let end_at l = List.hd l |> snd
 
-  let start global ~replaying_state:_ strokes
+  let start (global : Global_state.t) ~replaying_state:_ strokes
       { started_time; stroker; color; width; id } x y =
     let now = now global in
     let path = [ ((x, y), now () -. started_time) ] in
@@ -81,7 +83,8 @@ module Draw_stroke = struct
 
   let end_ _ = ()
 
-  let event global ~started_time strokes stroker color width =
+  let event (global : Global_state.t) ~started_time strokes stroker color width
+      =
     let start x y _ev =
       let id =
         "id" ^ (Random.int 429496729 |> string_of_int)

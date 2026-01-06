@@ -8,8 +8,9 @@ let is_action elem =
 let all_action_selector =
   all_actions |> List.map (fun s -> "[" ^ s ^ "]") |> String.concat ", "
 
-let find_next_pause_or_step () =
-  Brr.El.find_first_by_selector (Jstr.v all_action_selector)
+let find_next_pause_or_step (global : Global_state.t) () =
+  let root = global.window |> Brr.Window.document |> Brr.Document.body in
+  Brr.El.find_first_by_selector ~root (Jstr.v all_action_selector)
 
 open Undoable.Syntax
 
@@ -23,8 +24,8 @@ module AttributeActions = struct
         Undoable.return ()
     | Ok x -> f x
 
-  let activate global ?(remove_class = true) (module Action : Actions.S) window
-      elem =
+  let activate (global : Global_state.t) ?(remove_class = true)
+      (module Action : Actions.S) window elem =
     let on = Action.on in
     let$ v = Brr.El.at (Jstr.v on) elem in
     Brr.Console.(log [ "Activating"; Action.action_name; "by"; elem ]);
@@ -41,7 +42,7 @@ module AttributeActions = struct
     Undoable.List.iter do_ Actions.all
 end
 
-let setup_actions global window () =
+let setup_actions (global : Global_state.t) window () =
   let open Fut.Syntax in
   let+ _ : unit list =
     Fut.of_list
@@ -56,7 +57,10 @@ let setup_actions global window () =
            | None -> None
            | Some setup2 ->
                let res =
-                 Brr.El.fold_find_by_selector
+                 let root =
+                   global.window |> Brr.Window.document |> Brr.Document.body
+                 in
+                 Brr.El.fold_find_by_selector ~root
                    (fun elem acc ->
                      let> () = acc in
                      let open AttributeActions in
@@ -78,7 +82,7 @@ let setup_actions global window () =
   ()
 
 let next global window () =
-  match find_next_pause_or_step () with
+  match find_next_pause_or_step global () with
   | None -> None
   | Some pause ->
       let res =

@@ -1,1 +1,1 @@
-val setup : Brr.Window.t -> Universe.Window.t -> unit
+val setup : Global_state.t -> Universe.Window.t -> unit

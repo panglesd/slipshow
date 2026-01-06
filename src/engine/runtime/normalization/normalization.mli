@@ -8,7 +8,7 @@
     It is important that 2 is not made by moving the window, as otherwise on
     rescaling the window, the scale would change... *)
 
-val setup : Brr.Window.t -> Brr.El.t -> unit Fut.t
+val setup : Global_state.t -> Brr.El.t -> unit Fut.t
 
 val translate_coords : float * float -> float * float
 (** Turn coordinates given as "screen coordinates" to coordinates given as

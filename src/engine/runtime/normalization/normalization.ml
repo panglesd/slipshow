@@ -82,12 +82,12 @@ let create el =
   Brr.El.append_children format_container [ el ];
   { open_window; format_container }
 
-let setup global el =
+let setup (global : Global_state.t) el =
   let open_window = create el in
-  let* () = replace_open_window global open_window in
+  let* () = replace_open_window global.window open_window in
   let resize_observer =
     Brr.ResizeObserver.create (fun _ _ ->
-        ignore @@ replace_open_window global open_window)
+        ignore @@ replace_open_window global.window open_window)
   in
   let parent = Brr.El.parent open_window.open_window |> Option.get in
   let _unobser = Brr.ResizeObserver.observe resize_observer parent in

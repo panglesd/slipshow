@@ -50,7 +50,8 @@ let event_of_string s =
       Brr.Console.(log [ "Error when converting back an erase event:"; e ]);
       None
 
-let send global event = Messaging.draw global (event_to_string event)
+let send (global : Global_state.t) event =
+  Messaging.draw global (event_to_string event)
 
 let send_all_strokes global () =
   let strokes =

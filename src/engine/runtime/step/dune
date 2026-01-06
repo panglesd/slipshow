@@ -1,6 +1,7 @@
 (library
  (name step)
  (libraries
+  global_state
   messaging
   undoable
   universe

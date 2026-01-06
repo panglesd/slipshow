@@ -2,14 +2,14 @@ module type S = sig
   type args
 
   val setup : (args -> unit Fut.t) option
-  val setup_all : (Brr.Window.t -> unit -> unit Fut.t) option
+  val setup_all : (Global_state.t -> unit -> unit Fut.t) option
   val on : string
   val action_name : string
 
   val parse_args :
-    Brr.Window.t -> Brr.El.t -> string -> (args, [> `Msg of string ]) result
+    Global_state.t -> Brr.El.t -> string -> (args, [> `Msg of string ]) result
 
-  val do_ : Brr.Window.t -> Universe.Window.t -> args -> unit Undoable.t
+  val do_ : Global_state.t -> Universe.Window.t -> args -> unit Undoable.t
 end
 
 module Pause : sig
@@ -43,7 +43,7 @@ module Emph : SetClass
 module Unemph : SetClass
 module Step : S with type args = unit
 
-val exit : Brr.Window.t -> Universe.Window.t -> Brr.El.t -> unit Undoable.t
+val exit : Global_state.t -> Universe.Window.t -> Brr.El.t -> unit Undoable.t
 
 module Focus : sig
   type args = {

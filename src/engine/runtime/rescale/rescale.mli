@@ -7,5 +7,5 @@
     rendered on 1440px of width) but have another width computed by something
     else (eg three subslips in a flexbox row) *)
 
-val setup_rescalers : unit -> unit
+val setup_rescalers : Brr.Window.t -> unit -> unit
 (** Setup resize_observers for all elements with the right class *)

@@ -1,6 +1,7 @@
-let now global =
+let now (global : Global_state.t) =
   let performance =
-    Jv.get (Brr.Window.to_jv global) "performance" |> Brr.Performance.of_jv
+    Jv.get (Brr.Window.to_jv global.window) "performance"
+    |> Brr.Performance.of_jv
   in
   fun () -> Brr.Performance.now_ms performance
 

@@ -2,8 +2,10 @@ let id =
   Random.self_init ();
   Random.int 10000 |> string_of_int |> fun s -> "id" ^ s
 
-let if_parent global f =
-  match Brr.Window.parent global with None -> () | Some parent -> f parent
+let if_parent (global : Global_state.t) f =
+  match Brr.Window.parent global.window with
+  | None -> ()
+  | Some parent -> f parent
 
 let send_ready global () =
   if_parent global @@ fun parent ->
@@ -20,7 +22,7 @@ let send_step global step mode =
   in
   Brr.Window.post_message parent ~msg
 
-let draw global string =
+let draw (global : Global_state.t) string =
   if_parent global @@ fun parent ->
   let payload = Communication.Drawing string in
   let msg = { id; payload } |> Communication.to_string |> Jv.of_string in
