@@ -33,7 +33,7 @@ module AttributeActions = struct
       else Undoable.return ()
     in
     let v = Jstr.to_string v in
-    let$$ args = Action.parse_args elem v in
+    let$$ args = Action.parse_args global elem v in
     Action.do_ global window args
 
   let do_ global window elem =
@@ -48,7 +48,9 @@ let setup_actions global window () =
     @@ List.filter_map
          (fun (module X : Actions.S) ->
            let _ =
-             match X.setup_all with None -> Fut.return () | Some f -> f ()
+             match X.setup_all with
+             | None -> Fut.return ()
+             | Some f -> f global ()
            in
            match X.setup with
            | None -> None
@@ -80,7 +82,7 @@ let next global window () =
   | None -> None
   | Some pause ->
       let res =
-        let> () = Actions.exit window pause in
+        let> () = Actions.exit global window pause in
         let> () = AttributeActions.do_ global window pause in
         Undoable.return ()
       in

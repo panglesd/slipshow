@@ -112,10 +112,12 @@ let keyboard_setup global (window : Universe.Window.t) =
   ()
 
 let touch_setup global (window : Universe.Window.t) =
+  let global_root = global |> Brr.Window.document |> Brr.Document.body in
   let open Fut.Syntax in
   let () =
     let next =
-      Brr.El.find_first_by_selector (Jstr.v "#slip-touch-controls .slip-next")
+      Brr.El.find_first_by_selector ~root:global_root
+        (Jstr.v "#slip-touch-controls .slip-next")
       |> Option.get
     in
     let _unlisten =
@@ -132,7 +134,7 @@ let touch_setup global (window : Universe.Window.t) =
   in
   let () =
     let prev =
-      Brr.El.find_first_by_selector
+      Brr.El.find_first_by_selector ~root:global_root
         (Jstr.v "#slip-touch-controls .slip-previous")
       |> Option.get
     in
@@ -147,7 +149,7 @@ let touch_setup global (window : Universe.Window.t) =
   in
   let () =
     let fullscreen =
-      Brr.El.find_first_by_selector
+      Brr.El.find_first_by_selector ~root:global_root
         (Jstr.v "#slip-touch-controls .slip-fullscreen")
       |> Option.get
     in
