@@ -50,16 +50,16 @@ let event_of_string s =
       Brr.Console.(log [ "Error when converting back an erase event:"; e ]);
       None
 
-let send event = Messaging.draw (event_to_string event)
+let send global event = Messaging.draw global (event_to_string event)
 
-let send_all_strokes () =
+let send_all_strokes global () =
   let strokes =
     Lwd_table.fold
       (fun acc e ->
         Yojson.Safe.to_string (Drawing_state.Json.V1.of_stro e) :: acc)
       [] Drawing_state.workspaces.live_drawing
   in
-  Messaging.send_all_strokes strokes
+  Messaging.send_all_strokes global strokes
 
 let receive_all_strokes strokes =
   let ( let* ) x f =

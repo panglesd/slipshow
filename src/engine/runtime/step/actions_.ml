@@ -731,18 +731,18 @@ module Speaker_note : S = struct
   let setup = Some setup
   let setup_all = None
 
-  let do_ _global (_ : Universe.Window.t) (el : args) =
+  let do_ global (_ : Universe.Window.t) (el : args) =
     let innerHTML =
       Jv.Jstr.get (Brr.El.to_jv el) "innerHTML" |> Jstr.to_string
     in
     let old_value = !sn in
     let undo () =
-      Messaging.send_speaker_notes old_value;
+      Messaging.send_speaker_notes global old_value;
       sn := old_value;
       Fut.return ()
     in
     sn := innerHTML;
-    Messaging.send_speaker_notes !sn;
+    Messaging.send_speaker_notes global !sn;
     Undoable.return ~undo ()
 end
 
@@ -1022,7 +1022,12 @@ module Draw = struct
 
   let parse_args = Parse.parse_only_els
 
-  let replay ?(speedup = 1.) (record : Drawing_state.replaying_state) =
+  let replay global ?(speedup = 1.) (record : Drawing_state.replaying_state) =
+    let request_animation_frame f =
+      Jv.to_int
+      @@ Jv.call (Brr.Window.to_jv global) "requestAnimationFrame"
+           [| Jv.callback ~arity:1 f |]
+    in
     let fut, resolve_fut = Fut.create () in
     let start_replay = Drawing_controller.Tools.now () in
     let original_time = Lwd.peek record.time in
@@ -1054,7 +1059,7 @@ module Draw = struct
             Lwd.set record.time max_time;
             resolve_fut ())
           else
-            let _animation_frame_id = Brr.G.request_animation_frame draw_loop in
+            let _animation_frame_id = request_animation_frame draw_loop in
             ()
       | Fast_move ->
           let now = Drawing_controller.Tools.now () in
@@ -1077,10 +1082,10 @@ module Draw = struct
           resolve_fut ()
       | Counting_for_toc -> assert false (* See "only_if_not_fast" *)
     in
-    let _animation_frame_id = Brr.G.request_animation_frame draw_loop in
+    let _animation_frame_id = request_animation_frame draw_loop in
     fut
 
-  let do_ _global _window elems =
+  let do_ global _window elems =
     only_if_not_fast @@ fun () ->
     (* let speedup = update_speedup 1. in *)
     Undoable.List.iter
@@ -1090,7 +1095,7 @@ module Draw = struct
         | Some record ->
             let open Fut.Syntax in
             let old_time = Lwd.peek record.time in
-            let* () = replay ?speedup:None record in
+            let* () = replay global ?speedup:None record in
             let undo () =
               Lwd.set record.time old_time;
               Fut.return ()

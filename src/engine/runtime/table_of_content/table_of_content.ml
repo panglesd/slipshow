@@ -43,7 +43,7 @@ let entry_action global window step =
           let _ : unit Fut.t =
             Fast.with_fast @@ fun () -> Step.Next.goto global step window
           in
-          Messaging.send_step step `Fast)
+          Messaging.send_step global step `Fast)
         (Brr.El.as_target el)
     in
     ()

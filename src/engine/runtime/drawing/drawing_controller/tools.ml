@@ -84,15 +84,15 @@ module Draw_stroke = struct
         (* TODO: id *)
       in
       let arg = { started_time; stroker; color; width; id } in
-      Messages.send @@ Draw (Start (arg, x, y));
+      Messages.send global @@ Draw (Start (arg, x, y));
       start global ~replaying_state:None strokes arg x y
     in
     let drag ~x ~y ~dx ~dy acc _ev =
-      Messages.send @@ Draw (Drag { x; y; dx; dy });
+      Messages.send global @@ Draw (Drag { x; y; dx; dy });
       drag global ~x ~y ~dx ~dy acc
     in
     let end_ acc _ev =
-      Messages.send @@ Draw End;
+      Messages.send global @@ Draw End;
       end_ acc
     in
     mouse_drag_in_universe start drag end_
@@ -149,15 +149,15 @@ module Erase = struct
 
   let event global ~started_time ~replayed_strokes strokes =
     let start x y _ev =
-      Messages.send @@ Erase (Start ({ started_time }, x, y));
+      Messages.send global @@ Erase (Start ({ started_time }, x, y));
       start ~replayed_strokes strokes { started_time } x y
     in
     let drag ~x ~y ~dx ~dy acc _ev =
-      Messages.send @@ Erase (Drag { x; y; dx; dy });
+      Messages.send global @@ Erase (Drag { x; y; dx; dy });
       drag global ~x ~y ~dx ~dy acc
     in
     let end_ acc _ev =
-      Messages.send @@ Erase End;
+      Messages.send global @@ Erase End;
       end_ acc
     in
     mouse_drag_in_universe start drag end_
@@ -190,6 +190,6 @@ module Clear = struct
     Option.iter clear replayed_strokes
 
   let event global ~replayed_strokes started_time strokes =
-    Messages.send (Clear started_time);
+    Messages.send global (Clear started_time);
     clear global ~replayed_strokes started_time strokes
 end

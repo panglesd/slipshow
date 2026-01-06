@@ -52,7 +52,7 @@ let start ~window ~width ~height ~step =
         Fast.with_fast @@ fun () -> Step.Next.goto global step sliding_window
   in
   let () = Controller.setup window sliding_window in
-  let () = Messaging.send_ready () in
+  let () = Messaging.send_ready global () in
   (* let () = Drawing_editor.init () in *)
   Fut.return ()
 

@@ -42,7 +42,7 @@ let keyboard_setup global (window : Universe.Window.t) =
       check_modif_key Brr.Ev.Keyboard.meta_key @@ fun () ->
       check_textarea @@ fun () ->
       match key with
-      | "s" -> Messaging.open_speaker_notes ()
+      | "s" -> Messaging.open_speaker_notes global ()
       | "t" -> Table_of_content.toggle_visibility global
       | "l" ->
           let _ : unit Fut.t =
@@ -80,14 +80,14 @@ let keyboard_setup global (window : Universe.Window.t) =
           let _ : unit Fut.t =
             let open Fut.Syntax in
             let+ _ : unit Fut.t = Step.Next.go_next global window in
-            Messaging.send_step (Step.State.get_step ()) `Normal
+            Messaging.send_step global (Step.State.get_step ()) `Normal
           in
           ()
       | "ArrowLeft" | "PageUp" | "ArrowUp" ->
           let _ : unit Fut.t =
             let open Fut.Syntax in
             let+ () = Step.Next.go_prev window in
-            Messaging.send_step (Step.State.get_step ()) `Normal
+            Messaging.send_step global (Step.State.get_step ()) `Normal
           in
           ()
       | "z" ->
@@ -123,7 +123,7 @@ let touch_setup global (window : Universe.Window.t) =
         (fun _ ->
           let _ : unit Fut.t =
             let+ _ : unit Fut.t = Step.Next.go_next global window in
-            Messaging.send_step (Step.State.get_step ()) `Normal
+            Messaging.send_step global (Step.State.get_step ()) `Normal
           in
           ())
         (Brr.El.as_target next)
@@ -266,7 +266,7 @@ let message_setup global window =
           ()
       | Some { payload = Drawing d; id = _window_id } -> handle_drawing global d
       | Some { payload = Send_all_drawing; id = _ } ->
-          Drawing_controller.Messages.send_all_strokes ()
+          Drawing_controller.Messages.send_all_strokes global ()
       | Some { payload = Receive_all_drawing all_strokes; id = _ } ->
           Drawing_controller.Messages.receive_all_strokes all_strokes
       | _ -> ())
