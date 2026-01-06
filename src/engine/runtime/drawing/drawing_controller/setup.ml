@@ -7,11 +7,15 @@ let ( !! ) = Jstr.v
 
 open Brr
 
+let request_animation_frame global f =
+  Jv.to_int
+  @@ Jv.call global "requestAnimationFrame" [| Jv.callback ~arity:1 f |]
+
 let init_ui global () =
   let ui = Lwd.observe (Panel.panel global) in
   let on_invalidate _ =
     let _ : int =
-      G.request_animation_frame @@ fun _ ->
+      request_animation_frame (Window.to_jv global) @@ fun _ ->
       let _ui = Lwd.quick_sample ui in
       (* Beware that due to this being ignored, a changed "root" element will
          not be updated by Lwd, only its reactive attributes/children *)
@@ -34,7 +38,7 @@ let init_ui global () =
 (*   (ignore content, ignore el) *)
 
 module Rec_in_progress = struct
-  let init () =
+  let init global () =
     let visib =
       let$ status = Lwd.get Drawing_state.status in
       match status with
@@ -73,7 +77,7 @@ module Rec_in_progress = struct
     let svg = Lwd.observe svg in
     let on_invalidate _ =
       let _ : int =
-        G.request_animation_frame @@ fun _ ->
+        request_animation_frame (Window.to_jv global) @@ fun _ ->
         let _ui = Lwd.quick_sample svg in
         (* Beware that due to this being ignored, a changed "root" element will
          not be updated by Lwd, only its reactive attributes/children *)
@@ -93,7 +97,7 @@ module Garbage = struct
   (** Handle the slipshow-drawing-mode class added to the body depending on the
       mode. *)
 
-  let g () =
+  let g global () =
     let open Lwd_infix in
     let panel =
       let$* status = Lwd.get Drawing_state.status in
@@ -107,26 +111,21 @@ module Garbage = struct
     let ui = Lwd.observe panel in
     let on_invalidate _ =
       let _ : int =
-        G.request_animation_frame @@ fun _ ->
+        request_animation_frame (Window.to_jv global) @@ fun _ ->
         let is_drawing = Lwd.quick_sample ui in
+        let body = global |> Window.document |> Document.body in
         ignore
         @@
         match is_drawing with
         | `Presenting ->
-            Brr.El.set_class !!"slipshow-drawing-mode" false
-              (Brr.Document.body Brr.G.document);
-            Brr.El.set_class !!"slipshow-editing-mode" false
-              (Brr.Document.body Brr.G.document)
+            El.set_class !!"slipshow-drawing-mode" false body;
+            El.set_class !!"slipshow-editing-mode" false body
         | `Drawing ->
-            Brr.El.set_class !!"slipshow-drawing-mode" true
-              (Brr.Document.body Brr.G.document);
-            Brr.El.set_class !!"slipshow-editing-mode" false
-              (Brr.Document.body Brr.G.document)
+            El.set_class !!"slipshow-drawing-mode" true body;
+            El.set_class !!"slipshow-editing-mode" false body
         | `Editing ->
-            Brr.El.set_class !!"slipshow-drawing-mode" false
-              (Brr.Document.body Brr.G.document);
-            Brr.El.set_class !!"slipshow-editing-mode" true
-              (Brr.Document.body Brr.G.document)
+            El.set_class !!"slipshow-drawing-mode" false body;
+            El.set_class !!"slipshow-editing-mode" true body
       in
       ()
     in
@@ -141,7 +140,7 @@ module Ui = struct
     let svg = Lwd.observe svg in
     let on_invalidate _ =
       let _ : int =
-        G.request_animation_frame @@ fun _ ->
+        request_animation_frame (Window.to_jv global) @@ fun _ ->
         let _ui = Lwd.quick_sample svg in
         (* Beware that due to this being ignored, a changed "root" element will
          not be updated by Lwd, only its reactive attributes/children *)
@@ -158,7 +157,7 @@ module Ui = struct
     ()
 end
 
-let connect () =
+let connect global () =
   let open Lwd_infix in
   let panel =
     let handler =
@@ -211,7 +210,7 @@ let connect () =
   let ui = Lwd.observe panel in
   let on_invalidate _ =
     let _ : int =
-      G.request_animation_frame @@ fun _ ->
+      request_animation_frame (Window.to_jv global) @@ fun _ ->
       let _ui = Lwd.quick_sample ui in
       (* Beware that due to this being ignored, a changed "root" element will
          not be updated by Lwd, only its reactive attributes/children *)
@@ -228,11 +227,11 @@ let connect () =
 
 let init_ui global () =
   Preview.init_drawing_area ();
-  connect ();
+  connect global ();
   Preview.for_events global ();
-  Rec_in_progress.init ();
+  Rec_in_progress.init global ();
   init_ui global ();
-  Garbage.g ();
+  Garbage.g global ();
   Ui.init global ()
 (* ; *)
 (* Time.el *)
