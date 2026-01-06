@@ -1,5 +1,5 @@
-let keyboard_setup (window : Universe.Window.t) =
-  let target = Brr.Window.as_target Brr.G.window in
+let keyboard_setup global (window : Universe.Window.t) =
+  let target = Brr.Window.as_target global in
   let callback ev =
     let key = ev |> Brr.Ev.as_type |> Brr.Ev.Keyboard.key |> Jstr.to_string in
     let current_coord = Universe.State.get_coord () in
@@ -19,7 +19,7 @@ let keyboard_setup (window : Universe.Window.t) =
             | "input" | "textarea" | "select" | "button" -> true
             | _ -> false
         in
-        let active_elem = Brr.Document.active_el Brr.G.document in
+        let active_elem = Brr.Document.active_el (Brr.Window.document global) in
         (* We need to go inside shadow roots to check if focused content is editable *)
         let rec check active_elem =
           match active_elem with
@@ -37,13 +37,13 @@ let keyboard_setup (window : Universe.Window.t) =
       let try_handle handler k =
         match handler ev with true -> () | false -> k ()
       in
-      try_handle Drawing_controller.Controller.handle @@ fun () ->
+      try_handle (Drawing_controller.Controller.handle global) @@ fun () ->
       check_modif_key Brr.Ev.Keyboard.ctrl_key @@ fun () ->
       check_modif_key Brr.Ev.Keyboard.meta_key @@ fun () ->
       check_textarea @@ fun () ->
       match key with
       | "s" -> Messaging.open_speaker_notes ()
-      | "t" -> Table_of_content.toggle_visibility ()
+      | "t" -> Table_of_content.toggle_visibility global
       | "l" ->
           let _ : unit Fut.t =
             Step.Next.Excursion.start ();
@@ -79,7 +79,7 @@ let keyboard_setup (window : Universe.Window.t) =
       | "ArrowRight" | "ArrowDown" | "PageDown" | " " ->
           let _ : unit Fut.t =
             let open Fut.Syntax in
-            let+ _ : unit Fut.t = Step.Next.go_next window in
+            let+ _ : unit Fut.t = Step.Next.go_next global window in
             Messaging.send_step (Step.State.get_step ()) `Normal
           in
           ()
@@ -111,7 +111,7 @@ let keyboard_setup (window : Universe.Window.t) =
   let _listener = Brr.Ev.listen Brr.Ev.keydown callback target in
   ()
 
-let touch_setup (window : Universe.Window.t) =
+let touch_setup global (window : Universe.Window.t) =
   let open Fut.Syntax in
   let () =
     let next =
@@ -122,7 +122,7 @@ let touch_setup (window : Universe.Window.t) =
       Brr.Ev.listen Brr.Ev.click
         (fun _ ->
           let _ : unit Fut.t =
-            let+ _ : unit Fut.t = Step.Next.go_next window in
+            let+ _ : unit Fut.t = Step.Next.go_next global window in
             Messaging.send_step (Step.State.get_step ()) `Normal
           in
           ())
@@ -154,17 +154,17 @@ let touch_setup (window : Universe.Window.t) =
     let _unlisten =
       Brr.Ev.listen Brr.Ev.click
         (fun _ ->
-          let body = Brr.Document.body Brr.G.document in
+          let body = Brr.Document.body (Brr.Window.document global) in
           let _ = Brr.El.request_fullscreen body in
           ())
         (Brr.El.as_target fullscreen)
     in
     ()
   in
-  let target = Brr.G.document |> Brr.Document.body |> Brr.El.as_target in
+  let body = global |> Brr.Window.document |> Brr.Document.body in
+  let target = Brr.El.as_target body in
   let touchstart (ev : Brr.Ev.Pointer.t Brr.Ev.t) =
     let type_ = Brr.Ev.Pointer.type' (Brr.Ev.as_type ev) |> Jstr.to_string in
-    let body = Brr.Document.body Brr.G.document in
     if String.equal "touch" type_ then
       Brr.El.set_class (Jstr.v "mobile") true body;
     let stop_here () =
@@ -223,32 +223,34 @@ let handle_drag (dragger : (_, 'b) dragger) =
             dragger.end_ acc';
             acc := None)
 
-let draw_stroke_dragger =
+let draw_stroke_dragger global =
   let open Drawing_controller.Tools.Draw_stroke in
-  let start = start ~replaying_state:None in
+  let start = start global ~replaying_state:None in
+  let drag = drag global in
   { start; drag; end_ }
 
-let erase_dragger =
+let erase_dragger global =
   let open Drawing_controller.Tools.Erase in
   let start = start ~replayed_strokes:None in
+  let drag = drag global in
   { start; drag; end_ }
 
-let handle_erase = handle_drag erase_dragger
-let handle_draw_stroke = handle_drag draw_stroke_dragger
+let handle_erase global = handle_drag (erase_dragger global)
+let handle_draw_stroke global = handle_drag (draw_stroke_dragger global)
 
-let handle_drawing d =
+let handle_drawing global d =
   let modu = Drawing_controller.Messages.event_of_string d in
   match modu with
-  | Some (Draw s) -> handle_draw_stroke s
-  | Some (Erase s) -> handle_erase s
+  | Some (Draw s) -> handle_draw_stroke global s
+  | Some (Erase s) -> handle_erase global s
   | Some (Clear started_time) ->
-      Drawing_controller.Tools.Clear.clear ~replayed_strokes:None started_time
-        Drawing_state.workspaces.live_drawing
+      Drawing_controller.Tools.Clear.clear global ~replayed_strokes:None
+        started_time Drawing_state.workspaces.live_drawing
   | None ->
       Brr.Console.(
         error [ "There was an error when decoding a drawing message: "; d ])
 
-let message_setup window =
+let message_setup global window =
   Brr.Ev.listen Brr_io.Message.Ev.message
     (fun event ->
       let raw_data : Jv.t = Brr_io.Message.Ev.data (Brr.Ev.as_type event) in
@@ -257,20 +259,21 @@ let message_setup window =
       | Some { payload = State (i, mode); id = _ } ->
           let fast = match mode with `Fast -> true | _ -> false in
           let _ : unit Fut.t =
-            if fast then Fast.with_fast @@ fun () -> Step.Next.goto i window
-            else Step.Next.goto i window
+            if fast then
+              Fast.with_fast @@ fun () -> Step.Next.goto global i window
+            else Step.Next.goto global i window
           in
           ()
-      | Some { payload = Drawing d; id = _window_id } -> handle_drawing d
+      | Some { payload = Drawing d; id = _window_id } -> handle_drawing global d
       | Some { payload = Send_all_drawing; id = _ } ->
           Drawing_controller.Messages.send_all_strokes ()
       | Some { payload = Receive_all_drawing all_strokes; id = _ } ->
           Drawing_controller.Messages.receive_all_strokes all_strokes
       | _ -> ())
-    (Brr.Window.as_target Brr.G.window)
+    (Brr.Window.as_target global)
   |> ignore
 
-let setup (window : Universe.Window.t) =
-  keyboard_setup window;
-  touch_setup window;
-  message_setup window
+let setup global (window : Universe.Window.t) =
+  keyboard_setup global window;
+  touch_setup global window;
+  message_setup global window

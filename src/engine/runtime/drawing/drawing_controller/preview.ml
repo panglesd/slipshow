@@ -296,7 +296,7 @@ let init_drawing_area () =
   Lwd.set_on_invalidate svg on_invalidate;
   ()
 
-let for_events =
+let for_events global =
   let drawing_started_time = Tools.now () in
   (* Just to avoid one level of indentation... *)
   Fun.id @@ fun () ->
@@ -319,7 +319,8 @@ let for_events =
                   (recording_temp, started_at)
             in
             Lwd_seq.element
-            @@ Tools.Draw_stroke.event ~started_time strokes stroker color width
+            @@ Tools.Draw_stroke.event global ~started_time strokes stroker
+                 color width
         | Pointer -> Lwd_seq.empty
         | Eraser ->
             let strokes, started_time, replayed_part =
@@ -336,8 +337,8 @@ let for_events =
               | Presenting -> (workspaces.live_drawing, Tools.now (), None)
             in
             Lwd_seq.element
-            @@ Tools.Erase.event ~started_time ~replayed_strokes:replayed_part
-                 strokes
+            @@ Tools.Erase.event global ~started_time
+                 ~replayed_strokes:replayed_part strokes
       in
       match status with
       | Drawing d -> draw_mode d

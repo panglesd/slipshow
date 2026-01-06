@@ -203,10 +203,10 @@ let global_panel recording =
   in
   Elwd.div [ `R name_title; `R select (* ; `R total_time *); `R change_title ]
 
-let play (replaying_state : replaying_state) =
+let play global (replaying_state : replaying_state) =
   Lwd.set replaying_state.is_playing true;
   let max = Lwd.peek replaying_state.recording.total_time in
-  let start_time = now () -. Lwd.peek replaying_state.time in
+  let start_time = now global () -. Lwd.peek replaying_state.time in
   let current_time = ref @@ Tools.now () in
   let rec loop _ =
     let now = Tools.now () in
@@ -233,7 +233,7 @@ let play (replaying_state : replaying_state) =
   in
   loop 0.
 
-let play_button editing_state =
+let play_button global editing_state =
   let$* is_playing = Lwd.get editing_state.is_playing in
   if is_playing then
     let click =
@@ -242,7 +242,9 @@ let play_button editing_state =
     in
     Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "⏸ Pause") ]
   else
-    let click = Elwd.handler Brr.Ev.click (fun _ -> play editing_state) in
+    let click =
+      Elwd.handler Brr.Ev.click (fun _ -> play global editing_state)
+    in
     Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "▶ Play") ]
 
 let save_button recording =
@@ -305,7 +307,7 @@ let close_button =
   in
   Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Close editing panel") ]
 
-let el =
+let el global =
   let$* replaying_state = Lwd.get current_replaying_state in
   let recording = replaying_state.recording in
   let description =
@@ -367,7 +369,7 @@ let el =
         ~st:[ `P (!!"flex-grow", !!"1") ]
         [
           `R ti;
-          `R (play_button replaying_state);
+          `R (play_button global replaying_state);
           `R (save_button recording);
           (* `R select_button; *)
           (* `R move_button; *)
@@ -398,7 +400,7 @@ let el =
       ]
     [ `R description; `R time_panel ]
 
-let el =
+let el global =
   let display =
     let$ status = Lwd.get status in
     match status with
@@ -407,7 +409,7 @@ let el =
   in
   let el =
     let$* status = Lwd.get status in
-    match status with Editing -> el | _ -> Lwd.pure (Brr.El.div [])
+    match status with Editing -> el global | _ -> Lwd.pure (Brr.El.div [])
   in
   let st = [ `P (Brr.El.Style.height, !!"300px") ] in
   Elwd.div

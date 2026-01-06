@@ -1,4 +1,8 @@
-let now () = Brr.Performance.now_ms Brr.G.performance
+let now global =
+  let performance =
+    Jv.get (Brr.Window.to_jv global) "performance" |> Brr.Performance.of_jv
+  in
+  fun () -> Brr.Performance.now_ms performance
 
 include Types
 module Json = Json
@@ -35,7 +39,8 @@ let live_drawing_state =
 
 let status = Lwd.var (Drawing Presenting)
 
-let start_recording replaying_state =
+let start_recording global replaying_state =
+  let now = now global in
   Lwd.set live_drawing_state.tool (Stroker Pen);
   let replayed_part, unplayed_erasure =
     let tbl = Lwd_table.make () in
@@ -68,7 +73,7 @@ let start_recording replaying_state =
             recording_temp = Lwd_table.make ();
           }))
 
-let finish_recording
+let finish_recording global
     {
       replaying_state;
       started_at;
@@ -76,6 +81,7 @@ let finish_recording
       replayed_part;
       unplayed_erasure;
     } =
+  let now = now global in
   let additional_time = now () -. started_at -. Lwd.peek replaying_state.time in
   Lwd_table.iter
     (fun stro ->

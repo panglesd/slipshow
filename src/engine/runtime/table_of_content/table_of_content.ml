@@ -1,10 +1,12 @@
+open Brr
+
 let ( !! ) = Jstr.v
 let inner_text = Brr.El.Prop.jstr !!"innerText"
 
-let toggle_visibility () =
-  let body = Brr.Document.body Brr.G.document in
+let toggle_visibility window =
+  let body = window |> Window.document |> Document.body in
   let c = Jstr.v "slipshow-toc-mode" in
-  Brr.El.set_class c (not @@ Brr.El.class' c body) body
+  El.set_class c (not @@ El.class' c body) body
 
 let categorize el =
   let action =
@@ -22,7 +24,7 @@ let entry_title el =
     ~at:[ Brr.At.class' !!"slipshow-toc-content" ]
     [ Brr.El.txt (Brr.El.prop inner_text el) ]
 
-let entry_action window step =
+let entry_action global window step =
   let step_elem =
     [
       Brr.El.div
@@ -39,7 +41,7 @@ let entry_action window step =
       Brr.Ev.listen Brr.Ev.click
         (fun _ ->
           let _ : unit Fut.t =
-            Fast.with_fast @@ fun () -> Step.Next.goto step window
+            Fast.with_fast @@ fun () -> Step.Next.goto global step window
           in
           Messaging.send_step step `Fast)
         (Brr.El.as_target el)
@@ -51,7 +53,7 @@ let entry_action window step =
 open Undoable.Syntax
 open Fut.Syntax
 
-let generate window root =
+let generate global window root =
   let categorized_els =
     Brr.El.fold_find_by_selector ~root
       (fun el acc -> categorize el :: acc)
@@ -66,13 +68,15 @@ let generate window root =
         loop undo entries step res
     | `Action a :: res ->
         if Step.Action_scheduler.is_action a then
-          let* res = Step.Action_scheduler.AttributeActions.do_ window a in
+          let* res =
+            Step.Action_scheduler.AttributeActions.do_ global window a
+          in
           let undo =
             let> () = undo in
             Fut.return res
           in
           let step = step + 1 in
-          let entries = entry_action window step :: entries in
+          let entries = entry_action global window step :: entries in
           loop undo entries step categorized_els
         else loop undo entries step res
     | [] -> Fut.return (undo, List.rev entries)
@@ -83,7 +87,7 @@ let generate window root =
   in
   let* (), undo = undo in
   let+ () = undo () in
-  let els = entry_action window 0 :: entries in
+  let els = entry_action global window 0 :: entries in
   let toc_el = Brr.El.div ~at:[ Brr.At.id !!"slipshow-toc" ] els in
   let horizontal_container =
     Brr.El.find_first_by_selector (Jstr.v "#slipshow-horizontal-flex")
@@ -92,7 +96,7 @@ let generate window root =
   Brr.El.append_children horizontal_container [ toc_el ];
   let _unlisten =
     Brr.Ev.listen Brr.Ev.click
-      (fun _ -> toggle_visibility ())
+      (fun _ -> toggle_visibility global)
       (Brr.El.find_first_by_selector (Jstr.v "#slipshow-counter")
       |> Option.get |> Brr.El.as_target)
   in

@@ -1,6 +1,6 @@
 open Drawing_state
 
-let shortcut_editing (replaying_state : replaying_state) key =
+let shortcut_editing global (replaying_state : replaying_state) key =
   match key with
   | "m" ->
       Lwd.set editing_tool Move;
@@ -12,13 +12,13 @@ let shortcut_editing (replaying_state : replaying_state) key =
       Lwd.set editing_tool Rescale;
       true
   | "R" ->
-      start_recording replaying_state;
+      start_recording global replaying_state;
       true
   | " " ->
       (match Lwd.peek replaying_state.is_playing with
       | true -> Lwd.set replaying_state.is_playing false
       | false ->
-          Ui.play replaying_state;
+          Ui.play global replaying_state;
           Lwd.set replaying_state.is_playing true);
       true
   | "ArrowRight" ->
@@ -38,7 +38,7 @@ let shortcut_editing (replaying_state : replaying_state) key =
       true
   | _ -> false
 
-let shortcut_drawing mode key =
+let shortcut_drawing global mode key =
   match key with
   | "p" | "w" ->
       Lwd.set live_drawing_state.tool (Stroker Pen);
@@ -59,20 +59,20 @@ let shortcut_drawing mode key =
         | Recording { started_at; replayed_part; recording_temp; _ } ->
             (recording_temp, started_at, Some replayed_part)
       in
-      Tools.Clear.event ~replayed_strokes started_at strokes;
+      Tools.Clear.event global ~replayed_strokes started_at strokes;
       true
   | "R" ->
       (match mode with
       | Presenting -> Lwd.set status Editing
-      | Recording state -> finish_recording state);
+      | Recording state -> finish_recording global state);
       true
   | _ -> false
 
-let shortcuts key =
+let shortcuts global key =
   match Lwd.peek status with
-  | Drawing mode -> shortcut_drawing mode key
-  | Editing -> shortcut_editing (Lwd.peek current_replaying_state) key
+  | Drawing mode -> shortcut_drawing global mode key
+  | Editing -> shortcut_editing global (Lwd.peek current_replaying_state) key
 
-let handle ev =
+let handle global ev =
   let key = ev |> Brr.Ev.as_type |> Brr.Ev.Keyboard.key |> Jstr.to_string in
-  shortcuts key
+  shortcuts global key

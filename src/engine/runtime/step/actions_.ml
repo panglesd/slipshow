@@ -346,7 +346,7 @@ module type S = sig
   val on : string
   val action_name : string
   val parse_args : Brr.El.t -> string -> (args, [> `Msg of string ]) result
-  val do_ : Universe.Window.t -> args -> unit Undoable.t
+  val do_ : Brr.Window.t -> Universe.Window.t -> args -> unit Undoable.t
 end
 
 module type Move = sig
@@ -440,7 +440,7 @@ module Pause = struct
 
   let parse_args = Parse.parse_only_els
 
-  let do_ _window elems =
+  let do_ _global _window elems =
     only_if_not_fast @@ fun () ->
     elems
     |> Undoable.List.iter @@ fun elem ->
@@ -491,7 +491,7 @@ struct
                     ^ Jstr.to_string positional))
             | Some elem -> Ok { elem; duration; margin }))
 
-  let do_ window { margin; duration; elem } =
+  let do_ _global window { margin; duration; elem } =
     only_if_not_fast @@ fun () ->
     let margin = Option.value ~default:0. margin in
     let duration = Option.value ~default:1. duration in
@@ -514,7 +514,7 @@ struct
 
   let parse_args = Parse.parse_only_els
 
-  let do_ _window elems =
+  let do_ _global _window elems =
     only_if_not_fast @@ fun () ->
     Undoable.List.iter (Undoable.Browser.set_class X.class_ X.state) elems
 end
@@ -649,7 +649,7 @@ module Focus = struct
         let elems = List.filter_map find_first_by_selector positional in
         { elems; duration; margin }
 
-  let do_ window { margin; duration; elems } =
+  let do_ _global window { margin; duration; elems } =
     only_if_not_fast @@ fun () ->
     let> () = State.push (Universe.State.get_coord ()) in
     let margin = Option.value ~default:0. margin in
@@ -669,7 +669,7 @@ module Unfocus = struct
   let action_name = "unfocus"
   let parse_args elem s = Parse.no_args ~action_name elem s
 
-  let do_ window () =
+  let do_ _global window () =
     only_if_not_fast @@ fun () ->
     let> coord = Focus.State.pop () in
     match coord with
@@ -713,7 +713,7 @@ module Step = struct
   let on = "step"
   let action_name = "step"
   let parse_args elem s = Parse.no_args ~action_name elem s
-  let do_ _ _ = Undoable.return ()
+  let do_ _ _ _ = Undoable.return ()
 end
 
 module Speaker_note : S = struct
@@ -731,7 +731,7 @@ module Speaker_note : S = struct
   let setup = Some setup
   let setup_all = None
 
-  let do_ (_ : Universe.Window.t) (el : args) =
+  let do_ _global (_ : Universe.Window.t) (el : args) =
     let innerHTML =
       Jv.Jstr.get (Brr.El.to_jv el) "innerHTML" |> Jstr.to_string
     in
@@ -755,10 +755,10 @@ module Play_media = struct
   let parse_args = Parse.parse_only_els
   let log_error = function Ok x -> x | Error x -> Brr.Console.(log [ x ])
 
-  let do_ _window elems =
+  let do_ global _window elems =
     only_if_not_fast @@ fun () ->
     let is_speaker_note =
-      match Brr.Window.name Brr.G.window |> Jstr.to_string with
+      match Brr.Window.name global |> Jstr.to_string with
       | "slipshow_speaker_view" -> true
       | _ -> false
     in
@@ -961,7 +961,7 @@ module Change_page = struct
     Undoable.return
     @@ match new_n with [] -> None | new_n -> Some { arg with n = new_n }
 
-  let do_ _window { args; original_elem } =
+  let do_ _global _window { args; original_elem } =
     let> args = Undoable.List.filter_map do_1 args in
     match args with
     | [] -> Undoable.return ()
@@ -1080,7 +1080,7 @@ module Draw = struct
     let _animation_frame_id = Brr.G.request_animation_frame draw_loop in
     fut
 
-  let do_ _window elems =
+  let do_ _global _window elems =
     only_if_not_fast @@ fun () ->
     (* let speedup = update_speedup 1. in *)
     Undoable.List.iter
@@ -1109,7 +1109,7 @@ module Clear_draw = struct
 
   let parse_args = Parse.parse_only_els
 
-  let do_ _window elems =
+  let do_ _global _window elems =
     only_if_not_fast @@ fun () ->
     Undoable.List.iter
       (fun elem ->

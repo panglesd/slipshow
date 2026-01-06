@@ -15,7 +15,7 @@ module Execute = struct
 
   let only_if_fast f = if Fast.is_counting () then Undoable.return () else f ()
 
-  let do_ window elem =
+  let do_ global window elem =
     only_if_fast @@ fun () ->
     let undos_ref = ref [] in
     let undo_fallback () =
@@ -30,7 +30,7 @@ module Execute = struct
       Brr.Console.(log [ body ]);
       let args = Jv.Function.[ ("slip", Fun.id) ] in
       let f = Jv.Function.v ~body ~args in
-      let arg = Javascript_api.slip window undos_ref in
+      let arg = Javascript_api.slip global window undos_ref in
       let u = f arg in
       let undo () =
         try Fut.return (ignore @@ Jv.call u "undo" [||])
@@ -43,7 +43,7 @@ module Execute = struct
           [ "An exception occurred when trying to execute a custom script:"; e ]);
       Undoable.return ~undo:undo_fallback ()
 
-  let do_ window elems = Undoable.List.iter (do_ window) elems
+  let do_ global window elems = Undoable.List.iter (do_ global window) elems
   let setup = None
   let setup_all = None
 end

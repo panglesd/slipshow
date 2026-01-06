@@ -79,12 +79,12 @@ let with_step_transition =
   set_counter (string_of_int to_);
   res
 
-let go_next window n =
+let go_next global window n =
   in_queue @@ fun () ->
   let rec loop n =
     if n <= 0 then Fut.return ()
     else
-      match Action_scheduler.next window () with
+      match Action_scheduler.next global window () with
       | None -> Fut.return ()
       | Some undos ->
           let* (), undos = with_step_transition 1 @@ fun () -> undos in
@@ -108,23 +108,23 @@ let go_prev n =
   let+ () = loop n in
   actualize ()
 
-let goto step window =
+let goto global step window =
   let current_step = State.get_step () in
   let* () = Excursion.end_ window () in
   if current_step > step then go_prev (current_step - step)
-  else if current_step < step then go_next window (step - current_step)
+  else if current_step < step then go_next global window (step - current_step)
   else Fut.return ()
 
 let current_execution = ref None
 
-let go_next window =
+let go_next global window =
   (* We return a Fut.t Fut.t here to allow to wait for [with_step_transition] to
      update the state, without waiting for the actual transition to be
      finished. *)
   let+ () = Excursion.end_ window () in
   match !current_execution with
   | None -> (
-      match Action_scheduler.next window () with
+      match Action_scheduler.next global window () with
       | None -> Fut.return ()
       | Some fut ->
           let fut =

@@ -21,49 +21,52 @@ let one_arg conv action undos_ref =
 (* let one_elem action = one_arg Brr.El.of_jv action *)
 (* let one_elem_list action = one_arg (Jv.to_list Brr.El.of_jv) action *)
 
-let move (module X : Actions.Move) window undos_ref =
+let move global (module X : Actions.Move) window undos_ref =
   Jv.callback ~arity:3 @@ fun elems duration margin ->
   let elem = Brr.El.of_jv elems
   and duration = Jv.to_option Jv.to_float duration
   and margin = Jv.to_option Jv.to_float margin in
-  register_undo undos_ref @@ fun () -> X.do_ window X.{ duration; margin; elem }
+  register_undo undos_ref @@ fun () ->
+  X.do_ global window X.{ duration; margin; elem }
 
-let up = move (module Actions.Up)
-let down = move (module Actions.Down)
-let center = move (module Actions.Center)
-let scroll = move (module Actions.Scroll)
+let up global = move global (module Actions.Up)
+let down global = move global (module Actions.Down)
+let center global = move global (module Actions.Center)
+let scroll global = move global (module Actions.Scroll)
 
-let focus window undos_ref =
+let focus global window undos_ref =
   Jv.callback ~arity:3 @@ fun elems duration margin ->
   let elems = Jv.to_list Brr.El.of_jv elems
   and duration = Jv.to_option Jv.to_float duration
   and margin = Jv.to_option Jv.to_float margin in
   register_undo undos_ref @@ fun () ->
-  Actions.Focus.do_ window { duration; margin; elems }
+  Actions.Focus.do_ global window { duration; margin; elems }
 
-let unfocus window = one_arg (fun _ -> ()) (Actions.Unfocus.do_ window)
+let unfocus global window =
+  one_arg (fun _ -> ()) (Actions.Unfocus.do_ global window)
 
-let class_setter (module X : Actions.SetClass) window undos_ref =
+let class_setter global (module X : Actions.SetClass) window undos_ref =
   Jv.callback ~arity:1 @@ fun elems ->
   let elems = (Jv.to_list Brr.El.of_jv) elems in
-  register_undo undos_ref @@ fun () -> X.do_ window elems
+  register_undo undos_ref @@ fun () -> X.do_ global window elems
 
-let unstatic = class_setter (module Actions.Unstatic)
-let static = class_setter (module Actions.Static)
-let reveal = class_setter (module Actions.Reveal)
-let unreveal = class_setter (module Actions.Unreveal)
-let emph = class_setter (module Actions.Emph)
-let unemph = class_setter (module Actions.Unemph)
+let unstatic global = class_setter global (module Actions.Unstatic)
+let static global = class_setter global (module Actions.Static)
+let reveal global = class_setter global (module Actions.Reveal)
+let unreveal global = class_setter global (module Actions.Unreveal)
+let emph global = class_setter global (module Actions.Emph)
+let unemph global = class_setter global (module Actions.Unemph)
 
-let play_media window undos_ref =
+let play_media global window undos_ref =
   Jv.callback ~arity:1 @@ fun elems ->
   let elems = Jv.to_list Brr.El.of_jv elems in
-  register_undo undos_ref @@ fun () -> Actions.Play_media.do_ window elems
+  register_undo undos_ref @@ fun () ->
+  Actions.Play_media.do_ global window elems
 
-let draw window undos_ref =
+let draw global window undos_ref =
   Jv.callback ~arity:1 @@ fun elems ->
   let elems = Jv.to_list Brr.El.of_jv elems in
-  register_undo undos_ref @@ fun () -> Actions.Draw.do_ window elems
+  register_undo undos_ref @@ fun () -> Actions.Draw.do_ global window elems
 
 let change_page _window undos_ref =
   Jv.callback ~arity:2 @@ fun elem change ->
@@ -102,30 +105,30 @@ let set_prop undos_ref =
 
 let is_fast = Jv.callback ~arity:1 (fun _ -> Jv.of_bool @@ Fast.is_fast ())
 
-let slip window undos_ref =
+let slip global window undos_ref =
   Jv.obj
     [|
       (* Actions *)
-      ("up", up window undos_ref);
-      ("center", center window undos_ref);
-      ("down", down window undos_ref);
-      ("scroll", scroll window undos_ref);
-      ("focus", focus window undos_ref);
-      ("unfocus", unfocus window undos_ref);
-      ("static", static window undos_ref);
-      ("unstatic", unstatic window undos_ref);
-      ("reveal", reveal window undos_ref);
-      ("unreveal", unreveal window undos_ref);
-      ("emph", emph window undos_ref);
-      ("unemph", unemph window undos_ref);
+      ("up", up global window undos_ref);
+      ("center", center global window undos_ref);
+      ("down", down global window undos_ref);
+      ("scroll", scroll global window undos_ref);
+      ("focus", focus global window undos_ref);
+      ("unfocus", unfocus global window undos_ref);
+      ("static", static global window undos_ref);
+      ("unstatic", unstatic global window undos_ref);
+      ("reveal", reveal global window undos_ref);
+      ("unreveal", unreveal global window undos_ref);
+      ("emph", emph global window undos_ref);
+      ("unemph", unemph global window undos_ref);
       ("onUndo", on_undo undos_ref);
       (* Scripting utilities *)
       ("state", state);
       ("setStyle", set_style undos_ref);
       ("setClass", set_class undos_ref);
       ("setProp", set_prop undos_ref);
-      ("playMedia", play_media window undos_ref);
-      ("draw", draw window undos_ref);
+      ("playMedia", play_media global window undos_ref);
+      ("draw", draw global window undos_ref);
       ("isFast", is_fast);
       ("changePage", change_page window undos_ref);
     |]

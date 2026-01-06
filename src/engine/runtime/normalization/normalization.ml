@@ -14,7 +14,7 @@ let translate_coords (x, y) =
   let x = x -. (width () /. 2.) and y = y -. (height () /. 2.) in
   (x, y)
 
-let replace_open_window window =
+let replace_open_window global window =
   let open_window = window.open_window in
   let set_state ~left ~right ~top ~bottom ~width ~height =
     state := { left; (* right; *) top; (* bottom; *) scale = !state.scale };
@@ -35,7 +35,7 @@ let replace_open_window window =
   let browser_h = foi @@ Brr.El.offset_h parent in
   let browser_w = foi @@ Brr.El.offset_w parent in
   let* window_w, _window_h =
-    let body = Brr.Document.body Brr.G.document in
+    let body = Brr.Document.body (Brr.Window.document global) in
     if width () *. browser_h < height () *. browser_w then
       let () =
         Brr.El.set_class (Jstr.v "horizontal") false body;
@@ -82,12 +82,12 @@ let create el =
   Brr.El.append_children format_container [ el ];
   { open_window; format_container }
 
-let setup el =
+let setup global el =
   let open_window = create el in
-  let* () = replace_open_window open_window in
+  let* () = replace_open_window global open_window in
   let resize_observer =
     Brr.ResizeObserver.create (fun _ _ ->
-        ignore @@ replace_open_window open_window)
+        ignore @@ replace_open_window global open_window)
   in
   let parent = Brr.El.parent open_window.open_window |> Option.get in
   let _unobser = Brr.ResizeObserver.observe resize_observer parent in

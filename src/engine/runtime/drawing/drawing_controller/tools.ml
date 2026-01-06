@@ -41,8 +41,9 @@ module Draw_stroke = struct
   let starts_at l = List.hd (List.rev l) |> snd
   let end_at l = List.hd l |> snd
 
-  let start ~replaying_state:_ strokes
+  let start global ~replaying_state:_ strokes
       { started_time; stroker; color; width; id } x y =
+    let now = now global in
     let path = [ ((x, y), now () -. started_time) ] in
     let el =
       let path = Lwd.var path in
@@ -67,7 +68,8 @@ module Draw_stroke = struct
     Lwd_table.append' strokes el;
     (started_time, el)
 
-  let drag ~x ~y ~dx ~dy ((started_time, el) as acc) =
+  let drag global ~x ~y ~dx ~dy ((started_time, el) as acc) =
+    let now = now global in
     let path = Lwd.peek el.path in
     let path = ((x +. dx, y +. dy), now () -. started_time) :: path in
     Lwd.set el.path path;
@@ -75,7 +77,7 @@ module Draw_stroke = struct
 
   let end_ _ = ()
 
-  let event ~started_time strokes stroker color width =
+  let event global ~started_time strokes stroker color width =
     let start x y _ev =
       let id =
         "id" ^ (Random.int 429496729 |> string_of_int)
@@ -83,11 +85,11 @@ module Draw_stroke = struct
       in
       let arg = { started_time; stroker; color; width; id } in
       Messages.send @@ Draw (Start (arg, x, y));
-      start ~replaying_state:None strokes arg x y
+      start global ~replaying_state:None strokes arg x y
     in
     let drag ~x ~y ~dx ~dy acc _ev =
       Messages.send @@ Draw (Drag { x; y; dx; dy });
-      drag ~x ~y ~dx ~dy acc
+      drag global ~x ~y ~dx ~dy acc
     in
     let end_ acc _ev =
       Messages.send @@ Draw End;
@@ -100,7 +102,8 @@ module Erase = struct
   let start ~replayed_strokes strokes { started_time } x y =
     (started_time, strokes, replayed_strokes, (x, y))
 
-  let drag ~x ~y ~dx ~dy (started_time, strokes, replayed_strokes, c0) =
+  let drag global ~x ~y ~dx ~dy (started_time, strokes, replayed_strokes, c0) =
+    let now = now global in
     let c1 = (x +. dx, y +. dy) in
     let try_erase stro time =
       let time = Option.value ~default:Float.infinity time in
@@ -144,14 +147,14 @@ module Erase = struct
 
   let end_ _ = ()
 
-  let event ~started_time ~replayed_strokes strokes =
+  let event global ~started_time ~replayed_strokes strokes =
     let start x y _ev =
       Messages.send @@ Erase (Start ({ started_time }, x, y));
       start ~replayed_strokes strokes { started_time } x y
     in
     let drag ~x ~y ~dx ~dy acc _ev =
       Messages.send @@ Erase (Drag { x; y; dx; dy });
-      drag ~x ~y ~dx ~dy acc
+      drag global ~x ~y ~dx ~dy acc
     in
     let end_ acc _ev =
       Messages.send @@ Erase End;
@@ -161,7 +164,8 @@ module Erase = struct
 end
 
 module Clear = struct
-  let clear ~replayed_strokes started_time strokes =
+  let clear global ~replayed_strokes started_time strokes =
+    let now = now global in
     let clear strokes =
       Lwd_table.iter
         (fun stro ->
@@ -185,7 +189,7 @@ module Clear = struct
     clear strokes;
     Option.iter clear replayed_strokes
 
-  let event ~replayed_strokes started_time strokes =
+  let event global ~replayed_strokes started_time strokes =
     Messages.send (Clear started_time);
-    clear ~replayed_strokes started_time strokes
+    clear global ~replayed_strokes started_time strokes
 end

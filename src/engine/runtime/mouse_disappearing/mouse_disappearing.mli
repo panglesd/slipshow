@@ -1,1 +1,1 @@
-val setup : unit -> unit
+val setup : Brr.Window.t -> unit

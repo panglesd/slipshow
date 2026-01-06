@@ -7,23 +7,25 @@
 	timeOutIds.push(setTimeout(() => { document.body.style.cursor = "none";}, 5000));
     });
  *)
-let body = Brr.Document.body Brr.G.document
 
-let show_cursor () =
-  Brr.El.set_inline_style Brr.El.Style.cursor (Jstr.v "auto") body
+open Brr
 
-let hide_cursor () =
-  Brr.El.set_inline_style Brr.El.Style.cursor (Jstr.v "none") body
+let show_cursor body () =
+  El.set_inline_style Brr.El.Style.cursor (Jstr.v "auto") body
 
-let setup () =
-  show_cursor ();
+let hide_cursor body () =
+  El.set_inline_style Brr.El.Style.cursor (Jstr.v "none") body
+
+let setup window =
+  let body = window |> Window.document |> Document.body in
+  show_cursor body ();
   let timeout_id = ref None in
   let _unlisten =
     Brr.Ev.listen Brr.Ev.pointermove
       (fun _ ->
         (match !timeout_id with None -> () | Some id -> Brr.G.stop_timer id);
-        show_cursor ();
-        let id = Brr.G.set_timeout ~ms:5000 (fun _ -> hide_cursor ()) in
+        show_cursor body ();
+        let id = Brr.G.set_timeout ~ms:5000 (fun _ -> hide_cursor body ()) in
         timeout_id := Some id)
       (Brr.El.as_target body)
   in

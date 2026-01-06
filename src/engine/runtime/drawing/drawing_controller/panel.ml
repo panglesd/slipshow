@@ -144,7 +144,7 @@ let width_button var width c name =
 let toplevel_panel_el =
   Elwd.div ~at:[ `P (Brr.At.class' !!"slip-writing-toolbar") ]
 
-let drawing_panel mode =
+let drawing_panel global mode =
   let lds = Drawing_state.live_drawing_state in
   let pen_button = pen_button lds.tool (Lwd.pure "Pen") "p" in
   let highlighter_button =
@@ -205,7 +205,7 @@ let drawing_panel mode =
             | Recording { started_at; replayed_part; recording_temp; _ } ->
                 (recording_temp, started_at, Some replayed_part)
           in
-          Tools.Clear.event ~replayed_strokes started_at strokes)
+          Tools.Clear.event global ~replayed_strokes started_at strokes)
     in
     let icon = panel_icon [ `P (Brr.El.txt !!"✗") ] in
     panel_block
@@ -231,7 +231,7 @@ let drawing_panel mode =
           ()
     | Recording state ->
         let handler =
-          Elwd.handler Brr.Ev.click (fun _ -> finish_recording state)
+          Elwd.handler Brr.Ev.click (fun _ -> finish_recording global state)
         in
         let icon =
           Brr.El.div
@@ -257,7 +257,7 @@ let drawing_panel mode =
       `R record_button;
     ]
 
-let editing_panel =
+let editing_panel global =
   let editing_tool v icon name shortcut =
     let handler = Elwd.handler Brr.Ev.click (fun _ -> Lwd.set editing_tool v) in
     let class_ =
@@ -277,7 +277,8 @@ let editing_panel =
     let record =
       let handler =
         Elwd.handler Brr.Ev.click (fun _ ->
-            Drawing_state.start_recording (Lwd.peek current_replaying_state))
+            Drawing_state.start_recording global
+              (Lwd.peek current_replaying_state))
       in
       let icon =
         Brr.El.div
@@ -308,9 +309,11 @@ let editing_panel =
   in
   toplevel_panel_el [ `R block; `R recording_block ]
 
-let panel =
+let panel global =
   let content =
     let$* status = Lwd.get Drawing_state.status in
-    match status with Drawing d -> drawing_panel d | Editing -> editing_panel
+    match status with
+    | Drawing d -> drawing_panel global d
+    | Editing -> editing_panel global
   in
   Elwd.div ~at:[ `P (Brr.At.id !!"slipshow-drawing-toolbar") ] [ `R content ]

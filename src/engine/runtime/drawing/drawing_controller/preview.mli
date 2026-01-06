@@ -5,4 +5,4 @@
 
 val drawing_area : Brr.El.t Lwd.t
 val init_drawing_area : unit -> unit
-val for_events : unit -> unit
+val for_events : Brr.Window.t -> unit -> unit

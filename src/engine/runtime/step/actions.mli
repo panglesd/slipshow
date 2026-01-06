@@ -6,7 +6,7 @@ module type S = sig
   val on : string
   val action_name : string
   val parse_args : Brr.El.t -> string -> (args, [> `Msg of string ]) result
-  val do_ : Universe.Window.t -> args -> unit Undoable.t
+  val do_ : Brr.Window.t -> Universe.Window.t -> args -> unit Undoable.t
 end
 
 module Pause : sig

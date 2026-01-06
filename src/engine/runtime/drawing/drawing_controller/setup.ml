@@ -7,8 +7,8 @@ let ( !! ) = Jstr.v
 
 open Brr
 
-let init_ui () =
-  let ui = Lwd.observe Panel.panel in
+let init_ui global () =
+  let ui = Lwd.observe (Panel.panel global) in
   let on_invalidate _ =
     let _ : int =
       G.request_animation_frame @@ fun _ ->
@@ -136,8 +136,8 @@ module Garbage = struct
 end
 
 module Ui = struct
-  let init () =
-    let svg = Ui.el in
+  let init global () =
+    let svg = Ui.el global in
     let svg = Lwd.observe svg in
     let on_invalidate _ =
       let _ : int =
@@ -226,13 +226,13 @@ let connect () =
   Lwd.set_on_invalidate ui on_invalidate;
   ()
 
-let init_ui () =
+let init_ui global () =
   Preview.init_drawing_area ();
   connect ();
-  Preview.for_events ();
+  Preview.for_events global ();
   Rec_in_progress.init ();
-  init_ui ();
+  init_ui global ();
   Garbage.g ();
-  Ui.init ()
+  Ui.init global ()
 (* ; *)
 (* Time.el *)
