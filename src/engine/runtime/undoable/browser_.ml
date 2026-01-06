@@ -36,9 +36,9 @@ let set_style style value elem =
   return ~undo ()
 
 module History = struct
-  let set_hash h =
-    let old_uri = Brr.Window.location Brr.G.window in
-    let history = Browser.History.set_hash h in
+  let set_hash global h =
+    let old_uri = Brr.Window.location global in
+    let history = Browser.History.set_hash global h in
     let undo () =
       match history with
       | None -> Fut.return ()

@@ -1,9 +1,9 @@
-let set_hash h =
-  let old_uri = Brr.Window.location Brr.G.window in
+let set_hash global h =
+  let old_uri = Brr.Window.location global in
   match Brr.Uri.scheme old_uri |> Jstr.to_string with
   | "about" -> None
   | _ ->
-      let history = Brr.Window.history Brr.G.window in
+      let history = Brr.Window.history global in
       let uri =
         let fragment = Jstr.v h in
         Brr.Uri.with_uri ~fragment old_uri |> Result.get_ok

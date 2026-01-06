@@ -30,7 +30,7 @@ let start ~window ~width ~height ~step =
         window |> Window.location |> Uri.fragment |> Jstr.to_string
         |> int_of_string_opt
   in
-  let _history = Browser.History.set_hash "" in
+  let _history = Browser.History.set_hash global "" in
   let* () = Step.Action_scheduler.setup_actions global sliding_window () in
   (* We do one step first, without recording it/updating the hash, to enter in
      the first slip *)

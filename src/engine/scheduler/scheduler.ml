@@ -248,9 +248,9 @@ module Handle = struct
         Brr.Window.post_message main_frame ~msg
     | _ -> ()
 
-  let setting_state = function
+  let setting_state global = function
     | { Communication.payload = State (i, _); _ } ->
-        let _history = Browser.History.set_hash (string_of_int i) in
+        let _history = Browser.History.set_hash global (string_of_int i) in
         current_step := Some i
     | _ -> ()
 
@@ -283,19 +283,19 @@ module Handle = struct
     | _ -> ()
 end
 
-let speaker_note_handling window msg =
+let speaker_note_handling global window msg =
   let () =
     let forward_to = Some (Brr.G.window, content_window iframe) in
     Handle.forwarding forward_to msg
   in
-  let () = Handle.setting_state msg in
+  let () = Handle.setting_state global msg in
   let () = Handle.initial_state window msg in
   let () = Handle.send_all_strokes_on_ready (content_window iframe) msg in
   let () = Handle.new_speaker_notes msg in
   let () = Handle.forward_to_parent msg in
   ()
 
-let main_frame_handling msg =
+let main_frame_handling global msg =
   let () =
     let forward_to =
       Option.map
@@ -304,18 +304,24 @@ let main_frame_handling msg =
     in
     Handle.forwarding forward_to msg
   in
-  let () = Handle.setting_state msg in
+  let () = Handle.setting_state global msg in
   let () = Handle.initial_state (content_window iframe) msg in
-  let () = Handle.opening_closing_speaker_note speaker_note_handling msg in
+  let () =
+    Handle.opening_closing_speaker_note (speaker_note_handling global) msg
+  in
   let () = Handle.forward_to_parent msg in
   ()
 
-let _ = listen Brr.G.window main_frame_handling
+let init global =
+  let _ = listen global (main_frame_handling global) in
+  let _ =
+    Brr.Ev.listen Brr.Ev.beforeunload
+      (fun _event ->
+        match !speaker_view_ref with
+        | None -> ()
+        | Some (w, _) -> Brr.Window.close w)
+      (Brr.Window.as_target global)
+  in
+  ()
 
-let _ =
-  Brr.Ev.listen Brr.Ev.beforeunload
-    (fun _event ->
-      match !speaker_view_ref with
-      | None -> ()
-      | Some (w, _) -> Brr.Window.close w)
-    (Brr.Window.as_target Brr.G.window)
+let () = init Brr.G.window
