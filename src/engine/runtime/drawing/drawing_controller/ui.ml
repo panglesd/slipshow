@@ -227,7 +227,9 @@ let play global (replaying_state : replaying_state) =
     if
       now <= max && Lwd.peek replaying_state.is_playing && not has_crossed_pause
     then
-      let _animation_frame_id = Brr.G.request_animation_frame loop in
+      let _animation_frame_id =
+        Preview.request_animation_frame (Brr.Window.to_jv global) loop
+      in
       ()
     else Lwd.set replaying_state.is_playing false
   in

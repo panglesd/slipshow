@@ -7,15 +7,11 @@ let ( !! ) = Jstr.v
 
 open Brr
 
-let request_animation_frame global f =
-  Jv.to_int
-  @@ Jv.call global "requestAnimationFrame" [| Jv.callback ~arity:1 f |]
-
 let init_ui global () =
   let ui = Lwd.observe (Panel.panel global) in
   let on_invalidate _ =
     let _ : int =
-      request_animation_frame (Window.to_jv global) @@ fun _ ->
+      Preview.request_animation_frame (Window.to_jv global) @@ fun _ ->
       let _ui = Lwd.quick_sample ui in
       (* Beware that due to this being ignored, a changed "root" element will
          not be updated by Lwd, only its reactive attributes/children *)
@@ -77,7 +73,7 @@ module Rec_in_progress = struct
     let svg = Lwd.observe svg in
     let on_invalidate _ =
       let _ : int =
-        request_animation_frame (Window.to_jv global) @@ fun _ ->
+        Preview.request_animation_frame (Window.to_jv global) @@ fun _ ->
         let _ui = Lwd.quick_sample svg in
         (* Beware that due to this being ignored, a changed "root" element will
          not be updated by Lwd, only its reactive attributes/children *)
@@ -111,7 +107,7 @@ module Garbage = struct
     let ui = Lwd.observe panel in
     let on_invalidate _ =
       let _ : int =
-        request_animation_frame (Window.to_jv global) @@ fun _ ->
+        Preview.request_animation_frame (Window.to_jv global) @@ fun _ ->
         let is_drawing = Lwd.quick_sample ui in
         let body = global |> Window.document |> Document.body in
         ignore
@@ -140,7 +136,7 @@ module Ui = struct
     let svg = Lwd.observe svg in
     let on_invalidate _ =
       let _ : int =
-        request_animation_frame (Window.to_jv global) @@ fun _ ->
+        Preview.request_animation_frame (Window.to_jv global) @@ fun _ ->
         let _ui = Lwd.quick_sample svg in
         (* Beware that due to this being ignored, a changed "root" element will
          not be updated by Lwd, only its reactive attributes/children *)
@@ -210,7 +206,7 @@ let connect global () =
   let ui = Lwd.observe panel in
   let on_invalidate _ =
     let _ : int =
-      request_animation_frame (Window.to_jv global) @@ fun _ ->
+      Preview.request_animation_frame (Window.to_jv global) @@ fun _ ->
       let _ui = Lwd.quick_sample ui in
       (* Beware that due to this being ignored, a changed "root" element will
          not be updated by Lwd, only its reactive attributes/children *)
@@ -226,7 +222,7 @@ let connect global () =
   ()
 
 let init_ui global () =
-  Preview.init_drawing_area ();
+  Preview.init_drawing_area global ();
   connect global ();
   Preview.for_events global ();
   Rec_in_progress.init global ();

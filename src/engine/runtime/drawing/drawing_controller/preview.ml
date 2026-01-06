@@ -2,6 +2,10 @@ open Lwd_infix
 open Drawing_state
 open Brr_lwd
 
+let request_animation_frame global f =
+  Jv.to_int
+  @@ Jv.call global "requestAnimationFrame" [| Jv.callback ~arity:1 f |]
+
 let ( !! ) = Jstr.v
 
 let pfo_options width =
@@ -275,12 +279,12 @@ let drawing_area =
   in
   Elwd.v ~ns:`SVG (Jstr.v "g") [ `S all_drawings; `R drawn_live_drawing ]
 
-let init_drawing_area () =
+let init_drawing_area global () =
   let svg = drawing_area in
   let svg = Lwd.observe svg in
   let on_invalidate _ =
     let _ : int =
-      Brr.G.request_animation_frame @@ fun _ ->
+      request_animation_frame (Brr.Window.to_jv global) @@ fun _ ->
       let _ui = Lwd.quick_sample svg in
       (* Beware that due to this being ignored, a changed "root" element will
          not be updated by Lwd, only its reactive attributes/children *)
@@ -369,7 +373,7 @@ let for_events global =
   let ui = Lwd.observe panel in
   let on_invalidate _ =
     let _ : int =
-      Brr.G.request_animation_frame @@ fun _ ->
+      request_animation_frame (Brr.Window.to_jv global) @@ fun _ ->
       let _ui = Lwd.quick_sample ui in
       (* Beware that due to this being ignored, a changed "root" element will
          not be updated by Lwd, only its reactive attributes/children *)
