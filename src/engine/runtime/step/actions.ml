@@ -15,7 +15,7 @@ module Execute = struct
 
   let only_if_fast f = if Fast.is_counting () then Undoable.return () else f ()
 
-  let do_ global window elem =
+  let do_ (global : Global_state.t) window elem =
     only_if_fast @@ fun () ->
     let undos_ref = ref [] in
     let undo_fallback () =
@@ -29,7 +29,9 @@ module Execute = struct
       let body = Jv.get (Brr.El.to_jv elem) "innerHTML" |> Jv.to_jstr in
       Brr.Console.(log [ body ]);
       let args = Jv.Function.[ ("slip", Fun.id) ] in
-      let f = Jv.Function.v ~body ~args in
+      let f =
+        Jv.Function.v ~global:(Brr.Window.to_jv global.window) ~body ~args
+      in
       let arg = Javascript_api.slip global window undos_ref in
       let u = f arg in
       let undo () =

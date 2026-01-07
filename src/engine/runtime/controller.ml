@@ -2,7 +2,7 @@ let keyboard_setup (global : Global_state.t) (window : Universe.Window.t) =
   let target = Brr.Window.as_target global.window in
   let callback ev =
     let key = ev |> Brr.Ev.as_type |> Brr.Ev.Keyboard.key |> Jstr.to_string in
-    let current_coord = Universe.State.get_coord () in
+    let current_coord = Universe.State.get_coord global in
     let () =
       let check_modif_key modif f =
         if ev |> Brr.Ev.as_type |> modif then () else f ()
@@ -48,32 +48,32 @@ let keyboard_setup (global : Global_state.t) (window : Universe.Window.t) =
       | "t" -> Table_of_content.toggle_visibility global.window
       | "l" ->
           let _ : unit Fut.t =
-            Step.Next.Excursion.start ();
-            Universe.Move.move_relative_pure
+            Step.Next.Excursion.start global ();
+            Universe.Move.move_relative_pure global
               ~x:(30. *. 1. /. current_coord.scale)
               window ~duration:0.
           in
           ()
       | "j" ->
           let _ : unit Fut.t =
-            Step.Next.Excursion.start ();
-            Universe.Move.move_relative_pure
+            Step.Next.Excursion.start global ();
+            Universe.Move.move_relative_pure global
               ~x:(-30. *. 1. /. current_coord.scale)
               window ~duration:0.
           in
           ()
       | "k" ->
           let _ : unit Fut.t =
-            Step.Next.Excursion.start ();
-            Universe.Move.move_relative_pure
+            Step.Next.Excursion.start global ();
+            Universe.Move.move_relative_pure global
               ~y:(30. *. 1. /. current_coord.scale)
               window ~duration:0.
           in
           ()
       | "i" ->
           let _ : unit Fut.t =
-            Step.Next.Excursion.start ();
-            Universe.Move.move_relative_pure
+            Step.Next.Excursion.start global ();
+            Universe.Move.move_relative_pure global
               ~y:(-30. *. 1. /. current_coord.scale)
               window ~duration:0.
           in
@@ -82,26 +82,27 @@ let keyboard_setup (global : Global_state.t) (window : Universe.Window.t) =
           let _ : unit Fut.t =
             let open Fut.Syntax in
             let+ _ : unit Fut.t = Step.Next.go_next global window in
-            Messaging.send_step global (Step.State.get_step ()) `Normal
+            Messaging.send_step global (Step.State.get_step global) `Normal
           in
           ()
       | "ArrowLeft" | "PageUp" | "ArrowUp" ->
           let _ : unit Fut.t =
             let open Fut.Syntax in
             let+ () = Step.Next.go_prev global window in
-            Messaging.send_step global (Step.State.get_step ()) `Normal
+            Messaging.send_step global (Step.State.get_step global) `Normal
           in
           ()
       | "z" ->
           let _ : unit Fut.t =
-            Step.Next.Excursion.start ();
-            Universe.Move.move_relative_pure ~scale:1.02 window ~duration:0.
+            Step.Next.Excursion.start global ();
+            Universe.Move.move_relative_pure global ~scale:1.02 window
+              ~duration:0.
           in
           ()
       | "Z" ->
           let _ : unit Fut.t =
-            Step.Next.Excursion.start ();
-            Universe.Move.move_relative_pure ~scale:(1. /. 1.02) window
+            Step.Next.Excursion.start global ();
+            Universe.Move.move_relative_pure global ~scale:(1. /. 1.02) window
               ~duration:0.
           in
           ()
@@ -127,7 +128,7 @@ let touch_setup (global : Global_state.t) (window : Universe.Window.t) =
         (fun _ ->
           let _ : unit Fut.t =
             let+ _ : unit Fut.t = Step.Next.go_next global window in
-            Messaging.send_step global (Step.State.get_step ()) `Normal
+            Messaging.send_step global (Step.State.get_step global) `Normal
           in
           ())
         (Brr.El.as_target next)

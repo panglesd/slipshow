@@ -24,7 +24,8 @@ let window_coord_in_universe (global : Global_state.t) x y =
   in
   let offset_x = Brr.El.bound_x main in
   (x -. offset_x, y)
-  |> Normalization.translate_coords |> Universe.Window.translate_coords
+  |> Normalization.translate_coords global
+  |> Universe.Window.translate_coords global
   (* See system.css: we add padding to be able to write on the side of the
      content. *)
   |> fun (x, y) -> (x -. 2000., y -. 2000.)
@@ -53,7 +54,7 @@ module Draw_stroke = struct
     let path = [ ((x, y), now () -. started_time) ] in
     let el =
       let path = Lwd.var path in
-      let { Universe.Coordinates.scale; _ } = Universe.State.get_coord () in
+      let { Universe.Coordinates.scale; _ } = Universe.State.get_coord global in
       let end_at = Lwd.map (Lwd.get path) ~f:end_at in
       let starts_at = Lwd.map (Lwd.get path) ~f:starts_at in
       {
@@ -123,7 +124,7 @@ module Erase = struct
           in
           let close_enough =
             let { Universe.Coordinates.scale; _ } =
-              Universe.State.get_coord ()
+              Universe.State.get_coord global
             in
             Drawing_state.Path_editing.close_enough_poly2 scale path c1
           in

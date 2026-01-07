@@ -9,14 +9,14 @@ open struct
   module Console = Brr.Console
 end
 
-let move window target ~duration =
-  let old_coordinate = State.get_coord () in
-  let+ () = move_pure window target ~duration in
-  let undo () = move_pure window old_coordinate ~duration in
+let move global window target ~duration =
+  let old_coordinate = State.get_coord global in
+  let+ () = move_pure global window target ~duration in
+  let undo () = move_pure global window old_coordinate ~duration in
   ((), undo)
 
-let move_relative ?(x = 0.) ?(y = 0.) ?(scale = 1.) window ~duration =
-  let coord = State.get_coord () in
+let move_relative global ?(x = 0.) ?(y = 0.) ?(scale = 1.) window ~duration =
+  let coord = State.get_coord global in
   let dest =
     {
       Coordinates.x = coord.x +. x;
@@ -24,60 +24,61 @@ let move_relative ?(x = 0.) ?(y = 0.) ?(scale = 1.) window ~duration =
       scale = coord.scale *. scale;
     }
   in
-  move window dest ~duration
+  move global window dest ~duration
 
-let move_relative_pure ?(x = 0.) ?(y = 0.) ?(scale = 1.) window ~duration =
-  move_relative ~x ~y ~scale window ~duration |> Undoable.discard
+let move_relative_pure global ?(x = 0.) ?(y = 0.) ?(scale = 1.) window ~duration
+    =
+  move_relative global ~x ~y ~scale window ~duration |> Undoable.discard
 
 let add_margin margin (c : Coordinates.element) =
   { c with width = c.width +. margin; height = c.height +. margin }
 
-let focus ?(duration = 1.) ?(margin = 0.) window elems =
-  let coords_e = List.map (Coord_computation.elem window) elems in
+let focus global ?(duration = 1.) ?(margin = 0.) window elems =
+  let coords_e = List.map (Coord_computation.elem global window) elems in
   let coords_e = List.map (add_margin margin) coords_e in
-  let current = State.get_coord () in
-  let coords_w = Coord_computation.Window.focus ~current coords_e in
-  move window coords_w ~duration
+  let current = State.get_coord global in
+  let coords_w = Coord_computation.Window.focus global ~current coords_e in
+  move global window coords_w ~duration
 
-let focus_pure ?margin window elem =
-  focus ?margin window elem |> Undoable.discard
+let focus_pure global ?margin window elem =
+  focus global ?margin window elem |> Undoable.discard
 
-let enter ?(duration = 1.) ?(margin = 0.) window elem =
-  let coords_e = Coord_computation.elem window elem in
+let enter global ?(duration = 1.) ?(margin = 0.) window elem =
+  let coords_e = Coord_computation.elem global window elem in
   let coords_e = add_margin margin coords_e in
-  let coords_w = Coord_computation.Window.enter coords_e in
-  move window coords_w ~duration
+  let coords_w = Coord_computation.Window.enter global coords_e in
+  move global window coords_w ~duration
 
-let up ?(duration = 1.) ?(margin = 0.) window elem =
-  let coords_e = Coord_computation.elem window elem in
+let up global ?(duration = 1.) ?(margin = 0.) window elem =
+  let coords_e = Coord_computation.elem global window elem in
   let coords_e = add_margin margin coords_e in
-  let current = State.get_coord () in
-  let coords_w = Coord_computation.Window.up ~current coords_e in
-  move window coords_w ~duration
+  let current = State.get_coord global in
+  let coords_w = Coord_computation.Window.up global ~current coords_e in
+  move global window coords_w ~duration
 
-let down ?(duration = 1.) ?(margin = 0.) window elem =
-  let coords_e = Coord_computation.elem window elem in
+let down global ?(duration = 1.) ?(margin = 0.) window elem =
+  let coords_e = Coord_computation.elem global window elem in
   let coords_e = add_margin margin coords_e in
-  let current = State.get_coord () in
-  let coords_w = Coord_computation.Window.down ~current coords_e in
-  move window coords_w ~duration
+  let current = State.get_coord global in
+  let coords_w = Coord_computation.Window.down global ~current coords_e in
+  move global window coords_w ~duration
 
-let center ?(duration = 1.) ?(margin = 0.) window elem =
-  let coords_e = Coord_computation.elem window elem in
+let center global ?(duration = 1.) ?(margin = 0.) window elem =
+  let coords_e = Coord_computation.elem global window elem in
   let coords_e = add_margin margin coords_e in
-  let current = State.get_coord () in
-  let coords_w = Coord_computation.Window.center ~current coords_e in
-  move window coords_w ~duration
+  let current = State.get_coord global in
+  let coords_w = Coord_computation.Window.center global ~current coords_e in
+  move global window coords_w ~duration
 
-let scroll ?(duration = 1.) ?(margin = 0.) window elem =
-  let coords_e = Coord_computation.elem window elem in
-  let current = State.get_coord () in
+let scroll global ?(duration = 1.) ?(margin = 0.) window elem =
+  let coords_e = Coord_computation.elem global window elem in
+  let current = State.get_coord global in
   if
     coords_e.y -. (coords_e.height /. 2.)
-    < current.y -. (Constants.height () /. 2. *. current.scale)
-  then up window elem ~margin ~duration
+    < current.y -. (global.height /. 2. *. current.scale)
+  then up global window elem ~margin ~duration
   else if
     coords_e.y +. (coords_e.height /. 2.)
-    > current.y +. (Constants.height () /. 2. *. current.scale)
-  then down window elem ~margin ~duration
+    > current.y +. (global.height /. 2. *. current.scale)
+  then down global window elem ~margin ~duration
   else Undoable.return ()

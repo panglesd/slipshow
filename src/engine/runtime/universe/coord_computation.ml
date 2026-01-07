@@ -1,7 +1,7 @@
 open Coordinates
-open Constants
+(* open Constants *)
 
-let elem window elem =
+let elem (global : Global_state.t) window elem =
   let get_coord elem =
     let x = Brr.El.bound_x elem and y = Brr.El.bound_y elem in
     let x = x -. Window.bound_x window and y = y -. Window.bound_y window in
@@ -10,7 +10,10 @@ let elem window elem =
     let y = y +. (height /. 2.) in
     let x, y, width, height =
       let scaled = Normalization.scale in
-      (scaled x, scaled y, scaled width, scaled height)
+      ( scaled global x,
+        scaled global y,
+        scaled global width,
+        scaled global height )
     in
     { x; y; width; height }
   in
@@ -27,7 +30,7 @@ let elem window elem =
   }
 
 module Window = struct
-  let focus ~current elems =
+  let focus (global : Global_state.t) ~current elems =
     let box (b1 : element) (b2 : element) =
       let left_x =
         Float.min (b1.x -. (b1.width /. 2.)) (b2.x -. (b2.width /. 2.))
@@ -52,33 +55,34 @@ module Window = struct
     | [] -> current
     | elem :: elems ->
         let box = List.fold_left box elem elems in
-        let scale1 = width () /. box.width
-        and scale2 = height () /. box.height in
+        let scale1 = global.width /. box.width
+        and scale2 = global.height /. box.height in
         let scale = Float.min scale1 scale2 in
         { scale; x = box.x; y = box.y }
 
-  let enter elem =
-    let scale = width () /. elem.width in
-    let y = elem.y -. (elem.height /. 2.) +. (height () /. 2. /. scale) in
+  let enter (global : Global_state.t) elem =
+    let scale = global.width /. elem.width in
+    let y = elem.y -. (elem.height /. 2.) +. (global.height /. 2. /. scale) in
     { scale; x = elem.x; y }
 
-  let up ?(margin = 13.5) ~current elem =
+  let up (global : Global_state.t) ?(margin = 13.5) ~current elem =
     let margin = margin /. current.scale in
     let y =
       elem.y -. (elem.height /. 2.)
-      +. (height () /. 2. /. current.scale)
+      +. (global.height /. 2. /. current.scale)
       -. margin
     in
     { current with y }
 
-  let down ?(margin = 13.5) ~current elem =
+  let down (global : Global_state.t) ?(margin = 13.5) ~current elem =
     let margin = margin /. current.scale in
     let y =
       elem.y +. (elem.height /. 2.)
-      -. (height () /. 2. /. current.scale)
+      -. (global.height /. 2. /. current.scale)
       +. margin
     in
     { current with y }
 
-  let center ~(current : window) (elem : element) = { current with y = elem.y }
+  let center (_global : Global_state.t) ~(current : window) (elem : element) =
+    { current with y = elem.y }
 end

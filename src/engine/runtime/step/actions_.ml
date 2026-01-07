@@ -470,6 +470,7 @@ module Move (X : sig
   val action_name : string
 
   val move :
+    Global_state.t ->
     ?duration:float ->
     ?margin:float ->
     Universe.Window.t ->
@@ -508,11 +509,11 @@ struct
                     ^ Jstr.to_string positional))
             | Some elem -> Ok { elem; duration; margin }))
 
-  let do_ _global window { margin; duration; elem } =
+  let do_ global window { margin; duration; elem } =
     only_if_not_fast @@ fun () ->
     let margin = Option.value ~default:0. margin in
     let duration = Option.value ~default:1. duration in
-    X.move ~margin ~duration window elem
+    X.move global ~margin ~duration window elem
 end
 
 module SetClass (X : sig
@@ -561,31 +562,32 @@ module Scroll = Move (struct
 end)
 
 module Enter = struct
-  type t = {
+  type t = Global_state.Predef.enter_t = {
     element_entered : Brr.El.t;  (** The element we entered *)
     coord_left : Universe.Coordinates.window;
         (** The coordinate we left when entering *)
     duration : float option;  (** The duration it took to enter entering *)
   }
 
-  let stack = Stack.create ()
-
   include Move (struct
     let on = "enter-at-unpause"
     let action_name = "enter"
 
-    let move ?duration ?margin window element_entered =
+    let move (global : Global_state.t) ?duration ?margin window element_entered
+        =
       let> () =
-        let coord_left = Universe.State.get_coord () in
-        Undoable.Stack.push { element_entered; coord_left; duration } stack
+        let coord_left = Universe.State.get_coord global in
+        Undoable.Stack.push
+          { element_entered; coord_left; duration }
+          global.enter
       in
-      Universe.Move.enter ?duration ?margin window element_entered
+      Universe.Move.enter global ?duration ?margin window element_entered
   end)
 end
 
-let exit global window to_elem =
+let exit (global : Global_state.t) window to_elem =
   let rec exit () =
-    let coord = Undoable.Stack.peek Enter.stack in
+    let coord = Undoable.Stack.peek global.enter in
     match coord with
     | None -> Undoable.return ()
     | Some { element_entered; _ }
@@ -593,9 +595,9 @@ let exit global window to_elem =
         Undoable.return ()
     | Some { coord_left; duration; _ } -> (
         let duration = Option.value duration ~default:1.0 in
-        let> _ = Undoable.Stack.pop_opt Enter.stack in
-        match Undoable.Stack.peek Enter.stack with
-        | None -> Universe.Move.move window coord_left ~duration
+        let> _ = Undoable.Stack.pop_opt global.enter in
+        match Undoable.Stack.peek global.enter with
+        | None -> Universe.Move.move global window coord_left ~duration
         | Some { Enter.element_entered; _ }
           when Brr.El.contains element_entered ~child:to_elem ->
             let duration =
@@ -606,7 +608,7 @@ let exit global window to_elem =
                   | Error _ -> duration
                   | Ok v -> Option.value ~default:duration v.duration)
             in
-            Universe.Move.move window coord_left ~duration
+            Universe.Move.move global window coord_left ~duration
         | Some _ -> exit ())
   in
   exit ()
@@ -673,10 +675,10 @@ module Focus = struct
 
   let do_ global window { margin; duration; elems } =
     only_if_not_fast @@ fun () ->
-    let> () = State.push global (Universe.State.get_coord ()) in
+    let> () = State.push global (Universe.State.get_coord global) in
     let margin = Option.value ~default:0. margin in
     let duration = Option.value ~default:1. duration in
-    Universe.Move.focus ~margin ~duration window elems
+    Universe.Move.focus global ~margin ~duration window elems
 
   let setup = None
   let setup_all = None
@@ -696,7 +698,7 @@ module Unfocus = struct
     let> coord = Focus.State.pop global () in
     match coord with
     | None -> Undoable.return ()
-    | Some coord -> Universe.Move.move window coord ~duration:1.0
+    | Some coord -> Universe.Move.move global window coord ~duration:1.0
 end
 
 module Reveal = SetClass (struct
@@ -745,7 +747,7 @@ module Speaker_note : S = struct
   type args = Brr.El.t
 
   let parse_args = Parse.parse_only_el
-  let sn = ref ""
+  let sn = ref "" (* TODO *)
 
   let setup elem =
     Fut.return @@ Brr.El.set_class (Jstr.v "__slipshow__speaker_note") true elem

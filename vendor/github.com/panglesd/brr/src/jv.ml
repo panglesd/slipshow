@@ -181,8 +181,11 @@ module Function = struct
     | [] -> []
     | (s, _conv) :: q -> of_string s :: args_to_list q
 
-  let v : type a . args:(a args) -> body:Jstr.t -> a =
-    fun ~args ~body ->
+  let global' = global
+
+  let v : type a . ?global:t -> args:(a args) -> body:Jstr.t -> a =
+    fun ?(global) ~args ~body ->
+    let global = Option.value global ~default:global' in
     let jstr_args = Array.of_list @@ args_to_list args @ [ of_jstr body ] in
     let res = new' (get global "Function") jstr_args in
     let rec c : type a. jv list -> a args -> a = fun args -> function

@@ -1,4 +1,4 @@
-open Constants
+(* open Constants *)
 
 open struct
   module Window = Brr.Window
@@ -14,8 +14,8 @@ type t = {
   universe : Brr.El.t;
 }
 
-let translate_coords (x0, y0) =
-  let { Coordinates.x; y; scale } = State.get_coord () in
+let translate_coords (global : Global_state.t) (x0, y0) =
+  let { Coordinates.x; y; scale } = State.get_coord global in
   let x1 = (x0 /. scale) +. x in
   let y1 = (y0 /. scale) +. y in
   (x1, y1)
@@ -31,7 +31,7 @@ let pp { scale_container; rotate_container; universe } =
 
 open Fut.Syntax
 
-let setup el =
+let setup (global : Global_state.t) el =
   let open Brr in
   let universe =
     El.div
@@ -76,7 +76,7 @@ let setup el =
   Brr.El.insert_siblings `Replace el [ rotate_container ];
   Brr.El.append_children universe [ el ];
   let+ () =
-    Browser.Css.set [ Width (width ()); Height (height ()) ] scale_container;
+    Browser.Css.set [ Width global.width; Height global.height ] scale_container;
     Fut.tick ~ms:0
   in
   { rotate_container; scale_container; universe }
@@ -94,13 +94,13 @@ let live_scale { scale_container; _ } =
   in
   compute_scale scale_container
 
-let move_pure window ({ x; y; scale } as target : Coordinates.window) ~duration
-    =
+let move_pure (global : Global_state.t) window
+    ({ x; y; scale } as target : Coordinates.window) ~duration =
   Brr.Console.(log [ "Moving with duration"; duration ]);
   let duration = if Fast.is_fast () then 0. else duration in
   let old_scale =
     let live_scale = live_scale window in
-    let { Coordinates.scale = state_scale; _ } = State.get_coord () in
+    let { Coordinates.scale = state_scale; _ } = State.get_coord global in
     let diff =
       Float.min live_scale state_scale /. Float.max live_scale state_scale
     in
@@ -127,9 +127,9 @@ let move_pure window ({ x; y; scale } as target : Coordinates.window) ~duration
         ( (TransitionTiming "", TransitionDelay 0.),
           (TransitionTiming "", TransitionDelay 0.) )
   in
-  State.set_coord target;
-  let x = -.x +. (width () /. 2.) in
-  let y = -.y +. (height () /. 2.) in
+  State.set_coord global target;
+  let x = -.x +. (global.width /. 2.) in
+  let y = -.y +. (global.height /. 2.) in
   let () =
     Browser.Css.set [ TransitionDuration duration ] window.scale_container
   and () = Browser.Css.set [ scale_function ] window.scale_container

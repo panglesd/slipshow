@@ -1,2 +1,2 @@
-val set_coord : Coordinates.window -> unit
-val get_coord : unit -> Coordinates.window
+val set_coord : Global_state.t -> Coordinates.window -> unit
+val get_coord : Global_state.t -> Coordinates.window

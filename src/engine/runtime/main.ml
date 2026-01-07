@@ -9,16 +9,26 @@ let start ~window ~width ~height ~step =
     | true -> Jv.apply do_pdf [||] |> Fut.of_promise ~ok:(fun _ -> ())
     | false -> Fut.return (Ok ())
   in
-  Constants.set_height height;
-  Constants.set_width width;
   let el =
     let root = window |> Window.document |> Document.body in
     El.find_first_by_selector ~root (Jstr.v "#slipshow-content") |> Option.get
   in
   (* let body = Brr.El.find_first_by_selector (Jstr.v "body") |> Option.get in *)
-  let global = { Global_state.window; focus = None } in
+  let global =
+    {
+      Global_state.window;
+      focus = None;
+      enter = Stack.create ();
+      current_execution = None;
+      step = 0;
+      height;
+      width;
+      coordinates = { x = width /. 2.; y = height /. 2.; scale = 1. };
+      normalization_state = { left = 0.; top = 0.; scale = 1. };
+    }
+  in
   let* () = Normalization.setup global el in
-  let* sliding_window = Universe.Window.setup el in
+  let* sliding_window = Universe.Window.setup global el in
   (* TODO: move out of here (Later: Why?) *)
   let () = Rescale.setup_rescalers global.window () in
   let () = Drawing_controller.Setup.init_ui global () in

@@ -10,9 +10,9 @@
 
 val setup : Global_state.t -> Brr.El.t -> unit Fut.t
 
-val translate_coords : float * float -> float * float
+val translate_coords : Global_state.t -> float * float -> float * float
 (** Turn coordinates given as "screen coordinates" to coordinates given as
     inside the black square *)
 
-val scale : float -> float
+val scale : Global_state.t -> float -> float
 (** Scale coordinates (? TODO: improve docstring) *)

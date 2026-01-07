@@ -9,7 +9,7 @@ val go_prev : Global_state.t -> Universe.Window.t -> unit Fut.t
 val goto : Global_state.t -> int -> Universe.Window.t -> unit Fut.t
 
 module Excursion : sig
-  val start : unit -> unit
+  val start : Global_state.t -> unit -> unit
   (** Start an "excursion". The excursion is stopped when the step is set (via
       {!goto}, {!go_next} or {!go_prev}). When an excursion is stopped, the
       window returns where it was when the excursion started.

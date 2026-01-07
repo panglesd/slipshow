@@ -1,9 +1,11 @@
 type t
 
 val pp : t -> unit
-val setup : Brr.El.t -> t Fut.t
-val translate_coords : float * float -> float * float
-val move_pure : t -> Coordinates.window -> duration:float -> unit Fut.t
+val setup : Global_state.t -> Brr.El.t -> t Fut.t
+val translate_coords : Global_state.t -> float * float -> float * float
+
+val move_pure :
+  Global_state.t -> t -> Coordinates.window -> duration:float -> unit Fut.t
 
 (** The following values are useful for computing coordinates from
     [getBoundingRect]: *)

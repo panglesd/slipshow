@@ -378,7 +378,7 @@ module Function : sig
     | [] : jv args
     | (::) : (string * ('a -> jv)) * 'b args -> ('a -> 'b) args
 
-  val v : args:('a args) -> body:Jstr.t -> 'a
+  val v : ?global:t -> args:('a args) -> body:Jstr.t -> 'a
   (** Creates a function with the given body. For instance:
 
       {[

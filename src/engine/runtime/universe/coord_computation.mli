@@ -1,11 +1,16 @@
 open Coordinates
 
-val elem : Window.t -> Brr.El.t -> element
+val elem : Global_state.t -> Window.t -> Brr.El.t -> element
 
 module Window : sig
-  val focus : current:window -> element list -> window
-  val enter : element -> window
-  val up : ?margin:float -> current:window -> element -> window
-  val center : current:window -> element -> window
-  val down : ?margin:float -> current:window -> element -> window
+  val focus : Global_state.t -> current:window -> element list -> window
+  val enter : Global_state.t -> element -> window
+
+  val up :
+    Global_state.t -> ?margin:float -> current:window -> element -> window
+
+  val center : Global_state.t -> current:window -> element -> window
+
+  val down :
+    Global_state.t -> ?margin:float -> current:window -> element -> window
 end
