@@ -5,7 +5,7 @@ Shortcuts
 Here is the list of shortcuts you can use during a presentation:
 
 - :kbd:`↓`, :kbd:`→`, :kbd:`<Space>`, :kbd:`<PageDown>` to go to the next step of the presentation,
-- :kbd:`↑`, :kbd:`←`, :kbd`<PageUp>` to go to the previous step of the presentation,
+- :kbd:`↑`, :kbd:`←`, :kbd:`<PageUp>` to go to the previous step of the presentation,
 - :kbd:`s` to open the speaker notes,
 - :kbd:`i` / :kbd:`j` / :kbd:`k` / :kbd:`l` to move the scrolling window,
 - :kbd:`z` / :kbd:`Shift` + :kbd:`Z` to zoom/unzoom,
