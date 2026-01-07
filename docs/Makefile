@@ -18,7 +18,7 @@ html: _static/main.js
 	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 _static/main.js:
-	@dune opam exec -- build --profile release doc-repl/main.js
+	@opam exec -- dune build --profile release doc-repl/main.js
 	@mkdir -p _static
 	@cp doc-repl/main.js _static/main.js
 
