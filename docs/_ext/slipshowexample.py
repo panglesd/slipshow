@@ -36,9 +36,12 @@ def visit_slipshow_example_node_html(self, node):
       <div class="editor-button">Editor</div>
       <div class="pres-button">Presentation</div>
       <div class="both-button">Both</div>
+      <div class="fullscreen-button">⛶</div>
     </div>
-    <div class="editor"></div>
-    <div class="preview"></div>
+    <div class="editor-preview-container">
+      <div class="editor"></div>
+      <div class="preview"></div>
+    </div>
     <div class="source" style="display:none">""")
     # Write raw, *escaped* text so it appears exactly as typed
     self.body.append(self.encode(node['raw_text']))

@@ -72,3 +72,29 @@
 .show-both         > .tabs > .both-button {
     background: aliceblue;
 }
+.running-example.fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  margin: 0;
+}
+.running-example.fullscreen .editor-preview-container {
+  display:flex;
+  height: 100%;
+}
+.running-example.fullscreen .editor {
+  background: #282c34;
+  height: 100%;
+  overflow: auto;
+}
+.running-example.fullscreen .entry {
+  height: 100%;
+}
+.fullscreen .entry .preview, .fullscreen .entry .preview > * {
+  height: 100%;
+}
+.running-example .fullscreen-button {
+  flex-grow: 0;
+  padding-left: 20px;
+  padding-right: 20px;
+}

@@ -74,6 +74,16 @@ let () =
               let editor_button = ffbs_unsafe ".editor-button" in
               let pres_button = ffbs_unsafe ".pres-button" in
               let both_button = ffbs_unsafe ".both-button" in
+              let fullscreen_button = ffbs_unsafe ".fullscreen-button" in
+              let () =
+                let fullscreen = ref false in
+                Ev.(listen click)
+                  (fun _ ->
+                    fullscreen := not !fullscreen;
+                    El.set_class !!"fullscreen" !fullscreen el)
+                  (El.as_target fullscreen_button)
+                |> ignore
+              in
               let new_el = ffbs_unsafe ".entry" in
               (* See also the python file _ext/slipshowexample.py *)
               let mode_to_string = function
