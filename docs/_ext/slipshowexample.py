@@ -19,17 +19,33 @@ class SlipshowExampleDirective(Directive):
         node['dimension'] = self.options.get("dimension", "")
         return [node]
 
-
 def visit_slipshow_example_node_html(self, node):
-    self.body.append('<div dimension="'+node['dimension']+'" class="running-example '+node['visible']+'">')
-
+    match node['visible']:
+        case "both":
+            mode = "show-both"
+        case "editor":
+            mode = "show-editor"
+        case "presentation":
+            mode = "show-presentation"
+        case _:
+            mode = "show-both"
+    self.body.append(f"""
+<div dimension="{node['dimension']}" class="running-example {node['visible']}">
+  <div class="entry {mode}">
+    <div class="tabs">
+      <div class="editor-button">Editor</div>
+      <div class="pres-button">Presentation</div>
+      <div class="both-button">Both</div>
+    </div>
+    <div class="editor"></div>
+    <div class="preview"></div>
+    <div class="source" style="display:none">""")
     # Write raw, *escaped* text so it appears exactly as typed
     self.body.append(self.encode(node['raw_text']))
-
+    self.body.append('</div></div></div>')
 
 def depart_slipshow_example_node_html(self, node):
-    self.body.append('</div>')
-
+    pass
 
 def setup(app):
     app.add_node(

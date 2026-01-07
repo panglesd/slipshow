@@ -55,12 +55,6 @@ let () =
           Brr.El.fold_find_by_selector
             (fun el () ->
               let open Brr in
-              let mode =
-                if El.class' !!"both" el then Show_both
-                else if El.class' !!"editor" el then Show_editor
-                else if El.class' !!"presentation" el then Show_presentation
-                else Show_both
-              in
               let dimension =
                 El.at !!"dimension" el |> Option.map Jstr.to_string |> fun x ->
                 Option.bind x (fun s ->
@@ -68,34 +62,25 @@ let () =
                     | Ok x -> Some x
                     | Error _ -> None)
               in
+              let ffbs_unsafe c =
+                El.find_first_by_selector ~root:el !!c |> Option.get
+              in
               let content =
-                Jv.get (Brr.El.to_jv el) "textContent" |> Jv.to_string
+                let source = ffbs_unsafe ".source" in
+                Jv.get (Brr.El.to_jv source) "textContent" |> Jv.to_string
               in
-              let editor_el = El.div ~at:[ At.class' !!"editor" ] [] in
-              let preview_el = El.div ~at:[ At.class' !!"preview" ] [] in
-              let txt c t = Brr.El.div ~at:[ At.class' !!c ] [ El.txt' t ] in
-              let editor_button = txt "editor-button" "Editor" in
-              let pres_button = txt "pres-button" "Presentation" in
-              let both_button = txt "both-button" "Both" in
-              let tabs_el =
-                El.div
-                  ~at:[ At.class' !!"tabs" ]
-                  [ editor_button; pres_button; both_button ]
-              in
+              let editor_el = ffbs_unsafe ".editor" in
+              let preview_el = ffbs_unsafe ".preview" in
+              let editor_button = ffbs_unsafe ".editor-button" in
+              let pres_button = ffbs_unsafe ".pres-button" in
+              let both_button = ffbs_unsafe ".both-button" in
+              let new_el = ffbs_unsafe ".entry" in
+              (* See also the python file _ext/slipshowexample.py *)
               let mode_to_string = function
                 | Show_editor -> Jstr.v "show-editor"
                 | Show_presentation -> Jstr.v "show-presentation"
                 | Show_both -> Jstr.v "show-both"
               in
-              let new_el =
-                El.div
-                  ~at:
-                    [
-                      At.class' (Jstr.append !!"entry " @@ mode_to_string mode);
-                    ]
-                  [ tabs_el; editor_el; preview_el ]
-              in
-              El.set_children el [ new_el ];
               let () =
                 let set_class v =
                   let set v b = El.set_class (mode_to_string v) b new_el in
