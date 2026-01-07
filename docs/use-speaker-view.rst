@@ -11,7 +11,7 @@ The speaker view contains several elements:
 - A timer and clock.
 - Your notes.
 
-You can open it by pressing :key:`s` after opening the presentation.
+You can open it by pressing :kbd:`s` after opening the presentation.
 
 Adding notes
 ============
@@ -56,7 +56,7 @@ The speaker view and complex workflow
 =====================================
 
 Slipshow tries to synchronize the two presentation view. For instance, if you
-press :key:`Right arrow` in one, it changes step in both. Similarly for drawing.
+press :kbd:`Right arrow` in one, it changes step in both. Similarly for drawing.
 
 However, there are things that cannot really be synchronized. For instance, if
 you write text in an input box. In this case, I encourage you to mirror your

@@ -17,7 +17,7 @@ Starting a recording
 
 In order to start recording a drawing, open the presentation you want to include the drawing in a web browser.
 
-In the upper left, amongst the drawing tools, you'll find a "Manage my recording" button. Click on it, or use the shortcut :key:`R`.
+In the upper left, amongst the drawing tools, you'll find a "Manage my recording" button. Click on it, or use the shortcut :kbd:`R`.
 
 This will open a bottom panel, where you can either :ref:`edit your previous
 recordings <editing-recording>`. This includes any recording added to the
@@ -25,9 +25,9 @@ presentation, as well as a "new one", initially named "Unnamed recording".
 
 You can change this name in the left part of the bottom panel.
 
-Once you have named your new recording, let's actually record the drawing! Either click on "Start recording" on the top left panel, or use the shortcut, :key:`R`.
+Once you have named your new recording, let's actually record the drawing! Either click on "Start recording" on the top left panel, or use the shortcut, :kbd:`R`.
 
-You can now start drawing, every stroke and erasure will be recorded. To end the drawing, click on "Stop recording", or use the shortcut, :key:`R`.
+You can now start drawing, every stroke and erasure will be recorded. To end the drawing, click on "Stop recording", or use the shortcut, :kbd:`R`.
 
 Editing a recording
 ===================
@@ -41,18 +41,18 @@ You have several tool to edit a recording, available on the top left panel, or w
 The Selection Tool
 ------------------
 
-The selection tool can be taken by clicking on it in the top left panel, or by using its shortcut, :key:`s`. It allows, unsuprisingly, to select strokes and erasures, both on the presentation view and the timeline.
+The selection tool can be taken by clicking on it in the top left panel, or by using its shortcut, :kbd:`s`. It allows, unsuprisingly, to select strokes and erasures, both on the presentation view and the timeline.
 
 On both targets, click and drag with the primary button of your mouse to "preselect" strokes. Preselected strokes will be visible. Once you release the mouse button, the preselection will be turned into a selection.
 
-In the default case, the new selection replaces the previous one. However, if you hold :key:`Shift` during the process, the preselection will be added to the selection. And if you hold :key:`Ctrl`, the elements of the preselection are added if not present in the selection, and removed otherwise.
+In the default case, the new selection replaces the previous one. However, if you hold :kbd:`Shift` during the process, the preselection will be added to the selection. And if you hold :kbd:`Ctrl`, the elements of the preselection are added if not present in the selection, and removed otherwise.
 
 In the presentation view, only drawn strokes can be selected. In the timeline, any stroke or erasure can be selected.
 
 The Move Tool
 -------------
 
-The move tool can be taken by clicking on it in the top left panel, or by using its shortcut, :key:`m`. It allows, unsuprisingly, to move strokes and erasures, in space-time.
+The move tool can be taken by clicking on it in the top left panel, or by using its shortcut, :kbd:`m`. It allows, unsuprisingly, to move strokes and erasures, in space-time.
 
 To move where spatially strokes are drawn, one has to click and drag *anywhere* on the presentation view. When the selection is non empty, only the currently selected strokes will be moved. When the selection is empty, the same action will move the entirety of the strokes.
 
@@ -64,7 +64,7 @@ In the timeline, one can also change the "track" of the moved strokes. It allows
 The Rescale Tool
 ----------------
 
-The rescale tool can be taken by clicking on it in the top left panel, or by using its shortcut, :key:`s`. It allows, unsuprisingly, to rescale strokes and erasures, in space-time.
+The rescale tool can be taken by clicking on it in the top left panel, or by using its shortcut, :kbd:`s`. It allows, unsuprisingly, to rescale strokes and erasures, in space-time.
 
 To spatially rescale strokes, one has to click and drag *anywhere* on the presentation view. When the selection is non empty, only the currently selected strokes will be rescaled. When the selection is empty, the same action will rescale the entirety of the strokes.
 
@@ -80,7 +80,7 @@ When your selection is not empty, you can change the colors and width of the str
 Extending a recording
 ---------------------
 
-You can extend your recording with new strokes and erasure by clicking "Continue recording" or pressing the shortcut :key:`R`. It will put you back in drawing mode, at the selected time. The new recording will be inserted at the time set.
+You can extend your recording with new strokes and erasure by clicking "Continue recording" or pressing the shortcut :kbd:`R`. It will put you back in drawing mode, at the selected time. The new recording will be inserted at the time set.
 
 Adding pauses
 -------------
@@ -133,7 +133,7 @@ Advices on this kind of presentation
 As I've mentioned already several time, this feature is pretty experimental, so I don't have much experience. However I already played a bit with it, so I can give a few advices on how to make presentation with it!
 
 - Be careful, in ``serve`` mode, modifying any file the presentation depends on will make the page refresh, potentially discarding your unsaved changes,
-- Save often, see point above! You can either save in a file the presentation does not depend upon, or accept the refresh and reopen the recording you are working on with :key:`R`.
+- Save often, see point above! You can either save in a file the presentation does not depend upon, or accept the refresh and reopen the recording you are working on with :kbd:`R`.
 - Use the key shortcuts! Otherwise, it'll rapidly be very cumbersome.
 - It's easy to edit afterward, so do not hesitate to stop and resume recording.
 - Strip leading time with the "Move" tool and trailing time with the "Rescale" tool, both with an empty selection.
