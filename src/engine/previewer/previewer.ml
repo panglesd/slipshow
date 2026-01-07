@@ -93,12 +93,15 @@ let set_srcdoc { index; panels; _ } slipshow =
 let preview ?slipshow_js ?frontmatter ?read_file previewer source =
   let starting_state = !(previewer.stage) in
   let slipshow =
-    Slipshow.convert ?slipshow_js ?frontmatter ?read_file ~autofocus:false
-      ~starting_state source
+    Slipshow.convert ~include_speaker_view:false ?slipshow_js ?frontmatter
+      ?read_file ~autofocus:false ~starting_state source
   in
   set_srcdoc previewer slipshow
 
 let preview_compiled previewer delayed =
   let starting_state = Some !(previewer.stage) in
-  let slipshow = Slipshow.add_starting_state delayed starting_state in
+  let slipshow =
+    Slipshow.add_starting_state ~include_speaker_view:false delayed
+      starting_state
+  in
   set_srcdoc previewer slipshow

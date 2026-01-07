@@ -48,7 +48,10 @@ let compile ~input ~output ~cli_frontmatter =
       (match input with `Stdin -> Fpath.v "./" | `File f -> Fpath.parent f)
       ()
   in
-  let html = Slipshow.convert ~frontmatter:cli_frontmatter ~read_file content in
+  let html =
+    Slipshow.convert ~include_speaker_view:true ~frontmatter:cli_frontmatter
+      ~read_file content
+  in
   let all_used_files = Fpath.Set.union !asset_files !used_files in
   match output with
   | `Stdout ->
@@ -86,7 +89,9 @@ let serve ~input ~output ~cli_frontmatter ~port =
       Slipshow.delayed ~frontmatter:cli_frontmatter ~read_file content
     in
     let all_used_files = Fpath.Set.union !asset_files !used_files in
-    let html = Slipshow.add_starting_state result None in
+    let html =
+      Slipshow.add_starting_state ~include_speaker_view:true result None
+    in
     let+ () = Io.write output html in
     ( result,
       Fpath.Set.add

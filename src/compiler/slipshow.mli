@@ -28,9 +28,14 @@ val delayed :
     let the previewer decide on the starting state. *)
 
 val add_starting_state :
-  ?autofocus:bool -> delayed -> starting_state option -> string
+  include_speaker_view:bool ->
+  ?autofocus:bool ->
+  delayed ->
+  starting_state option ->
+  string
 
 val convert :
+  include_speaker_view:bool ->
   ?autofocus:bool ->
   ?slipshow_js:Asset.t ->
   ?frontmatter:Frontmatter.resolved Frontmatter.t ->

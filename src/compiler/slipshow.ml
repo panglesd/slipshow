@@ -190,7 +190,7 @@ let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty)
   embed_in_page ~slipshow_js ~dimension ~has ~math_link ~theme ~css_links
     content
 
-let add_starting_state ?(autofocus = true) (start, end_)
+let add_starting_state ~include_speaker_view ?(autofocus = true) (start, end_)
     (starting_state : starting_state option) =
   let autofocus = if autofocus then "autofocus" else "" in
   let starting_state =
@@ -240,8 +240,9 @@ let add_starting_state ?(autofocus = true) (start, end_)
       favicon_element autofocus html
       Data_files.(read Scheduler_js)
   in
-  if true then html else orig_html
+  if include_speaker_view then html else orig_html
 
-let convert ?autofocus ?slipshow_js ?frontmatter ?starting_state ?read_file s =
+let convert ~include_speaker_view ?autofocus ?slipshow_js ?frontmatter
+    ?starting_state ?read_file s =
   let delayed = delayed ?slipshow_js ?frontmatter ?read_file s in
-  add_starting_state ?autofocus delayed starting_state
+  add_starting_state ~include_speaker_view ?autofocus delayed starting_state
