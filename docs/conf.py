@@ -84,3 +84,5 @@ commit_sha = subprocess.check_output(
 extlinks = {
     'github_src': (f'https://github.com/panglesd/slipshow/blob/{commit_sha}/%s', '%s')
 }
+
+html_extra_path = ['extra_html']

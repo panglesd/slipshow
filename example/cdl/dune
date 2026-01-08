@@ -1,6 +1,15 @@
 (rule
  (deps (glob_files *.md) %{bin:slipshow})
- (aliases runtest examples)
+ (aliases runtest)
+ (mode promote)
+ (action
+   (run %{bin:slipshow} compile cdl.md)))
+
+(rule
+ (deps (glob_files *.md) %{bin:slipshow})
+ (target cdl.html)
+ (aliases examples)
+ (mode promote)
  (action
    (run %{bin:slipshow} compile cdl.md)))
 
