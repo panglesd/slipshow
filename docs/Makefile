@@ -12,19 +12,13 @@ BUILDDIR      = _build
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-.PHONY: help Makefile _static/main.js _static/cdl.html
+.PHONY: help Makefile dependencies
 
-html: _static/main.js _static/cdl.html
+html: dependencies
 	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-_static/main.js:
-	@opam exec -- dune build --profile release doc-repl/main.js
-	@cp doc-repl/main.js _static/main.js
-
-_static/cdl.html:
-	@opam exec -- dune build --profile release @../example/cdl/examples
-	@mkdir -p extra_html
-	@cp ../example/cdl/cdl.html extra_html/cdl.html
+dependencies:
+	@bash setup.sh
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
