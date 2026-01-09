@@ -64,7 +64,7 @@ The Undo Monad
    :Slipshow version: 0.7.0: The Slipshow of Dorian Gray
    :Date: 2025
    :About: Computer Science
-   :Source: :github_src:`example/undo-monad/`
+   :Source: :github_src:`example/undo-monad-short/`
    :Rendered version: `https://choum.net/panglesd/slides/undo-monad.html`_
 
 Campus du libre
