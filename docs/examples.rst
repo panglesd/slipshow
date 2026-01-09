@@ -22,75 +22,113 @@ Note also that being "real-life" presentation, they were made under time
 constraints, sometimes using older versions with less features in the
 language. So the code is probably not the cleanest, and that is fine.
 
-See: :github_src:`example/`
+.. contents::
+   :local:
 
-Campus du libre
-===============
+Working at the edge of your documentation
+=========================================
 
-.. figure:: cdl.png
-   :scale: 40 %
-   :align: center
-   :alt: A screenshot presenting the three parts of the CDL presentation
-   :target: cdl.html
+.. container:: example-card
 
-   The "Campus du libre" presentation
+   .. figure:: edge-doc.png
+      :scale: 30 %
+      :align: center
+      :alt: A screenshot presenting the undo monad presentation end state
+      :target: https://choum.net/panglesd/slides/edge-doc.html
 
-:Type: Typed presentation
-:Author: Me!
-:Date: 2024
-:Slipshow version: Latest (presentation kept up to date)
-:Theme: Slipshow
-:Source: :github_src:`example/cdl/`
-:Rendered: `cdl.html`_
+      The "Undo Monad" presentation
 
-FunOCaml
-========
-
-.. figure:: funocaml.png
-   :scale: 30 %
-   :align: center
-   :alt: A screenshot presenting the three parts of the CDL presentation
-   :target: https://choum.net/panglesd/slides/funocaml.html
-
-   The "FunOCaml" presentation
-
-:Type: Typed presentation
-:Author: Me!
-:Slipshow version: Latest (presentation kept up to date)
-:Date: 2025
-:Theme: Slipshow and Computer Science
-:Source: :github_src:`example/funocaml/`
-:Rendered version: https://choum.net/panglesd/slides/funocaml.html
+   :Type: Mixed type and drawn presentation
+   :Author: Me!
+   :Slipshow version: 0.7.0: The Slipshow of Dorian Gray
+   :Date: 2026
+   :Source: ...
+   :Rendered version: `https://choum.net/panglesd/slides/edge-doc.html`_
+   :About: Computer Science
 
 The Undo Monad
 ==============
 
-.. figure:: undo-monad.png
-   :scale: 30 %
-   :align: center
-   :alt: A screenshot presenting the undo monad presentation end state
-   :target: https://choum.net/panglesd/slides/undo-monad.html
+.. container:: example-card
 
-   The "Undo Monad" presentation
+   .. figure:: undo-monad.png
+      :scale: 30 %
+      :align: center
+      :alt: A screenshot presenting the undo monad presentation end state
+      :target: https://choum.net/panglesd/slides/undo-monad.html
 
-:Type: Typed and drawn presentation
-:Author: Me!
-:Slipshow version: Latest (presentation kept up to date)
-:Date: 2025
-:Theme: Computer Science
-:Source: :github_src:`example/undo-monad/`
-:Rendered version: `https://choum.net/panglesd/slides/undo-monad.html`_
+      The "Undo Monad" presentation
+
+   :Type: Typed and drawn presentation
+   :Author: Me!
+   :Slipshow version: 0.7.0: The Slipshow of Dorian Gray
+   :Date: 2025
+   :About: Computer Science
+   :Source: :github_src:`example/undo-monad/`
+   :Rendered version: `https://choum.net/panglesd/slides/undo-monad.html`_
+
+Campus du libre
+===============
+
+.. container:: example-card
+
+   .. figure:: cdl.png
+      :scale: 40 %
+      :align: center
+      :alt: A screenshot presenting the three parts of the CDL presentation
+      :target: cdl.html
+
+      The "Campus du libre" presentation
+
+   :Type: Typed presentation
+   :Author: Me!
+   :Date: 2024
+   :Slipshow version: 0.7.0: The Slipshow of Dorian Gray
+   :About: Slipshow
+   :Source: :github_src:`example/cdl/`
+   :Rendered: `<cdl.html>`_
+
+FunOCaml
+========
+
+.. container:: example-card
+
+   .. figure:: funocaml.png
+      :scale: 30 %
+      :align: center
+      :alt: A screenshot presenting the three parts of the CDL presentation
+      :target: https://choum.net/panglesd/slides/funocaml.html
+
+      The "FunOCaml" presentation
+
+   :Type: Typed presentation
+   :Author: Me!
+   :Slipshow version: 0.7.0: The Slipshow of Dorian Gray
+   :Date: 2025
+   :About: Slipshow and Computer Science
+   :Source: :github_src:`example/funocaml/`
+   :Rendered version: https://choum.net/panglesd/slides/funocaml.html
 
 Infinite Computations in Algorithmic Randomness and Reverse Mathematics
 =======================================================================
 
-:Type: Typed presentation
-:Author: Me!
-:Slipshow version: Very old
-:Date: 2019
-:Source: ...
-:Rendered version: ...
-:Theme: Computer Science
+.. container:: example-card
+
+   .. figure:: thesis2.png
+      :scale: 30 %
+      :align: center
+      :alt: A screenshot showing the ICARRM presentation end state
+      :target: https://choum.net/panglesd/slides/slides-js/slides.html
+
+      The "ICARRM" presentation
+
+   :Type: Typed presentation
+   :Author: Me!
+   :Slipshow version: The oldest of all
+   :Date: 2019
+   :About: Mathematics
+   :Source: Directly look at the HTML source
+   :Rendered version: `<https://choum.net/panglesd/slides/slides-js/slides.html>`_
 
 .. note::
 
@@ -99,55 +137,83 @@ Infinite Computations in Algorithmic Randomness and Reverse Mathematics
 The computable strength of Milliken's Tree Theorem and applications
 ===================================================================
 
-:Type: Typed presentation
-:Author: Me!
-:Slipshow version: Very old
-:Date: ...
-:Source: ...
-:Rendered version: ...
-:Theme: Mathematics
+.. container:: example-card
+
+   .. figure:: milliken.png
+      :scale: 30 %
+      :align: center
+      :alt: A screenshot of the Milliken presentation
+      :target: https://choum.net/panglesd/slides/slides-js/slides.html
+
+      The "Milliken Tree Theorem" presentation
+
+   :Type: Typed presentation
+   :Author: Me!
+   :Slipshow version: Very old
+   :Date: 2021
+   :Source: Directly look at the HTML source
+   :Rendered version: `<https://choum.net/panglesd/slides/WDCM-2021-slips/wdcm-ada.html>`_
+   :About: Mathematics
 
 Busy beaver
 ===========
 
-:Type: Typed presentation with custom scripts
-:Author: Meithecatte and others
-:Slipshow version: ...
-:Date: ...
-:Source: ...
-:Rendered version: ...
-:Theme: Mathematics
+.. container:: example-card
 
-Myriam
-======
+   .. figure:: busybeaver.png
+      :scale: 30 %
+      :align: center
+      :alt: A screenshot of the Milliken presentation
+      :target: https://choum.net/panglesd/slides/slides-js/slides.html
 
-:Type: Typed presentation
-:Author: Myriam Preissmann
-:Slipshow version: ...
-:Date: ...
-:Source: ...
-:Rendered version: ...
-:Theme: Mathematics
+      The "Busy Beaver" presentation
 
-Lysxia
-======
+   :Type: Typed presentation with custom scripts
+   :Author: Tristan Stérin, Maja Kądziołka
+   :Slipshow version: 0.2
+   :Date: 2025
+   :Source: `<https://github.com/meithecatte/bbslides/>`_
+   :Rendered version: `<https://choum.net/panglesd/bbslides.html>`_
+   :About: Mathematics
 
-:Type: Typed presentation
-:Author: Li-yao Xia
-:Slipshow version: ...
-:Date: 2025
-:Source: https://gitlab.com/lysxia/prez/-/blob/main/defunctionalization-lmf.md?ref_type=heads
-:Rendered version: https://poisson.chat/aquarium/defunctionalization-lmf.html
-:Theme: Computer Science
+Defunctionalization for fun
+===========================
+
+.. container:: example-card
+
+   .. figure:: fun-notfun.png
+      :scale: 23 %
+      :align: center
+      :alt: A screenshot of the Defunctionalization presentation
+      :target: https://choum.net/panglesd/slides/slides-js/slides.html
+
+      The "Defunctionalization for fun" presentation
+
+   :Type: Typed presentation
+   :Author: Li-yao Xia
+   :Slipshow version: 0.6.0: The King's Slipshow
+   :Date: 2025
+   :Source: `<https://gitlab.com/lysxia/prez/-/blob/main/defunctionalization-lmf.md>`_
+   :Rendered version: `<https://poisson.chat/aquarium/defunctionalization-lmf.html>`_
+   :About: Computer Science
 
 Structures et équations de graphes sourcés : petite largeur arborescente et chemins disjoints
 =============================================================================================
 
-:Type: Typed presentation
-:Author: Samuel Humeau
-:Slipshow version: ...
-:Date: 2025
-:Source: No source
-:Rendered version: https://perso.ens-lyon.fr/samuel.humeau/pages/slides.html
-:Theme: Computer Science
+.. container:: example-card
 
+   .. figure:: humeau.png
+      :scale: 30 %
+      :align: center
+      :alt: A screenshot of the presentation
+      :target: https://choum.net/panglesd/slides/slides-js/slides.html
+
+      The end state of presentation
+
+   :Type: Typed presentation
+   :Author: Samuel Humeau
+   :Slipshow version: 0.6.0: The King's Slipshow
+   :Date: 2025
+   :Source: No source
+   :Rendered version: `<https://perso.ens-lyon.fr/samuel.humeau/pages/slides.html>`_
+   :About: Computer Science
