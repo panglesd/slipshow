@@ -21,6 +21,7 @@ build:
   jobs:
     pre_build:
       # Sandboxing must be disabled in Docker
+      - echo $PWD
       - opam --version
       - opam init --disable-sandboxing -y
       - opam install --deps-only -y .
