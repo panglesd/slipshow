@@ -1,23 +1,21 @@
 (rule
- (deps (glob_files *.md) %{bin:slipshow})
- (aliases runtest)
- (mode promote)
- (action
-   (run %{bin:slipshow} compile cdl.md)))
-
-(rule
- (deps (glob_files *.md) %{bin:slipshow})
+ (deps
+  (glob_files *.md)
+  (glob_files *.draw)
+  (glob_files *.mp4)
+  (glob_files *.png)
+  (glob_files *.svg)
+  (glob_files *.pdf)
+  %{bin:slipshow})
  (target cdl.html)
  (aliases examples)
  (mode promote)
  (action
-   (run %{bin:slipshow} compile cdl.md)))
+  (run %{bin:slipshow} compile cdl.md)))
 
 (rule
  (deps (universe))
- (aliases runtest examples)
+ (aliases examples)
  (action
   (progn
-   (bash "echo See \"Campus du libre\" at:")
-   (bash "echo \"   file://$PWD/cdl.html\"")
-   (bash "echo "))))
+   (bash "printf \"See Campus du libre at:\n   file://$PWD/cdl.html\""))))

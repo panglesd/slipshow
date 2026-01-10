@@ -32,7 +32,7 @@
 
 {draw=compiledraw}
 
-{down="~margin:102 cmf-addons"}
+{down="~margin:652 cmf-addons"}
 
 ![](bas_solution.draw){#bad_solution draw}
 
@@ -42,7 +42,7 @@
 
 {draw=bad_solution}
 
-{down="~margin:127 cmf-addons"}
+{down="~margin:827 cmf-addons"}
 
 {draw=bad_solution}
 
