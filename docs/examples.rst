@@ -34,7 +34,7 @@ Working at the edge of your documentation
       :scale: 30 %
       :align: center
       :alt: A screenshot presenting the undo monad presentation end state
-      :target: https://choum.net/panglesd/slides/edge-doc.html
+      :target: edge-documentation/doc.html
 
       The "Undo Monad" presentation
 
@@ -42,8 +42,8 @@ Working at the edge of your documentation
    :Author: Me!
    :Slipshow version: 0.7.0: The Slipshow of Dorian Gray
    :Date: 2026
-   :Source: ...
-   :Rendered version: `https://choum.net/panglesd/slides/edge-doc.html`_
+   :Source: :github_src:`example/edge-documentation`
+   :Rendered version: `<edge-documentation/doc.html>`_
    :About: Computer Science
 
 The Undo Monad
@@ -55,7 +55,7 @@ The Undo Monad
       :scale: 30 %
       :align: center
       :alt: A screenshot presenting the undo monad presentation end state
-      :target: https://choum.net/panglesd/slides/undo-monad.html
+      :target: undo-monad-short/pres.html
 
       The "Undo Monad" presentation
 
@@ -65,7 +65,7 @@ The Undo Monad
    :Date: 2025
    :About: Computer Science
    :Source: :github_src:`example/undo-monad-short/`
-   :Rendered version: `https://choum.net/panglesd/slides/undo-monad.html`_
+   :Rendered version: `<undo-monad-short/pres.html>`_
 
 Campus du libre
 ===============
@@ -76,7 +76,7 @@ Campus du libre
       :scale: 40 %
       :align: center
       :alt: A screenshot presenting the three parts of the CDL presentation
-      :target: cdl.html
+      :target: campus-du-libre/cdl.html
 
       The "Campus du libre" presentation
 
@@ -85,8 +85,8 @@ Campus du libre
    :Date: 2024
    :Slipshow version: 0.7.0: The Slipshow of Dorian Gray
    :About: Slipshow
-   :Source: :github_src:`example/cdl/`
-   :Rendered: `<cdl.html>`_
+   :Source: :github_src:`example/campus-du-libre/`
+   :Rendered: `<campus-du-libre/cdl.html>`_
 
 FunOCaml
 ========
@@ -97,7 +97,7 @@ FunOCaml
       :scale: 30 %
       :align: center
       :alt: A screenshot presenting the three parts of the CDL presentation
-      :target: https://choum.net/panglesd/slides/funocaml.html
+      :target: funocaml-2025/main.html
 
       The "FunOCaml" presentation
 
@@ -106,8 +106,8 @@ FunOCaml
    :Slipshow version: 0.7.0: The Slipshow of Dorian Gray
    :Date: 2025
    :About: Slipshow and Computer Science
-   :Source: :github_src:`example/funocaml/`
-   :Rendered version: https://choum.net/panglesd/slides/funocaml.html
+   :Source: :github_src:`example/funocaml-2025/`
+   :Rendered version: `<funocaml-2025/main.html>`_
 
 Infinite Computations in Algorithmic Randomness and Reverse Mathematics
 =======================================================================

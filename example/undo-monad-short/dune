@@ -1,0 +1,23 @@
+(rule
+ (deps (glob_files *.md) (glob_files *.draw) (glob_files *.mp4) (glob_files *.png) (glob_files *.svg) (glob_files *.pdf) %{bin:slipshow})
+ (aliases runtest)
+ (mode promote)
+ (action
+   (run %{bin:slipshow} compile pres.md)))
+
+(rule
+ (deps (glob_files *.md) (glob_files *.draw) (glob_files *.mp4) (glob_files *.png) (glob_files *.svg) (glob_files *.pdf) %{bin:slipshow})
+ (target pres.html)
+ (aliases examples)
+ (mode promote)
+ (action
+   (run %{bin:slipshow} compile pres.md)))
+
+(rule
+ (deps (universe))
+ (aliases runtest examples)
+ (action
+  (progn
+   (bash "echo See \"Undo Monad short\" at:")
+   (bash "echo \"   file://$PWD/pres.html\"")
+   (bash "echo "))))
