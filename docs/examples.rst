@@ -155,8 +155,8 @@ The computable strength of Milliken's Tree Theorem and applications
    :Rendered version: `<https://choum.net/panglesd/slides/WDCM-2021-slips/wdcm-ada.html>`_
    :About: Mathematics
 
-Busy beaver
-===========
+Formal verification of the 5th Busy Beaver value
+================================================
 
 .. container:: example-card
 
@@ -164,7 +164,7 @@ Busy beaver
       :scale: 30 %
       :align: center
       :alt: A screenshot of the Milliken presentation
-      :target: https://choum.net/panglesd/slides/slides-js/slides.html
+      :target: https://choum.net/panglesd/bbslides.html
 
       The "Busy Beaver" presentation
 
