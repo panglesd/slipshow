@@ -9,7 +9,7 @@ let has =
   in
   let inline _ acc = function
     | Inline.Ext_math_span _ -> Folder.ret { acc with math = true }
-    | Ast.Pdf _ -> Folder.ret { acc with pdf = true }
+    | Ast.S_inline (Pdf _) -> Folder.ret { acc with pdf = true }
     | _ -> Folder.default
   in
   Ast.Folder.make ~block ~inline ()

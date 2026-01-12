@@ -98,7 +98,7 @@ module Stage1 = struct
       match Mapper.map_block m b with None -> Block.empty | Some b -> b
     in
     let attrs = Mapper.map_attrs m attrs in
-    Mapper.ret (Ast.Div ((b, (attrs, meta2)), meta))
+    Mapper.ret (Ast.div ((b, (attrs, meta2)), meta))
 
   let handle_slip_scripts_creation m ((cb, (attrs, meta)), meta2) =
     match Block.Code_block.info_string cb with
@@ -107,7 +107,7 @@ module Stage1 = struct
         match Block.Code_block.language_of_info_string info with
         | Some ("slip-script", _) ->
             Mapper.ret
-              (Ast.SlipScript ((cb, (Mapper.map_attrs m attrs, meta)), meta2))
+              (Ast.slipscript ((cb, (Mapper.map_attrs m attrs, meta)), meta2))
         | _ -> Mapper.default)
 
   let handle_includes read_file current_path m (attrs, meta) =
@@ -134,7 +134,7 @@ module Stage1 = struct
             | Some mapped_blocks ->
                 let attrs = Mapper.map_attrs m attrs in
                 Mapper.ret
-                  (Ast.Included ((mapped_blocks, (attrs, meta)), Meta.none))))
+                  (Ast.included ((mapped_blocks, (attrs, meta)), Meta.none))))
     | _ -> Mapper.default
 
   let get_link_definition (defs : Cmarkit.Label.defs) l =
@@ -182,11 +182,11 @@ module Stage1 = struct
     let attrs = Mapper.map_attrs m attrs in
     let origin = ((l, (attrs, meta2)), meta) in
     match kind with
-    | `Image -> Mapper.ret @@ Ast.Image { Ast.uri; origin; id = Id.gen () }
-    | `Video -> Mapper.ret @@ Ast.Video { Ast.uri; origin; id = Id.gen () }
-    | `Audio -> Mapper.ret @@ Ast.Audio { Ast.uri; origin; id = Id.gen () }
-    | `Draw -> Mapper.ret @@ Ast.Hand_drawn { Ast.uri; origin; id = Id.gen () }
-    | `Pdf -> Mapper.ret @@ Ast.Pdf { Ast.uri; origin; id = Id.gen () }
+    | `Image -> Mapper.ret @@ Ast.image { Ast.uri; origin; id = Id.gen () }
+    | `Video -> Mapper.ret @@ Ast.video { Ast.uri; origin; id = Id.gen () }
+    | `Audio -> Mapper.ret @@ Ast.audio { Ast.uri; origin; id = Id.gen () }
+    | `Draw -> Mapper.ret @@ Ast.hand_drawn { Ast.uri; origin; id = Id.gen () }
+    | `Pdf -> Mapper.ret @@ Ast.pdf { Ast.uri; origin; id = Id.gen () }
 
   let handle_dash_separated_blocks m (blocks, meta) =
     let div ((attrs, am), blocks) =
@@ -198,7 +198,7 @@ module Stage1 = struct
       in
       match blocks with
       | None -> None
-      | Some blocks -> Some (Ast.Div ((blocks, (attrs, am)), Meta.none))
+      | Some blocks -> Some (Ast.div ((blocks, (attrs, am)), Meta.none))
     in
     let find_biggest blocks =
       let find_biggest biggest block =
@@ -340,26 +340,28 @@ module Stage2 = struct
     | Block.Ext_standalone_attributes _ -> None
     | Block.Ext_attribute_definition _ -> None
     (* Slipshow nodes *)
-    | Ast.Included ((inc, attrs), meta) ->
-        Some (Ast.Included ((inc, no_attrs), meta), attrs)
-    | Ast.Div ((div, attrs), meta) ->
-        Some (Ast.Div ((div, no_attrs), meta), attrs)
-    | Ast.Slide ((slide, attrs), meta) ->
-        Logs.err (fun m ->
-            m
-              "Slides should not appear here, this is an error on slipshow's \
-               side. Please report!");
-        Some (Ast.Slide ((slide, no_attrs), meta), attrs)
-    | Ast.Slip ((slip, attrs), meta) ->
-        Logs.err (fun m ->
-            m
-              "Slips should not appear here, this is an error on slipshow's \
-               side. Please report!");
-        Some (Ast.Slip ((slip, no_attrs), meta), attrs)
-    | Ast.SlipScript ((slscr, attrs), meta) ->
-        Some (Ast.SlipScript ((slscr, no_attrs), meta), attrs)
-    | Ast.Carousel ((c, attrs), meta) ->
-        Some (Ast.Carousel ((c, no_attrs), meta), attrs)
+    | Ast.S_block b -> (
+        match b with
+        | Included ((inc, attrs), meta) ->
+            Some (Ast.included ((inc, no_attrs), meta), attrs)
+        | Div ((div, attrs), meta) ->
+            Some (Ast.div ((div, no_attrs), meta), attrs)
+        | Slide ((slide, attrs), meta) ->
+            Logs.err (fun m ->
+                m
+                  "Slides should not appear here, this is an error on \
+                   slipshow's side. Please report!");
+            Some (Ast.slide ((slide, no_attrs), meta), attrs)
+        | Slip ((slip, attrs), meta) ->
+            Logs.err (fun m ->
+                m
+                  "Slips should not appear here, this is an error on \
+                   slipshow's side. Please report!");
+            Some (Ast.slip ((slip, no_attrs), meta), attrs)
+        | SlipScript ((slscr, attrs), meta) ->
+            Some (Ast.slipscript ((slscr, no_attrs), meta), attrs)
+        | Carousel ((c, attrs), meta) ->
+            Some (Ast.carousel ((c, no_attrs), meta), attrs))
     | _ -> None
 
   (** Get the attributes of a cmarkit node, returns them and the element
@@ -396,32 +398,35 @@ module Stage2 = struct
     | Block.Ext_standalone_attributes _ -> b
     | Block.Ext_attribute_definition _ -> b
     (* Slipshow nodes *)
-    | Ast.Included ((inc, (attrs, meta_a)), meta) ->
-        Ast.Included ((inc, (merge attrs, meta_a)), meta)
-    | Ast.Div ((div, (attrs, meta_a)), meta) ->
-        Ast.Div ((div, (merge attrs, meta_a)), meta)
-    | Ast.Slide ((slide, (attrs, meta_a)), meta) ->
-        Logs.err (fun m ->
-            m
-              "Slides should not appear here, this is an error on slipshow's \
-               side. Please report!");
-        Ast.Slide ((slide, (merge attrs, meta_a)), meta)
-    | Ast.Slip ((slip, (attrs, meta_a)), meta) ->
-        Logs.err (fun m ->
-            m
-              "Slips should not appear here, this is an error on slipshow's \
-               side. Please report!");
-        Ast.Slip ((slip, (merge attrs, meta_a)), meta)
-    | Ast.SlipScript ((slscr, (attrs, meta_a)), meta) ->
-        Ast.SlipScript ((slscr, (merge attrs, meta_a)), meta)
-    | Ast.Carousel ((c, (attrs, meta_a)), meta) ->
-        Ast.Carousel ((c, (merge attrs, meta_a)), meta)
+    | Ast.S_block b -> (
+        match b with
+        | Included ((inc, (attrs, meta_a)), meta) ->
+            Ast.included ((inc, (merge attrs, meta_a)), meta)
+        | Div ((div, (attrs, meta_a)), meta) ->
+            Ast.div ((div, (merge attrs, meta_a)), meta)
+        | Slide ((slide, (attrs, meta_a)), meta) ->
+            Logs.err (fun m ->
+                m
+                  "Slides should not appear here, this is an error on \
+                   slipshow's side. Please report!");
+            Ast.slide ((slide, (merge attrs, meta_a)), meta)
+        | Slip ((slip, (attrs, meta_a)), meta) ->
+            Logs.err (fun m ->
+                m
+                  "Slips should not appear here, this is an error on \
+                   slipshow's side. Please report!");
+            Ast.slip ((slip, (merge attrs, meta_a)), meta)
+        | SlipScript ((slscr, (attrs, meta_a)), meta) ->
+            Ast.slipscript ((slscr, (merge attrs, meta_a)), meta)
+        | Carousel ((c, (attrs, meta_a)), meta) ->
+            Ast.carousel ((c, (merge attrs, meta_a)), meta))
     | _ -> b
 
   let execute =
     let block m c =
       match c with
-      | Ast.Div ((Block.Blocks (bs, m_bs), (attrs, m_attrs)), m_div) ->
+      | Ast.S_block (Div ((Block.Blocks (bs, m_bs), (attrs, m_attrs)), m_div))
+        ->
           let kvs = Attributes.kv_attributes attrs in
           let rem_prefix ~prefix s =
             if String.starts_with ~prefix s then
@@ -456,7 +461,7 @@ module Stage2 = struct
             | None -> Block.Blocks ([], m_bs)
             | Some l -> l
           in
-          Mapper.ret (Ast.Div ((bs, (attrs, m_attrs)), m_div))
+          Mapper.ret (Ast.div ((bs, (attrs, m_attrs)), m_div))
       | _ -> Mapper.default
     in
     Ast.Mapper.make ~block ()
@@ -467,9 +472,9 @@ end
 module Stage3 = struct
   let rec extract_title block =
     match block with
-    | Ast.Div ((h, attrs), meta) ->
+    | Ast.S_block (Div ((h, attrs), meta)) ->
         let block, title = extract_title h in
-        (Ast.Div ((block, attrs), meta), title)
+        (Ast.div ((block, attrs), meta), title)
     | Block.Heading ((h, attrs), _) when Block.Heading.level h = 1 ->
         (Block.Blocks ([], Meta.none), Some (Block.Heading.inline h, attrs))
     | Block.Blocks (Block.Heading ((h, attrs), _) :: blocks, meta)
@@ -514,15 +519,15 @@ module Stage3 = struct
           let block, attrs = map ~may_enter:true block (attrs, meta2) in
           let block, title = extract_title block in
           Mapper.ret
-          @@ Ast.Slide (({ content = block; title }, attrs), Meta.none)
+          @@ Ast.slide (({ content = block; title }, attrs), Meta.none)
       | Some (block, (attrs, meta2)) when Attributes.mem "slip" attrs ->
           let block, (attrs, meta) = map ~may_enter:true block (attrs, meta2) in
-          Mapper.ret @@ Ast.Slip ((block, (attrs, meta)), Meta.none)
+          Mapper.ret @@ Ast.slip ((block, (attrs, meta)), Meta.none)
       | Some (block, (attrs, meta2)) when Attributes.mem "carousel" attrs ->
           let block, attrs = map ~may_enter:false block (attrs, meta2) in
           let children =
             match block with
-            | Ast.Div ((Block.Blocks (l, _), _), _) -> l
+            | Ast.S_block (Div ((Block.Blocks (l, _), _), _)) -> l
             | _ -> [ block ]
           in
           let children =
@@ -530,7 +535,7 @@ module Stage3 = struct
               (function Block.Blank_line _ -> None | x -> Some x)
               children
           in
-          Mapper.ret @@ Ast.Carousel ((children, attrs), Meta.none)
+          Mapper.ret @@ Ast.carousel ((children, attrs), Meta.none)
       | Some _ -> Mapper.default
     in
     Ast.Mapper.make ~block ()
@@ -547,12 +552,17 @@ module Stage4 = struct
   let execute =
     let block _f _acc _c = Folder.default in
     let inline _f acc = function
-      | Ast.Video { uri = Path p; id; _ }
-      | Ast.Pdf { uri = Path p; id; _ }
-      | Ast.Audio { uri = Path p; id; _ }
-      | Ast.Hand_drawn { uri = Path p; id; _ }
-      | Ast.Image { uri = Path p; id; _ } ->
-          Folder.ret @@ fpath_map_add_to_list p id acc
+      | Ast.S_inline i -> (
+          match i with
+          | Video media
+          | Pdf media
+          | Audio media
+          | Hand_drawn media
+          | Image media -> (
+              match media with
+              | { uri = Path p; id; _ } ->
+                  Folder.ret @@ fpath_map_add_to_list p id acc
+              | _ -> Folder.default))
       | _ -> Folder.default
     in
     Ast.Folder.make ~block ~inline ()
@@ -622,8 +632,8 @@ let to_cmarkit =
     | Ast.SlipScript _ -> Mapper.delete
     | Ast.Carousel ((l, _), meta) ->
         `Map (Mapper.map_block m (Block.Blocks (l, meta)))
-    | _ -> Mapper.default
   in
+  let block m = function Ast.S_block b -> block m b | _ -> Mapper.default in
   let inline m = function
     | Ast.Video { origin; _ }
     | Ast.Audio { origin; _ }
@@ -631,6 +641,9 @@ let to_cmarkit =
     | Ast.Hand_drawn { origin; _ }
     | Ast.Image { origin; _ } ->
         `Map (Mapper.map_inline m (Inline.Image origin))
+  in
+  let inline m = function
+    | Ast.S_inline i -> inline m i
     | _ -> Mapper.default
   in
   let attrs = function

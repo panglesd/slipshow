@@ -95,11 +95,14 @@ let to_string = function
   | Cmarkit.Block.Ext_standalone_attributes _ -> "Ext_standalone_attributes"
   | Cmarkit.Block.Ext_attribute_definition _ -> "Ext_attribute_definition"
   (* Slipshow nodes *)
-  | Ast.Included _ -> "Included"
-  | Ast.Div _ -> "Div"
-  | Ast.Slide _ -> "Slide"
-  | Ast.Slip _ -> "Slip"
-  | Ast.SlipScript _ -> "SlipScript"
+  | Ast.S_block b -> (
+      match b with
+      | Ast.Included _ -> "Included"
+      | Ast.Div _ -> "Div"
+      | Ast.Slide _ -> "Slide"
+      | Ast.Slip _ -> "Slip"
+      | Ast.SlipScript _ -> "Slipscript"
+      | Ast.Carousel _ -> "Carousel")
   | _ -> "other"
 
 let () = ignore to_string
@@ -191,14 +194,6 @@ let custom_html_renderer (files : Ast.Files.map) =
   let default = renderer ~safe:false () in
   let custom_html =
     let inline c = function
-      | Inline.Text ((t, (attrs, _)), _) ->
-          (* Put text inside spans to be able to apply styles on them *)
-          Context.string c "<span";
-          add_attrs c attrs;
-          Context.byte c '>';
-          html_escaped_string c t;
-          Context.string c "</span>";
-          true
       | Ast.Pdf { uri; id; origin = (l, (attrs, _)), _ } ->
           pdf c ~uri ~id ~files l attrs;
           true
@@ -217,6 +212,17 @@ let custom_html_renderer (files : Ast.Files.map) =
           in
           pure_embed c uri files attrs;
           true
+    in
+    let inline c = function
+      | Inline.Text ((t, (attrs, _)), _) ->
+          (* Put text inside spans to be able to apply styles on them *)
+          Context.string c "<span";
+          add_attrs c attrs;
+          Context.byte c '>';
+          html_escaped_string c t;
+          Context.string c "</span>";
+          true
+      | Ast.S_inline i -> inline c i
       | _ -> false (* let the default HTML renderer handle that *)
     in
     let block c = function
@@ -304,8 +310,8 @@ let custom_html_renderer (files : Ast.Files.map) =
           RenderAttrs.in_block c "script" attrs (fun () ->
               RenderAttrs.block_lines c (Block.Code_block.code cb));
           true
-      | _ -> false
     in
+    let block c = function Ast.S_block b -> block c b | _ -> false in
     make ~inline ~block ()
   in
   compose default custom_html
