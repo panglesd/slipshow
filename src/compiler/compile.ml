@@ -80,9 +80,10 @@ let classify_image p =
   | ".aac" | ".flac" | ".mp3" | ".oga" | ".wav" -> `Audio
   | ".pdf" -> `Pdf
   | ".apng" | ".avif" | ".gif" | ".jpeg" | ".jpg" | ".jpe" | ".jig" | ".jfif"
-  | ".png" | ".svg" | ".webp" ->
+  | ".png" | ".webp" ->
       (* https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types#image_types *)
       `Image
+  | ".svg" -> `Svg
   | ".draw" -> `Draw
   | _ -> `Image
 
@@ -182,11 +183,12 @@ module Stage1 = struct
     let attrs = Mapper.map_attrs m attrs in
     let origin = ((l, (attrs, meta2)), meta) in
     match kind with
-    | `Image -> Mapper.ret @@ Ast.image { Ast.uri; origin; id = Id.gen () }
-    | `Video -> Mapper.ret @@ Ast.video { Ast.uri; origin; id = Id.gen () }
-    | `Audio -> Mapper.ret @@ Ast.audio { Ast.uri; origin; id = Id.gen () }
-    | `Draw -> Mapper.ret @@ Ast.hand_drawn { Ast.uri; origin; id = Id.gen () }
-    | `Pdf -> Mapper.ret @@ Ast.pdf { Ast.uri; origin; id = Id.gen () }
+    | `Image -> Mapper.ret @@ Ast.image { uri; origin; id = Id.gen () }
+    | `Svg -> Mapper.ret @@ Ast.svg { uri; origin; id = Id.gen () }
+    | `Video -> Mapper.ret @@ Ast.video { uri; origin; id = Id.gen () }
+    | `Audio -> Mapper.ret @@ Ast.audio { uri; origin; id = Id.gen () }
+    | `Draw -> Mapper.ret @@ Ast.hand_drawn { uri; origin; id = Id.gen () }
+    | `Pdf -> Mapper.ret @@ Ast.pdf { uri; origin; id = Id.gen () }
 
   let handle_dash_separated_blocks m (blocks, meta) =
     let div ((attrs, am), blocks) =
@@ -558,6 +560,7 @@ module Stage4 = struct
           | Pdf media
           | Audio media
           | Hand_drawn media
+          | Svg media
           | Image media -> (
               match media with
               | { uri = Path p; id; _ } ->
@@ -622,24 +625,23 @@ let to_cmarkit =
           | Some b -> b
         in
         Mapper.ret (Block.Blocks (title @ [ b ], meta))
-    | Ast.Div ((bq, _), meta)
-    | Ast.Slip ((bq, _), meta)
-    | Ast.Included ((bq, _), meta) ->
+    | Div ((bq, _), meta) | Slip ((bq, _), meta) | Included ((bq, _), meta) ->
         let b =
           match Mapper.map_block m bq with None -> Block.empty | Some b -> b
         in
         Mapper.ret (Block.Blocks ([ b ], meta))
-    | Ast.SlipScript _ -> Mapper.delete
-    | Ast.Carousel ((l, _), meta) ->
+    | SlipScript _ -> Mapper.delete
+    | Carousel ((l, _), meta) ->
         `Map (Mapper.map_block m (Block.Blocks (l, meta)))
   in
   let block m = function Ast.S_block b -> block m b | _ -> Mapper.default in
   let inline m = function
     | Ast.Video { origin; _ }
-    | Ast.Audio { origin; _ }
-    | Ast.Pdf { origin; _ }
-    | Ast.Hand_drawn { origin; _ }
-    | Ast.Image { origin; _ } ->
+    | Audio { origin; _ }
+    | Pdf { origin; _ }
+    | Hand_drawn { origin; _ }
+    | Svg { origin; _ }
+    | Image { origin; _ } ->
         `Map (Mapper.map_inline m (Inline.Image origin))
   in
   let inline m = function

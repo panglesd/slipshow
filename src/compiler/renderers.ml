@@ -203,6 +203,10 @@ let custom_html_renderer (files : Ast.Files.map) =
       | Ast.Image { uri; id; origin = (l, (attrs, _)), _ } ->
           media ~media_name:"img" c ~uri ~id ~files l attrs;
           true
+      | Ast.Svg { uri; id; origin = (l, (attrs, _)), _ } ->
+          media ~media_name:"img" c ~uri ~id ~files l attrs;
+          (* TODO: make it inline *)
+          true
       | Ast.Audio { uri; id; origin = (l, (attrs, _)), _ } ->
           media ~media_name:"audio" c ~uri ~id ~files l attrs;
           true

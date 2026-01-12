@@ -29,6 +29,7 @@ type media = {
 
 type s_inline =
   | Image of media
+  | Svg of media
   | Video of media
   | Audio of media
   | Pdf of media
@@ -37,6 +38,7 @@ type s_inline =
 type Inline.t += S_inline of s_inline
 
 let image i = S_inline (Image i)
+let svg i = S_inline (Svg i)
 let video i = S_inline (Video i)
 let audio i = S_inline (Audio i)
 let pdf i = S_inline (Pdf i)
@@ -80,6 +82,7 @@ module Folder = struct
     | Audio { origin = (l, _), _; uri = _; id = _ }
     | Video { origin = (l, _), _; uri = _; id = _ }
     | Hand_drawn { origin = (l, _), _; uri = _; id = _ }
+    | Svg { origin = (l, _), _; uri = _; id = _ }
     | Image { origin = (l, _), _; uri = _; id = _ } ->
         Folder.fold_inline f acc (Cmarkit.Inline.Link.text l)
 
@@ -157,6 +160,9 @@ module Mapper = struct
     | Image media ->
         let media = map_media m media in
         Some (Image media)
+    | Svg media ->
+        let media = map_media m media in
+        Some (Svg media)
     | Hand_drawn media ->
         let media = map_media m media in
         Some (Hand_drawn media)
