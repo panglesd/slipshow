@@ -65,6 +65,8 @@ Images, videos, audios, PDFs, drawings
 
 Images and the like are included with the following syntax: ``![alternative text](link to file)``.
 
+SVGs must have the ``svg`` attribute (TODO: do) or extension to be included as an svg and not as an image (to be able to add classes and actions to it).
+
 Videos must either have the ``video`` attribute (TODO: do) or the file must have one of the following extension:   ``.3gp``, ``.mpg``, ``.mpeg``, ``.mp4``, ``.m4v``, ``.m4p``, ``.ogv``, ``.ogg``,  ``.mov``, ``.webm``.
 
 Audios must either have the ``audio`` attribute (TODO: do) or the file must have one of the following extension:   ``.aac``, ``.flac``, ``.mp3``, ``.oga``, ``.wav``.

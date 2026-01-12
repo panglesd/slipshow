@@ -38,7 +38,6 @@ extensions = [
     'sphinx.ext.autosectionlabel',
     'sphinx.ext.extlinks',
     'slipshowexample',
-    'sphinx.ext.todo',
     'sphinx_tabs.tabs'
 ]
 

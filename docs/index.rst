@@ -64,7 +64,7 @@ We advise you to start by reading the :ref:`tutorial`. You can also peek at the 
    record-and-replay
    split-in-multiple-files
    use-speaker-view
-   embed-things
+   figures-bit-by-bit
    do-a-slide-based-presentation
 
 .. toctree::
