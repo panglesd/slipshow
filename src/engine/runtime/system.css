@@ -92,3 +92,11 @@ body.slipshow-editing-mode{
     opacity: 0.0;
   }
 }
+
+.slipshow-svg-container {
+  display: inline-block;
+}
+.slipshow-svg-container svg {
+  width: 100%;
+  height: auto;
+}

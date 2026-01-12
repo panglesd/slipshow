@@ -111,17 +111,22 @@ module C = Cmarkit_renderer.Context
 
 let src uri files =
   match uri with
-  | Asset.Uri.Link l -> l
+  | Asset.Uri.Link l -> `Link l
   | Path p -> (
       match Fpath.Map.find_opt p (files : Ast.Files.map) with
-      | None -> Fpath.to_string p
+      | None -> `Link (Fpath.to_string p)
       | Some { content; mode = `Base64; _ } ->
           let mime_type = Magic_mime.lookup (Fpath.filename p) in
-          let base64 = Base64.encode_string content in
-          Format.sprintf "data:%s;base64,%s" mime_type base64)
+          `Source (content, mime_type))
+
+let src_to_link = function
+  | `Link l -> l
+  | `Source (content, mime_type) ->
+      let base64 = Base64.encode_string content in
+      Format.sprintf "data:%s;base64,%s" mime_type base64
 
 (* Inspired from Cmarkit's image rendering *)
-let pdf c ~uri ~id:_ ~files i attrs =
+let pdf c ~uri ~files i attrs =
   let open Cmarkit in
   match uri with
   | Asset.Uri.Link l ->
@@ -154,7 +159,7 @@ let pdf c ~uri ~id:_ ~files i attrs =
       C.string c "</span>"
 
 (* Inspired from Cmarkit's image rendering *)
-let media ?(close = " >") ~media_name c ~uri ~id:_ ~files i attrs =
+let media ?(close = " >") ~media_name c ~uri ~files i attrs =
   let open Cmarkit in
   let src = src uri files |> src_to_link in
   let plain_text i =
@@ -171,6 +176,18 @@ let media ?(close = " >") ~media_name c ~uri ~id:_ ~files i attrs =
   if false then C.string c " controls";
   RenderAttrs.add_attrs c attrs;
   C.string c close
+
+(* Inspired from Cmarkit's image rendering *)
+let svg c ~uri ~files i attrs =
+  let open Cmarkit in
+  let src = src uri files in
+  match src with
+  | `Link _ -> media ~media_name:"svg" c ~uri ~files i attrs
+  | `Source (content, _mime_type) ->
+      let attrs =
+        Attributes.add_class attrs ("slipshow-svg-container", Meta.none)
+      in
+      RenderAttrs.with_attrs_span c attrs @@ fun () -> C.string c content
 
 let pure_embed c uri files attrs =
   let open Cmarkit_renderer in
@@ -194,21 +211,21 @@ let custom_html_renderer (files : Ast.Files.map) =
   let default = renderer ~safe:false () in
   let custom_html =
     let inline c = function
-      | Ast.Pdf { uri; id; origin = (l, (attrs, _)), _ } ->
-          pdf c ~uri ~id ~files l attrs;
+      | Ast.Pdf { uri; id = _; origin = (l, (attrs, _)), _ } ->
+          pdf c ~uri ~files l attrs;
           true
-      | Ast.Video { uri; id; origin = (l, (attrs, _)), _ } ->
-          media ~media_name:"video" c ~uri ~id ~files l attrs;
+      | Ast.Video { uri; id = _; origin = (l, (attrs, _)), _ } ->
+          media ~media_name:"video" c ~uri ~files l attrs;
           true
-      | Ast.Image { uri; id; origin = (l, (attrs, _)), _ } ->
-          media ~media_name:"img" c ~uri ~id ~files l attrs;
+      | Ast.Image { uri; id = _; origin = (l, (attrs, _)), _ } ->
+          media ~media_name:"img" c ~uri ~files l attrs;
           true
-      | Ast.Svg { uri; id; origin = (l, (attrs, _)), _ } ->
-          media ~media_name:"img" c ~uri ~id ~files l attrs;
+      | Ast.Svg { uri; id = _; origin = (l, (attrs, _)), _ } ->
+          svg c ~uri ~files l attrs;
           (* TODO: make it inline *)
           true
-      | Ast.Audio { uri; id; origin = (l, (attrs, _)), _ } ->
-          media ~media_name:"audio" c ~uri ~id ~files l attrs;
+      | Ast.Audio { uri; id = _; origin = (l, (attrs, _)), _ } ->
+          media ~media_name:"audio" c ~uri ~files l attrs;
           true
       | Ast.Hand_drawn { uri; id = _; origin = (_, (attrs, _)), _ } ->
           let attrs =
