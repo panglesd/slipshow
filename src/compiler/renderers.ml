@@ -156,7 +156,7 @@ let pdf c ~uri ~id:_ ~files i attrs =
 (* Inspired from Cmarkit's image rendering *)
 let media ?(close = " >") ~media_name c ~uri ~id:_ ~files i attrs =
   let open Cmarkit in
-  let src = src uri files in
+  let src = src uri files |> src_to_link in
   let plain_text i =
     let lines = Inline.to_plain_text ~break_on_soft:false i in
     String.concat "\n" (List.map (String.concat "") lines)

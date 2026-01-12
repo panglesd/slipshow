@@ -37,9 +37,11 @@ extensions = [
     'sphinx_rtd_theme',
     'sphinx.ext.autosectionlabel',
     'sphinx.ext.extlinks',
-    'slipshowexample'
+    'slipshowexample',
+    'sphinx.ext.todo',
+    'sphinx_tabs.tabs'
 ]
-extensions.append('sphinx.ext.todo')
+
 todo_include_todos=True
 
 # Add any paths that contain templates here, relative to this directory.
