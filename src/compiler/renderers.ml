@@ -222,7 +222,6 @@ let custom_html_renderer (files : Ast.Files.map) =
           true
       | Ast.Svg { uri; id = _; origin = (l, (attrs, _)), _ } ->
           svg c ~uri ~files l attrs;
-          (* TODO: make it inline *)
           true
       | Ast.Audio { uri; id = _; origin = (l, (attrs, _)), _ } ->
           media ~media_name:"audio" c ~uri ~files l attrs;

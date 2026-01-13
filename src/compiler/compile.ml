@@ -549,9 +549,8 @@ end
 
 module Stage4 = struct
   let fpath_map_add_to_list x data m =
-    let open Fpath.Map in
     let add = function None -> Some [ data ] | Some l -> Some (data :: l) in
-    update x add m
+    Fpath.Map.update x add m
 
   let execute =
     let block _f _acc _c = Folder.default in
