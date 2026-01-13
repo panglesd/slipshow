@@ -51,7 +51,7 @@ By hand
 
 If you open an SVG image with a text editor, it looks like this:
 
-.. code-block:: svg
+.. code-block:: xml
 
     <?xml version="1.0" encoding="UTF-8" standalone="no"?>
     <svg viewBox="0 0 10 10">
@@ -61,7 +61,7 @@ If you open an SVG image with a text editor, it looks like this:
 
 This allows you to add classes and IDs:
 
-.. code-block:: svg
+.. code-block:: xml
 
     <?xml version="1.0" encoding="UTF-8" standalone="no"?>
     <svg viewBox="0 0 10 10">

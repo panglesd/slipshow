@@ -213,7 +213,7 @@ Incompatibilities with Markdown
 Quotes
 ======
 
-Since in Slipshow, the ``>`` character is used for :ref:`grouping <grouping>`, quotes are not made like in Commonmark. Instead, they can be added as :ref:`special elements <blockquote-in-special-elements>`.
+Since in Slipshow, the ``>`` character is used for :doc:`grouping <grouping>`, quotes are not made like in Commonmark. Instead, they can be added as :ref:`special elements <blockquote-in-special-elements>`.
 
 .. slipshow-example::
 
@@ -226,4 +226,4 @@ Since in Slipshow, the ``>`` character is used for :ref:`grouping <grouping>`, q
 Setext Headings
 ===============
 
-Markdown's `Setext headings <https://spec.commonmark.org/0.31.2/#setext-headings>`_ cannot be used in Slipshow. Use :ref:`ATX headings <headings>`.
+Markdown's `Setext headings <https://spec.commonmark.org/0.31.2/#setext-headings>`_ cannot be used in Slipshow. Use :ref:`ATX headings <slipshow-syntax:headings>`.

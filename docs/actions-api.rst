@@ -151,7 +151,7 @@ Drawing actions
 ---------------
 
 ``draw``
-  Replay the drawing. Possible to specify multiple ids. See :ref:`Record and replay drawings`.
+  Replay the drawing. Possible to specify multiple ids. See the how-to :ref:`record-and-replay:Record and replay drawings` and the tutorial :doc:`record-tutorial`.
 
 ``clear``
   Clear the drawing. Possible to specify multiple ids.

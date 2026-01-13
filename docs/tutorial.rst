@@ -31,7 +31,7 @@ any OS with a web browser (virtually all of them!).
 
 In this tutorial, you will create your first slipshow presentation. It is
 entirely self-contained, and introduces both the usage, the syntax and the
-different features of slipshow. The :ref:`Anatomy of a Slipshow presentation` is
+different features of slipshow. The :ref:`anatomy:Anatomy of a Slipshow presentation` is
 a good complementary read, both can be read in any order.
 
 ..
@@ -146,7 +146,7 @@ Fortunately, Markdown is very simple! And is already widely used. So instead of 
 
 The `Learn Markdown in 60 seconds <https://commonmark.org/help/>`_ is from CommonMark, the organization that proposed a well-defined specification for Markdown. They also have a 10-minute tutorial to learn but also train!
 
-The slipshow syntax is defined in :ref:`Syntax reference`. In this tutorial, let's only focus on the syntax used in the example.
+The slipshow markup is defined in :doc:`slipshow-syntax`. In this tutorial, let's only focus on the syntax used in the example.
 
 Pauses
 """"""

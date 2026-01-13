@@ -140,7 +140,8 @@ timeline is a slider you can move around, and see the preview update
 accordingly. You can also press the :kbd:`Play` button to see how the replay
 looks!
 
-If you replay from the beginning, you will probably remark a few things
+If you replay from the beginning, you will probably remark a few things:
+
 - The recording has recorded some inactive time before (respectively after) the
   first (respectively last) stroke.
 - The replay is probably feeling very slow (unless you are very good!).
@@ -152,7 +153,7 @@ the strokes in the timeline by click-and-dragging left from anywhere on the
 timeline!
 
 This solves the problem of initial delay before the first stroke is
-replayed. Now, let's select the "Rescale tool" with :kdb:`r`. Similarly,
+replayed. Now, let's select the "Rescale tool" with :kbd:`r`. Similarly,
 click-and-drag left from anywhere on the timeline to rescale the selected
 strokes, making them replay faster. Test the new speed by replaying the preview
 until you are satisfied.

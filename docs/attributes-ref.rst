@@ -7,7 +7,7 @@ The Attribute Syntax
 
 Attributes are metadata that you can add to an existing element. They will always be enclosed in the ``{`` and ``}`` characters, and are very heavily inspired by `pandoc's attributes <https://pandoc.org/MANUAL.html#extension-attributes>`_.
 
-Here is a typical metadata:
+Here is a typical set of attributes:
 
 .. code-block:: markdown
 
@@ -17,17 +17,17 @@ It consists of a list of space-separated attributes.
 
 Attributes can be one of the following:
 
-- An identifier. This is represented with a ``#`` followed by the name of the id. For instance: ``#example`` represents the identifier ``example``.
+- **An identifier**. This is represented with a ``#`` followed by the name of the id. For instance: ``#example`` represents the identifier ``example``.
 
-- A class. This is represented with a ``.`` followed by the name of the class. For instance: ``.definition`` represents the class ``definition``.
+- **A class**. This is represented with a ``.`` followed by the name of the class. For instance: ``.definition`` represents the class ``definition``.
 
-- A key-value attribute. This is represented by ``key=value``. For instance ``title=Hello`` is such an attribute. Simple and double quotes can be to use spaces in the value.
+- **A key-value attribute**. This is represented by ``key=value``. For instance ``title=Hello`` is such an attribute. Simple and double quotes can be used to have spaces in the value.
 
-- A flag attribute. It is an attribute that does not have a value, only a name. For instance, ``focus`` is such an attribute.
+- **A flag attribute**. It is an attribute that does not have a value, only a name. For instance, ``focus`` is such an attribute.
 
 A single identifier must be given to an element, and it must be unique amongst other elements. Multiple classes can be given to an element, and classes can be shared between elements.
 
-Attributes can be any of those defined in action, special elements, on any valid HTML attribute.
+Key-value and flag attributes can be any of those defined in :doc:`actions-api` or :doc:`special-elements`, or any valid HTML attribute.
 
 Attaching metadata
 ==================
@@ -35,15 +35,15 @@ Attaching metadata
 Standalone attributes
 ---------------------
 
-An attribute that is separated from the rest of the content by blank lines is a *standalone attribute*. They are attached to en "empty" element. They are useful in the context of slipshow, to give an instruction (such as a pause) in the flow of the presentation, without being tied to a specific element!
+A set of attributes that is separated from the rest of the content by blank lines is *standalone*. The attributes are attached to en "empty" element. It is useful in the context of slipshow, to give an instruction (such as a pause) in the flow of the presentation, without being tied to a specific element!
 
 .. code-block:: markdown
 
-		Some text
+   Some text
 
-		{pause}
+   {pause}
 
-		Some other text
+   Some other text
 
 
 Blocks and inlines
@@ -55,7 +55,7 @@ Inlines are the elements that are inside the flow of the text. For instance, bol
 
 Blocks, on the contrary, make the structure of the text. For instance paragraphs, titles, bullet lists, are blocks, as well as columns in a multi-column layout. Most of the time, they take the full horizontal space.
 
-This distinction is relevant here, as the way to add attributes will be specific for each of the two cases. And sometime, it will be important to distinguish the two cases:
+This distinction is relevant here, as the way to add attributes will be specific for each of the two cases. And sometimes, it will be important to distinguish the two cases:
 
 Here is an example where you set the background of an element to red, through an attribute. In the first case, you attach it to the paragraph. In the second case, you attach it to the text of the paragraph.
 
@@ -74,23 +74,23 @@ This confusion happens often with :ref:`metadata for images <image-metadata>`.
 Block metadata
 --------------
 
-To add attributes to a block, put the curly braces on an (otherwise empty) line just above. That is, for a heading:
+To attach attributes to a block, put the curly braces on an (otherwise empty) line just above. That is, for a heading:
 
 .. code-block:: markdown
 
-		{the attributes}
-		# The title
+   {the attributes}
+   # The title
 
-See the :ref:`next-section <pres-flow>` for the content on the attributes. If you want to add an attribute to a group of several blocks, indent all of them using ``>``. For instance
+If you want to attach an attribute to a group of several blocks, use :doc:`grouping <grouping>`. For instance, indent all of them using ``>``:
 
 .. code-block:: markdown
 
-		{the attributes}
-		> Some text
-		>
-		> ```
-		> A code block
-		> ```
+   {the attributes}
+   > Some text
+   >
+   > ```
+   > A code block
+   > ```
 
 An attribute cannot have line breaks. However, if two lines of attributes are in a row, they are merged.
 
@@ -103,17 +103,17 @@ Attributes are attached to the inline element they touch. For instance:
 
 .. code-block:: markdown
 
-		Some text and{A} some {B}other text and {C} finally an end.
+   Some text and{A} some {B}other text and {C} finally an end.
 
-		Works with **bold**{D} and other `inline elements`{E}
+   Works with **bold**{D} and other `inline elements`{E}
 
-In this example, ``A`` is attached to ``and``, ``B`` to ``other``,  ``C`` is a standalone attribute, ``D`` is attached to ``**bold**`` and ``E`` to ```inline elements```.
+In this example, ``A`` is attached to ``and``, ``B`` to ``other``,  ``C`` is a standalone inline attribute, ``D`` is attached to ``**bold**`` and ``E`` to ```inline elements```.
 
 If you want to attach an attribute to a group of inlines, you can use the ``[...]{attributes}`` syntax. For instance:
 
 .. code-block:: markdown
 
-		Works with [groups of **bold** and other `inline elements`]{F}
+   Works with [groups of **bold** and other `inline elements`]{F}
 
 However, sometimes putting long attributes in the middle of the text can hurt readability. Often, the attributes are the same and are repeated, which makes it even worse. Slipshow eases this by using referenced attributes. Similarly to footnotes and referenced links, they text only contains a reference, and the attribute itself is defined elsewhere:
 

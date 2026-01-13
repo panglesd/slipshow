@@ -8,13 +8,13 @@ There are different ways to have access to the slipshow compiler:
 
 **The best option** for people comfortable with it is to use the command line interface. It is distributed through various mediums:
 
-- You can download :ref:`precompiled binaries<Precompiled binaries>` for Mac and Linux, and Windows through WSL
+- You can download :ref:`precompiled binaries <quick-start:Precompiled binaries>` for Mac and Linux, and Windows through WSL
 - Slipshow is packaged in the ``opam`` package manager, if you have it all it takes is ``opam install slipshow``.
-- You can always :ref:`compile from source<compiling from source>`!
+- You can always :ref:`compile from source <quick-start:compiling from source>`!
 
-For **online-only use**, consider the :ref:`online sliphub editor<the sliphub online editor>`. It is great for trying the tool but is currently limited, for instance for anything that requires multiple files.
+For **online-only use**, consider the :ref:`online sliphub editor<quick-start:the sliphub online editor>`. It is great for trying the tool but is currently limited, for instance for anything that requires multiple files.
 
-There are other options that currently are lagging behind in terms of version, but that I might revisit some day: the :ref:`VSCode extension<The VS Code plugin>` and the slipshow editor.
+There are other options that currently are lagging behind in terms of version, but that I might revisit some day: the :ref:`VSCode extension<quick-start:The VS Code plugin>` and the slipshow editor.
 
 Precompiled binaries
 ====================

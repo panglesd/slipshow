@@ -18,7 +18,7 @@ Slipshow compiles files written in an extension of markdown, to a standalone htm
 
 This documentation can be read linearly. It alternates between more in-depth explanations, hands-on tutorial and technical references. If you know what you are looking for, each section tries to be focus and reasonably self-contained, so you can directly go to what you are looking for.
 
-We advise you to start by reading the :ref:`tutorial`. You can also peek at the :ref:`examples`.
+We advise you to start by reading the tutorials, starting with the :doc:`first <tutorial>`. You can also peek at the :doc:`examples`.
 
 
 ..

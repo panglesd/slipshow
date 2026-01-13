@@ -2,11 +2,13 @@
 Grouping
 ========
 
-The attribute (TODO: link) section explained how to give attributes to a single block. However, it did not explain how to give attributes to multiple blocks at the same time.
+The :ref:`attributes section <attributes-ref:attributes>` explained how to give attributes to a single block. However, it did not explain how to give attributes to multiple blocks at the same time.
 
 This is because you cannot, what you can do is create a new block, that consists of a "group" of block. There are two main mechanisms for that.
 
 The first one is "indentation-based". The second one is pretty new, as far as I know, as it is a separator rather than a delimitor with a beginning and an end.
+
+.. _using-less-to-group:
 
 Using ``>``
 -----------
