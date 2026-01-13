@@ -1,12 +1,7 @@
 Typing your presentation
 ========================
 
-This tutorial assumes you have access to the slipshow compiler. We encourage you not just to read, but to actually create the presentation this tutorial is describing. It is even better if you modify it to make it your own!
-
-For that, you can use the `sliphub editor <https://sliphub.choum.net/new>`_: it
-requires no installation on your computer, nor to create any account! However,
-if you actually want to use slipshow for the future, we strongly recommend
-completing the :ref:`getting-started` part of the document.
+Thanks to the editors and preview embedded in this page, this tutorial does not *require* you to have access to the slipshow compiler on your machine. However, we encourage you to have it, to not just read, but actually create the presentation this tutorial is describing. It is even better if you modify it to make it your own!
 
 .. contents:: Outline of the tutorial
    :local:
@@ -50,7 +45,9 @@ the more advanced workflows!
 To start, copy the following lines in a file, named for instance
 ``prime-numbers.md``:
 
-.. code-block:: markdown
+.. slipshow-example::
+   :visible: both
+   :dimension: 4:3
 
    # Prime numbers
 
@@ -75,61 +72,30 @@ The file that we just created is the *source* for a minimal prime-numbers. In
 order to get the presentation itself, we need to *compile* it, using the
 ``slipshow`` tool.
 
-This step depends on the way you have access to the slipshow compiler.
+In a terminal, issue the following command:
 
-.. tabs::
+.. code-block:: shell
 
-   .. tab:: Using the binary
+   $ slipshow serve prime-numbers.md
+   Visit http://localhost:8080 to view your presentation, with auto-reloading on file changes.
 
-      In a terminal, issue the following command:
+This ``serve`` command creates a file with the same name as the input
+name, but a different extension: ``prime-numbers.html``. The ``.md`` file
+is the one you'll use to modify the presentation, and the one you'll share
+with another author of the presentation. The ``.html`` file is the one
+you'll use to view or do your presentation, or to share with someone
+interested in viewing the presentation.
 
-      .. code-block:: shell
-
-		$ slipshow serve prime-numbers.md
-		Visit http://localhost:8080 to view your presentation, with auto-reloading on file changes.
-
-      This ``serve`` command creates a file with the same name as the input
-      name, but a different extension: ``prime-numbers.html``. The ``.md`` file
-      is the one you'll use to modify the presentation, and the one you'll share
-      with another author of the presentation. The ``.html`` file is the one
-      you'll use to view or do your presentation, or to share with someone
-      interested in viewing the presentation.
-
-      Moreover, the ``flag`` command will propagate any saved changes in the
-      input file, and "live-reload" the presentation served at the address
-      ``http://localhost:8080``. It is very useful when writing your
-      presentation. When you only want to generate the html file once, use
-      ``compile`` instead.
-
-   .. tab:: In VS Code
-
-      In the command palette (:kbd:`Ctrl` + :kbd:`Shift` + :kbd:`P`), write ``Compile slipshow``. This will create a file in the same directory, with the same name but the ``.html`` extension.
-
-      To view this file, opening it in a browser is sufficient! However, the file won't automatically update to new modifications on your source file. For this, open the command palette again and this time, write ``Preview slipshow``. This will open a preview of the presentation, which will automatically update to the newest changes!
-
-      In conclusion: use the preview command when writing your presentation, and use the compile one when your presentation is finished!
-
-   .. tab:: In the slipshow editor
-
-            On the right, you have a preview of your presentation: very useful when writing it! However, when your presentation is ready, you will want to turn it into a file that you can open in the browser.
-
-            Just click on the ``Compile`` button on the top bar. This will ask you the compiled file name. Then, whenever your source file and compiled file become out of sync, the color of the compiled file will turn red!
-
-   .. tab:: In sliphub
-
-            Your file is saved on the server live!
-
-            On the right, you have a preview of your presentation: very useful when writing it! However, when your presentation is ready, you might want to turn it into a local file that you can open in the browser.
-
-            To locally save a compiled source file, click on the ``Download
-            presentation`` button.
-
-            You can also use the "presentation link" which allow to share a "readonly" version of your presentation!
+Moreover, the ``flag`` command will propagate any saved changes in the
+input file, and "live-reload" the presentation served at the address
+``http://localhost:8080``. It is very useful when writing your
+presentation. When you only want to generate the html file once, use
+``compile`` instead.
 
 On the slipshow preview, you should see the familiar format for
 slide-based presentations (4:3 rectangle with black borders). Click on it to be
-sure you have the window focused, and hit the right arrow key (or equivalently,
-the down-arrow key) to step through the presentation! Right now, it has only two
+sure you have the window focused, and hit the :kbd:`Right arrow` key (or equivalently,
+the :kbd:`Down arrow` key) to step through the presentation! Right now, it has only two
 steps: the initial one, and the last one.
 
 Try to make a modification in ``prime-numbers.md`` and save the file. The
@@ -138,11 +104,16 @@ preview should refresh automatically with the new content!
 Also, type :kbd:`s`: this opens the speaker view, with a timer, notes you might
 want to add, and a synced view of the presentation.
 
+.. note::
+
+   The speaker view is disabled in the slipshow previews embedded in this
+   tutorial.
+
 The syntax used
 ~~~~~~~~~~~~~~~~
 
-Slipshow uses an extension of Markdown for its main syntax. So, knowing Markdown is a prerequisite to using slipshow.
-Fortunately, Markdown is very simple! And is already widely used. So instead of explaining the markdown syntax in this tutorial, I'll link to some great resources to learn Markdown, and only explain the additions:
+Slipshow uses an extension of Markdown for its main syntax. So, having already seen Markdown is a good start when using slipshow.
+Fortunately, Markdown is very simple! And is already widely used. I'll link to some great resources to learn Markdown, but you can also follow along this tutorial first and come back to them later.
 
 The `Learn Markdown in 60 seconds <https://commonmark.org/help/>`_ is from CommonMark, the organization that proposed a well-defined specification for Markdown. They also have a 10-minute tutorial to learn but also train!
 
@@ -217,6 +188,50 @@ proof, feel free to improve it 🙂.)
 
 .. code-block:: markdown
 
+   {pause}
+
+   {.theorem}
+   There are infinitely many prime numbers.
+
+   {pause .proof}
+   > Suppose there are finitely many prime numbers.
+   >
+   > Let's write $p_0, p_1, \dots, p_{n-1}$ a list of all prime numbers. We define:
+   >
+   > ```math
+   > P = \prod_{i=0}^{n-1}p_i, \quad
+   > N = P + 1.
+   > ```
+   >
+   > {pause}
+   >
+   > Let $p$ be a prime divisor of $N$. We claim that:
+   >
+   > ```math
+   > \forall i, p\neq p_i
+   > ```
+   > {pause}
+   > Indeed,
+   >
+   > ```math
+   > p \text{ divides } N \land\ p\text{ divides } P \implies p\text{ divides } 1
+   > ```
+   >
+   > So $p$ is a prime that is not part of the $p_i$, a contradiction. {pause}
+   > **Therefore, there must exists infinitely many prime numbers.**
+
+.. slipshow-example::
+   :visible: presentation
+   :dimension: 4:3
+
+   # Prime numbers
+
+   What is a prime number?
+
+   {pause}
+
+   {.definition}
+   A **prime number** is an integer divisible by exactly two integers: 1, and itself.
 
    {pause}
 
@@ -390,6 +405,51 @@ pause associated to the proof. The modified source should look like this:
    > Suppose there are finitely many prime numbers.
    > [...]
 
+.. slipshow-example::
+   :visible: presentation
+   :dimension: 4:3
+
+   # Prime numbers
+
+   What is a prime number?
+
+   {pause}
+
+   {.definition #prime-def}
+   A **prime number** is an integer divisible by exactly two integers: 1, and itself.
+
+   {pause}
+
+   {.theorem}
+   There are infinitely many prime numbers.
+
+   {pause .proof up=prime-def}
+   > Suppose there are finitely many prime numbers.
+   >
+   > Let's write $p_0, p_1, \dots, p_{n-1}$ a list of all prime numbers. We define:
+   >
+   > ```math
+   > P = \prod_{i=0}^{n-1}p_i, \quad
+   > N = P + 1.
+   > ```
+   >
+   > {pause}
+   >
+   > Let $p$ be a prime divisor of $N$. We claim that:
+   >
+   > ```math
+   > \forall i, p\neq p_i
+   > ```
+   > {pause}
+   > Indeed,
+   >
+   > ```math
+   > p \text{ divides } N \land\ p\text{ divides } P \implies p\text{ divides } 1
+   > ```
+   >
+   > So $p$ is a prime that is not part of the $p_i$, a contradiction. {pause}
+   > **Therefore, there must exists infinitely many prime numbers.**
+
 Try the rendered version of this new source: by getting rid of anything not
 useful, there is enough space in the screen to display the definition, theorem
 statement and whole proof!
@@ -417,6 +477,11 @@ easy to follow for the viewer.
    visible, in order to let them finish their note-taking and catch up with the
    presentation.
 
+.. note::
+
+   Don't go too fast! The more textual content you have, the slowest you should
+   go. Think about how long it would have taken you to write all this on a
+   whiteboard.
 
 Making your presentation live
 -----------------------------
@@ -430,7 +495,7 @@ Using the speaker view
 
 You can open the speaker view with the :kbd:`s` keybinding. The speaker view has a
 timer and a clock, speaker notes (filled using the ``speaker-note`` action) and
-a mirror of your main presentation.
+a mirror of your main presentation. It's disabled in the previews in this tutorial.
 
 Writing on the screen
 ~~~~~~~~~~~~~~~~~~~~~
@@ -473,6 +538,10 @@ What next?
 
 Congratulation, you've finished the tutorial for typed presentations! There are however many more things to learn:
 
-- We only briefly touched on the syntax. When you face new situations, you'll quickly need a more thorough presentation of Slipshow's syntax.
-- While predefined actions such as ``pause`` or ``up`` can bring you quite far, if you want more custom animations it is nice to know how to write your own scripts.
-- Typed presentations are great but some part of your presentation might benefit from being handwritten.
+- Typed presentations are great but some part of your presentation might benefit
+  from being handwritten. The :doc:`record-tutorial` is explaining how to do that.
+- We only briefly touched on the syntax. When you face new situations, you'll
+  quickly need a more thorough presentation of Slipshow's syntax.
+- While predefined actions such as ``pause`` or ``up`` can bring you quite far,
+  if you want more custom animations it is nice to know how to write your own
+  scripts.

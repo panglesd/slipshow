@@ -50,6 +50,9 @@
   border: 1px solid purple;
   background: lightgray;
   cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .entry .editor, .entry .preview {

@@ -96,6 +96,10 @@ to be ``font-size:150px``.
 .. slipshow-example::
    :dimension: 4:3
 
+   ---
+   dimension: 4:3
+   ---
+
    # 🕰️{style="font-size:150px"}
 
 That is better! Everything inside ``style`` is interpreted as CSS properties and
