@@ -135,6 +135,8 @@ finish the recording.
 
    <video src="../_static/video.mp4" controls autoplay></video>
 
+TODO: make the video
+
 You should now see the timeline of your strokes over time. On top of the
 timeline is a slider you can move around, and see the preview update
 accordingly. You can also press the :kbd:`Play` button to see how the replay
