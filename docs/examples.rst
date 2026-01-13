@@ -109,6 +109,27 @@ FunOCaml
    :Source: :github_src:`example/funocaml-2025/`
    :Rendered version: `<funocaml-2025/main.html>`_
 
+When magic meets multicore
+==========================
+
+.. container:: example-card
+
+   .. figure:: domains-bump.png
+      :scale: 30 %
+      :align: center
+      :alt: A screenshot presenting the Magic Multicore presentation
+      :target: https://pitag-ha.github.io/lambda-world-2025-merlin-domains
+
+      The "When magic meets multicore" presentation
+
+   :Type: Typed presentation
+   :Author: Sonja Heinze and Carine Morel
+   :Slipshow version: 0.6.0: The King's Slipshow
+   :Date: 2025
+   :About: Computer Science
+   :Source: `<https://github.com/pitag-ha/lambda-world-2025-merlin-domains/tree/main>`_
+   :Rendered version: `<https://pitag-ha.github.io/lambda-world-2025-merlin-domains>`_
+
 Infinite Computations in Algorithmic Randomness and Reverse Mathematics
 =======================================================================
 
