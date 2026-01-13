@@ -4,3 +4,9 @@ yarn-error.log
 
 # dune
 _build
+
+example/**/*.html
+docs/extra_html
+docs/doc-repl/main.js
+docs/_ext/__pycache__/
+docs/_static/main.js
