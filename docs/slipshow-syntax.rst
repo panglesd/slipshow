@@ -60,20 +60,26 @@ Links
 Links are included with the following syntax: ``[text](link target)``.
 
 
-Images, videos, audios, PDFs, drawings
---------------------------------------
+Images, SVGs, videos, audios, PDFs, drawings
+--------------------------------------------
 
-Images and the like are included with the following syntax: ``![alternative text](link to file)``.
+Images and several other objects are included with the following syntax:
+``![alternative text](path/to/file.extension)``.
 
-SVGs must have the ``svg`` attribute (TODO: do) or extension to be included as an svg and not as an image (to be able to add classes and actions to it).
+The kind of media that is included (image, video, ...) is by default inferred from the extension. For instance, a file ending with ``.png`` is considered an image, while a file ending in ``.mp3`` is considered an audio file.
+However, it is also possible to bypass this detection by using an :doc:`attribute <attributes-ref>`. For instance: ``![](file.mp4){audio}`` or ``![](file.svg){image}``.
 
-Videos must either have the ``video`` attribute (TODO: do) or the file must have one of the following extension:   ``.3gp``, ``.mpg``, ``.mpeg``, ``.mp4``, ``.m4v``, ``.m4p``, ``.ogv``, ``.ogg``,  ``.mov``, ``.webm``.
+Here are the possibilities:
 
-Audios must either have the ``audio`` attribute (TODO: do) or the file must have one of the following extension:   ``.aac``, ``.flac``, ``.mp3``, ``.oga``, ``.wav``.
+SVGs are recognized either from the ``svg`` attribute, or the ``.svg`` extension.
 
-Pdfs must either have the ``pdf`` attribute (TODO: do) or the file must have the ``.pdf`` extension.
+Videos are recognized either from the ``video`` attribute, or an extension from: ``.3gp``, ``.mpg``, ``.mpeg``, ``.mp4``, ``.m4v``, ``.m4p``, ``.ogv``, ``.ogg``,  ``.mov``, ``.webm``.
 
-Drawings must have the file have the ``.draw`` extension.
+Audios are recognized either from the ``audio`` attribute, or an extension from: ``.aac``, ``.flac``, ``.mp3``, ``.oga``, ``.wav``.
+
+Pdfs are recognized from the ``.pdf`` extension.
+
+Drawings are recognized from the ``.draw`` extension.
 
 .. slipshow-example::
 

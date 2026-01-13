@@ -148,10 +148,11 @@ module Stage1 = struct
     if has_attrs "video" then `Video
     else if has_attrs "audio" then `Audio
     else if has_attrs "image" then `Image
-    else if has_attrs "pdf" then `Pdf
     else if has_attrs "svg" then `Svg
-    else if has_attrs "draw" then `Draw
-    else
+    (* else if has_attrs "pdf" then `Pdf *)
+    (* else if has_attrs "draw" then `Draw
+       We don't want to pollute too much the namespace.  *)
+      else
       let d, _meta = Cmarkit.Link_definition.dest ld in
       match Fpath.of_string d with
       | Error _ -> `Image

@@ -87,7 +87,10 @@ function, it will be inferred by Slipshow through the API calls.
 
 And here we have it: An easy to write script that allows Slipshow to cancel its
 side-effects! The API available via ``slip`` allows more than just setting
-style, you can find the full API in the reference (TODO: link). And in case you want to do something that is not in the API, you have an escape hatch! The function ``slip.onUndo`` allows you to register your own undo function. For instance:
+style, you can find the full API in :doc:`the reference <actions-api>`. And in
+case you want to do something that is not in the API, you have an escape hatch!
+The function ``slip.onUndo`` allows you to register your own undo function. For
+instance:
 
 .. slipshow-example::
 

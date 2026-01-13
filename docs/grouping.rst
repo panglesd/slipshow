@@ -77,7 +77,7 @@ It is possible to mix-and-match both approaches.
 
 The problem with ``>`` is that the identation level can quickly become out of control, making the result not very readable, and a pain to edit. The problem with ``---`` is that you cannot easily see where it ends.
 
-Sometimes, mixing the approach helps improve the experience of deeply nested blocks. If it does not, consider splitting in files (TODO: link).
+Sometimes, mixing the approach helps improve the experience of deeply nested blocks. If it does not, consider :doc:`splitting in files <split-in-multiple-files>`.
 
 Let's see an example. Which one is more readable for you?
 
