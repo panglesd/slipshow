@@ -106,6 +106,16 @@ let finish_recording
                 Lwd.update (( +. ) additional_time) erased.at;
                 Lwd.set stro.erased (Some erased)))
     replaying_state.recording.strokes;
+  (* We update pauses times that were after the beginning of the recording *)
+  Lwd_table.iter
+    (fun pause ->
+      Lwd.may_update
+        (fun at ->
+          if at >= Lwd.peek replaying_state.time then
+            Some (at +. additional_time)
+          else None)
+        pause.p_at)
+    replaying_state.recording.pauses;
   Lwd.update (( +. ) additional_time) replaying_state.recording.total_time;
   Lwd.update (( +. ) additional_time) replaying_state.time;
   let max_track =
