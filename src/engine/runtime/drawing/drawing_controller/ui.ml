@@ -237,7 +237,9 @@ let play_button editing_state =
   let$* is_playing = Lwd.get editing_state.is_playing in
   if is_playing then
     let click =
-      Elwd.handler Brr.Ev.click (fun _ ->
+      Elwd.handler Brr.Ev.click (fun ev ->
+          let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv |> Brr.El.of_jv in
+          Brr.El.set_has_focus false el;
           Lwd.set editing_state.is_playing false)
     in
     Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "⏸ Pause") ]
@@ -270,7 +272,9 @@ let save_button recording =
 
 let add_pause_button (replaying_state : replaying_state) =
   let click =
-    Elwd.handler Brr.Ev.click (fun _ ->
+    Elwd.handler Brr.Ev.click (fun ev ->
+        let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv |> Brr.El.of_jv in
+        Brr.El.set_has_focus false el;
         let current_time = Lwd.peek replaying_state.time in
         let new_pause =
           {
@@ -301,7 +305,10 @@ let add_pause_button (replaying_state : replaying_state) =
 
 let close_button =
   let click =
-    Elwd.handler Brr.Ev.click (fun _ -> Lwd.set status (Drawing Presenting))
+    Elwd.handler Brr.Ev.click (fun ev ->
+        let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv |> Brr.El.of_jv in
+        Brr.El.set_has_focus false el;
+        Lwd.set status (Drawing Presenting))
   in
   Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Close editing panel") ]
 
