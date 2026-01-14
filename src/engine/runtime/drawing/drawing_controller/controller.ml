@@ -1,5 +1,32 @@
 open Drawing_state
 
+let check_in_textarea () =
+  (* This checks that we are not typing in a text input, to allow for editing *)
+  let is_editable active_elem =
+    if Brr.El.is_content_editable active_elem then true
+    else
+      let tag_name =
+        Brr.El.tag_name active_elem |> Jstr.lowercased |> Jstr.to_string
+      in
+      match tag_name with
+      | "input" | "textarea" | "select" | "button" -> true
+      | _ -> false
+  in
+  let active_elem = Brr.Document.active_el Brr.G.document in
+  (* We need to go inside shadow roots to check if focused content is editable *)
+  let rec check active_elem =
+    match active_elem with
+    | None -> false
+    | Some active_elem -> (
+        if is_editable active_elem then true
+        else
+          match Brr.El.shadow_root active_elem with
+          | None -> false
+          | Some shadow_root ->
+              check (Brr.El.Shadow_root.active_element shadow_root))
+  in
+  check active_elem
+
 let shortcut_editing (replaying_state : replaying_state) key =
   match key with
   | "m" ->
@@ -75,4 +102,4 @@ let shortcuts key =
 
 let handle ev =
   let key = ev |> Brr.Ev.as_type |> Brr.Ev.Keyboard.key |> Jstr.to_string in
-  shortcuts key
+  if check_in_textarea () then false else shortcuts key
