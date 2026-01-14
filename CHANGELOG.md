@@ -6,6 +6,7 @@
 
 - Add a "mirror mode" to the speaker view, which mirrors the entire screen you
   are sharing with the audience (#188)
+- Add support for external files through CLI and frontmatter (#191)
 
 ### Fix
 
