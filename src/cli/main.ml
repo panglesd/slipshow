@@ -97,6 +97,12 @@ module Compile_args = struct
     in
     Arg.(value & opt_all string [] & info ~docv:"URL" ~doc [ "css" ])
 
+  let js_links =
+    let doc =
+      "JS files to add to the presentation. Can be a local file or a remote URL"
+    in
+    Arg.(value & opt_all string [] & info ~docv:"URL" ~doc [ "js" ])
+
   let theme =
     let doc =
       "Slipshow theme to use in the presentation. Can be \"default\" for the \
@@ -163,6 +169,7 @@ module Compile_args = struct
     let+ math_link = math_link
     and+ theme = theme
     and+ css_links = css_links
+    and+ js_links = js_links
     and+ input = input
     and+ output = output
     and+ dimension = dim
@@ -170,7 +177,14 @@ module Compile_args = struct
     {
       cli_frontmatter =
         Slipshow.Frontmatter.Unresolved
-          { math_link; theme; css_links; dimension; toplevel_attributes };
+          {
+            math_link;
+            theme;
+            css_links;
+            dimension;
+            toplevel_attributes;
+            js_links;
+          };
       input;
       output;
     }

@@ -568,6 +568,8 @@ The current options for the frontmatter are:
 
 - ``css`` for adding css files to the presentation. Accepts a space-separated list of paths. Spaces in path are not possible yet.
 
+- ``js`` for adding ``.js`` files to the presentation. Accepts a space-separated list of paths. Spaces in path are not possible yet.
+
 - ``dimension`` for defining the dimension of the presentation. Accepts a
   string, either ``"4:3"`` (``1440x1080``, the default), ``"16:9"``
   (``1920x1080``), or ``"WIDTHxHEIGHT"``.

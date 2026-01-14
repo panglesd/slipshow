@@ -6,6 +6,7 @@ type 'a fm = {
   math_link : 'a option;
   theme : [ `Builtin of Themes.t | `External of string ] option;
   css_links : 'a list;
+  js_links : 'a list;
   dimension : (int * int) option;
 }
 

@@ -6,6 +6,7 @@ type 'a fm = {
   math_link : 'a option;
   theme : [ `Builtin of Themes.t | `External of string ] option;
   css_links : 'a list;
+  js_links : 'a list;
   dimension : (int * int) option;
 }
 
@@ -19,6 +20,7 @@ let resolve (Unresolved fm) ~to_asset =
       fm with
       math_link = Option.map to_asset fm.math_link;
       css_links = List.map to_asset fm.css_links;
+      js_links = List.map to_asset fm.js_links;
     }
 
 module Default = struct
@@ -45,6 +47,7 @@ let empty =
       math_link = None;
       theme = None;
       css_links = [];
+      js_links = [];
     }
 
 module String_to = struct
@@ -122,15 +125,18 @@ let of_string s =
     get ("math-link", fun x -> Ok (String_to.math_link x)) assoc
   in
   let theme = get ("theme", fun x -> Ok (String_to.theme x)) assoc in
-  let css_links =
-    get ("css", fun x -> Ok x) assoc
+  let files field =
+    get (field, fun x -> Ok x) assoc
     |> Option.map (fun x -> String.split_on_char ' ' x)
     |> Option.map @@ List.filter (fun x -> not (String.equal " " x))
     |> Option.value ~default:[]
   in
+  let css_links = files "css" in
+  let js_links = files "js" in
   let dimension = get ("dimension", String_to.dimension) assoc in
   Ok
-    (Unresolved { toplevel_attributes; math_link; theme; css_links; dimension })
+    (Unresolved
+       { toplevel_attributes; math_link; theme; css_links; dimension; js_links })
 
 let ( let* ) x f = Option.bind x f
 let ( let+ ) x f = Option.map f x
@@ -179,4 +185,6 @@ let combine (Resolved cli_frontmatter) (Resolved frontmatter) =
   let theme = combine_opt cli_frontmatter.theme frontmatter.theme in
   let dimension = combine_opt cli_frontmatter.dimension frontmatter.dimension in
   let css_links = cli_frontmatter.css_links @ frontmatter.css_links in
-  Resolved { toplevel_attributes; math_link; theme; css_links; dimension }
+  let js_links = cli_frontmatter.js_links @ frontmatter.js_links in
+  Resolved
+    { toplevel_attributes; math_link; theme; css_links; dimension; js_links }
