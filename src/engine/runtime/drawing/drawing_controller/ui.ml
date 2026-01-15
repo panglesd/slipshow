@@ -253,7 +253,15 @@ let save_button recording =
           Jv.set (Brr.El.to_jv a) "href" object_url;
           fun () -> Jv.call url "revokeObjectURL" [| object_url |] |> ignore
         in
-        Jv.set (Brr.El.to_jv a) "download" (Jv.of_string "drawing.draw");
+        let name = Lwd.peek recording.name in
+        let filename =
+          let f =
+            name |> String.lowercase_ascii
+            |> String.map (function ' ' -> '-' | s -> s)
+          in
+          f ^ ".draw"
+        in
+        Jv.set (Brr.El.to_jv a) "download" (Jv.of_string filename);
         Jv.call (Brr.El.to_jv a) "click" [||] |> ignore;
         revoke_url ())
   in
