@@ -175,3 +175,12 @@ let delete selection =
   List.iter (fun (row, _) -> Lwd_table.remove row) selection.s_strokes;
   List.iter (fun (stro, _) -> Lwd.set stro.erased None) selection.s_erasures;
   List.iter (fun (row, _) -> Lwd_table.remove row) selection.s_pauses
+
+let unselect selection =
+  List.iter (fun (_, stro) -> Lwd.set stro.selected false) selection.s_strokes;
+  List.iter
+    (fun (_, (erase : erased)) -> Lwd.set erase.selected false)
+    selection.s_erasures;
+  List.iter
+    (fun (_, pause) -> Lwd.set pause.p_selected false)
+    selection.s_pauses

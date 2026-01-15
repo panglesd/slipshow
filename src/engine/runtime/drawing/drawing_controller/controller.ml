@@ -39,6 +39,13 @@ let shortcut_editing (replaying_state : replaying_state) key =
       let selected = Lwd.quick_sample selected in
       Drawing_state.delete selected;
       true
+  | "Escape" ->
+      let selected =
+        Lwd.observe (Drawing_state.selection replaying_state.recording)
+      in
+      let selected = Lwd.quick_sample selected in
+      Drawing_state.unselect selected;
+      true
   | "s" ->
       Lwd.set editing_tool Select;
       true
