@@ -129,3 +129,49 @@ let finish_recording
       Lwd_table.append' replaying_state.recording.strokes stro)
     recording_temp;
   Lwd.set status Editing
+
+type selection = {
+  s_strokes : (stro Lwd_table.row * stro) list;
+  s_erasures : (stro * erased) list;
+  s_pauses : (pause Lwd_table.row * pause) list;
+}
+
+let selection recording =
+  let open Lwd_infix in
+  let$* s =
+    Lwd_table.map_reduce
+      (fun row s ->
+        let$ selected =
+          let$ selected = Lwd.get s.selected in
+          if selected then Lwd_seq.element (Either.Left (row, s))
+          else Lwd_seq.empty
+        and$ erase_selected =
+          let$* erased = Lwd.get s.erased in
+          match erased with
+          | None -> Lwd.pure Lwd_seq.empty
+          | Some erased ->
+              let$ selected = Lwd.get erased.selected in
+              if selected then Lwd_seq.element (Either.Right (s, erased))
+              else Lwd_seq.empty
+        in
+        Lwd_seq.concat selected erase_selected)
+      Lwd_seq.lwd_monoid recording.strokes
+    |> Lwd.join
+  in
+  let l = Lwd_seq.to_list s in
+  let s_strokes, s_erasures = List.partition_map Fun.id l in
+  let$ pauses =
+    Lwd_table.map_reduce
+      (fun row pause ->
+        let$ selected = Lwd.get pause.p_selected in
+        if selected then Lwd_seq.element (row, pause) else Lwd_seq.empty)
+      Lwd_seq.lwd_monoid recording.pauses
+    |> Lwd.join
+  in
+  let s_pauses = Lwd_seq.to_list pauses in
+  { s_erasures; s_strokes; s_pauses }
+
+let delete selection =
+  List.iter (fun (row, _) -> Lwd_table.remove row) selection.s_strokes;
+  List.iter (fun (stro, _) -> Lwd.set stro.erased None) selection.s_erasures;
+  List.iter (fun (row, _) -> Lwd_table.remove row) selection.s_pauses

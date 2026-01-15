@@ -32,6 +32,13 @@ let shortcut_editing (replaying_state : replaying_state) key =
   | "m" ->
       Lwd.set editing_tool Move;
       true
+  | "Delete" ->
+      let selected =
+        Lwd.observe (Drawing_state.selection replaying_state.recording)
+      in
+      let selected = Lwd.quick_sample selected in
+      Drawing_state.delete selected;
+      true
   | "s" ->
       Lwd.set editing_tool Select;
       true
