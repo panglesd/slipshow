@@ -7,8 +7,17 @@
 - Add a "mirror mode" to the speaker view, which mirrors the entire screen you
   are sharing with the audience (#188)
 - Add support for external files through CLI and frontmatter (#191)
+- Add shortcut to delete or unselect selection in drawing editing (#192)
+- Add a "Close editing panel" button when there are no strokes (#192)
+- Default file names for drawing recording depend on their names (#192)
 
 ### Fix
+
+- Fix pauses time not updated after a rerecording (#192)
+- Fix drawing editing shortcuts triggering even when focusing on a textarea
+  (#192)
+- Fix interaction between fields and drawing editing shortcuts (#192)
+- Fix order of `clear` and `draw` action: the first comes first (#192)
 
 ## [v0.7.0] The Slipshow of Dorian Gray (Wednesday 26th November, 2025)
 
