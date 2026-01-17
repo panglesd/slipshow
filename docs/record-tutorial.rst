@@ -15,7 +15,7 @@ The presentation topic
 Let's first discuss the point of this tutorial's presentation. You want to show
 to the audience a clever little trick to compute :math:`1+2+3+\dots+100`.
 
-We are going to do the same *twice*. And then, we'll sum the first one with the last one, and so on, in this way:
+We are going to do the sum *twice*. And then, we'll sum the first one with the last one, and so on, in this way:
 
 .. math::
 
@@ -34,6 +34,7 @@ Now, since we are summing :math:`100` times the number :math:`101`, we get that
    S = \frac{100 \times 101} 2 = 5050
 
 Now, take a moment to think how you would present that, in two situations:
+
 - You explain it to a friend and you have a pen and paper or a whiteboard
 - You do a presentation with slides.
 
