@@ -38,7 +38,8 @@ extensions = [
     'sphinx.ext.autosectionlabel',
     'sphinx.ext.extlinks',
     'slipshowexample',
-    'sphinx_tabs.tabs'
+    'sphinx_tabs.tabs',
+    'sphinxcontrib.video'
 ]
 autosectionlabel_prefix_document = True
 todo_include_todos=True

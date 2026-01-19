@@ -132,11 +132,8 @@ Now, the fun part! Start recording with :kbd:`Shift` + :kbd:`R`, and draw the
 sum! When you have finished drawing, press :kbd:`Shift` + :kbd:`R` again to
 finish the recording.
 
-.. raw:: html
-
-   <video src="../_static/video.mp4" controls autoplay></video>
-
-TODO: make the video
+.. video:: example_drawing3.mp4
+   :width: 100%
 
 You should now see the timeline of your strokes over time. On top of the
 timeline is a slider you can move around, and see the preview update
@@ -182,6 +179,9 @@ end of the last stroke.
      selected strokes, it rescales the duration of the whole timeline.
 
 
+.. video:: editing3.mp4
+   :width: 100%
+
 We are almost there! Now, we want to add a pause in various places, to leave us
 some take to speak, take questions, etc.
 
@@ -192,11 +192,17 @@ We can do that! Use the slider on top of the timeline to position the time where
 you want, and click the ``Add pause`` button. Now, replay from the beginning:
 the replay stops at the pause! And if you reclick replay, it goes through.
 
+.. video:: edit-plus.mp4
+   :width: 100%
+
 Saving the drawing file
 -----------------------
 
 Once you have finished editing the timeline and the preview, click on the "Save"
 button. Save the downloaded file next to your ``sum.md`` file, as ``sum.draw``.
+
+.. video:: save.mp4
+   :width: 100%
 
 Including the drawing in your presentation
 ------------------------------------------

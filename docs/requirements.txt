@@ -4,3 +4,4 @@ sphinx_rtd_theme==3.1.0
 readthedocs-sphinx-search==0.3.2
 sphinx-tabs
 docutils==0.21
+sphinxcontrib-video
