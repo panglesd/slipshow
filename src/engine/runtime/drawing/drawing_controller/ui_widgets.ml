@@ -5,6 +5,11 @@ let float ?(callback = fun _ -> ()) ?(ev = []) ?st ?(prop = []) ?type'
   let h =
    fun ev ->
     let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv in
+    let () =
+      let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv |> Brr.El.of_jv in
+      (* We unfocus so that shortcuts work *)
+      Brr.El.set_has_focus false el
+    in
     let new_value = Jv.get el "value" |> Jv.to_string |> float_of_string in
     callback new_value;
     Lwd.set var new_value
