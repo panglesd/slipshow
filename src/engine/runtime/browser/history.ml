@@ -6,7 +6,9 @@ let set_hash h =
       let history = Brr.Window.history Brr.G.window in
       let uri =
         let fragment = Jstr.v h in
-        Brr.Uri.with_uri ~fragment old_uri |> Result.get_ok
+        Brr.Uri.with_uri ~fragment old_uri |> function
+        | Ok x -> x
+        | Error _ -> failwith "Hello10"
       in
       Brr.Window.History.replace_state ~uri history;
       Some history

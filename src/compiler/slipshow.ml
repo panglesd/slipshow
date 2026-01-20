@@ -135,7 +135,9 @@ type delayed = string * string
 let delayed_to_string s = Marshal.to_string s [] |> Base64.encode_string
 
 let string_to_delayed s =
-  let s = s |> Base64.decode |> Result.get_ok in
+  let s =
+    s |> Base64.decode |> function Ok x -> x | Error _ -> failwith "Hello11"
+  in
   Marshal.from_string s 0
 
 let convert_to_md ~read_file content =

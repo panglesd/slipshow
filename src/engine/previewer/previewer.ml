@@ -4,7 +4,12 @@ module Msg = struct
   let of_jv m : msg option = m |> Jv.to_string |> Communication.of_string
 end
 
-type previewer = { stage : int ref; index : int ref; panels : Brr.El.t array }
+type previewer = {
+  stage : int ref;
+  index : int ref;
+  panels : Brr.El.t array;
+  ids : string * string;
+}
 
 let send_speaker_view oc panel =
   let payload =
@@ -85,10 +90,11 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ()) root =
         | _ -> ())
       (Brr.Window.as_target Brr.G.window)
   in
-  { stage; index; panels }
+  { stage; index; panels; ids = (name1, name2) }
 
 let set_srcdoc { index; panels; _ } slipshow =
-  Jv.set (Brr.El.to_jv panels.(1 - !index)) "srcdoc" (Jv.of_string slipshow)
+  try Jv.set (Brr.El.to_jv panels.(1 - !index)) "srcdoc" (Jv.of_string slipshow)
+  with _ -> Brr.Console.(log [ "XXX exception" ])
 
 let preview ?slipshow_js ?frontmatter ?read_file previewer source =
   let starting_state = !(previewer.stage) in
@@ -105,3 +111,5 @@ let preview_compiled previewer delayed =
       starting_state
   in
   set_srcdoc previewer slipshow
+
+let ids { ids; _ } = ids
