@@ -15,18 +15,18 @@ Trying directory output
 Experimental!
 Trying a UX for slipshow server mode
 
-  $ slipshow compile --web-mode <path1> <options> file.md
-  ***** UNREACHABLE *****
+$ slipshow compile --web-mode <path1> <options> file.md
+***** UNREACHABLE *****
 
 I guess slipshow serve has the same?
 
-  $ slipshow serve --web-mode <path1> <options> file.md
-  ***** UNREACHABLE *****
+$ slipshow serve --web-mode <path1> <options> file.md
+***** UNREACHABLE *****
 
 And there is a way to output the assets
 
-  $ slipshow web-assets <path2>
-  ***** UNREACHABLE *****
+$ slipshow web-assets <path2>
+***** UNREACHABLE *****
 
 Questions:
 
@@ -40,29 +40,29 @@ Probably:
 
 So for instance:
 
-  $ slipshow compile --web-mode assets/ -o root/ src/file.md
-  ***** UNREACHABLE *****
-  $ slipshow web-assets root/assets/
-  ***** UNREACHABLE *****
+$ slipshow compile --web-mode assets/ -o root/ src/file.md
+***** UNREACHABLE *****
+$ slipshow web-assets root/assets/
+***** UNREACHABLE *****
 
 What about managing everything under a web root?
 
-  $ slipshow compile --web-mode root/ --assets assets/ -o pres1/ file.md
-  ***** UNREACHABLE *****
-  $ slipshow web-assets --web-mode root/ assets/
-  ***** UNREACHABLE *****
+$ slipshow compile --web-mode root/ --assets assets/ -o pres1/ file.md
+***** UNREACHABLE *****
+$ slipshow web-assets --web-mode root/ assets/
+***** UNREACHABLE *****
 
 Where the end hierarchy is:
 
-  $ tree root/
-  ***** UNREACHABLE *****
+$ tree root/
+***** UNREACHABLE *****
 
 What about the assets such as images etc? For instance `![](img/a.png)`?
 
 - They are copied under the webroot. For instance in the example above:
 
-  $ tree root/
-  ***** UNREACHABLE *****
+$ tree root/
+***** UNREACHABLE *****
 
 
 Interesting, I think I like that better.
