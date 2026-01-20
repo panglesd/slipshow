@@ -115,7 +115,8 @@ let embed_in_page ~slipshow_js content ~has ~math_link ~css_links ~js_links
       <div id="slipshow-horizontal-flex">
         <div id="slipshow-main">
           <div id="slipshow-content">
-            <svg id="slipshow-drawing-elem" style="overflow:visible; position: absolute; z-index:1000; pointer-events: none"></svg> |};
+            <svg id="slipshow-drawing-elem" style="overflow:visible; position: absolute; z-index:1000; pointer-events: none"></svg>
+            |};
         content;
         {|
           </div>
