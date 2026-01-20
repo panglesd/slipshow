@@ -84,11 +84,19 @@ let head ~width ~height ~theme ~(has : Has.t) ~math_link ~css_links =
       highlight_js_ocaml_element;
     ]
 
-let embed_in_page ~slipshow_js content ~has ~math_link ~css_links ~theme
-    ~dimension =
+let embed_in_page ~slipshow_js content ~has ~math_link ~css_links ~js_links
+    ~theme ~dimension =
   let width, height = dimension in
   let head = head ~has ~math_link ~css_links ~theme ~width ~height in
   let slipshow_js_element = slipshow_js_element slipshow_js in
+  let js =
+    js_links
+    |> List.map (function
+         | Asset.Local { content = t; _ } ->
+             Format.sprintf "<script>%s</script>" t
+         | Remote r -> Format.sprintf {|<script src="%s"></script>|} r)
+    |> String.concat ""
+  in
   let start =
     Format.sprintf
       {|
@@ -123,10 +131,10 @@ let embed_in_page ~slipshow_js content ~has ~math_link ~css_links ~theme
       startSlipshow(%d, %d,|}
       head content slipshow_js_element width height
   in
-  let end_ = {|);
-    </script>
+  let end_ = Format.sprintf {|);
+    </script>%s
   </body>
-                   </html>|} in
+</html>|} js in
   (start, end_)
 
 type starting_state = int
@@ -170,9 +178,8 @@ let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty)
   let dimension =
     frontmatter.dimension |> Option.value ~default:Frontmatter.Default.dimension
   in
-  let css_links =
-    frontmatter.css_links (* |> List.map (Asset.of_string ~read_file) *)
-  in
+  let css_links = frontmatter.css_links in
+  let js_links = frontmatter.js_links in
   let theme =
     match frontmatter.theme with
     | None -> Frontmatter.Default.theme
@@ -181,14 +188,12 @@ let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty)
         let asset = Asset.of_string ~read_file x in
         `External asset
   in
-  let math_link =
-    frontmatter.math_link (* |> Option.map (Asset.of_string ~read_file) *)
-  in
+  let math_link = frontmatter.math_link in
   let md = Compile.compile ~attrs:toplevel_attributes ~read_file s in
   let content = Renderers.to_html_string md in
   let has = Has.find_out md in
   embed_in_page ~slipshow_js ~dimension ~has ~math_link ~theme ~css_links
-    content
+    ~js_links content
 
 let add_starting_state ~include_speaker_view ?(autofocus = true) (start, end_)
     (starting_state : starting_state option) =
