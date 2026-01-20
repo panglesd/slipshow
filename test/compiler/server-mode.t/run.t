@@ -12,6 +12,7 @@ Trying directory output
 
   $ slipshow compile --output dist/ f.md
 
+Experimental!
 Trying a UX for slipshow server mode
 
   $ slipshow compile --web-mode <path1> <options> file.md
@@ -54,19 +55,14 @@ What about managing everything under a web root?
 Where the end hierarchy is:
 
   $ tree root/
-  root/
-  root/pres1/file.html
-  root/assets/...
+  ***** UNREACHABLE *****
 
 What about the assets such as images etc? For instance `![](img/a.png)`?
 
 - They are copied under the webroot. For instance in the example above:
 
   $ tree root/
-  root/
-  root/pres1/file.html
-  root/pres/img/a.png
-  root/assets/...
+  ***** UNREACHABLE *****
 
 
 Interesting, I think I like that better.
