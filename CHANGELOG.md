@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [v0.8.0] Les gnomes voleurs de Slipshow (Tuesday 20th January, 2026)
 
 ### Features
 
