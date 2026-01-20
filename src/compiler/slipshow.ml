@@ -20,7 +20,8 @@ let css_element = function
   | Remote r -> Format.sprintf {|<link href="%s" rel="stylesheet" />|} r
 
 let theme_css = function
-  | `Builtin theme -> Format.sprintf "<style>%s</style>" (Themes.content theme)
+  | `Builtin theme ->
+      Format.sprintf "<style>%s</style>" (Themes.content ~lite:true theme)
   | `External asset -> css_element asset
 
 let internal_css =
@@ -98,21 +99,25 @@ let embed_in_page ~slipshow_js content ~has ~math_link ~css_links ~js_links
     |> String.concat ""
   in
   let start =
-    Format.sprintf
-      {|
+    String.concat ""
+      [
+        {|
 <!doctype html>
 <html>
   <head>
     <meta charset="utf-8" />
-    %s
+    |};
+        head;
+        {|
   </head>
   <body>
     <div id="slipshow-vertical-flex">
       <div id="slipshow-horizontal-flex">
         <div id="slipshow-main">
           <div id="slipshow-content">
-            <svg id="slipshow-drawing-elem" style="overflow:visible; position: absolute; z-index:1000; pointer-events: none"></svg>
-            %s
+            <svg id="slipshow-drawing-elem" style="overflow:visible; position: absolute; z-index:1000; pointer-events: none"></svg> |};
+        content;
+        {|
           </div>
           <div id="slip-touch-controls">
             <div class="slip-previous">←</div>
@@ -124,12 +129,18 @@ let embed_in_page ~slipshow_js content ~has ~math_link ~css_links ~js_links
       </div>
     </div>
     <!-- Include the library -->
-    %s
+      |};
+        slipshow_js_element;
+        {|
     <!-- Start the presentation () -->
     <script>hljs.highlightAll();</script>
     <script>
-      startSlipshow(%d, %d,|}
-      head content slipshow_js_element width height
+      startSlipshow(|};
+        string_of_int width;
+        {|, |};
+        string_of_int height;
+        {|,|};
+      ]
   in
   let end_ = Format.sprintf {|);
     </script>%s
@@ -219,16 +230,23 @@ let add_starting_state ~include_speaker_view ?(autofocus = true) (start, end_)
     Format.sprintf {|<link rel="icon" type="image/x-icon" href="%s">|} href
   in
   let html =
-    Format.sprintf
-      {|
+    String.concat ""
+      [
+        {|
 <!doctype html>
 <html>
-<head>
-<meta charset='utf-8'>
-%s
-</head>
-  <body>
-          <iframe %s name="slipshow_main_pres" id="slipshow__internal_iframe" srcdoc="%s" style="
+  <head>
+    <meta charset='utf-8'>
+|};
+        favicon_element;
+        {|
+  </head>
+    <body>
+      <iframe |};
+        autofocus;
+        {| name="slipshow_main_pres" id="slipshow__internal_iframe" srcdoc="|};
+        html;
+        {|" style="
     width: 100%%;
     height: 100%%;
     position: fixed;
@@ -240,12 +258,13 @@ let add_starting_state ~include_speaker_view ?(autofocus = true) (start, end_)
 "></iframe>
 
       <script>
-      %s
+|};
+        Data_files.(read Scheduler_js);
+        {|
       </script>
   </body>
-                   </html>|}
-      favicon_element autofocus html
-      Data_files.(read Scheduler_js)
+</html>|};
+      ]
   in
   if include_speaker_view then html else orig_html
 

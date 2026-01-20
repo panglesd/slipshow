@@ -3,4 +3,4 @@
  (package slipshow)
  (preprocess
   (pps ppx_blob))
- (preprocessor_deps vanier.css default.css font-embedding.css))
+ (preprocessor_deps vanier.css default.css font-embedding.css font-embedding-lite.css))
