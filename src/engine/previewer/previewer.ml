@@ -4,10 +4,12 @@ module Msg = struct
   let of_jv m : msg option = m |> Jv.to_string |> Communication.of_string
 end
 
-type previewer = { stage : int ref; index : int ref; panels : Brr.El.t array }
-
-let ids = [| "slipshow-frame-1"; "slipshow-frame-2" |]
-let is_speaker_view_open = ref false
+type previewer = {
+  stage : int ref;
+  index : int ref;
+  panels : Brr.El.t array;
+  ids : string * string;
+}
 
 let send_speaker_view oc panel =
   let payload =
@@ -25,16 +27,25 @@ let send_speaker_view oc panel =
   in
   Brr.Window.post_message window ~msg
 
+let () = Random.self_init ()
+
 let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ()) root =
+  let ( !! ) = Jstr.v in
+  let name1 = Random.int 1000000 |> string_of_int |> fun s -> "id" ^ s in
+  let name2 = Random.int 1000000 |> string_of_int |> fun s -> "id" ^ s in
+  let ids = [| name1; name2 |] in
   let panel1 =
-    Brr.El.find_first_by_selector ~root (Jstr.v "#right-panel1") |> Option.get
+    Brr.El.iframe ~at:[ Brr.At.name !!name1; Brr.At.class' !!"right-panel1" ] []
   in
   let panel2 =
-    Brr.El.find_first_by_selector ~root (Jstr.v "#right-panel2") |> Option.get
+    Brr.El.iframe ~at:[ Brr.At.name !!name2; Brr.At.class' !!"right-panel2" ] []
   in
+  let () = Brr.El.append_children root [ panel1; panel2 ] in
   let panels = [| panel1; panel2 |] in
   let index = ref 0 in
   let stage = ref initial_stage in
+  let is_speaker_view_open = ref false in
+
   let _ =
     Brr.Ev.listen Brr_io.Message.Ev.message
       (fun event ->
@@ -58,36 +69,47 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ()) root =
         | Some { payload = Ready; id = _ }
           when String.equal source_name ids.(!index) ->
             ()
-        | Some { payload = Ready; id = _ } ->
+        | Some { payload = Ready; id }
+          when String.equal source_name ids.(1 - !index) ->
+            Brr.Console.(log [ "Getting a strange input"; id ]);
             if !is_speaker_view_open then (
               send_speaker_view `Close panels.(!index);
               send_speaker_view `Open panels.(1 - !index));
             index := 1 - !index;
             Brr.El.set_class (Jstr.v "active_panel") true panels.(!index);
-            let contentDocument el =
-              Jv.get (Brr.El.to_jv el) "contentDocument" |> Brr.Document.of_jv
-            in
-            let inner_iframe =
-              panels.(!index) |> contentDocument |> fun d ->
-              Brr.Document.find_el_by_id d (Jstr.v "slipshow__internal_iframe")
-              |> Option.get
-            in
-            let () = Brr.El.set_has_focus true inner_iframe in
+            (* let contentDocument el = *)
+            (*   Jv.get (Brr.El.to_jv el) "contentDocument" |> Brr.Document.of_jv *)
+            (* in *)
+            (* let inner_iframe = *)
+            (*   panels.(!index) |> contentDocument |> fun d -> *)
+            (*   Brr.Document.find_el_by_id d (Jstr.v "slipshow__internal_iframe") *)
+            (*   |> Option.get *)
+            (* in *)
+            (* let () = Brr.El.set_has_focus true inner_iframe in *)
             Brr.El.set_class (Jstr.v "active_panel") false panels.(1 - !index)
         | _ -> ())
       (Brr.Window.as_target Brr.G.window)
   in
-  { stage; index; panels }
+  { stage; index; panels; ids = (name1, name2) }
 
 let set_srcdoc { index; panels; _ } slipshow =
-  Jv.set (Brr.El.to_jv panels.(1 - !index)) "srcdoc" (Jv.of_string slipshow)
+  try Jv.set (Brr.El.to_jv panels.(1 - !index)) "srcdoc" (Jv.of_string slipshow)
+  with _ -> Brr.Console.(log [ "XXX exception" ])
 
-let preview previewer source =
+let preview ?slipshow_js ?frontmatter ?read_file previewer source =
   let starting_state = !(previewer.stage) in
-  let slipshow = Slipshow.convert ~starting_state source in
+  let slipshow =
+    Slipshow.convert ~include_speaker_view:false ?slipshow_js ?frontmatter
+      ?read_file ~autofocus:false ~starting_state source
+  in
   set_srcdoc previewer slipshow
 
 let preview_compiled previewer delayed =
   let starting_state = Some !(previewer.stage) in
-  let slipshow = Slipshow.add_starting_state delayed starting_state in
+  let slipshow =
+    Slipshow.add_starting_state ~include_speaker_view:false delayed
+      starting_state
+  in
   set_srcdoc previewer slipshow
+
+let ids { ids; _ } = ids

@@ -53,7 +53,7 @@ Cette présentation se fera en **trois parties** :
 >
 > {#merci pause}
 > > {#merci-2}
-> > ---
+> > ----
 > > # Merci de votre attention !
 > >
 > > - Site du projet : <https://github.com/panglesd/slipshow/>

@@ -95,11 +95,14 @@ let to_string = function
   | Cmarkit.Block.Ext_standalone_attributes _ -> "Ext_standalone_attributes"
   | Cmarkit.Block.Ext_attribute_definition _ -> "Ext_attribute_definition"
   (* Slipshow nodes *)
-  | Ast.Included _ -> "Included"
-  | Ast.Div _ -> "Div"
-  | Ast.Slide _ -> "Slide"
-  | Ast.Slip _ -> "Slip"
-  | Ast.SlipScript _ -> "SlipScript"
+  | Ast.S_block b -> (
+      match b with
+      | Ast.Included _ -> "Included"
+      | Ast.Div _ -> "Div"
+      | Ast.Slide _ -> "Slide"
+      | Ast.Slip _ -> "Slip"
+      | Ast.SlipScript _ -> "Slipscript"
+      | Ast.Carousel _ -> "Carousel")
   | _ -> "other"
 
 let () = ignore to_string
@@ -108,17 +111,22 @@ module C = Cmarkit_renderer.Context
 
 let src uri files =
   match uri with
-  | Asset.Uri.Link l -> l
+  | Asset.Uri.Link l -> `Link l
   | Path p -> (
       match Fpath.Map.find_opt p (files : Ast.Files.map) with
-      | None -> Fpath.to_string p
+      | None -> `Link (Fpath.to_string p)
       | Some { content; mode = `Base64; _ } ->
           let mime_type = Magic_mime.lookup (Fpath.filename p) in
-          let base64 = Base64.encode_string content in
-          Format.sprintf "data:%s;base64,%s" mime_type base64)
+          `Source (content, mime_type))
+
+let src_to_link = function
+  | `Link l -> l
+  | `Source (content, mime_type) ->
+      let base64 = Base64.encode_string content in
+      Format.sprintf "data:%s;base64,%s" mime_type base64
 
 (* Inspired from Cmarkit's image rendering *)
-let pdf c ~uri ~id:_ ~files i attrs =
+let pdf c ~uri ~files i attrs =
   let open Cmarkit in
   match uri with
   | Asset.Uri.Link l ->
@@ -151,9 +159,9 @@ let pdf c ~uri ~id:_ ~files i attrs =
       C.string c "</span>"
 
 (* Inspired from Cmarkit's image rendering *)
-let media ?(close = " >") ~media_name c ~uri ~id:_ ~files i attrs =
+let media ?(close = " >") ~media_name c ~uri ~files i attrs =
   let open Cmarkit in
-  let src = src uri files in
+  let src = src uri files |> src_to_link in
   let plain_text i =
     let lines = Inline.to_plain_text ~break_on_soft:false i in
     String.concat "\n" (List.map (String.concat "") lines)
@@ -168,6 +176,18 @@ let media ?(close = " >") ~media_name c ~uri ~id:_ ~files i attrs =
   if false then C.string c " controls";
   RenderAttrs.add_attrs c attrs;
   C.string c close
+
+(* Inspired from Cmarkit's image rendering *)
+let svg c ~uri ~files i attrs =
+  let open Cmarkit in
+  let src = src uri files in
+  match src with
+  | `Link _ -> media ~media_name:"svg" c ~uri ~files i attrs
+  | `Source (content, _mime_type) ->
+      let attrs =
+        Attributes.add_class attrs ("slipshow-svg-container", Meta.none)
+      in
+      RenderAttrs.with_attrs_span c attrs @@ fun () -> C.string c content
 
 let pure_embed c uri files attrs =
   let open Cmarkit_renderer in
@@ -191,6 +211,29 @@ let custom_html_renderer (files : Ast.Files.map) =
   let default = renderer ~safe:false () in
   let custom_html =
     let inline c = function
+      | Ast.Pdf { uri; id = _; origin = (l, (attrs, _)), _ } ->
+          pdf c ~uri ~files l attrs;
+          true
+      | Ast.Video { uri; id = _; origin = (l, (attrs, _)), _ } ->
+          media ~media_name:"video" c ~uri ~files l attrs;
+          true
+      | Ast.Image { uri; id = _; origin = (l, (attrs, _)), _ } ->
+          media ~media_name:"img" c ~uri ~files l attrs;
+          true
+      | Ast.Svg { uri; id = _; origin = (l, (attrs, _)), _ } ->
+          svg c ~uri ~files l attrs;
+          true
+      | Ast.Audio { uri; id = _; origin = (l, (attrs, _)), _ } ->
+          media ~media_name:"audio" c ~uri ~files l attrs;
+          true
+      | Ast.Hand_drawn { uri; id = _; origin = (_, (attrs, _)), _ } ->
+          let attrs =
+            Attributes.add_class attrs ("slipshow-hand-drawn", Meta.none)
+          in
+          pure_embed c uri files attrs;
+          true
+    in
+    let inline c = function
       | Inline.Text ((t, (attrs, _)), _) ->
           (* Put text inside spans to be able to apply styles on them *)
           Context.string c "<span";
@@ -199,24 +242,7 @@ let custom_html_renderer (files : Ast.Files.map) =
           html_escaped_string c t;
           Context.string c "</span>";
           true
-      | Ast.Pdf { uri; id; origin = (l, (attrs, _)), _ } ->
-          pdf c ~uri ~id ~files l attrs;
-          true
-      | Ast.Video { uri; id; origin = (l, (attrs, _)), _ } ->
-          media ~media_name:"video" c ~uri ~id ~files l attrs;
-          true
-      | Ast.Image { uri; id; origin = (l, (attrs, _)), _ } ->
-          media ~media_name:"img" c ~uri ~id ~files l attrs;
-          true
-      | Ast.Audio { uri; id; origin = (l, (attrs, _)), _ } ->
-          media ~media_name:"audio" c ~uri ~id ~files l attrs;
-          true
-      | Ast.Hand_drawn { uri; id = _; origin = (_, (attrs, _)), _ } ->
-          let attrs =
-            Attributes.add_class attrs ("slipshow-hand-drawn", Meta.none)
-          in
-          pure_embed c uri files attrs;
-          true
+      | Ast.S_inline i -> inline c i
       | _ -> false (* let the default HTML renderer handle that *)
     in
     let block c = function
@@ -304,8 +330,8 @@ let custom_html_renderer (files : Ast.Files.map) =
           RenderAttrs.in_block c "script" attrs (fun () ->
               RenderAttrs.block_lines c (Block.Code_block.code cb));
           true
-      | _ -> false
     in
+    let block c = function Ast.S_block b -> block c b | _ -> false in
     make ~inline ~block ()
   in
   compose default custom_html

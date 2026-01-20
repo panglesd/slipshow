@@ -1,3 +1,8 @@
 (data_only_dirs node_modules)
 
 (vendored_dirs vendor)
+
+(alias
+ (name runtest)
+ (deps
+  (alias_rec examples)))

@@ -190,16 +190,23 @@ module Compile_args = struct
     }
 end
 
+module Utils = struct
+  let output_of_input ~ext output input =
+    let filename_of_input input = Fpath.set_ext ext input in
+    match (output, input) with
+    | None, `File input -> `File (filename_of_input input)
+    | None, `Stdin -> `Stdout
+    | Some (`File dir), `File input when Fpath.is_dir_path dir ->
+        `File (Fpath.append dir (filename_of_input input))
+    | Some f, _ -> f
+end
+
 module Compile = struct
   let watch =
     let doc = "Watch the input file, and recompile when changes happen." in
     Arg.(value & flag & info ~docv:"" ~doc [ "watch" ])
 
   let ( let* ) = Result.bind
-
-  let output_of_input = function
-    | `File input -> `File (Fpath.set_ext "html" input)
-    | `Stdin -> `Stdout
 
   let force_file_io input output =
     let* input =
@@ -213,9 +220,7 @@ module Compile = struct
 
   let compile ~watch
       ~compile_args:{ Compile_args.input; output; cli_frontmatter } =
-    let output =
-      match output with Some o -> o | None -> output_of_input input
-    in
+    let output = Utils.output_of_input ~ext:"html" output input in
     if watch then
       let* input, output = force_file_io input output in
       Run.watch ~cli_frontmatter ~input ~output |> handle_error
@@ -246,9 +251,7 @@ module Serve = struct
 
   let serve ~port ~compile_args:{ Compile_args.input; output; cli_frontmatter }
       =
-    let output =
-      match output with Some o -> o | None -> Compile.output_of_input input
-    in
+    let output = Utils.output_of_input ~ext:"html" output input in
     let* input, output = Compile.force_file_io input output in
     Run.serve ~input ~output ~cli_frontmatter ~port |> handle_error
 
@@ -276,13 +279,7 @@ end
 
 module Markdownify = struct
   let do_ ~input ~output =
-    let output_of_input = function
-      | `File input -> `File (Fpath.set_ext "noattrs.md" input)
-      | `Stdin -> `Stdout
-    in
-    let output =
-      match output with Some o -> o | None -> output_of_input input
-    in
+    let output = Utils.output_of_input ~ext:"noattrs.md" output input in
     Run.markdown_compile ~input ~output |> handle_error
 
   let term =

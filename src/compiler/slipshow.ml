@@ -20,7 +20,8 @@ let css_element = function
   | Remote r -> Format.sprintf {|<link href="%s" rel="stylesheet" />|} r
 
 let theme_css = function
-  | `Builtin theme -> Format.sprintf "<style>%s</style>" (Themes.content theme)
+  | `Builtin theme ->
+      Format.sprintf "<style>%s</style>" (Themes.content ~lite:true theme)
   | `External asset -> css_element asset
 
 let internal_css =
@@ -84,11 +85,11 @@ let head ~width ~height ~theme ~(has : Has.t) ~math_link ~css_links =
       highlight_js_ocaml_element;
     ]
 
-let embed_in_page content ~has ~math_link ~css_links ~js_links ~theme ~dimension
-    =
+let embed_in_page ~slipshow_js content ~has ~math_link ~css_links ~js_links
+    ~theme ~dimension =
   let width, height = dimension in
   let head = head ~has ~math_link ~css_links ~theme ~width ~height in
-  let slipshow_js_element = slipshow_js_element None in
+  let slipshow_js_element = slipshow_js_element slipshow_js in
   let js =
     js_links
     |> List.map (function
@@ -98,13 +99,16 @@ let embed_in_page content ~has ~math_link ~css_links ~js_links ~theme ~dimension
     |> String.concat ""
   in
   let start =
-    Format.sprintf
-      {|
+    String.concat ""
+      [
+        {|
 <!doctype html>
 <html>
   <head>
     <meta charset="utf-8" />
-    %s
+    |};
+        head;
+        {|
   </head>
   <body>
     <div id="slipshow-vertical-flex">
@@ -112,7 +116,9 @@ let embed_in_page content ~has ~math_link ~css_links ~js_links ~theme ~dimension
         <div id="slipshow-main">
           <div id="slipshow-content">
             <svg id="slipshow-drawing-elem" style="overflow:visible; position: absolute; z-index:1000; pointer-events: none"></svg>
-            %s
+            |};
+        content;
+        {|
           </div>
           <div id="slip-touch-controls">
             <div class="slip-previous">←</div>
@@ -124,12 +130,18 @@ let embed_in_page content ~has ~math_link ~css_links ~js_links ~theme ~dimension
       </div>
     </div>
     <!-- Include the library -->
-    %s
+      |};
+        slipshow_js_element;
+        {|
     <!-- Start the presentation () -->
     <script>hljs.highlightAll();</script>
     <script>
-      startSlipshow(%d, %d,|}
-      head content slipshow_js_element width height
+      startSlipshow(|};
+        string_of_int width;
+        {|, |};
+        string_of_int height;
+        {|,|};
+      ]
   in
   let end_ = Format.sprintf {|);
     </script>%s
@@ -143,7 +155,9 @@ type delayed = string * string
 let delayed_to_string s = Marshal.to_string s [] |> Base64.encode_string
 
 let string_to_delayed s =
-  let s = s |> Base64.decode |> Result.get_ok in
+  let s =
+    s |> Base64.decode |> function Ok x -> x | Error _ -> failwith "Hello11"
+  in
   Marshal.from_string s 0
 
 let convert_to_md ~read_file content =
@@ -152,8 +166,8 @@ let convert_to_md ~read_file content =
   let sd = Compile.to_cmarkit sd in
   Cmarkit_commonmark.of_doc ~include_attributes:false sd
 
-let delayed ?(frontmatter = Frontmatter.empty) ?(read_file = fun _ -> Ok None) s
-    =
+let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty)
+    ?(read_file = fun _ -> Ok None) s =
   let Frontmatter.Resolved frontmatter, s =
     let ( let* ) x f =
       match x with
@@ -168,7 +182,7 @@ let delayed ?(frontmatter = Frontmatter.empty) ?(read_file = fun _ -> Ok None) s
         let* txt_frontmatter = Frontmatter.of_string yaml in
         let to_asset = Asset.of_string ~read_file in
         let txt_frontmatter = Frontmatter.resolve txt_frontmatter ~to_asset in
-        let frontmatter = Frontmatter.combine frontmatter txt_frontmatter in
+        let frontmatter = Frontmatter.combine txt_frontmatter frontmatter in
         (frontmatter, s)
   in
   let toplevel_attributes =
@@ -192,9 +206,12 @@ let delayed ?(frontmatter = Frontmatter.empty) ?(read_file = fun _ -> Ok None) s
   let md = Compile.compile ~attrs:toplevel_attributes ~read_file s in
   let content = Renderers.to_html_string md in
   let has = Has.find_out md in
-  embed_in_page ~dimension ~has ~math_link ~theme ~css_links ~js_links content
+  embed_in_page ~slipshow_js ~dimension ~has ~math_link ~theme ~css_links
+    ~js_links content
 
-let add_starting_state (start, end_) (starting_state : starting_state option) =
+let add_starting_state ~include_speaker_view ?(autofocus = true) (start, end_)
+    (starting_state : starting_state option) =
+  let autofocus = if autofocus then "autofocus" else "" in
   let starting_state =
     match starting_state with None -> "0" | Some st -> string_of_int st
   in
@@ -214,16 +231,23 @@ let add_starting_state (start, end_) (starting_state : starting_state option) =
     Format.sprintf {|<link rel="icon" type="image/x-icon" href="%s">|} href
   in
   let html =
-    Format.sprintf
-      {|
+    String.concat ""
+      [
+        {|
 <!doctype html>
 <html>
-<head>
-<meta charset='utf-8'>
-%s
-</head>
-  <body>
-          <iframe autofocus name="slipshow_main_pres" id="slipshow__internal_iframe" srcdoc="%s" style="
+  <head>
+    <meta charset='utf-8'>
+|};
+        favicon_element;
+        {|
+  </head>
+    <body>
+      <iframe |};
+        autofocus;
+        {| name="slipshow_main_pres" id="slipshow__internal_iframe" srcdoc="|};
+        html;
+        {|" style="
     width: 100%%;
     height: 100%%;
     position: fixed;
@@ -235,15 +259,17 @@ let add_starting_state (start, end_) (starting_state : starting_state option) =
 "></iframe>
 
       <script>
-      %s
+|};
+        Data_files.(read Scheduler_js);
+        {|
       </script>
   </body>
-                   </html>|}
-      favicon_element html
-      Data_files.(read Scheduler_js)
+</html>|};
+      ]
   in
-  if true then html else orig_html
+  if include_speaker_view then html else orig_html
 
-let convert ?frontmatter ?starting_state ?read_file s =
-  let delayed = delayed ?frontmatter ?read_file s in
-  add_starting_state delayed starting_state
+let convert ~include_speaker_view ?autofocus ?slipshow_js ?frontmatter
+    ?starting_state ?read_file s =
+  let delayed = delayed ?slipshow_js ?frontmatter ?read_file s in
+  add_starting_state ~include_speaker_view ?autofocus delayed starting_state

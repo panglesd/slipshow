@@ -18,6 +18,7 @@ type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
       [Ok None]). *)
 
 val delayed :
+  ?slipshow_js:Asset.t ->
   ?frontmatter:Frontmatter.resolved Frontmatter.t ->
   ?read_file:file_reader ->
   string ->
@@ -26,13 +27,21 @@ val delayed :
     to run [convert] server-side (which is useful to get images and so on) but
     let the previewer decide on the starting state. *)
 
-val add_starting_state : delayed -> starting_state option -> string
+val add_starting_state :
+  include_speaker_view:bool ->
+  ?autofocus:bool ->
+  delayed ->
+  starting_state option ->
+  string
 
 val convert :
+  include_speaker_view:bool ->
+  ?autofocus:bool ->
+  ?slipshow_js:Asset.t ->
   ?frontmatter:Frontmatter.resolved Frontmatter.t ->
   ?starting_state:starting_state ->
-  ?read_file:Compile.file_reader ->
+  ?read_file:file_reader ->
   string ->
   string
 
-val convert_to_md : read_file:Compile.file_reader -> string -> string
+val convert_to_md : read_file:file_reader -> string -> string

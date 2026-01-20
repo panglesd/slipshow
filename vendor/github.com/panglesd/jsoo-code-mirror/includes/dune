@@ -1,0 +1,37 @@
+(rule
+ (deps
+  (source_tree %{project_root}/node_modules))
+ (target bundle-es6.js)
+ (enabled_if
+  (= %{profile} "with-bundle"))
+ (action
+  (run
+   %{project_root}/node_modules/esbuild/bin/esbuild
+   %{dep:includes.js}
+   --bundle
+   --outfile=%{target})))
+
+; warning: node modules are not managed by dune
+; to generate a new bundle one should run `npm install` before the first build
+
+(rule
+ (deps
+  %{project_root}/package.json
+  %{project_root}/babel.config.js
+  (source_tree %{project_root}/node_modules))
+ (target bundle.js)
+ (mode promote)
+ (enabled_if
+  (= %{profile} "with-bundle"))
+ (action
+  (run
+   %{project_root}/node_modules/@babel/cli/bin/babel.js
+   %{dep:bundle-es6.js}
+   --config-file
+   %{project_root}/babel.config.js
+   -o
+   %{target})))
+
+; The bundle is only re-generated if the profile is `with-bundle`
+; If you add new javascript dependency or update the package.json
+; you should run `dune build --profile=with-bundle`

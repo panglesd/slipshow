@@ -10,6 +10,10 @@
 - Add shortcut to delete or unselect selection in drawing editing (#192)
 - Add a "Close editing panel" button when there are no strokes (#192)
 - Default file names for drawing recording depend on their names (#192)
+- Improve `-o` argument wrt directories (#190)
+- Inline SVGs instead of adding them as images, allowing the use of classes and
+  ids in SVGs (#190)
+- Rework the docs! (#190)
 
 ### Fix
 
@@ -18,6 +22,7 @@
   (#192)
 - Fix interaction between fields and drawing editing shortcuts (#192)
 - Fix order of `clear` and `draw` action: the first comes first (#192)
+- Use .woff2 for embedded fonts (#190)
 
 ## [v0.7.0] The Slipshow of Dorian Gray (Wednesday 26th November, 2025)
 

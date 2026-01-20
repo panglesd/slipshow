@@ -1,0 +1,21 @@
+(rule
+ (deps
+  (glob_files *.md)
+  (glob_files *.draw)
+  (glob_files *.mp4)
+  (glob_files *.png)
+  (glob_files *.svg)
+  (glob_files *.pdf)
+  %{bin:slipshow})
+ (target cdl.html)
+ (aliases examples)
+ (mode promote)
+ (action
+  (run %{bin:slipshow} compile cdl.md)))
+
+(rule
+ (deps (universe))
+ (aliases examples)
+ (action
+  (progn
+   (bash "printf \"See Campus du libre at:\n   file://$PWD/cdl.html\""))))

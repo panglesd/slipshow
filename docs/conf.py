@@ -14,6 +14,12 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
+import sys
+from pathlib import Path
+
+# I need to add my own extension and it needs to be found (from sphinx tuto)
+sys.path.append(str(Path('_ext').resolve()))
+
 
 # -- Project information -----------------------------------------------------
 
@@ -30,9 +36,12 @@ author = 'Paul-Elliot'
 extensions = [
     'sphinx_rtd_theme',
     'sphinx.ext.autosectionlabel',
-    'sphinx_tabs.tabs'
+    'sphinx.ext.extlinks',
+    'slipshowexample',
+    'sphinx_tabs.tabs',
+    'sphinxcontrib.video'
 ]
-extensions.append('sphinx.ext.todo')
+autosectionlabel_prefix_document = True
 todo_include_todos=True
 
 # Add any paths that contain templates here, relative to this directory.
@@ -41,7 +50,8 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '.venv',
+    '**/.venv/**']
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -55,7 +65,11 @@ html_theme = 'sphinx_rtd_theme'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-# html_static_path = ['_static']
+html_static_path = ['_static']
+
+html_js_files = ["main.js"]
+html_css_files = ["style.css"]
+
 
 
 # -- Added By PE -------------------------------------------------------------
@@ -63,3 +77,15 @@ html_theme = 'sphinx_rtd_theme'
 # Read The Doc uses a different version of sphinx by default, which has
 # a different default for master_doc
 master_doc = 'index'
+
+import subprocess
+
+commit_sha = subprocess.check_output(
+    ["git", "rev-parse", "HEAD"]
+).decode().strip()
+
+extlinks = {
+    'github_src': (f'https://github.com/panglesd/slipshow/blob/{commit_sha}/%s', '%s')
+}
+
+html_extra_path = ['extra_html']

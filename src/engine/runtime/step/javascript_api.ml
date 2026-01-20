@@ -35,7 +35,7 @@ let scroll = move (module Actions.Scroll)
 
 let focus window undos_ref =
   Jv.callback ~arity:3 @@ fun elems duration margin ->
-  let elems = (Jv.to_list Brr.El.of_jv) elems
+  let elems = Jv.to_list Brr.El.of_jv elems
   and duration = Jv.to_option Jv.to_float duration
   and margin = Jv.to_option Jv.to_float margin in
   register_undo undos_ref @@ fun () ->

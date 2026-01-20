@@ -1,0 +1,4 @@
+(rule
+ (mode promote)
+ (action
+  (copy ../doc-repl/main.bc.js main.js)))

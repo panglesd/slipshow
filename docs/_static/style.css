@@ -1,0 +1,113 @@
+.right-panel1.active_panel, .right-panel2.active_panel {
+  z-index: 1;
+}
+.right-panel1, .right-panel2 {
+    z-index: 0;
+    width:100%;
+    position:absolute;
+    top:0;
+    bottom:0;
+    left:0;
+    right:0;
+    border:0;
+}
+
+.preview {
+    position: relative;
+}
+.entry {
+    display: flex;
+    flex-direction: column;
+}
+/* .entry > * { */
+/*     width: 50%; */
+/* } */
+/* The iframes need to be absolutely positioned so their height and width need
+   to be manually set */
+.entry .preview, .entry .preview > * {
+    height:500px;
+}
+.running-example {
+  margin-top: 24px;
+  margin-bottom: 24px;
+  padding: 0px;
+  border: 6px solid #2980b9;
+  border-radius: 12px;
+}
+.editor {
+  border-bottom: 3px solid #2980b9;
+}
+.cm-content {
+    font-size: 13px;
+}
+.tabs {
+  display: flex;
+  justify-content: space-around;
+}
+.tabs > * {
+  flex-grow: 1;
+  text-align: center;
+  border: 1px solid purple;
+  background: lightgray;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.entry .editor, .entry .preview {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  pointer-events: none;
+}
+.entry.show-presentation .preview,
+.entry.show-editor .editor,
+.entry.show-both .preview,
+.entry.show-both .editor {
+  opacity: 1;
+  position: relative;
+  pointer-events: all;
+}
+
+.show-editor       > .tabs > .editor-button,
+.show-presentation > .tabs > .pres-button,
+.show-both         > .tabs > .both-button {
+    background: aliceblue;
+}
+.running-example.fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  margin: 0;
+}
+.running-example.fullscreen .editor-preview-container {
+  display:flex;
+  height: 100%;
+}
+.running-example.fullscreen .editor {
+  background: #282c34;
+  height: 100%;
+  overflow: auto;
+}
+.running-example.fullscreen .entry {
+  height: 100%;
+}
+.fullscreen .entry .preview, .fullscreen .entry .preview > * {
+  height: 100%;
+}
+.running-example .fullscreen-button {
+  flex-grow: 0;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+.example-card {
+  border: 1px solid #e1e4e5;
+  border-radius: 6px;
+  padding: 20px;
+  margin-bottom: 30px;
+  background: #fcfcf8;
+}
+.example-card:hover {
+  background: #fcfcff;
+}
