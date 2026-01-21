@@ -29,7 +29,7 @@ type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
     - [slide] attributed elements are turned into slides
     - [carousel] attributed elements are turned into carousels
 
-    The fourth stage is populating the media files map *)
+    The fourth stage is populating the media files map, and the ID map. *)
 
 module Path_entering : sig
   (** Path are relative to the file we are reading. When we include a file we
@@ -158,13 +158,14 @@ module Stage1 = struct
       | Error _ -> `Image
       | Ok p -> classify_image p
 
-  let update_link_definition current_path ld =
+  let update_link_definition current_path (ld, meta) =
     let label, layout, defined_label, (dest, meta_dest), title =
       Link_definition.(label ld, layout ld, defined_label ld, dest ld, title ld)
     in
     let uri = resolve_file current_path dest in
     let dest = (Asset.Uri.to_string uri, meta_dest) in
-    (uri, Link_definition.make ~layout ~defined_label ?label ~dest ?title ())
+    ( (uri, meta),
+      Link_definition.make ~layout ~defined_label ?label ~dest ?title () )
 
   let handle_image_inlining m defs current_path ((l, (attrs, meta2)), meta) =
     let text = Inline.Link.text l in
@@ -178,7 +179,7 @@ module Stage1 = struct
           in
           let kind = classify_link_definition ld attrs in
           let attrs_ld = Mapper.map_attrs m attrs_ld in
-          let dest, ld = update_link_definition current_path ld in
+          let dest, ld = update_link_definition current_path (ld, meta) in
           Some (kind, ((ld, (attrs_ld, meta2)), meta), dest)
     in
     let reference = `Inline ld in
@@ -554,8 +555,68 @@ module Stage4 = struct
     Fpath.Map.update x add m
 
   let execute =
-    let block _f _acc _c = Folder.default in
-    let inline _f acc = function
+    let block f (x, acc) c =
+      let acc =
+        match Stage2.get_attribute c with
+        | None -> (x, acc)
+        | Some (_, (attrs, meta)) -> (
+            match Attributes.id attrs with
+            | None ->
+                (* Logs.warn (fun m -> m "There is no id here"); *)
+                (x, acc)
+            | Some ((_id, _) as id') ->
+                (* Logs.warn (fun m -> m "There is an id here: %s" id); *)
+                (x, (id', c, meta) :: acc))
+      in
+      (* let acc = Folder.fold_block f acc c in *)
+      let open Block in
+      let res =
+        match c with
+        | Blank_line _ | Code_block _ | Html_block _
+        | Ext_standalone_attributes _ | Link_reference_definition _
+        | Thematic_break _ | Ext_math_block _ | Ext_attribute_definition _ ->
+            acc
+        | Heading ((h, _attrs), _) ->
+            Folder.fold_inline f acc (Block.Heading.inline h)
+        | Block_quote ((bq, _attrs), _) ->
+            Folder.fold_block f acc (Cmarkit.Block.Block_quote.block bq)
+        | Blocks (bs, _) -> List.fold_left (Folder.fold_block f) acc bs
+        | List ((l, _attrs), _) ->
+            let fold_list_item m acc (i, _) =
+              Folder.fold_block m acc (Block.List_item.block i)
+            in
+            List.fold_left (fold_list_item f) acc (List'.items l)
+        | Paragraph ((p, _attrs), _) ->
+            Folder.fold_inline f acc (Block.Paragraph.inline p)
+        | Ext_table ((t, _attrs), _) ->
+            let fold_row acc ((r, _), _) =
+              match r with
+              | `Header is | `Data is ->
+                  List.fold_left
+                    (fun acc (i, _) -> Folder.fold_inline f acc i)
+                    acc is
+              | `Sep _ -> acc
+            in
+            List.fold_left fold_row acc (Table.rows t)
+        | Ext_footnote_definition ((_fn, _attrs), _) -> acc (* TODO *)
+        | Ast.S_block b -> (
+            match b with
+            | Ast.Slide (({ content = b; title = Some (title, _) }, _), _) ->
+                let acc = Folder.fold_inline f acc title in
+                Folder.fold_block f acc b
+            | Slide (({ content = b; title = None }, _), _)
+            | Div ((b, _), _)
+            | Included ((b, _), _)
+            | Slip ((b, _), _) ->
+                Folder.fold_block f acc b
+            | SlipScript _ -> acc
+            | Carousel ((l, _), _) ->
+                List.fold_left (fun acc x -> Folder.fold_block f acc x) acc l)
+        | _ -> assert false
+      in
+      Folder.ret res
+    in
+    let inline _f (acc, x) = function
       | Ast.S_inline i -> (
           match i with
           | Video media
@@ -565,27 +626,91 @@ module Stage4 = struct
           | Svg media
           | Image media -> (
               match media with
-              | { uri = Path p; id; _ } ->
-                  Folder.ret @@ fpath_map_add_to_list p id acc
+              | { uri = Path p, meta; id; origin } ->
+                  Folder.ret
+                  @@ (fpath_map_add_to_list p (id, (origin, meta)) acc, x)
               | _ -> Folder.default))
       | _ -> Folder.default
     in
     Ast.Folder.make ~block ~inline ()
 
   let execute ~read_file md =
-    let asset_map = Cmarkit.Folder.fold_doc execute Fpath.Map.empty md in
+    let asset_map, id_list =
+      Cmarkit.Folder.fold_doc execute (Fpath.Map.empty, []) md
+    in
+    let () =
+      let module Map = Map.Make (String) in
+      let _map =
+        List.fold_left
+          (fun acc (((id, meta1), b1, meta_attrs) as value) ->
+            Map.update id
+              (function
+                | None -> Some value
+                | Some ((_, meta2), b2, meta_attrs2) as same ->
+                    let tl1 = Meta.textloc meta1 in
+                    ignore b1;
+                    ignore b2;
+                    let () =
+                      let tl3 = Meta.textloc meta_attrs in
+                      Logs.warn (fun m ->
+                          m "Error: Attributes at location: %a"
+                            Cmarkit.Textloc.pp_ocaml tl3)
+                    in
+                    let () =
+                      let tl3 = Meta.textloc meta_attrs2 in
+                      Logs.warn (fun m ->
+                          m "Error: Attributes at location: %a"
+                            Cmarkit.Textloc.pp_ocaml tl3)
+                    in
+                    (* let () = *)
+                    (*   match b2 with *)
+                    (*   | Block.Heading (_, meta3) -> *)
+                    (*       let tl3 = Meta.textloc meta3 in *)
+                    (*       Logs.warn (fun m -> *)
+                    (*           m "Error: Heading at location: %a" *)
+                    (*             Cmarkit.Textloc.pp_ocaml tl3) *)
+                    (*   | _ -> () *)
+                    (* in *)
+                    (* let () = *)
+                    (*   match b1 with *)
+                    (*   | Block.Heading (_, meta3) -> *)
+                    (*       let tl3 = Meta.textloc meta3 in *)
+                    (*       Logs.warn (fun m -> *)
+                    (*           m "Error: Heading at location: %a" *)
+                    (*             Cmarkit.Textloc.pp_ocaml tl3) *)
+                    (*   | _ -> () *)
+                    (* in *)
+                    let tl2 = Meta.textloc meta2 in
+                    Logs.warn (fun m ->
+                        m "Error: duplicated id: %s:\n- %a\n- %a" id
+                          Cmarkit.Textloc.pp_ocaml tl1 Cmarkit.Textloc.pp_ocaml
+                          tl2);
+                    same)
+              acc)
+          Map.empty id_list
+      in
+      ()
+    in
     let files =
       Fpath.Map.filter_map
         (fun path used_by ->
           let read_file : file_reader = read_file in
           let mode = `Base64 in
           match read_file path with
-          | Ok (Some content) -> Some { Ast.Files.content; mode; used_by; path }
+          | Ok (Some content) ->
+              let used_by = List.map fst used_by in
+              Some { Ast.Files.content; mode; used_by; path }
           | Ok None -> None
           | Error (`Msg s) ->
-              Logs.warn (fun m ->
-                  m "Could not read file: %a. Considering it as an URL. (%s)"
-                    Fpath.pp path s);
+              List.iter
+                (fun (_id, (_node, meta)) ->
+                  let textloc = Meta.textloc meta in
+                  Logs.warn (fun m ->
+                      m
+                        "Could not read file: %a at %a. Considering it as an \
+                         URL. (%s)"
+                        Fpath.pp path Textloc.pp_ocaml textloc s))
+                used_by;
               None)
         asset_map
     in
@@ -602,7 +727,10 @@ let of_cmarkit ~read_file md =
 let compile ~attrs ?(read_file = fun _ -> Ok None) s =
   let open Cmarkit in
   let md =
-    let doc = Doc.of_string ~heading_auto_ids:true ~strict:false s in
+    let doc =
+      Doc.of_string ~file:"Myfile" ~locs:true ~heading_auto_ids:true
+        ~strict:false s
+    in
     let bq = Block.Block_quote.make (Doc.block doc) in
     let block = Block.Block_quote ((bq, (attrs, Meta.none)), Meta.none) in
     Doc.make block

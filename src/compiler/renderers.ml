@@ -211,22 +211,22 @@ let custom_html_renderer (files : Ast.Files.map) =
   let default = renderer ~safe:false () in
   let custom_html =
     let inline c = function
-      | Ast.Pdf { uri; id = _; origin = (l, (attrs, _)), _ } ->
+      | Ast.Pdf { uri = uri, _; id = _; origin = (l, (attrs, _)), _ } ->
           pdf c ~uri ~files l attrs;
           true
-      | Ast.Video { uri; id = _; origin = (l, (attrs, _)), _ } ->
+      | Ast.Video { uri = uri, _; id = _; origin = (l, (attrs, _)), _ } ->
           media ~media_name:"video" c ~uri ~files l attrs;
           true
-      | Ast.Image { uri; id = _; origin = (l, (attrs, _)), _ } ->
+      | Ast.Image { uri = uri, _; id = _; origin = (l, (attrs, _)), _ } ->
           media ~media_name:"img" c ~uri ~files l attrs;
           true
-      | Ast.Svg { uri; id = _; origin = (l, (attrs, _)), _ } ->
+      | Ast.Svg { uri = uri, _; id = _; origin = (l, (attrs, _)), _ } ->
           svg c ~uri ~files l attrs;
           true
-      | Ast.Audio { uri; id = _; origin = (l, (attrs, _)), _ } ->
+      | Ast.Audio { uri = uri, _; id = _; origin = (l, (attrs, _)), _ } ->
           media ~media_name:"audio" c ~uri ~files l attrs;
           true
-      | Ast.Hand_drawn { uri; id = _; origin = (_, (attrs, _)), _ } ->
+      | Ast.Hand_drawn { uri = uri, _; id = _; origin = (_, (attrs, _)), _ } ->
           let attrs =
             Attributes.add_class attrs ("slipshow-hand-drawn", Meta.none)
           in

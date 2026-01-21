@@ -22,7 +22,7 @@ let slipscript d = S_block (SlipScript d)
 let carousel d = S_block (Carousel d)
 
 type media = {
-  uri : Asset.Uri.t;
+  uri : Asset.Uri.t node;
   id : string;
   origin : Cmarkit.Inline.Link.t attributed node;
 }
