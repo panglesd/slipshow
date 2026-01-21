@@ -106,18 +106,21 @@ let html_source =
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
            <title>Slipshow preview</title>
            <style>
-           #right-panel1.active_panel, #right-panel2.active_panel {
+           .right-panel1.active_panel, .right-panel2.active_panel {
              z-index: 1;
+             width:100%%;
+             position:absolute;
+             inset:0;
+             border:0;
+             height: 100vh;
            }
-           #right-panel1, #right-panel2 {
+           .right-panel1, .right-panel2 {
              z-index: 0;
            }
 </style>
 </head>
            <body>
            <div id="iframes">
-	     <iframe name="slipshow-frame-1" id="right-panel1" style="width:100%%; position:absolute; top:0;bottom:0;left:0;right:0;border:0; height: 100vh"></iframe>
-	     <iframe name="slipshow-frame-2" id="right-panel2" style="width:100%%; position:absolute; top:0;bottom:0;left:0;right:0;border:0; height: 100vh"></iframe>
            </div>
            <script>%s</script>
 </body>
