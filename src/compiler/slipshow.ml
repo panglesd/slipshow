@@ -248,8 +248,8 @@ let add_starting_state ~include_speaker_view ?(autofocus = true) (start, end_)
         {| name="slipshow_main_pres" id="slipshow__internal_iframe" srcdoc="|};
         html;
         {|" style="
-    width: 100%%;
-    height: 100%%;
+    width: 100%;
+    height: 100%;
     position: fixed;
     left: 0;
     border: 1px;
