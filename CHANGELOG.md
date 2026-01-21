@@ -1,5 +1,11 @@
 # Changelog
 
+## [v0.8.1] Les gnomes voleurs de Slipshow (Tuesday 21th January, 2026)
+
+### Fix
+
+- Fix horrible mistake.
+
 ## [v0.8.0] Les gnomes voleurs de Slipshow (Tuesday 20th January, 2026)
 
 ### Features
