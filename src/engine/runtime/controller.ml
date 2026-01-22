@@ -233,6 +233,20 @@ let message_setup window =
             else Step.Next.goto i window
           in
           ()
+      | Some { payload = Next; id = _ } ->
+          let _ : unit Fut.t =
+            let open Fut.Syntax in
+            let+ _ : unit Fut.t = Step.Next.go_next window in
+            Messaging.send_step (Step.State.get_step ()) `Normal
+          in
+          ()
+      | Some { payload = Previous; id = _ } ->
+          let _ : unit Fut.t =
+            let open Fut.Syntax in
+            let+ () = Step.Next.go_prev window in
+            Messaging.send_step (Step.State.get_step ()) `Normal
+          in
+          ()
       | Some { payload = Drawing d; id = _window_id } -> handle_drawing d
       | Some { payload = Send_all_drawing; id = _ } ->
           Drawing_controller.Messages.send_all_strokes ()

@@ -37,11 +37,16 @@ let recv () =
     let request_and_update typ =
       let+ x = Js_of_ocaml_lwt.XmlHttpRequest.get (uri typ |> Jstr.to_string) in
       let raw_data = x.content in
+      Brr.Console.(log [ "Question" ]);
       match Proto.of_string raw_data with
       | Update _ ->
+          Brr.Console.(log [ "Update" ]);
           let data = Slipshow.string_to_delayed raw_data in
           Previewer.preview_compiled previewer data
-      | GoForward | GoBackward -> Brr.Console.(log [ "GOFORWARD" ])
+      | GoForward ->
+          Brr.Console.(log [ "GOFORWARD" ]);
+          Previewer.next previewer
+      | GoBackward -> Previewer.previous previewer
     in
     let rec recv () =
       let* () = request_and_update `OnChange in

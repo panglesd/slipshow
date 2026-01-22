@@ -139,16 +139,20 @@ class lsp_server cond =
     method! on_req_execute_command ~notify_back:_ ~id:_ ~workDoneToken:_
         (c : string) (_args : Yojson.Safe.t list option) :
         Yojson.Safe.t Linol_lwt.t =
-      let () =
-        Lwt_condition.broadcast cond Proto.GoForward;
-        (* Write message to file *)
-        let oc = open_out "/tmp/msg" in
-        (* create or truncate file, return channel *)
-        Printf.fprintf oc "%s: %s\n" "executeCommandCalled" c;
-        (* write something *)
-        close_out oc
-      in
+      (match c with
+      | "slipshow.forward" -> Lwt_condition.broadcast cond Proto.GoForward
+      | "slipshow.backward" -> Lwt_condition.broadcast cond Proto.GoBackward
+      | _ -> ());
 
+      (* let () = *)
+      (*   Lwt_condition.broadcast cond Proto.GoForward; *)
+      (*   (\* Write message to file *\) *)
+      (*   let oc = open_out "/tmp/msg" in *)
+      (*   (\* create or truncate file, return channel *\) *)
+      (*   Printf.fprintf oc "%s: %s\n" "executeCommandCalled" c; *)
+      (*   (\* write something *\) *)
+      (*   close_out oc *)
+      (* in *)
       Linol_lwt.return `Null
     (** Execute a command with given arguments.
         @since 0.3 *)
@@ -166,7 +170,7 @@ let run () =
     let shutdown () = s#get_status = `ReceivedExit in
     Linol_lwt.Jsonrpc2.run ~shutdown server
   in
-  let main = Lwt.pick [ server_promise; task ] in
+  let main = Lwt.pick [ task; server_promise ] in
   match Linol_lwt.run main with
   | () -> ()
   | exception e ->

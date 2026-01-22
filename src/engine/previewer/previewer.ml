@@ -27,6 +27,30 @@ let send_speaker_view oc panel =
   in
   Brr.Window.post_message window ~msg
 
+let send_next panel =
+  let payload = Communication.Next in
+  let content_window w =
+    Jv.get (Brr.El.to_jv w) "contentWindow" |> Brr.Window.of_jv
+  in
+  let window = content_window panel in
+  let msg =
+    (* Currently, the ID does not matter... *)
+    { payload; id = "TODO" } |> Communication.to_string |> Jv.of_string
+  in
+  Brr.Window.post_message window ~msg
+
+let send_previous panel =
+  let payload = Communication.Previous in
+  let content_window w =
+    Jv.get (Brr.El.to_jv w) "contentWindow" |> Brr.Window.of_jv
+  in
+  let window = content_window panel in
+  let msg =
+    (* Currently, the ID does not matter... *)
+    { payload; id = "TODO" } |> Communication.to_string |> Jv.of_string
+  in
+  Brr.Window.post_message window ~msg
+
 let () = Random.self_init ()
 
 let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ()) root =
@@ -113,3 +137,11 @@ let preview_compiled previewer delayed =
   set_srcdoc previewer slipshow
 
 let ids { ids; _ } = ids
+
+let next (previewer : previewer) =
+  let current_window = previewer.panels.(!(previewer.index)) in
+  send_next current_window
+
+let previous (previewer : previewer) =
+  let current_window = previewer.panels.(!(previewer.index)) in
+  send_previous current_window
