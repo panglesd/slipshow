@@ -4,4 +4,8 @@ val of_cmarkit : read_file:file_reader -> Cmarkit.Doc.t -> Ast.t
 val to_cmarkit : Ast.t -> Cmarkit.Doc.t
 
 val compile :
-  attrs:Cmarkit.Attributes.t -> ?read_file:file_reader -> string -> Ast.t
+  ?file:string ->
+  attrs:Cmarkit.Attributes.t ->
+  ?read_file:file_reader ->
+  string ->
+  Ast.t * Errors.t list

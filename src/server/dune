@@ -4,4 +4,4 @@
   (pps ppx_blob))
  (preprocessor_deps
   (file client/client.bc.js))
- (libraries lwt slipshow bos fpath irmin-watcher dream))
+ (libraries lwt slipshow bos fpath irmin-watcher dream proto))

@@ -31,6 +31,29 @@ type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
 
     The fourth stage is populating the media files map, and the ID map. *)
 
+module Log_errors : sig
+  val with_ : (unit -> 'a) -> 'a * Errors.t list
+  val add : Errors.t -> unit
+end = struct
+  let errors_acc = ref []
+  let add x = errors_acc := x :: !errors_acc
+
+  let with_ f =
+    let old_errors = !errors_acc in
+    errors_acc := [];
+    let clean_up () =
+      let errors = !errors_acc in
+      errors_acc := old_errors;
+      errors
+    in
+    try
+      let res = f () in
+      (res, clean_up ())
+    with exn ->
+      let _ = clean_up in
+      raise exn
+end
+
 module Path_entering : sig
   (** Path are relative to the file we are reading. When we include a file we
       need to interpret the path as relative to it.
@@ -681,6 +704,14 @@ module Stage4 = struct
                     (*   | _ -> () *)
                     (* in *)
                     let tl2 = Meta.textloc meta2 in
+                    let error =
+                      {
+                        Errors.error =
+                          DuplicateID { id; previous_occurrence = tl1 };
+                        loc = tl2;
+                      }
+                    in
+                    Log_errors.add error;
                     Logs.warn (fun m ->
                         m "Error: duplicated id: %s:\n- %a\n- %a" id
                           Cmarkit.Textloc.pp_ocaml tl1 Cmarkit.Textloc.pp_ocaml
@@ -724,12 +755,15 @@ let of_cmarkit ~read_file md =
   let md3 = Stage3.execute md2 in
   Stage4.execute ~read_file md3
 
-let compile ~attrs ?(read_file = fun _ -> Ok None) s =
+let compile ?file ~attrs ?(read_file = fun _ -> Ok None) s =
+  Log_errors.with_ @@ fun () ->
   let open Cmarkit in
   let md =
     let doc =
-      Doc.of_string ~file:"Myfile" ~locs:true ~heading_auto_ids:true
-        ~strict:false s
+      match file with
+      | None -> Doc.of_string ~heading_auto_ids:true ~strict:false s
+      | Some file ->
+          Doc.of_string ~file ~locs:true ~heading_auto_ids:true ~strict:false s
     in
     let bq = Block.Block_quote.make (Doc.block doc) in
     let block = Block.Block_quote ((bq, (attrs, Meta.none)), Meta.none) in

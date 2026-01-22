@@ -1,5 +1,10 @@
 module Asset = Asset
 module Frontmatter = Frontmatter
+module Compile = Compile
+module Ast = Ast
+module Errors = Errors
+module Renderers = Renderers
+module Has = Has
 
 type starting_state = int
 type delayed
@@ -16,6 +21,17 @@ type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
     - [Error (`Msg m)] if it decided to try to read the file, but got an error.
       In this case, the error is reported, and the file is linked (just as
       [Ok None]). *)
+
+val embed_in_page :
+  slipshow_js:Asset.t option ->
+  string ->
+  has:Has.t ->
+  math_link:Asset.t option ->
+  css_links:Asset.t list ->
+  js_links:Asset.t list ->
+  theme:[< `Builtin of Themes.t | `External of Asset.t ] ->
+  dimension:int * int ->
+  delayed
 
 val delayed :
   ?slipshow_js:Asset.t ->

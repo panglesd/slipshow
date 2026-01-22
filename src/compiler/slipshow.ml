@@ -1,5 +1,10 @@
 module Asset = Asset
 module Frontmatter = Frontmatter
+module Compile = Compile
+module Ast = Ast
+module Errors = Errors
+module Renderers = Renderers
+module Has = Has
 
 type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
 
@@ -203,7 +208,7 @@ let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty)
         `External asset
   in
   let math_link = frontmatter.math_link in
-  let md = Compile.compile ~attrs:toplevel_attributes ~read_file s in
+  let md, _errors = Compile.compile ~attrs:toplevel_attributes ~read_file s in
   let content = Renderers.to_html_string md in
   let has = Has.find_out md in
   embed_in_page ~slipshow_js ~dimension ~has ~math_link ~theme ~css_links

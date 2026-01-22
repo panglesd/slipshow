@@ -164,9 +164,9 @@ let do_serve ~port compile =
                     !content);
               Dream.get "/onchange" (fun _ ->
                   let* () = Lwt_condition.wait cond in
-                  Dream.respond
-                    ~headers:[ ("Content-Type", "text/plain") ]
-                    !content);
+                  let msg = Proto.Update !content in
+                  let msg = Proto.to_string msg in
+                  Dream.respond ~headers:[ ("Content-Type", "text/plain") ] msg);
             ]
      in
      Lwt.both dream wac)
