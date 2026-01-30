@@ -9,6 +9,7 @@ type previewer = {
   index : int ref;
   panels : Brr.El.t array;
   ids : string * string;
+  include_speaker_view : bool;
 }
 
 let send_speaker_view oc panel =
@@ -29,7 +30,8 @@ let send_speaker_view oc panel =
 
 let () = Random.self_init ()
 
-let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ()) root =
+let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
+    ~include_speaker_view root =
   let ( !! ) = Jstr.v in
   let name1 = Random.int 1000000 |> string_of_int |> fun s -> "id" ^ s in
   let name2 = Random.int 1000000 |> string_of_int |> fun s -> "id" ^ s in
@@ -90,7 +92,7 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ()) root =
         | _ -> ())
       (Brr.Window.as_target Brr.G.window)
   in
-  { stage; index; panels; ids = (name1, name2) }
+  { stage; index; panels; ids = (name1, name2); include_speaker_view }
 
 let set_srcdoc { index; panels; _ } slipshow =
   try Jv.set (Brr.El.to_jv panels.(1 - !index)) "srcdoc" (Jv.of_string slipshow)
@@ -98,17 +100,18 @@ let set_srcdoc { index; panels; _ } slipshow =
 
 let preview ?slipshow_js ?frontmatter ?read_file previewer source =
   let starting_state = !(previewer.stage) in
+  let include_speaker_view = previewer.include_speaker_view in
   let slipshow =
-    Slipshow.convert ~include_speaker_view:false ?slipshow_js ?frontmatter
-      ?read_file ~autofocus:false ~starting_state source
+    Slipshow.convert ~include_speaker_view ?slipshow_js ?frontmatter ?read_file
+      ~autofocus:false ~starting_state source
   in
   set_srcdoc previewer slipshow
 
 let preview_compiled previewer delayed =
   let starting_state = Some !(previewer.stage) in
+  let include_speaker_view = previewer.include_speaker_view in
   let slipshow =
-    Slipshow.add_starting_state ~include_speaker_view:false delayed
-      starting_state
+    Slipshow.add_starting_state ~include_speaker_view delayed starting_state
   in
   set_srcdoc previewer slipshow
 

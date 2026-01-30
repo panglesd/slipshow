@@ -10,7 +10,11 @@ type previewer
     to be a {e source}: you cannot pass it a compiled file. *)
 
 val create_previewer :
-  ?initial_stage:int -> ?callback:(int -> unit) -> Brr.El.t -> previewer
+  ?initial_stage:int ->
+  ?callback:(int -> unit) ->
+  include_speaker_view:bool ->
+  Brr.El.t ->
+  previewer
 
 val preview :
   ?slipshow_js:Slipshow.Asset.t ->
