@@ -287,9 +287,11 @@ let speaker_note_handling window msg =
 let main_frame_handling msg =
   let () =
     let forward_to =
-      Option.map
-        (fun (w, child_frame) -> (w, content_window child_frame))
-        !speaker_view_ref
+      Option.bind !speaker_view_ref (fun (w, child_frame) ->
+          if not @@ Brr.Window.closed w then Some (w, content_window child_frame)
+          else (
+            speaker_view_ref := None;
+            None))
     in
     Handle.forwarding forward_to msg
   in
