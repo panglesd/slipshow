@@ -21,6 +21,7 @@ val delayed :
   ?slipshow_js:Asset.t ->
   ?frontmatter:Frontmatter.resolved Frontmatter.t ->
   ?read_file:file_reader ->
+  has_speaker_view:bool ->
   string ->
   delayed
 (** This function is used to delay the decision on the starting state. It allows
@@ -28,14 +29,10 @@ val delayed :
     let the previewer decide on the starting state. *)
 
 val add_starting_state :
-  include_speaker_view:bool ->
-  ?autofocus:bool ->
-  delayed ->
-  starting_state option ->
-  string
+  ?autofocus:bool -> delayed -> starting_state option -> string
 
 val convert :
-  include_speaker_view:bool ->
+  has_speaker_view:bool ->
   ?autofocus:bool ->
   ?slipshow_js:Asset.t ->
   ?frontmatter:Frontmatter.resolved Frontmatter.t ->

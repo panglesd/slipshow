@@ -85,8 +85,8 @@ let head ~width ~height ~theme ~(has : Has.t) ~math_link ~css_links =
       highlight_js_ocaml_element;
     ]
 
-let embed_in_page ~slipshow_js content ~has ~math_link ~css_links ~js_links
-    ~theme ~dimension =
+let embed_in_page ~has_speaker_view ~slipshow_js content ~has ~math_link
+    ~css_links ~js_links ~theme ~dimension =
   let width, height = dimension in
   let head = head ~has ~math_link ~css_links ~theme ~width ~height in
   let slipshow_js_element = slipshow_js_element slipshow_js in
@@ -104,7 +104,9 @@ let embed_in_page ~slipshow_js content ~has ~math_link ~css_links ~js_links
         {|
 <!doctype html>
 <html>
-  <head>
+  <head>|};
+        (if has_speaker_view then {|    <base target="_parent">|} else "");
+        {|
     <meta charset="utf-8" />
     |};
         head;
@@ -147,10 +149,10 @@ let embed_in_page ~slipshow_js content ~has ~math_link ~css_links ~js_links
     </script>%s
   </body>
 </html>|} js in
-  (start, end_)
+  (start, end_, has_speaker_view)
 
 type starting_state = int
-type delayed = string * string
+type delayed = string * string * bool
 
 let delayed_to_string s = Marshal.to_string s [] |> Base64.encode_string
 
@@ -167,7 +169,7 @@ let convert_to_md ~read_file content =
   Cmarkit_commonmark.of_doc ~include_attributes:false sd
 
 let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty)
-    ?(read_file = fun _ -> Ok None) s =
+    ?(read_file = fun _ -> Ok None) ~has_speaker_view s =
   let Frontmatter.Resolved frontmatter, s =
     let ( let* ) x f =
       match x with
@@ -206,10 +208,10 @@ let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty)
   let md = Compile.compile ~attrs:toplevel_attributes ~read_file s in
   let content = Renderers.to_html_string md in
   let has = Has.find_out md in
-  embed_in_page ~slipshow_js ~dimension ~has ~math_link ~theme ~css_links
-    ~js_links content
+  embed_in_page ~has_speaker_view ~slipshow_js ~dimension ~has ~math_link ~theme
+    ~css_links ~js_links content
 
-let add_starting_state ~include_speaker_view ?(autofocus = true) (start, end_)
+let add_starting_state ?(autofocus = true) (start, end_, has_speaker_view)
     (starting_state : starting_state option) =
   let autofocus = if autofocus then "autofocus" else "" in
   let starting_state =
@@ -267,9 +269,11 @@ let add_starting_state ~include_speaker_view ?(autofocus = true) (start, end_)
 </html>|};
       ]
   in
-  if include_speaker_view then html else orig_html
+  if has_speaker_view then html else orig_html
 
-let convert ~include_speaker_view ?autofocus ?slipshow_js ?frontmatter
+let convert ~has_speaker_view ?autofocus ?slipshow_js ?frontmatter
     ?starting_state ?read_file s =
-  let delayed = delayed ?slipshow_js ?frontmatter ?read_file s in
-  add_starting_state ~include_speaker_view ?autofocus delayed starting_state
+  let delayed =
+    delayed ~has_speaker_view ?slipshow_js ?frontmatter ?read_file s
+  in
+  add_starting_state ?autofocus delayed starting_state
