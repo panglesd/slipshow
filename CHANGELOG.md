@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Fix
+
+- Fix impossibility to reopen speaker view after closing it on Firefox (#198,
+  issue #194)
+- Fix impossibility to open speaker view in serve mode (#198, issue #197)
+
 ## [v0.8.1] Les gnomes voleurs de Slipshow (Tuesday 21th January, 2026)
 
 ### Fix
