@@ -8,6 +8,7 @@ type 'a fm = {
   css_links : 'a list;
   js_links : 'a list;
   dimension : (int * int) option;
+  highlightjs_theme : string option;
 }
 
 type 'a t =
@@ -37,6 +38,7 @@ module Default = struct
       ()
 
   let theme = `Builtin Themes.Default
+  let highlightjs_theme = "default"
 end
 
 let empty =
@@ -48,6 +50,7 @@ let empty =
       theme = None;
       css_links = [];
       js_links = [];
+      highlightjs_theme = None;
     }
 
 module String_to = struct
@@ -125,6 +128,7 @@ let of_string s =
     get ("math-link", fun x -> Ok (String_to.math_link x)) assoc
   in
   let theme = get ("theme", fun x -> Ok (String_to.theme x)) assoc in
+  let highlightjs_theme = get ("highlightjs-theme", fun x -> Ok x) assoc in
   let files field =
     get (field, fun x -> Ok x) assoc
     |> Option.map (fun x -> String.split_on_char ' ' x)
@@ -136,7 +140,15 @@ let of_string s =
   let dimension = get ("dimension", String_to.dimension) assoc in
   Ok
     (Unresolved
-       { toplevel_attributes; math_link; theme; css_links; dimension; js_links })
+       {
+         toplevel_attributes;
+         math_link;
+         theme;
+         css_links;
+         dimension;
+         js_links;
+         highlightjs_theme;
+       })
 
 let ( let* ) x f = Option.bind x f
 let ( let+ ) x f = Option.map f x
@@ -186,5 +198,16 @@ let combine (Resolved cli_frontmatter) (Resolved frontmatter) =
   let dimension = combine_opt cli_frontmatter.dimension frontmatter.dimension in
   let css_links = cli_frontmatter.css_links @ frontmatter.css_links in
   let js_links = cli_frontmatter.js_links @ frontmatter.js_links in
+  let highlightjs_theme =
+    combine_opt cli_frontmatter.highlightjs_theme frontmatter.highlightjs_theme
+  in
   Resolved
-    { toplevel_attributes; math_link; theme; css_links; dimension; js_links }
+    {
+      toplevel_attributes;
+      math_link;
+      theme;
+      css_links;
+      dimension;
+      js_links;
+      highlightjs_theme;
+    }

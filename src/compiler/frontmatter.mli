@@ -8,6 +8,7 @@ type 'a fm = {
   css_links : 'a list;
   js_links : 'a list;
   dimension : (int * int) option;
+  highlightjs_theme : string option;
 }
 
 (** We use this trick to only allow [string fm] and [Asset.t fm], but it is
@@ -21,6 +22,7 @@ module Default : sig
   val dimension : int * int
   val toplevel_attributes : Cmarkit.Attributes.t
   val theme : [> `Builtin of Themes.t ]
+  val highlightjs_theme : string
 end
 
 val empty : resolved t

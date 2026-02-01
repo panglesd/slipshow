@@ -110,6 +110,13 @@ module Compile_args = struct
     in
     Arg.(value & opt Custom_conv.theme None & info ~docv:"URL" ~doc [ "theme" ])
 
+  let highlightjs_theme =
+    let doc = "Highlightjs theme to use when highlighting code blocks." in
+    Arg.(
+      value
+      & opt (some string) None
+      & info ~docv:"THEME_NAME" ~doc [ "highlightjs-theme" ])
+
   let math_link =
     let doc =
       "Where to find the mathjax javascript file. Optional. When absent, use \
@@ -168,6 +175,7 @@ module Compile_args = struct
     let open Term.Syntax in
     let+ math_link = math_link
     and+ theme = theme
+    and+ highlightjs_theme = highlightjs_theme
     and+ css_links = css_links
     and+ js_links = js_links
     and+ input = input
@@ -184,6 +192,7 @@ module Compile_args = struct
             dimension;
             toplevel_attributes;
             js_links;
+            highlightjs_theme;
           };
       input;
       output;
