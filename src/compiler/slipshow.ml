@@ -42,12 +42,12 @@ let slipshow_js_element slipshow_link =
   | Some (Remote r) -> Format.sprintf "<script src=\"%s\"></script>" r
   | None -> Format.sprintf "<script>%s</script>" Data_files.(read Slipshow_js)
 
-let head ~width ~height ~theme ~(has : Has.t) ~math_link ~css_links =
+let head ~width ~height ~theme ~highlightjs_theme ~(has : Has.t) ~math_link
+    ~css_links =
   let theme = theme_css theme in
   let highlight_css_element =
-    "<style>"
-    ^ (Option.get @@ Highlightjs.read "styles/default.min.css")
-    ^ "</style>"
+    let filename = "styles/" ^ highlightjs_theme ^ ".min.css" in
+    "<style>" ^ (Option.get @@ Highlightjs.read filename) ^ "</style>"
   in
   let highlight_js_element =
     "<script>"
@@ -97,9 +97,11 @@ let head ~width ~height ~theme ~(has : Has.t) ~math_link ~css_links =
     ]
 
 let embed_in_page ~has_speaker_view ~slipshow_js content ~has ~math_link
-    ~css_links ~js_links ~theme ~dimension =
+    ~css_links ~js_links ~theme ~dimension ~highlightjs_theme =
   let width, height = dimension in
-  let head = head ~has ~math_link ~css_links ~theme ~width ~height in
+  let head =
+    head ~has ~math_link ~css_links ~theme ~width ~height ~highlightjs_theme
+  in
   let slipshow_js_element = slipshow_js_element slipshow_js in
   let js =
     js_links
@@ -215,12 +217,16 @@ let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty)
         let asset = Asset.of_string ~read_file x in
         `External asset
   in
+  let highlightjs_theme =
+    Option.value ~default:Frontmatter.Default.highlightjs_theme
+      frontmatter.highlightjs_theme
+  in
   let math_link = frontmatter.math_link in
   let md = Compile.compile ~attrs:toplevel_attributes ~read_file s in
   let content = Renderers.to_html_string md in
   let has = Has.find_out md in
   embed_in_page ~has_speaker_view ~slipshow_js ~dimension ~has ~math_link ~theme
-    ~css_links ~js_links content
+    ~css_links ~js_links content ~highlightjs_theme
 
 let add_starting_state ?(autofocus = true) (start, end_, has_speaker_view)
     (starting_state : starting_state option) =

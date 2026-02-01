@@ -35,3 +35,8 @@ The current options for the frontmatter are:
 - ``dimension`` for defining the dimension of the presentation. Accepts a
   string, either ``"4:3"`` (``1440x1080``, the default), ``"16:9"``
   (``1920x1080``), or ``"WIDTHxHEIGHT"``.
+
+- ``highlightjs-theme``, for selecting a highlightjs theme. Accepts the name of
+  a theme, corresponding to the name of a file in `this list
+  <https://github.com/highlightjs/highlight.js/tree/5697ae5187746c24732e62cd625f3f83004a44ce/src/styles>`_,
+  stripped from its extension.
