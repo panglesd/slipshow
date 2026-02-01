@@ -60,9 +60,14 @@ let head ~width ~height ~theme ~highlightjs_theme ~(has : Has.t) ~math_link
     |> Option.map @@ fun s -> "<script>" ^ s ^ "</script>"
   in
   let highlight_js_lang_elements =
-    has.code_blocks
-    |> Has.StringSet.filter_map highlight_js_lang_element
-    |> Has.StringSet.to_list |> String.concat ""
+    has.code_blocks |> fun x ->
+    Has.StringSet.fold
+      (fun h acc ->
+        match highlight_js_lang_element h with
+        | None -> acc
+        | Some l -> l :: acc)
+      x []
+    |> String.concat ""
   in
   let pdf_support =
     if has.pdf then
