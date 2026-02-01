@@ -34,42 +34,6 @@
  (action
   (copy %{deps} %{target})))
 
-(rule
- (target highlight-js.css.crunch)
- (enabled_if
-  (= %{profile} "with-bundle"))
- (mode promote)
- (action
-  (run
-   wget
-   --output-document
-   highlight-js.css.crunch
-   https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css)))
-
-(rule
- (target highlight-js.js.crunch)
- (enabled_if
-  (= %{profile} "with-bundle"))
- (mode promote)
- (action
-  (run
-   wget
-   --output-document
-   highlight-js.js.crunch
-   https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js)))
-
-(rule
- (target highlight-js.ocaml.js.crunch)
- (enabled_if
-  (= %{profile} "with-bundle"))
- (mode promote)
- (action
-  (run
-   wget
-   --output-document
-   highlight-js.ocaml.js.crunch
-   https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/ocaml.min.js)))
-
 ; (rule
 ;  (target "tailwindcss.js")
 ;  (enabled_if
