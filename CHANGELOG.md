@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Added
+
+- Support for syntax highlighting of all highlightjs-supported languages and
+  themes (#200)
+
 ### Fix
 
 - Fix impossibility to reopen speaker view after closing it on Firefox (#198,
