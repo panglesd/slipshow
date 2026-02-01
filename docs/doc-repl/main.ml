@@ -20,6 +20,7 @@ let view ~dimension ~preview_el ~editor_el starting =
          css_links = [];
          js_links = [];
          dimension;
+         highlightjs_theme = None;
        }
       : _ Slipshow.Frontmatter.t)
   in
