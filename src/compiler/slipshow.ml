@@ -45,13 +45,24 @@ let slipshow_js_element slipshow_link =
 let head ~width ~height ~theme ~(has : Has.t) ~math_link ~css_links =
   let theme = theme_css theme in
   let highlight_css_element =
-    "<style>" ^ Data_files.(read Highlight_css) ^ "</style>"
+    "<style>"
+    ^ (Option.get @@ Highlightjs.read "styles/default.min.css")
+    ^ "</style>"
   in
   let highlight_js_element =
-    "<script>" ^ Data_files.(read Highlight_js) ^ "</script>"
+    "<script>"
+    ^ (Option.get @@ Highlightjs.read "highlight.min.js")
+    ^ "</script>"
   in
-  let highlight_js_ocaml_element =
-    "<script>" ^ Data_files.(read Highlight_js_ocaml) ^ "</script>"
+  let highlight_js_lang_element lang =
+    let filename = "languages/" ^ lang ^ ".min.js" in
+    Highlightjs.read filename
+    |> Option.map @@ fun s -> "<script>" ^ s ^ "</script>"
+  in
+  let highlight_js_lang_elements =
+    has.code_blocks
+    |> List.filter_map highlight_js_lang_element
+    |> String.concat ""
   in
   let pdf_support =
     if has.pdf then
@@ -82,7 +93,7 @@ let head ~width ~height ~theme ~(has : Has.t) ~math_link ~css_links =
       css_elements;
       highlight_css_element;
       highlight_js_element;
-      highlight_js_ocaml_element;
+      highlight_js_lang_elements;
     ]
 
 let embed_in_page ~has_speaker_view ~slipshow_js content ~has ~math_link
