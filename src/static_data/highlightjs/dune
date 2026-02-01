@@ -1,0 +1,3 @@
+(library
+ (name highlightjs)
+ (public_name slipshow.highlightjs))
