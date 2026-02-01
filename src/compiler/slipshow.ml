@@ -61,8 +61,8 @@ let head ~width ~height ~theme ~(has : Has.t) ~math_link ~css_links =
   in
   let highlight_js_lang_elements =
     has.code_blocks
-    |> List.filter_map highlight_js_lang_element
-    |> String.concat ""
+    |> Has.StringSet.filter_map highlight_js_lang_element
+    |> Has.StringSet.to_list |> String.concat ""
   in
   let pdf_support =
     if has.pdf then
