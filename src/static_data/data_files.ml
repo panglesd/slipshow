@@ -18,7 +18,7 @@ let string_of_file = function
   | Highlight_js_ocaml -> "highlight-js.ocaml.js.crunch"
   | _ -> assert false
 
-let read f =match f with
+let read f = match f with
   | Slipshow_js -> [%blob "../engine/runtime/slipshow.js"]
   | Scheduler_js -> [%blob "../engine/scheduler/scheduler.bc.js"]
   | Slip_internal_css -> [%blob "../engine/runtime/slipshow-internal.css"]
