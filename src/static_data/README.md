@@ -28,4 +28,8 @@ Here is how to include highlightJS:
       - The styles/*.min.css (embed the images files from `styles/` as base64
         urls where they are used)
 - To remove all .js but none .min.js you can use: `find . -type f -name "*.js" ! -name "*.min.js" -delete`
-- Copy those files in src/static_data/highlightjs
+- Copy those files in `src/static_data/highlightjs/data`:
+  - The styles in `styles/`
+  - The js in `languages/`
+  - `highlight.min.js` in `./`
+- Then run `dune build @highlightjs` and promote the new files
