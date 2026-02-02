@@ -1,40 +1,40 @@
-(rule
- (deps %{project_root}/staged_dist/slipshow.cdn.min.js)
- (target "slipshow.cdn.min.js.crunch")
- (enabled_if
-  (= %{profile} "with-bundle"))
- (mode promote)
- (action
-  (copy %{deps} %{target})))
+; (rule
+;  (deps %{project_root}/staged_dist/slipshow.cdn.min.js)
+;  (target "slipshow.cdn.min.js.crunch")
+;  (enabled_if
+;   (= %{profile} "with-bundle"))
+;  (mode promote)
+;  (action
+;   (copy %{deps} %{target})))
 
-(rule
- (deps %{project_root}/staged_dist/css/slip.css)
- (target "slip.css.crunch")
- (enabled_if
-  (= %{profile} "with-bundle"))
- (mode promote)
- (action
-  (copy %{deps} %{target})))
+; (rule
+;  (deps %{project_root}/staged_dist/css/slip.css)
+;  (target "slip.css.crunch")
+;  (enabled_if
+;   (= %{profile} "with-bundle"))
+;  (mode promote)
+;  (action
+;   (copy %{deps} %{target})))
 
-(rule
- (deps %{project_root}/staged_dist/css/theorem.css)
- (target "theorem.css.crunch")
- (enabled_if
-  (= %{profile} "with-bundle"))
- (mode promote)
- (action
-  (copy %{deps} %{target})))
+; (rule
+;  (deps %{project_root}/staged_dist/css/theorem.css)
+;  (target "theorem.css.crunch")
+;  (enabled_if
+;   (= %{profile} "with-bundle"))
+;  (mode promote)
+;  (action
+;   (copy %{deps} %{target})))
 
-(rule
- ; This needs to be mathjax version 3, as mathjax 4 has changed its build
- ; process and does not include a "full" variant with all extensions.
- (deps %{project_root}/node_modules/mathjax/es5/tex-svg-full.js)
- (target "tex-svg-full.js.crunch")
- (enabled_if
-  (= %{profile} "with-bundle"))
- (mode promote)
- (action
-  (copy %{deps} %{target})))
+; (rule
+;  ; This needs to be mathjax version 3, as mathjax 4 has changed its build
+;  ; process and does not include a "full" variant with all extensions.
+;  (deps %{project_root}/node_modules/mathjax/es5/tex-svg-full.js)
+;  (target "tex-svg-full.js.crunch")
+;  (enabled_if
+;   (= %{profile} "with-bundle"))
+;  (mode promote)
+;  (action
+;   (copy %{deps} %{target})))
 
 ; (rule
 ;  (target "tailwindcss.js")
@@ -59,8 +59,6 @@
  (deps
   (:x data_contents.ml)
   (glob_files *.crunch))
- (enabled_if
-  (= %{profile} "with-bundle"))
  (action
   (progn
    (setenv

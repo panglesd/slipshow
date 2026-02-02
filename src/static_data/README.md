@@ -48,3 +48,13 @@ KaTeX is nice because it is somehow simpler to make it standalone:
 - Put all that inside `static_data/katex/data/`
 - run `dune build @katex` and promote the new files
 
+------------
+
+## Mathjax
+
+Mathjax is harder to make standalone.
+- Somewhere, do `npm install mathjax@3`
+- Get the file `node_modules/mathjax/es5/tex-svg-full.js` but name it with
+  `.crunch` at the end.
+- run `dune build @data-files` and promote the new files
+
