@@ -39,4 +39,12 @@ Here is how to include highlightJS:
 ## KaTeX
 
 KaTeX is nice because it is somehow simpler to make it standalone:
-- TODO
+- Download from the [CDN](https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js)
+- Get a standalone version of the stylesheet, using pandoc:
+  ```
+  $ pandoc tool.md --standalone --embed-resources -o tool.html
+  ```
+- Download the auto-render extension at https://cdn.jsdelivr.net/npm/katex@latest/dist/contrib/auto-render.min.js
+- Put all that inside `static_data/katex/data/`
+- run `dune build @katex` and promote the new files
+

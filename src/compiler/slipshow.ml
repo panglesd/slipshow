@@ -12,8 +12,32 @@ let mathjax_element has_math math_link =
     | Some (Remote r) ->
         Format.sprintf "<script id=\"MathJax-script\" src=\"%s\"></script>" r
     | None ->
-        Format.sprintf "<script id=\"MathJax-script\">%s</script>"
-          Data_files.(read Mathjax_js)
+        String.concat ""
+        @@ [
+             Format.sprintf "<script>%s</script>"
+               (Katex.read "katex.min.js" |> Option.get);
+             Format.sprintf "<style>%s</style>"
+               (Katex.read "standalone-style.min.css" |> Option.get);
+             Format.sprintf "<script>%s</script>"
+               (Katex.read "auto-render.min.js" |> Option.get);
+             {|  <script>
+
+        renderMathInElement(document.body, {
+          // customised options
+          // • auto-render specific keys, e.g.:
+          delimiters: [
+              {left: '\\(', right: '\\)', display: false},
+              {left: '\\[', right: '\\]', display: true}
+          ],
+          // • rendering keys, e.g.:
+            throwOnError : false,
+            strict: false,
+            trust:true
+        });
+
+</script>
+|};
+           ]
 
 let css_element = function
   | Asset.Local { content = t; _ } -> Format.sprintf "<style>%s</style>" t
