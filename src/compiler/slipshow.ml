@@ -42,8 +42,7 @@ let slipshow_js_element slipshow_link =
   | Some (Remote r) -> Format.sprintf "<script src=\"%s\"></script>" r
   | None -> Format.sprintf "<script>%s</script>" Data_files.(read Slipshow_js)
 
-let head ~width ~height ~theme ~highlightjs_theme ~(has : Has.t) ~math_link
-    ~css_links =
+let head ~width ~height ~theme ~highlightjs_theme ~(has : Has.t) ~css_links =
   let theme = theme_css theme in
   let highlight_css_element =
     let filename = "styles/" ^ highlightjs_theme ^ ".min.css" in
@@ -84,14 +83,12 @@ let head ~width ~height ~theme ~highlightjs_theme ~(has : Has.t) ~math_link
     in
     Format.sprintf {|<link rel="icon" type="image/x-icon" href="%s">|} href
   in
-  let mathjax_element = mathjax_element has.math math_link in
   let css_elements = List.map css_element css_links |> String.concat "" in
   String.concat "\n"
     [
       pdf_support;
       variable_css ~width ~height;
       favicon_element;
-      mathjax_element;
       internal_css;
       system_css;
       theme;
@@ -104,9 +101,7 @@ let head ~width ~height ~theme ~highlightjs_theme ~(has : Has.t) ~math_link
 let embed_in_page ~has_speaker_view ~slipshow_js content ~has ~math_link
     ~css_links ~js_links ~theme ~dimension ~highlightjs_theme =
   let width, height = dimension in
-  let head =
-    head ~has ~math_link ~css_links ~theme ~width ~height ~highlightjs_theme
-  in
+  let head = head ~has ~css_links ~theme ~width ~height ~highlightjs_theme in
   let slipshow_js_element = slipshow_js_element slipshow_js in
   let js =
     js_links
@@ -116,13 +111,17 @@ let embed_in_page ~has_speaker_view ~slipshow_js content ~has ~math_link
          | Remote r -> Format.sprintf {|<script src="%s"></script>|} r)
     |> String.concat ""
   in
+  let mathjax_element = mathjax_element has.math math_link in
   let start =
     String.concat ""
       [
         {|
 <!doctype html>
 <html>
-  <head>|};
+  <head><script>window.MathJax = {
+  loader: {load: ['[tex]/html']},
+  tex: {packages: {'[+]': ['html']}}
+};</script>|};
         (if has_speaker_view then {|    <base target="_parent">|} else "");
         {|
     <meta charset="utf-8" />
@@ -154,8 +153,9 @@ let embed_in_page ~has_speaker_view ~slipshow_js content ~has ~math_link
         slipshow_js_element;
         {|
     <!-- Start the presentation () -->
-    <script>hljs.highlightAll();</script>
-    <script>
+    <script>hljs.highlightAll();</script>|};
+        mathjax_element;
+        {|    <script>
       startSlipshow(|};
         string_of_int width;
         {|, |};

@@ -12,7 +12,7 @@ type file =
 
 let string_of_file = function
   | Slipshow_js -> "slipshow.cdn.min.js.crunch"
-  | Mathjax_js -> "tex-svg.js.crunch"
+  | Mathjax_js -> "tex-svg-full.js.crunch"
   | Highlight_css -> "highlight-js.css.crunch"
   | Highlight_js -> "highlight-js.js.crunch"
   | Highlight_js_ocaml -> "highlight-js.ocaml.js.crunch"

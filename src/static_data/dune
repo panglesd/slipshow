@@ -26,8 +26,10 @@
   (copy %{deps} %{target})))
 
 (rule
- (deps %{project_root}/node_modules/mathjax/es5/tex-svg.js)
- (target "tex-svg.js.crunch")
+ ; This needs to be mathjax version 3, as mathjax 4 has changed its build
+ ; process and does not include a "full" variant with all extensions.
+ (deps %{project_root}/node_modules/mathjax/es5/tex-svg-full.js)
+ (target "tex-svg-full.js.crunch")
  (enabled_if
   (= %{profile} "with-bundle"))
  (mode promote)
