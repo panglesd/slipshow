@@ -3,26 +3,13 @@ module Frontmatter = Frontmatter
 
 type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
 
-let mathjax_element has_math math_link =
-  if not has_math then ""
-  else
-    match math_link with
-    | Some (Asset.Local { content = t; _ }) ->
-        Format.sprintf "<script id=\"MathJax-script\">%s</script>" t
-    | Some (Remote r) ->
-        Format.sprintf "<script id=\"MathJax-script\" src=\"%s\"></script>" r
-    | None ->
-        String.concat ""
-        @@ [
-             Format.sprintf "<script>%s</script>"
-               (Katex.read "katex.min.js" |> Option.get);
-             Format.sprintf "<style>%s</style>"
-               (Katex.read "standalone-style.min.css" |> Option.get);
-             Format.sprintf "<script>%s</script>"
-               (Katex.read "auto-render.min.js" |> Option.get);
-             {|  <script>
-
-        renderMathInElement(document.body, {
+let math_option_elem math_mode has_math =
+  let elem =
+    if not has_math then ""
+    else
+      match math_mode with
+      | `Katex ->
+          {| window.default_math_options = {
           // customised options
           // • auto-render specific keys, e.g.:
           delimiters: [
@@ -33,11 +20,43 @@ let mathjax_element has_math math_link =
             throwOnError : false,
             strict: false,
             trust:true
-        });
+        };
+|}
+      | `Mathjax ->
+          {|window.MathJax = {
+  loader: {load: ['[tex]/html']},
+  tex: {packages: {'[+]': ['html']}}
+};|}
+  in
+  "<script>" ^ elem ^ "</script>"
 
+let mathjax_element math_mode has_math math_link =
+  if not has_math then ""
+  else
+    match math_link with
+    | Some (Asset.Local { content = t; _ }) ->
+        Format.sprintf "<script id=\"MathJax-script\">%s</script>" t
+    | Some (Remote r) ->
+        Format.sprintf "<script id=\"MathJax-script\" src=\"%s\"></script>" r
+    | None -> (
+        match math_mode with
+        | `Katex ->
+            String.concat ""
+            @@ [
+                 Format.sprintf "<script>%s</script>"
+                   (Katex.read "katex.min.js" |> Option.get);
+                 Format.sprintf "<style>%s</style>"
+                   (Katex.read "standalone-style.min.css" |> Option.get);
+                 Format.sprintf "<script>%s</script>"
+                   (Katex.read "auto-render.min.js" |> Option.get);
+                 {|  <script>
+        renderMathInElement(document.body, {...window.default_math_options, ...window.Katex});
 </script>
 |};
-           ]
+               ]
+        | `Mathjax ->
+            Format.sprintf "<script id=\"MathJax-script\">%s</script>"
+              Data_files.(read Mathjax_js))
 
 let css_element = function
   | Asset.Local { content = t; _ } -> Format.sprintf "<style>%s</style>" t
@@ -66,7 +85,8 @@ let slipshow_js_element slipshow_link =
   | Some (Remote r) -> Format.sprintf "<script src=\"%s\"></script>" r
   | None -> Format.sprintf "<script>%s</script>" Data_files.(read Slipshow_js)
 
-let head ~width ~height ~theme ~highlightjs_theme ~(has : Has.t) ~css_links =
+let head ~width ~height ~theme ~highlightjs_theme ~(has : Has.t) ~math_mode
+    ~css_links =
   let theme = theme_css theme in
   let highlight_css_element =
     let filename = "styles/" ^ highlightjs_theme ^ ".min.css" in
@@ -108,6 +128,7 @@ let head ~width ~height ~theme ~highlightjs_theme ~(has : Has.t) ~css_links =
     Format.sprintf {|<link rel="icon" type="image/x-icon" href="%s">|} href
   in
   let css_elements = List.map css_element css_links |> String.concat "" in
+  let math_option = math_option_elem math_mode has.math in
   String.concat "\n"
     [
       pdf_support;
@@ -120,12 +141,15 @@ let head ~width ~height ~theme ~highlightjs_theme ~(has : Has.t) ~css_links =
       highlight_css_element;
       highlight_js_element;
       highlight_js_lang_elements;
+      math_option;
     ]
 
 let embed_in_page ~has_speaker_view ~slipshow_js content ~has ~math_link
-    ~css_links ~js_links ~theme ~dimension ~highlightjs_theme =
+    ~css_links ~js_links ~theme ~dimension ~highlightjs_theme ~math_mode =
   let width, height = dimension in
-  let head = head ~has ~css_links ~theme ~width ~height ~highlightjs_theme in
+  let head =
+    head ~has ~css_links ~theme ~width ~height ~highlightjs_theme ~math_mode
+  in
   let slipshow_js_element = slipshow_js_element slipshow_js in
   let js =
     js_links
@@ -135,17 +159,14 @@ let embed_in_page ~has_speaker_view ~slipshow_js content ~has ~math_link
          | Remote r -> Format.sprintf {|<script src="%s"></script>|} r)
     |> String.concat ""
   in
-  let mathjax_element = mathjax_element has.math math_link in
+  let mathjax_element = mathjax_element math_mode has.math math_link in
   let start =
     String.concat ""
       [
         {|
 <!doctype html>
 <html>
-  <head><script>window.MathJax = {
-  loader: {load: ['[tex]/html']},
-  tex: {packages: {'[+]': ['html']}}
-};</script>|};
+  <head>|};
         (if has_speaker_view then {|    <base target="_parent">|} else "");
         {|
     <meta charset="utf-8" />
@@ -238,6 +259,9 @@ let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty)
   in
   let css_links = frontmatter.css_links in
   let js_links = frontmatter.js_links in
+  let math_mode =
+    Option.value ~default:Frontmatter.Default.math_mode frontmatter.math_mode
+  in
   let theme =
     match frontmatter.theme with
     | None -> Frontmatter.Default.theme
@@ -255,7 +279,7 @@ let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty)
   let content = Renderers.to_html_string md in
   let has = Has.find_out md in
   embed_in_page ~has_speaker_view ~slipshow_js ~dimension ~has ~math_link ~theme
-    ~css_links ~js_links content ~highlightjs_theme
+    ~css_links ~js_links content ~highlightjs_theme ~math_mode
 
 let add_starting_state ?(autofocus = true) (start, end_, has_speaker_view)
     (starting_state : starting_state option) =

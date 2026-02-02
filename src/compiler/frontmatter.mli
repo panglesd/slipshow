@@ -9,6 +9,7 @@ type 'a fm = {
   js_links : 'a list;
   dimension : (int * int) option;
   highlightjs_theme : string option;
+  math_mode : [ `Mathjax | `Katex ] option;
 }
 
 (** We use this trick to only allow [string fm] and [Asset.t fm], but it is
@@ -23,6 +24,7 @@ module Default : sig
   val toplevel_attributes : Cmarkit.Attributes.t
   val theme : [> `Builtin of Themes.t ]
   val highlightjs_theme : string
+  val math_mode : [ `Mathjax | `Katex ]
 end
 
 val empty : resolved t
@@ -39,6 +41,7 @@ module String_to : sig
   val theme : string -> [> `Builtin of Themes.t | `External of string ]
   val css_link : string -> string
   val dimension : string -> (int * int, [> `Msg of string ]) result
+  val math_mode : string -> ([ `Katex | `Mathjax ], [ `Msg of string ]) result
 end
 
 val of_string : string -> (unresolved t, [> `Msg of string ]) result
