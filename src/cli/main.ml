@@ -63,10 +63,13 @@ module Custom_conv = struct
     Arg.conv (parser_, printer)
 
   let math_mode =
-    let parser_ s = Slipshow.Frontmatter.String_to.math_mode s in
-    let printer fmt = function
-      | `Mathjax -> Format.fprintf fmt "mathjax"
-      | `Katex -> Format.fprintf fmt "katex"
+    let parser_ s =
+      Result.map (fun x -> Some x) @@ Slipshow.Frontmatter.String_to.math_mode s
+    in
+    let rec printer fmt = function
+      | Some `Mathjax -> Format.fprintf fmt "mathjax"
+      | Some `Katex -> Format.fprintf fmt "katex"
+      | None -> printer fmt (Some Slipshow.Frontmatter.Default.math_mode)
     in
     Arg.conv (parser_, printer)
 
@@ -127,12 +130,15 @@ module Compile_args = struct
 
   let math_link =
     let doc =
-      "Where to find the mathjax javascript file. Optional. When absent, use \
-       mathjax.3.2.2 embedded in this binary. If URL is an absolute URL, links \
-       to it, otherwise the content is embedded in the html file."
+      "Where to find the javascript file for rendering math. Optional. When \
+       absent, uses mathjax.3.2.2 or katex.0.16.28, depending on the value of \
+       math-mode. If URL is an absolute URL, links to it, otherwise the \
+       content is embedded in the html file."
     in
     Arg.(
-      value & opt (some string) None & info ~docv:"URL" ~doc [ "m"; "mathjax" ])
+      value
+      & opt (some string) None
+      & info ~docv:"URL" ~doc [ "m"; "math-script" ])
 
   let dim =
     let doc =
@@ -174,9 +180,14 @@ module Compile_args = struct
     Arg.(value & pos 0 Custom_conv.input `Stdin & info [] ~doc ~docv:"FILE.md")
 
   let math_mode =
-    let doc = "Whether to use KaTeX or MathJax to render mathematics." in
+    let doc =
+      "Whether to use KaTeX or MathJax to render mathematics. Can be \
+       $(b,mathjax) or $(b,katex)."
+    in
     Arg.(
-      value & opt (some Custom_conv.math_mode) None & info [ "math-mode" ] ~doc)
+      value
+      & opt Custom_conv.math_mode None
+      & info [ "math-mode" ] ~doc ~docv:"MODE")
 
   type compile_args = {
     cli_frontmatter : Slipshow.Frontmatter.unresolved Slipshow.Frontmatter.t;
