@@ -33,3 +33,10 @@ Here is how to include highlightJS:
   - The js in `languages/`
   - `highlight.min.js` in `./`
 - Then run `dune build @highlightjs` and promote the new files
+
+------------
+
+## KaTeX
+
+KaTeX is nice because it is somehow simpler to make it standalone:
+- TODO
