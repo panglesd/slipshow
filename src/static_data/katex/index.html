@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+  <head>
+    <title></title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="standalone.css" />
+    <script src="katex.min.js"></script>
+    <script
+      src="auto-render.min.js"
+    ></script>
+  </head>
+  <body>
+      \(\htmlId{yoyo}{\sqrt 2}\)
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement(document.body, {
+          // customised options
+          // • auto-render specific keys, e.g.:
+          delimiters: [
+              {left: '\\(', right: '\\)', display: false},
+              {left: '\\[', right: '\\]', display: true}
+          ],
+          // • rendering keys, e.g.:
+            throwOnError : false,
+            strict: false,
+            trust:true
+        });
+    });
+</script>
+  </body>
+</html>
