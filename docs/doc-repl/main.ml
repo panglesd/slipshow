@@ -21,6 +21,7 @@ let view ~dimension ~preview_el ~editor_el starting =
          js_links = [];
          dimension;
          highlightjs_theme = None;
+         math_mode = None;
        }
       : _ Slipshow.Frontmatter.t)
   in

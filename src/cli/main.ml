@@ -62,6 +62,14 @@ module Custom_conv = struct
     in
     Arg.conv (parser_, printer)
 
+  let math_mode =
+    let parser_ s = Slipshow.Frontmatter.String_to.math_mode s in
+    let printer fmt = function
+      | `Mathjax -> Format.fprintf fmt "mathjax"
+      | `Katex -> Format.fprintf fmt "katex"
+    in
+    Arg.conv (parser_, printer)
+
   let dimension =
     let int_parser = Cmdliner.Arg.(conv_parser int) in
     let int_printer = Cmdliner.Arg.(conv_printer int) in
@@ -165,6 +173,11 @@ module Compile_args = struct
     in
     Arg.(value & pos 0 Custom_conv.input `Stdin & info [] ~doc ~docv:"FILE.md")
 
+  let math_mode =
+    let doc = "Whether to use KaTeX or MathJax to render mathematics." in
+    Arg.(
+      value & opt (some Custom_conv.math_mode) None & info [ "math-mode" ] ~doc)
+
   type compile_args = {
     cli_frontmatter : Slipshow.Frontmatter.unresolved Slipshow.Frontmatter.t;
     input : [ `File of Fpath.t | `Stdin ];
@@ -174,6 +187,7 @@ module Compile_args = struct
   let term =
     let open Term.Syntax in
     let+ math_link = math_link
+    and+ math_mode = math_mode
     and+ theme = theme
     and+ highlightjs_theme = highlightjs_theme
     and+ css_links = css_links
@@ -193,6 +207,7 @@ module Compile_args = struct
             toplevel_attributes;
             js_links;
             highlightjs_theme;
+            math_mode;
           };
       input;
       output;

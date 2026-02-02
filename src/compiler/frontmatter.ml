@@ -9,7 +9,10 @@ type 'a fm = {
   js_links : 'a list;
   dimension : (int * int) option;
   highlightjs_theme : string option;
+  math_mode : [ `Mathjax | `Katex ] option;
 }
+(** We keep an option even though there are default value to be able to merge
+    two frontmatter. None and default value represent different things. *)
 
 type 'a t =
   | Unresolved : string fm -> unresolved t
@@ -39,6 +42,7 @@ module Default = struct
 
   let theme = `Builtin Themes.Default
   let highlightjs_theme = "default"
+  let math_mode = `Mathjax
 end
 
 let empty =
@@ -51,6 +55,7 @@ let empty =
       css_links = [];
       js_links = [];
       highlightjs_theme = None;
+      math_mode = None;
     }
 
 module String_to = struct
@@ -70,6 +75,11 @@ module String_to = struct
     | _ -> Error (`Msg "Can only be a set of attributes")
 
   let math_link s = s
+
+  let math_mode = function
+    | "mathjax" -> Ok `Mathjax
+    | "katex" -> Ok `Katex
+    | _ -> Error (`Msg "Expected \"mathjax\" or \"katex\"")
 
   let theme s =
     match Themes.of_string s with
@@ -127,6 +137,7 @@ let of_string s =
   let math_link =
     get ("math-link", fun x -> Ok (String_to.math_link x)) assoc
   in
+  let math_mode = get ("math-mode", String_to.math_mode) assoc in
   let theme = get ("theme", fun x -> Ok (String_to.theme x)) assoc in
   let highlightjs_theme = get ("highlightjs-theme", fun x -> Ok x) assoc in
   let files field =
@@ -148,6 +159,7 @@ let of_string s =
          dimension;
          js_links;
          highlightjs_theme;
+         math_mode;
        })
 
 let ( let* ) x f = Option.bind x f
@@ -194,6 +206,7 @@ let combine (Resolved cli_frontmatter) (Resolved frontmatter) =
       frontmatter.toplevel_attributes
   in
   let math_link = combine_opt cli_frontmatter.math_link frontmatter.math_link in
+  let math_mode = combine_opt cli_frontmatter.math_mode frontmatter.math_mode in
   let theme = combine_opt cli_frontmatter.theme frontmatter.theme in
   let dimension = combine_opt cli_frontmatter.dimension frontmatter.dimension in
   let css_links = cli_frontmatter.css_links @ frontmatter.css_links in
@@ -210,4 +223,5 @@ let combine (Resolved cli_frontmatter) (Resolved frontmatter) =
       dimension;
       js_links;
       highlightjs_theme;
+      math_mode;
     }
