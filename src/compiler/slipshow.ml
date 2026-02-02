@@ -9,7 +9,7 @@ let math_option_elem math_mode has_math =
     else
       match math_mode with
       | `Katex ->
-          {| window.default_math_options = {
+          {| window.Katex = {
           // customised options
           // • auto-render specific keys, e.g.:
           delimiters: [
@@ -50,7 +50,7 @@ let mathjax_element math_mode has_math math_link =
                  Format.sprintf "<script>%s</script>"
                    (Katex.read "auto-render.min.js" |> Option.get);
                  {|  <script>
-        renderMathInElement(document.body, {...window.default_math_options, ...window.Katex});
+        renderMathInElement(document.body, window.Katex);
 </script>
 |};
                ]
