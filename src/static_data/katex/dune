@@ -6,8 +6,9 @@
  (aliases katex)
  (deps
   (:x katex.ml)
-  (glob_files_rec data/*)
- )
+  (glob_files_rec data/*))
+ (enabled_if
+  (= %{profile} "with-bundle"))
  (action
   (progn
    (setenv

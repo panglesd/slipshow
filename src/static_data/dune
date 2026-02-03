@@ -59,6 +59,8 @@
  (deps
   (:x data_contents.ml)
   (glob_files *.crunch))
+ (enabled_if
+  (= %{profile} "with-bundle"))
  (action
   (progn
    (setenv
