@@ -11,6 +11,7 @@ type s_block =
   | Slip of Block.t attributed node
   | SlipScript of Block.Code_block.t attributed node
   | Carousel of Block.t list attributed node
+  | MermaidJS of Block.Code_block.t attributed node
 
 type Block.t += S_block of s_block
 
@@ -19,6 +20,7 @@ let div d = S_block (Div d)
 let slide d = S_block (Slide d)
 let slip d = S_block (Slip d)
 let slipscript d = S_block (SlipScript d)
+let mermaid_js d = S_block (MermaidJS d)
 let carousel d = S_block (Carousel d)
 
 type media = {
@@ -69,7 +71,7 @@ module Folder = struct
     | Included ((b, _), _)
     | Slip ((b, _), _) ->
         Folder.fold_block f acc b
-    | SlipScript _ -> acc
+    | MermaidJS _ | SlipScript _ -> acc
     | Carousel ((l, _), _) ->
         List.fold_left (fun acc x -> Folder.fold_block f acc x) acc l
 
@@ -123,6 +125,9 @@ module Mapper = struct
     | SlipScript ((s, attrs), meta) ->
         let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
         Some (SlipScript ((s, attrs), meta))
+    | MermaidJS ((s, attrs), meta) ->
+        let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
+        Some (MermaidJS ((s, attrs), meta))
     | Carousel ((l, attrs), meta) -> (
         let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
         List.filter_map (Mapper.map_block m) l |> function
