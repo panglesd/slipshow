@@ -76,6 +76,7 @@ We advise you to start by reading the tutorials, starting with the :doc:`first <
    grouping
    special-elements
    actions-api
+   math
    custom-scripts-ref
    frontmatter
    themes
