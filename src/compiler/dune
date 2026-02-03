@@ -1,4 +1,13 @@
 (library
  (name slipshow)
  (public_name slipshow)
- (libraries cmarkit data_files base64 fpath magic-mime themes bos highlightjs katex))
+ (libraries
+  cmarkit
+  data_files
+  base64
+  fpath
+  magic-mime
+  themes
+  bos
+  highlightjs
+  katex))
