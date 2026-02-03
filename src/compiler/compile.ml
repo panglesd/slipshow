@@ -14,6 +14,7 @@ type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
     The first stage is doing the following:
     - Block quotes are turned into Divs,
     - [slip-script] code blocks are turned into slip scripts,
+    - [=mermaid] code blocks are turned into slip scripts,
     - [includes] are included, with the first stage runned on them,
     - Images src are relativized,
     - Images are turned into audio/video depending on the attributes/extension
@@ -109,6 +110,9 @@ module Stage1 = struct
         | Some ("slip-script", _) ->
             Mapper.ret
               (Ast.slipscript ((cb, (Mapper.map_attrs m attrs, meta)), meta2))
+        | Some ("=mermaid", _) ->
+            Mapper.ret
+              (Ast.mermaid_js ((cb, (Mapper.map_attrs m attrs, meta)), meta2))
         | _ -> Mapper.default)
 
   let handle_includes read_file current_path m (attrs, meta) =
@@ -365,6 +369,8 @@ module Stage2 = struct
             Some (Ast.slip ((slip, no_attrs), meta), attrs)
         | SlipScript ((slscr, attrs), meta) ->
             Some (Ast.slipscript ((slscr, no_attrs), meta), attrs)
+        | MermaidJS ((slscr, attrs), meta) ->
+            Some (Ast.mermaid_js ((slscr, no_attrs), meta), attrs)
         | Carousel ((c, attrs), meta) ->
             Some (Ast.carousel ((c, no_attrs), meta), attrs))
     | _ -> None
@@ -423,6 +429,8 @@ module Stage2 = struct
             Ast.slip ((slip, (merge attrs, meta_a)), meta)
         | SlipScript ((slscr, (attrs, meta_a)), meta) ->
             Ast.slipscript ((slscr, (merge attrs, meta_a)), meta)
+        | MermaidJS ((slscr, (attrs, meta_a)), meta) ->
+            Ast.mermaid_js ((slscr, (merge attrs, meta_a)), meta)
         | Carousel ((c, (attrs, meta_a)), meta) ->
             Ast.carousel ((c, (merge attrs, meta_a)), meta))
     | _ -> b
@@ -633,6 +641,7 @@ let to_cmarkit =
         in
         Mapper.ret (Block.Blocks ([ b ], meta))
     | SlipScript _ -> Mapper.delete
+    | MermaidJS cb -> Mapper.ret (Block.Code_block cb)
     | Carousel ((l, _), meta) ->
         `Map (Mapper.map_block m (Block.Blocks (l, meta)))
   in

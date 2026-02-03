@@ -102,6 +102,7 @@ let to_string = function
       | Ast.Slide _ -> "Slide"
       | Ast.Slip _ -> "Slip"
       | Ast.SlipScript _ -> "Slipscript"
+      | Ast.MermaidJS _ -> "MermaidJS"
       | Ast.Carousel _ -> "Carousel")
   | _ -> "other"
 
@@ -328,6 +329,11 @@ let custom_html_renderer (files : Ast.Files.map) =
               attrs
           in
           RenderAttrs.in_block c "script" attrs (fun () ->
+              RenderAttrs.block_lines c (Block.Code_block.code cb));
+          true
+      | Ast.MermaidJS ((cb, (attrs, _)), _) ->
+          let attrs = Attributes.add_class attrs ("mermaid", Meta.none) in
+          RenderAttrs.in_block c "pre" attrs (fun () ->
               RenderAttrs.block_lines c (Block.Code_block.code cb));
           true
     in
