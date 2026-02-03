@@ -79,26 +79,26 @@ If we pass a mathjax value, with a remote url:
   > EOF
   $ echo "#title 1+1=0" > without_math.md
 
-  $ slipshow compile -o m1.html --mathjax https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js with_inline_math.md
-  $ slipshow compile -o m2.html --mathjax https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js with_block_math.md
-  $ slipshow compile -o m3.html --mathjax https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js without_math.md
+  $ slipshow compile -o m1.html --math-script https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js with_inline_math.md
+  $ slipshow compile -o m2.html --math-script https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js with_block_math.md
+  $ slipshow compile -o m3.html --math-script https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js without_math.md
 
   $ show_source m1.html | grep mathjax
-  <script id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script>hljs.highlightAll();</script><script id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>    <script>
   $ show_source m2.html | grep mathjax
-  <script id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script>hljs.highlightAll();</script><script id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>    <script>
   $ show_source m3.html | grep mathjax
   [1]
 
 With a file
 
   $ echo "dummyABC" > mathjax.js
-  $ slipshow compile -o m.html --mathjax mathjax-unknown.js with_inline_math.md
+  $ slipshow compile -o m.html --math-script mathjax-unknown.js with_inline_math.md
   slipshow: [WARNING] Could not read file: mathjax-unknown.js. Considering it as an URL. (mathjax-unknown.js: No such file or directory)
-  $ slipshow compile -o m.html --mathjax mathjax.js with_inline_math.md
+  $ slipshow compile -o m.html --math-script mathjax.js with_inline_math.md
   $ show_source m.html | grep -A 1 dummyABC
-  <script id="MathJax-script">dummyABC
-  </script>
+      <script>hljs.highlightAll();</script><script id="MathJax-script">dummyABC
+  </script>    <script>
 
 Images
 
