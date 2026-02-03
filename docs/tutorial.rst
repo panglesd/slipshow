@@ -86,7 +86,7 @@ with another author of the presentation. The ``.html`` file is the one
 you'll use to view or do your presentation, or to share with someone
 interested in viewing the presentation.
 
-Moreover, the ``flag`` command will propagate any saved changes in the
+Moreover, the ``serve`` command will propagate any saved changes in the
 input file, and "live-reload" the presentation served at the address
 ``http://localhost:8080``. It is very useful when writing your
 presentation. When you only want to generate the html file once, use
