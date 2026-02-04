@@ -1,0 +1,18 @@
+(library
+ (name mermaid)
+ (public_name slipshow.mermaid))
+
+(rule
+ (aliases mermaid)
+ (deps
+  (:x mermaid.ml)
+  (glob_files_rec data/*) )
+ (enabled_if
+  (= %{profile} "with-bundle"))
+ (action
+  (progn
+   (setenv
+    SOURCE_DATE_EPOCH
+    0
+    (run ocaml-crunch data/ -o %{x}.corrected -m plain -s))
+   (diff? %{x} %{x}.corrected))))

@@ -1,11 +1,12 @@
 open Cmarkit
 module StringSet = Set.Make (String)
 
-type t = { math : bool; pdf : bool; code_blocks : StringSet.t }
+type t = { math : bool; pdf : bool; mermaid : bool; code_blocks : StringSet.t }
 
 let has =
   let block _ acc = function
     | Block.Ext_math_block _ -> Folder.ret { acc with math = true }
+    | Ast.S_block (MermaidJS _) -> Folder.ret { acc with mermaid = true }
     | Block.Code_block ((cb, _), _) -> (
         match Block.Code_block.info_string cb with
         | None -> Folder.default
@@ -27,5 +28,10 @@ let has =
 
 let find_out (doc : Ast.t) =
   Cmarkit.Folder.fold_doc has
-    { math = false; pdf = false; code_blocks = StringSet.empty }
+    {
+      math = false;
+      pdf = false;
+      code_blocks = StringSet.empty;
+      mermaid = false;
+    }
     doc.doc
