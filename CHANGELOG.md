@@ -4,6 +4,7 @@
 
 ### Added
 
+- Support for Mermaid JS (#205)
 - Support for syntax highlighting of all highlightjs-supported languages and
   themes (#200)
 - Support for MathJax extensions, especially the html extension to allow actions
