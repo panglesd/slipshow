@@ -3,7 +3,7 @@ module Frontmatter = Frontmatter
 
 type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
 
-let math_option_elem math_mode has_math =
+let math_option_elem math_mode ~has_math =
   let elem =
     if not has_math then ""
     else
@@ -27,6 +27,14 @@ let math_option_elem math_mode has_math =
   loader: {load: ['[tex]/html']},
   tex: {packages: {'[+]': ['html']}}
 };|}
+  in
+  "<script>" ^ elem ^ "</script>"
+
+let mermaid_option_elem ~has_mermaid =
+  let elem =
+    if not has_mermaid then ""
+    else
+      {|window.Mermaid = { startOnLoad: true, deterministicIds : true, securityLevel: "loose" };|}
   in
   "<script>" ^ elem ^ "</script>"
 
@@ -57,6 +65,17 @@ let mathjax_element math_mode has_math math_link =
         | `Mathjax ->
             Format.sprintf "<script id=\"MathJax-script\">%s</script>"
               Data_files.(read Mathjax_js))
+
+let mermaid_element has_mermaid =
+  if not has_mermaid then ""
+  else
+    String.concat ""
+      [
+        "<script id=\"mermaid-script\">";
+        Mermaid.read "mermaid.min.js" |> Option.get;
+        "</script>";
+        "<script>mermaid.initialize(window.Mermaid)</script>";
+      ]
 
 let css_element = function
   | Asset.Local { content = t; _ } -> Format.sprintf "<style>%s</style>" t
@@ -128,7 +147,8 @@ let head ~width ~height ~theme ~highlightjs_theme ~(has : Has.t) ~math_mode
     Format.sprintf {|<link rel="icon" type="image/x-icon" href="%s">|} href
   in
   let css_elements = List.map css_element css_links |> String.concat "" in
-  let math_option = math_option_elem math_mode has.math in
+  let math_option = math_option_elem math_mode ~has_math:has.math in
+  let mermaid_option = mermaid_option_elem ~has_mermaid:has.mermaid in
   String.concat "\n"
     [
       pdf_support;
@@ -142,6 +162,7 @@ let head ~width ~height ~theme ~highlightjs_theme ~(has : Has.t) ~math_mode
       highlight_js_element;
       highlight_js_lang_elements;
       math_option;
+      mermaid_option;
     ]
 
 let embed_in_page ~has_speaker_view ~slipshow_js content ~has ~math_link
@@ -160,6 +181,7 @@ let embed_in_page ~has_speaker_view ~slipshow_js content ~has ~math_link
     |> String.concat ""
   in
   let mathjax_element = mathjax_element math_mode has.math math_link in
+  let mermaid_element = mermaid_element has.mermaid in
   let start =
     String.concat ""
       [
@@ -200,6 +222,7 @@ let embed_in_page ~has_speaker_view ~slipshow_js content ~has ~math_link
     <!-- Start the presentation () -->
     <script>hljs.highlightAll();</script>|};
         mathjax_element;
+        mermaid_element;
         {|    <script>
       startSlipshow(|};
         string_of_int width;

@@ -60,3 +60,10 @@ Mathjax is harder to make standalone.
   `.crunch` at the end.
 - run `dune build @data-files --profile with-bundle` and promote the new files
 
+------------
+
+## MermaidJS
+
+- Download the latest version from https://cdn.jsdelivr.net/npm/mermaid@latest/dist/mermaid.min.js
+- Put it in `mermaidjs/data/`
+- run `dune build @mermaid --profile with-bundle` and promote the new files

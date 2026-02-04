@@ -10,4 +10,5 @@
   themes
   bos
   highlightjs
-  katex))
+  katex
+  mermaid))
