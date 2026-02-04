@@ -34,7 +34,7 @@ let mermaid_option_elem ~has_mermaid =
   let elem =
     if not has_mermaid then ""
     else
-      {|window.Mermaid = { startOnLoad: true, deterministicIds : true, securityLevel: "loose" };|}
+      {|window.Mermaid = { startOnLoad: false, deterministicIds : true, securityLevel: "loose" };|}
   in
   "<script>" ^ elem ^ "</script>"
 
@@ -224,17 +224,26 @@ let embed_in_page ~has_speaker_view ~slipshow_js content ~has ~math_link
         mathjax_element;
         mermaid_element;
         {|    <script>
-      startSlipshow(|};
+        async function startfunction () {
+        if (typeof mermaid !== "undefined" )
+          await mermaid.run();
+        startSlipshow(|};
         string_of_int width;
         {|, |};
         string_of_int height;
         {|,|};
       ]
   in
-  let end_ = Format.sprintf {|);
+  let end_ =
+    Format.sprintf
+      {|);
+};
+      startfunction()
     </script>%s
   </body>
-</html>|} js in
+</html>|}
+      js
+  in
   (start, end_, has_speaker_view)
 
 type starting_state = int
