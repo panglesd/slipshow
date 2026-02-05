@@ -18,6 +18,10 @@
 - Fix impossibility to open speaker view in serve mode (#198, issue #197)
 - Fix links opening inside iframe (#198)
 
+### Docs
+
+- Add how to include TikZ figures in your Slipshow presentation (#206)
+
 ## [v0.8.1] Les gnomes voleurs de Slipshow (Tuesday 21th January, 2026)
 
 ### Fix
