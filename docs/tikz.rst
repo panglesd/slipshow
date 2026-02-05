@@ -156,3 +156,14 @@ Here is the final result!
    {reveal=c}
 
    {reveal=c-edges}
+
+TikZ and auto-refresh
+=====================
+
+On ``serve`` mode, slipshow will automatically refresh when the svg file (eg ``triangle.svg``) has changed. However, it will not handle the recompilation of the ``.tex`` file.
+
+One way to fix this is to use a file watcher general tool, to recompile the ``.tex`` file on change. For instance, with ``entr``:
+
+.. code-block:: bash
+
+   $ echo "triangle.tex"| entr sh -c "latex triangle.tex && dvisvgm -n -e triangle.dvi"
