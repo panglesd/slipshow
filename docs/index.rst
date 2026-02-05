@@ -66,6 +66,7 @@ We advise you to start by reading the tutorials, starting with the :doc:`first <
    use-speaker-view
    figures-bit-by-bit
    do-a-slide-based-presentation
+   tikz
 
 .. toctree::
    :maxdepth: 1
