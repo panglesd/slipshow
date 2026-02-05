@@ -67,6 +67,7 @@ We advise you to start by reading the tutorials, starting with the :doc:`first <
    figures-bit-by-bit
    do-a-slide-based-presentation
    tikz
+   manim
 
 .. toctree::
    :maxdepth: 1
