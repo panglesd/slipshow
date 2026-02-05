@@ -3,7 +3,9 @@ type t
 val pp : t -> unit
 val setup : Brr.El.t -> t Fut.t
 val translate_coords : float * float -> float * float
-val move_pure : t -> Coordinates.window -> duration:float -> unit Fut.t
+
+val move_pure :
+  Fast.mode -> t -> Coordinates.window -> duration:float -> unit Fut.t
 
 (** The following values are useful for computing coordinates from
     [getBoundingRect]: *)

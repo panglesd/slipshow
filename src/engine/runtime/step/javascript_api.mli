@@ -1,1 +1,1 @@
-val slip : Universe.Window.t -> Undoable.undo list ref -> Jv.t
+val slip : mode:Fast.mode -> Universe.Window.t -> Undoable.undo list ref -> Jv.t

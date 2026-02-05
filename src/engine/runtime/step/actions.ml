@@ -13,10 +13,13 @@ module Execute = struct
 
   open Fut.Syntax
 
-  let only_if_fast f = if Fast.is_counting () then Undoable.return () else f ()
+  let only_if_fast mode f =
+    match mode with Fast.Counting_for_toc -> Undoable.return () | _ -> f ()
 
-  let do_ window elem =
-    only_if_fast @@ fun () ->
+  (* if Fast.is_counting () then Undoable.return () else f () *)
+
+  let do_ ~mode window elem =
+    only_if_fast mode @@ fun () ->
     let undos_ref = ref [] in
     let undo_fallback () =
       List.fold_left
@@ -30,7 +33,7 @@ module Execute = struct
       Brr.Console.(log [ body ]);
       let args = Jv.Function.[ ("slip", Fun.id) ] in
       let f = Jv.Function.v ~body ~args in
-      let arg = Javascript_api.slip window undos_ref in
+      let arg = Javascript_api.slip ~mode window undos_ref in
       let u = f arg in
       let undo () =
         try Fut.return (ignore @@ Jv.call u "undo" [||])
@@ -43,7 +46,7 @@ module Execute = struct
           [ "An exception occurred when trying to execute a custom script:"; e ]);
       Undoable.return ~undo:undo_fallback ()
 
-  let do_ window elems = Undoable.List.iter (do_ window) elems
+  let do_ ~mode window elems = Undoable.List.iter (do_ ~mode window) elems
   let setup = None
   let setup_all = None
 end

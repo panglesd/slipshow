@@ -23,7 +23,8 @@ module AttributeActions = struct
         Undoable.return ()
     | Ok x -> f x
 
-  let activate ?(remove_class = true) (module Action : Actions.S) window elem =
+  let activate ~mode ?(remove_class = true) (module Action : Actions.S) window
+      elem =
     let on = Action.on in
     let$ v = Brr.El.at (Jstr.v on) elem in
     Brr.Console.(log [ "Activating"; Action.action_name; "by"; elem ]);
@@ -33,10 +34,10 @@ module AttributeActions = struct
     in
     let v = Jstr.to_string v in
     let$$ args = Action.parse_args elem v in
-    Action.do_ window args
+    Action.do_ ~mode window args
 
-  let do_ window elem =
-    let do_ = fun m -> activate m window elem in
+  let do_ ~mode window elem =
+    let do_ = fun m -> activate ~mode m window elem in
     Undoable.List.iter do_ Actions.all
 end
 
@@ -57,11 +58,12 @@ let setup_actions window () =
                    (fun elem acc ->
                      let> () = acc in
                      let open AttributeActions in
-                     activate ~remove_class:false
+                     let mode = failwith "TODO" in
+                     activate ~mode ~remove_class:false
                        (module struct
                          include X
 
-                         let do_ _window x =
+                         let do_ ~mode:_ _window x =
                            setup2 x |> ignore;
                            Undoable.return ()
                        end)
@@ -74,13 +76,13 @@ let setup_actions window () =
   in
   ()
 
-let next window () =
+let next ~mode window () =
   match find_next_pause_or_step () with
   | None -> None
   | Some pause ->
       let res =
-        let> () = Actions.exit window pause in
-        let> () = AttributeActions.do_ window pause in
+        let> () = Actions.exit ~mode window pause in
+        let> () = AttributeActions.do_ ~mode window pause in
         Undoable.return ()
       in
       Some res

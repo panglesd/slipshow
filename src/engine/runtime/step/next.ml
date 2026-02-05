@@ -1,27 +1,29 @@
 open Fut.Syntax
 
+(*
+  Si on veut en rajouter :
+   - C'est quand on finit qu'on clean derrière soi, et débloque le suivant.
+   - TODO explain the rest
+*)
+
 let in_queue =
-  let running = ref false in
   let queue = Queue.create () in
-  let wait_in_queue () =
-    if !running then (
-      Fast.with_fast @@ fun () ->
-      let fut, cont = Fut.create () in
-      Queue.add cont queue;
-      fut)
-    else (
-      running := true;
-      Fut.return ())
+  let wait_in_queue hurry_bomb =
+    match Queue.take_opt queue with
+    | None -> Fut.return ()
+    | Some (_, h) ->
+        let () = match h with Fast.Normal h -> Fast.detonate h | _ -> () in
+        let fut, cont = Fut.create () in
+        Queue.add (cont, hurry_bomb) queue;
+        fut
   in
   let next_in_queue () =
     match Queue.take_opt queue with
-    | None ->
-        running := false;
-        ()
-    | Some cont -> cont ()
+    | None -> ()
+    | Some (cont, _hurry_bomb) -> cont ()
   in
-  fun f ->
-    let* () = wait_in_queue () in
+  fun hurry_bomb f ->
+    let* () = wait_in_queue hurry_bomb in
     let+ () = f () in
     next_in_queue ()
 
@@ -61,7 +63,7 @@ module Excursion = struct
     | None -> Fut.return ()
     | Some last_pos ->
         excursion := None;
-        Universe.Window.move_pure window last_pos ~duration:1.
+        Universe.Window.move_pure Fast.slow window last_pos ~duration:1.
 end
 
 let counter =
@@ -79,12 +81,13 @@ let with_step_transition =
   set_counter (string_of_int to_);
   res
 
-let go_next window n =
-  in_queue @@ fun () ->
+let go_next ~mode window n =
+  in_queue mode @@ fun () ->
   let rec loop n =
     if n <= 0 then Fut.return ()
     else
-      match Action_scheduler.next window () with
+      let mode = failwith "TODO" in
+      match Action_scheduler.next ~mode window () with
       | None -> Fut.return ()
       | Some undos ->
           let* (), undos = with_step_transition 1 @@ fun () -> undos in
@@ -94,8 +97,9 @@ let go_next window n =
   let+ () = loop n in
   actualize ()
 
-let go_prev n =
-  in_queue @@ fun () ->
+let go_prev ~mode n =
+  (* let hurry_bomb = failwith "TODO" in *)
+  in_queue mode @@ fun () ->
   let rec loop n =
     if n <= 0 then Fut.return ()
     else
@@ -108,11 +112,11 @@ let go_prev n =
   let+ () = loop n in
   actualize ()
 
-let goto step window =
+let goto ~mode step window =
   let current_step = State.get_step () in
   let* () = Excursion.end_ window () in
-  if current_step > step then go_prev (current_step - step)
-  else if current_step < step then go_next window (step - current_step)
+  if current_step > step then go_prev ~mode (current_step - step)
+  else if current_step < step then go_next ~mode window (step - current_step)
   else Fut.return ()
 
 let current_execution = ref None
@@ -124,7 +128,8 @@ let go_next window =
   let+ () = Excursion.end_ window () in
   match !current_execution with
   | None -> (
-      match Action_scheduler.next window () with
+      let mode = Fast.normal () in
+      match Action_scheduler.next window ~mode () with
       | None -> Fut.return ()
       | Some fut ->
           let fut =
@@ -133,9 +138,15 @@ let go_next window =
             actualize ();
             current_execution := None
           in
-          current_execution := Some fut;
+          current_execution := Some (fut, mode);
           fut)
-  | Some fut -> Fast.with_fast @@ fun () -> fut
+  | Some (fut, mode) ->
+      let () =
+        match mode with
+        | Normal hurry_bomb -> Fast.detonate hurry_bomb
+        | Counting_for_toc | Fast | Slow -> ()
+      in
+      fut
 
 let go_prev window =
   let do_the_undo () =
@@ -147,12 +158,17 @@ let go_prev window =
           actualize ();
           current_execution := None
         in
-        current_execution := Some fut;
+        current_execution := Some (fut, Fast.fast);
         Fut.return ()
   in
   let* () = Excursion.end_ window () in
   match !current_execution with
   | None -> do_the_undo ()
-  | Some fut ->
-      let* () = Fast.with_fast @@ fun () -> fut in
+  | Some (fut, mode) ->
+      let () =
+        match mode with
+        | Normal hurry_bomb -> Fast.detonate hurry_bomb
+        | Counting_for_toc | Fast | Slow -> ()
+      in
+      let* () = fut in
       do_the_undo ()
