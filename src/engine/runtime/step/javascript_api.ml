@@ -21,32 +21,34 @@ let one_arg conv action undos_ref =
 (* let one_elem action = one_arg Brr.El.of_jv action *)
 (* let one_elem_list action = one_arg (Jv.to_list Brr.El.of_jv) action *)
 
-let move (module X : Actions.Move) window undos_ref =
+let move (module X : Actions.Move) ~mode window undos_ref =
   Jv.callback ~arity:3 @@ fun elems duration margin ->
   let elem = Brr.El.of_jv elems
   and duration = Jv.to_option Jv.to_float duration
   and margin = Jv.to_option Jv.to_float margin in
-  register_undo undos_ref @@ fun () -> X.do_ window X.{ duration; margin; elem }
+  register_undo undos_ref @@ fun () ->
+  X.do_ ~mode window X.{ duration; margin; elem }
 
 let up = move (module Actions.Up)
 let down = move (module Actions.Down)
 let center = move (module Actions.Center)
 let scroll = move (module Actions.Scroll)
 
-let focus window undos_ref =
+let focus ~mode window undos_ref =
   Jv.callback ~arity:3 @@ fun elems duration margin ->
   let elems = Jv.to_list Brr.El.of_jv elems
   and duration = Jv.to_option Jv.to_float duration
   and margin = Jv.to_option Jv.to_float margin in
   register_undo undos_ref @@ fun () ->
-  Actions.Focus.do_ window { duration; margin; elems }
+  Actions.Focus.do_ ~mode window { duration; margin; elems }
 
-let unfocus window = one_arg (fun _ -> ()) (Actions.Unfocus.do_ window)
+let unfocus ~mode window =
+  one_arg (fun _ -> ()) (Actions.Unfocus.do_ ~mode window)
 
-let class_setter (module X : Actions.SetClass) window undos_ref =
+let class_setter (module X : Actions.SetClass) ~mode window undos_ref =
   Jv.callback ~arity:1 @@ fun elems ->
   let elems = (Jv.to_list Brr.El.of_jv) elems in
-  register_undo undos_ref @@ fun () -> X.do_ window elems
+  register_undo undos_ref @@ fun () -> X.do_ ~mode window elems
 
 let unstatic = class_setter (module Actions.Unstatic)
 let static = class_setter (module Actions.Static)
@@ -55,24 +57,24 @@ let unreveal = class_setter (module Actions.Unreveal)
 let emph = class_setter (module Actions.Emph)
 let unemph = class_setter (module Actions.Unemph)
 
-let play_media window undos_ref =
+let play_media ~mode window undos_ref =
   Jv.callback ~arity:1 @@ fun elems ->
   let elems = Jv.to_list Brr.El.of_jv elems in
-  register_undo undos_ref @@ fun () -> Actions.Play_media.do_ window elems
+  register_undo undos_ref @@ fun () -> Actions.Play_media.do_ ~mode window elems
 
-let draw window undos_ref =
+let draw ~mode window undos_ref =
   Jv.callback ~arity:1 @@ fun elems ->
   let elems = Jv.to_list Brr.El.of_jv elems in
-  register_undo undos_ref @@ fun () -> Actions.Draw.do_ window elems
+  register_undo undos_ref @@ fun () -> Actions.Draw.do_ ~mode window elems
 
-let change_page _window undos_ref =
+let change_page ~mode _window undos_ref =
   Jv.callback ~arity:2 @@ fun elem change ->
   let target_elem = Brr.El.of_jv elem in
   let change = Jv.to_string change in
   register_undo undos_ref @@ fun () ->
   Actions.Change_page.parse_change change
   |> Undoable.Option.iter @@ fun change ->
-     Actions.Change_page.do_javascript_api ~target_elem ~change
+     Actions.Change_page.do_javascript_api ~mode ~target_elem ~change
 
 let on_undo =
   one_arg Fun.id @@ fun callback ->
@@ -100,32 +102,33 @@ let set_prop undos_ref =
   let prop = Jv.to_jstr prop in
   register_undo undos_ref @@ fun () -> Undoable.Browser.set_prop obj prop value
 
-let is_fast = Jv.callback ~arity:1 (fun _ -> Jv.of_bool @@ Fast.is_fast ())
+let is_fast mode =
+  Jv.callback ~arity:1 (fun _ -> Jv.of_bool @@ Fast.is_fast mode)
 
-let slip window undos_ref =
+let slip ~mode window undos_ref =
   Jv.obj
     [|
       (* Actions *)
-      ("up", up window undos_ref);
-      ("center", center window undos_ref);
-      ("down", down window undos_ref);
-      ("scroll", scroll window undos_ref);
-      ("focus", focus window undos_ref);
-      ("unfocus", unfocus window undos_ref);
-      ("static", static window undos_ref);
-      ("unstatic", unstatic window undos_ref);
-      ("reveal", reveal window undos_ref);
-      ("unreveal", unreveal window undos_ref);
-      ("emph", emph window undos_ref);
-      ("unemph", unemph window undos_ref);
+      ("up", up ~mode window undos_ref);
+      ("center", center ~mode window undos_ref);
+      ("down", down ~mode window undos_ref);
+      ("scroll", scroll ~mode window undos_ref);
+      ("focus", focus ~mode window undos_ref);
+      ("unfocus", unfocus ~mode window undos_ref);
+      ("static", static ~mode window undos_ref);
+      ("unstatic", unstatic ~mode window undos_ref);
+      ("reveal", reveal ~mode window undos_ref);
+      ("unreveal", unreveal ~mode window undos_ref);
+      ("emph", emph ~mode window undos_ref);
+      ("unemph", unemph ~mode window undos_ref);
       ("onUndo", on_undo undos_ref);
       (* Scripting utilities *)
       ("state", state);
       ("setStyle", set_style undos_ref);
       ("setClass", set_class undos_ref);
       ("setProp", set_prop undos_ref);
-      ("playMedia", play_media window undos_ref);
-      ("draw", draw window undos_ref);
-      ("isFast", is_fast);
-      ("changePage", change_page window undos_ref);
+      ("playMedia", play_media ~mode window undos_ref);
+      ("draw", draw ~mode window undos_ref);
+      ("isFast", is_fast mode);
+      ("changePage", change_page ~mode window undos_ref);
     |]

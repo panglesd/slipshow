@@ -6,7 +6,7 @@ val go_next : Universe.Window.t -> unit Fut.t Fut.t
     finished. *)
 
 val go_prev : Universe.Window.t -> unit Fut.t
-val goto : int -> Universe.Window.t -> unit Fut.t
+val goto : mode:Fast.mode -> int -> Universe.Window.t -> unit Fut.t
 
 module Excursion : sig
   val start : unit -> unit

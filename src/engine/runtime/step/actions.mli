@@ -6,7 +6,7 @@ module type S = sig
   val on : string
   val action_name : string
   val parse_args : Brr.El.t -> string -> (args, [> `Msg of string ]) result
-  val do_ : Universe.Window.t -> args -> unit Undoable.t
+  val do_ : mode:Fast.mode -> Universe.Window.t -> args -> unit Undoable.t
 end
 
 module Pause : sig
@@ -40,7 +40,7 @@ module Emph : SetClass
 module Unemph : SetClass
 module Step : S with type args = unit
 
-val exit : Universe.Window.t -> Brr.El.t -> unit Undoable.t
+val exit : mode:Fast.mode -> Universe.Window.t -> Brr.El.t -> unit Undoable.t
 
 module Focus : sig
   type args = {
@@ -70,7 +70,7 @@ module Change_page : sig
   val parse_change : string -> change option
 
   val do_javascript_api :
-    target_elem:Brr.El.t -> change:change -> unit Undoable.t
+    mode:Fast.mode -> target_elem:Brr.El.t -> change:change -> unit Undoable.t
 
   include S with type args := args
 end

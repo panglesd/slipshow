@@ -21,7 +21,7 @@ let keyboard_setup (window : Universe.Window.t) =
             Step.Next.Excursion.start ();
             Universe.Move.move_relative_pure
               ~x:(30. *. 1. /. current_coord.scale)
-              window ~duration:0.
+              Fast.slow window ~duration:0.
           in
           ()
       | "j" ->
@@ -29,7 +29,7 @@ let keyboard_setup (window : Universe.Window.t) =
             Step.Next.Excursion.start ();
             Universe.Move.move_relative_pure
               ~x:(-30. *. 1. /. current_coord.scale)
-              window ~duration:0.
+              Fast.slow window ~duration:0.
           in
           ()
       | "k" ->
@@ -37,7 +37,7 @@ let keyboard_setup (window : Universe.Window.t) =
             Step.Next.Excursion.start ();
             Universe.Move.move_relative_pure
               ~y:(30. *. 1. /. current_coord.scale)
-              window ~duration:0.
+              Fast.slow window ~duration:0.
           in
           ()
       | "i" ->
@@ -45,7 +45,7 @@ let keyboard_setup (window : Universe.Window.t) =
             Step.Next.Excursion.start ();
             Universe.Move.move_relative_pure
               ~y:(-30. *. 1. /. current_coord.scale)
-              window ~duration:0.
+              Fast.slow window ~duration:0.
           in
           ()
       | "ArrowRight" | "ArrowDown" | "PageDown" | " " ->
@@ -65,14 +65,15 @@ let keyboard_setup (window : Universe.Window.t) =
       | "z" ->
           let _ : unit Fut.t =
             Step.Next.Excursion.start ();
-            Universe.Move.move_relative_pure ~scale:1.02 window ~duration:0.
+            Universe.Move.move_relative_pure ~scale:1.02 Fast.slow window
+              ~duration:0.
           in
           ()
       | "Z" ->
           let _ : unit Fut.t =
             Step.Next.Excursion.start ();
-            Universe.Move.move_relative_pure ~scale:(1. /. 1.02) window
-              ~duration:0.
+            Universe.Move.move_relative_pure Fast.slow ~scale:(1. /. 1.02)
+              window ~duration:0.
           in
           ()
       | _ -> ()
@@ -229,8 +230,8 @@ let message_setup window =
       | Some { payload = State (i, mode); id = _ } ->
           let fast = match mode with `Fast -> true | _ -> false in
           let _ : unit Fut.t =
-            if fast then Fast.with_fast @@ fun () -> Step.Next.goto i window
-            else Step.Next.goto i window
+            if fast then Step.Next.goto ~mode:Fast.fast i window
+            else Step.Next.goto ~mode:Fast.slow i window
           in
           ()
       | Some { payload = Drawing d; id = _window_id } -> handle_drawing d

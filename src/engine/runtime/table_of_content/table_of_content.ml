@@ -38,9 +38,7 @@ let entry_action window step =
     let _unlistener =
       Brr.Ev.listen Brr.Ev.click
         (fun _ ->
-          let _ : unit Fut.t =
-            Fast.with_fast @@ fun () -> Step.Next.goto step window
-          in
+          let _ : unit Fut.t = Step.Next.goto ~mode:Fast.fast step window in
           Messaging.send_step step `Fast)
         (Brr.El.as_target el)
     in
@@ -52,6 +50,7 @@ open Undoable.Syntax
 open Fut.Syntax
 
 let generate window root =
+  let mode = Fast.counting_for_toc in
   let categorized_els =
     Brr.El.fold_find_by_selector ~root
       (fun el acc -> categorize el :: acc)
@@ -66,7 +65,9 @@ let generate window root =
         loop undo entries step res
     | `Action a :: res ->
         if Step.Action_scheduler.is_action a then
-          let* res = Step.Action_scheduler.AttributeActions.do_ window a in
+          let* res =
+            Step.Action_scheduler.AttributeActions.do_ ~mode window a
+          in
           let undo =
             let> () = undo in
             Fut.return res
@@ -77,10 +78,7 @@ let generate window root =
         else loop undo entries step res
     | [] -> Fut.return (undo, List.rev entries)
   in
-  let* undo, entries =
-    Fast.with_counting @@ fun () ->
-    loop (Undoable.return ()) [] 0 categorized_els
-  in
+  let* undo, entries = loop (Undoable.return ()) [] 0 categorized_els in
   let* (), undo = undo in
   let+ () = undo () in
   let els = entry_action window 0 :: entries in
