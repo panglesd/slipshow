@@ -1,28 +1,23 @@
-type mode = Normal | Fast_move | Counting_for_toc
+type hurry_bomb = {
+  wait : unit Fut.t;
+  has_detonated : bool ref;
+  detonate : unit -> unit;
+}
 
-let mode = ref Normal
+let has_detonated h = !(h.has_detonated)
+let detonate h = h.detonate ()
+let wait h = h.wait
 
-(* I don't think we can really make a [finally]-style function: {!/Fut.t} does
-   not support exceptions... *)
-let with_ new_mode f =
-  let open Fut.Syntax in
-  let old_mode = !mode in
-  mode := new_mode;
-  let+ res = f () in
-  mode := old_mode;
-  res
+let create () =
+  let has_detonated = ref false in
+  let wait, detonate = Fut.create () in
+  let wait = Fut.map (fun () -> has_detonated := true) wait in
+  { wait; has_detonated; detonate }
 
-(* This is actually tricky: if we do two [with_] in parallel (which might happen
-   if it's triggered by a keystroke) you don't know which mode you'll end
-   with...
-*)
+type mode = Normal of hurry_bomb | Counting_for_toc | Fast | Slow
 
-let with_fast f =
-  match !mode with
-  | Fast_move -> f () (* To avoid the parallel problem mentioned above *)
-  | _ -> with_ Fast_move f
-
-let with_counting f = with_ Counting_for_toc f
-let is_counting () = !mode = Counting_for_toc
-let is_fast () = !mode = Fast_move
-let get_mode () = !mode
+let normal () = Normal (create ())
+let counting_for_toc = Counting_for_toc
+let fast = Fast
+let slow = Slow
+let is_fast = function Normal h -> has_detonated h | Slow -> false | _ -> true

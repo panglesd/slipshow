@@ -1,21 +1,13 @@
-type mode = Normal | Fast_move | Counting_for_toc
+type hurry_bomb
 
-(** Will be fast if:
-    - We start from a specific state as given by a hash ([#15]) or a message
-    - We click on the table of content *)
+val has_detonated : hurry_bomb -> bool
+val detonate : hurry_bomb -> unit
+val wait : hurry_bomb -> unit Fut.t
 
-val with_fast : (unit -> 'a Fut.t) -> 'a Fut.t
-(** [with_fast f] runs [f], with calls to {!is_fast} returning [true]. [f]
-    should not raise *)
+type mode = private Normal of hurry_bomb | Counting_for_toc | Fast | Slow
 
-val with_counting : (unit -> 'a Fut.t) -> 'a Fut.t
-(** [with_counting f] runs [f], with calls to {!is_counting} returning [true].
-    [f] should not raise *)
-
-val is_fast : unit -> bool
-(** [is_fast ()] returns [true] iff it is called inside {!with_fast} *)
-
-val is_counting : unit -> bool
-(** [is_fast ()] returns [true] iff it is called inside {!counting} *)
-
-val get_mode : unit -> mode
+val normal : unit -> mode
+val counting_for_toc : mode
+val slow : mode
+val fast : mode
+val is_fast : mode -> bool

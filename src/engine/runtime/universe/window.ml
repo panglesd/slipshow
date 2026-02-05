@@ -94,54 +94,65 @@ let live_scale { scale_container; _ } =
   in
   compute_scale scale_container
 
-let move_pure window ({ x; y; scale } as target : Coordinates.window) ~duration
-    =
+let move_pure mode window ({ x; y; scale } as target : Coordinates.window)
+    ~duration =
   Brr.Console.(log [ "Moving with duration"; duration ]);
-  let duration = if Fast.is_fast () then 0. else duration in
-  let old_scale =
-    let live_scale = live_scale window in
-    let { Coordinates.scale = state_scale; _ } = State.get_coord () in
-    let diff =
-      Float.min live_scale state_scale /. Float.max live_scale state_scale
-    in
-    (* Live scale computes a less precise scale than state scale. If they are
+  match mode with
+  | Fast.Counting_for_toc -> Fut.return ()
+  | _ ->
+      let duration =
+        match mode with
+        | Counting_for_toc -> assert false
+        | Fast -> 0.
+        | Slow -> duration
+        | Normal hurry_bomb ->
+            if Fast.has_detonated hurry_bomb then 0. else duration
+      in
+      let old_scale =
+        let live_scale = live_scale window in
+        let { Coordinates.scale = state_scale; _ } = State.get_coord () in
+        let diff =
+          Float.min live_scale state_scale /. Float.max live_scale state_scale
+        in
+        (* Live scale computes a less precise scale than state scale. If they are
        close together, may make sense to consider them "equal" and use the more
        precise one *)
-    if diff < 0.95 then live_scale else state_scale
-  in
-  let transitions_style =
-    if scale /. old_scale > 1.1 then `Zoom
-    else if old_scale /. scale > 1.1 then `Unzoom
-    else `Flat
-  in
-  let (scale_function, scale_duration), (universe_function, universe_duration) =
-    let open Browser.Css in
-    match transitions_style with
-    | `Zoom ->
-        ( (TransitionTiming "ease-in", TransitionDelay (0.5 *. duration)),
-          (TransitionTiming "ease-out", TransitionDelay 0.) )
-    | `Unzoom ->
-        ( (TransitionTiming "ease-out", TransitionDelay 0.),
-          (TransitionTiming "ease-in", TransitionDelay (0.5 *. duration)) )
-    | `Flat ->
-        ( (TransitionTiming "", TransitionDelay 0.),
-          (TransitionTiming "", TransitionDelay 0.) )
-  in
-  State.set_coord target;
-  let x = -.x +. (width () /. 2.) in
-  let y = -.y +. (height () /. 2.) in
-  let () =
-    Browser.Css.set [ TransitionDuration duration ] window.scale_container
-  and () = Browser.Css.set [ scale_function ] window.scale_container
-  and () = Browser.Css.set [ scale_duration ] window.scale_container
-  and () =
-    Browser.Css.set [ TransitionDuration duration ] window.rotate_container
-  and () = Browser.Css.set [ TransitionDuration duration ] window.universe
-  and () = Browser.Css.set [ universe_function ] window.universe
-  and () = Browser.Css.set [ universe_duration ] window.universe
-  and () = Browser.Css.set [ Translate { x; y } ] window.universe
-  and () = Browser.Css.set [ Scale scale ] window.scale_container in
-  Fut.return ()
+        if diff < 0.95 then live_scale else state_scale
+      in
+      let transitions_style =
+        if scale /. old_scale > 1.1 then `Zoom
+        else if old_scale /. scale > 1.1 then `Unzoom
+        else `Flat
+      in
+      let ( (scale_function, scale_duration),
+            (universe_function, universe_duration) ) =
+        let open Browser.Css in
+        match transitions_style with
+        | `Zoom ->
+            ( (TransitionTiming "ease-in", TransitionDelay (0.5 *. duration)),
+              (TransitionTiming "ease-out", TransitionDelay 0.) )
+        | `Unzoom ->
+            ( (TransitionTiming "ease-out", TransitionDelay 0.),
+              (TransitionTiming "ease-in", TransitionDelay (0.5 *. duration)) )
+        | `Flat ->
+            ( (TransitionTiming "", TransitionDelay 0.),
+              (TransitionTiming "", TransitionDelay 0.) )
+      in
+      State.set_coord target;
+      let x = -.x +. (width () /. 2.) in
+      let y = -.y +. (height () /. 2.) in
+      let () =
+        Browser.Css.set [ TransitionDuration duration ] window.scale_container
+      and () = Browser.Css.set [ scale_function ] window.scale_container
+      and () = Browser.Css.set [ scale_duration ] window.scale_container
+      and () =
+        Browser.Css.set [ TransitionDuration duration ] window.rotate_container
+      and () = Browser.Css.set [ TransitionDuration duration ] window.universe
+      and () = Browser.Css.set [ universe_function ] window.universe
+      and () = Browser.Css.set [ universe_duration ] window.universe
+      and () = Browser.Css.set [ Translate { x; y } ] window.universe
+      and () = Browser.Css.set [ Scale scale ] window.scale_container in
+      Fut.return ()
 
 let bound_x { universe; _ } = Brr.El.bound_x universe
 let bound_y { universe; _ } = Brr.El.bound_y universe
