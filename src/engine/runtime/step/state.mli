@@ -3,6 +3,7 @@ type transition = {
   to_ : int;
   mode : Fast.mode;
   mutable next : transition option;
+  send_message : bool;
 }
 
 type t = At of int | Transition of transition

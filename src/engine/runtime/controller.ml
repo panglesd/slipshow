@@ -50,20 +50,12 @@ let keyboard_setup (window : Universe.Window.t) =
           ()
       | "ArrowRight" | "ArrowDown" | "PageDown" | " " ->
           let _ : unit Fut.t =
-            let open Fut.Syntax in
-            let+ _ : unit Fut.t = Step.Next.go_next window (Fast.normal ()) in
-            (* Messaging.send_step (Step.State.get_step ()) `Normal *)
-            ()
-            (* TODO: do *)
+            Step.Next.go_next ~send_message:true window (Fast.normal ())
           in
           ()
       | "ArrowLeft" | "PageUp" | "ArrowUp" ->
           let _ : unit Fut.t =
-            let open Fut.Syntax in
-            let+ _ : unit Fut.t = Step.Next.go_prev window (Fast.normal ()) in
-            (* Messaging.send_step (Step.State.get_step ()) `Normal *)
-            ()
-            (* TODO: do *)
+            Step.Next.go_prev ~send_message:true window (Fast.normal ())
           in
           ()
       | "z" ->
@@ -89,7 +81,6 @@ let keyboard_setup (window : Universe.Window.t) =
   ()
 
 let touch_setup (window : Universe.Window.t) =
-  let open Fut.Syntax in
   let () =
     let next =
       Brr.El.find_first_by_selector (Jstr.v "#slip-touch-controls .slip-next")
@@ -99,10 +90,7 @@ let touch_setup (window : Universe.Window.t) =
       Brr.Ev.listen Brr.Ev.click
         (fun _ ->
           let _ : unit Fut.t =
-            let+ _ : unit Fut.t = Step.Next.go_next window (Fast.normal ()) in
-            (* Messaging.send_step (Step.State.get_step ()) `Normal *)
-            ()
-            (* TODO: do *)
+            Step.Next.go_next ~send_message:true window (Fast.normal ())
           in
           ())
         (Brr.El.as_target next)
@@ -118,9 +106,8 @@ let touch_setup (window : Universe.Window.t) =
     let _unlisten =
       Brr.Ev.listen Brr.Ev.click
         (fun _ ->
-          let _ : unit Fut.t Fut.t =
-            (*  TODO: is there a bug? It seems there should be a message sent *)
-            Step.Next.go_prev window (Fast.normal ())
+          let _ : unit Fut.t =
+            Step.Next.go_prev ~send_message:true window (Fast.normal ())
           in
           ())
         (Brr.El.as_target prev)
@@ -238,9 +225,9 @@ let message_setup window =
       match msg with
       | Some { payload = State (i, mode); id = _ } ->
           let fast = match mode with `Fast -> true | _ -> false in
-          let _ : unit Fut.t Fut.t =
-            if fast then Step.Next.go_to ~mode:Fast.fast i window
-            else Step.Next.go_to ~mode:Fast.slow i window
+          let _ : unit Fut.t =
+            let mode = if fast then Fast.fast else Fast.normal () in
+            Step.Next.go_to ~send_message:false ~mode i window
           in
           ()
       | Some { payload = Drawing d; id = _window_id } -> handle_drawing d

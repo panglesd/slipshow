@@ -317,7 +317,7 @@ let add_starting_state ?(autofocus = true) (start, end_, has_speaker_view)
     (starting_state : starting_state option) =
   let autofocus = if autofocus then "autofocus" else "" in
   let starting_state =
-    match starting_state with None -> "0" | Some st -> string_of_int st
+    match starting_state with None -> "null" | Some st -> string_of_int st
   in
   let html = start ^ starting_state ^ end_ in
   let orig_html = html in
