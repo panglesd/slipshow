@@ -31,7 +31,7 @@ let start ~width ~height ~step =
   (* We do one step first, without recording it/updating the hash, to enter in
      the first slip *)
   let* _ =
-    let mode = failwith "TODO" in
+    let mode = Fast.slow in
     Step.Action_scheduler.next ~mode window ()
     |> Option.value ~default:(Undoable.return ())
     |> Undoable.discard
@@ -45,7 +45,9 @@ let start ~width ~height ~step =
   let* () =
     match initial_step with
     | None -> Fut.return @@ Step.Next.actualize ()
-    | Some step -> Step.Next.goto ~mode:Fast.fast step window
+    | Some step ->
+        let* x = Step.Next.go_to ~mode:Fast.fast step window in
+        x (* TODO: make the join better *)
   in
   let () = Controller.setup window in
   let () = Messaging.send_ready () in

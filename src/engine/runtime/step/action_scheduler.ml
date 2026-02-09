@@ -58,7 +58,7 @@ let setup_actions window () =
                    (fun elem acc ->
                      let> () = acc in
                      let open AttributeActions in
-                     let mode = failwith "TODO" in
+                     let mode = Fast.fast in
                      activate ~mode ~remove_class:false
                        (module struct
                          include X

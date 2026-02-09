@@ -364,8 +364,7 @@ module type SetClass = S with type args = Brr.El.t list
 let only_if_not_counting mode f =
   match mode with
   | Fast.Counting_for_toc -> Undoable.return ()
-  | Normal hurry_bomb -> f hurry_bomb
-  | _ -> failwith "TODO"
+  | Normal _ | Fast | Slow -> f ()
 
 module Pause = struct
   let on = "pause"
@@ -1069,7 +1068,7 @@ module Draw = struct
       in
       match mode with
       | Fast.Slow -> when_slow ()
-      | Fast.Normal hurry_bomb when Fast.has_detonated hurry_bomb ->
+      | Fast.Normal hurry_bomb when not (Fast.has_detonated hurry_bomb) ->
           when_slow ()
       | _ ->
           let now = Drawing_controller.Tools.now () in
