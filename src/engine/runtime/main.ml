@@ -44,10 +44,9 @@ let start ~width ~height ~step =
   let* () = Table_of_content.generate window el in
   let* () =
     match initial_step with
-    | None -> Fut.return @@ Step.Next.actualize ()
+    | None -> Fut.return @@ Step.Next.actualize 0
     | Some step ->
-        let* x = Step.Next.go_to ~mode:Fast.fast step window in
-        x (* TODO: make the join better *)
+        Step.Next.go_to ~send_message:false ~mode:Fast.fast step window
   in
   let () = Controller.setup window in
   let () = Messaging.send_ready () in
