@@ -1,32 +1,5 @@
 open Fut.Syntax
 
-(*
-  Si on veut en rajouter :
-   - C'est quand on finit qu'on clean derrière soi, et débloque le suivant.
-   - TODO explain the rest
-*)
-
-let in_queue =
-  let queue = Queue.create () in
-  let wait_in_queue hurry_bomb =
-    match Queue.take_opt queue with
-    | None -> Fut.return ()
-    | Some (_, h) ->
-        let () = match h with Fast.Normal h -> Fast.detonate h | _ -> () in
-        let fut, cont = Fut.create () in
-        Queue.add (cont, hurry_bomb) queue;
-        fut
-  in
-  let next_in_queue () =
-    match Queue.take_opt queue with
-    | None -> ()
-    | Some (cont, _hurry_bomb) -> cont ()
-  in
-  fun hurry_bomb f ->
-    let* () = wait_in_queue hurry_bomb in
-    let+ () = f () in
-    next_in_queue ()
-
 let all_undos = Stack.create ()
 let ( !! ) = Jstr.v
 
@@ -39,7 +12,7 @@ let actualize () =
   in
   match
     Brr.El.find_first_by_selector
-      !!(".slipshow-toc-step-" ^ string_of_int (State.get_step ()))
+      !!(".slipshow-toc-step-" ^ (State.get_step () |> State.to_string))
   with
   | None -> ()
   | Some el ->
@@ -66,109 +39,88 @@ module Excursion = struct
         Universe.Window.move_pure Fast.slow window last_pos ~duration:1.
 end
 
-let counter =
-  Brr.El.find_first_by_selector (Jstr.v "#slipshow-counter") |> Option.get
-
-let set_counter s = Brr.El.set_children counter [ Brr.El.txt' s ]
-
-let with_step_transition =
- fun diff f ->
-  let from = State.get_step () in
-  let to_ = from + diff in
-  set_counter (string_of_int from ^ "→" ^ string_of_int to_);
-  let () = State.set_step to_ in
-  let+ res = f () in
-  set_counter (string_of_int to_);
-  res
-
-let go_next ~mode window n =
-  in_queue mode @@ fun () ->
+let go_next ~mode window ~from ~to_ =
+  let () = Brr.Console.(log [ "going next from "; from; " to "; to_ ]) in
   let rec loop n =
     if n <= 0 then Fut.return ()
     else
-      let mode = failwith "TODO" in
       match Action_scheduler.next ~mode window () with
       | None -> Fut.return ()
       | Some undos ->
-          let* (), undos = with_step_transition 1 @@ fun () -> undos in
+          let* (), undos = undos in
           Stack.push undos all_undos;
           loop (n - 1)
   in
-  let+ () = loop n in
+  let+ () = loop (to_ - from) in
   actualize ()
 
-let go_prev ~mode n =
-  (* let hurry_bomb = failwith "TODO" in *)
-  in_queue mode @@ fun () ->
+let go_prev ~mode:_ ~from ~to_ =
   let rec loop n =
     if n <= 0 then Fut.return ()
     else
       match Stack.pop_opt all_undos with
       | None -> Fut.return ()
       | Some undo ->
-          let* () = with_step_transition (-1) undo in
+          let* () = undo () in
           loop (n - 1)
   in
-  let+ () = loop n in
+  let+ () = loop (from - to_) in
   actualize ()
 
-let goto ~mode step window =
-  let current_step = State.get_step () in
+let goto ~mode ~from ~to_ window =
+  Brr.Console.(log [ "Goto step"; to_; "from step"; from ]);
   let* () = Excursion.end_ window () in
-  if current_step > step then go_prev ~mode (current_step - step)
-  else if current_step < step then go_next ~mode window (step - current_step)
+  if from > to_ then go_prev ~mode ~from ~to_
+  else if from < to_ then go_next ~mode window ~from ~to_
   else Fut.return ()
 
-let current_execution = ref None
+let rec exec_transition transition window =
+  let () = State.set_step (State.Transition transition) in
+  let* res =
+    goto ~mode:transition.mode ~from:transition.from ~to_:transition.to_ window
+  in
+  match transition.next with
+  | None ->
+      let () = State.set_step (State.At transition.to_) in
+      Fut.return res
+  | Some next_transition -> exec_transition next_transition window
 
-let go_next window =
+let go_to ~mode to_ window =
+  (* TODO: check comment below *)
   (* We return a Fut.t Fut.t here to allow to wait for [with_step_transition] to
      update the state, without waiting for the actual transition to be
      finished. *)
   let+ () = Excursion.end_ window () in
-  match !current_execution with
-  | None -> (
-      let mode = Fast.normal () in
-      match Action_scheduler.next window ~mode () with
-      | None -> Fut.return ()
-      | Some fut ->
-          let fut =
-            let+ (), undos = with_step_transition 1 @@ fun () -> fut in
-            Stack.push undos all_undos;
-            actualize ();
-            current_execution := None
-          in
-          current_execution := Some (fut, mode);
-          fut)
-  | Some (fut, mode) ->
-      let () =
-        match mode with
-        | Normal hurry_bomb -> Fast.detonate hurry_bomb
-        | Counting_for_toc | Fast | Slow -> ()
-      in
-      fut
-
-let go_prev window =
-  let do_the_undo () =
-    match Stack.pop_opt all_undos with
-    | None -> Fut.return ()
-    | Some undo ->
-        let fut =
-          let+ () = with_step_transition (-1) undo in
-          actualize ();
-          current_execution := None
-        in
-        current_execution := Some (fut, Fast.fast);
-        Fut.return ()
+  let do_it ~from ~to_ =
+    let transition = { State.from; to_; mode; next = None } in
+    exec_transition transition window
   in
-  let* () = Excursion.end_ window () in
-  match !current_execution with
-  | None -> do_the_undo ()
-  | Some (fut, mode) ->
+  match State.get_step () with
+  | At from -> do_it ~from ~to_
+  | Transition transition ->
       let () =
-        match mode with
-        | Normal hurry_bomb -> Fast.detonate hurry_bomb
+        match transition.mode with
+        | Normal h -> Fast.detonate h
         | Counting_for_toc | Fast | Slow -> ()
       in
-      let* () = fut in
-      do_the_undo ()
+      (* TODO: check if it's a problem that activate is never activated *)
+      let f, _activate = Fut.create () in
+      let from = transition.to_ in
+      transition.next <- Some { from; to_; mode; next = None };
+      f
+
+let go_next window mode =
+  let step =
+    match State.get_step () with
+    | At n -> n + 1
+    | Transition { from; to_; _ } -> Int.max from to_
+  in
+  go_to step ~mode window
+
+let go_prev window mode =
+  let step =
+    match State.get_step () with
+    | At n -> n - 1
+    | Transition { from; to_; _ } -> Int.min from to_
+  in
+  go_to step ~mode window

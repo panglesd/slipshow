@@ -51,15 +51,19 @@ let keyboard_setup (window : Universe.Window.t) =
       | "ArrowRight" | "ArrowDown" | "PageDown" | " " ->
           let _ : unit Fut.t =
             let open Fut.Syntax in
-            let+ _ : unit Fut.t = Step.Next.go_next window in
-            Messaging.send_step (Step.State.get_step ()) `Normal
+            let+ _ : unit Fut.t = Step.Next.go_next window (Fast.normal ()) in
+            (* Messaging.send_step (Step.State.get_step ()) `Normal *)
+            ()
+            (* TODO: do *)
           in
           ()
       | "ArrowLeft" | "PageUp" | "ArrowUp" ->
           let _ : unit Fut.t =
             let open Fut.Syntax in
-            let+ () = Step.Next.go_prev window in
-            Messaging.send_step (Step.State.get_step ()) `Normal
+            let+ _ : unit Fut.t = Step.Next.go_prev window (Fast.normal ()) in
+            (* Messaging.send_step (Step.State.get_step ()) `Normal *)
+            ()
+            (* TODO: do *)
           in
           ()
       | "z" ->
@@ -95,8 +99,10 @@ let touch_setup (window : Universe.Window.t) =
       Brr.Ev.listen Brr.Ev.click
         (fun _ ->
           let _ : unit Fut.t =
-            let+ _ : unit Fut.t = Step.Next.go_next window in
-            Messaging.send_step (Step.State.get_step ()) `Normal
+            let+ _ : unit Fut.t = Step.Next.go_next window (Fast.normal ()) in
+            (* Messaging.send_step (Step.State.get_step ()) `Normal *)
+            ()
+            (* TODO: do *)
           in
           ())
         (Brr.El.as_target next)
@@ -112,7 +118,10 @@ let touch_setup (window : Universe.Window.t) =
     let _unlisten =
       Brr.Ev.listen Brr.Ev.click
         (fun _ ->
-          let _ : unit Fut.t = Step.Next.go_prev window in
+          let _ : unit Fut.t Fut.t =
+            (*  TODO: is there a bug? It seems there should be a message sent *)
+            Step.Next.go_prev window (Fast.normal ())
+          in
           ())
         (Brr.El.as_target prev)
     in
@@ -229,9 +238,9 @@ let message_setup window =
       match msg with
       | Some { payload = State (i, mode); id = _ } ->
           let fast = match mode with `Fast -> true | _ -> false in
-          let _ : unit Fut.t =
-            if fast then Step.Next.goto ~mode:Fast.fast i window
-            else Step.Next.goto ~mode:Fast.slow i window
+          let _ : unit Fut.t Fut.t =
+            if fast then Step.Next.go_to ~mode:Fast.fast i window
+            else Step.Next.go_to ~mode:Fast.slow i window
           in
           ()
       | Some { payload = Drawing d; id = _window_id } -> handle_drawing d
