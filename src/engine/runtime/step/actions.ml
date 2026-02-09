@@ -72,8 +72,8 @@ let all =
     (module Emph : S);
     (module Unemph : S);
     (module Execute : S);
-    (module Play_media : S);
     (module Change_page : S);
+    (module Play_media : S);
     (module Speaker_note : S);
     (module Clear_draw : S);
     (module Draw : S);

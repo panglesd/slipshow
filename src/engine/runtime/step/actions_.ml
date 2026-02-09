@@ -791,23 +791,38 @@ module Play_media = struct
             log_error res;
             Brr_io.Media.El.set_current_time_s e current
           in
-          let* res =
+          let* () =
             let open Brr_io.Media.El in
-            let when_slow () =
+            let when_slow hurry_bomb =
               Brr.Console.(log [ "Playing" ]);
-              Brr_io.Media.El.play e
+              let fut, activate = Fut.create () in
+              let _ =
+                let+ () = Fast.wait hurry_bomb in
+                set_current_time_s e (duration_s e);
+                activate ()
+              in
+              let _unlisten =
+                Brr.Ev.listen Brr.Ev.ended
+                  (fun _ev -> activate ())
+                  (e |> Brr_io.Media.El.to_el |> Brr.El.as_target)
+              in
+              let* err = Brr_io.Media.El.play e in
+              match err with Ok () -> fut | Error _e -> fut
             in
             let when_fast () =
               Brr.Console.(log [ "Just setting current time" ]);
-              Fut.return @@ Ok (set_current_time_s e (duration_s e))
+              Fut.return @@ set_current_time_s e (duration_s e)
             in
             match mode with
             | Fast.Normal hurry_bomb when not (Fast.has_detonated hurry_bomb) ->
-                when_slow ()
-            | Slow -> when_slow ()
+                when_slow hurry_bomb
+            | Slow ->
+                when_slow
+                  (match Fast.normal () with
+                  | Normal h -> h
+                  | _ -> assert false)
             | Counting_for_toc | Fast | Normal _ -> when_fast ()
           in
-          log_error res;
           Undoable.return ~undo ())
       elems
 
