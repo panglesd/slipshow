@@ -496,6 +496,8 @@ struct
 
   let do_ ~mode window { margin; duration; elem } =
     only_if_not_counting mode @@ fun _mode ->
+    let open Fut.Syntax in
+    let* () = Excursion.end_ window () in
     let margin = Option.value ~default:0. margin in
     let duration = Option.value ~default:1. duration in
     X.move ~margin ~duration mode window elem
@@ -578,6 +580,8 @@ let exit ~mode window to_elem =
       when Brr.El.contains element_entered ~child:to_elem ->
         Undoable.return ()
     | Some { coord_left; duration; _ } -> (
+        let open Fut.Syntax in
+        let* () = Excursion.end_ window () in
         let duration = Option.value duration ~default:1.0 in
         let> _ = Undoable.Stack.pop_opt Enter.stack in
         match Undoable.Stack.peek Enter.stack with
@@ -654,6 +658,8 @@ module Focus = struct
 
   let do_ ~mode window { margin; duration; elems } =
     only_if_not_counting mode @@ fun _mode ->
+    let open Fut.Syntax in
+    let* () = Excursion.end_ window () in
     let> () = State.push (Universe.State.get_coord ()) in
     let margin = Option.value ~default:0. margin in
     let duration = Option.value ~default:1. duration in
@@ -677,7 +683,10 @@ module Unfocus = struct
     let> coord = Focus.State.pop () in
     match coord with
     | None -> Undoable.return ()
-    | Some coord -> Universe.Move.move mode window coord ~duration:1.0
+    | Some coord ->
+        let open Fut.Syntax in
+        let* () = Excursion.end_ window () in
+        Universe.Move.move mode window coord ~duration:1.0
 end
 
 module Reveal = SetClass (struct

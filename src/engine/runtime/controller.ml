@@ -18,7 +18,7 @@ let keyboard_setup (window : Universe.Window.t) =
       | "t" -> Table_of_content.toggle_visibility ()
       | "l" ->
           let _ : unit Fut.t =
-            Step.Next.Excursion.start ();
+            Step.Excursion.start ();
             Universe.Move.move_relative_pure
               ~x:(30. *. 1. /. current_coord.scale)
               Fast.slow window ~duration:0.
@@ -26,7 +26,7 @@ let keyboard_setup (window : Universe.Window.t) =
           ()
       | "j" ->
           let _ : unit Fut.t =
-            Step.Next.Excursion.start ();
+            Step.Excursion.start ();
             Universe.Move.move_relative_pure
               ~x:(-30. *. 1. /. current_coord.scale)
               Fast.slow window ~duration:0.
@@ -34,7 +34,7 @@ let keyboard_setup (window : Universe.Window.t) =
           ()
       | "k" ->
           let _ : unit Fut.t =
-            Step.Next.Excursion.start ();
+            Step.Excursion.start ();
             Universe.Move.move_relative_pure
               ~y:(30. *. 1. /. current_coord.scale)
               Fast.slow window ~duration:0.
@@ -42,7 +42,7 @@ let keyboard_setup (window : Universe.Window.t) =
           ()
       | "i" ->
           let _ : unit Fut.t =
-            Step.Next.Excursion.start ();
+            Step.Excursion.start ();
             Universe.Move.move_relative_pure
               ~y:(-30. *. 1. /. current_coord.scale)
               Fast.slow window ~duration:0.
@@ -60,14 +60,14 @@ let keyboard_setup (window : Universe.Window.t) =
           ()
       | "z" ->
           let _ : unit Fut.t =
-            Step.Next.Excursion.start ();
+            Step.Excursion.start ();
             Universe.Move.move_relative_pure ~scale:1.02 Fast.slow window
               ~duration:0.
           in
           ()
       | "Z" ->
           let _ : unit Fut.t =
-            Step.Next.Excursion.start ();
+            Step.Excursion.start ();
             Universe.Move.move_relative_pure Fast.slow ~scale:(1. /. 1.02)
               window ~duration:0.
           in

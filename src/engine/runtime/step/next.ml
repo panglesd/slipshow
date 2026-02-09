@@ -18,26 +18,6 @@ let actualize n =
       Brr.El.scroll_into_view ~align_v:`Nearest ~behavior:`Smooth el;
       Brr.El.set_class !!"slipshow-toc-current-step" true el
 
-module Excursion = struct
-  let excursion = ref None
-
-  let start () =
-    match !excursion with
-    | None -> excursion := Some (Universe.State.get_coord ())
-    | Some _ -> ()
-
-  (* When we [move_away] using [ijkl] and [zZ], we store the position we
-     left. When we change the presentation step, we [move_back] to where we
-     were. *)
-
-  let end_ window () =
-    match !excursion with
-    | None -> Fut.return ()
-    | Some last_pos ->
-        excursion := None;
-        Universe.Window.move_pure Fast.slow window last_pos ~duration:1.
-end
-
 let go_next ~mode window ~from ~to_ =
   let () = Brr.Console.(log [ "going next from "; from; " to "; to_ ]) in
   let rec loop n =
@@ -70,7 +50,6 @@ let go_prev ~mode:_ ~from ~to_ =
 
 let goto ~mode ~from ~to_ window =
   Brr.Console.(log [ "Goto step"; to_; "from step"; from ]);
-  let* () = Excursion.end_ window () in
   if from > to_ then go_prev ~mode ~from ~to_
   else if from < to_ then go_next ~mode window ~from ~to_
   else Fut.return from
@@ -97,7 +76,6 @@ let rec exec_transition transition window =
       exec_transition { next_transition with from = new_to } window
 
 let go_to ~mode ~send_message to_ window =
-  let* () = Excursion.end_ window () in
   match State.get_step () with
   | At from ->
       let transition = { State.from; to_; mode; next = None; send_message } in
