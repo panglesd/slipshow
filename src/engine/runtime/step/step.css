@@ -25,16 +25,26 @@
   cursor: pointer;
 }
 
+.slipshow__carousel {
+    display: grid;
+}
+.slipshow__carousel > .slipshow__carousel_children {
+    grid-area: 1 / 1;
+
+}
 .slipshow__carousel > .slipshow__carousel_children:not(.slipshow__carousel_active) {
-  position: absolute;
   visibility: hidden;
+}
+.slipshow__carousel:not(.carousel-fixed-size) > .slipshow__carousel_children:not(.slipshow__carousel_active) {
+  position: absolute;
 }
 
 .slipshow__carousel > .slipshow__carousel_children.slipshow__carousel_active ~ .slipshow__carousel_children {
-  position: absolute;
   visibility: hidden;
 }
-
+.slipshow__carousel:not(.carousel-fixed-size) > .slipshow__carousel_children.slipshow__carousel_active ~ .slipshow__carousel_children {
+  position: absolute;
+}
 [slipshow-pdf] {
   display:inline-block;
 }
