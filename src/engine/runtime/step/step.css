@@ -30,6 +30,11 @@
   visibility: hidden;
 }
 
+.slipshow__carousel > .slipshow__carousel_children.slipshow__carousel_active ~ .slipshow__carousel_children {
+  position: absolute;
+  visibility: hidden;
+}
+
 [slipshow-pdf] {
   display:inline-block;
 }

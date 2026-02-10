@@ -975,13 +975,15 @@ module Change_page = struct
     let new_index = Int.min (List.length children - 1) new_index in
     let next = List.nth children new_index in
     let> () =
-      current_index |> Option.to_list
-      |> Undoable.List.iter (fun (_, active_elem) ->
-             Undoable.Browser.set_class "slipshow__carousel_active" false
-               active_elem)
+      Undoable.Browser.set_class "slipshow__carousel_active" true next
     in
     let> () =
-      Undoable.Browser.set_class "slipshow__carousel_active" true next
+      current_index |> Option.to_list
+      |> Undoable.List.iter (fun (old_index, active_elem) ->
+             if old_index <> new_index then
+               Undoable.Browser.set_class "slipshow__carousel_active" false
+                 active_elem
+             else Undoable.return ())
     in
     let new_n =
       match n with
