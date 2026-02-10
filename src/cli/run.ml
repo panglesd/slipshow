@@ -112,3 +112,8 @@ let markdown_compile ~input ~output =
       print_string md;
       Ok ()
   | `File output -> Io.write output md
+
+let present path =
+  let ( let* ) = Result.bind in
+  let* content = Bos.OS.File.read path in
+  Present.present content

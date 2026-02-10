@@ -21,3 +21,5 @@ val markdown_compile :
   input:[< `File of Fpath.t | `Stdin ] ->
   output:[< `File of Fpath.t | `Stdout ] ->
   (unit, [ `Msg of string ]) result
+
+val present : Fpath.t -> (unit, [ `Msg of string ]) result

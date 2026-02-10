@@ -1,0 +1,9 @@
+(library
+ (name present)
+ (public_name slipshow.present)
+ (preprocess
+  (pps ppx_blob))
+ (preprocessor_deps
+  (file htmls/speaker.bc.js)
+  (file htmls/audience.bc.js))
+ (libraries lwt bos dream cmarkit))
