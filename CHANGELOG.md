@@ -10,6 +10,7 @@
 - Support for MathJax extensions, especially the html extension to allow actions
   to target math elements (#202)
 - Add KaTeX as a possible alternate renderer (#202)
+- Added `carousel-fixed-size` to have carousel not change size (#207)
 
 ### Fix
 
@@ -17,10 +18,13 @@
   issue #194)
 - Fix impossibility to open speaker view in serve mode (#198, issue #197)
 - Fix links opening inside iframe (#198)
+- Fix ending excursions with `ijkl` only when needed (#207)
+- Fixed video long-step handling (#207)
 
 ### Docs
 
 - Add how to include TikZ figures in your Slipshow presentation (#206)
+- Add how to include Manim videos in your Slipshow presentation (#207)
 
 ## [v0.8.1] Les gnomes voleurs de Slipshow (Tuesday 21th January, 2026)
 
