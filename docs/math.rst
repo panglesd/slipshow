@@ -11,7 +11,7 @@ the flow of text. Blocks are optentially bigger formulas that break the flow of
 text.
 
 In order to write inline math, enclose it between ``$``. For instance: ``The
-irrational $\sqrt 2$ is the positive number that equals $2$ when squared.
+irrational $\sqrt 2$ is the positive number that equals $2$ when squared.``
 
 In order to write display math, either enclose it between ``$$``, or put it inside a ``math`` code block
 
