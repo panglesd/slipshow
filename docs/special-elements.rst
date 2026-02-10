@@ -102,6 +102,8 @@ A carousel is created simply by giving it a ``carousel`` attribute. Carousels ar
    C
    ----
 
+Carousel will take the height of their current displayed element, unless the ``carousel-fixed-size`` class is added to the carousel. In which case, it takes the height of the tallest element.
+
 Includes
 --------
 
