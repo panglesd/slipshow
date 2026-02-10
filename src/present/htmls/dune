@@ -1,0 +1,11 @@
+(executable
+ (name speaker)
+ (modes js)
+ (libraries brr slipshow.previewer)
+ (modules speaker))
+
+(executable
+ (name audience)
+ (modes js)
+ (libraries brr slipshow.previewer)
+ (modules audience))

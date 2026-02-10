@@ -209,11 +209,37 @@ module Lsp = struct
     Cmd.v info term
 end
 
+module Present = struct
+  let present input =
+    let input = Fpath.v input in
+    Run.present input |> handle_error
+
+  let input =
+    let doc =
+      "$(docv) is the CommonMark file to process. Reads from $(b,stdin) if \
+       $(b,-) is specified."
+    in
+    Arg.(required & pos 0 (some string) None & info [] ~doc ~docv:"FILE.md")
+
+  let term =
+    let open Term.Syntax in
+    let+ input = input in
+    present input
+
+  let cmd =
+    let doc = "Present a Slipshow" in
+    let man = [] in
+    let info =
+      Cmd.info "present" ~version:("%%VERSION%%: " ^ version_title) ~doc ~man
+    in
+    Cmd.v info term
+end
+
 let group =
   let doc = "A tool to compile and preview slipshow presentation" in
   let man = [] in
   let info = Cmd.info "slipshow" ~version:slipshow_version ~doc ~man in
-  Cmd.group info [ Compile.cmd; Serve.cmd; Markdownify.cmd; Theme.cmd; Lsp.cmd ]
+  Cmd.group info [ Compile.cmd; Serve.cmd; Markdownify.cmd; Theme.cmd; Lsp.cmd; Present.cmd ]
 
 let main () = exit (Cmd.eval_result group)
 let () = main ()
