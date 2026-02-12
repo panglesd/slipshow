@@ -9,6 +9,7 @@ type payload =
   | Send_all_drawing
   | Receive_all_drawing of string list
   | Stop_moving
+  | Poll_vote of { id : string; vote : int }
 
 type t = { payload : payload; id : string }
 

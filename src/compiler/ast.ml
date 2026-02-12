@@ -12,6 +12,7 @@ type s_block =
   | SlipScript of Block.Code_block.t attributed node
   | Carousel of Block.t list attributed node
   | MermaidJS of Block.Code_block.t attributed node
+  | Poll_element of Block.t list attributed node
 
 type Block.t += S_block of s_block
 
@@ -22,6 +23,7 @@ let slip d = S_block (Slip d)
 let slipscript d = S_block (SlipScript d)
 let mermaid_js d = S_block (MermaidJS d)
 let carousel d = S_block (Carousel d)
+let poll_element d = S_block (Poll_element d)
 
 type media = {
   uri : Asset.Uri.t;
@@ -73,6 +75,8 @@ module Folder = struct
         Folder.fold_block f acc b
     | MermaidJS _ | SlipScript _ -> acc
     | Carousel ((l, _), _) ->
+        List.fold_left (fun acc x -> Folder.fold_block f acc x) acc l
+    | Poll_element ((l, _), _) ->
         List.fold_left (fun acc x -> Folder.fold_block f acc x) acc l
 
   let block_ext_default f acc = function
@@ -133,6 +137,11 @@ module Mapper = struct
         List.filter_map (Mapper.map_block m) l |> function
         | [] -> None
         | l -> Some (Carousel ((l, attrs), meta)))
+    | Poll_element ((l, attrs), meta) -> (
+        let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
+        List.filter_map (Mapper.map_block m) l |> function
+        | [] -> None
+        | l -> Some (Poll_element ((l, attrs), meta)))
 
   let block_ext_default m = function
     | S_block b -> block_ext_default m b |> Option.map (fun b -> S_block b)

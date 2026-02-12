@@ -30,6 +30,9 @@ type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
     - [slide] attributed elements are turned into slides
     - [carousel] attributed elements are turned into carousels
 
+    The third prime stage is doing the following:
+    - [carousel] with poll attributes elements are turned into polls
+
     The fourth stage is populating the media files map *)
 
 module Path_entering : sig
@@ -372,7 +375,9 @@ module Stage2 = struct
         | MermaidJS ((slscr, attrs), meta) ->
             Some (Ast.mermaid_js ((slscr, no_attrs), meta), attrs)
         | Carousel ((c, attrs), meta) ->
-            Some (Ast.carousel ((c, no_attrs), meta), attrs))
+            Some (Ast.carousel ((c, no_attrs), meta), attrs)
+        | Poll_element ((c, attrs), meta) ->
+            Some (Ast.poll_element ((c, no_attrs), meta), attrs))
     | _ -> None
 
   (** Get the attributes of a cmarkit node, returns them and the element
@@ -432,7 +437,9 @@ module Stage2 = struct
         | MermaidJS ((slscr, (attrs, meta_a)), meta) ->
             Ast.mermaid_js ((slscr, (merge attrs, meta_a)), meta)
         | Carousel ((c, (attrs, meta_a)), meta) ->
-            Ast.carousel ((c, (merge attrs, meta_a)), meta))
+            Ast.carousel ((c, (merge attrs, meta_a)), meta)
+        | Poll_element ((c, (attrs, meta_a)), meta) ->
+            Ast.poll_element ((c, (merge attrs, meta_a)), meta))
     | _ -> b
 
   let execute =
@@ -556,6 +563,47 @@ module Stage3 = struct
   let execute md = Cmarkit.Mapper.map_doc execute md
 end
 
+module Stage3' = struct
+  let execute =
+    let block _m c =
+      match c with
+      | Ast.S_block (Ast.Carousel (((_, (attrs, _)), _) as x)) -> (
+          match Attributes.find "poll-element" attrs with
+          | None -> Mapper.default
+          | Some _ -> Mapper.ret @@ Ast.S_block (Ast.Poll_element x))
+      (* | None -> Mapper.default *)
+      (* | Some (block, (attrs, meta2)) when Attributes.mem "blockquote" attrs -> *)
+      (*     let block, attrs = map ~may_enter:false block (attrs, meta2) in *)
+      (*     let block = Block.Block_quote.make block in *)
+      (*     Mapper.ret @@ Block.Block_quote ((block, attrs), Meta.none) *)
+      (* | Some (block, (attrs, meta2)) when Attributes.mem "slide" attrs -> *)
+      (*     let block, attrs = map ~may_enter:true block (attrs, meta2) in *)
+      (*     let block, title = extract_title block in *)
+      (*     Mapper.ret *)
+      (*     @@ Ast.slide (({ content = block; title }, attrs), Meta.none) *)
+      (* | Some (block, (attrs, meta2)) when Attributes.mem "slip" attrs -> *)
+      (*     let block, (attrs, meta) = map ~may_enter:true block (attrs, meta2) in *)
+      (*     Mapper.ret @@ Ast.slip ((block, (attrs, meta)), Meta.none) *)
+      (* | Some (block, (attrs, meta2)) when Attributes.mem "carousel" attrs -> *)
+      (*     let block, attrs = map ~may_enter:false block (attrs, meta2) in *)
+      (*     let children = *)
+      (*       match block with *)
+      (*       | Ast.S_block (Div ((Block.Blocks (l, _), _), _)) -> l *)
+      (*       | _ -> [ block ] *)
+      (*     in *)
+      (*     let children = *)
+      (*       List.filter_map *)
+      (*         (function Block.Blank_line _ -> None | x -> Some x) *)
+      (*         children *)
+      (*     in *)
+      (*     Mapper.ret @@ Ast.carousel ((children, attrs), Meta.none) *)
+      | _ -> Mapper.default
+    in
+    Ast.Mapper.make ~block ()
+
+  let execute md = Cmarkit.Mapper.map_doc execute md
+end
+
 module Stage4 = struct
   let fpath_map_add_to_list x data m =
     let add = function None -> Some [ data ] | Some l -> Some (data :: l) in
@@ -605,6 +653,7 @@ let of_cmarkit ~read_file md =
   let md1 = Stage1.execute defs read_file md in
   let md2 = Stage2.execute md1 in
   let md3 = Stage3.execute md2 in
+  let md3 = Stage3'.execute md3 in
   Stage4.execute ~read_file md3
 
 let compile ~attrs ?(read_file = fun _ -> Ok None) s =
@@ -643,6 +692,8 @@ let to_cmarkit =
     | SlipScript _ -> Mapper.delete
     | MermaidJS cb -> Mapper.ret (Block.Code_block cb)
     | Carousel ((l, _), meta) ->
+        `Map (Mapper.map_block m (Block.Blocks (l, meta)))
+    | Poll_element ((l, _), meta) ->
         `Map (Mapper.map_block m (Block.Blocks (l, meta)))
   in
   let block m = function Ast.S_block b -> block m b | _ -> Mapper.default in

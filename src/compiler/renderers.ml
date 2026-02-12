@@ -103,7 +103,8 @@ let to_string = function
       | Ast.Slip _ -> "Slip"
       | Ast.SlipScript _ -> "Slipscript"
       | Ast.MermaidJS _ -> "MermaidJS"
-      | Ast.Carousel _ -> "Carousel")
+      | Ast.Carousel _ -> "Carousel"
+      | Ast.Poll_element _ -> "Poll_element")
   | _ -> "other"
 
 let () = ignore to_string
@@ -286,6 +287,19 @@ let custom_html_renderer (files : Ast.Files.map) =
                         ("slipshow__carousel_active", Meta.none)
                     else children_attrs
                   in
+                  RenderAttrs.in_block c "div" attrs @@ fun () ->
+                  Context.block c b)
+                l);
+          true
+      | Ast.Poll_element ((l, (attrs, _)), _) ->
+          let attrs = Attributes.add_class attrs ("poll_element", Meta.none) in
+          let children_attrs =
+            Attributes.make ~class':[ ("poll_element_children", Meta.none) ] ()
+          in
+          RenderAttrs.in_block c "div" attrs (fun () ->
+              List.iter
+                (fun b ->
+                  let attrs = children_attrs in
                   RenderAttrs.in_block c "div" attrs @@ fun () ->
                   Context.block c b)
                 l);
