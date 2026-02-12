@@ -28,6 +28,7 @@ type payload =
       scale : float option;
     }
   | GotoLoc of string
+  | Stop_moving
 [@@deriving sexp]
 
 type t = { payload : payload; id : string } [@@deriving sexp]

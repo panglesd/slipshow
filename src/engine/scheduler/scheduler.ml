@@ -245,6 +245,9 @@ module Handle = struct
           |> Communication.to_string |> Jv.of_string
         in
         Brr.Window.post_message main_frame ~msg
+    | { Communication.payload = Stop_moving; _ } as msg ->
+        let msg = msg |> Communication.to_string |> Jv.of_string in
+        Brr.Window.post_message main_frame ~msg
     | _ -> ()
 
   let setting_state = function
