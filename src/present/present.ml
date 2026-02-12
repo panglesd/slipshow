@@ -62,7 +62,7 @@ let dream content =
                      event
                  in
                  let send_current_step () =
-                   let event = Present_comm.Send_step !current_step in
+                   let event = Present_comm.Send_step (!current_step, `Fast) in
                    send_event event
                  in
                  if their_step = !current_step then
@@ -82,7 +82,7 @@ let dream_speaker content =
              let () =
                match event with
                | None -> ()
-               | Some (Send_step i) -> current_step := i
+               | Some (Send_step (i, _)) -> current_step := i
              in
              Dream.log "Current step is now %d" !current_step;
              let () = Option.iter (Lwt_condition.broadcast cond) event in
