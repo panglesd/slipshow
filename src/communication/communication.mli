@@ -8,6 +8,7 @@ type payload =
   | Drawing of string
   | Send_all_drawing
   | Receive_all_drawing of string list
+  | Stop_moving
 
 type t = { payload : payload; id : string }
 

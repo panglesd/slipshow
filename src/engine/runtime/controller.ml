@@ -1,3 +1,5 @@
+let global_allowed = ref true
+
 let keyboard_setup (window : Universe.Window.t) =
   let target = Brr.Window.as_target Brr.G.window in
   let callback ev =
@@ -5,9 +7,11 @@ let keyboard_setup (window : Universe.Window.t) =
     let current_coord = Universe.State.get_coord () in
     let () =
       let check_modif_key modif = ev |> Brr.Ev.as_type |> modif in
+      let check_allowed f = if !global_allowed then f () else () in
       let try_handle handler k =
         match handler with true -> () | false -> k ()
       in
+      check_allowed @@ fun () ->
       try_handle (Drawing_controller.Controller.handle ev) @@ fun () ->
       try_handle (check_modif_key Brr.Ev.Keyboard.ctrl_key) @@ fun () ->
       try_handle (check_modif_key Brr.Ev.Keyboard.meta_key) @@ fun () ->
@@ -232,6 +236,8 @@ let message_setup window =
           in
           ()
       | Some { payload = Drawing d; id = _window_id } -> handle_drawing d
+      | Some { payload = Stop_moving; id = _window_id } ->
+          global_allowed := false
       | Some { payload = Send_all_drawing; id = _ } ->
           Drawing_controller.Messages.send_all_strokes ()
       | Some { payload = Receive_all_drawing all_strokes; id = _ } ->
