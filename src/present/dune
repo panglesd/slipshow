@@ -6,4 +6,4 @@
  (preprocessor_deps
   (file htmls/speaker.bc.js)
   (file htmls/audience.bc.js))
- (libraries lwt bos dream cmarkit))
+ (libraries lwt bos dream cmarkit present_comm))

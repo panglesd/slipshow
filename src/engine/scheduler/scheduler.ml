@@ -136,6 +136,7 @@ let listen w handle_msg =
   Brr.Ev.listen Brr_io.Message.Ev.message
     (fun event ->
       let raw_data : Jv.t = Brr_io.Message.Ev.data (Brr.Ev.as_type event) in
+      Brr.Console.(log [ "raw_data"; raw_data ]);
       let msg = Msg.of_jv raw_data in
       match msg with None -> () | Some msg -> handle_msg msg)
     (Brr.Window.as_target w)
@@ -237,6 +238,15 @@ module Handle = struct
         Brr.Window.post_message main_frame ~msg
     | _ -> ()
 
+  let set_state_todo main_frame = function
+    | { Communication.payload = Set_state i; id } ->
+        let msg =
+          { payload = State (i, `Normal); id }
+          |> Communication.to_string |> Jv.of_string
+        in
+        Brr.Window.post_message main_frame ~msg
+    | _ -> ()
+
   let setting_state = function
     | { Communication.payload = State (i, _); _ } ->
         let _history = Browser.History.set_hash (string_of_int i) in
@@ -297,6 +307,7 @@ let main_frame_handling msg =
   in
   let () = Handle.setting_state msg in
   let () = Handle.initial_state (content_window iframe) msg in
+  let () = Handle.set_state_todo (content_window iframe) msg in
   let () = Handle.opening_closing_speaker_note speaker_note_handling msg in
   let () = Handle.forward_to_parent msg in
   ()

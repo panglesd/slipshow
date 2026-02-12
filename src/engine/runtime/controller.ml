@@ -224,6 +224,7 @@ let message_setup window =
       let msg = comm_of_jv raw_data in
       match msg with
       | Some { payload = State (i, mode); id = _ } ->
+          Brr.Console.(log [ "Receiving a State "; i ]);
           let fast = match mode with `Fast -> true | _ -> false in
           let _ : unit Fut.t =
             let mode = if fast then Fast.fast else Fast.normal () in
