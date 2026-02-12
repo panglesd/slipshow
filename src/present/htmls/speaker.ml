@@ -114,9 +114,9 @@ let _unlisten =
       let raw_data : Jv.t = Brr_io.Message.Ev.data (Brr.Ev.as_type event) in
       let msg = Msg.of_jv raw_data in
       match msg with
-      | Some { payload = State (new_stage, _mode); id = _ } ->
+      | Some { payload = State (new_stage, mode); id = _ } ->
           Console.(log [ "New state:"; new_stage ]);
-          let _ = send_event (Send_step new_stage) in
+          let _ = send_event (Send_step (new_stage, mode)) in
           ()
       | Some { payload = Ready; id = _ } -> Console.(log [ "READY" ])
       | _ -> ())

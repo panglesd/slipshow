@@ -239,9 +239,9 @@ module Handle = struct
     | _ -> ()
 
   let set_state_todo main_frame = function
-    | { Communication.payload = Set_state i; id } ->
+    | { Communication.payload = Set_state (i, mode); id } ->
         let msg =
-          { payload = State (i, `Normal); id }
+          { payload = State (i, mode); id }
           |> Communication.to_string |> Jv.of_string
         in
         Brr.Window.post_message main_frame ~msg
