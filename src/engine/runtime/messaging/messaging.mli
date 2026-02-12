@@ -1,5 +1,6 @@
 val send_ready : unit -> unit
 val send_step : int -> [ `Fast | `Normal ] -> unit
+val send_vote : Communication.payload -> unit
 
 (* module Draw_event : sig *)
 (*   type t = Draw of string | Erase of string | Clear of string *)

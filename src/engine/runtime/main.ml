@@ -50,6 +50,24 @@ let start ~width ~height ~step =
   in
   let () = Controller.setup window in
   let () = Messaging.send_ready () in
+  let () =
+    Brr.El.fold_find_by_selector
+      (fun election_el () ->
+        let id = Jstr.to_string (Brr.El.prop Brr.El.Prop.id election_el) in
+        let children = Brr.El.children ~only_els:true election_el in
+        List.iteri
+          (fun i choice ->
+            let event = Communication.Poll_vote { id; vote = i } in
+            let _unlisten =
+              Brr.Ev.listen Brr.Ev.click
+                (fun _ev -> Messaging.send_vote event)
+                (Brr.El.as_target choice)
+            in
+            ())
+          children)
+      (Jstr.v "[poll-element]") ()
+  in
+
   (* let () = Drawing_editor.init () in *)
   Fut.return ()
 

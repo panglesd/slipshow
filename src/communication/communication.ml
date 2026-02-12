@@ -13,6 +13,7 @@ type payload =
   | Next
   | Previous
   | Stop_moving
+  | Poll_vote of { id : string; vote : int }
 [@@deriving sexp]
 
 type t = { payload : payload; id : string } [@@deriving sexp]

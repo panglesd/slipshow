@@ -11,6 +11,7 @@ type payload =
   | Next
   | Previous
   | Stop_moving
+  | Poll_vote of { id : string; vote : int }
 
 type t = { payload : payload; id : string }
 

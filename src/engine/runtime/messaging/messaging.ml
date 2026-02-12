@@ -22,6 +22,11 @@ let send_step step mode =
   in
   Brr.Window.post_message parent ~msg
 
+let send_vote payload =
+  if_parent @@ fun parent ->
+  let msg = { id; payload } |> Communication.to_string |> Jv.of_string in
+  Brr.Window.post_message parent ~msg
+
 let draw string =
   if_parent @@ fun parent ->
   let payload = Communication.Drawing string in
