@@ -1,4 +1,4 @@
-let speaker_source html =
+let source html script =
   let html =
     let buf = Buffer.create 10 in
     Cmarkit_html.buffer_add_html_escaped_string buf html;
@@ -11,7 +11,7 @@ let speaker_source html =
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
            <title>Slipshow preview</title>
            <style>
-           .presentation {
+           #presentation {
              z-index: 1;
              width:100%%;
              position:absolute;
@@ -28,7 +28,15 @@ let speaker_source html =
 </body>
 </html>
   |html}
-    html [%blob "htmls/speaker.bc.js"]
+    html script
+
+let speaker_source html = source html [%blob "htmls/speaker.bc.js"]
+let audience_source html = source html [%blob "htmls/audience.bc.js"]
+let cond = Lwt_condition.create ()
+
+open Lwt.Syntax
+
+let current_step = ref 0
 
 let dream content =
   Dream.serve ~port:8081 ~interface:"0.0.0.0"
@@ -40,7 +48,27 @@ let dream content =
              Dream.log "client: %s" (Dream.client req);
              Dream.log "tls: %b" (Dream.tls req);
              Dream.log "target: %s" (Dream.target req);
-             Dream.html (speaker_source content));
+             Dream.html (audience_source content));
+         Dream.get "/onchange" (fun req ->
+             let their_step = Dream.query req "current_step" in
+             match their_step with
+             | None -> failwith "HORREUR"
+             | Some their_step ->
+                 let their_step = int_of_string their_step in
+                 let send_event event =
+                   let event = Present_comm.to_string event in
+                   Dream.respond
+                     ~headers:[ ("Content-Type", "text/plain") ]
+                     event
+                 in
+                 let send_current_step () =
+                   let event = Present_comm.Send_step !current_step in
+                   send_event event
+                 in
+                 if their_step = !current_step then
+                   let* event = Lwt_condition.wait cond in
+                   send_event event
+                 else send_current_step ());
        ]
 
 let dream_speaker content =
@@ -48,12 +76,27 @@ let dream_speaker content =
   @@ Dream.logger
   @@ Dream.router
        [
+         Dream.post "/event" (fun req ->
+             let* body = Dream.body req in
+             let event = Present_comm.from_string body in
+             let () =
+               match event with
+               | None -> ()
+               | Some (Send_step i) -> current_step := i
+             in
+             Dream.log "Current step is now %d" !current_step;
+             let () = Option.iter (Lwt_condition.broadcast cond) event in
+             Dream.log "%s" body;
+             Dream.html content);
          Dream.get "/" (fun req ->
              Dream.log "A browser reloaded";
              Dream.log "client: %s" (Dream.client req);
              Dream.log "tls: %b" (Dream.tls req);
              Dream.log "target: %s" (Dream.target req);
-             Dream.html content);
+             Dream.html (speaker_source content));
+         Dream.get "/onchange" (fun _req ->
+             let x, _ = Lwt.wait () in
+             x);
        ]
 
 let bore () =

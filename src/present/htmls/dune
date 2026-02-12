@@ -1,11 +1,11 @@
 (executable
  (name speaker)
  (modes js)
- (libraries brr slipshow.previewer)
+ (libraries brr slipshow.previewer communication yojson present_comm)
  (modules speaker))
 
 (executable
  (name audience)
  (modes js)
- (libraries brr slipshow.previewer)
+ (libraries brr slipshow.previewer communication yojson present_comm)
  (modules audience))
