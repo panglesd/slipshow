@@ -81,9 +81,9 @@ let iframe = El.find_first_by_selector !!"#presentation" |> Option.get
 let iframe_window =
   Jv.get (Brr.El.to_jv iframe) "contentWindow" |> Brr.Window.of_jv
 
-let receive_callback (Present_comm.Send_step i) =
+let receive_callback (Present_comm.Send_step (i, mode)) =
   current_step := i;
-  let payload = Communication.Set_state i in
+  let payload = Communication.Set_state (i, mode) in
   let msg_ =
     (* Currently, the ID does not matter... *)
     { payload; id = "TODO" } |> Communication.to_string |> Jv.of_string
