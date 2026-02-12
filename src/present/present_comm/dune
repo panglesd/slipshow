@@ -1,0 +1,4 @@
+(library
+ (name present_comm)
+ (public_name slipshow.present_comm)
+ (libraries yojson))

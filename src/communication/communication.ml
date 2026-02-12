@@ -3,6 +3,7 @@ open Sexplib.Std
 type payload =
   | State of int * [ `Fast | `Normal ]
   | Ready
+  | Set_state of int
   | Open_speaker_notes
   | Close_speaker_notes
   | Speaker_notes of string
