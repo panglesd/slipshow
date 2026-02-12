@@ -31,6 +31,7 @@ let receive_callback event =
   | Present_comm.Send_step _ -> ()
   | Poll_truth poll ->
       Console.(log [ "YYYYYYYYYYYYYYYYYYYYYYYYYYYY" ]);
+      current_vote_result := poll;
       let () =
         let iframe =
           El.find_first_by_selector !!"#presentation" |> function
