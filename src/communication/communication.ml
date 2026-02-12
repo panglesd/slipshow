@@ -12,6 +12,7 @@ type payload =
   | Receive_all_drawing of string list
   | Next
   | Previous
+  | Stop_moving
 [@@deriving sexp]
 
 type t = { payload : payload; id : string } [@@deriving sexp]

@@ -131,7 +131,14 @@ let _unlisten =
       (*     Console.(log [ "New state:"; new_stage ]); *)
       (*     let _ = send_event (`Send_step new_stage) in *)
       (*     () *)
-      | Some { payload = Ready; id = _ } -> Console.(log [ "READY" ])
+      | Some { payload = Ready; id = _ } ->
+          let payload = Communication.Stop_moving in
+          let msg_ =
+            (* Currently, the ID does not matter... *)
+            { payload; id = "TODO" } |> Communication.to_string |> Jv.of_string
+          in
+          Console.(log [ "sending"; msg_ ]);
+          Brr.Window.post_message iframe_window ~msg:msg_
       | _ -> ())
     (Brr.Window.as_target Brr.G.window)
 

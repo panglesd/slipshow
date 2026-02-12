@@ -10,6 +10,7 @@ type payload =
   | Receive_all_drawing of string list
   | Next
   | Previous
+  | Stop_moving
 
 type t = { payload : payload; id : string }
 
