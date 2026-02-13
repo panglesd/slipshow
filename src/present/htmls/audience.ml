@@ -29,15 +29,6 @@ let uri typ =
   let uri = Uri.with_query_params uri params in
   uri |> Brr.Uri.to_jstr
 
-let iframe = El.find_first_by_selector !!"#presentation" |> Option.get
-
-let iframe_window =
-  Jv.get (Brr.El.to_jv iframe) "contentWindow" |> Brr.Window.of_jv
-
-let slipshow_iframe =
-  let root = Window.document iframe_window |> Document.body in
-  El.find_first_by_selector ~root !!"iframe" |> Option.get
-
 let receive_callback event =
   match event with
   | Present_comm.Send_step (i, mode) ->
@@ -48,11 +39,29 @@ let receive_callback event =
         { payload; id = "TODO" } |> Communication.to_string |> Jv.of_string
       in
       Console.(log [ "sending"; msg_ ]);
+      let iframe = El.find_first_by_selector !!"#presentation" |> Option.get in
+      let iframe_window =
+        Jv.get (Brr.El.to_jv iframe) "contentWindow" |> Brr.Window.of_jv
+      in
+      let _slipshow_iframe =
+        let root = Window.document iframe_window |> Document.body in
+        El.find_first_by_selector ~root !!"iframe" |> Option.get
+      in
       Brr.Window.post_message iframe_window ~msg:msg_
   | Poll_truth poll ->
       Console.(log [ "YYYYYYYYYYYYYYYYYYYYYYYYYYYY" ]);
       current_vote_result := poll;
       let () =
+        let iframe =
+          El.find_first_by_selector !!"#presentation" |> Option.get
+        in
+        let iframe_window =
+          Jv.get (Brr.El.to_jv iframe) "contentWindow" |> Brr.Window.of_jv
+        in
+        let slipshow_iframe =
+          let root = Window.document iframe_window |> Document.body in
+          El.find_first_by_selector ~root !!"iframe" |> Option.get
+        in
         let slipshow_window =
           Jv.get (Brr.El.to_jv slipshow_iframe) "contentWindow"
           |> Brr.Window.of_jv
@@ -134,6 +143,16 @@ let _unlisten =
             { payload; id = "TODO" } |> Communication.to_string |> Jv.of_string
           in
           Console.(log [ "sending"; msg_ ]);
+          let iframe =
+            El.find_first_by_selector !!"#presentation" |> Option.get
+          in
+          let iframe_window =
+            Jv.get (Brr.El.to_jv iframe) "contentWindow" |> Brr.Window.of_jv
+          in
+          let _slipshow_iframe =
+            let root = Window.document iframe_window |> Document.body in
+            El.find_first_by_selector ~root !!"iframe" |> Option.get
+          in
           Brr.Window.post_message iframe_window ~msg:msg_
       | Some { payload = Poll_vote { id; vote }; id = _ } ->
           if Hashtbl.mem has_voted id then ()
