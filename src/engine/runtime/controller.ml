@@ -93,6 +93,8 @@ let touch_setup (window : Universe.Window.t) =
     let _unlisten =
       Brr.Ev.listen Brr.Ev.click
         (fun _ ->
+          let check_allowed f = if !global_allowed then f () else () in
+          check_allowed @@ fun () ->
           let _ : unit Fut.t =
             Step.Next.go_next ~send_message:true window (Fast.normal ())
           in
@@ -110,6 +112,8 @@ let touch_setup (window : Universe.Window.t) =
     let _unlisten =
       Brr.Ev.listen Brr.Ev.click
         (fun _ ->
+          let check_allowed f = if !global_allowed then f () else () in
+          check_allowed @@ fun () ->
           let _ : unit Fut.t =
             Step.Next.go_prev ~send_message:true window (Fast.normal ())
           in
