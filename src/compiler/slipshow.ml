@@ -108,27 +108,13 @@ let head ~width ~height ~theme ~highlightjs_theme ~(has : Has.t) ~math_mode
     ~css_links =
   let theme = theme_css theme in
   let highlight_css_element =
-    let filename = "styles/" ^ highlightjs_theme ^ ".min.css" in
-    "<style>" ^ (Option.get @@ Highlightjs.read filename) ^ "</style>"
+    let s = Highlightjs.styles highlightjs_theme in
+    "<style>" ^ s ^ "</style>"
   in
-  let highlight_js_element =
-    "<script>"
-    ^ (Option.get @@ Highlightjs.read "highlight.min.js")
-    ^ "</script>"
-  in
-  let highlight_js_lang_element lang =
-    let filename = "languages/" ^ lang ^ ".min.js" in
-    Highlightjs.read filename
-    |> Option.map @@ fun s -> "<script>" ^ s ^ "</script>"
-  in
+  let highlight_js_element = "<script>" ^ Highlightjs.script ^ "</script>" in
   let highlight_js_lang_elements =
-    has.code_blocks |> fun x ->
-    Has.StringSet.fold
-      (fun h acc ->
-        match highlight_js_lang_element h with
-        | None -> acc
-        | Some l -> l :: acc)
-      x []
+    Highlightjs.lang_scripts has.code_blocks
+    |> List.map (fun s -> "<script>" ^ s ^ "</script>")
     |> String.concat ""
   in
   let pdf_support =
