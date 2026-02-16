@@ -1456,7 +1456,8 @@ module Doc : sig
   val of_string :
     ?defs:Label.defs -> ?resolver:Label.resolver -> ?nested_links:bool ->
     ?heading_auto_ids:bool -> ?layout:bool -> ?locs:bool ->
-    ?file:Textloc.fpath -> ?strict:bool -> string -> t
+    ?file:Textloc.fpath -> ?loc_offset: int * int -> ?strict:bool -> string
+    -> t
     (** [of_string md] is a document from the UTF-8 encoded CommonMark
         document [md].
 
