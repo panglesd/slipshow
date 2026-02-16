@@ -6,7 +6,7 @@
 
 - Support for Mermaid JS (#205)
 - Support for syntax highlighting of all highlightjs-supported languages and
-  themes (#200)
+  themes (#200, #208)
 - Support for MathJax extensions, especially the html extension to allow actions
   to target math elements (#202)
 - Add KaTeX as a possible alternate renderer (#202)
