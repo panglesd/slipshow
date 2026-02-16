@@ -1,0 +1,191 @@
+(* Built from:
+   https://github.com/highlightjs/highlight.js/blob/5697ae5187746c24732e62cd625f3f83004a44ce/SUPPORTED_LANGUAGES.md
+   and the list of files in data/languages/
+*)
+
+let map =
+  [
+    [ "1c" ];
+    [ "abnf" ];
+    [ "accesslog" ];
+    [ "actionscript"; "as" ];
+    [ "ada" ];
+    [ "angelscript"; "asc" ];
+    [ "apache"; "apacheconf" ];
+    [ "applescript"; "osascript" ];
+    [ "arcade" ];
+    [ "arduino"; "ino" ];
+    [ "armasm"; "arm" ];
+    [ "asciidoc"; "adoc" ];
+    [ "aspectj" ];
+    [ "autohotkey" ];
+    [ "autoit" ];
+    [ "avrasm" ];
+    [ "awk"; "mawk"; "nawk"; "gawk" ];
+    [ "bash"; "sh"; "zsh" ];
+    [ "basic" ];
+    [ "bnf" ];
+    [ "brainfuck"; "bf" ];
+    [ "c"; "h" ];
+    [ "csharp"; "cs" ];
+    [ "cpp"; "hpp"; "cc"; "hh"; "c++"; "h++"; "cxx"; "hxx" ];
+    [ "cal" ];
+    [ "cos"; "cls" ];
+    [ "capnproto"; "capnp" ];
+    [ "ceylon" ];
+    [ "clojure"; "clj" ];
+    [ "cmake"; "cmake.in" ];
+    [ "coffeescript"; "coffee"; "cson"; "iced" ];
+    [ "coq" ];
+    [ "crmsh"; "crm"; "pcmk" ];
+    [ "crystal"; "cr" ];
+    [ "csp" ];
+    [ "css" ];
+    [ "d" ];
+    [ "dart" ];
+    [ "dpr"; "dfm"; "pas"; "pascal" ];
+    [ "diff"; "patch" ];
+    [ "django"; "jinja" ];
+    [ "dns"; "zone"; "bind" ];
+    [ "dockerfile"; "docker" ];
+    [ "dos"; "bat"; "cmd" ];
+    [ "dsconfig" ];
+    [ "dts" ];
+    [ "dust"; "dst" ];
+    [ "ebnf" ];
+    [ "elixir" ];
+    [ "elm" ];
+    [ "erlang"; "erl" ];
+    [ "excel"; "xls"; "xlsx" ];
+    [ "fsharp"; "fs"; "fsx"; "fsi"; "fsscript" ];
+    [ "fix" ];
+    [ "fortran"; "f90"; "f95" ];
+    [ "gcode"; "nc" ];
+    [ "gams"; "gms" ];
+    [ "gauss"; "gss" ];
+    [ "gherkin" ];
+    [ "go"; "golang" ];
+    [ "golo"; "gololang" ];
+    [ "gradle" ];
+    [ "graphql"; "gql" ];
+    [ "groovy" ];
+    [ "haml" ];
+    [ "handlebars"; "hbs"; "html.hbs"; "html.handlebars" ];
+    [ "haskell"; "hs" ];
+    [ "haxe"; "hx" ];
+    [
+      "xml"; "html"; "xhtml"; "rss"; "atom"; "xjb"; "xsd"; "xsl"; "plist"; "svg";
+    ];
+    [ "http"; "https" ];
+    [ "hy"; "hylang" ];
+    [ "inform7"; "i7" ];
+    [ "ini"; "toml" ];
+    [ "irpf90" ];
+    [ "java"; "jsp" ];
+    [ "javascript"; "js"; "jsx" ];
+    [ "json"; "jsonc"; "json5" ];
+    [ "julia"; "jl" ];
+    [ "julia-repl" ];
+    [ "kotlin"; "kt" ];
+    [ "lasso"; "ls"; "lassoscript" ];
+    [ "tex" ];
+    [ "ldif" ];
+    [ "leaf" ];
+    [ "less" ];
+    [ "lisp" ];
+    [ "livecodeserver" ];
+    [ "livescript"; "ls" ];
+    [ "lua"; "pluto" ];
+    [ "makefile"; "mk"; "mak"; "make" ];
+    [ "markdown"; "md"; "mkdown"; "mkd" ];
+    [ "mathematica"; "mma"; "wl" ];
+    [ "matlab" ];
+    [ "maxima" ];
+    [ "mel" ];
+    [ "mercury" ];
+    [ "mips"; "mipsasm" ];
+    [ "mizar" ];
+    [ "mojolicious" ];
+    [ "monkey" ];
+    [ "moonscript"; "moon" ];
+    [ "n1ql" ];
+    [ "nginx"; "nginxconf" ];
+    [ "nim"; "nimrod" ];
+    [ "nix" ];
+    [ "nsis" ];
+    [ "objectivec"; "mm"; "objc"; "obj-c"; "obj-c++"; "objective-c" ];
+    [ "ocaml"; "ml" ];
+    [ "glsl" ];
+    [ "openscad"; "scad" ];
+    [ "ruleslanguage" ];
+    [ "oxygene" ];
+    [ "parser3" ];
+    [ "perl"; "pl"; "pm" ];
+    [ "pf"; "pf.conf" ];
+    [ "php" ];
+    [ "plaintext"; "txt"; "text" ];
+    [ "pony" ];
+    [ "pgsql"; "postgres"; "postgresql" ];
+    [ "powershell"; "ps"; "ps1" ];
+    [ "processing" ];
+    [ "prolog" ];
+    [ "properties" ];
+    [ "proto"; "protobuf" ];
+    [ "puppet"; "pp" ];
+    [ "python"; "py"; "gyp" ];
+    [ "profile" ];
+    [ "python-repl"; "pycon" ];
+    [ "k"; "kdb" ];
+    [ "qml" ];
+    [ "r" ];
+    [ "reasonml"; "re" ];
+    [ "rib" ];
+    [ "rsl" ];
+    [ "graph"; "instances" ];
+    [ "ruby"; "rb"; "gemspec"; "podspec"; "thor"; "irb" ];
+    [ "rust"; "rs" ];
+    [ "SAS"; "sas" ];
+    [ "scala" ];
+    [ "scheme" ];
+    [ "scilab"; "sci" ];
+    [ "scss" ];
+    [ "shell"; "console" ];
+    [ "smali" ];
+    [ "smalltalk"; "st" ];
+    [ "sml"; "ml" ];
+    [ "sql" ];
+    [ "stan"; "stanfuncs" ];
+    [ "stata" ];
+    [ "p21"; "step"; "stp" ];
+    [ "stylus"; "styl" ];
+    [ "subunit" ];
+    [ "swift" ];
+    [ "tcl"; "tk" ];
+    [ "tap" ];
+    [ "thrift" ];
+    [ "tp" ];
+    [ "twig"; "craftcms" ];
+    [ "typescript"; "ts"; "tsx"; "mts"; "cts" ];
+    [ "vala" ];
+    [ "vbnet"; "vb" ];
+    [ "vbscript"; "vbs" ];
+    [ "verilog"; "v" ];
+    [ "vhdl" ];
+    [ "vim" ];
+    [ "axapta"; "x" ];
+    [ "x86asm" ];
+    [ "xl"; "tao" ];
+    [ "xquery"; "xpath"; "xq"; "xqm" ];
+    [ "yml"; "yaml" ];
+    [ "zephir"; "zep" ];
+  ]
+
+let map =
+  let h = Hashtbl.create 10 in
+  List.iter
+    (function
+      | main_name :: _ as l ->
+          List.iter (fun name -> Hashtbl.add h name main_name) l
+      | _ -> assert false)
+    map;
+  h

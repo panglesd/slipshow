@@ -1,11 +1,12 @@
 (library
  (name highlightjs)
- (public_name slipshow.highlightjs))
+ (public_name slipshow.highlightjs)
+ (libraries logs))
 
 (rule
  (aliases highlightjs)
  (deps
-  (:x highlightjs.ml)
+  (:x highlightjs_data.ml)
   (glob_files_rec data/*))
  (enabled_if
   (= %{profile} "with-bundle"))
