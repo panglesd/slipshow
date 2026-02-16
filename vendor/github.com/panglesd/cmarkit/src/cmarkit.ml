@@ -978,6 +978,7 @@ type parser =
     exts : bool; (* parse extensions if [true]. *)
     nolocs : bool; (* do not compute locations if [true]. *)
     nolayout : bool; (* do not compute layout fields if [true]. *)
+    loc_offset : int * int; (* byte offset and line offset *)
     heading_auto_ids : bool; (* compute heading ids. *)
     nested_links : bool;
     mutable defs : Label.defs;
@@ -999,14 +1000,14 @@ type parser =
 let parser
     ?(defs = Label.Map.empty) ?(resolver = Label.default_resolver)
     ?(nested_links = false) ?(heading_auto_ids = false) ?(layout = false)
-    ?(locs = false) ?(file = Textloc.file_none) ~strict i
+    ?(locs = false) ?(file = Textloc.file_none) ?(loc_offset = 0,0) ~strict i
   =
   let nolocs = not locs and nolayout = not layout and exts = not strict in
   { file; i; buf = Buffer.create 512; exts; nolocs; nolayout;
     heading_auto_ids; nested_links; defs; resolver; cidx = Closer_index.empty;
     current_line_pos = 1, 0; current_line_last_char = -1; current_char = 0;
     current_char_col = 0; next_non_blank = 0; next_non_blank_col = 0;
-    tab_consumed_cols = 0; }
+    tab_consumed_cols = 0; loc_offset}
 
 let find_label_defining_key p key = match Label.Map.find_opt key p.defs with
 | Some (Link_definition.Def ((ld, _), _)) -> Link_definition.defined_label ld
@@ -1038,17 +1039,27 @@ let current_line_span p ~first ~last =
 
 let meta p textloc = if p.nolocs then Meta.none else Meta.make ~textloc ()
 
+let offseted_loc ~loc_offset ~file ~first_byte ~last_byte ~first_line ~last_line =
+  let byte_offset, line_offset = loc_offset in
+  let first_byte = first_byte + byte_offset and last_byte = last_byte + byte_offset in
+  let offset_line (line_n, line_byte) = (line_n + line_offset, line_byte + byte_offset) in
+  let first_line = offset_line first_line in
+  let last_line = offset_line last_line in
+  Textloc.v ~file ~first_byte ~last_byte ~first_line ~last_line
+
 let textloc_of_span p span =
   if p.nolocs then Textloc.none else
   let first_byte = span.first and last_byte = span.last in
   let first_line = span.line_pos and last_line = span.line_pos in
-  Textloc.v ~file:p.file ~first_byte ~last_byte ~first_line ~last_line
+  offseted_loc ~loc_offset:p.loc_offset
+    ~file:p.file ~first_byte ~last_byte ~first_line ~last_line
 
 let textloc_of_lines p ~first ~last ~first_line ~last_line =
   if p.nolocs then Textloc.none else
   let first_byte = first and first_line = first_line.line_pos in
   let last_byte = last and last_line = last_line.line_pos in
-  Textloc.v ~file:p.file ~first_byte ~last_byte ~first_line ~last_line
+  offseted_loc ~loc_offset:p.loc_offset
+    ~file:p.file ~first_byte ~last_byte ~first_line ~last_line
 
 let meta_of_spans p ~first:first_line ~last:last_line =
   if p.nolocs then Meta.none else
@@ -3128,9 +3139,10 @@ module Block_struct = struct
   let parse p =
     let meta p =
       let first_byte = 0 and last_byte = p.current_line_last_char in
-      let first_line = 1, first_byte and last_line = p.current_line_pos in
+      let first_line = (1, first_byte) and last_line = p.current_line_pos in
       let file = p.file in
-      meta p (Textloc.v ~file ~first_byte ~last_byte ~first_line ~last_line)
+      meta p (offseted_loc ~loc_offset:p.loc_offset
+                ~file ~first_byte ~last_byte ~first_line ~last_line)
     in
     let rec loop p bs =
       let bs = add_line p bs in
@@ -3403,12 +3415,12 @@ module Doc = struct
   let block d = d.block
   let defs d = d.defs
   let of_string
-      ?defs ?resolver ?nested_links ?heading_auto_ids ?layout ?locs ?file
+      ?defs ?resolver ?nested_links ?heading_auto_ids ?layout ?locs ?file ?loc_offset
       ?(strict = true) s
     =
     let p =
       parser ?defs ?resolver ?nested_links ?heading_auto_ids ?layout ?locs
-        ?file ~strict s
+        ?file ?loc_offset ~strict s
     in
     let nl, doc = Block_struct.parse p in
     let block = block_struct_to_doc p doc in
