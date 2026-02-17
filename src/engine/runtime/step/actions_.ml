@@ -49,7 +49,7 @@ module Parse : sig
     action_name:string -> 'a -> string -> (unit, [> `Msg of string ]) result
 
   val parse_only_els :
-    Brr.El.t -> string -> (Brr.El.t list, [> `Msg of string ]) result
+    string -> ([ `Self | `Id_list of string list ], [> `Msg of string ]) result
 
   val parse_only_el :
     Brr.El.t -> string -> (Brr.El.t, [> `Msg of string ]) result
@@ -207,7 +207,7 @@ end = struct
            in
            { named; positional })
 
-  let id x = Jstr.of_string ("#" ^ x)
+  let id x = x
 
   type 'a description_named_atom =
     string * (string -> ('a, [ `Msg of string ]) result)
@@ -302,12 +302,10 @@ end = struct
         Logs.warn (fun m ->
             m "The %s action does not accept any argument" action_name)
 
-  let parse_only_els elem s =
+  let parse_only_els s =
     let ( let$ ) = Fun.flip Result.map in
     let$ x = parse ~named:[] ~positional:id s in
-    match merge_positional x with
-    | [] -> List.[ elem ]
-    | x -> List.filter_map find_first_by_selector x
+    match merge_positional x with [] -> `Self | x -> `Id_list x
 
   let parse_only_el elem s =
     let ( let$ ) = Result.bind in
@@ -345,7 +343,7 @@ module type S = sig
   val setup_all : (unit -> unit Fut.t) option
   val on : string
   val action_name : string
-  val parse_args : Brr.El.t -> string -> (args, [> `Msg of string ]) result
+  val parse_args : string -> (args, [> `Msg of string ]) result
   val do_ : mode:Fast.mode -> Universe.Window.t -> args -> unit Undoable.t
 end
 
@@ -449,6 +447,8 @@ module Pause = struct
        let> () = set_class "pauseTarget" false elem in
        update elem (fun n -> n - 1)
 end
+
+module _ : S = Pause
 
 module Move (X : sig
   val on : string
