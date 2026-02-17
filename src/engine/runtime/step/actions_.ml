@@ -807,7 +807,9 @@ module Play_media = struct
               let fut, activate = Fut.create () in
               let _ =
                 let+ () = Fast.wait hurry_bomb in
-                set_current_time_s e (duration_s e);
+                let duration = duration_s e in
+                if not @@ Float.is_nan duration then
+                  set_current_time_s e duration;
                 activate ()
               in
               let _unlisten =
@@ -821,7 +823,9 @@ module Play_media = struct
             in
             let when_fast () =
               Brr.Console.(log [ "Just setting current time" ]);
-              Fut.return @@ set_current_time_s e (duration_s e)
+              let duration = duration_s e in
+              if Float.is_nan duration then Fut.return ()
+              else Fut.return @@ set_current_time_s e duration
             in
             match mode with
             | Fast.Normal hurry_bomb when not (Fast.has_detonated hurry_bomb) ->
