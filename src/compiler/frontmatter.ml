@@ -196,7 +196,16 @@ let extract s =
   let+ end_, after = find_closing s start in
   let frontmatter = String.sub s start (end_ - start) in
   let rest = String.sub s after (String.length s - after) in
-  (frontmatter, rest)
+  let offset =
+    let rec n_lines acc index =
+      if index < 0 then acc
+      else
+        let acc = if s.[index] = '\n' then acc + 1 else acc in
+        n_lines acc (index - 1)
+    in
+    (after, n_lines 0 (after - 1))
+  in
+  (frontmatter, rest, offset)
 
 let combine (Resolved cli_frontmatter) (Resolved frontmatter) =
   let combine_opt cli f = match cli with Some _ as x -> x | None -> f in

@@ -46,7 +46,7 @@ end
 
 val of_string : string -> (unresolved t, [> `Msg of string ]) result
 
-val extract : string -> (string * string) option
+val extract : string -> (string * string * (int * int)) option
 (** The first string is the frontmatter, the second one the original string with
     the frontmatter and separator stripped *)
 

@@ -49,7 +49,10 @@ let compile ~input ~output ~cli_frontmatter =
       ()
   in
   let html =
-    Slipshow.convert ~has_speaker_view:true ~frontmatter:cli_frontmatter
+    let file =
+      match input with `File f -> Some (Fpath.to_string f) | _ -> None
+    in
+    Slipshow.convert ~has_speaker_view:true ~frontmatter:cli_frontmatter ?file
       ~read_file content
   in
   let all_used_files = Fpath.Set.union !asset_files !used_files in
@@ -86,8 +89,9 @@ let serve ~input ~output ~cli_frontmatter ~port =
     let* content = Io.read (`File input) in
     let used_files, read_file = read_file (Fpath.parent input) () in
     let result =
+      let file = Fpath.to_string input in
       Slipshow.delayed ~has_speaker_view:true ~frontmatter:cli_frontmatter
-        ~read_file content
+        ~read_file ~file content
     in
     let all_used_files = Fpath.Set.union !asset_files !used_files in
     let html = Slipshow.add_starting_state result None in
