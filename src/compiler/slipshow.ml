@@ -251,24 +251,24 @@ let convert_to_md ~read_file content =
   let sd = Compile.to_cmarkit sd in
   Cmarkit_commonmark.of_doc ~include_attributes:false sd
 
-let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty)
+let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty) ?file
     ?(read_file = fun _ -> Ok None) ~has_speaker_view s =
-  let Frontmatter.Resolved frontmatter, s =
+  let Frontmatter.Resolved frontmatter, s, loc_offset =
     let ( let* ) x f =
       match x with
       | Ok x -> f x
       | Error (`Msg err) ->
           Logs.err (fun m -> m "Failed to parse the frontmatter: %s" err);
-          (frontmatter, s)
+          (frontmatter, s, (0, 0))
     in
     match Frontmatter.extract s with
-    | None -> (frontmatter, s)
-    | Some (yaml, s) ->
+    | None -> (frontmatter, s, (0, 0))
+    | Some (yaml, s, offset) ->
         let* txt_frontmatter = Frontmatter.of_string yaml in
         let to_asset = Asset.of_string ~read_file in
         let txt_frontmatter = Frontmatter.resolve txt_frontmatter ~to_asset in
         let frontmatter = Frontmatter.combine txt_frontmatter frontmatter in
-        (frontmatter, s)
+        (frontmatter, s, offset)
   in
   let toplevel_attributes =
     frontmatter.toplevel_attributes
@@ -295,7 +295,10 @@ let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty)
       frontmatter.highlightjs_theme
   in
   let math_link = frontmatter.math_link in
-  let md = Compile.compile ~attrs:toplevel_attributes ~read_file s in
+  let md, errors =
+    Compile.compile ~loc_offset ?file ~attrs:toplevel_attributes ~read_file s
+  in
+  let () = List.iter (Format.printf "%a\n%!" Errors.pp) errors in
   let content = Renderers.to_html_string md in
   let has = Has.find_out md in
   embed_in_page ~has_speaker_view ~slipshow_js ~dimension ~has ~math_link ~theme
@@ -361,9 +364,9 @@ let add_starting_state ?(autofocus = true) (start, end_, has_speaker_view)
   in
   if has_speaker_view then html else orig_html
 
-let convert ~has_speaker_view ?autofocus ?slipshow_js ?frontmatter
+let convert ~has_speaker_view ?autofocus ?slipshow_js ?frontmatter ?file
     ?starting_state ?read_file s =
   let delayed =
-    delayed ~has_speaker_view ?slipshow_js ?frontmatter ?read_file s
+    delayed ~has_speaker_view ?slipshow_js ?frontmatter ?file ?read_file s
   in
   add_starting_state ?autofocus delayed starting_state
