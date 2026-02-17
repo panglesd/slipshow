@@ -610,7 +610,7 @@ let of_cmarkit ~read_file md =
 let compile ~attrs ?(read_file = fun _ -> Ok None) s =
   let open Cmarkit in
   let md =
-    let doc = Doc.of_string ~heading_auto_ids:true ~strict:false s in
+    let doc = Doc.of_string ~heading_auto_ids:false ~strict:false s in
     let bq = Block.Block_quote.make (Doc.block doc) in
     let block = Block.Block_quote ((bq, (attrs, Meta.none)), Meta.none) in
     Doc.make block

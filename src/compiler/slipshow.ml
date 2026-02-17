@@ -244,7 +244,9 @@ let string_to_delayed s =
   Marshal.from_string s 0
 
 let convert_to_md ~read_file content =
-  let md = Cmarkit.Doc.of_string ~heading_auto_ids:true ~strict:false content in
+  let md =
+    Cmarkit.Doc.of_string ~heading_auto_ids:false ~strict:false content
+  in
   let sd = Compile.of_cmarkit ~read_file md in
   let sd = Compile.to_cmarkit sd in
   Cmarkit_commonmark.of_doc ~include_attributes:false sd
