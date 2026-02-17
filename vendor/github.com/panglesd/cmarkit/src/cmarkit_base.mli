@@ -392,7 +392,7 @@ val md_attributes:
     option
 
 val ext_attributes :
-  string -> last:byte_pos -> start:byte_pos -> line_type
+  string -> last:byte_pos -> start:byte_pos -> line_pos:Textloc.line_pos -> line_type
 (** [ext_attributes s ~last ~start] matches an attribute specification.
     This remains on the same line. *)
 

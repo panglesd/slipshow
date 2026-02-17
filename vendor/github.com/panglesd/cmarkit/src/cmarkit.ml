@@ -2708,7 +2708,8 @@ module Block_struct = struct
           if r <> Nomatch then r else
           Paragraph_line
       | '{' when p.exts ->
-          let r = Match.ext_attributes p.i ~last ~start in
+          let line_pos = p.current_line_pos in
+          let r = Match.ext_attributes p.i ~last ~start ~line_pos in
           if r <> Nomatch then r else
             Paragraph_line
       | _ ->

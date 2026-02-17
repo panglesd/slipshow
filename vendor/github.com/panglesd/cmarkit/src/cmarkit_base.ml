@@ -1397,8 +1397,8 @@ let ext_attribute_label buf s ~line_pos ~last ~start =
       else Nomatch
       (* Ext_footnote_label (rev_spans, colon, key) *)
 
-let ext_attributes s ~last ~start =
-  let line = { line_pos = Textloc.line_pos_none; first = start; last } in
+let ext_attributes s ~last ~start ~line_pos =
+  let line = { line_pos; first = start; last } in
   let next_line () = None in
   match md_attributes ~next_line s () ~line ~start with
   | None -> Nomatch
