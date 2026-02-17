@@ -826,7 +826,12 @@ module Play_media = struct
                   (e |> Brr_io.Media.El.to_el |> Brr.El.as_target)
               in
               let* err = Brr_io.Media.El.play e in
-              match err with Ok () -> fut | Error _e -> fut
+              match err with
+              | Ok () -> fut
+              | Error e ->
+                  Brr.Console.(error [ e ]);
+                  activate ();
+                  fut
             in
             let when_fast () =
               Brr.Console.(log [ "Just setting current time" ]);
