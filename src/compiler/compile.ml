@@ -455,8 +455,9 @@ module Stage4 = struct
           | Svg media
           | Image media -> (
               match media with
-              | { uri = Path p; id; _ } ->
-                  Folder.ret @@ fpath_map_add_to_list p id acc
+              | { uri = Path p, meta; id; origin } ->
+                  Folder.ret
+                  @@ (fpath_map_add_to_list p (id, (origin, meta)) acc, x)
               | _ -> Folder.default))
       | _ -> Folder.default
     in
@@ -489,10 +490,17 @@ let of_cmarkit ~read_file md =
   let md3 = Stage3.execute md2 in
   Stage4.execute ~read_file md3
 
-let compile ~attrs ?(read_file = fun _ -> Ok None) s =
+let compile ?file ?loc_offset ~attrs ?(read_file = fun _ -> Ok None) s =
+  Errors.with_ @@ fun () ->
   let open Cmarkit in
   let md =
-    let doc = Doc.of_string ~heading_auto_ids:false ~strict:false s in
+    let doc =
+      match file with
+      | None -> Doc.of_string ~heading_auto_ids:false ~strict:false s
+      | Some file ->
+          Doc.of_string ?loc_offset ~file ~locs:true ~heading_auto_ids:false
+            ~strict:false s
+    in
     let bq = Block.Block_quote.make (Doc.block doc) in
     let block = Block.Block_quote ((bq, (attrs, Meta.none)), Meta.none) in
     Doc.make block
