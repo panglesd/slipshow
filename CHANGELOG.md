@@ -21,6 +21,7 @@
 - Fix ending excursions with `ijkl` only when needed (#207)
 - Fixed video long-step handling (#207)
 - Removed confusing auto-generated IDs (#209)
+- Fix `play-media` behavior when facing errors (#210)
 
 ### Docs
 
