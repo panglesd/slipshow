@@ -805,6 +805,13 @@ module Play_media = struct
             let when_slow hurry_bomb =
               Brr.Console.(log [ "Playing" ]);
               let fut, activate = Fut.create () in
+              let activate =
+                let did = ref false in
+                fun () ->
+                  let old_did = !did in
+                  did := true;
+                  if not old_did then activate ()
+              in
               let _ =
                 let+ () = Fast.wait hurry_bomb in
                 let duration = duration_s e in
