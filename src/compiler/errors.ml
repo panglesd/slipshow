@@ -7,11 +7,11 @@ module Error = struct
 
   let pp ppf = function
     | DuplicateID id ->
-        ignore id.previous_occurrence;
-        Format.fprintf ppf "Duplicate id: %s" id.id
+        Format.fprintf ppf "ID '%s' has already been given at %a." id.id
+          Cmarkit.Textloc.pp_ocaml id.previous_occurrence
     | MissingFile s ->
         (* ignore s.previous_occurrence; *)
-        Format.fprintf ppf "Missing file: %s (%s). Considering it as an URL."
+        Format.fprintf ppf "Missing file: %s, considering it as an URL. (%s)"
           s.file s.error_msg
 end
 
