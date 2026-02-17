@@ -30,7 +30,7 @@ type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
     - [slide] attributed elements are turned into slides
     - [carousel] attributed elements are turned into carousels
 
-    The fourth stage is populating the media files map *)
+    The fourth stage is populating the media files map, and the ID map. *)
 
 module Path_entering : sig
   (** Path are relative to the file we are reading. When we include a file we
@@ -162,13 +162,14 @@ module Stage1 = struct
       | Error _ -> `Image
       | Ok p -> classify_image p
 
-  let update_link_definition current_path ld =
+  let update_link_definition current_path (ld, meta) =
     let label, layout, defined_label, (dest, meta_dest), title =
       Link_definition.(label ld, layout ld, defined_label ld, dest ld, title ld)
     in
     let uri = resolve_file current_path dest in
     let dest = (Asset.Uri.to_string uri, meta_dest) in
-    (uri, Link_definition.make ~layout ~defined_label ?label ~dest ?title ())
+    ( (uri, meta),
+      Link_definition.make ~layout ~defined_label ?label ~dest ?title () )
 
   let handle_image_inlining m defs current_path ((l, (attrs, meta2)), meta) =
     let text = Inline.Link.text l in
@@ -182,7 +183,7 @@ module Stage1 = struct
           in
           let kind = classify_link_definition ld attrs in
           let attrs_ld = Mapper.map_attrs m attrs_ld in
-          let dest, ld = update_link_definition current_path ld in
+          let dest, ld = update_link_definition current_path (ld, meta) in
           Some (kind, ((ld, (attrs_ld, meta2)), meta), dest)
     in
     let reference = `Inline ld in
@@ -350,7 +351,7 @@ module Stage2 = struct
                         Attributes.add (c, meta) value acc))
               Attributes.empty kvs
           in
-          let bs = List.map (Ast.Utils.merge_attribute new_attrs) bs in
+          let bs = List.map (Ast.Utils.Block.merge_attribute new_attrs) bs in
           let bs =
             match Mapper.map_block m (Block.Blocks (bs, m_bs)) with
             | None -> Block.Blocks ([], m_bs)
@@ -404,7 +405,7 @@ module Stage3 = struct
         let attrs = Mapper.map_attrs m attrs in
         (b, (attrs, meta2))
       in
-      match Ast.Utils.get_attribute c with
+      match Ast.Utils.Block.get_attribute c with
       | None -> Mapper.default
       | Some (block, (attrs, meta2)) when Attributes.mem "blockquote" attrs ->
           let block, attrs = map ~may_enter:false block (attrs, meta2) in
@@ -444,39 +445,98 @@ module Stage4 = struct
     Fpath.Map.update x add m
 
   let execute =
-    let block _f _acc _c = Folder.default in
-    let inline _f acc = function
-      | Ast.S_inline i -> (
-          match i with
-          | Video media
-          | Pdf media
-          | Audio media
-          | Hand_drawn media
-          | Svg media
-          | Image media -> (
-              match media with
-              | { uri = Path p, meta; id; origin } ->
-                  Folder.ret
-                  @@ (fpath_map_add_to_list p (id, (origin, meta)) acc, x)
-              | _ -> Folder.default))
-      | _ -> Folder.default
+    let block f (x, id_list) c =
+      let acc =
+        match Ast.Utils.Block.get_attribute c with
+        | None -> (x, id_list)
+        | Some (_, (attrs, meta)) -> (
+            match Attributes.id attrs with
+            | None -> (x, id_list)
+            | Some id -> (x, (id, `Block c, meta) :: id_list))
+      in
+      let res = Ast.Folder.continue_block f c acc in
+      Folder.ret res
+    in
+    let inline f (acc, id_list) i =
+      let id_list =
+        match Ast.Utils.Inline.get_attribute i with
+        | None -> id_list
+        | Some (_, (attrs, meta)) -> (
+            match Attributes.id attrs with
+            | None -> id_list
+            | Some id -> (id, `Inline i, meta) :: id_list)
+      in
+      let acc =
+        match i with
+        | Ast.S_inline i -> (
+            match i with
+            | Video media
+            | Pdf media
+            | Audio media
+            | Hand_drawn media
+            | Svg media
+            | Image media -> (
+                match media with
+                | { uri = Path p, meta; id; origin } ->
+                    fpath_map_add_to_list p (id, (origin, meta)) acc
+                | _ -> acc))
+        | _ -> acc
+      in
+      let acc = Ast.Folder.continue_inline f i (acc, id_list) in
+      Folder.ret acc
     in
     Ast.Folder.make ~block ~inline ()
 
   let execute ~read_file md =
-    let asset_map = Cmarkit.Folder.fold_doc execute Fpath.Map.empty md in
+    let asset_map, id_list =
+      Cmarkit.Folder.fold_doc execute (Fpath.Map.empty, []) md
+    in
+    let id_list = List.rev id_list in
+    let () =
+      let module Map = Map.Make (String) in
+      let _map =
+        List.fold_left
+          (fun acc (((id, meta1), _b1, _meta_attrs) as value) ->
+            Map.update id
+              (function
+                | None -> Some value
+                | Some ((_, meta2), _b2, _meta_attrs2) as same ->
+                    let tl1 = Meta.textloc meta1 in
+                    let tl2 = Meta.textloc meta2 in
+                    let () =
+                      Errors.add
+                        {
+                          error = DuplicateID { id; previous_occurrence = tl2 };
+                          loc = tl1;
+                        }
+                    in
+                    same)
+              acc)
+          Map.empty id_list
+      in
+      ()
+    in
     let files =
       Fpath.Map.filter_map
         (fun path used_by ->
           let read_file : file_reader = read_file in
           let mode = `Base64 in
           match read_file path with
-          | Ok (Some content) -> Some { Ast.Files.content; mode; used_by; path }
+          | Ok (Some content) ->
+              let used_by = List.map fst used_by in
+              Some { Ast.Files.content; mode; used_by; path }
           | Ok None -> None
-          | Error (`Msg s) ->
-              Logs.warn (fun m ->
-                  m "Could not read file: %a. Considering it as an URL. (%s)"
-                    Fpath.pp path s);
+          | Error (`Msg error_msg) ->
+              List.iter
+                (fun (_id, (_node, meta)) ->
+                  let textloc = Meta.textloc meta in
+                  Errors.add
+                    {
+                      error =
+                        MissingFile { file = Fpath.to_string path; error_msg };
+                      loc = textloc;
+                    })
+                used_by;
               None)
         asset_map
     in
