@@ -317,124 +317,6 @@ module Stage1 = struct
 end
 
 module Stage2 = struct
-  (** Get the attributes of a cmarkit node, returns them and the element
-      stripped of its attributes *)
-  let get_attribute =
-    let no_attrs = (Attributes.empty, Meta.none) in
-    function
-    (* Standard Cmarkit nodes *)
-    | Block.Blank_line _ -> None
-    | Block.Block_quote ((bq, attrs), meta) ->
-        Some (Block.Block_quote ((bq, no_attrs), meta), attrs)
-    | Block.Blocks _ -> None
-    | Block.Code_block ((cb, attrs), meta) ->
-        Some (Block.Code_block ((cb, no_attrs), meta), attrs)
-    | Block.Heading ((h, attrs), meta) ->
-        Some (Block.Heading ((h, no_attrs), meta), attrs)
-    | Block.Html_block ((hb, attrs), meta) ->
-        Some (Block.Html_block ((hb, no_attrs), meta), attrs)
-    | Block.Link_reference_definition _ -> None
-    | Block.List ((l, attrs), meta) ->
-        Some (Block.List ((l, no_attrs), meta), attrs)
-    | Block.Paragraph ((p, attrs), meta) ->
-        Some (Block.Paragraph ((p, no_attrs), meta), attrs)
-    | Block.Thematic_break ((tb, attrs), meta) ->
-        Some (Block.Thematic_break ((tb, no_attrs), meta), attrs)
-    (* Extension Cmarkit nodes *)
-    | Block.Ext_math_block ((mb, attrs), meta) ->
-        Some (Block.Ext_math_block ((mb, no_attrs), meta), attrs)
-    | Block.Ext_table ((table, attrs), meta) ->
-        Some (Block.Ext_table ((table, no_attrs), meta), attrs)
-    | Block.Ext_footnote_definition _ -> None
-    | Block.Ext_standalone_attributes _ -> None
-    | Block.Ext_attribute_definition _ -> None
-    (* Slipshow nodes *)
-    | Ast.S_block b -> (
-        match b with
-        | Included ((inc, attrs), meta) ->
-            Some (Ast.included ((inc, no_attrs), meta), attrs)
-        | Div ((div, attrs), meta) ->
-            Some (Ast.div ((div, no_attrs), meta), attrs)
-        | Slide ((slide, attrs), meta) ->
-            Logs.err (fun m ->
-                m
-                  "Slides should not appear here, this is an error on \
-                   slipshow's side. Please report!");
-            Some (Ast.slide ((slide, no_attrs), meta), attrs)
-        | Slip ((slip, attrs), meta) ->
-            Logs.err (fun m ->
-                m
-                  "Slips should not appear here, this is an error on \
-                   slipshow's side. Please report!");
-            Some (Ast.slip ((slip, no_attrs), meta), attrs)
-        | SlipScript ((slscr, attrs), meta) ->
-            Some (Ast.slipscript ((slscr, no_attrs), meta), attrs)
-        | MermaidJS ((slscr, attrs), meta) ->
-            Some (Ast.mermaid_js ((slscr, no_attrs), meta), attrs)
-        | Carousel ((c, attrs), meta) ->
-            Some (Ast.carousel ((c, no_attrs), meta), attrs))
-    | _ -> None
-
-  (** Get the attributes of a cmarkit node, returns them and the element
-      stripped of its attributes *)
-  let merge_attribute new_attrs b =
-    let merge base =
-      Attributes.merge ~base ~new_attrs
-      (* Old attributes take precendence over "new" one *)
-    in
-    match b with
-    (* Standard Cmarkit nodes *)
-    | Block.Blank_line _ | Block.Blocks _ -> b
-    | Block.Block_quote ((bq, (attrs, meta_a)), meta) ->
-        Block.Block_quote ((bq, (merge attrs, meta_a)), meta)
-    | Block.Code_block ((cb, (attrs, meta_a)), meta) ->
-        Block.Code_block ((cb, (merge attrs, meta_a)), meta)
-    | Block.Heading ((h, (attrs, meta_a)), meta) ->
-        Block.Heading ((h, (merge attrs, meta_a)), meta)
-    | Block.Html_block ((hb, (attrs, meta_a)), meta) ->
-        Block.Html_block ((hb, (merge attrs, meta_a)), meta)
-    | Block.Link_reference_definition _ -> b
-    | Block.List ((l, (attrs, meta_a)), meta) ->
-        Block.List ((l, (merge attrs, meta_a)), meta)
-    | Block.Paragraph ((p, (attrs, meta_a)), meta) ->
-        Block.Paragraph ((p, (merge attrs, meta_a)), meta)
-    | Block.Thematic_break ((tb, (attrs, meta_a)), meta) ->
-        Block.Thematic_break ((tb, (merge attrs, meta_a)), meta)
-    (* Extension Cmarkit nodes *)
-    | Block.Ext_math_block ((mb, (attrs, meta_a)), meta) ->
-        Block.Ext_math_block ((mb, (merge attrs, meta_a)), meta)
-    | Block.Ext_table ((table, (attrs, meta_a)), meta) ->
-        Block.Ext_table ((table, (merge attrs, meta_a)), meta)
-    | Block.Ext_footnote_definition _ -> b
-    | Block.Ext_standalone_attributes _ -> b
-    | Block.Ext_attribute_definition _ -> b
-    (* Slipshow nodes *)
-    | Ast.S_block b -> (
-        match b with
-        | Included ((inc, (attrs, meta_a)), meta) ->
-            Ast.included ((inc, (merge attrs, meta_a)), meta)
-        | Div ((div, (attrs, meta_a)), meta) ->
-            Ast.div ((div, (merge attrs, meta_a)), meta)
-        | Slide ((slide, (attrs, meta_a)), meta) ->
-            Logs.err (fun m ->
-                m
-                  "Slides should not appear here, this is an error on \
-                   slipshow's side. Please report!");
-            Ast.slide ((slide, (merge attrs, meta_a)), meta)
-        | Slip ((slip, (attrs, meta_a)), meta) ->
-            Logs.err (fun m ->
-                m
-                  "Slips should not appear here, this is an error on \
-                   slipshow's side. Please report!");
-            Ast.slip ((slip, (merge attrs, meta_a)), meta)
-        | SlipScript ((slscr, (attrs, meta_a)), meta) ->
-            Ast.slipscript ((slscr, (merge attrs, meta_a)), meta)
-        | MermaidJS ((slscr, (attrs, meta_a)), meta) ->
-            Ast.mermaid_js ((slscr, (merge attrs, meta_a)), meta)
-        | Carousel ((c, (attrs, meta_a)), meta) ->
-            Ast.carousel ((c, (merge attrs, meta_a)), meta))
-    | _ -> b
-
   let execute =
     let block m c =
       match c with
@@ -468,7 +350,7 @@ module Stage2 = struct
                         Attributes.add (c, meta) value acc))
               Attributes.empty kvs
           in
-          let bs = List.map (merge_attribute new_attrs) bs in
+          let bs = List.map (Ast.Utils.merge_attribute new_attrs) bs in
           let bs =
             match Mapper.map_block m (Block.Blocks (bs, m_bs)) with
             | None -> Block.Blocks ([], m_bs)
@@ -522,7 +404,7 @@ module Stage3 = struct
         let attrs = Mapper.map_attrs m attrs in
         (b, (attrs, meta2))
       in
-      match Stage2.get_attribute c with
+      match Ast.Utils.get_attribute c with
       | None -> Mapper.default
       | Some (block, (attrs, meta2)) when Attributes.mem "blockquote" attrs ->
           let block, attrs = map ~may_enter:false block (attrs, meta2) in

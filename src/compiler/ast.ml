@@ -178,3 +178,72 @@ module Mapper = struct
 
   let make = Mapper.make ~block_ext_default ~inline_ext_default
 end
+
+module Utils = struct
+  (** Get the attributes of a cmarkit node, returns them and the element
+      stripped of its attributes *)
+  let update_attribute :
+      (Attributes.t node -> Attributes.t node) ->
+      Block.t ->
+      (Block.t * Attributes.t node) option =
+   fun attr_upd ->
+    let open Block in
+    function
+    (* Standard Cmarkit nodes *)
+    | Blank_line _ | Blocks _ -> None
+    | Block_quote ((bq, attrs), meta) ->
+        Some (Block_quote ((bq, attr_upd attrs), meta), attrs)
+    | Code_block ((cb, attrs), meta) ->
+        Some (Code_block ((cb, attr_upd attrs), meta), attrs)
+    | Heading ((h, attrs), meta) ->
+        Some (Heading ((h, attr_upd attrs), meta), attrs)
+    | Html_block ((hb, attrs), meta) ->
+        Some (Html_block ((hb, attr_upd attrs), meta), attrs)
+    | Link_reference_definition _ -> None
+    | List ((l, attrs), meta) -> Some (List ((l, attr_upd attrs), meta), attrs)
+    | Paragraph ((p, attrs), meta) ->
+        Some (Paragraph ((p, attr_upd attrs), meta), attrs)
+    | Thematic_break ((tb, attrs), meta) ->
+        Some (Thematic_break ((tb, attr_upd attrs), meta), attrs)
+    (* Extension Cmarkit nodes *)
+    | Ext_math_block ((mb, attrs), meta) ->
+        Some (Ext_math_block ((mb, attr_upd attrs), meta), attrs)
+    | Ext_table ((table, attrs), meta) ->
+        Some (Ext_table ((table, attr_upd attrs), meta), attrs)
+    | Ext_footnote_definition _ | Ext_standalone_attributes _
+    | Ext_attribute_definition _ ->
+        None
+    (* Slipshow nodes *)
+    | S_block b -> (
+        match b with
+        | Included ((inc, attrs), meta) ->
+            Some (included ((inc, attr_upd attrs), meta), attrs)
+        | Div ((d, attrs), meta) -> Some (div ((d, attr_upd attrs), meta), attrs)
+        | Slide ((s, attrs), meta) ->
+            Some (slide ((s, attr_upd attrs), meta), attrs)
+        | Slip ((s, attrs), meta) ->
+            Some (slip ((s, attr_upd attrs), meta), attrs)
+        | SlipScript ((slscr, attrs), meta) ->
+            Some (slipscript ((slscr, attr_upd attrs), meta), attrs)
+        | MermaidJS ((slscr, attrs), meta) ->
+            Some (mermaid_js ((slscr, attr_upd attrs), meta), attrs)
+        | Carousel ((c, attrs), meta) ->
+            Some (carousel ((c, attr_upd attrs), meta), attrs))
+    | _ -> None
+
+  (** Get the attributes of a cmarkit node, returns them and the element
+      stripped of its attributes *)
+  let get_attribute b =
+    let no_attrs = (Attributes.empty, Meta.none) in
+    let attr_upd _ = no_attrs in
+    update_attribute attr_upd b
+
+  (** Get the attributes of a cmarkit node, returns them and the element
+      stripped of its attributes *)
+  let merge_attribute new_attrs b =
+    let merge (base, meta) =
+      (Attributes.merge ~base ~new_attrs, meta)
+      (* Old attributes take precendence over "new" one *)
+    in
+    match update_attribute merge b with None -> b | Some (b, _) -> b
+end
