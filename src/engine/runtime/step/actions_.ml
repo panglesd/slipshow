@@ -765,7 +765,7 @@ module Play_media = struct
   type args = Brr.El.t list
 
   let parse_args = Parse.parse_only_els
-  let log_error = function Ok x -> x | Error x -> Brr.Console.(log [ x ])
+  let log_error = function Ok x -> x | Error x -> Brr.Console.(error [ x ])
 
   let do_ ~mode _window elems =
     only_if_not_counting mode @@ fun _mode ->
