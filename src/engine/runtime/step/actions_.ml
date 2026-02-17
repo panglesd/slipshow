@@ -811,7 +811,8 @@ module Play_media = struct
                 activate ()
               in
               let _unlisten =
-                Brr.Ev.listen Brr.Ev.ended
+                let opts = Brr.Ev.listen_opts ~once:true () in
+                Brr.Ev.listen ~opts Brr.Ev.ended
                   (fun _ev -> activate ())
                   (e |> Brr_io.Media.El.to_el |> Brr.El.as_target)
               in
