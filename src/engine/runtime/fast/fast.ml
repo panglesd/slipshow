@@ -12,6 +12,7 @@ let create () =
   let has_detonated = ref false in
   let wait, detonate = Fut.create () in
   let wait = Fut.map (fun () -> has_detonated := true) wait in
+  let detonate () = if !has_detonated then () else detonate () in
   { wait; has_detonated; detonate }
 
 type mode = Normal of hurry_bomb | Counting_for_toc | Fast | Slow
