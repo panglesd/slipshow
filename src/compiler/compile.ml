@@ -129,8 +129,8 @@ module Stage1 = struct
         | Ok None -> Mapper.default
         | Ok (Some contents) -> (
             let md =
-              Cmarkit.Doc.of_string ~heading_auto_ids:false ~strict:false
-                contents
+              let file = Some (Fpath.to_string relativized_path) in
+              Cmarkit_proxy.of_string ~file contents
             in
             Path_entering.in_path current_path (Fpath.parent (Fpath.v src))
             @@ fun () ->
@@ -554,13 +554,7 @@ let compile ?file ?loc_offset ~attrs ?(read_file = fun _ -> Ok None) s =
   Errors.with_ @@ fun () ->
   let open Cmarkit in
   let md =
-    let doc =
-      match file with
-      | None -> Doc.of_string ~heading_auto_ids:false ~strict:false s
-      | Some file ->
-          Doc.of_string ?loc_offset ~file ~locs:true ~heading_auto_ids:false
-            ~strict:false s
-    in
+    let doc = Cmarkit_proxy.of_string ?loc_offset ~file s in
     let bq = Block.Block_quote.make (Doc.block doc) in
     let block = Block.Block_quote ((bq, (attrs, Meta.none)), Meta.none) in
     Doc.make block
