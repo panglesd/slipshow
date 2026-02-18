@@ -13,7 +13,7 @@ We can compile the file using the slip_of_mark binary
   <div class="slip">
   <div class="slip-body">
   <div>
-  <h1 id="a-title"><a class="anchor" aria-hidden="true" href="#a-title"></a><span>A title</span></h1>
+  <h1><span>A title</span></h1>
   <div pause></div>
   <p><span>A word </span><span id="id" emph-at-unpause step>and</span><span> some other words.</span></p>
   <div pause></div>
@@ -53,7 +53,7 @@ If we do not pass an input file, it gets its value from stdin
   <div class="slip">
   <div class="slip-body">
   <div>
-  <h1 id="title"><a class="anchor" aria-hidden="true" href="#title"></a><span>Title</span></h1>
+  <h1><span>Title</span></h1>
   <p><span>Paragraph</span></p>
 
 If we give neither the input nor the output, stdin and stdout are used:
