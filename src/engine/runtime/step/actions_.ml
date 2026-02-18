@@ -791,6 +791,12 @@ module Play_media = struct
           let e = Brr_io.Media.El.of_el e in
           let () = if is_speaker_note then Brr_io.Media.El.set_muted e true in
           let current = Brr_io.Media.El.current_time_s e in
+          let () =
+            (* Strangely, without this, at least in my setup, firefox often
+               waits several seconds before showing the video, even in a very
+               simple html file just playing the file.  *)
+            Brr_io.Media.El.set_current_time_s e current
+          in
           let is_playing = not @@ Brr_io.Media.El.paused e in
           let undo () =
             let+ res =
