@@ -1960,8 +1960,6 @@ document.querySelectorAll(".finished").forEach((elem => {
 }))
 ```
 
-![](links.draw){draw #draw-links}
-
 <!-- 1. Slipshow: Compile from markdown, to a standalone html file, not based on slides. -->
 <!--   - Slipshow basics -->
 <!--   - Actions -->

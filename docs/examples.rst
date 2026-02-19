@@ -40,7 +40,7 @@ Working at the edge of your documentation
 
    :Type: Mixed type and drawn presentation
    :Author: Me!
-   :Slipshow version: 0.7.0: The Slipshow of Dorian Gray
+   :Slipshow version: 0.9.0: Manim Black
    :Date: 2026
    :Source: :github_src:`example/edge-documentation`
    :Rendered version: `<edge-documentation/doc.html>`_
@@ -61,7 +61,7 @@ The Undo Monad
 
    :Type: Typed and drawn presentation
    :Author: Me!
-   :Slipshow version: 0.7.0: The Slipshow of Dorian Gray
+   :Slipshow version: 0.9.0: Manim Black
    :Date: 2025
    :About: Computer Science
    :Source: :github_src:`example/undo-monad-short/`
@@ -83,7 +83,7 @@ Campus du libre
    :Type: Typed presentation
    :Author: Me!
    :Date: 2024
-   :Slipshow version: 0.7.0: The Slipshow of Dorian Gray
+   :Slipshow version: 0.9.0: Manim Black
    :About: Slipshow
    :Source: :github_src:`example/campus-du-libre/`
    :Rendered: `<campus-du-libre/cdl.html>`_
@@ -103,7 +103,7 @@ FunOCaml
 
    :Type: Typed presentation
    :Author: Me!
-   :Slipshow version: 0.7.0: The Slipshow of Dorian Gray
+   :Slipshow version: 0.9.0: Manim Black
    :Date: 2025
    :About: Slipshow and Computer Science
    :Source: :github_src:`example/funocaml-2025/`

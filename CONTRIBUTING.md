@@ -58,6 +58,25 @@ The directory structure is the following:
 
 In order to release a new version, you need to:
 
+### Check that everything works fine
+
+This includes:
+
+- The docs:
+  -
+    ```
+    $ cd docs/
+    $ make clean
+    $ make html
+    $ firefox _build/html/index.html
+    ```
+  - Check the the pages look good
+  - Check that all "kept up to date" examples look good
+  - Update the "Slipshow version" for examples kept up to date (Currently the first four)
+- Check that serve mode works
+- Check that other dependants (sliphub, slipshow-vscode, ...) compile and work
+  well
+
 ### Update the name of the release
 
 See `version_title` in `src/cli/main.ml`.

@@ -38,10 +38,10 @@ In order to turn that into a video, you can do
    $ manim -hm main.py AnimatedSquareToCircle
 
 A video file will be generated in
-``media/videos/main/720p30/AnimatedSquareToCircle.mp4`` (the resolution may
-depend on the default resolution). You can include this file in a Slipshow
-presentation simply with ``![](path/to/file.mp4)``, and play it with the
-``play-media`` action. For instance:
+``media/videos/main/720p30/AnimatedSquareToCircle.mp4`` (the path may depend on
+the resolution). You can include this file in a Slipshow presentation simply
+with ``![](path/to/file.mp4)``, and play it with the ``play-media`` action. For
+instance:
 
 .. code-block::
 

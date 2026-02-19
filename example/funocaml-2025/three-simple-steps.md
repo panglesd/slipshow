@@ -272,12 +272,12 @@ let () = undo ();;
 >
 > ✅️ Ocamlformat
 
-{exec pause down=treemd}
+{exec pause focus="treemd featurelistocatooling"}
 ```slip-script
 slip.setClass(document.querySelector("#dunefeat"), "ssellected", true)
 ```
 
-{#treemd carousel change-page='~n:"3 5"'}
+{#treemd carousel change-page='~n:all'}
 > ```
 >    
 >     slipshow
