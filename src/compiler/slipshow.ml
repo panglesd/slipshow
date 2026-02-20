@@ -247,12 +247,13 @@ let convert_to_md ~read_file content =
   let md =
     Cmarkit.Doc.of_string ~heading_auto_ids:false ~strict:false content
   in
-  let sd = Compile.of_cmarkit ~read_file md in
+  let sd, _ = Compile.of_cmarkit ~read_file md in
   let sd = Compile.to_cmarkit sd in
   Cmarkit_commonmark.of_doc ~include_attributes:false sd
 
 let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty) ?file
     ?(read_file = fun _ -> Ok None) ~has_speaker_view s =
+  let whole_content = s in
   let Frontmatter.Resolved frontmatter, s, loc_offset =
     let ( let* ) x f =
       match x with
@@ -295,8 +296,31 @@ let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty) ?file
       frontmatter.highlightjs_theme
   in
   let math_link = frontmatter.math_link in
-  let md, errors =
+  let (md, htbl_include), errors =
     Compile.compile ~loc_offset ?file ~attrs:toplevel_attributes ~read_file s
+  in
+  let graceful_errors =
+    List.filter_map
+      (fun er ->
+        Errors.to_grace
+          (fun f ->
+            if file = Some f then
+              Grace.Source.(`String { name = file; content = whole_content })
+            else
+              match Hashtbl.find_opt htbl_include f with
+              | Some content -> Grace.Source.(`String { name = file; content })
+              | None ->
+                  Grace.Source.(
+                    `String { name = file; content = whole_content }))
+          er)
+      errors
+  in
+  let () =
+    List.iter
+      (Format.printf "%a@."
+         (Grace_ansi_renderer.pp_diagnostic ?config:None
+            ~code_to_string:Errors.to_code))
+      graceful_errors
   in
   let () = List.iter (Format.printf "%a\n%!" Errors.pp) errors in
   let content = Renderers.to_html_string md in

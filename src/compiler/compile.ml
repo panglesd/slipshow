@@ -30,7 +30,10 @@ type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
     - [slide] attributed elements are turned into slides
     - [carousel] attributed elements are turned into carousels
 
-    The fourth stage is populating the media files map, and the ID map. *)
+    The fourth stage is populating the media files map, and the ID map.
+
+    The fifth stage is iterating on the attributes to generate warnings for
+    wrongly designed action attributes. *)
 
 module Path_entering : sig
   (** Path are relative to the file we are reading. When we include a file we
@@ -115,7 +118,7 @@ module Stage1 = struct
               (Ast.mermaid_js ((cb, (Mapper.map_attrs m attrs, meta)), meta2))
         | _ -> Mapper.default)
 
-  let handle_includes read_file current_path m (attrs, meta) =
+  let handle_includes ~htbl_include read_file current_path m (attrs, meta) =
     match (Attributes.find "include" attrs, Attributes.find "src" attrs) with
     | Some (_, None), Some (_, Some ({ v = src; _ }, _)) -> (
         let relativized_path =
@@ -128,6 +131,7 @@ module Stage1 = struct
             Mapper.default
         | Ok None -> Mapper.default
         | Ok (Some contents) -> (
+            Hashtbl.add htbl_include (Fpath.to_string relativized_path) contents;
             let md =
               let file = Some (Fpath.to_string relativized_path) in
               Cmarkit_proxy.of_string ~file contents
@@ -251,14 +255,14 @@ module Stage1 = struct
         let res = List.filter_map div res in
         Mapper.ret @@ Block.Blocks (res, meta)
 
-  let execute defs read_file =
+  let execute ~htbl_include defs read_file =
     let current_path = Path_entering.make () in
     let block m = function
       | Block.Blocks bs -> handle_dash_separated_blocks m bs
       | Block.Block_quote bq -> turn_block_quotes_into_divs m bq
       | Block.Code_block cb -> handle_slip_scripts_creation m cb
       | Block.Ext_standalone_attributes sa ->
-          handle_includes read_file current_path m sa
+          handle_includes ~htbl_include read_file current_path m sa
       | _ -> Mapper.default
     in
     let inline i = function
@@ -314,7 +318,11 @@ module Stage1 = struct
     Ast.Mapper.make ~block ~inline ~attrs ()
 
   let execute defs read_file md =
-    Cmarkit.Mapper.map_doc (execute defs read_file) md
+    let htbl_include = Hashtbl.create 3 in
+    let res =
+      Cmarkit.Mapper.map_doc (execute ~htbl_include defs read_file) md
+    in
+    (res, htbl_include)
 end
 
 module Stage2 = struct
@@ -492,29 +500,26 @@ module Stage4 = struct
       Cmarkit.Folder.fold_doc execute (Fpath.Map.empty, []) md
     in
     let id_list = List.rev id_list in
-    let () =
+    let id_map =
       let module Map = Map.Make (String) in
-      let _map =
-        List.fold_left
-          (fun acc (((id, meta1), _b1, _meta_attrs) as value) ->
-            Map.update id
-              (function
-                | None -> Some value
-                | Some ((_, meta2), _b2, _meta_attrs2) as same ->
-                    let tl1 = Meta.textloc meta1 in
-                    let tl2 = Meta.textloc meta2 in
-                    let () =
-                      Errors.add
-                        {
-                          error = DuplicateID { id; previous_occurrence = tl2 };
-                          loc = tl1;
-                        }
-                    in
-                    same)
-              acc)
-          Map.empty id_list
-      in
-      ()
+      List.fold_left
+        (fun acc (((id, meta1), _b1, _meta_attrs) as value) ->
+          Map.update id
+            (function
+              | None -> Some value
+              | Some ((_, meta2), _b2, _meta_attrs2) as same ->
+                  let tl1 = Meta.textloc meta1 in
+                  let tl2 = Meta.textloc meta2 in
+                  let () =
+                    Errors.add
+                      {
+                        error = DuplicateID { id; previous_occurrence = tl2 };
+                        loc = tl1;
+                      }
+                  in
+                  same)
+            acc)
+        Map.empty id_list
     in
     let files =
       Fpath.Map.filter_map
@@ -540,15 +545,91 @@ module Stage4 = struct
               None)
         asset_map
     in
-    { Ast.doc = md; files }
+    ({ Ast.doc = md; files }, id_map)
+end
+
+module Stage5 = struct
+  let check_attribute ~id_map block_or_inline (attrs, meta) =
+    let module M = Map.Make (String) in
+    let id_map :
+        ((string * Meta.t)
+        * ([> `Block of Block.t | `Inline of Inline.t ] as '_weak322)
+        * Meta.t)
+        M.t =
+      id_map
+    in
+    let ex = Attributes.find Actions_arguments.Execute.on attrs in
+    match ex with
+    | None -> ()
+    | Some (_, value) -> (
+        let value, val_loc =
+          match value with
+          | None -> ("", Textloc.none)
+          | Some ({ v; _ }, meta) -> (v, Meta.textloc meta)
+        in
+        let args = Actions_arguments.Execute.parse_args value in
+        match args with
+        | Error (`Msg msg) ->
+            Errors.add
+              {
+                error =
+                  ParsingError
+                    { action = Actions_arguments.Execute.action_name; msg };
+                loc = val_loc;
+              }
+            (* TODO: do *)
+        | Ok args ->
+            let targets =
+              match args with
+              | `Self -> [ block_or_inline ]
+              | `Ids ids ->
+                  List.filter_map
+                    (fun id ->
+                      match M.find_opt id id_map with
+                      | None -> None (* TODO: warning *)
+                      | Some (_, bol, _) -> Some bol)
+                    ids
+            in
+            List.iter
+              (function
+                | `Block _ -> () (* TODO: do *)
+                | _ ->
+                    let loc = Meta.textloc meta in
+                    Errors.add { error = WrongType (); loc })
+              targets;
+            ())
+
+  let folder ~id_map =
+    let block _f () c =
+      let () =
+        match Ast.Utils.Block.get_attribute c with
+        | None -> ()
+        | Some (_, attrs) -> check_attribute ~id_map (`Block c) attrs
+      in
+      Folder.default
+    in
+    let inline _f () i =
+      let () =
+        match Ast.Utils.Inline.get_attribute i with
+        | None -> ()
+        | Some (_, attrs) -> check_attribute ~id_map (`Inline i) attrs
+      in
+      Folder.default
+    in
+    Ast.Folder.make ~block ~inline ()
+
+  let execute ~id_map ast =
+    let () = Cmarkit.Folder.fold_doc (folder ~id_map) () ast.Ast.doc in
+    ast
 end
 
 let of_cmarkit ~read_file md =
   let defs = Cmarkit.Doc.defs md in
-  let md1 = Stage1.execute defs read_file md in
+  let md1, htbl_include = Stage1.execute defs read_file md in
   let md2 = Stage2.execute md1 in
   let md3 = Stage3.execute md2 in
-  Stage4.execute ~read_file md3
+  let md4, id_map = Stage4.execute ~read_file md3 in
+  (Stage5.execute ~id_map md4, htbl_include)
 
 let compile ?file ?loc_offset ~attrs ?(read_file = fun _ -> Ok None) s =
   Errors.with_ @@ fun () ->
