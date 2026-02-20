@@ -22,12 +22,12 @@ let one_arg conv action undos_ref =
 (* let one_elem_list action = one_arg (Jv.to_list Brr.El.of_jv) action *)
 
 let move (module X : Actions.Move) ~mode window undos_ref =
-  Jv.callback ~arity:3 @@ fun elems duration margin ->
-  let elem = Brr.El.of_jv elems
+  Jv.callback ~arity:3 @@ fun elem duration margin ->
+  let elem = Brr.El.of_jv elem
   and duration = Jv.to_option Jv.to_float duration
   and margin = Jv.to_option Jv.to_float margin in
   register_undo undos_ref @@ fun () ->
-  X.do_ ~mode window X.{ duration; margin; elem }
+  X.do_ ~mode window elem X.{ duration; margin; target = `Self }
 
 let up = move (module Actions.Up)
 let down = move (module Actions.Down)
@@ -40,15 +40,15 @@ let focus ~mode window undos_ref =
   and duration = Jv.to_option Jv.to_float duration
   and margin = Jv.to_option Jv.to_float margin in
   register_undo undos_ref @@ fun () ->
-  Actions.Focus.do_ ~mode window { duration; margin; elems }
+  Actions.Focus.do_js ~mode window { duration; margin; elems }
 
 let unfocus ~mode window =
-  one_arg (fun _ -> ()) (Actions.Unfocus.do_ ~mode window)
+  one_arg (fun _ -> ()) (Actions.Unfocus.do_js ~mode window)
 
 let class_setter (module X : Actions.SetClass) ~mode window undos_ref =
   Jv.callback ~arity:1 @@ fun elems ->
   let elems = (Jv.to_list Brr.El.of_jv) elems in
-  register_undo undos_ref @@ fun () -> X.do_ ~mode window elems
+  register_undo undos_ref @@ fun () -> X.do_js ~mode window elems
 
 let unstatic = class_setter (module Actions.Unstatic)
 let static = class_setter (module Actions.Static)
@@ -60,21 +60,23 @@ let unemph = class_setter (module Actions.Unemph)
 let play_media ~mode window undos_ref =
   Jv.callback ~arity:1 @@ fun elems ->
   let elems = Jv.to_list Brr.El.of_jv elems in
-  register_undo undos_ref @@ fun () -> Actions.Play_media.do_ ~mode window elems
+  register_undo undos_ref @@ fun () ->
+  Actions.Play_media.do_js ~mode window elems
 
 let draw ~mode window undos_ref =
   Jv.callback ~arity:1 @@ fun elems ->
   let elems = Jv.to_list Brr.El.of_jv elems in
-  register_undo undos_ref @@ fun () -> Actions.Draw.do_ ~mode window elems
+  register_undo undos_ref @@ fun () -> Actions.Draw.do_js ~mode window elems
 
 let change_page ~mode _window undos_ref =
   Jv.callback ~arity:2 @@ fun elem change ->
-  let target_elem = Brr.El.of_jv elem in
+  let elem = Brr.El.of_jv elem in
   let change = Jv.to_string change in
   register_undo undos_ref @@ fun () ->
   Actions.Change_page.parse_change change
   |> Undoable.Option.iter @@ fun change ->
-     Actions.Change_page.do_javascript_api ~mode ~target_elem ~change
+     let js_arg = { Actions.Change_page.change; elem } in
+     Actions.Change_page.do_js ~mode _window js_arg
 
 let on_undo =
   one_arg Fun.id @@ fun callback ->

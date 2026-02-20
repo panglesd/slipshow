@@ -5,12 +5,7 @@ include Actions_
    [Actions] would depend on [Javascrip_api] which would depend on [Actions]. *)
 
 module Execute = struct
-  type args = Brr.El.t list
-
-  let on = "exec-at-unpause"
-  let action_name = "exec"
-  let parse_args = Parse.parse_only_els
-
+  include Actions_arguments.Execute
   open Fut.Syntax
 
   let only_if_fast mode f =
@@ -46,7 +41,14 @@ module Execute = struct
           [ "An exception occurred when trying to execute a custom script:"; e ]);
       Undoable.return ~undo:undo_fallback ()
 
-  let do_ ~mode window elems = Undoable.List.iter (do_ ~mode window) elems
+  type js_args = |
+
+  let do_js ~mode:_ _window _not_inhabited = Undoable.return ()
+
+  let do_ ~mode window elem args =
+    let elems = Actions_.elems_of_ids_or_self args elem in
+    Undoable.List.iter (do_ ~mode window) elems
+
   let setup = None
   let setup_all = None
 end

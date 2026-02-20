@@ -8,4 +8,5 @@
   logs
   fast
   drawing_state
-  drawing_controller))
+  drawing_controller
+  actions_arguments))
