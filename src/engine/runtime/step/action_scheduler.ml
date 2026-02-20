@@ -33,8 +33,8 @@ module AttributeActions = struct
       else Undoable.return ()
     in
     let v = Jstr.to_string v in
-    let$$ args = Action.parse_args elem v in
-    Action.do_ ~mode window args
+    let$$ args = Action.parse_args v in
+    Action.do_ ~mode window elem args
 
   let do_ ~mode window elem =
     let do_ = fun m -> activate ~mode m window elem in
@@ -63,8 +63,8 @@ let setup_actions window () =
                        (module struct
                          include X
 
-                         let do_ ~mode:_ _window x =
-                           setup2 x |> ignore;
+                         let do_ ~mode:_ _window el x =
+                           setup2 el x |> ignore;
                            Undoable.return ()
                        end)
                        window elem)

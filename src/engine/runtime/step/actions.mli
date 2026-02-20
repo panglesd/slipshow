@@ -1,31 +1,42 @@
 module type S = sig
-  type args
+  include Actions_arguments.S
 
-  val setup : (args -> unit Fut.t) option
+  val setup : (Brr.El.t -> args -> unit Fut.t) option
   val setup_all : (unit -> unit Fut.t) option
-  val on : string
-  val action_name : string
-  val parse_args : Brr.El.t -> string -> (args, [> `Msg of string ]) result
-  val do_ : mode:Fast.mode -> Universe.Window.t -> args -> unit Undoable.t
+
+  type js_args
+
+  val do_js : mode:Fast.mode -> Universe.Window.t -> js_args -> unit Undoable.t
+
+  val do_ :
+    mode:Fast.mode -> Universe.Window.t -> Brr.El.t -> args -> unit Undoable.t
 end
 
-module Pause : sig
-  type args = Brr.El.t list
-
-  include S with type args := args
-end
+module Pause :
+  S
+    with type args := Actions_arguments.ids_or_self
+     and type js_args = Brr.El.t list
 
 module type Move = sig
   type args = {
     margin : float option;
     duration : float option;
-    elem : Brr.El.t;
+    target : [ `Self | `Id of string ];
   }
 
-  include S with type args := args
+  type js_args = {
+    elem : Brr.El.t;
+    duration : float option;
+    margin : float option;
+  }
+
+  include S with type args := args and type js_args := js_args
 end
 
-module type SetClass = S with type args = Brr.El.t list
+module type SetClass =
+  S
+    with type args = [ `Self | `Ids of string list ]
+     and type js_args = Brr.El.t list
 
 module Up : Move
 module Down : Move
@@ -43,36 +54,31 @@ module Step : S with type args = unit
 val exit : mode:Fast.mode -> Universe.Window.t -> Brr.El.t -> unit Undoable.t
 
 module Focus : sig
-  type args = {
+  include module type of Actions_arguments.Focus
+
+  type js_args = {
     margin : float option;
     duration : float option;
     elems : Brr.El.t list;
   }
 
-  include S with type args := args
+  include S with type args := args and type js_args := js_args
 end
 
 module Unfocus : S with type args = unit
-module Execute : S with type args = Brr.El.t list
-module Play_media : S with type args = Brr.El.t list
+module Execute : S with type args = Actions_arguments.Execute.args
+
+module Play_media :
+  S
+    with type args = Actions_arguments.Play_media.args
+     and type js_args = Brr.El.t list
 
 module Change_page : sig
-  type change = Absolute of int | Relative of int | All | Range of int * int
+  include module type of Actions_arguments.Change_page
 
-  type arg = {
-    target_elem : Brr.El.t;
-    n : change list;
-    original_id : string option;
-  }
+  type js_args = { elem : Brr.El.t; change : change }
 
-  type args = { original_elem : Brr.El.t; args : arg list }
-
-  val parse_change : string -> change option
-
-  val do_javascript_api :
-    mode:Fast.mode -> target_elem:Brr.El.t -> change:change -> unit Undoable.t
-
-  include S with type args := args
+  include S with type args := args and type js_args := js_args
 end
 
 val all : (module S) list

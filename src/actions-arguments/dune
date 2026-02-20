@@ -1,0 +1,6 @@
+(library
+ (name actions_arguments)
+ (public_name slipshow.actions_arguments)
+ (libraries logs))
+
+; TODO: remove logs and output warnings

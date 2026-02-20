@@ -1,385 +1,89 @@
 open Undoable.Syntax
+open Brr
+
+let ( !! ) = Jstr.v
 
 (** On an invalid selector, this function will raise. Since in this module ids
     are user input, we valide them *)
 let find_first_by_selector ?root x =
-  try Brr.El.find_first_by_selector ?root x
+  try El.find_first_by_selector ?root x
   with e ->
-    Brr.Console.(error [ e ]);
+    Console.(error [ e ]);
     None
 
 (* We define the [Actions_] module to avoid a circular dependency: If we had
    only one [Action] module (and not an [Actions] and an [Actions_]) then
    [Actions] would depend on [Javascrip_api] which would depend on [Actions]. *)
 
-module Parse : sig
-  val id : string -> Jstr.t
-
-  type 'a description_named_atom =
-    string * (string -> ('a, [ `Msg of string ]) result)
-
-  type _ descr_tuple =
-    | [] : unit descr_tuple
-    | ( :: ) :
-        'a description_named_atom * 'b descr_tuple
-        -> ('a * 'b) descr_tuple
-
-  type _ output_tuple =
-    | [] : unit output_tuple
-    | ( :: ) : 'a option * 'b output_tuple -> ('a * 'b) output_tuple
-
-  type 'a non_empty_list = 'a * 'a list
-
-  type ('named, 'positional) parsed = {
-    p_named : 'named output_tuple;
-    p_pos : 'positional list;
-  }
-
-  val parse :
-    named:'named descr_tuple ->
-    positional:(string -> 'pos) ->
-    string ->
-    (('named, 'pos) parsed non_empty_list, [> `Msg of string ]) result
-
-  val merge_positional : (unit, 'a) parsed * (unit, 'a) parsed list -> 'a list
-  val require_single_action : action_name:string -> 'a * 'b list -> 'a
-  val require_single_positional : action_name:string -> 'a list -> 'a option
-
-  val no_args :
-    action_name:string -> 'a -> string -> (unit, [> `Msg of string ]) result
-
-  val parse_only_els :
-    string -> ([ `Self | `Id_list of string list ], [> `Msg of string ]) result
-
-  val parse_only_el :
-    Brr.El.t -> string -> (Brr.El.t, [> `Msg of string ]) result
-
-  val option_to_error : 'a -> 'b option -> ('b, [> `Msg of 'a ]) result
-  val duration : string * (string -> (float, [> `Msg of string ]) result)
-  val margin : string * (string -> (float, [> `Msg of string ]) result)
-end = struct
-  let parse_string s =
-    let is_ws idx = match s.[idx] with '\n' | ' ' -> true | _ -> false in
-    let is_alpha idx =
-      let c = s.[idx] in
-      ('a' <= c && c <= 'z')
-      || ('A' <= c && c <= 'Z')
-      || ('0' <= c && c <= '9')
-      || c = '_'
-    in
-    let rec consume_ws idx =
-      if idx >= String.length s then idx
-      else if is_ws idx then consume_ws (idx + 1)
-      else idx
-    in
-    let rec consume_non_ws idx =
-      if idx >= String.length s then idx
-      else if not (is_ws idx) then consume_non_ws (idx + 1)
-      else idx
-    in
-    let rec consume_alpha idx =
-      if idx >= String.length s then idx
-      else if is_alpha idx then consume_alpha (idx + 1)
-      else idx
-    in
-    let quoted_string idx =
-      let rec take_inside_quoted_string acc idx =
-        match s.[idx] with
-        | '"' -> (acc |> List.rev |> List.to_seq |> String.of_seq, idx + 1)
-        | '\\' -> take_inside_quoted_string (s.[idx + 1] :: acc) (idx + 2)
-        | _ -> take_inside_quoted_string (s.[idx] :: acc) (idx + 1)
-      in
-      take_inside_quoted_string [] idx
-    in
-    let parse_unquoted_string idx =
-      let idx0 = idx in
-      let idx = consume_non_ws idx in
-      let arg = String.sub s idx0 (idx - idx0) in
-      (arg, idx)
-    in
-    let parse_arg idx =
-      match s.[idx] with
-      | '"' -> quoted_string (idx + 1)
-      | _ -> parse_unquoted_string idx
-    in
-    let repeat parser idx =
-      let rec do_ acc idx =
-        match parser idx with
-        | None -> (List.rev acc, idx)
-        | Some (x, idx') ->
-            if idx' = idx then
-              failwith "Parser did not consume input; infinite loop detected"
-            else do_ (x :: acc) idx'
-      in
-      do_ [] idx
-    in
-    let parse_name idx =
-      let idx0 = idx in
-      let idx = consume_alpha idx in
-      let name = String.sub s idx0 (idx - idx0) in
-      (name, idx)
-    in
-    let parse_column idx =
-      match s.[idx] with
-      | ':' -> idx + 1
-      | _ -> failwith "no : after named argument"
-    in
-    let parse_named idx =
-      let idx = consume_ws idx in
-      match s.[idx] with
-      | '~' ->
-          let idx = idx + 1 in
-          let name, idx = parse_name idx in
-          let idx = parse_column idx in
-          let arg, idx = parse_arg idx in
-          Some ((name, arg), idx)
-      | (exception Invalid_argument _) | _ -> None
-    in
-    let parse_semicolon idx =
-      let idx = consume_ws idx in
-      match s.[idx] with
-      | ';' -> Some ((), idx + 1)
-      | (exception Invalid_argument _) | _ -> None
-    in
-    let parse_positional idx =
-      let idx = consume_ws idx in
-      match s.[idx] with
-      | _ -> Some (parse_arg idx)
-      | exception Invalid_argument _ -> None
-    in
-    let parse_one idx =
-      let ( let$ ) x f = match x with Some _ as x -> x | None -> f () in
-      let ( let> ) x f =
-        match x with Some (x, idx) -> Some (f x, idx) | None -> None
-      in
-      let$ () =
-        let> named = parse_named idx in
-        `Named named
-      in
-      let$ () =
-        let> () = parse_semicolon idx in
-        `Semicolon
-      in
-      let> p = parse_positional idx in
-      `Positional p
-    in
-    let parse_all = repeat parse_one in
-    let parsed, _ = parse_all 0 in
-    let unfinished_acc, parsed =
-      List.fold_left
-        (fun (current_acc, global_acc) -> function
-          | `Semicolon -> ([], List.rev current_acc :: global_acc)
-          | (`Positional _ | `Named _) as x -> (x :: current_acc, global_acc))
-        ([], []) parsed
-    in
-    let parsed = List.rev unfinished_acc :: parsed |> List.rev in
-    parsed
-    |> List.map
-       @@ List.partition_map (function
-            | `Named x -> Left x
-            | `Positional p -> Right p)
-
-  let ( let+ ) x y = Result.map y x
-
-  module Smap_ = Map.Make (String)
-
-  module Smap = struct
-    include Smap_
-
-    (* of_list has only been added in 5.1. Implementation taken from the OCaml
-       stdlib. *)
-    let of_list bs = List.fold_left (fun m (k, v) -> add k v m) empty bs
-  end
-
-  type action = { named : string Smap.t; positional : string list }
-
-  let parse_string s =
-    let+ s =
-      try Ok (parse_string s)
-      with _ (* TODO: finer grain catch and better error messages *) ->
-        Error (`Msg "Failed when trying to parse argument")
-    in
-    s
-    |> List.map (fun (named, positional) ->
-           let named =
-             Smap.of_list named
-             (* TODO: warn on duplicate name *)
-           in
-           { named; positional })
-
-  let id x = x
-
-  type 'a description_named_atom =
-    string * (string -> ('a, [ `Msg of string ]) result)
-
-  type _ descr_tuple =
-    | [] : unit descr_tuple
-    | ( :: ) :
-        'a description_named_atom * 'b descr_tuple
-        -> ('a * 'b) descr_tuple
-
-  type _ output_tuple =
-    | [] : unit output_tuple
-    | ( :: ) : 'a option * 'b output_tuple -> ('a * 'b) output_tuple
-
-  type 'a non_empty_list = 'a * 'a list
-
-  type ('named, 'positional) parsed = {
-    p_named : 'named output_tuple;
-    p_pos : 'positional list;
-  }
-
-  let parsed_name (description_name, description_convert) action =
-    Smap.find_opt description_name action.named
-    |> Option.map description_convert
-
-  let rec parsed_names : type a. action -> a descr_tuple -> a output_tuple =
-   fun action descriptions ->
-    match descriptions with
-    | [] -> []
-    | description :: rest ->
-        let parsed =
-          match parsed_name description action with
-          | None -> None
-          | Some (Error (`Msg s)) ->
-              Logs.warn (fun m -> m "Could not parse argument: %s" s);
-              None
-          | Some (Ok a) -> Some a
-        in
-        parsed :: parsed_names action rest
-
-  let parse_atom ~named ~positional action =
-    let p_named = parsed_names action named in
-    let p_pos = List.map positional action.positional in
-    { p_named; p_pos }
-
-  let parse ~named ~positional s :
-      (('named, 'pos) parsed non_empty_list, _) result =
-    let+ parsed_string = parse_string s in
-    List.map (parse_atom ~named ~positional) parsed_string |> function
-    | [] ->
-        assert false
-        (* An empty string would be parsed as [ [[None; None; ...], []] ] *)
-    | a :: rest -> ((a, rest) : _ non_empty_list)
-
-  let merge_positional (h, t) =
-    List.concat_map
-      (fun { p_named = ([] : _ output_tuple); p_pos = p } -> p)
-      (h :: t)
-
-  let require_single_action ~action_name x =
-    match x with
-    | a, rest ->
-        let () =
-          match (rest : _ list) with
-          | [] -> ()
-          | _ :: _ ->
-              Logs.warn (fun m ->
-                  m "Action %s does not support ';'-separated arguments"
-                    action_name)
-        in
-        a
-
-  let require_single_positional ~action_name (x : _ list) =
-    match x with
-    | [] -> None
-    | a :: rest ->
-        let () =
-          match rest with
-          | [] -> ()
-          | _ :: _ ->
-              Logs.warn (fun m ->
-                  m "Action %s does not support multiple arguments" action_name)
-        in
-        Some a
-
-  let no_args ~action_name _elem s =
-    let ( let$ ) = Fun.flip Result.map in
-    let$ x = parse ~named:[] ~positional:id s in
-    match x with
-    | { p_named = []; p_pos = [] }, [] -> ()
-    | _ ->
-        Logs.warn (fun m ->
-            m "The %s action does not accept any argument" action_name)
-
-  let parse_only_els s =
-    let ( let$ ) = Fun.flip Result.map in
-    let$ x = parse ~named:[] ~positional:id s in
-    match merge_positional x with [] -> `Self | x -> `Id_list x
-
-  let parse_only_el elem s =
-    let ( let$ ) = Result.bind in
-    let$ x = parse ~named:[] ~positional:id s in
-    match merge_positional x with
-    | [] -> Ok elem
-    | _ :: _ :: _ -> Error (`Msg "Expected a single ID")
-    | [ x ] -> (
-        match find_first_by_selector x with
-        | Some x -> Ok x
-        | None ->
-            Error (`Msg ("Could not find element with ID " ^ Jstr.to_string x)))
-
-  let option_to_error error = function
-    | Some x -> Ok x
-    | None -> Error (`Msg error)
-
-  let duration =
-    ( "duration",
-      fun x ->
-        x |> Float.of_string_opt |> option_to_error "Error during float parsing"
-    )
-
-  let margin =
-    ( "margin",
-      fun x ->
-        x |> Float.of_string_opt |> option_to_error "Error during float parsing"
-    )
-end
-
 module type S = sig
-  type args
+  include Actions_arguments.S
 
-  val setup : (args -> unit Fut.t) option
+  val setup : (El.t -> args -> unit Fut.t) option
   val setup_all : (unit -> unit Fut.t) option
-  val on : string
-  val action_name : string
-  val parse_args : string -> (args, [> `Msg of string ]) result
-  val do_ : mode:Fast.mode -> Universe.Window.t -> args -> unit Undoable.t
+
+  type js_args
+
+  val do_js : mode:Fast.mode -> Universe.Window.t -> js_args -> unit Undoable.t
+
+  val do_ :
+    mode:Fast.mode -> Universe.Window.t -> El.t -> args -> unit Undoable.t
 end
 
 module type Move = sig
   type args = {
     margin : float option;
     duration : float option;
-    elem : Brr.El.t;
+    target : [ `Self | `Id of string ];
   }
 
-  include S with type args := args
+  type js_args = {
+    elem : Brr.El.t;
+    duration : float option;
+    margin : float option;
+  }
+
+  include S with type args := args and type js_args := js_args
 end
 
-module type SetClass = S with type args = Brr.El.t list
+module type SetClass =
+  S
+    with type args = [ `Self | `Ids of string list ]
+     and type js_args = Brr.El.t list
 
 let only_if_not_counting mode f =
   match mode with
   | Fast.Counting_for_toc -> Undoable.return ()
   | Normal _ | Fast | Slow -> f ()
 
+let elems_of_ids_or_self ids_or_self elem =
+  match ids_or_self with
+  | `Self -> [ elem ]
+  | `Ids ids ->
+      (* TODO: warn on non-existent element *)
+      List.filter_map (fun id -> El.find_first_by_selector !!("#" ^ id)) ids
+
+let elem_of_id_or_self id_or_self elem =
+  match id_or_self with
+  | `Self -> elem
+  | `Id id ->
+      (* TODO: no Option.get *)
+      El.find_first_by_selector !!("#" ^ id) |> Option.get
+
 module Pause = struct
-  let on = "pause"
-  let action_name = "pause"
+  include Actions_arguments.Pause
 
   let do_to_root elem f =
     let is_root elem =
-      Brr.El.class' (Jstr.v "slip") elem
-      || Brr.El.class' (Jstr.v "slide") elem
-      || Brr.El.class' (Jstr.v "slipshow-universe") elem
-      || (Option.is_some @@ Brr.El.at (Jstr.v "pause-block") elem)
+      El.class' (Jstr.v "slip") elem
+      || El.class' (Jstr.v "slide") elem
+      || El.class' (Jstr.v "slipshow-universe") elem
+      || (Option.is_some @@ El.at (Jstr.v "pause-block") elem)
     in
     let rec do_rec elem =
       if is_root elem then Undoable.return ()
       else
         let> () = f elem in
-        match Brr.El.parent elem with
+        match El.parent elem with
         | None -> Undoable.return ()
         | Some elem -> do_rec elem
     in
@@ -400,12 +104,12 @@ module Pause = struct
   let update elem f =
     do_to_root elem @@ fun elem ->
     let n =
-      match Brr.El.at (Jstr.v "pauseAncestorMultiplicity") elem with
+      match El.at (Jstr.v "pauseAncestorMultiplicity") elem with
       | None -> 0
       | Some n -> (
           match Jstr.to_int n with
           | None ->
-              Brr.Console.(
+              Console.(
                 log [ "Error: wrong value to pauseAncestorMultiplicity:"; n ]);
               0
           | Some n -> n)
@@ -418,14 +122,16 @@ module Pause = struct
     update elem (( + ) 1) |> Undoable.discard
 
   let setup_all () =
+    (* TODO: check if this is really needed *)
     let open Fut.Syntax in
-    Brr.El.fold_find_by_selector
+    El.fold_find_by_selector
       (fun elem acc ->
         let* () = acc in
         setup elem)
       (Jstr.v "pause-target") (Fut.return ())
 
-  let setup elems =
+  let setup elem args =
+    let elems = elems_of_ids_or_self args elem in
     let open Fut.Syntax in
     List.fold_left
       (fun acc elem ->
@@ -436,16 +142,19 @@ module Pause = struct
   let setup = Some setup
   let setup_all = Some setup_all
 
-  type args = Brr.El.t list
+  type js_args = El.t list
 
-  let parse_args = Parse.parse_only_els
-
-  let do_ ~mode _window elems =
+  let do_js ~mode _window elems =
     only_if_not_counting mode @@ fun _mode ->
     elems
     |> Undoable.List.iter @@ fun elem ->
        let> () = set_class "pauseTarget" false elem in
        update elem (fun n -> n - 1)
+
+  let do_ ~mode _window elem args =
+    only_if_not_counting mode @@ fun _mode ->
+    let elems = elems_of_ids_or_self args elem in
+    do_js ~mode _window elems
 end
 
 module _ : S = Pause
@@ -459,48 +168,34 @@ module Move (X : sig
     ?margin:float ->
     Fast.mode ->
     Universe.Window.t ->
-    Brr.El.t ->
+    El.t ->
     unit Undoable.t
 end) =
 struct
-  let on = X.on
-  let action_name = X.action_name
+  include Actions_arguments.Move (X)
+
+  type js_args = { elem : El.t; duration : float option; margin : float option }
+
   let setup = None
   let setup_all = None
 
-  type args = {
-    margin : float option;
-    duration : float option;
-    elem : Brr.El.t;
-  }
-
-  let parse_args elem s =
-    let ( let* ) = Result.bind in
-    let* x =
-      Parse.parse ~named:[ Parse.duration; Parse.margin ] ~positional:Parse.id s
-    in
-    match Parse.require_single_action ~action_name:X.action_name x with
-    | { p_named = [ duration; margin ]; p_pos = positional } -> (
-        match
-          Parse.require_single_positional ~action_name:X.action_name positional
-        with
-        | None -> Ok { elem; duration; margin }
-        | Some positional -> (
-            match find_first_by_selector positional with
-            | None ->
-                Error
-                  (`Msg
-                     ("Could not find element with id"
-                    ^ Jstr.to_string positional))
-            | Some elem -> Ok { elem; duration; margin }))
-
-  let do_ ~mode window { margin; duration; elem } =
+  let do_js ~mode window { elem; margin; duration } =
     only_if_not_counting mode @@ fun _mode ->
     let open Fut.Syntax in
     let* () = Excursion.end_ window () in
     let margin = Option.value ~default:0. margin in
     let duration = Option.value ~default:1. duration in
     X.move ~margin ~duration mode window elem
+
+  let do_ ~mode window elem { margin; duration; target } =
+    only_if_not_counting mode @@ fun _mode ->
+    let elem =
+      match target with
+      | `Self -> elem
+      | `Id id -> find_first_by_selector !!("#" ^ id) |> Option.get
+      (* TODO: not option.get *)
+    in
+    do_js ~mode window { elem; margin; duration }
 end
 
 module SetClass (X : sig
@@ -510,18 +205,21 @@ module SetClass (X : sig
   val state : bool
 end) =
 struct
-  let on = X.on
-  let action_name = X.action_name
+  include Actions_arguments.SetClass (X)
+
+  type js_args = El.t list
+
   let setup = None
   let setup_all = None
 
-  type args = Brr.El.t list
-
-  let parse_args = Parse.parse_only_els
-
-  let do_ ~mode _window elems =
+  let do_js ~mode _window elems =
     only_if_not_counting mode @@ fun _mode ->
     Undoable.List.iter (Undoable.Browser.set_class X.class_ X.state) elems
+
+  let do_ ~mode _window elem args =
+    only_if_not_counting mode @@ fun _mode ->
+    let elems = elems_of_ids_or_self args elem in
+    do_js ~mode _window elems
 end
 
 module Up = Move (struct
@@ -529,6 +227,8 @@ module Up = Move (struct
   let action_name = "up"
   let move = Universe.Move.up
 end)
+
+module _ : S = Up
 
 module Down = Move (struct
   let on = "down-at-unpause"
@@ -550,7 +250,7 @@ end)
 
 module Enter = struct
   type t = {
-    element_entered : Brr.El.t;  (** The element we entered *)
+    element_entered : El.t;  (** The element we entered *)
     coord_left : Universe.Coordinates.window;
         (** The coordinate we left when entering *)
     duration : float option;  (** The duration it took to enter entering *)
@@ -577,7 +277,7 @@ let exit ~mode window to_elem =
     match coord with
     | None -> Undoable.return ()
     | Some { element_entered; _ }
-      when Brr.El.contains element_entered ~child:to_elem ->
+      when El.contains element_entered ~child:to_elem ->
         Undoable.return ()
     | Some { coord_left; duration; _ } -> (
         let open Fut.Syntax in
@@ -587,12 +287,12 @@ let exit ~mode window to_elem =
         match Undoable.Stack.peek Enter.stack with
         | None -> Universe.Move.move mode window coord_left ~duration
         | Some { Enter.element_entered; _ }
-          when Brr.El.contains element_entered ~child:to_elem ->
+          when El.contains element_entered ~child:to_elem ->
             let duration =
-              match Brr.El.at (Jstr.v "enter-at-unpause") to_elem with
+              match El.at (Jstr.v "enter-at-unpause") to_elem with
               | None -> duration
               | Some s -> (
-                  match Enter.parse_args to_elem (Jstr.to_string s) with
+                  match Enter.parse_args (Jstr.to_string s) with
                   | Error _ -> duration
                   | Ok v -> Option.value ~default:duration v.duration)
             in
@@ -608,6 +308,8 @@ module Unstatic = SetClass (struct
   let state = true
 end)
 
+module _ : S = Unstatic
+
 module Static = SetClass (struct
   let on = "static-at-unpause"
   let action_name = "static"
@@ -616,6 +318,8 @@ module Static = SetClass (struct
 end)
 
 module Focus = struct
+  include Actions_arguments.Focus
+
   module State = struct
     let stack = ref None
 
@@ -635,28 +339,13 @@ module Focus = struct
           Undoable.return ~undo ret
   end
 
-  type args = {
+  type js_args = {
     margin : float option;
     duration : float option;
-    elems : Brr.El.t list;
+    elems : El.t list;
   }
 
-  let on = "focus-at-unpause"
-  let action_name = "focus"
-
-  let parse_args elem s =
-    let ( let$ ) = Fun.flip Result.map in
-    let$ x =
-      Parse.parse ~named:[ Parse.duration; Parse.margin ] ~positional:Parse.id s
-    in
-    match Parse.require_single_action ~action_name x with
-    | { p_named = [ duration; margin ]; p_pos = [] } ->
-        { elems = [ elem ]; duration; margin }
-    | { p_named = [ duration; margin ]; p_pos = positional } ->
-        let elems = List.filter_map find_first_by_selector positional in
-        { elems; duration; margin }
-
-  let do_ ~mode window { margin; duration; elems } =
+  let do_js ~mode window { elems; margin; duration } =
     only_if_not_counting mode @@ fun _mode ->
     let open Fut.Syntax in
     let* () = Excursion.end_ window () in
@@ -665,20 +354,26 @@ module Focus = struct
     let duration = Option.value ~default:1. duration in
     Universe.Move.focus ~margin ~duration mode window elems
 
+  let do_ ~mode window el { target; margin; duration } =
+    only_if_not_counting mode @@ fun _mode ->
+    let elems = elems_of_ids_or_self target el in
+    do_js ~mode window { elems; margin; duration }
+
   let setup = None
   let setup_all = None
 end
 
+module _ : S = Focus
+
 module Unfocus = struct
-  type args = unit
+  include Actions_arguments.Unfocus
 
   let setup = None
   let setup_all = None
-  let on = "unfocus-at-unpause"
-  let action_name = "unfocus"
-  let parse_args elem s = Parse.no_args ~action_name elem s
 
-  let do_ ~mode window () =
+  type js_args = unit
+
+  let do_js ~mode window () =
     only_if_not_counting mode @@ fun _mode ->
     let> coord = Focus.State.pop () in
     match coord with
@@ -687,7 +382,12 @@ module Unfocus = struct
         let open Fut.Syntax in
         let* () = Excursion.end_ window () in
         Universe.Move.move mode window coord ~duration:1.0
+
+  let do_ ~mode window _elem () =
+    only_if_not_counting mode @@ fun _mode -> do_js ~mode window ()
 end
+
+module _ : S = Unfocus
 
 module Reveal = SetClass (struct
   let on = "reveal-at-unpause"
@@ -718,35 +418,35 @@ module Unemph = SetClass (struct
 end)
 
 module Step = struct
-  type args = unit
+  include Actions_arguments.Step
 
   let setup = None
   let setup_all = None
-  let on = "step"
-  let action_name = "step"
-  let parse_args elem s = Parse.no_args ~action_name elem s
-  let do_ ~mode:_ _ _ = Undoable.return ()
+
+  type js_args = unit
+
+  let do_js ~mode:_ _ _ = Undoable.return ()
+  let do_ ~mode:_ _ _ _ = Undoable.return ()
 end
 
-module Speaker_note : S = struct
-  let on = "speaker-note"
-  let action_name = on
+module _ : S = Step
 
-  type args = Brr.El.t
+module Speaker_note = struct
+  include Actions_arguments.Speaker_note
 
-  let parse_args = Parse.parse_only_el
   let sn = ref ""
 
-  let setup elem =
-    Fut.return @@ Brr.El.set_class (Jstr.v "__slipshow__speaker_note") true elem
+  let setup elem arg =
+    let elem = elem_of_id_or_self arg elem in
+    Fut.return @@ El.set_class (Jstr.v "__slipshow__speaker_note") true elem
 
   let setup = Some setup
   let setup_all = None
 
-  let do_ ~mode:_ (_ : Universe.Window.t) (el : args) =
-    let innerHTML =
-      Jv.Jstr.get (Brr.El.to_jv el) "innerHTML" |> Jstr.to_string
-    in
+  type js_args = El.t
+
+  let do_js ~mode:_ (_ : Universe.Window.t) elem =
+    let innerHTML = Jv.Jstr.get (El.to_jv elem) "innerHTML" |> Jstr.to_string in
     let old_value = !sn in
     let undo () =
       Messaging.send_speaker_notes old_value;
@@ -756,31 +456,35 @@ module Speaker_note : S = struct
     sn := innerHTML;
     Messaging.send_speaker_notes !sn;
     Undoable.return ~undo ()
+
+  let do_ ~mode _window elem (arg : args) =
+    let elem = elem_of_id_or_self arg elem in
+    do_js ~mode _window elem
 end
 
+module _ : S = Speaker_note
+
 module Play_media = struct
-  let on = "play-media"
-  let action_name = "play-media"
+  include Actions_arguments.Play_media
 
-  type args = Brr.El.t list
+  type js_args = Brr.El.t list
 
-  let parse_args = Parse.parse_only_els
-  let log_error = function Ok x -> x | Error x -> Brr.Console.(error [ x ])
+  let log_error = function Ok x -> x | Error x -> Console.(error [ x ])
 
-  let do_ ~mode _window elems =
+  let do_js ~mode _window elems =
     only_if_not_counting mode @@ fun _mode ->
     let is_speaker_note =
-      match Brr.Window.name Brr.G.window |> Jstr.to_string with
+      match Window.name G.window |> Jstr.to_string with
       | "slipshow_speaker_view" -> true
       | _ -> false
     in
     Undoable.List.iter
       (fun e ->
         let open Fut.Syntax in
-        let is_video = Jstr.equal (Jstr.v "video") @@ Brr.El.tag_name e in
-        let is_audio = Jstr.equal (Jstr.v "audio") @@ Brr.El.tag_name e in
+        let is_video = Jstr.equal (Jstr.v "video") @@ El.tag_name e in
+        let is_audio = Jstr.equal (Jstr.v "audio") @@ El.tag_name e in
         if (not is_video) && not is_audio then (
-          Brr.Console.(
+          Console.(
             log
               [
                 "Action play-media only has effect on video and audio elements:";
@@ -809,7 +513,7 @@ module Play_media = struct
           let* () =
             let open Brr_io.Media.El in
             let when_slow hurry_bomb =
-              Brr.Console.(log [ "Playing" ]);
+              Console.(log [ "Playing" ]);
               let fut, activate = Fut.create () in
               let activate =
                 let did = ref false in
@@ -826,21 +530,21 @@ module Play_media = struct
                 activate ()
               in
               let _unlisten =
-                let opts = Brr.Ev.listen_opts ~once:true () in
-                Brr.Ev.listen ~opts Brr.Ev.ended
+                let opts = Ev.listen_opts ~once:true () in
+                Ev.listen ~opts Ev.ended
                   (fun _ev -> activate ())
-                  (e |> Brr_io.Media.El.to_el |> Brr.El.as_target)
+                  (e |> Brr_io.Media.El.to_el |> El.as_target)
               in
               let* err = Brr_io.Media.El.play e in
               match err with
               | Ok () -> fut
               | Error e ->
-                  Brr.Console.(error [ e ]);
+                  Console.(error [ e ]);
                   activate ();
                   fut
             in
             let when_fast () =
-              Brr.Console.(log [ "Just setting current time" ]);
+              Console.(log [ "Just setting current time" ]);
               let duration = duration_s e in
               if Float.is_nan duration then Fut.return ()
               else Fut.return @@ set_current_time_s e duration
@@ -858,106 +562,28 @@ module Play_media = struct
           Undoable.return ~undo ())
       elems
 
+  let do_ ~mode _window elem args =
+    only_if_not_counting mode @@ fun _mode ->
+    let elems = elems_of_ids_or_self args elem in
+    do_js ~mode _window elems
+
   let setup = None
   let setup_all = None
 end
 
+module _ : S = Play_media
+
 module Change_page = struct
-  type change = Absolute of int | Relative of int | All | Range of int * int
+  include Actions_arguments.Change_page
 
-  type arg = {
-    target_elem : Brr.El.t;
-    n : change list;
-    original_id : string option;
-  }
-
-  type args = { original_elem : Brr.El.t; args : arg list }
-
-  let on = "change-page"
-  let action_name = "change-page"
   let ( let+ ) x f = Result.map f x
   let ( let* ) x f = Result.bind x f
 
   let handle_error = function
     | Ok x -> Some x
     | Error (`Msg x) ->
-        Brr.Console.(log [ x ]);
+        Console.(log [ x ]);
         None
-
-  let parse_change s =
-    if String.equal "all" s then Some All
-    else
-      match int_of_string_opt s with
-      | None -> (
-          match String.split_on_char '-' s with
-          | [ a; b ] -> (
-              match (int_of_string_opt a, int_of_string_opt b) with
-              | Some a, Some b -> Some (Range (a, b))
-              | _ ->
-                  Brr.Console.(log [ "Could not parse parameter" ]);
-                  None)
-          | _ ->
-              Brr.Console.(log [ "Could not parse parameter" ]);
-              None)
-      | Some x -> (
-          match s.[0] with
-          | '+' | '-' -> Some (Relative x)
-          | _ -> Some (Absolute x))
-
-  let parse_single_action original_elem
-      { Parse.p_named = ([ n_opt ] : _ Parse.output_tuple); p_pos = elem_ids } =
-    let n = Option.value ~default:[ Relative 1 ] n_opt in
-    let+ elem, elem_id =
-      match elem_ids with
-      | [] -> Ok (original_elem, None)
-      | [ id ] -> (
-          find_first_by_selector ("#" ^ id |> Jstr.v) |> function
-          | Some x -> Ok (x, Some id)
-          | None -> Error (`Msg "No elem of id found"))
-      | id :: _ -> (
-          Brr.Console.(log [ "Expected single id" ]);
-          find_first_by_selector ("#" ^ id |> Jstr.v) |> function
-          | Some x -> Ok (x, Some id)
-          | None -> Error (`Msg "No elem of id found"))
-    in
-    { n; target_elem = elem; original_id = elem_id }
-
-  let parse_n s =
-    let l =
-      String.split_on_char ' ' s
-      |> List.filter (fun x -> not @@ String.equal "" x)
-    in
-    l |> List.filter_map parse_change |> Result.ok
-
-  let parse_args original_elem s =
-    let+ ac, actions =
-      Parse.parse ~named:[ ("n", parse_n) ] ~positional:Fun.id s
-    in
-    let actions = ac :: actions in
-    let args =
-      List.filter_map
-        (fun action -> parse_single_action original_elem action |> handle_error)
-        actions
-    in
-    { args; original_elem }
-
-  let args_as_string args =
-    let arg_to_string { n; original_id; _ } =
-      let to_string = function
-        | All -> "all"
-        | Relative x when x < 0 -> string_of_int x
-        | Relative x -> "+" ^ string_of_int x
-        | Absolute x -> string_of_int x
-        | Range (x, y) -> string_of_int x ^ "-" ^ string_of_int y
-      in
-      let s = n |> List.map to_string |> String.concat " " in
-      let n = "~n:\"" ^ s ^ "\"" in
-      let original_id =
-        match original_id with None -> "" | Some s -> " " ^ s
-      in
-      n ^ original_id
-    in
-    args |> List.map arg_to_string |> String.concat " ; "
 
   (* Taken from OCaml 5.2 *)
   let find_mapi f =
@@ -968,29 +594,31 @@ module Change_page = struct
     in
     aux 0
 
-  let do_1 ({ target_elem; n; _ } as arg) =
-    let check_carousel f =
-      if Brr.El.class' (Jstr.v "slipshow__carousel") target_elem then f ()
-      else Undoable.return None
-    in
-    check_carousel @@ fun () ->
-    let children = Brr.El.children ~only_els:true target_elem in
+  type js_args = { elem : El.t; change : change }
+
+  let check_carousel elem f =
+    if El.class' (Jstr.v "slipshow__carousel") elem then f ()
+    else Undoable.return None
+
+  (* TODO: better name... *)
+  let do_js' ~mode:_ _window { elem; change } =
+    check_carousel elem @@ fun () ->
+    let children = El.children ~only_els:true elem in
     let current_index =
       find_mapi
         (fun i x ->
-          if Brr.El.class' (Jstr.v "slipshow__carousel_active") x then
-            Some (i, x)
+          if El.class' (Jstr.v "slipshow__carousel_active") x then Some (i, x)
           else None)
         children
     in
     let new_index =
-      match (n, current_index) with
-      | Range (a, _) :: _, _ -> a
-      | Absolute i :: _, _ -> i - 1
-      | Relative r :: _, Some (i, _) -> i + r
-      | All :: _, Some (i, _) -> i + 1
+      match (change, current_index) with
+      | Range (a, _), _ -> a
+      | Absolute i, _ -> i - 1
+      | Relative r, Some (i, _) -> i + r
+      | All, Some (i, _) -> i + 1
       | _ ->
-          Brr.Console.(log [ "Error during carousel" ]);
+          Console.(log [ "Error during carousel" ]);
           0
     in
     let new_index = Int.max 0 new_index in
@@ -1008,44 +636,60 @@ module Change_page = struct
                  active_elem
              else Undoable.return ())
     in
-    let new_n =
+    Undoable.return (Some overflow)
+
+  let do_js ~mode _window js_args =
+    let> _ = do_js' ~mode _window js_args in
+    Undoable.return ()
+
+  (* TODO: Make it more elegant, coding-wise! *)
+  let do_1 ~mode window elem ({ target; n; _ } as arg) =
+    let target_elem = elem_of_id_or_self target elem in
+    check_carousel target_elem @@ fun () ->
+    let> new_n =
       match n with
-      | [] -> []
-      | All :: _ as n when not overflow -> n
-      | Range (a, b) :: rest when a < b -> Range (a + 1, b) :: rest
-      | Range (a, b) :: rest when a = b -> rest
-      | Range (a, b) :: rest (* when a > b *) -> Range (a - 1, b) :: rest
-      | _ :: n -> n
+      | [] -> Undoable.return []
+      | change :: rest -> (
+          let> overflow = do_js' ~mode window { elem = target_elem; change } in
+          match overflow with
+          | None -> Undoable.return []
+          | Some overflow -> (
+              match change with
+              | All when not overflow -> Undoable.return n
+              | Range (a, b) when a < b ->
+                  Undoable.return (Range (a + 1, b) :: rest)
+              | Range (a, b) when a = b -> Undoable.return rest
+              | Range (a, b) (* when a > b *) ->
+                  Undoable.return (Range (a - 1, b) :: rest)
+              | _ -> Undoable.return rest))
     in
     Undoable.return
     @@ match new_n with [] -> None | new_n -> Some { arg with n = new_n }
 
-  let do_ ~mode:_ _window { args; original_elem } =
-    let> args = Undoable.List.filter_map do_1 args in
+  let do_ ~mode _window elem args =
+    let> args = Undoable.List.filter_map (do_1 ~mode _window elem) args in
     match args with
     | [] -> Undoable.return ()
     | args ->
         let new_v = args_as_string args in
-        Undoable.Browser.set_at on (Some (Jstr.v new_v)) original_elem
-
-  let do_javascript_api ~mode:_ ~target_elem ~change =
-    let> _ = do_1 { target_elem; n = [ change ]; original_id = None } in
-    Undoable.return ()
+        Undoable.Browser.set_at on (Some (Jstr.v new_v)) elem
 
   let setup = None
   let setup_all = None
 end
 
+module _ : S = Change_page
+
 module Draw = struct
+  include Actions_arguments.Draw
+
   let state = Hashtbl.create 10
-  let on = "draw"
-  let action_name = on
 
   let setup elem =
     match Hashtbl.find_opt state elem with
     | Some _ -> Fut.return ()
     | None ->
-        let data = Brr.El.at (Jstr.v "x-data") elem in
+        let data = El.at (Jstr.v "x-data") elem in
         (match data with
         | None -> ()
         | Some data -> (
@@ -1053,7 +697,7 @@ module Draw = struct
             match
               Drawing_state.Json.string_to_recording (Jstr.to_string data)
             with
-            | Error e -> Brr.Console.(log [ e ])
+            | Error e -> Console.(log [ e ])
             | Ok recording ->
                 let replaying_state =
                   { recording; time = Lwd.var 0.; is_playing = Lwd.var false }
@@ -1063,23 +707,20 @@ module Draw = struct
         Fut.return ()
 
   let setup_all () =
-    Brr.El.fold_find_by_selector
+    El.fold_find_by_selector
       (fun elem acc -> Fut.bind acc (fun () -> setup elem))
       (Jstr.v ".slipshow-hand-drawn")
       (Fut.return ())
 
   let setup_all = Some setup_all
 
-  let setup elems =
+  let setup el args =
+    let elems = elems_of_ids_or_self args el in
     List.fold_left
       (fun acc elem -> Fut.bind acc (fun () -> setup elem))
       (Fut.return ()) elems
 
   let setup = Some setup
-
-  type args = Brr.El.t list
-
-  let parse_args = Parse.parse_only_els
 
   let replay ?(speedup = 1.) mode (record : Drawing_state.replaying_state) =
     let fut, resolve_fut = Fut.create () in
@@ -1112,7 +753,7 @@ module Draw = struct
           Lwd.set record.time max_time;
           resolve_fut ())
         else
-          let _animation_frame_id = Brr.G.request_animation_frame draw_loop in
+          let _animation_frame_id = G.request_animation_frame draw_loop in
           ()
       in
       match mode with
@@ -1140,10 +781,12 @@ module Draw = struct
           resolve_fut ()
       (* | Counting_for_toc -> assert false (\* See "only_if_not_fast" *\) *)
     in
-    let _animation_frame_id = Brr.G.request_animation_frame draw_loop in
+    let _animation_frame_id = G.request_animation_frame draw_loop in
     fut
 
-  let do_ ~mode _window elems =
+  type js_args = El.t list
+
+  let do_js ~mode _window elems =
     only_if_not_counting mode @@ fun _mode ->
     (* let speedup = update_speedup 1. in *)
     Undoable.List.iter
@@ -1160,19 +803,24 @@ module Draw = struct
             in
             Undoable.return ~undo ())
       elems
+
+  let do_ ~mode _window el args =
+    only_if_not_counting mode @@ fun _mode ->
+    let elems = elems_of_ids_or_self args el in
+    do_js ~mode _window elems
 end
 
+module _ : S = Draw
+
 module Clear_draw = struct
-  let on = "clear"
-  let action_name = on
+  include Actions_arguments.Clear_draw
+
   let setup = None
   let setup_all = None
 
-  type args = Brr.El.t list
+  type js_args = El.t list
 
-  let parse_args = Parse.parse_only_els
-
-  let do_ ~mode _window elems =
+  let do_js ~mode _window elems =
     only_if_not_counting mode @@ fun _mode ->
     Undoable.List.iter
       (fun elem ->
@@ -1187,4 +835,11 @@ module Clear_draw = struct
             in
             Undoable.return ~undo ())
       elems
+
+  let do_ ~mode _window el args =
+    only_if_not_counting mode @@ fun _mode ->
+    let elems = elems_of_ids_or_self args el in
+    do_js ~mode _window elems
 end
+
+module _ : S = Clear_draw

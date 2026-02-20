@@ -1,0 +1,269 @@
+let parse_string s =
+  let is_ws idx = match s.[idx] with '\n' | ' ' -> true | _ -> false in
+  let is_alpha idx =
+    let c = s.[idx] in
+    ('a' <= c && c <= 'z')
+    || ('A' <= c && c <= 'Z')
+    || ('0' <= c && c <= '9')
+    || c = '_'
+  in
+  let rec consume_ws idx =
+    if idx >= String.length s then idx
+    else if is_ws idx then consume_ws (idx + 1)
+    else idx
+  in
+  let rec consume_non_ws idx =
+    if idx >= String.length s then idx
+    else if not (is_ws idx) then consume_non_ws (idx + 1)
+    else idx
+  in
+  let rec consume_alpha idx =
+    if idx >= String.length s then idx
+    else if is_alpha idx then consume_alpha (idx + 1)
+    else idx
+  in
+  let quoted_string idx =
+    let rec take_inside_quoted_string acc idx =
+      match s.[idx] with
+      | '"' -> (acc |> List.rev |> List.to_seq |> String.of_seq, idx + 1)
+      | '\\' -> take_inside_quoted_string (s.[idx + 1] :: acc) (idx + 2)
+      | _ -> take_inside_quoted_string (s.[idx] :: acc) (idx + 1)
+    in
+    take_inside_quoted_string [] idx
+  in
+  let parse_unquoted_string idx =
+    let idx0 = idx in
+    let idx = consume_non_ws idx in
+    let arg = String.sub s idx0 (idx - idx0) in
+    (arg, idx)
+  in
+  let parse_arg idx =
+    match s.[idx] with
+    | '"' -> quoted_string (idx + 1)
+    | _ -> parse_unquoted_string idx
+  in
+  let repeat parser idx =
+    let rec do_ acc idx =
+      match parser idx with
+      | None -> (List.rev acc, idx)
+      | Some (x, idx') ->
+          if idx' = idx then
+            failwith "Parser did not consume input; infinite loop detected"
+          else do_ (x :: acc) idx'
+    in
+    do_ [] idx
+  in
+  let parse_name idx =
+    let idx0 = idx in
+    let idx = consume_alpha idx in
+    let name = String.sub s idx0 (idx - idx0) in
+    (name, idx)
+  in
+  let parse_column idx =
+    match s.[idx] with
+    | ':' -> idx + 1
+    | _ -> failwith "no : after named argument"
+  in
+  let parse_named idx =
+    let idx = consume_ws idx in
+    match s.[idx] with
+    | '~' ->
+        let idx = idx + 1 in
+        let name, idx = parse_name idx in
+        let idx = parse_column idx in
+        let arg, idx = parse_arg idx in
+        Some ((name, arg), idx)
+    | (exception Invalid_argument _) | _ -> None
+  in
+  let parse_semicolon idx =
+    let idx = consume_ws idx in
+    match s.[idx] with
+    | ';' -> Some ((), idx + 1)
+    | (exception Invalid_argument _) | _ -> None
+  in
+  let parse_positional idx =
+    let idx = consume_ws idx in
+    match s.[idx] with
+    | _ -> Some (parse_arg idx)
+    | exception Invalid_argument _ -> None
+  in
+  let parse_one idx =
+    let ( let$ ) x f = match x with Some _ as x -> x | None -> f () in
+    let ( let> ) x f =
+      match x with Some (x, idx) -> Some (f x, idx) | None -> None
+    in
+    let$ () =
+      let> named = parse_named idx in
+      `Named named
+    in
+    let$ () =
+      let> () = parse_semicolon idx in
+      `Semicolon
+    in
+    let> p = parse_positional idx in
+    `Positional p
+  in
+  let parse_all = repeat parse_one in
+  let parsed, _ = parse_all 0 in
+  let unfinished_acc, parsed =
+    List.fold_left
+      (fun (current_acc, global_acc) -> function
+        | `Semicolon -> ([], List.rev current_acc :: global_acc)
+        | (`Positional _ | `Named _) as x -> (x :: current_acc, global_acc))
+      ([], []) parsed
+  in
+  let parsed = List.rev unfinished_acc :: parsed |> List.rev in
+  parsed
+  |> List.map
+     @@ List.partition_map (function
+          | `Named x -> Left x
+          | `Positional p -> Right p)
+
+let ( let+ ) x y = Result.map y x
+
+module Smap_ = Map.Make (String)
+
+module Smap = struct
+  include Smap_
+
+  (* of_list has only been added in 5.1. Implementation taken from the OCaml
+       stdlib. *)
+  let of_list bs = List.fold_left (fun m (k, v) -> add k v m) empty bs
+end
+
+type action = { named : string Smap.t; positional : string list }
+
+let parse_string s =
+  let+ s =
+    try Ok (parse_string s)
+    with _ (* TODO: finer grain catch and better error messages *) ->
+      Error (`Msg "Failed when trying to parse argument")
+  in
+  s
+  |> List.map (fun (named, positional) ->
+         let named =
+           Smap.of_list named
+           (* TODO: warn on duplicate name *)
+         in
+         { named; positional })
+
+let id x = x
+
+type 'a description_named_atom =
+  string * (string -> ('a, [ `Msg of string ]) result)
+
+type _ descr_tuple =
+  | [] : unit descr_tuple
+  | ( :: ) : 'a description_named_atom * 'b descr_tuple -> ('a * 'b) descr_tuple
+
+type _ output_tuple =
+  | [] : unit output_tuple
+  | ( :: ) : 'a option * 'b output_tuple -> ('a * 'b) output_tuple
+
+type 'a non_empty_list = 'a * 'a list
+
+type ('named, 'positional) parsed = {
+  p_named : 'named output_tuple;
+  p_pos : 'positional list;
+}
+
+let parsed_name (description_name, description_convert) action =
+  Smap.find_opt description_name action.named |> Option.map description_convert
+
+let rec parsed_names : type a. action -> a descr_tuple -> a output_tuple =
+ fun action descriptions ->
+  match descriptions with
+  | [] -> []
+  | description :: rest ->
+      let parsed =
+        match parsed_name description action with
+        | None -> None
+        | Some (Error (`Msg s)) ->
+            Logs.warn (fun m -> m "Could not parse argument: %s" s);
+            None
+        | Some (Ok a) -> Some a
+      in
+      parsed :: parsed_names action rest
+
+let parse_atom ~named ~positional action =
+  let p_named = parsed_names action named in
+  let p_pos = List.map positional action.positional in
+  { p_named; p_pos }
+
+let parse ~named ~positional s :
+    (('named, 'pos) parsed non_empty_list, _) result =
+  let+ parsed_string = parse_string s in
+  List.map (parse_atom ~named ~positional) parsed_string |> function
+  | [] ->
+      assert false
+      (* An empty string would be parsed as [ [[None; None; ...], []] ] *)
+  | a :: rest -> ((a, rest) : _ non_empty_list)
+
+let merge_positional (h, t) =
+  List.concat_map
+    (fun { p_named = ([] : _ output_tuple); p_pos = p } -> p)
+    (h :: t)
+
+let require_single_action ~action_name x =
+  match x with
+  | a, rest ->
+      let () =
+        match (rest : _ list) with
+        | [] -> ()
+        | _ :: _ ->
+            Logs.warn (fun m ->
+                m "Action %s does not support ';'-separated arguments"
+                  action_name)
+      in
+      a
+
+let require_single_positional ~action_name (x : _ list) =
+  match x with
+  | [] -> None
+  | a :: rest ->
+      let () =
+        match rest with
+        | [] -> ()
+        | _ :: _ ->
+            Logs.warn (fun m ->
+                m "Action %s does not support multiple arguments" action_name)
+      in
+      Some a
+
+let no_args ~action_name s =
+  let ( let$ ) = Fun.flip Result.map in
+  let$ x = parse ~named:[] ~positional:id s in
+  match x with
+  | { p_named = []; p_pos = [] }, [] -> ()
+  | _ ->
+      Logs.warn (fun m ->
+          m "The %s action does not accept any argument" action_name)
+
+let parse_only_els s =
+  let ( let$ ) = Fun.flip Result.map in
+  let$ x = parse ~named:[] ~positional:id s in
+  match merge_positional x with [] -> `Self | x -> `Ids x
+
+let parse_only_el s =
+  let ( let$ ) = Result.bind in
+  let$ x = parse ~named:[] ~positional:id s in
+  match merge_positional x with
+  | [] -> Ok `Self
+  | _ :: _ :: _ -> Error (`Msg "Expected a single ID")
+  | [ x ] -> Ok (`Id x)
+
+let option_to_error error = function
+  | Some x -> Ok x
+  | None -> Error (`Msg error)
+
+let duration =
+  ( "duration",
+    fun x ->
+      x |> Float.of_string_opt |> option_to_error "Error during float parsing"
+  )
+
+let margin =
+  ( "margin",
+    fun x ->
+      x |> Float.of_string_opt |> option_to_error "Error during float parsing"
+  )
