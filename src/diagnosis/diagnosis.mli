@@ -1,0 +1,18 @@
+type loc = Cmarkit.Textloc.t
+
+type t =
+  | DuplicateID of { id : string; occurrences : loc list }
+  | MissingFile of { file : string; error_msg : string; locs : loc list }
+  | WrongType of { loc_reason : loc; loc_block : loc }
+  | ParsingError of { action : string; msg : string; loc : loc }
+  | UnusedArgument of {
+      action_name : string;
+      argument_name : string;
+      loc : loc;
+    }
+
+val pp : Format.formatter -> t -> unit
+val to_grace : (string -> Grace.Source.t) -> t -> t Grace.Diagnostic.t option
+val add : t -> unit
+val with_ : (unit -> 'a) -> 'a * t list
+val to_code : t -> string

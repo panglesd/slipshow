@@ -33,7 +33,7 @@ module type Move = sig
   type args = {
     margin : float option;
     duration : float option;
-    target : [ `Self | `Id of string ];
+    target : [ `Self | `Id of string Actions_arguments.Parse.node ];
   }
 
   type js_args = {
@@ -47,7 +47,7 @@ end
 
 module type SetClass =
   S
-    with type args = [ `Self | `Ids of string list ]
+    with type args = [ `Self | `Ids of string Actions_arguments.Parse.node list ]
      and type js_args = Brr.El.t list
 
 let only_if_not_counting mode f =
@@ -60,12 +60,14 @@ let elems_of_ids_or_self ids_or_self elem =
   | `Self -> [ elem ]
   | `Ids ids ->
       (* TODO: warn on non-existent element *)
-      List.filter_map (fun id -> El.find_first_by_selector !!("#" ^ id)) ids
+      List.filter_map
+        (fun (id, _) -> El.find_first_by_selector !!("#" ^ id))
+        ids
 
 let elem_of_id_or_self id_or_self elem =
   match id_or_self with
   | `Self -> elem
-  | `Id id ->
+  | `Id (id, _) ->
       (* TODO: no Option.get *)
       El.find_first_by_selector !!("#" ^ id) |> Option.get
 
@@ -192,7 +194,7 @@ struct
     let elem =
       match target with
       | `Self -> elem
-      | `Id id -> find_first_by_selector !!("#" ^ id) |> Option.get
+      | `Id (id, _) -> find_first_by_selector !!("#" ^ id) |> Option.get
       (* TODO: not option.get *)
     in
     do_js ~mode window { elem; margin; duration }
@@ -292,7 +294,8 @@ let exit ~mode window to_elem =
               match El.at (Jstr.v "enter-at-unpause") to_elem with
               | None -> duration
               | Some s -> (
-                  match Enter.parse_args (Jstr.to_string s) with
+                  let loc = Cmarkit.Textloc.none in
+                  match Enter.parse_args (Jstr.to_string s, loc) with
                   | Error _ -> duration
                   | Ok v -> Option.value ~default:duration v.duration)
             in

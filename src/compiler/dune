@@ -13,5 +13,4 @@
   katex
   mermaid
   actions_arguments
-  grace
-  grace.ansi_renderer))
+  diagnosis))
