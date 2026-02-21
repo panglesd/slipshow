@@ -33,7 +33,7 @@ module AttributeActions = struct
       else Undoable.return ()
     in
     let v = Jstr.to_string v in
-    let$$ args = Action.parse_args v in
+    let$$ args = Action.parse_args (v, Cmarkit.Textloc.none) in
     Action.do_ ~mode window elem args
 
   let do_ ~mode window elem =

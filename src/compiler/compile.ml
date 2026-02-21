@@ -500,26 +500,42 @@ module Stage4 = struct
       Cmarkit.Folder.fold_doc execute (Fpath.Map.empty, []) md
     in
     let id_list = List.rev id_list in
+    let module Map = Map.Make (String) in
     let id_map =
-      let module Map = Map.Make (String) in
       List.fold_left
-        (fun acc (((id, meta1), _b1, _meta_attrs) as value) ->
+        (fun acc (((id, _meta1), _b1, _meta_attrs) as value) ->
           Map.update id
             (function
-              | None -> Some value
-              | Some ((_, meta2), _b2, _meta_attrs2) as same ->
-                  let tl1 = Meta.textloc meta1 in
-                  let tl2 = Meta.textloc meta2 in
-                  let () =
-                    Errors.add
-                      {
-                        error = DuplicateID { id; previous_occurrence = tl2 };
-                        loc = tl1;
-                      }
-                  in
-                  same)
+              | None -> Some [ value ]
+              | Some (* ((_, meta2), _b2, _meta_attrs2) as *) same ->
+                  (* let tl1 = Meta.textloc meta1 in *)
+                  (* let tl2 = Meta.textloc meta2 in *)
+                  (* let () = *)
+                  (*   Errors.add *)
+                  (*     { *)
+                  (*       error = DuplicateID { id; previous_occurrence = tl2 }; *)
+                  (*       loc = tl1; *)
+                  (*     } *)
+                  (* in *)
+                  Some (value :: same))
             acc)
         Map.empty id_list
+    in
+    let id_map =
+      Map.filter_map
+        (fun id list ->
+          match list with
+          | [] -> assert false
+          | [ x ] -> Some x
+          | x :: _ :: _ ->
+              let occurrences =
+                List.map
+                  (fun ((_id, meta1), _b1, _meta_attrs) -> Meta.textloc meta1)
+                  list
+              in
+              Diagnosis.add @@ DuplicateID { id; occurrences };
+              Some x)
+        id_map
     in
     let files =
       Fpath.Map.filter_map
@@ -532,16 +548,11 @@ module Stage4 = struct
               Some { Ast.Files.content; mode; used_by; path }
           | Ok None -> None
           | Error (`Msg error_msg) ->
-              List.iter
-                (fun (_id, (_node, meta)) ->
-                  let textloc = Meta.textloc meta in
-                  Errors.add
-                    {
-                      error =
-                        MissingFile { file = Fpath.to_string path; error_msg };
-                      loc = textloc;
-                    })
-                used_by;
+              let locs =
+                List.map (fun (_id, (_node, meta)) -> Meta.textloc meta) used_by
+              in
+              Diagnosis.add
+                (MissingFile { file = Fpath.to_string path; error_msg; locs });
               None)
         asset_map
     in
@@ -549,7 +560,7 @@ module Stage4 = struct
 end
 
 module Stage5 = struct
-  let check_attribute ~id_map block_or_inline (attrs, meta) =
+  let check_attribute ~id_map block_or_inline (attrs, _meta) =
     let module M = Map.Make (String) in
     let id_map :
         ((string * Meta.t)
@@ -567,37 +578,19 @@ module Stage5 = struct
           | None -> ("", Textloc.none)
           | Some ({ v; _ }, meta) -> (v, Meta.textloc meta)
         in
-        let args = Actions_arguments.Execute.parse_args value in
+        let args = Actions_arguments.Execute.parse_args (value, val_loc) in
         match args with
         | Error (`Msg msg) ->
-            Errors.add
-              {
-                error =
-                  ParsingError
-                    { action = Actions_arguments.Execute.action_name; msg };
-                loc = val_loc;
-              }
+            Diagnosis.add
+            @@ ParsingError
+                 {
+                   action = Actions_arguments.Execute.action_name;
+                   msg;
+                   loc = val_loc;
+                 }
             (* TODO: do *)
         | Ok args ->
-            let targets =
-              match args with
-              | `Self -> [ block_or_inline ]
-              | `Ids ids ->
-                  List.filter_map
-                    (fun id ->
-                      match M.find_opt id id_map with
-                      | None -> None (* TODO: warning *)
-                      | Some (_, bol, _) -> Some bol)
-                    ids
-            in
-            List.iter
-              (function
-                | `Block _ -> () (* TODO: do *)
-                | _ ->
-                    let loc = Meta.textloc meta in
-                    Errors.add { error = WrongType (); loc })
-              targets;
-            ())
+            Actions_arguments.Execute.check args id_map block_or_inline val_loc)
 
   let folder ~id_map =
     let block _f () c =
@@ -632,7 +625,7 @@ let of_cmarkit ~read_file md =
   (Stage5.execute ~id_map md4, htbl_include)
 
 let compile ?file ?loc_offset ~attrs ?(read_file = fun _ -> Ok None) s =
-  Errors.with_ @@ fun () ->
+  Diagnosis.with_ @@ fun () ->
   let open Cmarkit in
   let md =
     let doc = Cmarkit_proxy.of_string ?loc_offset ~file s in

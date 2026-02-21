@@ -1,12 +1,16 @@
 We can compile the file
 
   $ slipshow compile slip.md
-  Error at File "slip.md", line 1, characters 28-37:
-  Missing file: img.png, considering it as an URL. (img.png: No such file or directory)
-  Error at File "slip.md", line 4, characters 3-12:
-  Missing file: img.png, considering it as an URL. (img.png: No such file or directory)
-  Error at File "slip.md", line 6, characters 3-12:
-  Missing file: img.png, considering it as an URL. (img.png: No such file or directory)
+  error[FSError]: file 'img.png' could not be read: img.png: No such file or directory
+      ┌─ slip.md:6:4
+    1 │  A paragraph with an ![image](img.png)
+      │                              ^^^^^^^^^ 
+      ·  
+    4 │  ![](img.png)
+      │     ^^^^^^^^^ 
+    5 │  
+    6 │  ![](img.png){#id2 .class2 key2=value2}
+      │     ^^^^^^^^^ 
 
   $ show_source slip.html | grep "<slip-body>" -A 10
   [1]

@@ -11,4 +11,4 @@ val compile :
   attrs:Cmarkit.Attributes.t ->
   ?read_file:file_reader ->
   string ->
-  (Ast.t * (string, string) Hashtbl.t) * Errors.t list
+  (Ast.t * (string, string) Hashtbl.t) * Diagnosis.t list

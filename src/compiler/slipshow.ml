@@ -302,7 +302,7 @@ let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty) ?file
   let graceful_errors =
     List.filter_map
       (fun er ->
-        Errors.to_grace
+        Diagnosis.to_grace
           (fun f ->
             if file = Some f then
               Grace.Source.(`String { name = file; content = whole_content })
@@ -319,10 +319,10 @@ let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty) ?file
     List.iter
       (Format.printf "%a@."
          (Grace_ansi_renderer.pp_diagnostic ?config:None
-            ~code_to_string:Errors.to_code))
+            ~code_to_string:Diagnosis.to_code))
       graceful_errors
   in
-  let () = List.iter (Format.printf "%a\n%!" Errors.pp) errors in
+  (* let () = List.iter (Format.printf "%a\n%!" Errors.pp) errors in *)
   let content = Renderers.to_html_string md in
   let has = Has.find_out md in
   embed_in_page ~has_speaker_view ~slipshow_js ~dimension ~has ~math_link ~theme

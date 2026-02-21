@@ -1,19 +1,21 @@
-type id_or_self = [ `Self | `Id of string ]
-type ids_or_self = [ `Self | `Ids of string list ]
+module Parse = Parse
+
+type id_or_self = [ `Self | `Id of string Parse.node ]
+type ids_or_self = [ `Self | `Ids of string Parse.node list ]
 
 module type S = sig
   type args
 
   val on : string
   val action_name : string
-  val parse_args : string -> (args, [> `Msg of string ]) result
+  val parse_args : string Parse.node -> (args, [> `Msg of string ]) result
 end
 
 module Pause = struct
   let on = "pause"
   let action_name = "pause"
 
-  type args = [ `Self | `Ids of string list ]
+  type args = [ `Self | `Ids of string Parse.node list ]
 
   let parse_args = Parse.parse_only_els
 end
@@ -48,40 +50,40 @@ struct
         | Some positional -> Ok { target = `Id positional; duration; margin })
 end
 
-(* module Up = Move (struct *)
-(*   let on = "up-at-unpause" *)
-(*   let action_name = "up" *)
-(* end) *)
+module Up = Move (struct
+  let on = "up-at-unpause"
+  let action_name = "up"
+end)
 
-(* module _ : S = Up *)
+module _ : S = Up
 
-(* module Down = Move (struct *)
-(*   let on = "down-at-unpause" *)
-(*   let action_name = "down" *)
-(* end) *)
+module Down = Move (struct
+  let on = "down-at-unpause"
+  let action_name = "down"
+end)
 
-(* module _ : S = Down *)
+module _ : S = Down
 
-(* module Center = Move (struct *)
-(*   let on = "center-at-unpause" *)
-(*   let action_name = "center" *)
-(* end) *)
+module Center = Move (struct
+  let on = "center-at-unpause"
+  let action_name = "center"
+end)
 
-(* module _ : S = Center *)
+module _ : S = Center
 
-(* module Scroll = Move (struct *)
-(*   let on = "scroll-at-unpause" *)
-(*   let action_name = "scroll" *)
-(* end) *)
+module Scroll = Move (struct
+  let on = "scroll-at-unpause"
+  let action_name = "scroll"
+end)
 
-(* module _ : S = Scroll *)
+module _ : S = Scroll
 
-(* module Enter = Move (struct *)
-(*   let on = "enter-at-unpause" *)
-(*   let action_name = "enter" *)
-(* end) *)
+module Enter = Move (struct
+  let on = "enter-at-unpause"
+  let action_name = "enter"
+end)
 
-(* module _ : S = Enter *)
+module _ : S = Enter
 
 module SetClass (X : sig
   val on : string
@@ -96,47 +98,47 @@ struct
   let parse_args = Parse.parse_only_els
 end
 
-(* module Unstatic = SetClass (struct *)
-(*   let on = "unstatic-at-unpause" *)
-(*   let action_name = "unstatic" *)
-(* end) *)
+module Unstatic = SetClass (struct
+  let on = "unstatic-at-unpause"
+  let action_name = "unstatic"
+end)
 
-(* module _ : S = Unstatic *)
+module _ : S = Unstatic
 
-(* module Static = SetClass (struct *)
-(*   let on = "static-at-unpause" *)
-(*   let action_name = "static" *)
-(* end) *)
+module Static = SetClass (struct
+  let on = "static-at-unpause"
+  let action_name = "static"
+end)
 
-(* module _ : S = Static *)
+module _ : S = Static
 
-(* module Reveal = SetClass (struct *)
-(*   let on = "reveal-at-unpause" *)
-(*   let action_name = "reveal" *)
-(* end) *)
+module Reveal = SetClass (struct
+  let on = "reveal-at-unpause"
+  let action_name = "reveal"
+end)
 
-(* module _ : S = Reveal *)
+module _ : S = Reveal
 
-(* module Unreveal = SetClass (struct *)
-(*   let on = "unreveal-at-unpause" *)
-(*   let action_name = "unreveal" *)
-(* end) *)
+module Unreveal = SetClass (struct
+  let on = "unreveal-at-unpause"
+  let action_name = "unreveal"
+end)
 
-(* module _ : S = Unreveal *)
+module _ : S = Unreveal
 
-(* module Emph = SetClass (struct *)
-(*   let on = "emph-at-unpause" *)
-(*   let action_name = "emph" *)
-(* end) *)
+module Emph = SetClass (struct
+  let on = "emph-at-unpause"
+  let action_name = "emph"
+end)
 
-(* module _ : S = Emph *)
+module _ : S = Emph
 
-(* module Unemph = SetClass (struct *)
-(*   let on = "unemph-at-unpause" *)
-(*   let action_name = "unemph" *)
-(* end) *)
+module Unemph = SetClass (struct
+  let on = "unemph-at-unpause"
+  let action_name = "unemph"
+end)
 
-(* module _ : S = Unemph *)
+module _ : S = Unemph
 
 module Step = struct
   type args = unit
@@ -284,7 +286,9 @@ module Change_page = struct
       in
       let s = n |> List.map to_string |> String.concat " " in
       let n = "~n:\"" ^ s ^ "\"" in
-      let original_id = match target with `Self -> "" | `Id s -> " " ^ s in
+      let original_id =
+        match target with `Self -> "" | `Id (s, _) -> " " ^ s
+      in
       n ^ original_id
     in
     args |> List.map arg_to_string |> String.concat " ; "
@@ -320,6 +324,30 @@ module Execute = struct
   let on = "exec-at-unpause"
   let action_name = "exec"
   let parse_args = Parse.parse_only_els
+
+  let check args id_map block_or_inline args_textloc =
+    let module M = Map.Make (String) in
+    let open Cmarkit in
+    let targets =
+      match args with
+      | `Self -> [ block_or_inline ]
+      | `Ids ids ->
+          List.filter_map
+            (fun (id, _loc) ->
+              match M.find_opt id id_map with
+              | None -> None (* TODO: warning *)
+              | Some (_, bol, _) -> Some bol)
+            ids
+    in
+    List.iter
+      (function
+        | `Block _ -> () (* TODO: do *)
+        | `Inline i ->
+            let loc_block = Inline.meta i |> Meta.textloc in
+            let loc_reason = args_textloc in
+            Diagnosis.add @@ WrongType { loc_reason; loc_block })
+      targets;
+    ()
 end
 
 module _ : S = Execute

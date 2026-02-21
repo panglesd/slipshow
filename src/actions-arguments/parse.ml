@@ -1,4 +1,20 @@
-let parse_string s =
+let nodify =
+  let open Cmarkit.Textloc in
+  fun whole_loc (idx, idx') ->
+    let file = file whole_loc in
+    let first_line = first_line whole_loc in
+    let last_line = first_line in
+    let first_byte = first_byte whole_loc + idx in
+    let last_byte = first_byte + idx' - idx - 1 in
+    v ~file ~first_line ~last_line ~first_byte ~last_byte
+
+let nodify x whole_loc indexes =
+  let loc = nodify whole_loc indexes in
+  (x, loc)
+
+type 'a node = 'a * Cmarkit.Textloc.t
+
+let parse_string (s, whole_loc) =
   let is_ws idx = match s.[idx] with '\n' | ' ' -> true | _ -> false in
   let is_alpha idx =
     let c = s.[idx] in
@@ -41,6 +57,7 @@ let parse_string s =
     match s.[idx] with
     | '"' -> quoted_string (idx + 1)
     | _ -> parse_unquoted_string idx
+    | exception _ -> failwith ": needs something after"
   in
   let repeat parser idx =
     let rec do_ acc idx =
@@ -49,7 +66,7 @@ let parse_string s =
       | Some (x, idx') ->
           if idx' = idx then
             failwith "Parser did not consume input; infinite loop detected"
-          else do_ (x :: acc) idx'
+          else do_ (x (* , { start = idx; finish = idx' } *) :: acc) idx'
     in
     do_ [] idx
   in
@@ -63,6 +80,7 @@ let parse_string s =
     match s.[idx] with
     | ':' -> idx + 1
     | _ -> failwith "no : after named argument"
+    | exception _ -> failwith "no : after named argument"
   in
   let parse_named idx =
     let idx = consume_ws idx in
@@ -70,6 +88,10 @@ let parse_string s =
     | '~' ->
         let idx = idx + 1 in
         let name, idx = parse_name idx in
+        let () =
+          if String.equal name "" then
+            failwith "'~' needs to be followed by a name"
+        in
         let idx = parse_column idx in
         let arg, idx = parse_arg idx in
         Some ((name, arg), idx)
@@ -89,19 +111,17 @@ let parse_string s =
   in
   let parse_one idx =
     let ( let$ ) x f = match x with Some _ as x -> x | None -> f () in
-    let ( let> ) x f =
-      match x with Some (x, idx) -> Some (f x, idx) | None -> None
+    let ( let> ) x f = Option.map f x in
+    let$ () =
+      let> named, idx' = parse_named idx in
+      (`Named (nodify named whole_loc (idx, idx')), idx')
     in
     let$ () =
-      let> named = parse_named idx in
-      `Named named
+      let> (), idx' = parse_semicolon idx in
+      (`Semicolon, idx')
     in
-    let$ () =
-      let> () = parse_semicolon idx in
-      `Semicolon
-    in
-    let> p = parse_positional idx in
-    `Positional p
+    let> p, idx' = parse_positional idx in
+    (`Positional (nodify p whole_loc (idx, idx')), idx')
   in
   let parse_all = repeat parse_one in
   let parsed, _ = parse_all 0 in
@@ -131,18 +151,21 @@ module Smap = struct
   let of_list bs = List.fold_left (fun m (k, v) -> add k v m) empty bs
 end
 
-type action = { named : string Smap.t; positional : string list }
+type action = { named : string node Smap.t; positional : string node list }
 
 let parse_string s =
   let+ s =
-    try Ok (parse_string s)
-    with _ (* TODO: finer grain catch and better error messages *) ->
-      Error (`Msg "Failed when trying to parse argument")
+    try Ok (parse_string s) with
+    | Failure s -> Error (`Msg s)
+    | _ (* TODO: finer grain catch and better error messages *) ->
+        Error (`Msg "Failed when trying to parse argument")
   in
   s
   |> List.map (fun (named, positional) ->
          let named =
-           Smap.of_list named
+           named
+           |> List.map (fun ((k, v), loc) -> (k, (v, loc)))
+           |> Smap.of_list
            (* TODO: warn on duplicate name *)
          in
          { named; positional })
@@ -164,14 +187,33 @@ type 'a non_empty_list = 'a * 'a list
 
 type ('named, 'positional) parsed = {
   p_named : 'named output_tuple;
-  p_pos : 'positional list;
+  p_pos : 'positional node list;
 }
 
 let parsed_name (description_name, description_convert) action =
-  Smap.find_opt description_name action.named |> Option.map description_convert
+  Smap.find_opt description_name action.named
+  |> Option.map (fun (x, _) -> description_convert x)
+
+let rec is_in_descr : type a. string -> a descr_tuple -> bool =
+ fun key names ->
+  match names with
+  | [] -> false
+  | (action_key, _) :: rest ->
+      if String.equal action_key key then true else is_in_descr key rest
+
+let check_is_unused : type a. action -> a descr_tuple -> unit =
+ fun action descriptions ->
+  Smap.iter
+    (fun key (_, loc) ->
+      if is_in_descr key descriptions then ()
+      else
+        Diagnosis.add
+          (UnusedArgument { action_name = "TODO"; argument_name = key; loc }))
+    action.named
 
 let rec parsed_names : type a. action -> a descr_tuple -> a output_tuple =
  fun action descriptions ->
+  check_is_unused action descriptions;
   match descriptions with
   | [] -> []
   | description :: rest ->
@@ -187,7 +229,9 @@ let rec parsed_names : type a. action -> a descr_tuple -> a output_tuple =
 
 let parse_atom ~named ~positional action =
   let p_named = parsed_names action named in
-  let p_pos = List.map positional action.positional in
+  let p_pos =
+    List.map (fun (x, loc) -> (positional x, loc)) action.positional
+  in
   { p_named; p_pos }
 
 let parse ~named ~positional s :

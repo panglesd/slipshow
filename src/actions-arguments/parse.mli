@@ -1,4 +1,6 @@
-val id : string -> string
+type 'a node = 'a * Cmarkit.Textloc.t
+
+val id : string (* node *) -> string (* node *)
 
 type 'a description_named_atom =
   string * (string -> ('a, [ `Msg of string ]) result)
@@ -15,25 +17,27 @@ type 'a non_empty_list = 'a * 'a list
 
 type ('named, 'positional) parsed = {
   p_named : 'named output_tuple;
-  p_pos : 'positional list;
+  p_pos : 'positional node list;
 }
 
 val parse :
   named:'named descr_tuple ->
-  positional:(string -> 'pos) ->
-  string ->
+  positional:(string (* node *) -> 'pos (* node *)) ->
+  string node ->
   (('named, 'pos) parsed non_empty_list, [> `Msg of string ]) result
 
-val merge_positional : (unit, 'a) parsed * (unit, 'a) parsed list -> 'a list
 val require_single_action : action_name:string -> 'a * 'b list -> 'a
 val require_single_positional : action_name:string -> 'a list -> 'a option
-val no_args : action_name:string -> string -> (unit, [> `Msg of string ]) result
+
+val no_args :
+  action_name:string -> string node -> (unit, [> `Msg of string ]) result
 
 val parse_only_els :
-  string -> ([ `Self | `Ids of string list ], [> `Msg of string ]) result
+  string node ->
+  ([ `Self | `Ids of string node list ], [> `Msg of string ]) result
 
 val parse_only_el :
-  string -> ([ `Self | `Id of string ], [> `Msg of string ]) result
+  string node -> ([ `Self | `Id of string node ], [> `Msg of string ]) result
 
 val option_to_error : 'a -> 'b option -> ('b, [> `Msg of 'a ]) result
 val duration : string * (string -> (float, [> `Msg of string ]) result)
