@@ -317,7 +317,7 @@ let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty) ?file
   in
   let () =
     List.iter
-      (Format.printf "%a@."
+      (Format.printf "%a@.@."
          (Grace_ansi_renderer.pp_diagnostic ?config:None
             ~code_to_string:Diagnosis.to_code))
       graceful_errors

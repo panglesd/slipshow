@@ -1,4 +1,4 @@
 (library
  (name diagnosis)
  (public_name slipshow.diagnosis)
- (libraries grace grace.ansi_renderer cmarkit))
+ (libraries grace grace.ansi_renderer cmarkit actions_arguments))

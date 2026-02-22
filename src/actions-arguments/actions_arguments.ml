@@ -8,7 +8,9 @@ module type S = sig
 
   val on : string
   val action_name : string
-  val parse_args : string Parse.node -> (args, [> `Msg of string ]) result
+
+  val parse_args :
+    string -> (args * Parse.warnor list, [> `Msg of string ]) result
 end
 
 module Pause = struct
@@ -22,11 +24,20 @@ end
 
 module _ : S = Pause
 
+module type Move = sig
+  type args = {
+    margin : float option;
+    duration : float option;
+    target : id_or_self;
+  }
+
+  include S with type args := args
+end
+
 module Move (X : sig
   val on : string
   val action_name : string
-end) =
-struct
+end) : Move = struct
   let on = X.on
   let action_name = X.action_name
 
@@ -38,16 +49,20 @@ struct
 
   let parse_args s =
     let ( let* ) = Result.bind in
-    let* x =
+    let* x, warnings =
       Parse.parse ~named:[ Parse.duration; Parse.margin ] ~positional:Parse.id s
     in
-    match Parse.require_single_action ~action_name:X.action_name x with
-    | { p_named = [ duration; margin ]; p_pos = positional } -> (
-        match
-          Parse.require_single_positional ~action_name:X.action_name positional
-        with
-        | None -> Ok { target = `Self; duration; margin }
-        | Some positional -> Ok { target = `Id positional; duration; margin })
+    let res =
+      match Parse.require_single_action ~action_name:X.action_name x with
+      | { p_named = [ duration; margin ]; p_pos = positional } -> (
+          match
+            Parse.require_single_positional ~action_name:X.action_name
+              positional
+          with
+          | None -> { target = `Self; duration; margin }
+          | Some positional -> { target = `Id positional; duration; margin })
+    in
+    Ok (res, warnings)
 end
 
 module Up = Move (struct
@@ -85,11 +100,12 @@ end)
 
 module _ : S = Enter
 
+module type SetClass = S with type args = ids_or_self
+
 module SetClass (X : sig
   val on : string
   val action_name : string
-end) =
-struct
+end) : SetClass = struct
   let on = X.on
   let action_name = X.action_name
 
@@ -162,15 +178,18 @@ module Focus = struct
 
   let parse_args s =
     let ( let$ ) = Fun.flip Result.map in
-    let$ x =
+    let$ x, warnings =
       Parse.parse ~named:[ Parse.duration; Parse.margin ] ~positional:Parse.id s
     in
-    match Parse.require_single_action ~action_name x with
-    | { p_named = [ duration; margin ]; p_pos = [] } ->
-        { target = `Self; duration; margin }
-    | { p_named = [ duration; margin ]; p_pos = positional } ->
-        let target = `Ids positional in
-        { target; duration; margin }
+    let res =
+      match Parse.require_single_action ~action_name x with
+      | { p_named = [ duration; margin ]; p_pos = [] } ->
+          { target = `Self; duration; margin }
+      | { p_named = [ duration; margin ]; p_pos = positional } ->
+          let target = `Ids positional in
+          { target; duration; margin }
+    in
+    (res, warnings)
 end
 
 module _ : S = Focus
@@ -264,7 +283,7 @@ module Change_page = struct
     l |> List.filter_map parse_change |> Result.ok
 
   let parse_args s =
-    let+ ac, actions =
+    let+ (ac, actions), warnings =
       Parse.parse ~named:[ ("n", parse_n) ] ~positional:Fun.id s
     in
     let actions = ac :: actions in
@@ -273,7 +292,7 @@ module Change_page = struct
         (fun action -> parse_single_action action |> handle_error)
         actions
     in
-    args
+    (args, warnings)
 
   let args_as_string args =
     let arg_to_string { n; target } =
@@ -324,30 +343,6 @@ module Execute = struct
   let on = "exec-at-unpause"
   let action_name = "exec"
   let parse_args = Parse.parse_only_els
-
-  let check args id_map block_or_inline args_textloc =
-    let module M = Map.Make (String) in
-    let open Cmarkit in
-    let targets =
-      match args with
-      | `Self -> [ block_or_inline ]
-      | `Ids ids ->
-          List.filter_map
-            (fun (id, _loc) ->
-              match M.find_opt id id_map with
-              | None -> None (* TODO: warning *)
-              | Some (_, bol, _) -> Some bol)
-            ids
-    in
-    List.iter
-      (function
-        | `Block _ -> () (* TODO: do *)
-        | `Inline i ->
-            let loc_block = Inline.meta i |> Meta.textloc in
-            let loc_reason = args_textloc in
-            Diagnosis.add @@ WrongType { loc_reason; loc_block })
-      targets;
-    ()
 end
 
 module _ : S = Execute

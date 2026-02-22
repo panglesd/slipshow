@@ -560,8 +560,9 @@ module Stage4 = struct
 end
 
 module Stage5 = struct
+  module M = Map.Make (String)
+
   let check_attribute ~id_map block_or_inline (attrs, _meta) =
-    let module M = Map.Make (String) in
     let id_map :
         ((string * Meta.t)
         * ([> `Block of Block.t | `Inline of Inline.t ] as '_weak322)
@@ -569,28 +570,9 @@ module Stage5 = struct
         M.t =
       id_map
     in
-    let ex = Attributes.find Actions_arguments.Execute.on attrs in
-    match ex with
-    | None -> ()
-    | Some (_, value) -> (
-        let value, val_loc =
-          match value with
-          | None -> ("", Textloc.none)
-          | Some ({ v; _ }, meta) -> (v, Meta.textloc meta)
-        in
-        let args = Actions_arguments.Execute.parse_args (value, val_loc) in
-        match args with
-        | Error (`Msg msg) ->
-            Diagnosis.add
-            @@ ParsingError
-                 {
-                   action = Actions_arguments.Execute.action_name;
-                   msg;
-                   loc = val_loc;
-                 }
-            (* TODO: do *)
-        | Ok args ->
-            Actions_arguments.Execute.check args id_map block_or_inline val_loc)
+    Check.exec id_map attrs block_or_inline;
+    Check.up id_map attrs block_or_inline
+  (* Actions_arguments.Execute.check args id_map block_or_inline val_loc) *)
 
   let folder ~id_map =
     let block _f () c =

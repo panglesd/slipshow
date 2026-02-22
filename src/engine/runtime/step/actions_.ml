@@ -294,10 +294,10 @@ let exit ~mode window to_elem =
               match El.at (Jstr.v "enter-at-unpause") to_elem with
               | None -> duration
               | Some s -> (
-                  let loc = Cmarkit.Textloc.none in
-                  match Enter.parse_args (Jstr.to_string s, loc) with
+                  match Enter.parse_args (Jstr.to_string s) with
                   | Error _ -> duration
-                  | Ok v -> Option.value ~default:duration v.duration)
+                  | Ok (v, _warnings) ->
+                      Option.value ~default:duration v.duration)
             in
             Universe.Move.move mode window coord_left ~duration
         | Some _ -> exit ())

@@ -1,4 +1,15 @@
-type 'a node = 'a * Cmarkit.Textloc.t
+type loc = int * int
+
+type warnor =
+  | UnusedArgument of {
+      action_name : string;
+      argument_name : string;
+      possible_arguments : string list;
+      loc : loc;
+    }
+  | Parsing_failure of { msg : string; loc : loc }
+
+type 'a node = 'a * loc
 
 val id : string (* node *) -> string (* node *)
 
@@ -23,21 +34,28 @@ type ('named, 'positional) parsed = {
 val parse :
   named:'named descr_tuple ->
   positional:(string (* node *) -> 'pos (* node *)) ->
-  string node ->
-  (('named, 'pos) parsed non_empty_list, [> `Msg of string ]) result
+  string ->
+  ( ('named, 'pos) parsed non_empty_list * warnor list,
+    [> `Msg of string ] )
+  result
 
 val require_single_action : action_name:string -> 'a * 'b list -> 'a
 val require_single_positional : action_name:string -> 'a list -> 'a option
 
 val no_args :
-  action_name:string -> string node -> (unit, [> `Msg of string ]) result
+  action_name:string ->
+  string ->
+  (unit * warnor list, [> `Msg of string ]) result
 
 val parse_only_els :
-  string node ->
-  ([ `Self | `Ids of string node list ], [> `Msg of string ]) result
+  string ->
+  ( [ `Self | `Ids of string node list ] * warnor list,
+    [> `Msg of string ] )
+  result
 
 val parse_only_el :
-  string node -> ([ `Self | `Id of string node ], [> `Msg of string ]) result
+  string ->
+  ([ `Self | `Id of string node ] * warnor list, [> `Msg of string ]) result
 
 val option_to_error : 'a -> 'b option -> ('b, [> `Msg of 'a ]) result
 val duration : string * (string -> (float, [> `Msg of string ]) result)
