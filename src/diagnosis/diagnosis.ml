@@ -1,15 +1,26 @@
 type loc = Cmarkit.Textloc.t
 
+let loc_of_ploc loc (idx, idx') =
+  let open Cmarkit.Textloc in
+  let file = file loc in
+  let first_line = first_line loc in
+  let last_line = first_line in
+  let first_byte = first_byte loc + idx in
+  let last_byte = first_byte + idx' - idx - 1 in
+  v ~file ~first_line ~last_line ~first_byte ~last_byte
+
 type t =
   | DuplicateID of { id : string; occurrences : loc list }
   | MissingFile of { file : string; error_msg : string; locs : loc list }
   | WrongType of { loc_reason : loc; loc_block : loc }
   | ParsingError of { action : string; msg : string; loc : loc }
-  | UnusedArgument of {
-      action_name : string;
-      argument_name : string;
-      loc : loc;
-    }
+  | ParsingWarnor of { warnor : Actions_arguments.Parse.warnor; loc : loc }
+  | MissingID of { id : string; loc : loc }
+(* | UnusedArgument of { *)
+(*     action_name : string; *)
+(*     argument_name : string; *)
+(*     loc : loc; *)
+(*   } *)
 
 let pp ppf = function
   | DuplicateID id ->
@@ -25,9 +36,13 @@ let pp ppf = function
   | ParsingError { action; msg; loc = _ } ->
       Format.fprintf ppf
         "Parsing of the arguments of actions '%s' failed with '%s'" action msg
-  | UnusedArgument { action_name; argument_name; loc = _ } ->
-      Format.fprintf ppf "Action '%s' does not use argument '%s'" action_name
-        argument_name
+  (* | ParsingWarnor (UnusedArgument { action_name; argument_name; loc }) -> _ *)
+  | ParsingWarnor _ -> Format.fprintf ppf "TODO" (* TODO: do *)
+  | MissingID _ -> Format.fprintf ppf "TODO" (* TODO: do *)
+
+(* | UnusedArgument { action_name; argument_name; loc = _ } -> *)
+(*     Format.fprintf ppf "Action '%s' does not use argument '%s'" action_name *)
+(*       argument_name *)
 
 let to_grace source_map error =
   let open Grace in
@@ -71,14 +86,57 @@ let to_grace source_map error =
       Some
         (Diagnostic.createf ~labels ~code:error Error
            "Action %s arguments could not be parsed" action)
-  | UnusedArgument { action_name; argument_name; loc } ->
+  | ParsingWarnor
+      {
+        warnor =
+          UnusedArgument
+            { action_name; argument_name; loc = parse_loc; possible_arguments };
+        loc;
+      } ->
+      let loc = loc_of_ploc loc parse_loc in
       let labels =
         [
           Diagnostic.Label.primaryf ~range:(range loc)
             "Action '%s' does not take argument '%s'" action_name argument_name;
         ]
       in
-      Some (Diagnostic.createf ~labels ~code:error Error "")
+      let notes =
+        match possible_arguments with
+        | [] ->
+            [
+              Diagnostic.Message.createf "'%s' accepts no arguments" action_name;
+            ]
+        | _ ->
+            [
+              Diagnostic.Message.createf "'%s' accepts arguments '%s'"
+                action_name
+                (String.concat "', '" possible_arguments);
+            ]
+      in
+      Some (Diagnostic.createf ~labels ~notes ~code:error Error "")
+  | ParsingWarnor { warnor = Parsing_failure { msg; loc = parse_loc }; loc } ->
+      let loc = loc_of_ploc loc parse_loc in
+      let labels = [ Diagnostic.Label.primaryf ~range:(range loc) "%s" msg ] in
+      Some (Diagnostic.createf ~labels ~code:error Error "Failed to parse")
+  | MissingID { id; loc } ->
+      let labels =
+        [
+          Diagnostic.Label.primaryf ~range:(range loc)
+            "This should be an ID present in the document";
+        ]
+      in
+      Some
+        (Diagnostic.createf ~labels ~code:error Warning
+           "No element with id '%s' were found" id)
+
+(* | UnusedArgument { action_name; argument_name; loc } -> *)
+(*     let labels = *)
+(*       [ *)
+(*         Diagnostic.Label.primaryf ~range:(range loc) *)
+(*           "Action '%s' does not take argument '%s'" action_name argument_name; *)
+(*       ] *)
+(*     in *)
+(*     Some (Diagnostic.createf ~labels ~code:error Error "") *)
 
 (* let pp ppf v = *)
 (*   Format.fprintf ppf "Error at %a:\n%a" Cmarkit.Textloc.pp_ocaml v.loc Error.pp *)
@@ -107,4 +165,5 @@ let to_code = function
   | MissingFile _ -> "FSError"
   | WrongType _ -> "WrongType"
   | ParsingError _ -> "ActionParsing"
-  | UnusedArgument _ -> "UnusedArgument"
+  | ParsingWarnor _ -> "ActionParsing"
+  | MissingID _ -> "IDNotFound"
