@@ -2,7 +2,9 @@ open Cmarkit
 module M = Map.Make (String)
 
 module Is = struct
-  let slip_script _bol = failwith "TODO"
+  let slip_script (bol : Ast.Bol.t) =
+    match bol with `Block (Ast.S_block (SlipScript _)) -> true | _ -> false
+
   let speaker_note _bol = failwith "TODO"
 end
 
@@ -31,12 +33,12 @@ let parse_args (type args)
       f args val_loc
 
 let handle_id_get id_map val_loc (id, loc) =
+  let loc = Diagnosis.loc_of_ploc val_loc loc in
   match M.find_opt id id_map with
   | None ->
-      let loc = Diagnosis.loc_of_ploc val_loc loc in
       Diagnosis.add @@ MissingID { id; loc };
-      None (* TODO: warning *)
-  | Some (_, bol, _) -> Some bol
+      None
+  | Some (_, bol, _) -> Some (bol, Some loc)
 
 let handle_id id_map val_loc (id, loc) =
   handle_id_get id_map val_loc (id, loc) |> ignore
@@ -47,24 +49,22 @@ let exec id_map attrs block_or_inline =
   parse_args (module Actions_arguments.Execute) attrs @@ fun args val_loc ->
   let targets =
     match args with
-    | `Self -> [ block_or_inline ]
+    | `Self -> [ (block_or_inline, None) ]
     | `Ids ids -> List.filter_map (handle_id_get id_map val_loc) ids
   in
   List.iter
-    (function
-      | `Block _ -> () (* TODO: do *)
-      | `Inline i ->
-          let loc_block = Inline.meta i |> Meta.textloc in
-          let loc_reason = val_loc in
-          Diagnosis.add @@ WrongType { loc_reason; loc_block })
+    (fun (bol, id_loc) ->
+      if not (Is.slip_script bol) then
+        let loc_block = Ast.Bol.text_loc bol in
+        let loc_reason = Option.value id_loc ~default:(Ast.Bol.text_loc bol) in
+        Diagnosis.add @@ WrongType { loc_reason; loc_block })
     targets;
   ()
 
-type bol = [ `Block of Block.t | `Inline of Inline.t ]
-type id_map = ((string * Meta.t) * bol * Meta.t) M.t
+type id_map = ((string * Meta.t) * Ast.Bol.t * Meta.t) M.t
 
 let move (module A : Actions_arguments.Move) (id_map : id_map) attrs
-    (_block_or_inline : bol) =
+    (_block_or_inline : Ast.Bol.t) =
   parse_args (module A) attrs @@ fun args val_loc ->
   match args.target with `Self -> () | `Id id -> handle_id id_map val_loc id
 
@@ -84,7 +84,7 @@ let unfocus (_id_map : id_map) attrs _block_or_inline =
   parse_args (module Actions_arguments.Unfocus) attrs @@ fun _ _ -> ()
 
 let set_class (module A : Actions_arguments.SetClass) (id_map : id_map) attrs
-    (_block_or_inline : bol) =
+    (_block_or_inline : Ast.Bol.t) =
   parse_args (module A) attrs @@ fun args val_loc ->
   match args with `Self -> () | `Ids ids -> handle_ids id_map val_loc ids
 

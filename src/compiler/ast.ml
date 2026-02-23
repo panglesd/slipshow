@@ -323,6 +323,22 @@ module Utils = struct
         (* Old attributes take precendence over "new" one *)
       in
       match update_attribute merge b with None -> b | Some (b, _) -> b
+
+    let meta b =
+      let ext b =
+        match b with
+        | S_block b -> (
+            match b with
+            | Included (_, meta) -> meta
+            | Div (_, meta) -> meta
+            | Slide (_, meta) -> meta
+            | Slip (_, meta) -> meta
+            | SlipScript (_, meta) -> meta
+            | Carousel (_, meta) -> meta
+            | MermaidJS (_, meta) -> meta)
+        | _ -> assert false
+      in
+      Block.meta ~ext b
   end
 
   module Inline = struct
@@ -408,5 +424,29 @@ module Utils = struct
         (* Old attributes take precendence over "new" one *)
       in
       match update_attribute merge b with None -> b | Some (b, _) -> b
+
+    let meta i =
+      let ext i =
+        match i with
+        | S_inline i -> (
+            match i with
+            | Image { origin = _, meta; _ } -> meta
+            | Svg { origin = _, meta; _ } -> meta
+            | Video { origin = _, meta; _ } -> meta
+            | Audio { origin = _, meta; _ } -> meta
+            | Pdf { origin = _, meta; _ } -> meta
+            | Hand_drawn { origin = _, meta; _ } -> meta)
+        | _ -> assert false
+      in
+      Inline.meta ~ext i
   end
+end
+
+module Bol = struct
+  type t = [ `Block of Block.t | `Inline of Inline.t ]
+
+  let text_loc (bol : t) =
+    match bol with
+    | `Block b -> b |> Utils.Block.meta |> Meta.textloc
+    | `Inline i -> i |> Utils.Inline.meta |> Meta.textloc
 end
