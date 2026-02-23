@@ -44,7 +44,7 @@ let pp ppf = function
 (*     Format.fprintf ppf "Action '%s' does not use argument '%s'" action_name *)
 (*       argument_name *)
 
-let to_grace source_map error =
+let with_range source_map loc f =
   let open Grace in
   let range (loc : loc) =
     let source = source_map (Cmarkit.Textloc.file loc) in
@@ -52,11 +52,19 @@ let to_grace source_map error =
     let stop = Cmarkit.Textloc.last_byte loc + 1 in
     Range.create ~source (Byte_index.of_int start) (Byte_index.of_int stop)
   in
+  try
+    let range = range loc in
+    Some (f ~range)
+  with _ -> None
+
+let to_grace source_map error =
+  let open Grace in
+  let with_range = with_range source_map in
   match error with
   | DuplicateID { id; occurrences } ->
       let labels =
-        List.map
-          (fun occ -> Diagnostic.Label.primaryf ~range:(range occ) "")
+        List.filter_map
+          (fun occ -> with_range occ @@ Diagnostic.Label.primaryf "")
           occurrences
       in
       Some
@@ -64,8 +72,8 @@ let to_grace source_map error =
            "ID %s is assigned multiple times" id)
   | MissingFile { file; error_msg; locs } ->
       let labels =
-        List.map
-          (fun loc -> Diagnostic.Label.primaryf ~range:(range loc) "")
+        List.filter_map
+          (fun loc -> with_range loc @@ Diagnostic.Label.primaryf "")
           locs
       in
       Some
@@ -73,16 +81,20 @@ let to_grace source_map error =
            "file '%s' could not be read: %s" file error_msg)
   | WrongType { loc_reason; loc_block } ->
       let labels =
-        [
-          Diagnostic.Label.primaryf ~range:(range loc_reason)
-            "This expects the id of a slip-script";
-          Diagnostic.Label.primaryf ~range:(range loc_block)
-            "This is not a slip-script";
-        ]
+        List.filter_map Fun.id
+          [
+            with_range loc_reason
+            @@ Diagnostic.Label.primaryf "This expects the id of a slip-script";
+            with_range loc_block
+            @@ Diagnostic.Label.primaryf "This is not a slip-script";
+          ]
       in
       Some (Diagnostic.createf ~labels ~code:error Error "Wrong type")
   | ParsingError { action; msg; loc } ->
-      let labels = [ Diagnostic.Label.primaryf ~range:(range loc) "%s" msg ] in
+      let labels =
+        List.filter_map Fun.id
+          [ with_range loc @@ Diagnostic.Label.primaryf "%s" msg ]
+      in
       Some
         (Diagnostic.createf ~labels ~code:error Error
            "Action %s arguments could not be parsed" action)
@@ -95,10 +107,13 @@ let to_grace source_map error =
       } ->
       let loc = loc_of_ploc loc parse_loc in
       let labels =
-        [
-          Diagnostic.Label.primaryf ~range:(range loc)
-            "Action '%s' does not take argument '%s'" action_name argument_name;
-        ]
+        List.filter_map Fun.id
+          [
+            with_range loc
+            @@ Diagnostic.Label.primaryf
+                 "Action '%s' does not take argument '%s'" action_name
+                 argument_name;
+          ]
       in
       let notes =
         match possible_arguments with
@@ -116,14 +131,19 @@ let to_grace source_map error =
       Some (Diagnostic.createf ~labels ~notes ~code:error Error "")
   | ParsingWarnor { warnor = Parsing_failure { msg; loc = parse_loc }; loc } ->
       let loc = loc_of_ploc loc parse_loc in
-      let labels = [ Diagnostic.Label.primaryf ~range:(range loc) "%s" msg ] in
+      let labels =
+        List.filter_map Fun.id
+          [ with_range loc @@ Diagnostic.Label.primaryf "%s" msg ]
+      in
       Some (Diagnostic.createf ~labels ~code:error Error "Failed to parse")
   | MissingID { id; loc } ->
       let labels =
-        [
-          Diagnostic.Label.primaryf ~range:(range loc)
-            "This should be an ID present in the document";
-        ]
+        List.filter_map Fun.id
+          [
+            with_range loc
+            @@ Diagnostic.Label.primaryf
+                 "This should be an ID present in the document";
+          ]
       in
       Some
         (Diagnostic.createf ~labels ~code:error Warning
