@@ -1078,7 +1078,7 @@ type attributes = [
 type line_type =
 | Atx_heading_line of heading_level * byte_pos * first * last
 | Blank_line
-| Block_quote_line
+| Block_quote_line of line_span (* loc of marker *)
 | Fenced_code_block_line of first * last * (first * last) option
 | Html_block_line of html_block_end_cond
 | Indented_code_block_line
