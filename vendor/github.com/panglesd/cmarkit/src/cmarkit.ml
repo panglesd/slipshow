@@ -1466,6 +1466,13 @@ module Inline_struct = struct
     let inline = if image then Inline.Image link else Inline.Link link in
     Inline { start = first; inline; endline = last_line; next = last + 1 }
 
+  let ext_attrs_token p ~first ~last ~first_line ~last_line text attrs attr_meta =
+    let textloc = textloc_of_lines p ~first ~last ~first_line ~last_line in
+    let full_meta = meta p textloc in
+    let attrs_span = Inline.Attributes_span.make text (attrs, attr_meta) in
+    let inline = Inline.Ext_attrs (attrs_span, full_meta) in
+    Inline { start = first; inline; endline = last_line; next = last + 1 }
+
   let emphasis_token p ~first ~last ~first_line ~last_line ~strong emph =
     let textloc = textloc_of_lines p ~first ~last ~first_line ~last_line in
     let delim = p.i.[first] in
@@ -1828,12 +1835,17 @@ module Inline_struct = struct
                 in
                 meta p loc
               in
-              let attrs =
-                Inline.Attributes_span.make (Inline.Inlines (text, attr_meta))
-                  (attrs, attr_meta)
+              let is =
+                let first_line = start_line and last_line = line in
+                inlines_inline p ~first:start ~last ~first_line ~last_line
+                  text
               in
-              let inline = Inline.Ext_attrs (attrs, attr_meta) in
-              let t = Inline { start; inline; endline; next = last + 1 } in
+              let first = start in
+              let first_line = start_line and last_line = endline in
+              let t =
+                ext_attrs_token p ~first ~last ~first_line ~last_line is
+                  attrs attr_meta
+              in
               Some (toks, endline, t, false)
 
   and first_pass p toks line =
