@@ -1821,8 +1821,18 @@ module Inline_struct = struct
               let (attrs, _) =
                 attributes p (attrs, ()) (Attributes.empty, None) last
               in
-              let attrs = Inline.Attributes_span.make (Inline.Inlines (text, Meta.none)) (attrs, Meta.none) in
-              let inline = Inline.Ext_attrs (attrs, Meta.none) in
+              let attr_meta =
+                let loc =
+                  textloc_of_lines p ~first:(text_last + 1) ~last
+                    ~first_line:line ~last_line:endline
+                in
+                meta p loc
+              in
+              let attrs =
+                Inline.Attributes_span.make (Inline.Inlines (text, attr_meta))
+                  (attrs, attr_meta)
+              in
+              let inline = Inline.Ext_attrs (attrs, attr_meta) in
               let t = Inline { start; inline; endline; next = last + 1 } in
               Some (toks, endline, t, false)
 
@@ -2016,42 +2026,42 @@ module Inline_struct = struct
     (* Only [Inline] and [Newline] tokens remain. We fold over them to
        convert them to [inline] values and [Break]s. [Text] inlines
        are created for data between them. *)
-    let add_attr attrs position acc =
+    let add_attr ((_, attrs_meta) as attrs) position acc =
       match position with
       | `Standalone ->
          let t =
-           Inline.Attributes_span.make (Inline.Inlines ([], Meta.none))
-             (attrs, Meta.none)
+           Inline.Attributes_span.make (Inline.Inlines ([], attrs_meta))
+             attrs
          in
-         Inline.Ext_attrs (t, Meta.none) :: acc
+         Inline.Ext_attrs (t, attrs_meta) :: acc
       | `Attached ->
         match acc with
         | Inline.Autolink ((a, _old_attrs), meta) :: q ->
-           Inline.Autolink ((a, (attrs, Meta.none)), meta) :: q
+           Inline.Autolink ((a, attrs), meta) :: q
         | Inline.Code_span ((a, _old_attrs), meta) :: q ->
-           Inline.Code_span ((a, (attrs, Meta.none)), meta) :: q
+           Inline.Code_span ((a, attrs), meta) :: q
         | Inline.Emphasis ((a, _old_attrs), meta) :: q ->
-           Inline.Emphasis ((a, (attrs, Meta.none)), meta) :: q
+           Inline.Emphasis ((a, attrs), meta) :: q
         | Inline.Image ((a, _old_attrs), meta) :: q ->
-           Inline.Image ((a, (attrs, Meta.none)), meta) :: q
+           Inline.Image ((a, attrs), meta) :: q
         | Inline.Link ((a, _old_attrs), meta) :: q ->
-           Inline.Link ((a, (attrs, Meta.none)), meta) :: q
+           Inline.Link ((a, attrs), meta) :: q
         | Inline.Strong_emphasis ((a, _old_attrs), meta) :: q ->
-           Inline.Strong_emphasis ((a, (attrs, Meta.none)), meta) :: q
+           Inline.Strong_emphasis ((a, attrs), meta) :: q
         | Inline.Text ((a, _old_attrs), meta) :: q ->
-           Inline.Text ((a, (attrs, Meta.none)), meta) :: q
-           (* let t = Inline.Attributes_span.make i (attrs, Meta.none) in *)
+           Inline.Text ((a, attrs), meta) :: q
+           (* let t = Inline.Attributes_span.make i attrs in *)
            (* Inline.Ext_attrs (t, Meta.none) :: q *)
         | Inline.Ext_strikethrough ((a, _old_attrs), meta) :: q ->
-           Inline.Ext_strikethrough ((a, (attrs, Meta.none)), meta) :: q
+           Inline.Ext_strikethrough ((a, attrs), meta) :: q
         | Inline.Ext_math_span ((a, _old_attrs), meta) :: q ->
-           Inline.Ext_math_span ((a, (attrs, Meta.none)), meta) :: q
+           Inline.Ext_math_span ((a, attrs), meta) :: q
         | _ ->
           let t =
-           Inline.Attributes_span.make (Inline.Inlines ([], Meta.none))
-             (attrs, Meta.none)
+            Inline.Attributes_span.make (Inline.Inlines ([], attrs_meta))
+             attrs
           in
-         Inline.Ext_attrs (t, Meta.none) :: acc
+         Inline.Ext_attrs (t, attrs_meta) :: acc
 
     in
     let rec loop ?attrs toks line acc k = match toks with
@@ -2072,7 +2082,12 @@ module Inline_struct = struct
         let i = Match.last_blank p.i ~first:k ~start:(start - 1) in
         let acc = try_add_text_inline p line ~first:k ~last:i acc in
         let acc = try_add_text_inline p line ~first:(i+1) ~last:(start - 1) acc in
-        let acc = add_attr attrs position acc in
+        let attr_loc =
+          textloc_of_lines p ~first:start ~last:(next - 1) ~first_line:line
+            ~last_line:endline
+          in
+        let attr_meta = meta p attr_loc in
+        let acc = add_attr (attrs, attr_meta) position acc in
         loop toks endline acc next
     | (Backticks _ | Autolink_or_html_start _ | Link_start _ | Right_brack _
       | Emphasis_marks _ | Right_paren _ | Strikethrough_marks _ | Open_curly _
@@ -2160,26 +2175,33 @@ module Inline_struct = struct
         in
         `Col ((text, (bbefore, bafter)), k)
 
-  let add_tok tok is =
-    let add_attr attrs position acc =
+  let add_tok p line tok is =
+    let add_attr attrs position acc start next endline =
+      let attr_meta =
+        let loc =
+          textloc_of_lines p ~first:start ~last:(next - 1) ~first_line:line
+            ~last_line:endline
+        in
+        meta p loc
+      in
       match position with
       | `Standalone ->
          let t =
-           Inline.Attributes_span.make (Inline.Inlines ([], Meta.none))
-             (attrs, Meta.none)
+           Inline.Attributes_span.make (Inline.Inlines ([], attr_meta))
+             (attrs, attr_meta)
          in
-         Inline.Ext_attrs (t, Meta.none) :: acc
+         Inline.Ext_attrs (t, attr_meta) :: acc
       | `Attached ->
          match acc with
          | i :: q ->
-            let t = Inline.Attributes_span.make i (attrs, Meta.none) in
-            Inline.Ext_attrs (t, Meta.none) :: q
+            let t = Inline.Attributes_span.make i (attrs, attr_meta) in
+            Inline.Ext_attrs (t, attr_meta) :: q
          | [] -> []
     in
     match tok with
     | Inline { inline } -> inline :: is
     | Attributes { start; next; attrs; position ; endline } ->
-       add_attr attrs position is
+       add_attr attrs position is start next endline
     | _ -> is
 
   let rec finish_col p line blanks_before is toks k =
@@ -2192,11 +2214,11 @@ module Inline_struct = struct
       | `Not_found _ -> assert false
       end
   | (Inline { start; next } | Attributes { start; next }) as tok :: toks when k >= start ->
-      finish_col p line blanks_before (add_tok tok is) toks next
+      finish_col p line blanks_before (add_tok p line tok is) toks next
   | (Inline { start; next } | Attributes { start; next }) as tok :: toks as toks' ->
       begin match find_pipe p line ~before:start k with
       | `Not_found text ->
-          let is = add_tok tok (text :: is) in
+          let is = add_tok p line tok (text :: is) in
           finish_col p line blanks_before is toks next
       | `Found (text, after, k) ->
           let is = match text with Some t -> t :: is | None -> is in
@@ -2219,7 +2241,7 @@ module Inline_struct = struct
       begin match start_col p line ~before:start k with
       | `Col (col, k) -> parse_cols p line (col :: acc) toks' k
       | `Start (before, is) ->
-          let is = add_tok tok is in
+          let is = add_tok p line tok is in
           let col, toks, k = finish_col p line before is toks next in
           parse_cols p line (col :: acc) toks k
       end
@@ -2789,7 +2811,7 @@ module Block_struct = struct
     let add_attribute new_attr attrs = match new_attr with
       | `Class rev_spans ->
          let new_class = Inline_struct.attr_of_rev_spans p rev_spans in
-         Attributes.add_class attrs new_class
+         Attributes.add_class attrs new_class (* TODO: location *)
       | `Id rev_spans ->
          let new_id = Inline_struct.attr_of_rev_spans p rev_spans in
          Attributes.set_id attrs new_id
@@ -2806,7 +2828,10 @@ module Block_struct = struct
     let new_attrs =
       List.fold_right add_attribute new_attrs Attributes.empty, Meta.none
     in
-    let ad = ({ Block.Attribute_definition.indent; label; attrs = new_attrs }, attrs), Meta.none in
+    let ad =
+      ({ Block.Attribute_definition.indent; label; attrs = new_attrs }, attrs),
+      Meta.none
+    in
     set_label_def p label (Block.Attribute_definition.Def ad);
     (* accept_cols p ~count:(last - p.current_char + 1); *)
     Ext_attribute_label
@@ -3386,7 +3411,10 @@ and block_struct_to_standalone_attrs p attrs =
 
 and block_struct_to_attribute_definition p indent label new_attrs attrs
   =
-  let meta = Meta.none (* TODO *) in
+  let meta = match snd attrs with
+  | None -> Meta.none
+  | Some (first, last) -> meta_of_spans p ~first ~last
+  in
   let attrs = block_struct_to_attr p attrs in
   let fn =
     ({ Block.Attribute_definition.indent; label; attrs = new_attrs }, attrs),
