@@ -2,10 +2,19 @@ open Cmarkit
 module M = Map.Make (String)
 
 module Is = struct
+  let carousel (bol : Ast.Bol.t) =
+    match bol with `Block (Ast.S_block (Carousel _)) -> true | _ -> false
+
+  let playable_media (bol : Ast.Bol.t) =
+    match bol with
+    | `Inline (Ast.S_inline (Video _ | Audio _)) -> true
+    | _ -> false
+
   let slip_script (bol : Ast.Bol.t) =
     match bol with `Block (Ast.S_block (SlipScript _)) -> true | _ -> false
 
-  let speaker_note _bol = failwith "TODO"
+  let draw (bol : Ast.Bol.t) =
+    match bol with `Inline (Ast.S_inline (Hand_drawn _)) -> true | _ -> false
 end
 
 let act_only_on_attributes_with_actions (module A : Actions_arguments.S) attrs f
@@ -45,21 +54,28 @@ let handle_id id_map val_loc (id, loc) =
 
 let handle_ids id_map val_loc ids = List.iter (handle_id id_map val_loc) ids
 
-let exec id_map attrs block_or_inline =
-  parse_args (module Actions_arguments.Execute) attrs @@ fun args val_loc ->
+let check_targets is id_map bol val_loc targets =
   let targets =
-    match args with
-    | `Self -> [ (block_or_inline, None) ]
+    match targets with
+    | `Self -> [ (bol, None) ]
     | `Ids ids -> List.filter_map (handle_id_get id_map val_loc) ids
   in
   List.iter
     (fun (bol, id_loc) ->
-      if not (Is.slip_script bol) then
+      if not (is bol) then
         let loc_block = Ast.Bol.text_loc bol in
         let loc_reason = Option.value id_loc ~default:(Ast.Bol.text_loc bol) in
         Diagnosis.add @@ WrongType { loc_reason; loc_block })
     targets;
   ()
+
+let check_target is id_map bol val_loc target =
+  let targets = match target with `Self -> `Self | `Id id -> `Ids [ id ] in
+  check_targets is id_map bol val_loc targets
+
+let exec id_map attrs block_or_inline =
+  parse_args (module Actions_arguments.Execute) attrs @@ fun args val_loc ->
+  check_targets Is.slip_script id_map block_or_inline val_loc args
 
 type id_map = ((string * Meta.t) * Ast.Bol.t * Meta.t) M.t
 
@@ -95,21 +111,26 @@ let unreveal = set_class (module Actions_arguments.Unreveal)
 let emph = set_class (module Actions_arguments.Emph)
 let unemph = set_class (module Actions_arguments.Unemph)
 
-let speaker_note id_map attrs block_or_inline =
+let speaker_note id_map attrs _block_or_inline =
   parse_args (module Actions_arguments.Speaker_note) attrs
   @@ fun args val_loc ->
-  let bol =
-    match args with
-    | `Self -> block_or_inline
-    | `Id id -> handle_id_get id_map val_loc id
-  in
-  match bol with
-  | Some b when Is.speaker_note b -> ()
-  | _ ->
-      (* TODO: must be a speaker note *)
-      ()
+  match args with `Self -> () | `Id id -> handle_id id_map val_loc id
 
-let play_media _id_map _attrs _block_or_inline = failwith "TODO"
-let change_page _id_map _attrs _block_or_inline = failwith "TODO"
-let draw _id_map _attrs _block_or_inline = failwith "TODO"
-let clear_draw _id_map _attrs _block_or_inline = failwith "TODO"
+let play_media id_map attrs block_or_inline =
+  parse_args (module Actions_arguments.Play_media) attrs @@ fun args val_loc ->
+  check_targets Is.playable_media id_map block_or_inline val_loc args
+
+let change_page id_map attrs block_or_inline =
+  parse_args (module Actions_arguments.Change_page) attrs @@ fun args val_loc ->
+  List.iter
+    (fun (arg : Actions_arguments.Change_page.arg) ->
+      check_target Is.carousel id_map block_or_inline val_loc arg.target)
+    args
+
+let draw id_map attrs block_or_inline =
+  parse_args (module Actions_arguments.Draw) attrs @@ fun args val_loc ->
+  check_targets Is.draw id_map block_or_inline val_loc args
+
+let clear_draw id_map attrs block_or_inline =
+  parse_args (module Actions_arguments.Clear_draw) attrs @@ fun args val_loc ->
+  check_targets Is.draw id_map block_or_inline val_loc args
