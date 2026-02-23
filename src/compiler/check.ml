@@ -8,16 +8,24 @@ module Is = struct
     | `Inline (Ast.S_inline (Pdf _)) -> true
     | _ -> false
 
+  let carousel_or_pdf = (carousel_or_pdf, "carousel or pdf")
+
   let playable_media (bol : Ast.Bol.t) =
     match bol with
     | `Inline (Ast.S_inline (Video _ | Audio _)) -> true
     | _ -> false
 
+  let playable_media = (playable_media, "video or audio")
+
   let slip_script (bol : Ast.Bol.t) =
     match bol with `Block (Ast.S_block (SlipScript _)) -> true | _ -> false
 
+  let slip_script = (slip_script, "slip-script")
+
   let draw (bol : Ast.Bol.t) =
     match bol with `Inline (Ast.S_inline (Hand_drawn _)) -> true | _ -> false
+
+  let draw = (draw, "drawing")
 end
 
 let act_only_on_attributes_with_actions (module A : Actions_arguments.S) attrs f
@@ -57,7 +65,7 @@ let handle_id id_map val_loc (id, loc) =
 
 let handle_ids id_map val_loc ids = List.iter (handle_id id_map val_loc) ids
 
-let check_targets is id_map bol val_loc targets =
+let check_targets (is, expected_type) id_map bol val_loc targets =
   let targets =
     match targets with
     | `Self -> [ (bol, None) ]
@@ -68,7 +76,7 @@ let check_targets is id_map bol val_loc targets =
       if not (is bol) then
         let loc_block = Ast.Bol.text_loc bol in
         let loc_reason = Option.value id_loc ~default:(Ast.Bol.text_loc bol) in
-        Diagnosis.add @@ WrongType { loc_reason; loc_block })
+        Diagnosis.add @@ WrongType { loc_reason; loc_block; expected_type })
     targets;
   ()
 

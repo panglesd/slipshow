@@ -12,7 +12,7 @@ let loc_of_ploc loc (idx, idx') =
 type t =
   | DuplicateID of { id : string; occurrences : loc list }
   | MissingFile of { file : string; error_msg : string; locs : loc list }
-  | WrongType of { loc_reason : loc; loc_block : loc }
+  | WrongType of { loc_reason : loc; loc_block : loc; expected_type : string }
   | ParsingError of { action : string; msg : string; loc : loc }
   | ParsingWarnor of { warnor : Actions_arguments.Parse.warnor; loc : loc }
   | MissingID of { id : string; loc : loc }
@@ -31,7 +31,7 @@ let pp ppf = function
       (* ignore s.previous_occurrence; *)
       Format.fprintf ppf "Missing file: %s, considering it as an URL. (%s)"
         s.file s.error_msg
-  | WrongType { loc_reason = _; loc_block = _ } ->
+  | WrongType { loc_reason = _; loc_block = _; expected_type = _ } ->
       Format.fprintf ppf "Wrong type"
   | ParsingError { action; msg; loc = _ } ->
       Format.fprintf ppf
@@ -79,14 +79,15 @@ let to_grace source_map error =
       Some
         (Diagnostic.createf ~labels ~code:error Error
            "file '%s' could not be read: %s" file error_msg)
-  | WrongType { loc_reason; loc_block } ->
+  | WrongType { loc_reason; loc_block; expected_type } ->
       let labels =
         List.filter_map Fun.id
           [
             with_range loc_reason
-            @@ Diagnostic.Label.primaryf "This expects the id of a slip-script";
+            @@ Diagnostic.Label.primaryf "This expects the id of a %s"
+                 expected_type;
             with_range loc_block
-            @@ Diagnostic.Label.primaryf "This is not a slip-script";
+            @@ Diagnostic.Label.primaryf "This is not a %s" expected_type;
           ]
       in
       Some (Diagnostic.createf ~labels ~code:error Error "Wrong type")
