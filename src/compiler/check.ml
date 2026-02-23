@@ -2,8 +2,11 @@ open Cmarkit
 module M = Map.Make (String)
 
 module Is = struct
-  let carousel (bol : Ast.Bol.t) =
-    match bol with `Block (Ast.S_block (Carousel _)) -> true | _ -> false
+  let carousel_or_pdf (bol : Ast.Bol.t) =
+    match bol with
+    | `Block (Ast.S_block (Carousel _)) -> true
+    | `Inline (Ast.S_inline (Pdf _)) -> true
+    | _ -> false
 
   let playable_media (bol : Ast.Bol.t) =
     match bol with
@@ -124,7 +127,7 @@ let change_page id_map attrs block_or_inline =
   parse_args (module Actions_arguments.Change_page) attrs @@ fun args val_loc ->
   List.iter
     (fun (arg : Actions_arguments.Change_page.arg) ->
-      check_target Is.carousel id_map block_or_inline val_loc arg.target)
+      check_target Is.carousel_or_pdf id_map block_or_inline val_loc arg.target)
     args
 
 let draw id_map attrs block_or_inline =
@@ -134,3 +137,25 @@ let draw id_map attrs block_or_inline =
 let clear_draw id_map attrs block_or_inline =
   parse_args (module Actions_arguments.Clear_draw) attrs @@ fun args val_loc ->
   check_targets Is.draw id_map block_or_inline val_loc args
+
+let all_checks =
+  [
+    clear_draw;
+    change_page;
+    play_media;
+    speaker_note;
+    unstatic;
+    static;
+    reveal;
+    unreveal;
+    emph;
+    unemph;
+    focus;
+    unfocus;
+    up;
+    down;
+    center;
+    scroll;
+    enter;
+    exec;
+  ]

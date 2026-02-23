@@ -570,8 +570,8 @@ module Stage5 = struct
         M.t =
       id_map
     in
-    Check.exec id_map attrs block_or_inline;
-    Check.up id_map attrs block_or_inline
+    List.iter (fun check -> check id_map attrs block_or_inline) Check.all_checks
+
   (* Actions_arguments.Execute.check args id_map block_or_inline val_loc) *)
 
   let folder ~id_map =
