@@ -17,7 +17,7 @@ module Pause = struct
 
   type args = [ `Self | `Ids of string W.node list ]
 
-  let parse_args = Parse.parse_only_els
+  let parse_args = Parse.parse_only_els ~action_name
 end
 
 module _ : S = Pause
@@ -49,7 +49,9 @@ end) : Move = struct
     let ( let+ ) x f = Result.map f x in
     let open W.M in
     let+ x =
-      Parse.parse ~named:[ Parse.duration; Parse.margin ] ~positional:Parse.id s
+      Parse.parse ~action_name
+        ~named:[ Parse.duration; Parse.margin ]
+        ~positional:Parse.id s
     in
     let$ x = x in
     let$ res = Parse.require_single_action ~action_name:X.action_name x in
@@ -109,7 +111,7 @@ end) : SetClass = struct
 
   type args = ids_or_self
 
-  let parse_args = Parse.parse_only_els
+  let parse_args = Parse.parse_only_els ~action_name
 end
 
 module Unstatic = SetClass (struct
@@ -177,7 +179,9 @@ module Focus = struct
   let parse_args s =
     let ( let+ ) = Fun.flip Result.map in
     let+ x =
-      Parse.parse ~named:[ Parse.duration; Parse.margin ] ~positional:Parse.id s
+      Parse.parse ~action_name
+        ~named:[ Parse.duration; Parse.margin ]
+        ~positional:Parse.id s
     in
     let open W.M in
     let$ x = x in
@@ -208,7 +212,7 @@ module Speaker_note = struct
 
   type args = id_or_self
 
-  let parse_args = Parse.parse_only_el
+  let parse_args = Parse.parse_only_el ~action_name
 end
 
 module _ : S = Speaker_note
@@ -219,7 +223,7 @@ module Play_media = struct
 
   type args = ids_or_self
 
-  let parse_args = Parse.parse_only_els
+  let parse_args = Parse.parse_only_els ~action_name
 end
 
 module _ : S = Play_media
@@ -287,7 +291,9 @@ module Change_page = struct
 
   let parse_args s =
     let open W.M in
-    let+ res = Parse.parse ~named:[ ("n", parse_n) ] ~positional:Fun.id s in
+    let+ res =
+      Parse.parse ~action_name ~named:[ ("n", parse_n) ] ~positional:Fun.id s
+    in
     let$ ac, actions = res in
     let actions = ac :: actions in
     let warnings, res =
@@ -326,7 +332,7 @@ module Draw = struct
 
   type args = ids_or_self
 
-  let parse_args = Parse.parse_only_els
+  let parse_args = Parse.parse_only_els ~action_name
 end
 
 module _ : S = Draw
@@ -337,7 +343,7 @@ module Clear_draw = struct
 
   type args = ids_or_self
 
-  let parse_args = Parse.parse_only_els
+  let parse_args = Parse.parse_only_els ~action_name
 end
 
 module _ : S = Clear_draw
@@ -347,7 +353,7 @@ module Execute = struct
 
   let on = "exec-at-unpause"
   let action_name = "exec"
-  let parse_args = Parse.parse_only_els
+  let parse_args = Parse.parse_only_els ~action_name
 end
 
 module _ : S = Execute

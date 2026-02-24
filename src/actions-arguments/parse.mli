@@ -21,6 +21,7 @@ type ('named, 'positional) parsed = {
 }
 
 val parse :
+  action_name:string ->
   named:'named descr_tuple ->
   positional:(string -> 'pos) ->
   string ->
@@ -36,11 +37,14 @@ val no_args :
   action_name:string -> string -> (unit W.t, [> `Msg of string ]) result
 
 val parse_only_els :
+  action_name:string ->
   string ->
   ([ `Self | `Ids of string W.node list ] W.t, [> `Msg of string ]) result
 
 val parse_only_el :
-  string -> ([ `Self | `Id of string W.node ] W.t, [> `Msg of string ]) result
+  action_name:string ->
+  string ->
+  ([ `Self | `Id of string W.node ] W.t, [> `Msg of string ]) result
 
 val option_to_error : 'a -> 'b option -> ('b, [> `Msg of 'a ]) result
 val duration : string * (string W.node -> (float, [> `Msg of string ]) result)
