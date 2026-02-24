@@ -16,11 +16,11 @@ type t =
   | ParsingError of { action : string; msg : string; loc : loc }
   | ParsingWarnor of { warnor : Actions_arguments.W.warnor; loc : loc }
   | MissingID of { id : string; loc : loc }
-(* | UnusedArgument of { *)
-(*     action_name : string; *)
-(*     argument_name : string; *)
-(*     loc : loc; *)
-(*   } *)
+  | General of {
+      msg : string;
+      labels : (string * loc) list;
+      notes : string list;
+    }
 
 let pp ppf = function
   | DuplicateID id ->
@@ -39,6 +39,7 @@ let pp ppf = function
   (* | ParsingWarnor (UnusedArgument { action_name; argument_name; loc }) -> _ *)
   | ParsingWarnor _ -> Format.fprintf ppf "TODO" (* TODO: do *)
   | MissingID _ -> Format.fprintf ppf "TODO" (* TODO: do *)
+  | General _ -> Format.fprintf ppf "TODO" (* TODO: do *)
 
 (* | UnusedArgument { action_name; argument_name; loc = _ } -> *)
 (*     Format.fprintf ppf "Action '%s' does not use argument '%s'" action_name *)
@@ -68,7 +69,7 @@ let to_grace source_map error =
           occurrences
       in
       Some
-        (Diagnostic.createf ~labels ~code:error Error
+        (Diagnostic.createf ~labels ~code:error Warning
            "ID %s is assigned multiple times" id)
   | MissingFile { file; error_msg; locs } ->
       let labels =
@@ -77,7 +78,7 @@ let to_grace source_map error =
           locs
       in
       Some
-        (Diagnostic.createf ~labels ~code:error Error
+        (Diagnostic.createf ~labels ~code:error Warning
            "file '%s' could not be read: %s" file error_msg)
   | WrongType { loc_reason; loc_block; expected_type } ->
       let labels =
@@ -90,14 +91,14 @@ let to_grace source_map error =
             @@ Diagnostic.Label.primaryf "This is not a %s" expected_type;
           ]
       in
-      Some (Diagnostic.createf ~labels ~code:error Error "Wrong type")
+      Some (Diagnostic.createf ~labels ~code:error Warning "Wrong type")
   | ParsingError { action; msg; loc } ->
       let labels =
         List.filter_map Fun.id
           [ with_range loc @@ Diagnostic.Label.primaryf "%s" msg ]
       in
       Some
-        (Diagnostic.createf ~labels ~code:error Error
+        (Diagnostic.createf ~labels ~code:error Warning
            "Action %s arguments could not be parsed" action)
   | ParsingWarnor
       {
@@ -129,14 +130,14 @@ let to_grace source_map error =
                 (String.concat "', '" possible_arguments);
             ]
       in
-      Some (Diagnostic.createf ~labels ~notes ~code:error Error "")
+      Some (Diagnostic.createf ~labels ~notes ~code:error Warning "")
   | ParsingWarnor { warnor = Parsing_failure { msg; loc = parse_loc }; loc } ->
       let loc = loc_of_ploc loc parse_loc in
       let labels =
         List.filter_map Fun.id
           [ with_range loc @@ Diagnostic.Label.primaryf "%s" msg ]
       in
-      Some (Diagnostic.createf ~labels ~code:error Error "Failed to parse")
+      Some (Diagnostic.createf ~labels ~code:error Warning "Failed to parse")
   | MissingID { id; loc } ->
       let labels =
         List.filter_map Fun.id
@@ -149,19 +150,17 @@ let to_grace source_map error =
       Some
         (Diagnostic.createf ~labels ~code:error Warning
            "No element with id '%s' were found" id)
-
-(* | UnusedArgument { action_name; argument_name; loc } -> *)
-(*     let labels = *)
-(*       [ *)
-(*         Diagnostic.Label.primaryf ~range:(range loc) *)
-(*           "Action '%s' does not take argument '%s'" action_name argument_name; *)
-(*       ] *)
-(*     in *)
-(*     Some (Diagnostic.createf ~labels ~code:error Error "") *)
-
-(* let pp ppf v = *)
-(*   Format.fprintf ppf "Error at %a:\n%a" Cmarkit.Textloc.pp_ocaml v.loc Error.pp *)
-(*     v.error *)
+  | General { msg; labels; notes } ->
+      let labels =
+        List.filter_map
+          (fun (msg, loc) ->
+            with_range loc @@ Diagnostic.Label.primaryf "%s" msg)
+          labels
+      in
+      let notes =
+        List.map (fun msg -> Diagnostic.Message.createf "%s" msg) notes
+      in
+      Some (Diagnostic.createf ~labels ~notes ~code:error Warning "%s" msg)
 
 let errors_acc = ref []
 let add x = errors_acc := x :: !errors_acc
@@ -188,3 +187,4 @@ let to_code = function
   | ParsingError _ -> "ActionParsing"
   | ParsingWarnor _ -> "ActionParsing"
   | MissingID _ -> "IDNotFound"
+  | General _ -> "General"

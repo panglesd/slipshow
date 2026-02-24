@@ -120,14 +120,20 @@ module Stage1 = struct
 
   let handle_includes ~htbl_include read_file current_path m (attrs, meta) =
     match (Attributes.find "include" attrs, Attributes.find "src" attrs) with
-    | Some (_, None), Some (_, Some ({ v = src; _ }, _)) -> (
+    | Some (_, None), Some (_, Some ({ v = src; _ }, filepath_meta)) -> (
         let relativized_path =
           Path_entering.relativize current_path (Fpath.v src)
         in
         match read_file relativized_path with
         | Error (`Msg err) ->
-            Logs.warn (fun m ->
-                m "Could not read %a: %s" Fpath.pp relativized_path err);
+            let locs = [ Meta.textloc filepath_meta ] in
+            Diagnosis.add
+              (MissingFile
+                 {
+                   file = Fpath.to_string relativized_path;
+                   error_msg = err;
+                   locs;
+                 });
             Mapper.default
         | Ok None -> Mapper.default
         | Ok (Some contents) -> (
@@ -353,9 +359,14 @@ module Stage2 = struct
                     match (categorize key, value) with
                     | `Class c, None -> Attributes.add_class acc (c, meta)
                     | `Kv c, _ -> Attributes.add (c, meta) value acc
-                    | `Class c, Some _ ->
-                        Logs.warn (fun m ->
-                            m "Children classes cannot have a value");
+                    | `Class c, Some (_, v_meta) ->
+                        Diagnosis.add
+                          (General
+                             {
+                               msg = "Children classes cannot have a value";
+                               labels = [ ("", Meta.textloc v_meta) ];
+                               notes = [];
+                             });
                         Attributes.add (c, meta) value acc))
               Attributes.empty kvs
           in
