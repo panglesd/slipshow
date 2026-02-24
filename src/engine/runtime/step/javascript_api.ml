@@ -73,7 +73,7 @@ let change_page ~mode _window undos_ref =
   let elem = Brr.El.of_jv elem in
   let change = Jv.to_string change in
   register_undo undos_ref @@ fun () ->
-  Actions.Change_page.parse_change change
+  Actions.Change_page.parse_change (change, (0, 0))
   |> Undoable.Option.iter @@ fun change ->
      let js_arg = { Actions.Change_page.change; elem } in
      Actions.Change_page.do_js ~mode _window js_arg

@@ -3,7 +3,7 @@ module W := Warnings
 val id : string (* node *) -> string (* node *)
 
 type 'a description_named_atom =
-  string * (string -> ('a, [ `Msg of string ]) result)
+  string * (string W.node -> ('a, [ `Msg of string ]) result)
 
 type _ descr_tuple =
   | [] : unit descr_tuple
@@ -43,5 +43,5 @@ val parse_only_el :
   string -> ([ `Self | `Id of string W.node ] W.t, [> `Msg of string ]) result
 
 val option_to_error : 'a -> 'b option -> ('b, [> `Msg of 'a ]) result
-val duration : string * (string -> (float, [> `Msg of string ]) result)
-val margin : string * (string -> (float, [> `Msg of string ]) result)
+val duration : string * (string W.node -> (float, [> `Msg of string ]) result)
+val margin : string * (string W.node -> (float, [> `Msg of string ]) result)
