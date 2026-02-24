@@ -1,15 +1,4 @@
-type loc = int * int
-
-type warnor =
-  | UnusedArgument of {
-      action_name : string;
-      argument_name : string;
-      possible_arguments : string list;
-      loc : loc;
-    }
-  | Parsing_failure of { msg : string; loc : loc }
-
-type 'a node = 'a * loc
+module W := Warnings
 
 val id : string (* node *) -> string (* node *)
 
@@ -28,34 +17,30 @@ type 'a non_empty_list = 'a * 'a list
 
 type ('named, 'positional) parsed = {
   p_named : 'named output_tuple;
-  p_pos : 'positional node list;
+  p_pos : 'positional W.node list;
 }
 
 val parse :
   named:'named descr_tuple ->
-  positional:(string (* node *) -> 'pos (* node *)) ->
+  positional:(string -> 'pos) ->
   string ->
-  ( ('named, 'pos) parsed non_empty_list * warnor list,
-    [> `Msg of string ] )
-  result
+  (('named, 'pos) parsed W.node non_empty_list W.t, [> `Msg of string ]) result
 
-val require_single_action : action_name:string -> 'a * 'b list -> 'a
-val require_single_positional : action_name:string -> 'a list -> 'a option
+val require_single_action :
+  action_name:string -> 'a W.node non_empty_list -> 'a W.node W.t
+
+val require_single_positional :
+  action_name:string -> 'a W.node list -> 'a W.node option W.t
 
 val no_args :
-  action_name:string ->
-  string ->
-  (unit * warnor list, [> `Msg of string ]) result
+  action_name:string -> string -> (unit W.t, [> `Msg of string ]) result
 
 val parse_only_els :
   string ->
-  ( [ `Self | `Ids of string node list ] * warnor list,
-    [> `Msg of string ] )
-  result
+  ([ `Self | `Ids of string W.node list ] W.t, [> `Msg of string ]) result
 
 val parse_only_el :
-  string ->
-  ([ `Self | `Id of string node ] * warnor list, [> `Msg of string ]) result
+  string -> ([ `Self | `Id of string W.node ] W.t, [> `Msg of string ]) result
 
 val option_to_error : 'a -> 'b option -> ('b, [> `Msg of 'a ]) result
 val duration : string * (string -> (float, [> `Msg of string ]) result)
