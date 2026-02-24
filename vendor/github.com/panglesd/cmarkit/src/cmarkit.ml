@@ -2316,7 +2316,7 @@ module Block_struct = struct
     (* https://spec.commonmark.org/current/#block-quote-marker *)
     if end_of_line p || p.i.[p.current_char] <> '>' then Match.Nomatch else
     let marker_span =
-      current_line_span p ~first:p.current_char ~last:(p.current_char+1)
+      current_line_span p ~first:p.current_char ~last:p.current_char
     in
     let next_is_blank =
       let next = p.current_char + 1 in
