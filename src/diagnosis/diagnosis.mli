@@ -9,6 +9,11 @@ type t =
   | ParsingError of { action : string; msg : string; loc : loc }
   | ParsingWarnor of { warnor : Actions_arguments.W.warnor; loc : loc }
   | MissingID of { id : string; loc : loc }
+  | General of {
+      msg : string;
+      labels : (string * loc) list;
+      notes : string list;
+    }
 
 val pp : Format.formatter -> t -> unit
 val to_grace : (string -> Grace.Source.t) -> t -> t Grace.Diagnostic.t option
