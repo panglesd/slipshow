@@ -1,35 +1,6 @@
-type loc = int * int
+module W = Warnings
 
-type warnor =
-  | UnusedArgument of {
-      action_name : string;
-      argument_name : string;
-      possible_arguments : string list;
-      loc : loc;
-    }
-  | Parsing_failure of { msg : string; loc : loc }
-
-module Diagnosis = struct
-  let errors_acc = ref []
-  let add x = errors_acc := x :: !errors_acc
-
-  let with_ f =
-    let old_errors = !errors_acc in
-    errors_acc := [];
-    let clean_up () =
-      let errors = !errors_acc in
-      errors_acc := old_errors;
-      errors
-    in
-    try
-      let res = f () in
-      (res, clean_up ())
-    with exn ->
-      let _ = clean_up in
-      raise exn
-end
-
-type 'a node = 'a * loc
+type 'a node = 'a W.node
 
 let parse_string s =
   let is_ws idx = match s.[idx] with '\n' | ' ' -> true | _ -> false in
@@ -135,26 +106,31 @@ let parse_string s =
     in
     let$ () =
       let> (), idx' = parse_semicolon idx in
-      (`Semicolon, idx')
+      (`Semicolon idx', idx')
     in
     let> (p, idx'), idx = parse_positional idx in
     (`Positional (p, (idx, idx')), idx')
   in
   let parse_all = repeat parse_one in
   let parsed, _ = parse_all 0 in
-  let unfinished_acc, parsed =
+  let (unfinished_acc, loc), parsed =
     List.fold_left
-      (fun (current_acc, global_acc) -> function
-        | `Semicolon -> ([], List.rev current_acc :: global_acc)
-        | (`Positional _ | `Named _) as x -> (x :: current_acc, global_acc))
-      ([], []) parsed
+      (fun ((current_acc, (idx0, idx1)), global_acc) -> function
+        | `Semicolon idx ->
+            ( ([], (idx, idx)),
+              (List.rev current_acc, (idx0, idx1)) :: global_acc )
+        | (`Positional (_, (_, end_)) | `Named (_, (_, end_))) as x ->
+            ((x :: current_acc, (idx0, end_)), global_acc))
+      (([], (0, 0)), [])
+      parsed
   in
-  let parsed = List.rev unfinished_acc :: parsed |> List.rev in
+  let parsed = (List.rev unfinished_acc, loc) :: parsed |> List.rev in
   parsed
-  |> List.map
-     @@ List.partition_map (function
-          | `Named x -> Left x
-          | `Positional p -> Right p)
+  |> List.map @@ fun (l, loc) ->
+     ( List.partition_map
+         (function `Named x -> Left x | `Positional p -> Right p)
+         l,
+       loc )
 
 let ( let+ ) x y = Result.map y x
 
@@ -170,22 +146,25 @@ end
 
 type action = { named : string node Smap.t; positional : string node list }
 
-let parse_string s =
+let parse_string s : (_ W.t, _) result =
   let+ s =
     try Ok (parse_string s) with
     | Failure s -> Error (`Msg s)
     | _ (* TODO: finer grain catch and better error messages *) ->
         Error (`Msg "Failed when trying to parse argument")
   in
-  s
-  |> List.map (fun (named, positional) ->
-         let named =
-           named
-           |> List.map (fun ((k, v), loc) -> (k, (v, loc)))
-           |> Smap.of_list
-           (* TODO: warn on duplicate name *)
-         in
-         { named; positional })
+  let res =
+    s
+    |> List.map (fun ((named, positional), loc) ->
+           let named =
+             named
+             |> List.map (fun ((k, v), loc) -> (k, (v, loc)))
+             |> Smap.of_list
+             (* TODO: warn on duplicate name *)
+           in
+           ({ named; positional }, loc))
+  in
+  (res, [])
 
 let id x = x
 
@@ -225,7 +204,7 @@ let check_is_unused : type a. action -> a descr_tuple -> unit =
       if List.mem key all_keys then ()
       else
         let possible_arguments = all_keys in
-        Diagnosis.add
+        W.add
           (UnusedArgument
              {
                action_name = "TODO";
@@ -244,65 +223,67 @@ let rec parsed_names : type a. action -> a descr_tuple -> a output_tuple =
         match parsed_name description action with
         | None -> None
         | Some (Error (`Msg msg), loc) ->
-            Diagnosis.add @@ Parsing_failure { msg; loc };
+            W.add @@ Parsing_failure { msg; loc };
             None
         | Some (Ok a, _) -> Some a
       in
       parsed :: parsed_names action rest
 
-let parse_atom ~named ~positional action =
+let parse_atom ~named ~positional (action, loc) =
   let p_named = parsed_names action named in
   check_is_unused action named;
   let p_pos =
     List.map (fun (x, loc) -> (positional x, loc)) action.positional
   in
-  { p_named; p_pos }
+  ({ p_named; p_pos }, loc)
+
+open W.M
 
 let parse ~named ~positional s :
-    (('named, 'pos) parsed non_empty_list * warnor list, _) result =
-  let parsed_string, warnings = Diagnosis.with_ @@ fun () -> parse_string s in
-  match parsed_string with
-  | Error e -> Error e
-  | Ok parsed_string ->
-      let res, warnings' =
-        Diagnosis.with_ @@ fun () ->
-        List.map (parse_atom ~named ~positional) parsed_string |> function
-        | [] ->
-            assert false
-            (* An empty string would be parsed as [ [[None; None; ...], []] ] *)
-        | a :: rest -> ((a, rest) : _ non_empty_list)
-      in
-      Ok (res, warnings @ warnings')
+    (('named, 'pos) parsed node non_empty_list * W.warnor list, _) result =
+  let+ parsed_string = parse_string s in
+  let$ parsed_string = parsed_string in
+  W.with_ @@ fun () ->
+  List.map (parse_atom ~named ~positional) parsed_string |> function
+  | [] ->
+      assert false
+      (* An empty string would be parsed as [ [[None; None; ...], []] ] *)
+  | a :: rest -> ((a, rest) : _ non_empty_list)
 
 let merge_positional (h, t) =
   List.concat_map
-    (fun { p_named = ([] : _ output_tuple); p_pos = p } -> p)
+    (fun ({ p_named = ([] : _ output_tuple); p_pos = p }, _loc) -> p)
     (h :: t)
 
 let require_single_action ~action_name x =
   match x with
   | a, rest ->
-      let () =
+      let warnings =
         match (rest : _ list) with
-        | [] -> ()
+        | [] -> ([] : _ list)
         | _ :: _ ->
-            Logs.warn (fun m ->
-                m "Action %s does not support ';'-separated arguments"
-                  action_name)
+            let msg =
+              "Action " ^ action_name
+              ^ " does not support ';'-separated arguments"
+            in
+            let loc = failwith "TODO" in
+            [ W.Parsing_failure { msg; loc } ]
       in
-      a
+      (a, warnings)
 
 let require_single_positional ~action_name (x : _ list) =
+  W.with_ @@ fun () ->
   match x with
   | [] -> None
   | a :: rest ->
       let () =
         match rest with
         | [] -> ()
-        | _ :: _ ->
-            (* TODO: do remove logs *)
-            Logs.warn (fun m ->
-                m "Action %s does not support multiple arguments" action_name)
+        | (_, loc) :: rest ->
+            let msg =
+              "Action " ^ action_name ^ " does not support multiple arguments"
+            and loc = W.range loc rest in
+            W.add (Parsing_failure { msg; loc })
       in
       Some a
 
@@ -311,7 +292,7 @@ let no_args ~action_name s =
   let$ x, warnings = parse ~named:[] ~positional:id s in
   let res =
     match x with
-    | { p_named = []; p_pos = [] }, [] -> ()
+    | ({ p_named = []; p_pos = [] }, _loc), [] -> ()
     | _ ->
         (* TODO: do remove logs *)
         Logs.warn (fun m ->

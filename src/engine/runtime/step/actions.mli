@@ -21,7 +21,7 @@ module type Move = sig
   type args = {
     margin : float option;
     duration : float option;
-    target : [ `Self | `Id of string Actions_arguments.Parse.node ];
+    target : [ `Self | `Id of string Actions_arguments.W.node ];
   }
 
   type js_args = {
@@ -35,7 +35,7 @@ end
 
 module type SetClass =
   S
-    with type args = [ `Self | `Ids of string Actions_arguments.Parse.node list ]
+    with type args = [ `Self | `Ids of string Actions_arguments.W.node list ]
      and type js_args = Brr.El.t list
 
 module Up : Move

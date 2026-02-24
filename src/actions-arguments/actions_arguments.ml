@@ -1,23 +1,21 @@
-module Parse = Parse
+module W = Warnings
 
-type id_or_self = [ `Self | `Id of string Parse.node ]
-type ids_or_self = [ `Self | `Ids of string Parse.node list ]
+type id_or_self = [ `Self | `Id of string W.node ]
+type ids_or_self = [ `Self | `Ids of string W.node list ]
 
 module type S = sig
   type args
 
   val on : string
   val action_name : string
-
-  val parse_args :
-    string -> (args * Parse.warnor list, [> `Msg of string ]) result
+  val parse_args : string -> (args W.t, [> `Msg of string ]) result
 end
 
 module Pause = struct
   let on = "pause"
   let action_name = "pause"
 
-  type args = [ `Self | `Ids of string Parse.node list ]
+  type args = [ `Self | `Ids of string W.node list ]
 
   let parse_args = Parse.parse_only_els
 end
@@ -48,21 +46,21 @@ end) : Move = struct
   }
 
   let parse_args s =
-    let ( let* ) = Result.bind in
-    let* x, warnings =
+    let ( let+ ) x f = Result.map f x in
+    let open W.M in
+    let+ x =
       Parse.parse ~named:[ Parse.duration; Parse.margin ] ~positional:Parse.id s
     in
-    let res =
-      match Parse.require_single_action ~action_name:X.action_name x with
-      | { p_named = [ duration; margin ]; p_pos = positional } -> (
-          match
-            Parse.require_single_positional ~action_name:X.action_name
-              positional
-          with
-          | None -> { target = `Self; duration; margin }
-          | Some positional -> { target = `Id positional; duration; margin })
-    in
-    Ok (res, warnings)
+    let$ x = x in
+    let$ res = Parse.require_single_action ~action_name:X.action_name x in
+    match res with
+    | { p_named = [ duration; margin ]; p_pos = positional }, _ -> (
+        let$+ res =
+          Parse.require_single_positional ~action_name:X.action_name positional
+        in
+        match res with
+        | None -> { target = `Self; duration; margin }
+        | Some positional -> { target = `Id positional; duration; margin })
 end
 
 module Up = Move (struct
@@ -177,19 +175,19 @@ module Focus = struct
   let action_name = "focus"
 
   let parse_args s =
-    let ( let$ ) = Fun.flip Result.map in
-    let$ x, warnings =
+    let ( let+ ) = Fun.flip Result.map in
+    let+ x =
       Parse.parse ~named:[ Parse.duration; Parse.margin ] ~positional:Parse.id s
     in
-    let res =
-      match Parse.require_single_action ~action_name x with
-      | { p_named = [ duration; margin ]; p_pos = [] } ->
-          { target = `Self; duration; margin }
-      | { p_named = [ duration; margin ]; p_pos = positional } ->
-          let target = `Ids positional in
-          { target; duration; margin }
-    in
-    (res, warnings)
+    let open W.M in
+    let$ x = x in
+    let$+ res = Parse.require_single_action ~action_name x in
+    match res with
+    | { p_named = [ duration; margin ]; p_pos = [] }, _loc ->
+        { target = `Self; duration; margin }
+    | { p_named = [ duration; margin ]; p_pos = positional }, _loc ->
+        let target = `Ids positional in
+        { target; duration; margin }
 end
 
 module _ : S = Focus
@@ -236,12 +234,6 @@ module Change_page = struct
   let ( let+ ) x f = Result.map f x
   let ( let* ) x f = Result.bind x f
 
-  let handle_error = function
-    | Ok x -> Some x
-    | Error (`Msg _x) ->
-        (* TODO: something with [x] *)
-        None
-
   let parse_change s =
     if String.equal "all" s then Some All
     else
@@ -283,16 +275,18 @@ module Change_page = struct
     l |> List.filter_map parse_change |> Result.ok
 
   let parse_args s =
-    let+ (ac, actions), warnings =
-      Parse.parse ~named:[ ("n", parse_n) ] ~positional:Fun.id s
-    in
+    let open W.M in
+    let+ res = Parse.parse ~named:[ ("n", parse_n) ] ~positional:Fun.id s in
+    let$ ac, actions = res in
     let actions = ac :: actions in
-    let args =
-      List.filter_map
-        (fun action -> parse_single_action action |> handle_error)
-        actions
-    in
-    (args, warnings)
+    List.partition_map
+      (fun (action, loc) ->
+        match parse_single_action action with
+        | Ok x -> Left x
+        | Error (`Msg msg) ->
+            let warnor = W.Parsing_failure { msg; loc } in
+            Right warnor)
+      actions
 
   let args_as_string args =
     let arg_to_string { n; target } =
