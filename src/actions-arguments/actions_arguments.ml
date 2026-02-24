@@ -234,7 +234,7 @@ module Change_page = struct
   let ( let+ ) x f = Result.map f x
   let ( let* ) x f = Result.bind x f
 
-  let parse_change s =
+  let parse_change (s, loc) =
     if String.equal "all" s then Some All
     else
       match int_of_string_opt s with
@@ -244,10 +244,12 @@ module Change_page = struct
               match (int_of_string_opt a, int_of_string_opt b) with
               | Some a, Some b -> Some (Range (a, b))
               | _ ->
-                  (* TODO: Console.(log [ "Could not parse parameter" ]); *)
+                  let msg = "Could not parse parameter" in
+                  W.add (W.Parsing_failure { msg; loc });
                   None)
           | _ ->
-              (* TODO: Console.(log [ "Could not parse parameter" ]); *)
+              let msg = "Could not parse parameter" in
+              W.add (W.Parsing_failure { msg; loc });
               None)
       | Some x -> (
           match s.[0] with
@@ -270,10 +272,16 @@ module Change_page = struct
     in
     { n; target = id_or_self }
 
-  let parse_n s =
+  let parse_n (s, (loc_min, _)) =
     let l =
       String.split_on_char ' ' s
-      |> List.filter (fun x -> not @@ String.equal "" x)
+      |> List.fold_left
+           (fun (acc, idx) x ->
+             let l = String.length x in
+             if l = 0 then (acc, idx + 1)
+             else ((x, (idx, idx + l)) :: acc, idx + l + 1))
+           ([], loc_min)
+      |> fun (x, _) -> List.rev x
     in
     l |> List.filter_map parse_change |> Result.ok
 

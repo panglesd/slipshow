@@ -26,20 +26,22 @@ let parse_string s =
     else if is_alpha idx then consume_alpha (idx + 1)
     else idx
   in
-  let quoted_string idx =
+  let quoted_string idx0 =
     let rec take_inside_quoted_string acc idx =
       match s.[idx] with
-      | '"' -> (acc |> List.rev |> List.to_seq |> String.of_seq, idx + 1)
+      | '"' ->
+          ( (acc |> List.rev |> List.to_seq |> String.of_seq, (idx0, idx - 1)),
+            idx + 1 )
       | '\\' -> take_inside_quoted_string (s.[idx + 1] :: acc) (idx + 2)
       | _ -> take_inside_quoted_string (s.[idx] :: acc) (idx + 1)
     in
-    take_inside_quoted_string [] idx
+    take_inside_quoted_string [] idx0
   in
   let parse_unquoted_string idx =
     let idx0 = idx in
     let idx = consume_non_ws idx in
     let arg = String.sub s idx0 (idx - idx0) in
-    (arg, idx)
+    ((arg, (idx0, idx)), idx)
   in
   let parse_arg idx =
     match s.[idx] with
@@ -54,7 +56,7 @@ let parse_string s =
       | Some (x, idx') ->
           if idx' = idx then
             failwith "Parser did not consume input; infinite loop detected"
-          else do_ (x (* , { start = idx; finish = idx' } *) :: acc) idx'
+          else do_ (x :: acc) idx'
     in
     do_ [] idx
   in
@@ -101,30 +103,31 @@ let parse_string s =
     let ( let$ ) x f = match x with Some _ as x -> x | None -> f () in
     let ( let> ) x f = Option.map f x in
     let$ () =
-      let> named, idx', idx0 = parse_named idx in
-      (`Named (named, (idx0, idx')), idx')
+      let> named, idx', _idx0 = parse_named idx in
+      (`Named named, idx')
     in
     let$ () =
       let> (), idx' = parse_semicolon idx in
       (`Semicolon idx', idx')
     in
-    let> (p, idx'), idx = parse_positional idx in
-    (`Positional (p, (idx, idx')), idx')
+    let> (p, idx'), _idx = parse_positional idx in
+    (`Positional p, idx')
   in
   let parse_all = repeat parse_one in
   let parsed, _ = parse_all 0 in
   let (unfinished_acc, loc), parsed =
     List.fold_left
-      (fun ((current_acc, (idx0, idx1)), global_acc) -> function
+      (fun ((current_acc, idx0), global_acc) -> function
         | `Semicolon idx ->
-            ( ([], (idx, idx)),
-              (List.rev current_acc, (idx0, idx1)) :: global_acc )
-        | (`Positional (_, (_, end_)) | `Named (_, (_, end_))) as x ->
-            ((x :: current_acc, (idx0, end_)), global_acc))
-      (([], (0, 0)), [])
+            (([], idx), (List.rev current_acc, (idx0, idx)) :: global_acc)
+        | (`Positional _ | `Named _) as x ->
+            ((x :: current_acc, idx0), global_acc))
+      (([], 0), [])
       parsed
   in
-  let parsed = (List.rev unfinished_acc, loc) :: parsed |> List.rev in
+  let parsed =
+    (List.rev unfinished_acc, (loc, String.length s)) :: parsed |> List.rev
+  in
   parsed
   |> List.map @@ fun (l, loc) ->
      ( List.partition_map
@@ -158,7 +161,7 @@ let parse_string s : (_ W.t, _) result =
     |> List.map (fun ((named, positional), loc) ->
            let named =
              named
-             |> List.map (fun ((k, v), loc) -> (k, (v, loc)))
+             |> List.map (fun (k, (v, loc')) -> (k, (v, loc')))
              |> Smap.of_list
              (* TODO: warn on duplicate name *)
            in
@@ -169,7 +172,7 @@ let parse_string s : (_ W.t, _) result =
 let id x = x
 
 type 'a description_named_atom =
-  string * (string -> ('a, [ `Msg of string ]) result)
+  string * (string node -> ('a, [ `Msg of string ]) result)
 
 type _ descr_tuple =
   | [] : unit descr_tuple
@@ -188,7 +191,7 @@ type ('named, 'positional) parsed = {
 
 let parsed_name (description_name, description_convert) action =
   Smap.find_opt description_name action.named
-  |> Option.map (fun (x, loc) -> (description_convert x, loc))
+  |> Option.map (fun ((_, loc) as x) -> (description_convert x, loc))
 
 let rec all_keys : type a. a descr_tuple -> string list =
  fun names ->
@@ -288,17 +291,15 @@ let require_single_positional ~action_name (x : _ list) =
       Some a
 
 let no_args ~action_name s =
-  let ( let$ ) = Fun.flip Result.map in
-  let$ x, warnings = parse ~named:[] ~positional:id s in
-  let res =
-    match x with
-    | ({ p_named = []; p_pos = [] }, _loc), [] -> ()
-    | _ ->
-        (* TODO: do remove logs *)
-        Logs.warn (fun m ->
-            m "The %s action does not accept any argument" action_name)
-  in
-  (res, warnings)
+  let ( let+ ) = Fun.flip Result.map in
+  let open W.M in
+  let+ x = parse ~named:[] ~positional:id s in
+  let$ x = x in
+  match x with
+  | ({ p_named = []; p_pos = [] }, _loc), [] -> ((), [])
+  | (_, loc), _ ->
+      let msg = "The " ^ action_name ^ " action does not accept any argument" in
+      ((), [ W.Parsing_failure { msg; loc } ])
 
 let parse_only_els s =
   let ( let$ ) = Fun.flip Result.map in
@@ -321,12 +322,12 @@ let option_to_error error = function
 
 let duration =
   ( "duration",
-    fun x ->
+    fun (x, _) ->
       x |> Float.of_string_opt |> option_to_error "Error during float parsing"
   )
 
 let margin =
   ( "margin",
-    fun x ->
+    fun (x, _) ->
       x |> Float.of_string_opt |> option_to_error "Error during float parsing"
   )
