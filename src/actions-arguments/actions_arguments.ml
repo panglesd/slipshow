@@ -257,13 +257,16 @@ module Change_page = struct
   let parse_single_action
       { Parse.p_named = ([ n_opt ] : _ Parse.output_tuple); p_pos = elem_ids } =
     let n = Option.value ~default:[ Relative 1 ] n_opt in
-    let+ id_or_self =
+    let open W.M in
+    let$+ id_or_self =
       match elem_ids with
-      | [] -> Ok `Self
-      | [ id ] -> Ok (`Id id)
-      | id :: _ ->
-          (* TODO: Console.(log [ "Expected single id" ]); *)
-          Ok (`Id id)
+      | [] -> (`Self, [])
+      | [ id ] -> (`Id id, [])
+      | ((_, loc) as id) :: rest ->
+          let loc = W.range loc rest in
+          let msg = "Expected single id. Considering only the first one." in
+          let w = W.Parsing_failure { msg; loc } in
+          (`Id id, [ w ])
     in
     { n; target = id_or_self }
 
@@ -279,14 +282,14 @@ module Change_page = struct
     let+ res = Parse.parse ~named:[ ("n", parse_n) ] ~positional:Fun.id s in
     let$ ac, actions = res in
     let actions = ac :: actions in
-    List.partition_map
-      (fun (action, loc) ->
-        match parse_single_action action with
-        | Ok x -> Left x
-        | Error (`Msg msg) ->
-            let warnor = W.Parsing_failure { msg; loc } in
-            Right warnor)
-      actions
+    let warnings, res =
+      List.fold_left_map
+        (fun acc (action, _loc) ->
+          let res, w = parse_single_action action in
+          (w :: acc, res))
+        [] actions
+    in
+    (res, List.concat warnings)
 
   let args_as_string args =
     let arg_to_string { n; target } =
