@@ -166,7 +166,12 @@ let all_fields =
     (module Math_mode : Field);
   ]
 
-module SMap = Map.Make (String)
+module SMap = struct
+  include Map.Make (String)
+
+  (* Not included before OCaml 5.1 *)
+  let of_list bs = List.fold_left (fun m (k, v) -> add k v m) empty bs
+end
 
 let fields_map =
   all_fields
