@@ -573,14 +573,12 @@ module Stage5 = struct
   let check_attribute ~id_map block_or_inline (attrs, _meta) =
     let id_map :
         ((string * Meta.t)
-        * ([> `Block of Block.t | `Inline of Inline.t ] as '_weak322)
+        * [ `Block of Block.t | `Inline of Inline.t ]
         * Meta.t)
         M.t =
       id_map
     in
     List.iter (fun check -> check id_map attrs block_or_inline) Check.all_checks
-
-  (* Actions_arguments.Execute.check args id_map block_or_inline val_loc) *)
 
   let folder ~id_map =
     let block _f () c =
