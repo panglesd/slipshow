@@ -24,6 +24,7 @@
  (depends
   (ocaml (>= 4.14))
    dune
+  (grace (>= 0.3.0))
   (crunch :with-dev-setup)
   (lambdasoup :with-test)
   (cmdliner (>= 1.3.0))
