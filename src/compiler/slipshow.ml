@@ -271,15 +271,8 @@ let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty) ?file
     match Frontmatter.extract s with
     | None -> (frontmatter, s, (0, 0))
     | Some (yaml, s, offset, start) ->
-        let ( let* ) x f =
-          match x with
-          | Ok x -> f x
-          | Error (`Msg err) ->
-              Logs.err (fun m -> m "Failed to parse the frontmatter: %s" err);
-              (frontmatter, s, offset)
-        in
         let file = Option.value ~default:"-" file in
-        let* txt_frontmatter = Frontmatter.of_string file start yaml in
+        let txt_frontmatter = Frontmatter.of_string file start yaml in
         let to_asset = Asset.of_string ~read_file in
         let txt_frontmatter = Frontmatter.resolve txt_frontmatter ~to_asset in
         let frontmatter = Frontmatter.combine txt_frontmatter frontmatter in

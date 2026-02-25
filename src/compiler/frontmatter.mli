@@ -48,9 +48,7 @@ module Hljs_theme : Field_with_default with type t = string
 module Math_mode : Field_with_default with type t = [ `Mathjax | `Katex ]
 
 val empty : resolved t
-
-val of_string :
-  string -> int -> string -> (unresolved t, [> `Msg of string ]) result
+val of_string : string -> int -> string -> unresolved t
 
 val extract : string -> (string * string * (int * int) * int) option
 (** The first string is the frontmatter, the second one the original string with
