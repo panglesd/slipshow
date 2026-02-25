@@ -275,7 +275,7 @@ let of_string file offset s =
             fm)
   in
   let fm = List.fold_left handle_line empty_fm assoc in
-  Ok (Unresolved fm)
+  Unresolved fm
 
 let ( let* ) x f = Option.bind x f
 let ( let+ ) x f = Option.map f x
