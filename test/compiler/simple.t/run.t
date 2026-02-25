@@ -94,7 +94,8 @@ With a file
 
   $ echo "dummyABC" > mathjax.js
   $ slipshow compile -o m.html --math-script mathjax-unknown.js with_inline_math.md
-  slipshow: [WARNING] Could not read file: mathjax-unknown.js. Considering it as an URL. (mathjax-unknown.js: No such file or directory)
+  warning[FSError]: Missing file: mathjax-unknown.js, considering it as an URL. (mathjax-unknown.js: No such file or directory)
+  
   $ slipshow compile -o m.html --math-script mathjax.js with_inline_math.md
   $ show_source m.html | grep -A 1 dummyABC
       <script>hljs.highlightAll();</script><script id="MathJax-script">dummyABC

@@ -162,10 +162,10 @@ module Stage1 = struct
 
   let classify_link_definition (ld : Cmarkit.Link_definition.t) attrs =
     let has_attrs x = Cmarkit.Attributes.find x attrs |> Option.is_some in
-    if has_attrs "video" then `Video
-    else if has_attrs "audio" then `Audio
-    else if has_attrs "image" then `Image
-    else if has_attrs "svg" then `Svg
+    if has_attrs Special_attrs.video then `Video
+    else if has_attrs Special_attrs.audio then `Audio
+    else if has_attrs Special_attrs.image then `Image
+    else if has_attrs Special_attrs.svg then `Svg
     (* else if has_attrs "pdf" then `Pdf *)
     (* else if has_attrs "draw" then `Draw
        We don't want to pollute too much the namespace.  *)
