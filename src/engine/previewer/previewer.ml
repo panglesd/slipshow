@@ -31,6 +31,24 @@ let send_speaker_view oc panel =
 
 let () = Random.self_init ()
 
+let css =
+  {|
+.right-panel1.active_panel, .right-panel2.active_panel {
+  z-index: 1;
+}
+.right-panel1, .right-panel2 {
+    z-index: 0;
+    width:100%;
+    position:absolute;
+    top:0;
+    bottom:0;
+    left:0;
+    right:0;
+    border:0;
+    height:100%
+}
+|}
+
 let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
     ~include_speaker_view root =
   let ( !! ) = Jstr.v in
@@ -46,7 +64,8 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
   let errors_el =
     Brr.El.div ~at:[ Brr.At.class' !!"slipshow-errors-display" ] []
   in
-  let () = Brr.El.append_children root [ panel1; panel2; errors_el ] in
+  let css = Brr.El.style [ Brr.El.txt' css ] in
+  let () = Brr.El.append_children root [ panel1; panel2; errors_el; css ] in
   let panels = [| panel1; panel2 |] in
   let index = ref 0 in
   let stage = ref initial_stage in
@@ -106,6 +125,7 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
   }
 
 let set_errors errors_el warnings =
+  Brr.El.set_class (Jstr.v "has_warnings") (String.equal "" warnings) errors_el;
   Brr.El.set_children errors_el [ Brr.El.txt' warnings ]
 
 let set_srcdoc { index; panels; errors_el; _ } (slipshow, warnings) =

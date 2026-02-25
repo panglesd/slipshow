@@ -1,16 +1,3 @@
-.right-panel1.active_panel, .right-panel2.active_panel {
-  z-index: 1;
-}
-.right-panel1, .right-panel2 {
-    z-index: 0;
-    width:100%;
-    position:absolute;
-    top:0;
-    bottom:0;
-    left:0;
-    right:0;
-    border:0;
-}
 
 .preview {
     position: relative;
