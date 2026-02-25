@@ -119,7 +119,10 @@ module Stage1 = struct
         | _ -> Mapper.default)
 
   let handle_includes ~htbl_include read_file current_path m (attrs, meta) =
-    match (Attributes.find "include" attrs, Attributes.find "src" attrs) with
+    match
+      ( Attributes.find Special_attrs.include_ attrs,
+        Attributes.find Special_attrs.src attrs )
+    with
     | Some (_, None), Some (_, Some ({ v = src; _ }, filepath_meta)) -> (
         let relativized_path =
           Path_entering.relativize current_path (Fpath.v src)
@@ -416,30 +419,34 @@ module Stage3 = struct
         in
         let attrs =
           if
-            (Attributes.mem "no-enter" attrs
-            || Attributes.mem "enter-at-unpause" attrs)
+            (Attributes.mem Special_attrs.no_enter attrs
+            || Attributes.mem Actions_arguments.Enter.on attrs)
             || not may_enter
           then attrs
-          else Attributes.add ("enter-at-unpause", Meta.none) None attrs
+          else Attributes.add (Actions_arguments.Enter.on, Meta.none) None attrs
         in
         let attrs = Mapper.map_attrs m attrs in
         (b, (attrs, meta2))
       in
       match Ast.Utils.Block.get_attribute c with
       | None -> Mapper.default
-      | Some (block, (attrs, meta2)) when Attributes.mem "blockquote" attrs ->
+      | Some (block, (attrs, meta2))
+        when Attributes.mem Special_attrs.blockquote attrs ->
           let block, attrs = map ~may_enter:false block (attrs, meta2) in
           let block = Block.Block_quote.make block in
           Mapper.ret @@ Block.Block_quote ((block, attrs), Meta.none)
-      | Some (block, (attrs, meta2)) when Attributes.mem "slide" attrs ->
+      | Some (block, (attrs, meta2))
+        when Attributes.mem Special_attrs.slide attrs ->
           let block, attrs = map ~may_enter:true block (attrs, meta2) in
           let block, title = extract_title block in
           Mapper.ret
           @@ Ast.slide (({ content = block; title }, attrs), Meta.none)
-      | Some (block, (attrs, meta2)) when Attributes.mem "slip" attrs ->
+      | Some (block, (attrs, meta2))
+        when Attributes.mem Special_attrs.slip attrs ->
           let block, (attrs, meta) = map ~may_enter:true block (attrs, meta2) in
           Mapper.ret @@ Ast.slip ((block, (attrs, meta)), Meta.none)
-      | Some (block, (attrs, meta2)) when Attributes.mem "carousel" attrs ->
+      | Some (block, (attrs, meta2))
+        when Attributes.mem Special_attrs.carousel attrs ->
           let block, attrs = map ~may_enter:false block (attrs, meta2) in
           let children =
             match block with

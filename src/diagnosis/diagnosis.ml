@@ -16,6 +16,7 @@ type t =
   | ParsingError of { action : string; msg : string; loc : loc }
   | ParsingWarnor of { warnor : Actions_arguments.W.warnor; loc : loc }
   | MissingID of { id : string; loc : loc }
+  | UnknownAttribute of { attr : string; loc : loc }
   | General of {
       code : string;
       msg : string;
@@ -50,6 +51,11 @@ let pp ppf = function
       Format.fprintf ppf "Id '%s' could not be found" id
   | General { msg; labels = _; notes = _; code = _ } ->
       Format.fprintf ppf "%s" msg (* TODO: improve *)
+  | UnknownAttribute { attr; loc = _ } ->
+      Format.fprintf ppf
+        "Attribute '%s' is neither a standard HTML attribute nor a slipshow \
+         specific one"
+        attr
 
 let with_range source_map loc f =
   let open Grace in
@@ -167,6 +173,14 @@ let to_grace source_map error =
         List.map (fun msg -> Diagnostic.Message.createf "%s" msg) notes
       in
       Some (Diagnostic.createf ~labels ~notes ~code:error Warning "%s" msg)
+  | UnknownAttribute { attr; loc } ->
+      let labels =
+        List.filter_map Fun.id
+          [ with_range loc @@ Diagnostic.Label.primaryf "" ]
+      in
+      Some
+        (Diagnostic.createf ~labels ~code:error Warning
+           "Non standard attribute: '%s'" attr)
 
 let errors_acc = ref []
 let add x = errors_acc := x :: !errors_acc
@@ -193,6 +207,7 @@ let to_code = function
   | ParsingError _ -> "ActionParsing"
   | ParsingWarnor _ -> "ActionParsing"
   | MissingID _ -> "IDNotFound"
+  | UnknownAttribute _ -> "UnkownAttribute"
   | General { code; _ } -> code
 
 let report_no_src x =
