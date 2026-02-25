@@ -9,6 +9,7 @@ type t =
   | ParsingError of { action : string; msg : string; loc : loc }
   | ParsingWarnor of { warnor : Actions_arguments.W.warnor; loc : loc }
   | MissingID of { id : string; loc : loc }
+  | UnknownAttribute of { attr : string; loc : loc }
   | General of {
       code : string;
       msg : string;

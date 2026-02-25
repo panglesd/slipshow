@@ -146,9 +146,53 @@ let clear_draw id_map attrs block_or_inline =
   parse_args (module Actions_arguments.Clear_draw) attrs @@ fun args val_loc ->
   check_targets Is.draw id_map block_or_inline val_loc args
 
+module SSet = Set.Make (String)
+
+(* To get this list of all valid html attributes, go to
+   [https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes], get
+   the [tbody] DOM element of the list table, and run:
+
+   {[
+     Array.from(temp0.querySelectorAll("tr>td:first-child")).map((e) => {return e.innerText})
+   ]}
+
+   Right click, copy object, paste it, and then:
+   - Remove the "Deprecated" and "Experimental" flags
+   - Remove the data-* entry
+*)
+let all_attributes =
+  [
+    "accept";"accept-charset";"accesskey";"action";"align";"allow";"alpha";"alt";"as";"async";"autocapitalize";"autocomplete";"autoplay";"background";"bgcolor";"border";"capture";"charset";"checked";"cite";"class";"color";"colorspace";"cols";"colspan";"content";"contenteditable";"controls";"coords";"crossorigin";"csp";"data";"datetime";"decoding";"default";"defer";"dir";"dirname";"disabled";"download";"draggable";"enctype";"enterkeyhint";"elementtiming";"fetchpriority";"for";"form";"formaction";"formenctype";"formmethod";"formnovalidate";"formtarget";"headers";"height";"hidden";"high";"href";"hreflang";"http-equiv";"id";"integrity";"inputmode";"ismap";"itemprop";"kind";"label";"lang";"language";"loading";"list";"loop";"low";"max";"maxlength";"minlength";"media";"method";"min";"multiple";"muted";"name";"novalidate";"open";"optimum";"pattern";"ping";"placeholder";"playsinline";"poster";"preload";"readonly";"referrerpolicy";"rel";"required";"reversed";"role";"rows";"rowspan";"sandbox";"scope";"selected";"shape";"size";"sizes";"slot";"span";"spellcheck";"src";"srcdoc";"srclang";"srcset";"start";"step";"style";"summary";"tabindex";"target";"title";"translate";"type";"usemap";"value";"width";"wrap";
+  ] |> SSet.of_list
+ [@@ocamlformat "disable"]
+
+let all_actions =
+  List.map
+    (fun (module A : Actions_arguments.S) -> A.on)
+    Actions_arguments.all_actions
+  |> SSet.of_list
+
+let all_special = Special_attrs.all_attrs |> SSet.of_list
+
+let check_attribute key loc =
+  if SSet.mem key all_actions then ()
+  else if SSet.mem key all_special then ()
+  else if SSet.mem key all_attributes then ()
+  else if String.starts_with ~prefix:"data-" key then ()
+  else if String.starts_with ~prefix:"children:" key then ()
+  else Diagnosis.add (UnknownAttribute { attr = key; loc })
+
+let no_unknown_attributes _id_map attrs _block_or_inline =
+  let kv = Attributes.kv_attributes attrs in
+  List.iter
+    (fun ((key, meta), _value) ->
+      check_attribute key (Cmarkit.Meta.textloc meta))
+    kv
+
 let all_checks =
   [
     clear_draw;
+    draw;
     change_page;
     play_media;
     speaker_note;
@@ -166,4 +210,5 @@ let all_checks =
     scroll;
     enter;
     exec;
+    no_unknown_attributes;
   ]

@@ -357,3 +357,28 @@ module Execute = struct
 end
 
 module _ : S = Execute
+
+let all_actions =
+  [
+    (module Enter : S);
+    (module Clear_draw : S);
+    (module Draw : S);
+    (module Pause : S);
+    (module Step : S);
+    (module Up : S);
+    (module Down : S);
+    (module Center : S);
+    (module Scroll : S);
+    (module Change_page : S);
+    (module Focus : S);
+    (module Unfocus : S);
+    (module Execute : S);
+    (module Unstatic : S);
+    (module Static : S);
+    (module Reveal : S);
+    (module Unreveal : S);
+    (module Emph : S);
+    (module Unemph : S);
+    (module Speaker_note : S);
+    (module Play_media : S);
+  ]

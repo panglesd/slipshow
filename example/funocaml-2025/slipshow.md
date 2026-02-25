@@ -599,7 +599,7 @@ Say: "Slipshow has support for videos"
 }
 </style>
 
-{#video-demo .addons .block external}
+{#video-demo .addons .block}
 > ![](c6.mp4){style=width:100% #videoelem}
 
 {play-media=videoelem}
