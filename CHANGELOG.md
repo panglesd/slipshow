@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Helpful warnings at compile-time (#213)
+
 ## [v0.9.0] Manim Black (Tuesday 19th February, 2026)
 
 ### Added
