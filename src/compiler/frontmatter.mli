@@ -19,34 +19,40 @@ type 'a t =
   | Unresolved : string fm -> unresolved t
   | Resolved : Asset.t fm -> resolved t
 
-module Default : sig
-  val dimension : int * int
-  val toplevel_attributes : Cmarkit.Attributes.t
-  val theme : [> `Builtin of Themes.t ]
-  val highlightjs_theme : string
-  val math_mode : [ `Mathjax | `Katex ]
+module type Field = sig
+  type t
+
+  val key : string
+  val of_string : string -> (t, [ `Msg of string ]) result
+  val update_frontmatter : string fm -> t -> string fm
 end
+
+module type Field_with_default := sig
+  include Field
+
+  val default : t
+end
+
+module Toplevel_attributes :
+  Field_with_default with type t = Cmarkit.Attributes.t
+
+module Math_link : Field with type t = string
+
+module Theme :
+  Field_with_default with type t = [ `Builtin of Themes.t | `External of string ]
+
+module Css_links : Field with type t = string list
+module Js_links : Field with type t = string list
+module Dimension : Field_with_default with type t = int * int
+module Hljs_theme : Field_with_default with type t = string
+module Math_mode : Field_with_default with type t = [ `Mathjax | `Katex ]
 
 val empty : resolved t
 
-module String_to : sig
-  (** This is used to convert each field from a string to its unresolved ocaml
-      value. Used internally by {!extract}, but also externally by the CLI
-      converters. *)
+val of_string :
+  string -> int -> string -> (unresolved t, [> `Msg of string ]) result
 
-  val toplevel_attributes :
-    string -> (Cmarkit.Attributes.t, [> `Msg of string ]) result
-
-  val math_link : string -> string
-  val theme : string -> [> `Builtin of Themes.t | `External of string ]
-  val css_link : string -> string
-  val dimension : string -> (int * int, [> `Msg of string ]) result
-  val math_mode : string -> ([ `Katex | `Mathjax ], [ `Msg of string ]) result
-end
-
-val of_string : string -> (unresolved t, [> `Msg of string ]) result
-
-val extract : string -> (string * string * (int * int)) option
+val extract : string -> (string * string * (int * int) * int) option
 (** The first string is the frontmatter, the second one the original string with
     the frontmatter and separator stripped *)
 

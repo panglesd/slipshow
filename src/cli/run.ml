@@ -39,9 +39,11 @@ let compile ~input ~output ~cli_frontmatter =
     let used_files, read_file = read_file (Fpath.v "./") () in
     (used_files, Slipshow.Asset.of_string ~read_file)
   in
-  let cli_frontmatter =
+  let cli_frontmatter, warnings =
+    Diagnosis.with_ @@ fun () ->
     Slipshow.Frontmatter.resolve cli_frontmatter ~to_asset
   in
+  List.iter Diagnosis.report_no_src warnings;
   let* content = Io.read input in
   let used_files, read_file =
     read_file

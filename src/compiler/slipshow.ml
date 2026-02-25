@@ -251,21 +251,35 @@ let convert_to_md ~read_file content =
   let sd = Compile.to_cmarkit sd in
   Cmarkit_commonmark.of_doc ~include_attributes:false sd
 
+let to_grace file whole_content htbl_include er =
+  Diagnosis.to_grace
+    (fun f ->
+      if file = Some f then
+        Grace.Source.(`String { name = file; content = whole_content })
+      else
+        match Hashtbl.find_opt htbl_include f with
+        | Some content -> Grace.Source.(`String { name = file; content })
+        | None ->
+            Grace.Source.(`String { name = file; content = whole_content }))
+    er
+
 let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty) ?file
     ?(read_file = fun _ -> Ok None) ~has_speaker_view s =
   let whole_content = s in
-  let Frontmatter.Resolved frontmatter, s, loc_offset =
-    let ( let* ) x f =
-      match x with
-      | Ok x -> f x
-      | Error (`Msg err) ->
-          Logs.err (fun m -> m "Failed to parse the frontmatter: %s" err);
-          (frontmatter, s, (0, 0))
-    in
+  let (Frontmatter.Resolved frontmatter, s, loc_offset), warnings =
+    Diagnosis.with_ @@ fun () ->
     match Frontmatter.extract s with
     | None -> (frontmatter, s, (0, 0))
-    | Some (yaml, s, offset) ->
-        let* txt_frontmatter = Frontmatter.of_string yaml in
+    | Some (yaml, s, offset, start) ->
+        let ( let* ) x f =
+          match x with
+          | Ok x -> f x
+          | Error (`Msg err) ->
+              Logs.err (fun m -> m "Failed to parse the frontmatter: %s" err);
+              (frontmatter, s, offset)
+        in
+        let file = Option.value ~default:"-" file in
+        let* txt_frontmatter = Frontmatter.of_string file start yaml in
         let to_asset = Asset.of_string ~read_file in
         let txt_frontmatter = Frontmatter.resolve txt_frontmatter ~to_asset in
         let frontmatter = Frontmatter.combine txt_frontmatter frontmatter in
@@ -273,26 +287,29 @@ let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty) ?file
   in
   let toplevel_attributes =
     frontmatter.toplevel_attributes
-    |> Option.value ~default:Frontmatter.Default.toplevel_attributes
+    |> Option.value ~default:Frontmatter.Toplevel_attributes.default
   in
   let dimension =
-    frontmatter.dimension |> Option.value ~default:Frontmatter.Default.dimension
+    frontmatter.dimension |> Option.value ~default:Frontmatter.Dimension.default
   in
   let css_links = frontmatter.css_links in
   let js_links = frontmatter.js_links in
   let math_mode =
-    Option.value ~default:Frontmatter.Default.math_mode frontmatter.math_mode
+    Option.value ~default:Frontmatter.Math_mode.default frontmatter.math_mode
   in
-  let theme =
-    match frontmatter.theme with
-    | None -> Frontmatter.Default.theme
-    | Some (`Builtin _ as x) -> x
-    | Some (`External x) ->
+  let resolve_theme = function
+    | `Builtin _ as x -> x
+    | `External x ->
         let asset = Asset.of_string ~read_file x in
         `External asset
   in
+  let theme =
+    match frontmatter.theme with
+    | None -> resolve_theme Frontmatter.Theme.default
+    | Some t -> resolve_theme t
+  in
   let highlightjs_theme =
-    Option.value ~default:Frontmatter.Default.highlightjs_theme
+    Option.value ~default:Frontmatter.Hljs_theme.default
       frontmatter.highlightjs_theme
   in
   let math_link = frontmatter.math_link in
@@ -301,19 +318,8 @@ let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty) ?file
   in
   let graceful_errors =
     List.filter_map
-      (fun er ->
-        Diagnosis.to_grace
-          (fun f ->
-            if file = Some f then
-              Grace.Source.(`String { name = file; content = whole_content })
-            else
-              match Hashtbl.find_opt htbl_include f with
-              | Some content -> Grace.Source.(`String { name = file; content })
-              | None ->
-                  Grace.Source.(
-                    `String { name = file; content = whole_content }))
-          er)
-      errors
+      (to_grace file whole_content htbl_include)
+      (warnings @ errors)
   in
   let () =
     List.iter
@@ -322,7 +328,6 @@ let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty) ?file
             ~code_to_string:Diagnosis.to_code))
       graceful_errors
   in
-  (* let () = List.iter (Format.printf "%a\n%!" Errors.pp) errors in *)
   let content = Renderers.to_html_string md in
   let has = Has.find_out md in
   embed_in_page ~has_speaker_view ~slipshow_js ~dimension ~has ~math_link ~theme

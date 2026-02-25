@@ -27,10 +27,10 @@ let of_uri ~read_file s =
           let mime_type = Some (mime_of_ext (Fpath.filename fp)) in
           Local { mime_type; content; path = fp }
       | Ok None -> Remote (Fpath.to_string p)
-      | Error (`Msg e) ->
-          Logs.warn (fun f ->
-              f "Could not read file: %a. Considering it as an URL. (%s)"
-                Fpath.pp p e);
+      | Error (`Msg error_msg) ->
+          let locs = [] in
+          Diagnosis.add
+            (MissingFile { file = Fpath.to_string p; error_msg; locs });
           Remote (Fpath.to_string p))
 
 let of_string ~read_file s = s |> Uri.of_string |> of_uri ~read_file
