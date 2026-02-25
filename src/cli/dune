@@ -12,4 +12,5 @@
   fmt.cli
   fmt.tty
   logs.fmt
-  themes))
+  themes
+  diagnosis))

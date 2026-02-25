@@ -61,7 +61,7 @@ let () =
               let dimension =
                 El.at !!"dimension" el |> Option.map Jstr.to_string |> fun x ->
                 Option.bind x (fun s ->
-                    match Slipshow.Frontmatter.String_to.dimension s with
+                    match Slipshow.Frontmatter.Dimension.of_string s with
                     | Ok x -> Some x
                     | Error _ -> None)
               in

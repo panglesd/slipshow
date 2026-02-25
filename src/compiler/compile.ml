@@ -93,7 +93,7 @@ let classify_image p =
 
 let resolve_file ps s =
   match Asset.Uri.of_string s with
-  | Link s -> Asset.Uri.Link s
+  | Link _ as l -> l
   | Path p -> Path (Path_entering.relativize ps p)
 
 module Stage1 = struct
@@ -366,6 +366,7 @@ module Stage2 = struct
                                msg = "Children classes cannot have a value";
                                labels = [ ("", Meta.textloc v_meta) ];
                                notes = [];
+                               code = "ChildrenAttrs";
                              });
                         Attributes.add (c, meta) value acc))
               Attributes.empty kvs
@@ -517,18 +518,7 @@ module Stage4 = struct
         (fun acc (((id, _meta1), _b1, _meta_attrs) as value) ->
           Map.update id
             (function
-              | None -> Some [ value ]
-              | Some (* ((_, meta2), _b2, _meta_attrs2) as *) same ->
-                  (* let tl1 = Meta.textloc meta1 in *)
-                  (* let tl2 = Meta.textloc meta2 in *)
-                  (* let () = *)
-                  (*   Errors.add *)
-                  (*     { *)
-                  (*       error = DuplicateID { id; previous_occurrence = tl2 }; *)
-                  (*       loc = tl1; *)
-                  (*     } *)
-                  (* in *)
-                  Some (value :: same))
+              | None -> Some [ value ] | Some same -> Some (value :: same))
             acc)
         Map.empty id_list
     in

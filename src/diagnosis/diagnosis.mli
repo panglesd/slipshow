@@ -10,6 +10,7 @@ type t =
   | ParsingWarnor of { warnor : Actions_arguments.W.warnor; loc : loc }
   | MissingID of { id : string; loc : loc }
   | General of {
+      code : string;
       msg : string;
       labels : (string * loc) list;
       notes : string list;
@@ -20,3 +21,6 @@ val to_grace : (string -> Grace.Source.t) -> t -> t Grace.Diagnostic.t option
 val add : t -> unit
 val with_ : (unit -> 'a) -> 'a * t list
 val to_code : t -> string
+
+val report_no_src : t -> unit
+(** This one reports badly, without source code. Used for reporting cli. *)

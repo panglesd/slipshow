@@ -18,12 +18,12 @@ let handle_error = function Ok _ as x -> x | Error (`Msg msg) -> Error msg
 module Custom_conv = struct
   let toplevel_attributes =
     let parser s =
-      Slipshow.Frontmatter.String_to.toplevel_attributes s
+      Slipshow.Frontmatter.Toplevel_attributes.of_string s
       |> Result.map @@ fun s -> Some s
     in
     let printer fmt attrs =
       let attrs =
-        Option.value ~default:Slipshow.Frontmatter.Default.toplevel_attributes
+        Option.value ~default:Slipshow.Frontmatter.Toplevel_attributes.default
           attrs
       in
       let doc =
@@ -55,48 +55,38 @@ module Custom_conv = struct
   let output = io `Stdout
 
   let theme =
-    let parser_ s = Ok (Some (Slipshow.Frontmatter.String_to.theme s)) in
+    let parser_ s =
+      Result.map Option.some (Slipshow.Frontmatter.Theme.of_string s)
+    in
     let rec printer fmt = function
       | Some (`Builtin s) -> Format.fprintf fmt "%s" (Themes.to_string s)
       | Some (`External s) -> Format.fprintf fmt "%s" s
-      | None -> printer fmt (Some Slipshow.Frontmatter.Default.theme)
+      | None -> printer fmt (Some Slipshow.Frontmatter.Theme.default)
     in
     Arg.conv (parser_, printer)
 
   let math_mode =
     let parser_ s =
-      Result.map (fun x -> Some x) @@ Slipshow.Frontmatter.String_to.math_mode s
+      Result.map (fun x -> Some x) @@ Slipshow.Frontmatter.Math_mode.of_string s
     in
     let rec printer fmt = function
       | Some `Mathjax -> Format.fprintf fmt "mathjax"
       | Some `Katex -> Format.fprintf fmt "katex"
-      | None -> printer fmt (Some Slipshow.Frontmatter.Default.math_mode)
+      | None -> printer fmt (Some Slipshow.Frontmatter.Math_mode.default)
     in
     Arg.conv (parser_, printer)
 
   let dimension =
-    let int_parser = Cmdliner.Arg.(conv_parser int) in
     let int_printer = Cmdliner.Arg.(conv_printer int) in
-    let ( let* ) = Result.bind in
     let parser_ s =
-      match String.split_on_char 'x' s with
-      | [ "4:3" ] -> Ok (Some (1440, 1080))
-      | [ "16:9" ] -> Ok (Some (1920, 1080))
-      | [ width; height ] ->
-          let* width = int_parser width in
-          let* height = int_parser height in
-          Ok (Some (width, height))
-      | _ ->
-          Error
-            (`Msg
-               "Expected \"4:3\", \"16:9\", or two integers separated by a 'x'")
+      Result.map (fun x -> Some x) @@ Slipshow.Frontmatter.Dimension.of_string s
     in
     let rec printer fmt x =
       match x with
       | Some (1440, 1080) -> Format.fprintf fmt "4:3"
       | Some (1920, 1080) -> Format.fprintf fmt "16:9"
       | Some (w, h) -> Format.fprintf fmt "%ax%a" int_printer w int_printer h
-      | None -> printer fmt (Some Slipshow.Frontmatter.Default.dimension)
+      | None -> printer fmt (Some Slipshow.Frontmatter.Dimension.default)
     in
     Cmdliner.Arg.conv ~docv:"WIDTHxHEIGHT" (parser_, printer)
 end

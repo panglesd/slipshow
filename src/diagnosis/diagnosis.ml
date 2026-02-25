@@ -17,33 +17,39 @@ type t =
   | ParsingWarnor of { warnor : Actions_arguments.W.warnor; loc : loc }
   | MissingID of { id : string; loc : loc }
   | General of {
+      code : string;
       msg : string;
       labels : (string * loc) list;
       notes : string list;
     }
 
+(* This is currently used to render issues on things that don't have location:
+   mostly CLI input. CLI input have much less errors they can raise, so it's OK
+   if (most) of them are not great messages. But I still keep all of those here
+   since this function will have some things to be taken for LSP integration. *)
 let pp ppf = function
   | DuplicateID id ->
       Format.fprintf ppf "ID '%s' has already been given at %a." id.id
         (Fmt.list Cmarkit.Textloc.pp_ocaml)
         id.occurrences
   | MissingFile s ->
-      (* ignore s.previous_occurrence; *)
       Format.fprintf ppf "Missing file: %s, considering it as an URL. (%s)"
         s.file s.error_msg
-  | WrongType { loc_reason = _; loc_block = _; expected_type = _ } ->
-      Format.fprintf ppf "Wrong type"
+  | WrongType { loc_reason = _; loc_block = _; expected_type } ->
+      Format.fprintf ppf "Wrong type: expected type '%s'" expected_type
   | ParsingError { action; msg; loc = _ } ->
       Format.fprintf ppf
         "Parsing of the arguments of actions '%s' failed with '%s'" action msg
-  (* | ParsingWarnor (UnusedArgument { action_name; argument_name; loc }) -> _ *)
-  | ParsingWarnor _ -> Format.fprintf ppf "TODO" (* TODO: do *)
-  | MissingID _ -> Format.fprintf ppf "TODO" (* TODO: do *)
-  | General _ -> Format.fprintf ppf "TODO" (* TODO: do *)
-
-(* | UnusedArgument { action_name; argument_name; loc = _ } -> *)
-(*     Format.fprintf ppf "Action '%s' does not use argument '%s'" action_name *)
-(*       argument_name *)
+  | ParsingWarnor
+      { warnor = UnusedArgument { action_name; argument_name; _ }; loc = _ } ->
+      Format.fprintf ppf "Action '%s' does not accept argument '%s'" action_name
+        argument_name
+  | ParsingWarnor { warnor = Parsing_failure { msg; loc = _ }; loc = _ } ->
+      Format.fprintf ppf "Action argument parsing failure: %s" msg
+  | MissingID { id; loc = _ } ->
+      Format.fprintf ppf "Id '%s' could not be found" id
+  | General { msg; labels = _; notes = _; code = _ } ->
+      Format.fprintf ppf "%s" msg (* TODO: improve *)
 
 let with_range source_map loc f =
   let open Grace in
@@ -150,7 +156,7 @@ let to_grace source_map error =
       Some
         (Diagnostic.createf ~labels ~code:error Warning
            "No element with id '%s' were found" id)
-  | General { msg; labels; notes } ->
+  | General { msg; labels; notes; code = _ } ->
       let labels =
         List.filter_map
           (fun (msg, loc) ->
@@ -187,4 +193,11 @@ let to_code = function
   | ParsingError _ -> "ActionParsing"
   | ParsingWarnor _ -> "ActionParsing"
   | MissingID _ -> "IDNotFound"
-  | General _ -> "General"
+  | General { code; _ } -> code
+
+let report_no_src x =
+  let msg = Format.asprintf "%a" pp x in
+  let msg = Grace.Diagnostic.createf ~labels:[] ~code:x Warning "%s" msg in
+  Format.printf "%a@.@."
+    (Grace_ansi_renderer.pp_diagnostic ?config:None ~code_to_string:to_code)
+    msg
