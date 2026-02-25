@@ -8,6 +8,7 @@ type previewer = {
   stage : int ref;
   index : int ref;
   panels : Brr.El.t array;
+  errors_el : Brr.El.t;
   ids : string * string;
   include_speaker_view : bool;
 }
@@ -42,7 +43,10 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
   let panel2 =
     Brr.El.iframe ~at:[ Brr.At.name !!name2; Brr.At.class' !!"right-panel2" ] []
   in
-  let () = Brr.El.append_children root [ panel1; panel2 ] in
+  let errors_el =
+    Brr.El.div ~at:[ Brr.At.class' !!"slipshow-errors-display" ] []
+  in
+  let () = Brr.El.append_children root [ panel1; panel2; errors_el ] in
   let panels = [| panel1; panel2 |] in
   let index = ref 0 in
   let stage = ref initial_stage in
@@ -92,24 +96,43 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
         | _ -> ())
       (Brr.Window.as_target Brr.G.window)
   in
-  { stage; index; panels; ids = (name1, name2); include_speaker_view }
+  {
+    stage;
+    index;
+    panels;
+    ids = (name1, name2);
+    include_speaker_view;
+    errors_el;
+  }
 
-let set_srcdoc { index; panels; _ } slipshow =
+let set_errors errors_el warnings =
+  Brr.El.set_children errors_el [ Brr.El.txt' warnings ]
+
+let set_srcdoc { index; panels; errors_el; _ } (slipshow, warnings) =
+  set_errors errors_el warnings;
   try Jv.set (Brr.El.to_jv panels.(1 - !index)) "srcdoc" (Jv.of_string slipshow)
   with _ -> Brr.Console.(log [ "XXX exception" ])
 
 let preview ?slipshow_js ?frontmatter ?read_file previewer source =
   let starting_state = !(previewer.stage) in
   let has_speaker_view = previewer.include_speaker_view in
-  let slipshow =
+  let slipshow, warnings =
     Slipshow.convert ~has_speaker_view ?slipshow_js ?frontmatter ?read_file
       ~autofocus:false ~starting_state source
   in
-  set_srcdoc previewer slipshow
+  let warnings =
+    List.map
+      (Format.asprintf "%a@.@."
+         (Grace_ansi_renderer.pp_diagnostic ?config:None
+            ~code_to_string:Diagnosis.to_code))
+      warnings
+    |> String.concat ""
+  in
+  set_srcdoc previewer (slipshow, warnings)
 
-let preview_compiled previewer delayed =
+let preview_compiled previewer (delayed, warnings) =
   let starting_state = Some !(previewer.stage) in
   let slipshow = Slipshow.add_starting_state delayed starting_state in
-  set_srcdoc previewer slipshow
+  set_srcdoc previewer (slipshow, warnings)
 
 let ids { ids; _ } = ids

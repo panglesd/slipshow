@@ -4,8 +4,8 @@ module Frontmatter = Frontmatter
 type starting_state = int
 type delayed
 
-val delayed_to_string : delayed -> string
-val string_to_delayed : string -> delayed
+val delayed_to_string : delayed * string -> string
+val string_to_delayed : string -> delayed * string
 
 type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
 (** A value of type [file_reader], given a path [p], outputs:
@@ -24,7 +24,7 @@ val delayed :
   ?read_file:file_reader ->
   has_speaker_view:bool ->
   string ->
-  delayed
+  delayed * Diagnosis.t Grace.Diagnostic.t list
 (** This function is used to delay the decision on the starting state. It allows
     to run [convert] server-side (which is useful to get images and so on) but
     let the previewer decide on the starting state. *)
@@ -41,6 +41,6 @@ val convert :
   ?starting_state:starting_state ->
   ?read_file:file_reader ->
   string ->
-  string
+  string * Diagnosis.t Grace.Diagnostic.t list
 
 val convert_to_md : read_file:file_reader -> string -> string

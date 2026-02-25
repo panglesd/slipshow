@@ -24,5 +24,5 @@ val preview :
   string ->
   unit
 
-val preview_compiled : previewer -> Slipshow.delayed -> unit
+val preview_compiled : previewer -> Slipshow.delayed * string -> unit
 val ids : previewer -> string * string
