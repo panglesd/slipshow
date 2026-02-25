@@ -309,22 +309,18 @@ let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty) ?file
   let (md, htbl_include), errors =
     Compile.compile ~loc_offset ?file ~attrs:toplevel_attributes ~read_file s
   in
-  let graceful_errors =
+  let warnings =
     List.filter_map
       (to_grace file whole_content htbl_include)
       (warnings @ errors)
   in
-  let () =
-    List.iter
-      (Format.printf "%a@.@."
-         (Grace_ansi_renderer.pp_diagnostic ?config:None
-            ~code_to_string:Diagnosis.to_code))
-      graceful_errors
-  in
   let content = Renderers.to_html_string md in
   let has = Has.find_out md in
-  embed_in_page ~has_speaker_view ~slipshow_js ~dimension ~has ~math_link ~theme
-    ~css_links ~js_links content ~highlightjs_theme ~math_mode
+  let res =
+    embed_in_page ~has_speaker_view ~slipshow_js ~dimension ~has ~math_link
+      ~theme ~css_links ~js_links content ~highlightjs_theme ~math_mode
+  in
+  (res, warnings)
 
 let add_starting_state ?(autofocus = true) (start, end_, has_speaker_view)
     (starting_state : starting_state option) =
@@ -388,7 +384,8 @@ let add_starting_state ?(autofocus = true) (start, end_, has_speaker_view)
 
 let convert ~has_speaker_view ?autofocus ?slipshow_js ?frontmatter ?file
     ?starting_state ?read_file s =
-  let delayed =
+  let delayed, w =
     delayed ~has_speaker_view ?slipshow_js ?frontmatter ?file ?read_file s
   in
-  add_starting_state ?autofocus delayed starting_state
+  let res = add_starting_state ?autofocus delayed starting_state in
+  (res, w)

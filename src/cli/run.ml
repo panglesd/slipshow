@@ -43,19 +43,26 @@ let compile ~input ~output ~cli_frontmatter =
     Diagnosis.with_ @@ fun () ->
     Slipshow.Frontmatter.resolve cli_frontmatter ~to_asset
   in
-  List.iter Diagnosis.report_no_src warnings;
+  List.iter (Format.printf "%a" Diagnosis.report_no_src) warnings;
   let* content = Io.read input in
   let used_files, read_file =
     read_file
       (match input with `Stdin -> Fpath.v "./" | `File f -> Fpath.parent f)
       ()
   in
-  let html =
+  let html, warnings =
     let file =
       match input with `File f -> Some (Fpath.to_string f) | _ -> None
     in
     Slipshow.convert ~has_speaker_view:true ~frontmatter:cli_frontmatter ?file
       ~read_file content
+  in
+  let () =
+    List.iter
+      (Format.printf "%a@.@."
+         (Grace_ansi_renderer.pp_diagnostic ?config:None
+            ~code_to_string:Diagnosis.to_code))
+      warnings
   in
   let all_used_files = Fpath.Set.union !asset_files !used_files in
   match output with
@@ -85,20 +92,38 @@ let serve ~input ~output ~cli_frontmatter ~port =
       let used_files, read_file = read_file (Fpath.v "./") () in
       (used_files, Slipshow.Asset.of_string ~read_file)
     in
-    let cli_frontmatter =
+    let cli_frontmatter, warnings_cli_frontmatter =
+      Diagnosis.with_ @@ fun () ->
       Slipshow.Frontmatter.resolve cli_frontmatter ~to_asset
     in
     let* content = Io.read (`File input) in
     let used_files, read_file = read_file (Fpath.parent input) () in
-    let result =
+    let result, warnings =
       let file = Fpath.to_string input in
       Slipshow.delayed ~has_speaker_view:true ~frontmatter:cli_frontmatter
         ~read_file ~file content
     in
+    let warnings =
+      let config =
+        { Grace_ansi_renderer.Config.default with use_ansi = Some false }
+      in
+      List.map
+        (Format.asprintf "%a@.@."
+           (Grace_ansi_renderer.pp_diagnostic ?config:(Some config)
+              ~code_to_string:Diagnosis.to_code))
+        warnings
+    in
+    let cli_warnings =
+      List.map
+        (Format.asprintf "%a" Diagnosis.report_no_src)
+        warnings_cli_frontmatter
+    in
+    let warnings = cli_warnings @ warnings |> String.concat "" in
     let all_used_files = Fpath.Set.union !asset_files !used_files in
     let html = Slipshow.add_starting_state result None in
     let+ () = Io.write output html in
-    ( result,
+    let warnings = warnings in
+    ( (result, warnings),
       Fpath.Set.add
         (Fpath.normalize (Fpath.( // ) (Fpath.v (Sys.getcwd ())) input))
         all_used_files )

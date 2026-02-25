@@ -210,9 +210,9 @@ let to_code = function
   | UnknownAttribute _ -> "UnkownAttribute"
   | General { code; _ } -> code
 
-let report_no_src x =
+let report_no_src fmt x =
   let msg = Format.asprintf "%a" pp x in
   let msg = Grace.Diagnostic.createf ~labels:[] ~code:x Warning "%s" msg in
-  Format.printf "%a@.@."
+  Format.fprintf fmt "%a@.@."
     (Grace_ansi_renderer.pp_diagnostic ?config:None ~code_to_string:to_code)
     msg

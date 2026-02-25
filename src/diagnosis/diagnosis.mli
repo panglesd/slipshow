@@ -23,5 +23,5 @@ val add : t -> unit
 val with_ : (unit -> 'a) -> 'a * t list
 val to_code : t -> string
 
-val report_no_src : t -> unit
+val report_no_src : Format.formatter -> t -> unit
 (** This one reports badly, without source code. Used for reporting cli. *)
