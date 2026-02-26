@@ -114,7 +114,8 @@ dynamics with actions:
 
    {reveal=c-edges}
 
-Here is the final result!
+The ``external-ids`` field of the frontmatter tells the compiler not to warn you
+that it cannot find the given ids.  Here is the final result!
 
 .. slipshow-example::
    :visible: presentation
