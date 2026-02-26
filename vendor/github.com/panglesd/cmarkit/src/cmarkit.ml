@@ -179,6 +179,12 @@ module Attributes = struct
        let kv_attributes = ((key, meta), value) :: t.kv_attributes in
        { t with kv_attributes }
 
+  let remove key t =
+    { t with
+      kv_attributes =
+        List.filter (function ((k, _), _) -> not @@ String.equal k key) t.kv_attributes
+    }
+
   let find key t =
     List.find_opt (function ((k, _), _) -> String.equal k key) t.kv_attributes
 
