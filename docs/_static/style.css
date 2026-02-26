@@ -51,7 +51,9 @@
 .entry.show-presentation .preview,
 .entry.show-editor .editor,
 .entry.show-both .preview,
-.entry.show-both .editor {
+.entry.show-both .editor,
+.entry.show-warnings .editor,
+.entry.show-warnings .errors-el {
   opacity: 1;
   position: relative;
   pointer-events: all;
@@ -59,7 +61,8 @@
 
 .show-editor       > .tabs > .editor-button,
 .show-presentation > .tabs > .pres-button,
-.show-both         > .tabs > .both-button {
+.show-both         > .tabs > .both-button,
+.show-warnings     > .tabs > .warnings-button {
     background: aliceblue;
 }
 .running-example.fullscreen {

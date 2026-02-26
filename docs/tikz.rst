@@ -105,6 +105,7 @@ dynamics with actions:
 
    ---
    toplevel-attributes: slip enter=~duration:0 unreveal="c c-edges"
+   external-ids: c c-edges
    ---
 
    ![](triangle.svg){style="width:75%"}
@@ -121,6 +122,7 @@ Here is the final result!
 
    ---
    toplevel-attributes: slip enter=~duration:0 unreveal="c c-edges"
+   external-ids: c c-edges
    ---
 
    <!-- inlining the svg for simplicity -->
