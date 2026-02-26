@@ -5,6 +5,7 @@ module Uri = struct
     if
       Astring.String.is_infix ~affix:"://" s
       || String.starts_with ~prefix:"//" s
+      || String.starts_with ~prefix:"data:" s
     then Link s
     else Path (Fpath.v s)
 
