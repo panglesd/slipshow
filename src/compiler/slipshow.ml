@@ -244,10 +244,22 @@ let string_to_delayed s =
   Marshal.from_string s 0
 
 let convert_to_md ~read_file content =
-  let md =
-    Cmarkit.Doc.of_string ~heading_auto_ids:false ~strict:false content
+  let (fm, content, loc_offset), _warnings =
+    Diagnosis.with_ @@ fun () ->
+    match Frontmatter.extract content with
+    | None -> (Frontmatter.empty, content, (0, 0))
+    | Some (yaml, s, offset, start) ->
+        let file = "-" in
+        let frontmatter = Frontmatter.of_string file start yaml in
+        let to_asset = Asset.of_string ~read_file in
+        let frontmatter = Frontmatter.resolve frontmatter ~to_asset in
+        (frontmatter, s, offset)
   in
-  let sd, _ = Compile.of_cmarkit ~read_file md in
+  let md =
+    Cmarkit.Doc.of_string ~loc_offset ~heading_auto_ids:false ~strict:false
+      content
+  in
+  let sd, _htbl_include = Compile.of_cmarkit ~read_file ~fm md in
   let sd = Compile.to_cmarkit sd in
   Cmarkit_commonmark.of_doc ~include_attributes:false sd
 
@@ -307,7 +319,8 @@ let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty) ?file
   in
   let math_link = frontmatter.math_link in
   let (md, htbl_include), errors =
-    Compile.compile ~loc_offset ?file ~attrs:toplevel_attributes ~read_file s
+    Compile.compile ~loc_offset ?file ~attrs:toplevel_attributes
+      ~fm:(Frontmatter.Resolved frontmatter) ~read_file s
   in
   let warnings =
     List.filter_map

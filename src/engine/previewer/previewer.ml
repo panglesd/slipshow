@@ -50,7 +50,7 @@ let css =
 |}
 
 let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
-    ~include_speaker_view root =
+    ~include_speaker_view ~errors_el root =
   let ( !! ) = Jstr.v in
   let name1 = Random.int 1000000 |> string_of_int |> fun s -> "id" ^ s in
   let name2 = Random.int 1000000 |> string_of_int |> fun s -> "id" ^ s in
@@ -61,11 +61,8 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
   let panel2 =
     Brr.El.iframe ~at:[ Brr.At.name !!name2; Brr.At.class' !!"right-panel2" ] []
   in
-  let errors_el =
-    Brr.El.div ~at:[ Brr.At.class' !!"slipshow-errors-display" ] []
-  in
   let css = Brr.El.style [ Brr.El.txt' css ] in
-  let () = Brr.El.append_children root [ panel1; panel2; errors_el; css ] in
+  let () = Brr.El.append_children root [ panel1; panel2; css ] in
   let panels = [| panel1; panel2 |] in
   let index = ref 0 in
   let stage = ref initial_stage in
@@ -126,7 +123,11 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
 
 let set_errors errors_el warnings =
   Brr.El.set_class (Jstr.v "has_warnings") (String.equal "" warnings) errors_el;
-  Brr.El.set_children errors_el [ Brr.El.txt' warnings ]
+  let innerhtml el v =
+    let _ = Jv.set (Brr.El.to_jv el) "innerHTML" (Jv.of_string v) in
+    ()
+  in
+  innerhtml errors_el warnings
 
 let set_srcdoc { index; panels; errors_el; _ } (slipshow, warnings) =
   set_errors errors_el warnings;
@@ -137,8 +138,8 @@ let preview ?slipshow_js ?frontmatter ?read_file previewer source =
   let starting_state = !(previewer.stage) in
   let has_speaker_view = previewer.include_speaker_view in
   let slipshow, warnings =
-    Slipshow.convert ~has_speaker_view ?slipshow_js ?frontmatter ?read_file
-      ~autofocus:false ~starting_state source
+    Slipshow.convert ~file:"-" ~has_speaker_view ?slipshow_js ?frontmatter
+      ?read_file ~autofocus:false ~starting_state source
   in
   let warnings =
     List.map
@@ -146,6 +147,7 @@ let preview ?slipshow_js ?frontmatter ?read_file previewer source =
          (Grace_ansi_renderer.pp_diagnostic ?config:None
             ~code_to_string:Diagnosis.to_code))
       warnings
+    |> List.map (Ansi.process (Ansi.create ()))
     |> String.concat ""
   in
   set_srcdoc previewer (slipshow, warnings)

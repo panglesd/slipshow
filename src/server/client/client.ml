@@ -12,6 +12,21 @@ let uri typ =
 
 let elem = Brr.El.find_first_by_selector (Jstr.v "#iframes") |> Option.get
 
+let warnings =
+  Brr.El.find_first_by_selector (Jstr.v "#warnings-slipshow") |> Option.get
+
+let warnings_show =
+  Brr.El.find_first_by_selector (Jstr.v "#warnings-slipshow-show") |> Option.get
+
+let _unlistener =
+  Brr.Ev.listen Brr.Ev.click
+    (fun _ ->
+      let show_class = Jstr.v "hide-warnings" in
+      Brr.El.set_class show_class
+        (not @@ Brr.El.class' show_class warnings)
+        warnings)
+    (Brr.El.as_target warnings_show)
+
 let previewer =
   let initial_stage =
     Brr.G.window |> Brr.Window.location |> Brr.Uri.fragment |> Jstr.to_string
@@ -30,7 +45,7 @@ let previewer =
         Brr.Window.History.replace_state ~uri history
   in
   Previewer.create_previewer ?initial_stage ~callback ~include_speaker_view:true
-    elem
+    ~errors_el:warnings elem
 
 let recv () =
   let open Lwt.Syntax in

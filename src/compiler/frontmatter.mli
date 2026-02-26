@@ -10,6 +10,7 @@ type 'a fm = {
   dimension : (int * int) option;
   highlightjs_theme : string option;
   math_mode : [ `Mathjax | `Katex ] option;
+  external_ids : string list;
 }
 
 (** We use this trick to only allow [string fm] and [Asset.t fm], but it is

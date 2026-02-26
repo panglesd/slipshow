@@ -104,15 +104,13 @@ let serve ~input ~output ~cli_frontmatter ~port =
         ~read_file ~file content
     in
     let warnings =
-      let config =
-        { Grace_ansi_renderer.Config.default with use_ansi = Some false }
-      in
       List.map
         (Format.asprintf "%a@.@."
-           (Grace_ansi_renderer.pp_diagnostic ?config:(Some config)
+           (Grace_ansi_renderer.pp_diagnostic ?config:None
               ~code_to_string:Diagnosis.to_code))
         warnings
     in
+    let warnings = List.map (Ansi.process (Ansi.create ())) warnings in
     let cli_warnings =
       List.map
         (Format.asprintf "%a" Diagnosis.report_no_src)

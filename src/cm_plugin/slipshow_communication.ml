@@ -24,14 +24,16 @@ let update_slipshow ?slipshow_js ?frontmatter ?read_file () =
     in
     preview state content
 
-let slipshow_plugin ?slipshow_js ?frontmatter ?read_file preview_element =
+let slipshow_plugin ?slipshow_js ?frontmatter ?read_file ~errors_el
+    preview_element =
   let open Editor in
   let update_slipshow =
     update_slipshow ?slipshow_js ?frontmatter ?read_file ()
   in
   View.ViewPlugin.define (fun view ->
       let state =
-        Previewer.create_previewer ~include_speaker_view:false preview_element
+        Previewer.create_previewer ~include_speaker_view:false ~errors_el
+          preview_element
       in
       let _ : unit Fut.t = update_slipshow ~ms:0 state view in
       let update upd =
