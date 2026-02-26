@@ -41,6 +41,7 @@ def visit_slipshow_example_node_html(self, node):
     <div class="editor-preview-container">
       <div class="editor"></div>
       <div class="preview"></div>
+      <pre class="errors-el" style="background:black; margin:0; color: white; overflow-y:scroll"></pre>
     </div>
     <div class="source" style="display:none">""")
     # Write raw, *escaped* text so it appears exactly as typed
