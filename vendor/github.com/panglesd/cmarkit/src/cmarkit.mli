@@ -314,6 +314,9 @@ module Attributes : sig
   val add : key node -> value node option -> t -> t
   (** [add k v m] is [m] with key [k] bound to [v]. *)
 
+  val remove : key -> t -> t
+  (** [remove k m] is [m] with key [k] unbound. *)
+
   val find : string -> t -> (key node * value node option) option
   (** [find k m] the value of [k] in [m], if any. *)
 
