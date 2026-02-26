@@ -68,15 +68,20 @@ let handle_ids id_map val_loc ids = List.iter (handle_id id_map val_loc) ids
 let check_targets (is, expected_type) id_map bol val_loc targets =
   let targets =
     match targets with
-    | `Self -> [ (bol, None) ]
+    | `Self -> [ ((bol : Ast.Bol.t :> [ Ast.Bol.t | `External ]), None) ]
     | `Ids ids -> List.filter_map (handle_id_get id_map val_loc) ids
   in
   List.iter
     (fun (bol, id_loc) ->
-      if not (is bol) then
-        let loc_block = Ast.Bol.text_loc bol in
-        let loc_reason = Option.value id_loc ~default:(Ast.Bol.text_loc bol) in
-        Diagnosis.add @@ WrongType { loc_reason; loc_block; expected_type })
+      match bol with
+      | #Ast.Bol.t as bol ->
+          if not (is bol) then
+            let loc_block = Ast.Bol.text_loc bol in
+            let loc_reason =
+              Option.value id_loc ~default:(Ast.Bol.text_loc bol)
+            in
+            Diagnosis.add @@ WrongType { loc_reason; loc_block; expected_type }
+      | `External -> ())
     targets;
   ()
 
@@ -88,7 +93,7 @@ let exec id_map attrs block_or_inline =
   parse_args (module Actions_arguments.Execute) attrs @@ fun args val_loc ->
   check_targets Is.slip_script id_map block_or_inline val_loc args
 
-type id_map = ((string * Meta.t) * Ast.Bol.t * Meta.t) M.t
+type id_map = ((string * Meta.t) * [ Ast.Bol.t | `External ] * Meta.t) M.t
 
 let move (module A : Actions_arguments.Move) (id_map : id_map) attrs
     (_block_or_inline : Ast.Bol.t) =

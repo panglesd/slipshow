@@ -514,9 +514,14 @@ module Stage4 = struct
     in
     Ast.Folder.make ~block ~inline ()
 
-  let execute ~read_file md =
+  let execute ~(fm : Frontmatter.resolved Frontmatter.t) ~read_file md =
+    let (Frontmatter.Resolved fm) = fm in
+    let external_ids =
+      fm.external_ids
+      |> List.map (fun x -> ((x, Meta.none), `External, Meta.none))
+    in
     let asset_map, id_list =
-      Cmarkit.Folder.fold_doc execute (Fpath.Map.empty, []) md
+      Cmarkit.Folder.fold_doc execute (Fpath.Map.empty, external_ids) md
     in
     let id_list = List.rev id_list in
     let module Map = Map.Make (String) in
@@ -571,13 +576,6 @@ module Stage5 = struct
   module M = Map.Make (String)
 
   let check_attribute ~id_map block_or_inline (attrs, _meta) =
-    let id_map :
-        ((string * Meta.t)
-        * [ `Block of Block.t | `Inline of Inline.t ]
-        * Meta.t)
-        M.t =
-      id_map
-    in
     List.iter (fun check -> check id_map attrs block_or_inline) Check.all_checks
 
   let folder ~id_map =
@@ -604,15 +602,15 @@ module Stage5 = struct
     ast
 end
 
-let of_cmarkit ~read_file md =
+let of_cmarkit ~read_file ~(fm : Frontmatter.resolved Frontmatter.t) md =
   let defs = Cmarkit.Doc.defs md in
   let md1, htbl_include = Stage1.execute defs read_file md in
   let md2 = Stage2.execute md1 in
   let md3 = Stage3.execute md2 in
-  let md4, id_map = Stage4.execute ~read_file md3 in
+  let md4, id_map = Stage4.execute ~read_file ~fm md3 in
   (Stage5.execute ~id_map md4, htbl_include)
 
-let compile ?file ?loc_offset ~attrs ?(read_file = fun _ -> Ok None) s =
+let compile ?file ?loc_offset ~attrs ~fm ?(read_file = fun _ -> Ok None) s =
   Diagnosis.with_ @@ fun () ->
   let open Cmarkit in
   let md =
@@ -621,7 +619,7 @@ let compile ?file ?loc_offset ~attrs ?(read_file = fun _ -> Ok None) s =
     let block = Block.Block_quote ((bq, (attrs, Meta.none)), Meta.none) in
     Doc.make block
   in
-  of_cmarkit ~read_file md
+  of_cmarkit ~read_file ~fm md
 
 let to_cmarkit =
   let ( let* ) x f = Option.bind x f in

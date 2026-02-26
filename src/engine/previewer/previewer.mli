@@ -13,6 +13,7 @@ val create_previewer :
   ?initial_stage:int ->
   ?callback:(int -> unit) ->
   include_speaker_view:bool ->
+  errors_el:Brr.El.t ->
   Brr.El.t ->
   previewer
 

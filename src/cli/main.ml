@@ -210,6 +210,7 @@ module Compile_args = struct
             js_links;
             highlightjs_theme;
             math_mode;
+            external_ids = [];
           };
       input;
       output;

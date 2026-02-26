@@ -10,6 +10,7 @@ type 'a fm = {
   dimension : (int * int) option;
   highlightjs_theme : string option;
   math_mode : [ `Mathjax | `Katex ] option;
+  external_ids : string list;
 }
 (** We keep an option even though there are default value to be able to merge
     two frontmatter. None and default value represent different things. *)
@@ -154,6 +155,20 @@ module type Field = sig
   val update_frontmatter : string fm -> t -> string fm
 end
 
+module External_ids = struct
+  type t = string list
+
+  let key = "external-ids"
+
+  let of_string s =
+    String.split_on_char ' ' s
+    |> List.filter (fun x -> not @@ String.equal String.empty x)
+    |> Result.ok
+
+  let update_frontmatter (fm : _ fm) v =
+    { fm with external_ids = v @ fm.external_ids }
+end
+
 let all_fields =
   [
     (module Dimension : Field);
@@ -164,6 +179,7 @@ let all_fields =
     (module Js_links : Field);
     (module Hljs_theme : Field);
     (module Math_mode : Field);
+    (module External_ids : Field);
   ]
 
 module SMap = struct
@@ -203,6 +219,7 @@ let empty_fm =
     js_links = [];
     highlightjs_theme = None;
     math_mode = None;
+    external_ids = [];
   }
 
 let empty = Resolved empty_fm
@@ -343,6 +360,7 @@ let combine (Resolved cli_frontmatter) (Resolved frontmatter) =
   let highlightjs_theme =
     combine_opt cli_frontmatter.highlightjs_theme frontmatter.highlightjs_theme
   in
+  let external_ids = cli_frontmatter.external_ids @ frontmatter.external_ids in
   Resolved
     {
       toplevel_attributes;
@@ -353,4 +371,5 @@ let combine (Resolved cli_frontmatter) (Resolved frontmatter) =
       js_links;
       highlightjs_theme;
       math_mode;
+      external_ids;
     }
