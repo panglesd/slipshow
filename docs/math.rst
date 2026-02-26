@@ -73,9 +73,16 @@ respectively assign an identifier, and a class.
 
 This allows to easily make them target of actions. For instance, one can use the ``pause`` action with a target to reveal content bit by bit. The ``reveal`` action and ``unrevealed`` class are also useful.
 
+Remember to use the ``external-ids`` field of the frontmatter to tell the
+compiler not to warn you that it cannot find the given ids.
+
 .. slipshow-example::
    :visible: both
    :dimension: 4:3
+
+   ---
+   external-ids: pause1 pause2
+   ---
 
    # Some title to make it more realistic
 
