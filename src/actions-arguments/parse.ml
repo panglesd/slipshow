@@ -142,7 +142,7 @@ module Smap = Map.Make (String)
 
 type action = {
   name : string;
-  named : string node Smap.t;
+  named : (string node * W.loc) Smap.t;
   positional : string node list;
 }
 
@@ -161,7 +161,7 @@ let parse_string ~action_name s : (_ W.t, _) result =
              |> List.fold_left
                   (fun (map, warnings) ((k, k_loc), (v, loc')) ->
                     match Smap.find_opt k map with
-                    | None -> (Smap.add k (v, loc') map, warnings)
+                    | None -> (Smap.add k ((v, loc'), k_loc) map, warnings)
                     | Some _ ->
                         (* let loc = _ in *)
                         let msg =
@@ -200,7 +200,7 @@ type ('named, 'positional) parsed = {
 
 let parsed_name (description_name, description_convert) action =
   Smap.find_opt description_name action.named
-  |> Option.map (fun ((_, loc) as x) -> (description_convert x, loc))
+  |> Option.map (fun (((_, loc) as x), _) -> (description_convert x, loc))
 
 let rec all_keys : type a. a descr_tuple -> string list =
  fun names ->
