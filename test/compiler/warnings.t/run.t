@@ -101,9 +101,9 @@ Testing with an include
       │                                 ^^^ Error during float parsing
   
   warning[ActionParsing]: 
-      ┌─ all.md:29:18
+      ┌─ all.md:29:6
    29 │  {up="~duratiooon:12  ~duration:aaa"}
-      │                   ^^ Action 'up' does not take argument 'duratiooon'
+      │       ^^^^^^^^^^^ Action 'up' does not take argument 'duratiooon'
       = 'up' accepts arguments 'duration', 'margin'
   
   warning[UnkownAttribute]: Non standard attribute: 'unknown-attribute'
