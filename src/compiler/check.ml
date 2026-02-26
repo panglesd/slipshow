@@ -151,6 +151,10 @@ let clear_draw id_map attrs block_or_inline =
   parse_args (module Actions_arguments.Clear_draw) attrs @@ fun args val_loc ->
   check_targets Is.draw id_map block_or_inline val_loc args
 
+let pause id_map attrs _block_or_inline =
+  parse_args (module Actions_arguments.Pause) attrs @@ fun args val_loc ->
+  match args with `Self -> () | `Ids ids -> handle_ids id_map val_loc ids
+
 module SSet = Set.Make (String)
 
 (* To get this list of all valid html attributes, go to
@@ -200,6 +204,7 @@ let all_checks =
     draw;
     change_page;
     play_media;
+    pause;
     speaker_note;
     unstatic;
     static;
