@@ -62,3 +62,98 @@ Testing with an include
     4 │  {#id1}
       │    ^^^ 
   
+
+  $ slipshow compile all.md
+  warning[Frontmatter]: Error while parsing frontmatter field 'dimension'
+      ┌─ all.md:4:11
+    4 │  dimension: 16:16
+      │            ^^^^^^ Expected "4:3", "16:9", or two integers separated by a 'x'
+  
+  warning[Frontmatter]: Frontmatter field 'unknown-frontmatter' is not interpreted by slipshow
+      ┌─ all.md:3:1
+    3 │  unknown-frontmatter: field
+      │  ^^^^^^^^^^^^^^^^^^^ 
+      = Recognized fields are: 'dimension', 'toplevel-attributes', 'math-link', 'theme', 'css', 'js', 'highlightjs-theme', 'math-mode', 'external-ids'
+  
+  warning[ActionParsing]: Failed to parse
+      ┌─ all.md:41:16
+   41 │  {up="~margin:2 ~margin:3"}
+      │                 ^^^^^^^ Named argument 'margin' is duplicated. This instance is ignored.
+  
+  warning[ActionParsing]: Failed to parse
+      ┌─ all.md:35:11
+   35 │  {up="uid1 uid2"}
+      │            ^^^^ Action up does not support multiple arguments
+  
+  warning[ActionParsing]: Failed to parse
+      ┌─ all.md:33:11
+   33 │  {unfocus="something"}
+      │            ^^^^^^^^^ The unfocus action does not accept any argument
+  
+  warning[ActionParsing]: Action up arguments could not be parsed
+      ┌─ all.md:31:6
+   31 │  {up="~:12"}
+      │       ^^^^ '~' needs to be followed by a name
+  
+  warning[ActionParsing]: Failed to parse
+      ┌─ all.md:29:32
+   29 │  {up="~duratiooon:12  ~duration:aaa"}
+      │                                 ^^^ Error during float parsing
+  
+  warning[ActionParsing]: 
+      ┌─ all.md:29:18
+   29 │  {up="~duratiooon:12  ~duration:aaa"}
+      │                   ^^ Action 'up' does not take argument 'duratiooon'
+      = 'up' accepts arguments 'duration', 'margin'
+  
+  warning[UnkownAttribute]: Non standard attribute: 'unknown-attribute'
+      ┌─ all.md:18:2
+   18 │  {unknown-attribute}
+      │   ^^^^^^^^^^^^^^^^^ 
+  
+  warning[IDNotFound]: No element with id 'missing-id' were found
+      ┌─ all.md:16:8
+   16 │  {pause=missing-id}
+      │         ^^^^^^^^^^ This should be an ID present in the document
+  
+  warning[WrongType]: Wrong type
+      ┌─ all.md:14:1
+   14 │  This is not a carousel
+      │  ^^^^^^^^^^^^^^^^^^^^^^
+      │  │
+      │  This expects the id of a carousel or pdf
+      │  This is not a carousel or pdf
+  
+  warning[WrongType]: Wrong type
+      ┌─ all.md:11:1
+   11 │  Hello
+      │  ^^^^^
+      │  │
+      │  This expects the id of a slip-script
+      │  This is not a slip-script
+  
+  warning[UnkownAttribute]: Non standard attribute: 'dqzd'
+  
+  warning[IDNotFound]: No element with id 'yo' were found
+  
+  warning[FSError]: file 'missing.md' could not be read: missing.md: No such file or directory
+      ┌─ all.md:8:4
+    8 │  ![](missing.md)
+      │     ^^^^^^^^^^^^ 
+  
+  warning[DupID]: ID duplicated-id is assigned multiple times
+      ┌─ all.md:22:3
+    7 │  {#duplicated-id}
+      │    ^^^^^^^^^^^^^ 
+      ·  
+   20 │  {#duplicated-id}
+      │    ^^^^^^^^^^^^^ 
+   21 │  
+   22 │  {#duplicated-id}
+      │    ^^^^^^^^^^^^^ 
+  
+  warning[ChildrenAttrs]: Children classes cannot have a value
+      ┌─ all.md:24:19
+   24 │  {children:.class="have value"}
+      │                    ^^^^^^^^^^ 
+  
