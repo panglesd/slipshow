@@ -270,7 +270,7 @@ let to_grace file whole_content htbl_include er =
         Grace.Source.(`String { name = file; content = whole_content })
       else
         match Hashtbl.find_opt htbl_include f with
-        | Some content -> Grace.Source.(`String { name = file; content })
+        | Some content -> Grace.Source.(`String { name = Some f; content })
         | None ->
             Grace.Source.(`String { name = file; content = whole_content }))
     er
