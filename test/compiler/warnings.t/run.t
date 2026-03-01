@@ -55,7 +55,7 @@ Testing with an include
     9 │  
    10 │  Hello3{#id1}
       │          ^^^ 
-      ┌─ slip-with-include.md:4:3
+      ┌─ subfile.md:4:3
     1 │  {#id1}
       │    ^^^ 
       ·  
