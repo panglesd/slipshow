@@ -10,6 +10,7 @@ let audio = "audio"
 let image = "image"
 let svg = "svg"
 let pdf_resolution = "pdf-resolution"
+let pause_block = "pause-block"
 
 let all_attrs =
   [
@@ -25,4 +26,5 @@ let all_attrs =
     image;
     svg;
     pdf_resolution;
+    pause_block;
   ]
