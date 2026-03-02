@@ -122,7 +122,6 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
   }
 
 let set_errors errors_el warnings =
-  Brr.El.set_class (Jstr.v "has_warnings") (String.equal "" warnings) errors_el;
   let innerhtml el v =
     let _ = Jv.set (Brr.El.to_jv el) "innerHTML" (Jv.of_string v) in
     ()
