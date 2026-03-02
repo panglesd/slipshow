@@ -328,6 +328,13 @@ let find_closing s start =
   in
   aux start
 
+type extraction = {
+  frontmatter : string;
+  rest : string;
+  rest_offset : int * int;
+  fm_offset : int;
+}
+
 let extract s =
   let* start = find_opening s in
   let+ end_, after = find_closing s start in
@@ -342,7 +349,7 @@ let extract s =
     in
     (after, n_lines 0 (after - 1))
   in
-  (frontmatter, rest, offset, start)
+  { frontmatter; rest; rest_offset = offset; fm_offset = start }
 
 let combine (Resolved cli_frontmatter) (Resolved frontmatter) =
   let combine_opt cli f = match cli with Some _ as x -> x | None -> f in
