@@ -31,7 +31,7 @@ let with_ f =
     let res = f () in
     (res, clean_up ())
   with exn ->
-    let _ = clean_up in
+    let _ = clean_up () in
     raise exn
 
 module M = struct
