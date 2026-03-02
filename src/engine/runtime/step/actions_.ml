@@ -191,12 +191,7 @@ struct
 
   let do_ ~mode window elem { margin; duration; target } =
     only_if_not_counting mode @@ fun _mode ->
-    let elem =
-      match target with
-      | `Self -> elem
-      | `Id (id, _) -> find_first_by_selector !!("#" ^ id) |> Option.get
-      (* TODO: not option.get *)
-    in
+    let elem = elem_of_id_or_self target elem in
     do_js ~mode window { elem; margin; duration }
 end
 
