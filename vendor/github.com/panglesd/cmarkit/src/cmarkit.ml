@@ -2829,7 +2829,7 @@ module Block_struct = struct
     let add_attribute new_attr attrs = match new_attr with
       | `Class rev_spans ->
          let new_class = Inline_struct.attr_of_rev_spans p rev_spans in
-         Attributes.add_class attrs new_class (* TODO: location *)
+         Attributes.add_class attrs new_class
       | `Id rev_spans ->
          let new_id = Inline_struct.attr_of_rev_spans p rev_spans in
          Attributes.set_id attrs new_id
