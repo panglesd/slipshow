@@ -161,7 +161,7 @@ let to_grace source_map error =
       in
       Some
         (Diagnostic.createf ~labels ~code:error Warning
-           "No element with id '%s' were found" id)
+           "No element with id '%s' was found" id)
   | General { msg; labels; notes; code = _ } ->
       let labels =
         List.filter_map
@@ -207,7 +207,7 @@ let to_code = function
   | ParsingError _ -> "ActionParsing"
   | ParsingWarnor _ -> "ActionParsing"
   | MissingID _ -> "IDNotFound"
-  | UnknownAttribute _ -> "UnkownAttribute"
+  | UnknownAttribute _ -> "UnknownAttribute"
   | General { code; _ } -> code
 
 let report_no_src fmt x =

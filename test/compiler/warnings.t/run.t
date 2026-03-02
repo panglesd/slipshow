@@ -106,12 +106,12 @@ Testing with an include
       │       ^^^^^^^^^^^ Action 'up' does not take argument 'duratiooon'
       = 'up' accepts arguments 'duration', 'margin'
   
-  warning[UnkownAttribute]: Non standard attribute: 'unknown-attribute'
+  warning[UnknownAttribute]: Non standard attribute: 'unknown-attribute'
       ┌─ all.md:18:2
    18 │  {unknown-attribute}
       │   ^^^^^^^^^^^^^^^^^ 
   
-  warning[IDNotFound]: No element with id 'missing-id' were found
+  warning[IDNotFound]: No element with id 'missing-id' was found
       ┌─ all.md:16:8
    16 │  {pause=missing-id}
       │         ^^^^^^^^^^ This should be an ID present in the document
@@ -132,9 +132,9 @@ Testing with an include
       │  This expects the id of a slip-script
       │  This is not a slip-script
   
-  warning[UnkownAttribute]: Non standard attribute: 'dqzd'
+  warning[UnknownAttribute]: Non standard attribute: 'dqzd'
   
-  warning[IDNotFound]: No element with id 'yo' were found
+  warning[IDNotFound]: No element with id 'yo' was found
   
   warning[FSError]: file 'missing.md' could not be read: missing.md: No such file or directory
       ┌─ all.md:8:4
