@@ -24,7 +24,7 @@ module type Field = sig
   type t
 
   val key : string
-  val of_string : string -> (t, [ `Msg of string ]) result
+  val of_string : string * Cmarkit.Textloc.t -> (t, [ `Msg of string ]) result
   val update_frontmatter : string fm -> t -> string fm
 end
 
