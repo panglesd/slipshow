@@ -42,6 +42,6 @@ The current options for the frontmatter are:
   stripped from its extension.
 
 - ``external-ids``, for telling the slipshow compiler which ``ids`` will be
-  present even if they do not seem to be present in the document. This is just
-  in order to silence some warnings. This is useful when including svgs or math
-  where some IDs are given.
+  present even if they do not seem to be present in the document. Accepts a list
+  of space-separated ids. This is just in order to silence some warnings. This
+  is useful when including svgs or math where some IDs are given.
