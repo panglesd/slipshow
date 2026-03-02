@@ -248,12 +248,12 @@ let convert_to_md ~read_file content =
     Diagnosis.with_ @@ fun () ->
     match Frontmatter.extract content with
     | None -> (Frontmatter.empty, content, (0, 0))
-    | Some (yaml, s, offset, start) ->
+    | Some { frontmatter; rest; rest_offset; fm_offset } ->
         let file = "-" in
-        let frontmatter = Frontmatter.of_string file start yaml in
+        let frontmatter = Frontmatter.of_string file fm_offset frontmatter in
         let to_asset = Asset.of_string ~read_file in
         let frontmatter = Frontmatter.resolve frontmatter ~to_asset in
-        (frontmatter, s, offset)
+        (frontmatter, rest, rest_offset)
   in
   let md =
     Cmarkit.Doc.of_string ~loc_offset ~heading_auto_ids:false ~strict:false
@@ -282,13 +282,13 @@ let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty) ?file
     Diagnosis.with_ @@ fun () ->
     match Frontmatter.extract s with
     | None -> (frontmatter, s, (0, 0))
-    | Some (yaml, s, offset, start) ->
+    | Some { frontmatter = txt_fm; rest; rest_offset; fm_offset } ->
         let file = Option.value ~default:"-" file in
-        let txt_frontmatter = Frontmatter.of_string file start yaml in
+        let txt_fm = Frontmatter.of_string file fm_offset txt_fm in
         let to_asset = Asset.of_string ~read_file in
-        let txt_frontmatter = Frontmatter.resolve txt_frontmatter ~to_asset in
+        let txt_frontmatter = Frontmatter.resolve txt_fm ~to_asset in
         let frontmatter = Frontmatter.combine txt_frontmatter frontmatter in
-        (frontmatter, s, offset)
+        (frontmatter, rest, rest_offset)
   in
   let toplevel_attributes =
     frontmatter.toplevel_attributes

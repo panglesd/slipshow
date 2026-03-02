@@ -51,7 +51,14 @@ module Math_mode : Field_with_default with type t = [ `Mathjax | `Katex ]
 val empty : resolved t
 val of_string : string -> int -> string -> unresolved t
 
-val extract : string -> (string * string * (int * int) * int) option
+type extraction = {
+  frontmatter : string;
+  rest : string;
+  rest_offset : int * int;
+  fm_offset : int;
+}
+
+val extract : string -> extraction option
 (** The first string is the frontmatter, the second one the original string with
     the frontmatter and separator stripped *)
 
