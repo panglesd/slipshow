@@ -120,7 +120,6 @@ let serve ~input ~output ~cli_frontmatter ~port =
     let all_used_files = Fpath.Set.union !asset_files !used_files in
     let html = Slipshow.add_starting_state result None in
     let+ () = Io.write output html in
-    let warnings = warnings in
     ( (result, warnings),
       Fpath.Set.add
         (Fpath.normalize (Fpath.( // ) (Fpath.v (Sys.getcwd ())) input))
