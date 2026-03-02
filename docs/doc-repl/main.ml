@@ -60,7 +60,9 @@ let handle_elem =
   let dimension =
     El.at !!"dimension" el |> Option.map Jstr.to_string |> fun x ->
     Option.bind x (fun s ->
-        match Slipshow.Frontmatter.Dimension.of_string s with
+        match
+          Slipshow.Frontmatter.Dimension.of_string (s, Cmarkit.Textloc.none)
+        with
         | Ok x -> Some x
         | Error _ -> None)
   in

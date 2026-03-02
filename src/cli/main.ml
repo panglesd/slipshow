@@ -18,7 +18,8 @@ let handle_error = function Ok _ as x -> x | Error (`Msg msg) -> Error msg
 module Custom_conv = struct
   let toplevel_attributes =
     let parser s =
-      Slipshow.Frontmatter.Toplevel_attributes.of_string s
+      Slipshow.Frontmatter.Toplevel_attributes.of_string
+        (s, Cmarkit.Textloc.none)
       |> Result.map @@ fun s -> Some s
     in
     let printer fmt attrs =
@@ -56,7 +57,8 @@ module Custom_conv = struct
 
   let theme =
     let parser_ s =
-      Result.map Option.some (Slipshow.Frontmatter.Theme.of_string s)
+      Result.map Option.some
+        (Slipshow.Frontmatter.Theme.of_string (s, Cmarkit.Textloc.none))
     in
     let rec printer fmt = function
       | Some (`Builtin s) -> Format.fprintf fmt "%s" (Themes.to_string s)
@@ -67,7 +69,8 @@ module Custom_conv = struct
 
   let math_mode =
     let parser_ s =
-      Result.map (fun x -> Some x) @@ Slipshow.Frontmatter.Math_mode.of_string s
+      Result.map (fun x -> Some x)
+      @@ Slipshow.Frontmatter.Math_mode.of_string (s, Cmarkit.Textloc.none)
     in
     let rec printer fmt = function
       | Some `Mathjax -> Format.fprintf fmt "mathjax"
@@ -79,7 +82,8 @@ module Custom_conv = struct
   let dimension =
     let int_printer = Cmdliner.Arg.(conv_printer int) in
     let parser_ s =
-      Result.map (fun x -> Some x) @@ Slipshow.Frontmatter.Dimension.of_string s
+      Result.map (fun x -> Some x)
+      @@ Slipshow.Frontmatter.Dimension.of_string (s, Cmarkit.Textloc.none)
     in
     let rec printer fmt x =
       match x with

@@ -133,8 +133,14 @@ Testing with an include
       │  This is not a slip-script
   
   warning[UnknownAttribute]: Non standard attribute: 'dqzd'
+      ┌─ all.md:2:30
+    2 │  toplevel-attributes: exec=yo dqzd
+      │                               ^^^^ 
   
   warning[IDNotFound]: No element with id 'yo' was found
+      ┌─ all.md:2:27
+    2 │  toplevel-attributes: exec=yo dqzd
+      │                            ^^ This should be an ID present in the document
   
   warning[FSError]: file 'missing.md' could not be read: missing.md: No such file or directory
       ┌─ all.md:8:4

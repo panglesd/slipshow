@@ -30,7 +30,7 @@ module Toplevel_attributes = struct
         ]
       ()
 
-  let of_string s =
+  let of_string (s, loc) =
     let s = String.trim s in
     let s =
       if String.length s > 0 && s.[0] = '{' then
@@ -38,7 +38,13 @@ module Toplevel_attributes = struct
         s
       else "{" ^ s ^ "}"
     in
-    let cmarkit = Cmarkit.Doc.of_string ~strict:false s in
+    let loc_offset =
+      (Cmarkit.Textloc.first_byte loc, fst @@ Cmarkit.Textloc.first_line loc)
+    in
+    let file = Cmarkit.Textloc.file loc in
+    let cmarkit =
+      Cmarkit.Doc.of_string ~loc_offset ~locs:true ~file ~strict:false s
+    in
     let cmarkit = Cmarkit.Doc.block cmarkit in
     match cmarkit with
     | Cmarkit.Block.Ext_standalone_attributes (attrs, _) -> Ok attrs
@@ -52,7 +58,7 @@ module Math_link = struct
   type t = string
 
   let key = "math-link"
-  let of_string s = Ok s
+  let of_string (s, _) = Ok s
   let update_frontmatter (fm : _ fm) v = { fm with math_link = Some v }
 end
 
@@ -62,7 +68,7 @@ module Theme = struct
   let key = "theme"
   let default = `Builtin Themes.Default
 
-  let of_string s =
+  let of_string (s, _) =
     match Themes.of_string s with
     | Some theme -> Ok (`Builtin theme)
     | None -> Ok (`External s)
@@ -75,7 +81,7 @@ module Css_links = struct
 
   let key = "css"
 
-  let of_string s =
+  let of_string (s, _) =
     s |> String.split_on_char ' '
     |> List.filter (fun x -> not (String.equal "" x))
     |> Result.ok
@@ -89,7 +95,7 @@ module Js_links = struct
 
   let key = "js"
 
-  let of_string s =
+  let of_string (s, _) =
     s |> String.split_on_char ' '
     |> List.filter (fun x -> not (String.equal "" x))
     |> Result.ok
@@ -103,7 +109,7 @@ module Dimension = struct
   let key = "dimension"
   let default = (1440, 1080)
 
-  let of_string s =
+  let of_string (s, _) =
     let ( let* ) = Result.bind in
     let error =
       Error
@@ -128,7 +134,7 @@ module Hljs_theme = struct
   type t = string
 
   let key = "highlightjs-theme"
-  let of_string = fun x -> Ok x
+  let of_string = fun (x, _) -> Ok x
   let default = "default"
   let update_frontmatter (fm : _ fm) v = { fm with highlightjs_theme = Some v }
 end
@@ -139,8 +145,8 @@ module Math_mode = struct
   let key = "math-mode"
 
   let of_string = function
-    | "mathjax" -> Ok `Mathjax
-    | "katex" -> Ok `Katex
+    | "mathjax", _ -> Ok `Mathjax
+    | "katex", _ -> Ok `Katex
     | _ -> Error (`Msg "Expected \"mathjax\" or \"katex\"")
 
   let default = `Mathjax
@@ -151,7 +157,7 @@ module type Field = sig
   type t
 
   val key : string
-  val of_string : string -> (t, [ `Msg of string ]) result
+  val of_string : string * Cmarkit.Textloc.t -> (t, [ `Msg of string ]) result
   val update_frontmatter : string fm -> t -> string fm
 end
 
@@ -160,7 +166,7 @@ module External_ids = struct
 
   let key = "external-ids"
 
-  let of_string s =
+  let of_string (s, _) =
     String.split_on_char ' ' s
     |> List.filter (fun x -> not @@ String.equal String.empty x)
     |> Result.ok
@@ -284,7 +290,7 @@ let of_string file offset s =
     s |> split_in_lines
     |> List.filter_map @@ fun line -> cut file offset line ':'
   in
-  let handle_line fm ((key, kloc), (value, vloc)) =
+  let handle_line fm ((key, kloc), ((_, vloc) as value)) =
     match SMap.find_opt key fields_map with
     | None ->
         send_unrecognized_field ~key ~kloc;
