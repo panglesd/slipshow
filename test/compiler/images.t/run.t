@@ -1,12 +1,12 @@
 We can compile the file
 
   $ slipshow compile slip.md
-  warning[UnkownAttribute]: Non standard attribute: 'key2'
+  warning[UnknownAttribute]: Non standard attribute: 'key2'
       ┌─ slip.md:6:27
     6 │  ![](img.png){#id2 .class2 key2=value2}
       │                            ^^^^ 
   
-  warning[UnkownAttribute]: Non standard attribute: 'key'
+  warning[UnknownAttribute]: Non standard attribute: 'key'
       ┌─ slip.md:3:13
     3 │  {#id .class key=value}
       │              ^^^ 

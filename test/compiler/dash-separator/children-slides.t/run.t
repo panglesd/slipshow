@@ -1,25 +1,25 @@
   $ slipshow compile slides.md
-  warning[UnkownAttribute]: Non standard attribute: 'key'
+  warning[UnknownAttribute]: Non standard attribute: 'key'
       ┌─ slides.md:24:2
    24 │  {children:key=value #attributes}
       │   ^^^^^^^^^^^^ 
   
-  warning[UnkownAttribute]: Non standard attribute: 'key'
+  warning[UnknownAttribute]: Non standard attribute: 'key'
       ┌─ slides.md:33:6
    33 │  {k=v key="other value"}
       │       ^^^ 
   
-  warning[UnkownAttribute]: Non standard attribute: 'k'
+  warning[UnknownAttribute]: Non standard attribute: 'k'
       ┌─ slides.md:33:2
    33 │  {k=v key="other value"}
       │   ^ 
   
-  warning[UnkownAttribute]: Non standard attribute: 'key'
+  warning[UnknownAttribute]: Non standard attribute: 'key'
       ┌─ slides.md:24:2
    24 │  {children:key=value #attributes}
       │   ^^^^^^^^^^^^ 
   
-  warning[UnkownAttribute]: Non standard attribute: 'key'
+  warning[UnknownAttribute]: Non standard attribute: 'key'
       ┌─ slides.md:24:2
    24 │  {children:key=value #attributes}
       │   ^^^^^^^^^^^^ 
