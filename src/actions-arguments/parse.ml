@@ -324,7 +324,6 @@ let parse_only_els ~action_name s =
 let parse_only_el ~action_name s =
   let ( let$ ) x f = Result.map f x in
   let$ x, warnings = parse ~action_name ~named:[] ~positional:id s in
-  (* TODO why is this one an error (and not a warning)? *)
   match merge_positional x with
   | [] -> (`Self, warnings)
   | x :: rest ->

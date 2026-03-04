@@ -27,11 +27,11 @@ let of_uri ~read_file s =
       | Ok (Some content) ->
           let mime_type = Some (mime_of_ext (Fpath.filename fp)) in
           Local { mime_type; content; path = fp }
-      | Ok None -> Remote (Fpath.to_string p)
+      | Ok None -> Remote (Fpath.to_string fp)
       | Error (`Msg error_msg) ->
           let locs = [] in
           Diagnosis.add
-            (MissingFile { file = Fpath.to_string p; error_msg; locs });
-          Remote (Fpath.to_string p))
+            (MissingFile { file = Fpath.to_string fp; error_msg; locs });
+          Remote (Fpath.to_string fp))
 
 let of_string ~read_file s = s |> Uri.of_string |> of_uri ~read_file
