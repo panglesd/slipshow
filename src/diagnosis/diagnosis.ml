@@ -142,7 +142,7 @@ let to_grace source_map error =
                 (String.concat "', '" possible_arguments);
             ]
       in
-      Some (Diagnostic.createf ~labels ~notes Warning "")
+      Some (Diagnostic.createf ~labels ~notes Warning "Invalid action argument")
   | ParsingWarnor { warnor = Parsing_failure { msg; loc = parse_loc }; loc } ->
       let loc = loc_of_ploc loc parse_loc in
       let labels =
