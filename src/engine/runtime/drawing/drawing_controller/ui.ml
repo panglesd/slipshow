@@ -205,20 +205,27 @@ let play (replaying_state : replaying_state) =
     let before = now -. increment in
     let has_crossed_pause =
       Lwd_table.fold
-        (fun b pause ->
-          b
-          ||
-          let at = Lwd.peek pause.p_at in
-          before <= at && at < now)
-        false replaying_state.recording.pauses
+        (fun b (pause : Drawing_state.pause) ->
+          match b with
+          | Some _ as b -> b
+          | None ->
+              let at = Lwd.peek pause.p_at in
+              if before <= at && at < now then Some at else None)
+        None replaying_state.recording.pauses
     in
-    Lwd.set replaying_state.time now;
-    if
-      now <= max && Lwd.peek replaying_state.is_playing && not has_crossed_pause
-    then
-      let _animation_frame_id = Brr.G.request_animation_frame loop in
-      ()
-    else Lwd.set replaying_state.is_playing false
+    match has_crossed_pause with
+    | Some max_time ->
+        Lwd.set replaying_state.time (Float.next_after max_time Float.infinity);
+        Lwd.set replaying_state.is_playing false
+    | None ->
+        if now <= max && Lwd.peek replaying_state.is_playing then
+          let () = Lwd.set replaying_state.time now in
+          let _animation_frame_id = Brr.G.request_animation_frame loop in
+          ()
+        else if now > max && Lwd.peek replaying_state.is_playing then
+          let () = Lwd.set replaying_state.time max in
+          Lwd.set replaying_state.is_playing false
+        else ()
   in
   loop 0.
 

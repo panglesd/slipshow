@@ -752,20 +752,25 @@ module Draw = struct
         let has_crossed_pause =
           Lwd_table.fold
             (fun b (pause : Drawing_state.pause) ->
-              b
-              ||
-              let at = Lwd.peek pause.p_at in
-              time_before <= at && at < new_time)
-            false record.recording.pauses
+              match b with
+              | Some _ as b -> b
+              | None ->
+                  let at = Lwd.peek pause.p_at in
+                  if time_before <= at && at < new_time then Some at else None)
+            None record.recording.pauses
         in
         Lwd.set record.time new_time;
-        if has_crossed_pause then resolve_fut ()
-        else if new_time >= max_time then (
-          Lwd.set record.time max_time;
-          resolve_fut ())
-        else
-          let _animation_frame_id = G.request_animation_frame draw_loop in
-          ()
+        match has_crossed_pause with
+        | Some max_time ->
+            Lwd.set record.time (Float.next_after max_time Float.infinity);
+            resolve_fut ()
+        | None ->
+            if new_time >= max_time then (
+              Lwd.set record.time max_time;
+              resolve_fut ())
+            else
+              let _animation_frame_id = G.request_animation_frame draw_loop in
+              ()
       in
       match mode with
       | Fast.Slow -> when_slow ()
