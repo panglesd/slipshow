@@ -4,7 +4,15 @@
 
 ### Added
 
-- Helpful warnings at compile-time (#213)
+- Helpful warnings at compile-time (#213):
+  - Action parsing failures,
+  - Missing ID (and `external-ids` frontmatter field to selectively deactivate),
+  - Duplicated ID,
+  - Frontmatter parsing error,
+  - Wrong target type for actions,
+  - Missing file,
+  - Unknown attribute,
+  - ...
 
 ## [v0.9.0] Manim Black (Tuesday 19th February, 2026)
 
