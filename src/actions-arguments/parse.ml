@@ -28,15 +28,17 @@ let parse_string s =
   in
   let quoted_string idx0 =
     let rec take_inside_quoted_string acc idx =
-      match s.[idx] with
-      | '"' ->
-          ( (acc |> List.rev |> List.to_seq |> String.of_seq, (idx0, idx - 1)),
-            idx + 1 )
-      | '\\' ->
-          if idx + 1 >= String.length s then
-            failwith "Unterminated escape sequence in quoted string"
-          else take_inside_quoted_string (s.[idx + 1] :: acc) (idx + 2)
-      | _ -> take_inside_quoted_string (s.[idx] :: acc) (idx + 1)
+      if idx >= String.length s then failwith "Missing end of quote"
+      else
+        match s.[idx] with
+        | '"' ->
+            ( (acc |> List.rev |> List.to_seq |> String.of_seq, (idx0, idx - 1)),
+              idx + 1 )
+        | '\\' ->
+            if idx + 1 >= String.length s then
+              failwith "Unterminated escape sequence in quoted string"
+            else take_inside_quoted_string (s.[idx + 1] :: acc) (idx + 2)
+        | _ -> take_inside_quoted_string (s.[idx] :: acc) (idx + 1)
     in
     take_inside_quoted_string [] idx0
   in
