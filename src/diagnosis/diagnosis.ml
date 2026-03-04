@@ -81,8 +81,8 @@ let to_grace source_map error =
           occurrences
       in
       Some
-        (Diagnostic.createf ~labels ~code:error Warning
-           "ID %s is assigned multiple times" id)
+        (Diagnostic.createf ~labels Warning "ID %s is assigned multiple times"
+           id)
   | MissingFile { file; error_msg; locs } ->
       let labels =
         List.filter_map
@@ -90,8 +90,8 @@ let to_grace source_map error =
           locs
       in
       Some
-        (Diagnostic.createf ~labels ~code:error Warning
-           "file '%s' could not be read: %s" file error_msg)
+        (Diagnostic.createf ~labels Warning "file '%s' could not be read: %s"
+           file error_msg)
   | WrongType { loc_reason; loc_block; expected_type } ->
       let labels =
         List.filter_map Fun.id
@@ -103,14 +103,14 @@ let to_grace source_map error =
             @@ Diagnostic.Label.primaryf "This is not a %s" expected_type;
           ]
       in
-      Some (Diagnostic.createf ~labels ~code:error Warning "Wrong type")
+      Some (Diagnostic.createf ~labels Warning "Wrong type")
   | ParsingError { action; msg; loc } ->
       let labels =
         List.filter_map Fun.id
           [ with_range loc @@ Diagnostic.Label.primaryf "%s" msg ]
       in
       Some
-        (Diagnostic.createf ~labels ~code:error Warning
+        (Diagnostic.createf ~labels Warning
            "Action %s arguments could not be parsed" action)
   | ParsingWarnor
       {
@@ -142,14 +142,14 @@ let to_grace source_map error =
                 (String.concat "', '" possible_arguments);
             ]
       in
-      Some (Diagnostic.createf ~labels ~notes ~code:error Warning "")
+      Some (Diagnostic.createf ~labels ~notes Warning "")
   | ParsingWarnor { warnor = Parsing_failure { msg; loc = parse_loc }; loc } ->
       let loc = loc_of_ploc loc parse_loc in
       let labels =
         List.filter_map Fun.id
           [ with_range loc @@ Diagnostic.Label.primaryf "%s" msg ]
       in
-      Some (Diagnostic.createf ~labels ~code:error Warning "Failed to parse")
+      Some (Diagnostic.createf ~labels Warning "Failed to parse")
   | MissingID { id; loc } ->
       let labels =
         List.filter_map Fun.id
@@ -160,8 +160,8 @@ let to_grace source_map error =
           ]
       in
       Some
-        (Diagnostic.createf ~labels ~code:error Warning
-           "No element with id '%s' was found" id)
+        (Diagnostic.createf ~labels Warning "No element with id '%s' was found"
+           id)
   | General { msg; labels; notes; code = _ } ->
       let labels =
         List.filter_map
@@ -172,15 +172,14 @@ let to_grace source_map error =
       let notes =
         List.map (fun msg -> Diagnostic.Message.createf "%s" msg) notes
       in
-      Some (Diagnostic.createf ~labels ~notes ~code:error Warning "%s" msg)
+      Some (Diagnostic.createf ~labels ~notes Warning "%s" msg)
   | UnknownAttribute { attr; loc } ->
       let labels =
         List.filter_map Fun.id
           [ with_range loc @@ Diagnostic.Label.primaryf "" ]
       in
       Some
-        (Diagnostic.createf ~labels ~code:error Warning
-           "Non standard attribute: '%s'" attr)
+        (Diagnostic.createf ~labels Warning "Non standard attribute: '%s'" attr)
 
 let errors_acc = ref []
 let add x = errors_acc := x :: !errors_acc
