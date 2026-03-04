@@ -75,58 +75,70 @@ Testing with an include
       │  ^^^^^^^^^^^^^^^^^^^ 
       = Recognized fields are: 'dimension', 'toplevel-attributes', 'math-link', 'theme', 'css', 'js', 'highlightjs-theme', 'math-mode', 'external-ids'
   
+  warning[Frontmatter]: Invalid frontmatter entry
+      ┌─ all.md:7:1
+    7 │  anothe rwrong line
+      │  ^^^^^^^^^^^^^^^^^^ 
+      = Frontmatter have to be of the form "key:value" on a single line.
+  
+  warning[Frontmatter]: Invalid frontmatter entry
+      ┌─ all.md:5:1
+    5 │  wrong line
+      │  ^^^^^^^^^^ 
+      = Frontmatter have to be of the form "key:value" on a single line.
+  
   warning[ActionParsing]: Failed to parse
-      ┌─ all.md:41:16
-   41 │  {up="~margin:2 ~margin:3"}
+      ┌─ all.md:44:16
+   44 │  {up="~margin:2 ~margin:3"}
       │                 ^^^^^^^ Named argument 'margin' is duplicated. This instance is ignored.
   
   warning[ActionParsing]: Failed to parse
-      ┌─ all.md:35:11
-   35 │  {up="uid1 uid2"}
+      ┌─ all.md:38:11
+   38 │  {up="uid1 uid2"}
       │            ^^^^ Action up does not support multiple arguments
   
   warning[ActionParsing]: Failed to parse
-      ┌─ all.md:33:11
-   33 │  {unfocus="something"}
+      ┌─ all.md:36:11
+   36 │  {unfocus="something"}
       │            ^^^^^^^^^ The unfocus action does not accept any argument
   
   warning[ActionParsing]: Action up arguments could not be parsed
-      ┌─ all.md:31:6
-   31 │  {up="~:12"}
+      ┌─ all.md:34:6
+   34 │  {up="~:12"}
       │       ^^^^ '~' needs to be followed by a name
   
   warning[ActionParsing]: Failed to parse
-      ┌─ all.md:29:32
-   29 │  {up="~duratiooon:12  ~duration:aaa"}
+      ┌─ all.md:32:32
+   32 │  {up="~duratiooon:12  ~duration:aaa"}
       │                                 ^^^ Error during float parsing
   
   warning[ActionParsing]: 
-      ┌─ all.md:29:6
-   29 │  {up="~duratiooon:12  ~duration:aaa"}
+      ┌─ all.md:32:6
+   32 │  {up="~duratiooon:12  ~duration:aaa"}
       │       ^^^^^^^^^^^ Action 'up' does not take argument 'duratiooon'
       = 'up' accepts arguments 'duration', 'margin'
   
   warning[UnknownAttribute]: Non standard attribute: 'unknown-attribute'
-      ┌─ all.md:18:2
-   18 │  {unknown-attribute}
+      ┌─ all.md:21:2
+   21 │  {unknown-attribute}
       │   ^^^^^^^^^^^^^^^^^ 
   
   warning[IDNotFound]: No element with id 'missing-id' was found
-      ┌─ all.md:16:8
-   16 │  {pause=missing-id}
+      ┌─ all.md:19:8
+   19 │  {pause=missing-id}
       │         ^^^^^^^^^^ This should be an ID present in the document
   
   warning[WrongType]: Wrong type
-      ┌─ all.md:14:1
-   14 │  This is not a carousel
+      ┌─ all.md:17:1
+   17 │  This is not a carousel
       │  ^^^^^^^^^^^^^^^^^^^^^^
       │  │
       │  This expects the id of a carousel or pdf
       │  This is not a carousel or pdf
   
   warning[WrongType]: Wrong type
-      ┌─ all.md:11:1
-   11 │  Hello
+      ┌─ all.md:14:1
+   14 │  Hello
       │  ^^^^^
       │  │
       │  This expects the id of a slip-script
@@ -143,23 +155,23 @@ Testing with an include
       │                            ^^ This should be an ID present in the document
   
   warning[FSError]: file 'missing.md' could not be read: missing.md: No such file or directory
-      ┌─ all.md:8:4
-    8 │  ![](missing.md)
+      ┌─ all.md:11:4
+   11 │  ![](missing.md)
       │     ^^^^^^^^^^^^ 
   
   warning[DupID]: ID duplicated-id is assigned multiple times
-      ┌─ all.md:22:3
-    7 │  {#duplicated-id}
+      ┌─ all.md:25:3
+   10 │  {#duplicated-id}
       │    ^^^^^^^^^^^^^ 
       ·  
-   20 │  {#duplicated-id}
+   23 │  {#duplicated-id}
       │    ^^^^^^^^^^^^^ 
-   21 │  
-   22 │  {#duplicated-id}
+   24 │  
+   25 │  {#duplicated-id}
       │    ^^^^^^^^^^^^^ 
   
   warning[ChildrenAttrs]: Children classes cannot have a value
-      ┌─ all.md:24:19
-   24 │  {children:.class="have value"}
+      ┌─ all.md:27:19
+   27 │  {children:.class="have value"}
       │                    ^^^^^^^^^^ 
   
