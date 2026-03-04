@@ -2,6 +2,9 @@
 toplevel-attributes: exec=yo dqzd
 unknown-frontmatter: field
 dimension: 16:16
+wrong line
+
+anothe rwrong line
 ---
 
 {#duplicated-id}
