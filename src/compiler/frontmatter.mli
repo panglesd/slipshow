@@ -59,8 +59,8 @@ type extraction = {
 }
 
 val extract : string -> extraction option
-(** The first string is the frontmatter, the second one the original string with
-    the frontmatter and separator stripped *)
+(** Split the frontmatter and the rest of the input string, still computing
+    offsets *)
 
 val combine : resolved t -> resolved t -> resolved t
 val resolve : unresolved t -> to_asset:(string -> Asset.t) -> resolved t
