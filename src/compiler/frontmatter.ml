@@ -286,9 +286,30 @@ let send_general_error ~key ~msg ~vloc =
        })
 
 let of_string file offset s =
+  let raise_warning line =
+    let loc =
+      let i, _, (byte_start, byte_end) = line in
+      let first_byte = byte_start + offset
+      and last_byte = byte_end + offset - 1 in
+      Cmarkit.Textloc.v ~file ~first_line:(i, byte_start)
+        ~last_line:(i, byte_start) ~first_byte ~last_byte
+    in
+    let msg = "Invalid frontmatter entry" in
+    let note =
+      "Frontmatter have to be of the form \"key:value\" on a single line."
+    in
+    let notes = [ note ] in
+    Diagnosis.add
+      (General { msg; notes; labels = [ ("", loc) ]; code = "Frontmatter" })
+  in
   let assoc =
     s |> split_in_lines
-    |> List.filter_map @@ fun line -> cut file offset line ':'
+    |> List.filter_map @@ fun line ->
+       match cut file offset line ':' with
+       | None ->
+           raise_warning line;
+           None
+       | Some _ as res -> res
   in
   let handle_line fm ((key, kloc), ((_, vloc) as value)) =
     match SMap.find_opt key fields_map with
