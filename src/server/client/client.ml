@@ -45,7 +45,7 @@ let previewer =
         Brr.Window.History.replace_state ~uri history
   in
   Previewer.create_previewer ?initial_stage ~callback ~include_speaker_view:true
-    ~errors_el:warnings elem
+    ~errors_el:warnings ~steal_focus:true elem
 
 let recv () =
   let open Lwt.Syntax in
