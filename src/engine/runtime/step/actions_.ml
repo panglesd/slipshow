@@ -59,17 +59,28 @@ let elems_of_ids_or_self ids_or_self elem =
   match ids_or_self with
   | `Self -> [ elem ]
   | `Ids ids ->
-      (* TODO: warn on non-existent element *)
+      let handle_none id = function
+        | Some _ as x -> x
+        | None as x ->
+            Console.(error [ "id"; id; "was not found" ]);
+            x
+      in
       List.filter_map
-        (fun (id, _) -> El.find_first_by_selector !!("#" ^ id))
+        (fun (id, _) ->
+          El.find_first_by_selector !!("#" ^ id) |> handle_none id)
         ids
 
-let elem_of_id_or_self id_or_self elem =
+let elem_of_id_or_self id_or_self elem ~none some =
   match id_or_self with
-  | `Self -> elem
-  | `Id (id, _) ->
-      (* TODO: no Option.get *)
-      El.find_first_by_selector !!("#" ^ id) |> Option.get
+  | `Self -> some elem
+  | `Id (id, _) -> (
+      match El.find_first_by_selector !!("#" ^ id) with
+      | None ->
+          Console.(error [ "id"; id; "was not found" ]);
+          none
+      | Some elem -> some elem)
+
+let ( let< ) x f = x f
 
 module Pause = struct
   include Actions_arguments.Pause
@@ -191,7 +202,7 @@ struct
 
   let do_ ~mode window elem { margin; duration; target } =
     only_if_not_counting mode @@ fun _mode ->
-    let elem = elem_of_id_or_self target elem in
+    let< elem = elem_of_id_or_self target elem ~none:(Undoable.return ()) in
     do_js ~mode window { elem; margin; duration }
 end
 
@@ -435,7 +446,7 @@ module Speaker_note = struct
   let sn = ref ""
 
   let setup elem arg =
-    let elem = elem_of_id_or_self arg elem in
+    let< elem = elem_of_id_or_self arg elem ~none:(Fut.return ()) in
     Fut.return @@ El.set_class (Jstr.v "__slipshow__speaker_note") true elem
 
   let setup = Some setup
@@ -456,7 +467,7 @@ module Speaker_note = struct
     Undoable.return ~undo ()
 
   let do_ ~mode _window elem (arg : args) =
-    let elem = elem_of_id_or_self arg elem in
+    elem_of_id_or_self arg elem ~none:(Undoable.return ()) @@ fun elem ->
     do_js ~mode _window elem
 end
 
@@ -642,7 +653,9 @@ module Change_page = struct
 
   (* TODO: Make it more elegant, coding-wise! *)
   let do_1 ~mode window elem ({ target; n; _ } as arg) =
-    let target_elem = elem_of_id_or_self target elem in
+    let< target_elem =
+      elem_of_id_or_self target elem ~none:(Undoable.return None)
+    in
     check_carousel target_elem @@ fun () ->
     let> new_n =
       match n with
