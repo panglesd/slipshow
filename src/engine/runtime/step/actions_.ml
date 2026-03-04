@@ -478,7 +478,7 @@ module Play_media = struct
 
   type js_args = Brr.El.t list
 
-  let log_error = function Ok x -> x | Error x -> Console.(error [ x ])
+  let log_error = function Ok () -> () | Error x -> Console.(error [ x ])
 
   let do_js ~mode _window elems =
     only_if_not_counting mode @@ fun _mode ->

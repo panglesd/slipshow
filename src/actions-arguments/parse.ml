@@ -305,7 +305,6 @@ let require_single_positional ~action_name (x : _ list) =
       Some a
 
 let no_args ~action_name s =
-  let ( let+ ) = Fun.flip Result.map in
   let open W.M in
   let+ x = parse ~action_name ~named:[] ~positional:id s in
   let$ x = x in
@@ -316,14 +315,12 @@ let no_args ~action_name s =
       ((), [ W.Parsing_failure { msg; loc } ])
 
 let parse_only_els ~action_name s =
-  let ( let$ ) = Fun.flip Result.map in
-  let$ x, warnings = parse ~action_name ~named:[] ~positional:id s in
+  let+ x, warnings = parse ~action_name ~named:[] ~positional:id s in
   let res = match merge_positional x with [] -> `Self | x -> `Ids x in
   (res, warnings)
 
 let parse_only_el ~action_name s =
-  let ( let$ ) x f = Result.map f x in
-  let$ x, warnings = parse ~action_name ~named:[] ~positional:id s in
+  let+ x, warnings = parse ~action_name ~named:[] ~positional:id s in
   match merge_positional x with
   | [] -> (`Self, warnings)
   | x :: rest ->
