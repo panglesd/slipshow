@@ -112,7 +112,7 @@ Testing with an include
    32 │  {up="~duratiooon:12  ~duration:aaa"}
       │                                 ^^^ Error during float parsing
   
-  warning: 
+  warning: Invalid action argument
       ┌─ all.md:32:6
    32 │  {up="~duratiooon:12  ~duration:aaa"}
       │       ^^^^^^^^^^^ Action 'up' does not take argument 'duratiooon'
