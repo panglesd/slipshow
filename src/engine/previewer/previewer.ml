@@ -50,7 +50,7 @@ let css =
 |}
 
 let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
-    ~include_speaker_view ~errors_el root =
+    ~include_speaker_view ~errors_el ~steal_focus root =
   let ( !! ) = Jstr.v in
   let name1 = Random.int 1000000 |> string_of_int |> fun s -> "id" ^ s in
   let name2 = Random.int 1000000 |> string_of_int |> fun s -> "id" ^ s in
@@ -99,15 +99,20 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
               send_speaker_view `Open panels.(1 - !index));
             index := 1 - !index;
             Brr.El.set_class (Jstr.v "active_panel") true panels.(!index);
-            (* let contentDocument el = *)
-            (*   Jv.get (Brr.El.to_jv el) "contentDocument" |> Brr.Document.of_jv *)
-            (* in *)
-            (* let inner_iframe = *)
-            (*   panels.(!index) |> contentDocument |> fun d -> *)
-            (*   Brr.Document.find_el_by_id d (Jstr.v "slipshow__internal_iframe") *)
-            (*   |> Option.get *)
-            (* in *)
-            (* let () = Brr.El.set_has_focus true inner_iframe in *)
+            let () =
+              if steal_focus then
+                let contentDocument el =
+                  Jv.get (Brr.El.to_jv el) "contentDocument"
+                  |> Brr.Document.of_jv
+                in
+                let inner_iframe =
+                  panels.(!index) |> contentDocument |> fun d ->
+                  Brr.Document.find_el_by_id d
+                    (Jstr.v "slipshow__internal_iframe")
+                  |> Option.get
+                in
+                Brr.El.set_has_focus true inner_iframe
+            in
             Brr.El.set_class (Jstr.v "active_panel") false panels.(1 - !index)
         | _ -> ())
       (Brr.Window.as_target Brr.G.window)

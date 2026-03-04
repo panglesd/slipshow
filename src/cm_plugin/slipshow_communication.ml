@@ -33,7 +33,7 @@ let slipshow_plugin ?slipshow_js ?frontmatter ?read_file ~errors_el
   View.ViewPlugin.define (fun view ->
       let state =
         Previewer.create_previewer ~include_speaker_view:false ~errors_el
-          preview_element
+          ~steal_focus:false preview_element
       in
       let _ : unit Fut.t = update_slipshow ~ms:0 state view in
       let update upd =

@@ -14,6 +14,7 @@ val create_previewer :
   ?callback:(int -> unit) ->
   include_speaker_view:bool ->
   errors_el:Brr.El.t ->
+  steal_focus:bool ->
   Brr.El.t ->
   previewer
 
