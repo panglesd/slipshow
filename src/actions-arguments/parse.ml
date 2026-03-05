@@ -16,9 +16,10 @@ let parse_string s =
     else if is_ws idx then consume_ws (idx + 1)
     else idx
   in
-  let rec consume_non_ws idx =
+  let rec consume_non_ws_non_semicolon idx =
     if idx >= String.length s then idx
-    else if not (is_ws idx) then consume_non_ws (idx + 1)
+    else if (not (is_ws idx)) && not (Char.equal s.[idx] ';') then
+      consume_non_ws_non_semicolon (idx + 1)
     else idx
   in
   let rec consume_alpha idx =
@@ -44,7 +45,7 @@ let parse_string s =
   in
   let parse_unquoted_string idx =
     let idx0 = idx in
-    let idx = consume_non_ws idx in
+    let idx = consume_non_ws_non_semicolon idx in
     let arg = String.sub s idx0 (idx - idx0) in
     ((arg, (idx0, idx)), idx)
   in
