@@ -289,6 +289,7 @@ let of_string file offset s =
   let raise_warning line =
     let loc =
       let i, _, (byte_start, byte_end) = line in
+      let i = i + 1 in
       let first_byte = byte_start + offset
       and last_byte = byte_end + offset - 1 in
       Cmarkit.Textloc.v ~file ~first_line:(i, byte_start)
