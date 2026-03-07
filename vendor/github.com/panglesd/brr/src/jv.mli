@@ -373,24 +373,6 @@ external callback : arity:int -> (_ -> _) -> t = "caml_js_wrap_callback_strict"
 (** [callback ~arity f] makes function [f] with arity [arity] callable
     from JavaScript. *)
 
-module Function : sig
-  type _ args =
-    | [] : jv args
-    | (::) : (string * ('a -> jv)) * 'b args -> ('a -> 'b) args
-
-  val v : args:('a args) -> body:Jstr.t -> 'a
-  (** Creates a function with the given body. For instance:
-
-      {[
-        let body = Jstr.v "console.log(x, y + 2) ; return x" in
-        let args = Function.[("x", of_string) ; ("y", of_int)] in
-        let f = Function.v ~body ~args in
-        f "Hello" 42
-      ]}
-  *)
-
-end
-
 (** {1:exns Errors and exceptions} *)
 
 (** Error objects. *)
@@ -546,6 +528,30 @@ module Promise : sig
   val all : jv -> t
   (** [all arr] is a promise that resolves all the promises in the
       array [arr] to an array of values. *)
+end
+
+module Function : sig
+  type _ args =
+    | [] : jv args
+    | (::) : (string * ('a -> jv)) * 'b args -> ('a -> 'b) args
+
+  type _ async_args =
+    | [] : Promise.t async_args
+    | (::) : (string * ('a -> jv)) * 'b async_args -> ('a -> 'b) async_args
+
+  val v : args:('a args) -> body:Jstr.t -> 'a
+  (** Creates a function with the given body. For instance:
+
+      {[
+        let body = Jstr.v "console.log(x, y + 2) ; return x" in
+        let args = Function.[("x", of_string) ; ("y", of_int)] in
+        let f = Function.v ~body ~args in
+        f "Hello" 42
+      ]}
+  *)
+
+  val async : args:('a async_args) -> body:Jstr.t -> 'a
+
 end
 
 (** {1:unicode JavaScript Unicode identifiers}

@@ -27,7 +27,7 @@ module Execute = struct
       let body = Jv.get (Brr.El.to_jv elem) "innerHTML" |> Jv.to_jstr in
       Brr.Console.(log [ body ]);
       let args = Jv.Function.[ ("slip", Fun.id) ] in
-      let f = Jv.Function.v ~body ~args in
+      let f = Jv.Function.async ~body ~args in
       let arg = Javascript_api.slip ~mode window undos_ref in
       let u = f arg in
       let undo () =
