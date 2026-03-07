@@ -14,6 +14,10 @@
   - Unknown attribute,
   - ...
 
+### Fixed
+
+- Fixed drawing stopping slightly after pauses (#216)
+
 ## [v0.9.0] Manim Black (Tuesday 19th February, 2026)
 
 ### Added
