@@ -83,6 +83,7 @@ let next ~mode window () =
       let res =
         let> () = Actions.exit ~mode window pause in
         let> () = AttributeActions.do_ ~mode window pause in
-        Undoable.return ()
+        let continue = Brr.El.at (Jstr.v "auto-next") pause |> Option.is_some in
+        Undoable.return continue
       in
       Some res

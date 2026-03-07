@@ -54,7 +54,7 @@ let keyboard_setup (window : Universe.Window.t) =
           in
           ()
       | "ArrowLeft" | "PageUp" | "ArrowUp" ->
-          let _ : unit Fut.t =
+          let _ : bool Fut.t =
             Step.Next.go_prev ~send_message:true window (Fast.normal ())
           in
           ()
@@ -106,7 +106,7 @@ let touch_setup (window : Universe.Window.t) =
     let _unlisten =
       Brr.Ev.listen Brr.Ev.click
         (fun _ ->
-          let _ : unit Fut.t =
+          let _ : bool Fut.t =
             Step.Next.go_prev ~send_message:true window (Fast.normal ())
           in
           ())
@@ -225,7 +225,7 @@ let message_setup window =
       match msg with
       | Some { payload = State (i, mode); id = _ } ->
           let fast = match mode with `Fast -> true | _ -> false in
-          let _ : unit Fut.t =
+          let _ : bool Fut.t =
             let mode = if fast then Fast.fast else Fast.normal () in
             Step.Next.go_to ~send_message:false ~mode i window
           in

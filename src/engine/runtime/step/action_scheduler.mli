@@ -6,4 +6,4 @@ end
 
 val all_action_selector : string
 val setup_actions : Universe.Window.t -> unit -> unit Fut.t
-val next : mode:Fast.mode -> Universe.Window.t -> unit -> unit Undoable.t option
+val next : mode:Fast.mode -> Universe.Window.t -> unit -> bool Undoable.t option

@@ -30,10 +30,10 @@ let start ~width ~height ~step =
   let* () = Step.Action_scheduler.setup_actions window () in
   (* We do one step first, without recording it/updating the hash, to enter in
      the first slip *)
-  let* _ =
+  let* continue =
     let mode = Fast.slow in
     Step.Action_scheduler.next ~mode window ()
-    |> Option.value ~default:(Undoable.return ())
+    |> Option.value ~default:(Undoable.return false)
     |> Undoable.discard
   in
   let* () =
@@ -42,13 +42,22 @@ let start ~width ~height ~step =
     Fut.tick ~ms:0
   in
   let* () = Table_of_content.generate window el in
-  let* () =
+  let* continue : bool =
     match initial_step with
-    | None -> Fut.return @@ Step.Next.actualize 0
+    | None | Some 0 ->
+        Fut.return
+        @@
+        (Step.Next.actualize 0;
+         continue)
     | Some step ->
         Step.Next.go_to ~send_message:false ~mode:Fast.fast step window
   in
   let () = Controller.setup window in
+  let* () =
+    if continue then
+      Step.Next.go_next ~send_message:false window (Fast.normal ())
+    else Fut.return ()
+  in
   let () = Messaging.send_ready () in
   (* let () = Drawing_editor.init () in *)
   Fut.return ()

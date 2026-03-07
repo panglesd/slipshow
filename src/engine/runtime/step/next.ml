@@ -20,19 +20,20 @@ let actualize n =
 
 let go_next ~mode window ~from ~to_ =
   let () = Brr.Console.(log [ "going next from "; from; " to "; to_ ]) in
-  let rec loop n =
-    if n <= 0 then Fut.return to_
+  let rec loop n continue =
+    if n <= 0 then Fut.return (to_, continue)
     else
       match Action_scheduler.next ~mode window () with
-      | None -> Fut.return (to_ - n)
+      | None -> Fut.return (to_ - n, false)
       | Some undos ->
-          let* (), undos = undos in
+          Brr.Console.(log [ "MYRSK CONTINUINF 33"; continue ]);
+          let* continue, undos = undos in
           Stack.push undos all_undos;
-          loop (n - 1)
+          loop (n - 1) continue
   in
-  let+ res = loop (to_ - from) in
+  let+ res, continue = loop (to_ - from) false in
   actualize to_;
-  res
+  (res, continue)
 
 let go_prev ~mode:_ ~from ~to_ =
   let rec loop n =
@@ -50,18 +51,19 @@ let go_prev ~mode:_ ~from ~to_ =
 
 let goto ~mode ~from ~to_ window =
   Brr.Console.(log [ "Goto step"; to_; "from step"; from ]);
-  if from > to_ then go_prev ~mode ~from ~to_
+  if from > to_ then Fut.map (fun x -> (x, false)) (go_prev ~mode ~from ~to_)
   else if from < to_ then go_next ~mode window ~from ~to_
-  else Fut.return from
+  else Fut.return (from, false)
 
 let rec exec_transition transition window =
   let () = State.set_step (State.Transition transition) in
   if transition.send_message then
     Messaging.send_step transition.to_
       (if Fast.is_fast transition.mode then `Fast else `Normal);
-  let* new_to =
+  let* new_to, continue =
     goto ~mode:transition.mode ~from:transition.from ~to_:transition.to_ window
   in
+  transition.signal continue;
   let () =
     if (not @@ Int.equal new_to transition.to_) && transition.send_message then (
       Messaging.send_step new_to
@@ -71,14 +73,24 @@ let rec exec_transition transition window =
   match transition.next with
   | None ->
       let () = State.set_step (State.At new_to) in
-      Fut.return ()
+      Fut.return continue
   | Some next_transition ->
-      exec_transition { next_transition with from = new_to } window
+      let _ = exec_transition { next_transition with from = new_to } window in
+      Fut.return continue
 
 let go_to ~mode ~send_message to_ window =
   match State.get_step () with
   | At from ->
-      let transition = { State.from; to_; mode; next = None; send_message } in
+      let transition =
+        {
+          State.from;
+          to_;
+          mode;
+          next = None;
+          send_message;
+          signal = (fun _ -> ());
+        }
+      in
       exec_transition transition window
   | Transition transition ->
       let () =
@@ -87,18 +99,23 @@ let go_to ~mode ~send_message to_ window =
         | Counting_for_toc | Fast | Slow -> ()
       in
       (* TODO: check if it's a problem that activate is never activated *)
-      let f, _activate = Fut.create () in
+      let f, activate = Fut.create () in
       let from = transition.to_ in
-      transition.next <- Some { from; to_; mode; next = None; send_message };
+      transition.next <-
+        Some { from; to_; mode; next = None; send_message; signal = activate };
       f
 
-let go_next ~send_message window mode =
+let rec go_next ~send_message window mode =
   let step =
     match State.get_step () with
     | At n -> n + 1
     | Transition { from; to_; _ } -> Int.max from to_
   in
-  go_to step ~mode ~send_message window
+  let* res = go_to step ~mode ~send_message window in
+  match (res, mode) with
+  | true, Normal hb when not @@ Fast.has_detonated hb ->
+      go_next ~send_message:false window mode
+  | _ -> Fut.return ()
 
 let go_prev ~send_message window mode =
   let step =

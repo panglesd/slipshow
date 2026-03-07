@@ -4,6 +4,7 @@ type transition = {
   mode : Fast.mode;
   mutable next : transition option;
   send_message : bool;
+  signal : bool -> unit;
 }
 
 type t = At of int | Transition of transition

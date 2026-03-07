@@ -38,7 +38,7 @@ let entry_action window step =
     let _unlistener =
       Brr.Ev.listen Brr.Ev.click
         (fun _ ->
-          let _ : unit Fut.t =
+          let _ : bool Fut.t =
             Step.Next.go_to ~send_message:true ~mode:Fast.fast step window
           in
           ())
