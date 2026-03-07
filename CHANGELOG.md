@@ -19,6 +19,7 @@
 - Fixed drawing stopping slightly after pauses (#216)
 - Fixed keyboard shortcuts not working in serve mode until the preview was
   clicked (#215)
+- Fix shortcuts not working after saving a drawing (#217)
 
 ## [v0.9.0] Manim Black (Tuesday 19th February, 2026)
 
