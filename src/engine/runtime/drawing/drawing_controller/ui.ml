@@ -238,7 +238,7 @@ let play_button editing_state =
 
 let save_button recording =
   let click =
-    Elwd.handler Brr.Ev.click (fun _ ->
+    Elwd.handler Brr.Ev.click (fun ev ->
         let s = Drawing_state.Json.string_of_recording recording in
         let blob =
           let init = Brr.Blob.init ~type':(Jstr.v "application/json") () in
@@ -263,6 +263,8 @@ let save_button recording =
         in
         Jv.set (Brr.El.to_jv a) "download" (Jv.of_string filename);
         Jv.call (Brr.El.to_jv a) "click" [||] |> ignore;
+        let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv |> Brr.El.of_jv in
+        Brr.El.set_has_focus false el;
         revoke_url ())
   in
   Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "💾 Save") ]
