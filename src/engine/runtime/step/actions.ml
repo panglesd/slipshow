@@ -79,4 +79,5 @@ let all =
     (module Speaker_note : S);
     (module Clear_draw : S);
     (module Draw : S);
+    (module Wait : S);
   ]

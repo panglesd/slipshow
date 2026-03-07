@@ -65,6 +65,24 @@ end) : Move = struct
         | Some positional -> { target = `Id positional; duration; margin })
 end
 
+module Wait = struct
+  let on = "wait"
+  let action_name = on
+
+  type args = int
+
+  let parse_args s =
+    let ( let+ ) x f = Result.map f x in
+    let open W.M in
+    let+ x = Parse.parse ~action_name ~named:[] ~positional:int_of_string s in
+    let$ x = x in
+    let$ res = Parse.require_single_action ~action_name x in
+    match res with
+    | { p_named = []; p_pos = positional }, _ -> (
+        let$+ res = Parse.require_single_positional ~action_name positional in
+        match res with None -> 1000 | Some (positional, _) -> positional)
+end
+
 module Up = Move (struct
   let on = "up-at-unpause"
   let action_name = "up"

@@ -854,3 +854,42 @@ module Clear_draw = struct
 end
 
 module _ : S = Clear_draw
+
+module Wait = struct
+  include Actions_arguments.Wait
+
+  let setup = None
+  let setup_all = None
+
+  type js_args = unit
+
+  let do_js ~mode:_ _window _elems = failwith "TODO"
+
+  open Fut.Syntax
+
+  let do_ ~mode _window _el ms =
+    only_if_not_counting mode @@ fun _mode ->
+    let fut, activate = Fut.create () in
+    let activate =
+      let did = ref false in
+      fun () ->
+        let old_did = !did in
+        did := true;
+        if not old_did then activate ()
+    in
+    let _ =
+      let+ () = Fut.tick ~ms in
+      activate ()
+    in
+    let _ =
+      match mode with
+      | Normal hb ->
+          let+ () = Fast.wait hb in
+          activate ()
+      | _ -> Fut.return @@ activate ()
+    in
+    let* () = fut in
+    Undoable.return ()
+end
+
+module _ : S = Wait
