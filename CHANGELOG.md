@@ -20,6 +20,7 @@
 - Fixed keyboard shortcuts not working in serve mode until the preview was
   clicked (#215)
 - Fix shortcuts not working after saving a drawing (#217)
+- Fix wrong example links in docs (#218)
 
 ## [v0.9.0] Manim Black (Tuesday 19th February, 2026)
 
