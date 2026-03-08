@@ -164,7 +164,7 @@ The computable strength of Milliken's Tree Theorem and applications
       :scale: 30 %
       :align: center
       :alt: A screenshot of the Milliken presentation
-      :target: https://choum.net/panglesd/slides/slides-js/slides.html
+      :target: https://choum.net/panglesd/slides/WDCM-2021-slips/wdcm-ada.html
 
       The "Milliken Tree Theorem" presentation
 
@@ -206,7 +206,7 @@ Defunctionalization for fun
       :scale: 23 %
       :align: center
       :alt: A screenshot of the Defunctionalization presentation
-      :target: https://choum.net/panglesd/slides/slides-js/slides.html
+      :target: https://poisson.chat/aquarium/defunctionalization-lmf.html
 
       The "Defunctionalization for fun" presentation
 
@@ -227,7 +227,7 @@ Structures et équations de graphes sourcés : petite largeur arborescente et ch
       :scale: 30 %
       :align: center
       :alt: A screenshot of the presentation
-      :target: https://choum.net/panglesd/slides/slides-js/slides.html
+      :target: https://perso.ens-lyon.fr/samuel.humeau/pages/slides.html
 
       The end state of presentation
 
