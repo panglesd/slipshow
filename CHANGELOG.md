@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [v0.10.0] Don't look `{up}` (Thursday, the 12th of March, 2026)
 
 ### Added
 
