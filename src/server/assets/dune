@@ -1,0 +1,6 @@
+(library
+ (name server_assets)
+ (public_name slipshow.server_assets)
+ (preprocessor_deps
+  (file style.css))
+ (preprocess (pps ppx_blob)))
