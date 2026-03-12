@@ -112,44 +112,14 @@ let html_source =
            <pre id="warnings-slipshow" class="hide-warnings"></pre>
            <div id="warnings-slipshow-show">⚠️</div>
            <style>
-             #warnings-slipshow-show {
-               font-size:3em;
-    border:2px solid black;
-    padding:10px;
-    border-radius:1000px;
-    background:white;
-    cursor: pointer;
-    position:absolute;
-    z-index: 10;
-    top: 20px; right:20px;
-             }
-             #warnings-slipshow.hide-warnings {
-               display: none;
-             }
-             #warnings-slipshow {
-               font-family: monospace;
-               position: absolute;
-               inset: 0;
-               font-size: 1.5em;
-               background: rgba(0,0,0,0.9);
-               color: white;
-               z-index: 2;
-               white-space: pre;
-               margin:0;padding:20px;
-             }
-             #warnings-slipshow:empty {
-               display: none;
-             }
-             #warnings-slipshow:empty + #warnings-slipshow-show {
-               display: none;
-             }
+             %s
            </style>
            <style>%s</style>
            <script>%s</script>
 </body>
 </html>
   |html}
-    Ansi.css [%blob "client/client.bc.js"]
+    Server_assets.Style.v Ansi.css [%blob "client/client.bc.js"]
 
 let do_serve ~port compile =
   let () = if Sys.unix then Sys.(set_signal sigpipe Signal_ignore) in
