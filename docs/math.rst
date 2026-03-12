@@ -53,15 +53,14 @@ extensions are loaded.
    </script>
 
 The `list of options <https://docs.mathjax.org/en/v3.2/options/index.html>`_ can
-be found on `MathJax's docs <https://docs.mathjax.org/en/v3.2/>`_. The default
-value used by Slipshow is:
+be found on `MathJax's docs <https://docs.mathjax.org/en/v3.2/>`_.
 
-.. code-block::
+Use MathJax extensions
+======================
 
-   window.MathJax = {
-     loader: {load: ['[tex]/html']},
-     tex: {packages: {'[+]': ['html']}}
-   };
+Note that Slipshow uses a bundle of MathJax that contains `all extensions
+<https://docs.mathjax.org/en/v3.2/input/tex/extensions/index.html>`_ available
+in version 3.2 of MathJax.
 
 Reveal content bit by bit
 =========================
