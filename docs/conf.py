@@ -24,7 +24,7 @@ sys.path.append(str(Path('_ext').resolve()))
 # -- Project information -----------------------------------------------------
 
 project = 'slipshow'
-copyright = '2020, Paul-Elliot'
+copyright = '2020 - 2026, Paul-Elliot'
 author = 'Paul-Elliot'
 
 
