@@ -84,7 +84,9 @@ let watch ~input ~output ~cli_frontmatter =
     Logs.app (fun m -> m "Compiling...");
     compile ~input ~output ~cli_frontmatter
   in
-  Slipshow_server.do_watch compile
+  let () = Slipshow_server.do_watch compile in
+  (* [do_watch] never ends! *)
+  Ok ()
 
 let serve ~input ~output ~cli_frontmatter ~port =
   let compile () =
@@ -125,7 +127,9 @@ let serve ~input ~output ~cli_frontmatter ~port =
         (Fpath.normalize (Fpath.( // ) (Fpath.v (Sys.getcwd ())) input))
         all_used_files )
   in
-  Slipshow_server.do_serve ~port compile
+  let () = Slipshow_server.do_serve ~port compile in
+  (* [do_serve] never ends! *)
+  Ok ()
 
 let markdown_compile ~input ~output =
   let* content = Io.read input in
