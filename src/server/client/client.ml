@@ -59,12 +59,19 @@ let recv () =
   let ( $ ) f arg = do_and_retry f arg in
   let request_and_update typ =
     let open Fut.Result_syntax in
-    let request = Brr_io.Fetch.Request.v (uri typ) in
-    let* x = Brr_io.Fetch.request request in
-    let x = Brr_io.Fetch.Response.as_body x in
-    let+ raw_data = Brr_io.Fetch.Body.text x in
+    let+ raw_data =
+      let open Brr_io.Fetch in
+      let r = Request.v (uri typ) in
+      let* x = request r in
+      let x = Response.as_body x in
+      Body.text x
+    in
     let data = Slipshow.string_to_delayed (Jstr.to_string raw_data) in
-    Previewer.preview_compiled previewer data
+    match data with
+    | None ->
+        Console.error [ "Error when deserializing payload" ];
+        ()
+    | Some data -> Previewer.preview_compiled previewer data
   in
   let rec recv_updates () =
     let open Fut.Syntax in

@@ -5,7 +5,7 @@ type starting_state = int
 type delayed
 
 val delayed_to_string : delayed * string -> string
-val string_to_delayed : string -> delayed * string
+val string_to_delayed : string -> (delayed * string) option
 
 type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
 (** A value of type [file_reader], given a path [p], outputs:

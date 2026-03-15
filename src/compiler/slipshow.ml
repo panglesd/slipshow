@@ -238,10 +238,8 @@ type delayed = string * string * bool
 let delayed_to_string s = Marshal.to_string s [] |> Base64.encode_string
 
 let string_to_delayed s =
-  let s =
-    s |> Base64.decode |> function Ok x -> x | Error _ -> failwith "Hello11"
-  in
-  Marshal.from_string s 0
+  let s = s |> Base64.decode |> Result.to_option in
+  Option.bind s @@ fun s -> try Some (Marshal.from_string s 0) with _ -> None
 
 let convert_to_md ~read_file content =
   let (fm, content, loc_offset), _warnings =
