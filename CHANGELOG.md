@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Add a visual indicator for the state of the previewer (disconnected,
+  refreshing, ...) (#312)
+
+### Fixed
+
+- Fixed hot-reload not resuming after a disconnect (#312)
+
 ## [v0.10.0] Don't look `{up}` (Thursday, the 12th of March, 2026)
 
 ### Added
