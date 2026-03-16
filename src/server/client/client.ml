@@ -55,23 +55,40 @@ let rec do_and_retry f arg =
       let* () = Fut.tick ~ms:5000 in
       do_and_retry f arg
 
+let ( !! ) = Jstr.v
+let version = ref ""
+
 let recv () =
   let ( $ ) f arg = do_and_retry f arg in
   let request_and_update typ =
     let open Fut.Result_syntax in
     let+ raw_data =
       let open Brr_io.Fetch in
-      let r = Request.v (uri typ) in
+      let abort = Abort.controller () in
+      let timeout = G.set_timeout ~ms:10000 @@ fun () -> Abort.abort abort in
+      let signal = Abort.signal abort in
+      let body = Body.of_jstr !!(!version) in
+      let init = Request.init ~method':!!"post" ~signal ~body () in
+      let r = Request.v ~init (uri typ) in
       let* x = request r in
+      G.stop_timer timeout;
       let x = Response.as_body x in
       Body.text x
     in
-    let data = Slipshow.string_to_delayed (Jstr.to_string raw_data) in
+    let data = Proto.of_string (Jstr.to_string raw_data) in
     match data with
-    | None ->
-        Console.error [ "Error when deserializing payload" ];
-        ()
-    | Some data -> Previewer.preview_compiled previewer data
+    | None -> () (* TODO *)
+    | Some Pong ->
+        Console.log [ "pong" ];
+        () (* TODO *)
+    | Some (Update data) -> (
+        version := data.version;
+        let data = Slipshow.string_to_delayed data.content in
+        match data with
+        | None ->
+            Console.error [ "Error when deserializing payload" ];
+            ()
+        | Some data -> Previewer.preview_compiled previewer data)
   in
   let rec recv_updates () =
     let open Fut.Syntax in
