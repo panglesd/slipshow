@@ -19,6 +19,7 @@ let html_source =
            </div>
            <pre id="warnings-slipshow" class="hide-warnings"></pre>
            <div id="warnings-slipshow-show">⚠️</div>
+           <div id="connection-slipshow"></div>
            <style>
              %s
            </style>

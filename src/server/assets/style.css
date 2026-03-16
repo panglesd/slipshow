@@ -7,7 +7,7 @@
   cursor: pointer;
   position: absolute;
   z-index: 10;
-  top: 20px;
+  top: 80px;
   right: 20px;
 }
 #warnings-slipshow.hide-warnings {
@@ -31,4 +31,42 @@
 }
 #warnings-slipshow:empty + #warnings-slipshow-show {
   display: none;
+}
+#connection-slipshow {
+  position: absolute;
+  z-index: 100;
+  top: 30px;
+  right: 30px;
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-radius: 10px;
+}
+#connection-slipshow:before {
+  content: "";
+  width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  display: inline-block;
+  margin-right: 10px;
+}
+#connection-slipshow.connected:before {
+  background: lawngreen;
+}
+#connection-slipshow.connected:hover {
+  background: black;
+}
+#connection-slipshow.connected:hover:after {
+  content: "Connected to the slipshow server";
+  color: lawngreen;
+}
+#connection-slipshow.disconnected:before {
+  background: red;
+}
+#connection-slipshow.disconnected:hover:after {
+  content: "Disconnected from the slipshow server";
+  color: red;
+}
+#connection-slipshow.disconnected:hover {
+  background: beige;
 }
