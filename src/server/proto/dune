@@ -1,0 +1,3 @@
+(library
+ (name proto)
+ (libraries base64))

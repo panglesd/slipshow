@@ -29,6 +29,9 @@ let html_source =
   |html}
     Server_assets.Style.v Ansi.css [%blob "client/client.bc.js"]
 
+let generate_version () =
+  String.init 10 (fun _ -> Char.chr (97 + Random.int 26))
+
 let do_serve ~port compile =
   let () = if Sys.unix then Sys.(set_signal sigpipe Signal_ignore) in
   (* We need this, otherwise the program is killed when sending a long string to
@@ -43,12 +46,12 @@ let do_serve ~port compile =
           auto-reloading on file changes."
          port);
    let open Lwt.Syntax in
-   let content = ref "" in
+   let content = ref { Proto.content = ""; version = generate_version () } in
    let callback () =
      let ( let* ) = Result.bind in
      let* s, deps = compile () in
      let new_content = Slipshow.delayed_to_string s in
-     content := new_content;
+     content := { content = new_content; version = generate_version () };
      Lwt_condition.broadcast cond `Update;
      Ok deps
    in
@@ -57,21 +60,35 @@ let do_serve ~port compile =
      (* We serve on [127.0.0.1] since in musl libc library, localhost would
              trigger a DNS request (which might not resolve) *)
      Dream.serve ~port ~interface:"127.0.0.1"
-     @@ Dream.logger
      @@ Dream.router
           [
             Dream.get "/" (fun _ ->
                 Dream.log "A browser reloaded";
                 Dream.html html_source);
-            Dream.get "/now" (fun _ ->
+            Dream.post "/now" (fun _ ->
                 Dream.respond
                   ~headers:[ ("Content-Type", "text/plain") ]
-                  !content);
-            Dream.get "/onchange" (fun _ ->
-                let* () = Lwt_condition.wait cond in
-                Dream.respond
-                  ~headers:[ ("Content-Type", "text/plain") ]
-                  !content);
+                  (Proto.to_string (Update !content)));
+            Dream.post "/onchange" (fun req ->
+                let* body = Dream.body req in
+                if not @@ String.equal body !content.version then
+                  let c = Proto.Update !content in
+                  let c = Proto.to_string c in
+                  Dream.respond ~headers:[ ("Content-Type", "text/plain") ] c
+                else
+                  let gate = Lwt_condition.wait cond in
+                  let timeout =
+                    let+ () = Lwt_unix.sleep 7. in
+                    `Pong
+                  in
+                  let* event = Lwt.pick [ gate; timeout ] in
+                  let c =
+                    match event with
+                    | `Pong -> Proto.Pong
+                    | `Update -> Update !content
+                  in
+                  let c = Proto.to_string c in
+                  Dream.respond ~headers:[ ("Content-Type", "text/plain") ] c);
           ]
    in
    Lwt.both dream wac)
