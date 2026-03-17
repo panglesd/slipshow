@@ -17,7 +17,7 @@ open Lwt.Syntax
 
 let watch_and_compile initial_deps ~callback =
   let mutex = Lwt_mutex.create () in
-  let depending_on_files = ref initial_deps in
+  let depending_on_files = ref Fpath.Set.empty in
   let listened_directories = ref Fpath.Map.empty in
   let rec compile_and_watch () =
     match callback () with
@@ -87,6 +87,7 @@ let watch_and_compile initial_deps ~callback =
     depending_on_files := new_dependencies;
     listened_directories := new_listened_directories
   in
+  let* () = update initial_deps in
   let* () = compile_and_watch () in
   (* Just a way to never return *)
   Lwt.wait () |> fst
