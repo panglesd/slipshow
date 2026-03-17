@@ -169,10 +169,13 @@ let set_errors errors_el warnings =
   in
   innerhtml errors_el warnings
 
-let set_srcdoc { index; panels; errors_el; _ } (slipshow, warnings) =
+let set_srcdoc { index; panels; errors_el; preview_status; _ }
+    (slipshow, warnings) =
   set_errors errors_el warnings;
   try Jv.set (El.to_jv panels.(1 - !index)) "srcdoc" (Jv.of_string slipshow)
-  with exn -> Console.(log [ "exception"; Printexc.to_string exn ])
+  with exn ->
+    El.set_class preview_status_class true preview_status;
+    Console.(log [ "exception"; Printexc.to_string exn ])
 
 let preview ?slipshow_js ?frontmatter ?read_file previewer source =
   let () = El.set_class preview_status_class false previewer.preview_status in
