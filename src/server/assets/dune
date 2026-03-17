@@ -3,4 +3,5 @@
  (public_name slipshow.server_assets)
  (preprocessor_deps
   (file style.css))
- (preprocess (pps ppx_blob)))
+ (preprocess
+  (pps ppx_blob)))

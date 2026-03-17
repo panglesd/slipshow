@@ -206,12 +206,12 @@ let draw ~elapsed_time strokes =
     Lwd_seq.monoid strokes
   |> Lwd_seq.lift
   |> Lwd_seq.sort_uniq (fun (t1, t1', _el1, id1) (t2, t2', _el2, id2) ->
-         match Int.compare t1 t2 with
-         | (1 | -1) as res -> res
-         | _ -> (
-             match Float.compare t1' t2' with
-             | (1 | -1) as res -> res
-             | _ -> String.compare id1 id2))
+      match Int.compare t1 t2 with
+      | (1 | -1) as res -> res
+      | _ -> (
+          match Float.compare t1' t2' with
+          | (1 | -1) as res -> res
+          | _ -> String.compare id1 id2))
   |> Lwd_seq.map (fun (_, _, e, _) -> e)
 
 let drawing_area =

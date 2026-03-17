@@ -332,8 +332,7 @@ module Theme = struct
     let+ () = Term.const () in
     Themes.all
     |> List.iter (fun t ->
-           Format.printf "%s\n  %s\n" (Themes.to_string t)
-             (Themes.description t));
+        Format.printf "%s\n  %s\n" (Themes.to_string t) (Themes.description t));
     Ok ()
 
   let all =

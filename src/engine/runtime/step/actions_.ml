@@ -640,10 +640,10 @@ module Change_page = struct
     let> () =
       current_index |> Option.to_list
       |> Undoable.List.iter (fun (old_index, active_elem) ->
-             if old_index <> new_index then
-               Undoable.Browser.set_class "slipshow__carousel_active" false
-                 active_elem
-             else Undoable.return ())
+          if old_index <> new_index then
+            Undoable.Browser.set_class "slipshow__carousel_active" false
+              active_elem
+          else Undoable.return ())
     in
     Undoable.return (Some overflow)
 

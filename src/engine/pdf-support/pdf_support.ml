@@ -23,7 +23,7 @@ let handle elem src resolution =
   let* l =
     Fut.of_list
     @@ List.init num_pages (fun i ->
-           Pdfjs_ocaml.Pdf_document_proxy.get_page pdf (i + 1))
+        Pdfjs_ocaml.Pdf_document_proxy.get_page pdf (i + 1))
   in
   let l = List.map handle_error l in
   let+ res =

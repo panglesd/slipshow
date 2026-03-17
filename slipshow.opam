@@ -37,7 +37,7 @@ depends: [
   "ppx_deriving_yojson"
   "ansi" {>= "0.7.0"}
   "odoc" {with-doc}
-  "ocamlformat" {with-dev-setup & = "0.27.0"}
+  "ocamlformat" {with-dev-setup & = "0.28.1"}
 ]
 build: [
   ["dune" "subst"] {dev}
