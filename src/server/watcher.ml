@@ -66,11 +66,11 @@ let watch_and_compile initial_deps ~callback =
         match to_list set with
         | [] -> ()
         | l ->
-            Logs.info (fun m ->
+            Logs.app (fun m ->
                 m "%s dependency on %a" verb (Fmt.list ~sep:Fmt.sp Fpath.pp) l)
       in
-      log to_add "adding";
-      log to_remove "removing"
+      log to_add "Adding";
+      log to_remove "Removing"
     in
     let+ () =
       (* The new set of file dependencies may NOT need some directories to be
