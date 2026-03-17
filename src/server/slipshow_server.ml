@@ -31,6 +31,8 @@ let html_source =
   |html}
     Server_assets.Style.v Ansi.css [%blob "client/client.bc.js"]
 
+let () = Random.self_init ()
+
 let generate_version () =
   String.init 10 (fun _ -> Char.chr (97 + Random.int 26))
 
