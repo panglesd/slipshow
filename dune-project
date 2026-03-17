@@ -49,7 +49,7 @@
   (ansi (>= 0.7.0))
   (odoc :with-doc)
   (ocamlformat
-   (and :with-dev-setup (= 0.27.0))))
+   (and :with-dev-setup (= 0.28.1))))
  (tags
   (slipshow presentation slideshow beamer)))
 

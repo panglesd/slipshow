@@ -162,23 +162,23 @@ let parse_string ~action_name s : (_ W.t, _) result =
   let res, warnings =
     s
     |> List.map (fun ((named, positional), loc) ->
-           let named, warnings =
-             named
-             |> List.fold_left
-                  (fun (map, warnings) ((k, k_loc), (v, loc')) ->
-                    match Smap.find_opt k map with
-                    | None -> (Smap.add k ((v, loc'), k_loc) map, warnings)
-                    | Some _ ->
-                        (* let loc = _ in *)
-                        let msg =
-                          "Named argument '" ^ k
-                          ^ "' is duplicated. This instance is ignored."
-                        in
-                        let w = W.Parsing_failure { msg; loc = k_loc } in
-                        (map, w :: warnings))
-                  (Smap.empty, [])
-           in
-           (({ name = action_name; named; positional }, loc), warnings))
+        let named, warnings =
+          named
+          |> List.fold_left
+               (fun (map, warnings) ((k, k_loc), (v, loc')) ->
+                 match Smap.find_opt k map with
+                 | None -> (Smap.add k ((v, loc'), k_loc) map, warnings)
+                 | Some _ ->
+                     (* let loc = _ in *)
+                     let msg =
+                       "Named argument '" ^ k
+                       ^ "' is duplicated. This instance is ignored."
+                     in
+                     let w = W.Parsing_failure { msg; loc = k_loc } in
+                     (map, w :: warnings))
+               (Smap.empty, [])
+        in
+        (({ name = action_name; named; positional }, loc), warnings))
     |> List.split
   in
   let warnings = List.concat warnings in

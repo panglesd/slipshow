@@ -161,9 +161,8 @@ let embed_in_page ~has_speaker_view ~slipshow_js content ~has ~math_link
   let js =
     js_links
     |> List.map (function
-         | Asset.Local { content = t; _ } ->
-             Format.sprintf "<script>%s</script>" t
-         | Remote r -> Format.sprintf {|<script src="%s"></script>|} r)
+      | Asset.Local { content = t; _ } -> Format.sprintf "<script>%s</script>" t
+      | Remote r -> Format.sprintf {|<script src="%s"></script>|} r)
     |> String.concat ""
   in
   let mathjax_element = mathjax_element math_mode has.math math_link in

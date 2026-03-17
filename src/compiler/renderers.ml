@@ -254,8 +254,8 @@ let custom_html_renderer (files : Ast.Files.map) =
               let is_multiple l =
                 l
                 |> List.filter (function
-                     | Block.Blank_line _ -> false
-                     | _ -> true)
+                  | Block.Blank_line _ -> false
+                  | _ -> true)
                 |> List.length |> ( <= ) 2
               in
               match b with
