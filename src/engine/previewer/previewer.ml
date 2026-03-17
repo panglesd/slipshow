@@ -135,12 +135,18 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
                 let contentDocument el =
                   Jv.get (El.to_jv el) "contentDocument" |> Document.of_jv
                 in
-                let inner_iframe =
-                  panels.(!index) |> contentDocument |> fun d ->
-                  Document.find_el_by_id d (Jstr.v "slipshow__internal_iframe")
-                  |> Option.get
+                (* Depending on whether a speaker view is possible, the focus
+                   target is not accessible the same way *)
+                let focus_target =
+                  let d = contentDocument panels.(!index) in
+                  match
+                    Document.find_el_by_id d
+                      (Jstr.v "slipshow__internal_iframe")
+                  with
+                  | Some iframe -> iframe
+                  | None -> panels.(!index)
                 in
-                El.set_has_focus true inner_iframe
+                El.set_has_focus true focus_target
             in
             El.set_class (Jstr.v "active_panel") false panels.(1 - !index)
         | _ -> ())
