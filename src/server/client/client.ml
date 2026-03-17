@@ -75,7 +75,7 @@ let recv () =
   let ( $ ) f arg = do_and_retry f arg in
   let request_and_update typ =
     let open Fut.Result_syntax in
-    let+ raw_data =
+    let* raw_data =
       let open Brr_io.Fetch in
       let abort = Abort.controller () in
       let timeout =
@@ -98,19 +98,23 @@ let recv () =
     in
     let data = Proto.of_string (Jstr.to_string raw_data) in
     match data with
-    | None -> set_disconnected ()
+    | None ->
+        set_disconnected ();
+        Fut.return (Ok ())
     | Some Pong ->
         Console.log [ "pong" ];
-        set_connected ()
-    | Some (Update data) -> (
         set_connected ();
+        Fut.return (Ok ())
+    | Some (Update data) -> (
         version := data.version;
         let data = Slipshow.string_to_delayed data.content in
         match data with
         | None ->
-            Console.error [ "Error when deserializing payload" ];
-            ()
-        | Some data -> Previewer.preview_compiled previewer data)
+            Fut.return (Error (Jv.Error.v !!"Error when deserializing payload"))
+        | Some data ->
+            set_connected ();
+            Previewer.preview_compiled previewer data;
+            Fut.return (Ok ()))
   in
   let rec recv_updates () =
     let open Fut.Syntax in
