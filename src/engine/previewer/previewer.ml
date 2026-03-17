@@ -122,14 +122,12 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
         | Some { payload = Ready; id = _ }
           when String.equal source_name ids.(!index) ->
             ()
-        | Some { payload = Ready; id }
+        | Some { payload = Ready; id = _ }
           when String.equal source_name ids.(1 - !index) ->
             Jv.set (El.to_jv panels.(!index)) "srcdoc" (Jv.of_string "");
-            Console.(log [ "Getting a strange input"; id ]);
             let () = El.set_class preview_status_class true preview_status in
-            if !is_speaker_view_open then (
-              send_speaker_view `Close panels.(!index);
-              send_speaker_view `Open panels.(1 - !index));
+            if !is_speaker_view_open then
+              send_speaker_view `Open panels.(1 - !index);
             index := 1 - !index;
             El.set_class (Jstr.v "active_panel") true panels.(!index);
             let () =
