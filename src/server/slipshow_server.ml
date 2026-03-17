@@ -1,10 +1,11 @@
-let do_watch compile =
+let do_watch entry_point compile =
   let callback () =
     let res = compile () in
     Logs.app (fun m -> m "Recompiled!");
     res
   in
-  Lwt_main.run @@ Watcher.watch_and_compile ~callback
+  let initial = Fpath.Set.singleton entry_point in
+  Lwt_main.run @@ Watcher.watch_and_compile initial ~callback
 
 let html_source =
   Format.sprintf
@@ -33,7 +34,7 @@ let html_source =
 let generate_version () =
   String.init 10 (fun _ -> Char.chr (97 + Random.int 26))
 
-let do_serve ~port compile =
+let do_serve ~port entry_point compile =
   let () = if Sys.unix then Sys.(set_signal sigpipe Signal_ignore) in
   (* We need this, otherwise the program is killed when sending a long string to
      a closed connection... See https://github.com/aantron/dream/issues/378 *)
@@ -56,7 +57,8 @@ let do_serve ~port compile =
      Lwt_condition.broadcast cond `Update;
      Ok deps
    in
-   let wac = Watcher.watch_and_compile ~callback in
+   let initial = Fpath.Set.singleton entry_point in
+   let wac = Watcher.watch_and_compile initial ~callback in
    let dream =
      (* We serve on [127.0.0.1] since in musl libc library, localhost would
              trigger a DNS request (which might not resolve) *)

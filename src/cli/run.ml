@@ -79,12 +79,13 @@ let compile ~input ~output ~cli_frontmatter =
             all_used_files)
 
 let watch ~input ~output ~cli_frontmatter =
+  let input_fpath = input in
   let input = `File input and output = `File output in
   let compile () =
     Logs.app (fun m -> m "Compiling...");
     compile ~input ~output ~cli_frontmatter
   in
-  let () = Slipshow_server.do_watch compile in
+  let () = Slipshow_server.do_watch input_fpath compile in
   (* [do_watch] never ends! *)
   Ok ()
 
@@ -127,7 +128,7 @@ let serve ~input ~output ~cli_frontmatter ~port =
         (Fpath.normalize (Fpath.( // ) (Fpath.v (Sys.getcwd ())) input))
         all_used_files )
   in
-  let () = Slipshow_server.do_serve ~port compile in
+  let () = Slipshow_server.do_serve ~port input compile in
   (* [do_serve] never ends! *)
   Ok ()
 

@@ -15,30 +15,25 @@ open Lwt.Syntax
    ...
  *)
 
-(* A single function should be run in several cases. We don't want the function
-   to be run twice at the same time. So we make it wait on a condition and each
-   callback just signal that condition. *)
-
-let watch_and_compile ~callback (* k *) =
-  let depending_on_files = ref Fpath.Set.empty in
+let watch_and_compile initial_deps ~callback (* k *) =
+  let depending_on_files = ref initial_deps in
   let listened_directories = ref Fpath.Map.empty in
-  (* let cond = Lwt_condition.create () in *)
-  let rec compile_and_call_k () =
+  let rec compile_and_watch () =
     match callback () with
-    | Ok new_dependencies -> update new_dependencies listened_directories
+    | Ok new_dependencies -> update new_dependencies
     | Error (`Msg s) ->
         Logs.warn (fun m -> m "%s" s);
         Lwt.return_unit
   and watch =
     let callback prefix filename =
       let full_name = Fpath.normalize @@ Fpath.( / ) prefix filename in
-      if Fpath.Set.mem full_name !depending_on_files then compile_and_call_k ()
+      if Fpath.Set.mem full_name !depending_on_files then compile_and_watch ()
       else Lwt.return_unit
     in
     fun dir ->
       Logs.info (fun m -> m "Watching %a" Fpath.pp dir);
       Irmin_watcher.hook 0 (Fpath.to_string dir) (callback dir)
-  and update new_dependencies listened_directories =
+  and update new_dependencies =
     let* new_listened_directories =
       (* Some new dependencies may require new directories to be watched *)
       Fpath.Set.fold
@@ -61,10 +56,20 @@ let watch_and_compile ~callback (* k *) =
            new_dependencies)
         (Lwt.return Fpath.Map.empty)
     in
-    Logs.info (fun m ->
-        m "updating file dependencies to %a"
-          (Fmt.list ~sep:Fmt.sp Fpath.pp)
-          (Fpath.Set.fold (fun a x -> a :: x) new_dependencies []));
+    let to_add = Fpath.Set.diff new_dependencies !depending_on_files in
+    let to_remove = Fpath.Set.diff !depending_on_files new_dependencies in
+    let () =
+      let to_list set = Fpath.Set.fold (fun a x -> a :: x) set [] in
+      let log set verb =
+        match to_list set with
+        | [] -> ()
+        | l ->
+            Logs.info (fun m ->
+                m "%s dependency on %a" verb (Fmt.list ~sep:Fmt.sp Fpath.pp) l)
+      in
+      log to_add "adding";
+      log to_remove "removing"
+    in
     let+ () =
       (* The new set of file dependencies may NOT need some directories to be
          watched anymore *)
@@ -80,4 +85,4 @@ let watch_and_compile ~callback (* k *) =
     depending_on_files := new_dependencies;
     listened_directories := new_listened_directories
   in
-  compile_and_call_k ()
+  compile_and_watch ()
