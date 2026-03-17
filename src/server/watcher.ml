@@ -85,4 +85,6 @@ let watch_and_compile initial_deps ~callback (* k *) =
     depending_on_files := new_dependencies;
     listened_directories := new_listened_directories
   in
-  compile_and_watch ()
+  let* () = compile_and_watch () in
+  (* Just a way to never return *)
+  Lwt.wait () |> fst
