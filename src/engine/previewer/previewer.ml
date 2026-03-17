@@ -103,9 +103,8 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
   let _ =
     Ev.listen Brr_io.Message.Ev.message
       (fun event ->
-        let source =
-          Brr_io.Message.Ev.source (Ev.as_type event) |> Option.get
-        in
+        let ( let> ) x f = Option.iter f x in
+        let> source = Brr_io.Message.Ev.source (Ev.as_type event) in
         let source_name = Jv.get source "name" |> Jv.to_string in
         let raw_data : Jv.t = Brr_io.Message.Ev.data (Ev.as_type event) in
         let msg = Msg.of_jv raw_data in
