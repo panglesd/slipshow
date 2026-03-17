@@ -1,7 +1,7 @@
 let do_watch entry_point compile =
   let callback () =
     let res = compile () in
-    Logs.app (fun m -> m "Recompiled!");
+    let () = Result.iter (fun _ -> Logs.app (fun m -> m "Recompiled!")) res in
     res
   in
   let initial = Fpath.Set.singleton entry_point in
