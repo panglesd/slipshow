@@ -87,10 +87,14 @@ let recv () =
       let body = Body.of_jstr !!(!version) in
       let init = Request.init ~method':!!"post" ~signal ~body () in
       let r = Request.v ~init (uri typ) in
+      let open Fut.Syntax in
       let* x = request r in
       G.stop_timer timeout;
-      let x = Response.as_body x in
-      Body.text x
+      match x with
+      | Error _ as e -> Fut.return e
+      | Ok x ->
+          let x = Response.as_body x in
+          Body.text x
     in
     let data = Proto.of_string (Jstr.to_string raw_data) in
     match data with
