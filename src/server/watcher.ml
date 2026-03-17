@@ -15,7 +15,8 @@ open Lwt.Syntax
    ...
  *)
 
-let watch_and_compile initial_deps ~callback (* k *) =
+let watch_and_compile initial_deps ~callback =
+  let mutex = Lwt_mutex.create () in
   let depending_on_files = ref initial_deps in
   let listened_directories = ref Fpath.Map.empty in
   let rec compile_and_watch () =
@@ -34,6 +35,7 @@ let watch_and_compile initial_deps ~callback (* k *) =
       Logs.info (fun m -> m "Watching %a" Fpath.pp dir);
       Irmin_watcher.hook 0 (Fpath.to_string dir) (callback dir)
   and update new_dependencies =
+    Lwt_mutex.with_lock mutex @@ fun () ->
     let* new_listened_directories =
       (* Some new dependencies may require new directories to be watched *)
       Fpath.Set.fold
