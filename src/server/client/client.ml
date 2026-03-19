@@ -61,15 +61,10 @@ let version = ref ""
 
 let handle_answer = function
   | Server_to_client.Pong -> Fut.return (Ok ())
-  | Update data -> (
+  | Update data ->
       version := data.version;
-      let data = Slipshow.string_to_delayed data.content in
-      match data with
-      | None ->
-          Fut.return (Error (Jv.Error.v !!"Error when deserializing payload"))
-      | Some data ->
-          Previewer.preview_compiled previewer data;
-          Fut.return (Ok ()))
+      Previewer.preview_compiled previewer data.content;
+      Fut.return (Ok ())
 
 let proto_request_single ?signal msg =
   let open Brr_io.Fetch in

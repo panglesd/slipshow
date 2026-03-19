@@ -60,14 +60,24 @@ let do_serve ~port entry_point compile =
           auto-reloading on file changes."
          port);
    let open Lwt.Syntax in
-   let content = ref { Proto.content = ""; version = generate_version () } in
+   let initial_content, _ =
+     Slipshow.delayed ~has_speaker_view:false "Could not compile"
+   in
+   let content =
+     ref
+       { Proto.content = (initial_content, ""); version = generate_version () }
+   in
    let callback () =
-     let ( let* ) = Result.bind in
-     let* s, deps = compile () in
-     let new_content = Slipshow.delayed_to_string s in
-     content := { content = new_content; version = generate_version () };
-     Lwt_condition.broadcast cond `Update;
-     Ok deps
+     let res = compile () in
+     match res with
+     | Error (`Msg err) as e ->
+         content := { !content with content = (initial_content, err) };
+         Lwt_condition.broadcast cond `Update;
+         e
+     | Ok (c, deps) ->
+         content := { content = c; version = generate_version () };
+         Lwt_condition.broadcast cond `Update;
+         Ok deps
    in
    let initial = Fpath.Set.singleton entry_point in
    let wac = Watcher.watch_and_compile initial ~callback in
