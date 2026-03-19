@@ -1,12 +1,9 @@
 open Brr
 
-let uri typ =
+let uri =
   let uri = Window.location G.window in
   let uri = Uri.with_fragment_params uri (Uri.Params.of_jstr (Jstr.v "")) in
-  let route_segment =
-    let segment = match typ with `OnChange -> "onchange" | `Now -> "now" in
-    [ Jstr.v segment ]
-  in
+  let route_segment = [ Jstr.v "long-polling" ] in
   let uri = Uri.with_path_segments uri route_segment in
   uri |> Result.get_ok |> Uri.to_jstr
 
@@ -74,21 +71,21 @@ let handle_answer = function
           Previewer.preview_compiled previewer data;
           Fut.return (Ok ()))
 
-let proto_request_single ?signal typ msg =
+let proto_request_single ?signal msg =
   let open Brr_io.Fetch in
   let body = Body.of_jstr !!(Client_to_server.to_string msg) in
   let init = Request.init ~method':!!"post" ?signal ~body () in
-  let req = Request.v ~init (uri typ) in
+  let req = Request.v ~init uri in
   Brr_io.Fetch.request req
 
-let rec proto_request typ msg =
+let rec proto_request msg =
   let open Fut.Result_syntax in
   let* raw_data =
     let abort = Abort.controller () in
     let timeout = G.set_timeout ~ms:10000 @@ fun () -> Abort.abort abort in
     let signal = Abort.signal abort in
     let open Fut.Syntax in
-    let* x = proto_request_single ~signal typ msg in
+    let* x = proto_request_single ~signal msg in
     G.stop_timer timeout;
     match x with
     | Error _ as e -> Fut.return e
@@ -97,11 +94,14 @@ let rec proto_request typ msg =
         Brr_io.Fetch.Body.text x
   in
   let data = Server_to_client.of_string (Jstr.to_string raw_data) in
-  match data with None -> Fut.return (Ok ()) | Some msg -> handle_answer msg
+  match data with
+  | None ->
+      Fut.return (Error (Jv.Error.v !!"Could not deserialize data from server"))
+  | Some msg -> handle_answer msg
 
-and do_and_retry typ msg =
+and do_and_retry msg =
   let open Fut.Syntax in
-  let* res = proto_request typ msg in
+  let* res = proto_request msg in
   match res with
   | Ok () ->
       set_connected ();
@@ -111,7 +111,7 @@ and do_and_retry typ msg =
       Console.error [ e ];
       let rec wait_for_reconnect () =
         let* () = Fut.tick ~ms:3000 in
-        let* result = proto_request typ Ping in
+        let* result = proto_request Ping in
         match result with
         | Error e ->
             Console.error [ e ];
@@ -120,12 +120,12 @@ and do_and_retry typ msg =
       in
       let* () = wait_for_reconnect () in
       set_connected ();
-      do_and_retry typ msg
+      do_and_retry msg
 
 let recv () =
   let rec recv_updates () =
     let open Fut.Syntax in
-    let* () = do_and_retry `OnChange (UpdateFrom !version) in
+    let* () = do_and_retry (UpdateFrom !version) in
     recv_updates ()
   in
   recv_updates ()
