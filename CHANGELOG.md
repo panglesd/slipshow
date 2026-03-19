@@ -5,11 +5,11 @@
 ### Added
 
 - Add a visual indicator for the state of the previewer (disconnected,
-  refreshing, ...) (#312)
+  refreshing, ...) (#220, #222)
 
 ### Fixed
 
-- Fixed hot-reload not resuming after a disconnect (#312)
+- Fixed hot-reload not resuming after a disconnect (#220)
 
 ## [v0.10.0] Don't look `{up}` (Thursday, the 12th of March, 2026)
 
