@@ -80,11 +80,7 @@ let do_serve ~port entry_point compile =
             Dream.get "/" (fun _ ->
                 Dream.log "A browser reloaded";
                 Dream.html html_source);
-            Dream.post "/now" (fun _ ->
-                Dream.respond
-                  ~headers:[ ("Content-Type", "text/plain") ]
-                  (Proto.Server_to_client.to_string (Update !content)));
-            Dream.post "/onchange" (fun req ->
+            Dream.post "/long-polling" (fun req ->
                 let* body = Dream.body req in
                 let msg = Proto.Client_to_server.of_string body in
                 match msg with
