@@ -14,7 +14,7 @@ module Client_to_server : sig
 end
 
 module Server_to_client : sig
-  type t = Pong | Update of string versionned
+  type t = Pong | Update of (Slipshow.delayed * string) versionned
 
   include Serializing with type t := t
 end

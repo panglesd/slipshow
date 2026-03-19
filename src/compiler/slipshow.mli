@@ -4,6 +4,9 @@ module Frontmatter = Frontmatter
 type starting_state = int
 type delayed
 
+(** The additional string in the two functions below correspond to the warnings
+*)
+
 val delayed_to_string : delayed * string -> string
 val string_to_delayed : string -> (delayed * string) option
 

@@ -16,7 +16,7 @@ module Client_to_server = struct
 end
 
 module Server_to_client = struct
-  type t = Pong | Update of string versionned
+  type t = Pong | Update of (Slipshow.delayed * string) versionned
 
   include Marhsarializing
 end
