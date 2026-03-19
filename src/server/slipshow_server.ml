@@ -36,6 +36,16 @@ let () = Random.self_init ()
 let generate_version () =
   String.init 10 (fun _ -> Char.chr (97 + Random.int 26))
 
+let pong () =
+  let c = Proto.Server_to_client.Pong in
+  let c = Proto.Server_to_client.to_string c in
+  Dream.respond ~headers:[ ("Content-Type", "text/plain") ] c
+
+let send_update content =
+  let c = Proto.Server_to_client.Update content in
+  let c = Proto.Server_to_client.to_string c in
+  Dream.respond ~headers:[ ("Content-Type", "text/plain") ] c
+
 let do_serve ~port entry_point compile =
   let () = if Sys.unix then Sys.(set_signal sigpipe Signal_ignore) in
   (* We need this, otherwise the program is killed when sending a long string to
@@ -73,27 +83,26 @@ let do_serve ~port entry_point compile =
             Dream.post "/now" (fun _ ->
                 Dream.respond
                   ~headers:[ ("Content-Type", "text/plain") ]
-                  (Proto.to_string (Update !content)));
+                  (Proto.Server_to_client.to_string (Update !content)));
             Dream.post "/onchange" (fun req ->
                 let* body = Dream.body req in
-                if not @@ String.equal body !content.version then
-                  let c = Proto.Update !content in
-                  let c = Proto.to_string c in
-                  Dream.respond ~headers:[ ("Content-Type", "text/plain") ] c
-                else
-                  let gate = Lwt_condition.wait cond in
-                  let timeout =
-                    let+ () = Lwt_unix.sleep 7. in
-                    `Pong
-                  in
-                  let* event = Lwt.pick [ gate; timeout ] in
-                  let c =
-                    match event with
-                    | `Pong -> Proto.Pong
-                    | `Update -> Update !content
-                  in
-                  let c = Proto.to_string c in
-                  Dream.respond ~headers:[ ("Content-Type", "text/plain") ] c);
+                let msg = Proto.Client_to_server.of_string body in
+                match msg with
+                | None -> Dream.respond ~status:`Bad_Request ""
+                | Some Ping -> pong ()
+                | Some (UpdateFrom version) -> (
+                    if not @@ String.equal version !content.version then
+                      send_update !content
+                    else
+                      let gate = Lwt_condition.wait cond in
+                      let timeout =
+                        let+ () = Lwt_unix.sleep 7. in
+                        `Pong
+                      in
+                      let* event = Lwt.pick [ gate; timeout ] in
+                      match event with
+                      | `Pong -> pong ()
+                      | `Update -> send_update !content));
           ]
    in
    Lwt.both dream wac)

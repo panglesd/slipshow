@@ -1,5 +1,20 @@
 type 'a versionned = { content : 'a; version : string }
-type t = Pong | Update of string versionned
 
-val to_string : t -> string
-val of_string : string -> t option
+module type Serializing := sig
+  type t
+
+  val to_string : t -> string
+  val of_string : string -> t option
+end
+
+module Client_to_server : sig
+  type t = Ping | UpdateFrom of string
+
+  include Serializing with type t := t
+end
+
+module Server_to_client : sig
+  type t = Pong | Update of string versionned
+
+  include Serializing with type t := t
+end
