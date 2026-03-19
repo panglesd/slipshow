@@ -1,5 +1,7 @@
 module Asset = Asset
 module Frontmatter = Frontmatter
+module Compile = Compile
+module Ast = Ast
 
 type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
 

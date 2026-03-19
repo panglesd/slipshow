@@ -1,5 +1,7 @@
 module Asset = Asset
 module Frontmatter = Frontmatter
+module Compile = Compile
+module Ast = Ast
 
 type starting_state = int
 type delayed
