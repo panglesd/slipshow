@@ -58,71 +58,76 @@ let set_disconnected () =
   El.set_class !!"connected" false connection_show;
   El.set_class !!"disconnected" true connection_show
 
-let rec do_and_retry f arg =
-  let open Fut.Syntax in
-  let* x = f arg in
-  match x with
-  | Ok x -> Fut.return x
-  | Error e ->
-      set_disconnected ();
-      Console.error [ e ];
-      let* () = Fut.tick ~ms:3000 in
-      do_and_retry f arg
+open Proto
 
 let version = ref ""
 
-let recv () =
-  let ( $ ) f arg = do_and_retry f arg in
-  let request_and_update typ =
-    let open Fut.Result_syntax in
-    let* raw_data =
-      let open Brr_io.Fetch in
-      let abort = Abort.controller () in
-      let timeout =
-        G.set_timeout ~ms:10000 @@ fun () ->
-        set_disconnected ();
-        Abort.abort abort
-      in
-      let signal = Abort.signal abort in
-      let body = Body.of_jstr !!(!version) in
-      let init = Request.init ~method':!!"post" ~signal ~body () in
-      let r = Request.v ~init (uri typ) in
-      let open Fut.Syntax in
-      let* x = request r in
-      G.stop_timer timeout;
-      match x with
-      | Error _ as e -> Fut.return e
-      | Ok x ->
-          let x = Response.as_body x in
-          Body.text x
-    in
-    let data = Proto.of_string (Jstr.to_string raw_data) in
-    match data with
-    | None ->
-        set_disconnected ();
-        Fut.return (Ok ())
-    | Some Pong ->
-        Console.log [ "pong" ];
-        set_connected ();
-        Fut.return (Ok ())
-    | Some (Update data) -> (
-        version := data.version;
-        let data = Slipshow.string_to_delayed data.content in
-        match data with
-        | None ->
-            Fut.return (Error (Jv.Error.v !!"Error when deserializing payload"))
-        | Some data ->
-            set_connected ();
-            Previewer.preview_compiled previewer data;
-            Fut.return (Ok ()))
+let handle_answer = function
+  | Server_to_client.Pong -> Fut.return (Ok ())
+  | Update data -> (
+      version := data.version;
+      let data = Slipshow.string_to_delayed data.content in
+      match data with
+      | None ->
+          Fut.return (Error (Jv.Error.v !!"Error when deserializing payload"))
+      | Some data ->
+          Previewer.preview_compiled previewer data;
+          Fut.return (Ok ()))
+
+let proto_request_single ?signal typ msg =
+  let open Brr_io.Fetch in
+  let body = Body.of_jstr !!(Client_to_server.to_string msg) in
+  let init = Request.init ~method':!!"post" ?signal ~body () in
+  let req = Request.v ~init (uri typ) in
+  Brr_io.Fetch.request req
+
+let rec proto_request typ msg =
+  let open Fut.Result_syntax in
+  let* raw_data =
+    let abort = Abort.controller () in
+    let timeout = G.set_timeout ~ms:10000 @@ fun () -> Abort.abort abort in
+    let signal = Abort.signal abort in
+    let open Fut.Syntax in
+    let* x = proto_request_single ~signal typ msg in
+    G.stop_timer timeout;
+    match x with
+    | Error _ as e -> Fut.return e
+    | Ok x ->
+        let x = Brr_io.Fetch.Response.as_body x in
+        Brr_io.Fetch.Body.text x
   in
+  let data = Server_to_client.of_string (Jstr.to_string raw_data) in
+  match data with None -> Fut.return (Ok ()) | Some msg -> handle_answer msg
+
+and do_and_retry typ msg =
+  let open Fut.Syntax in
+  let* res = proto_request typ msg in
+  match res with
+  | Ok () ->
+      set_connected ();
+      Fut.return ()
+  | Error e ->
+      set_disconnected ();
+      Console.error [ e ];
+      let rec wait_for_reconnect () =
+        let* () = Fut.tick ~ms:3000 in
+        let* result = proto_request typ Ping in
+        match result with
+        | Error e ->
+            Console.error [ e ];
+            wait_for_reconnect ()
+        | Ok () -> Fut.return ()
+      in
+      let* () = wait_for_reconnect () in
+      set_connected ();
+      do_and_retry typ msg
+
+let recv () =
   let rec recv_updates () =
     let open Fut.Syntax in
-    let* () = request_and_update $ `OnChange in
+    let* () = do_and_retry `OnChange (UpdateFrom !version) in
     recv_updates ()
   in
-  let open Fut.Syntax in
-  let* () = request_and_update $ `Now in
   recv_updates ()
 
 let _ : unit Fut.t = recv ()
