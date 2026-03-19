@@ -132,7 +132,6 @@ jobs:
       matrix:
         config:
           - { os: "windows-2022", arch: "x86_64", target: "x64" }
-          - { os: "windows-2022", arch: "x86", target: "x86" }
         ocaml-compiler:
           - 4.14.x
     runs-on: ${{ matrix.config.os }}
@@ -146,10 +145,9 @@ jobs:
         run: git fetch --tags --force origin
 
       - name: Install OCaml ${{ matrix.ocaml-compiler }}
-        uses: ocaml/setup-ocaml@v2
+        uses: ocaml/setup-ocaml@v3
         with:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
-          architecture: ${{ matrix.config.target }}
 
       - name: Install dependencies
         run: opam install --deps-only --with-test --with-doc -y .
