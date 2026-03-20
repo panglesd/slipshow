@@ -10,12 +10,14 @@ type t =
   | ParsingWarnor of { warnor : Actions_arguments.W.warnor; loc : loc }
   | MissingID of { id : string; loc : loc }
   | UnknownAttribute of { attr : string; loc : loc }
-  | General of {
-      code : string;
-      msg : string;
-      labels : (string * loc) list;
-      notes : string list;
+  | UnknownFrontmatterField of {
+      key : string;
+      loc : loc;
+      allowed_keys : string list;
     }
+  | FrontmatterParsing of { key : string; msg : string; loc : loc }
+  | InvalidFrontmatterLine of { loc : loc }
+  | ChildrenClassWithValue of { loc : loc }
 
 val pp : Format.formatter -> t -> unit
 val to_grace : (string -> Grace.Source.t) -> t -> t Grace.Diagnostic.t option

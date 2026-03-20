@@ -49,7 +49,7 @@ let diagnostics (uri : Linol.Lsp.Types.DocumentUri.t) (s : string) :
     in
     fm_errors @ errors
   in
-  List.concat_map Diagnostic.diagnostics_of_error errors
+  List.concat_map Diagnostic.of_error errors
 
 class lsp_server =
   object (self)

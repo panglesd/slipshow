@@ -17,12 +17,14 @@ type t =
   | ParsingWarnor of { warnor : Actions_arguments.W.warnor; loc : loc }
   | MissingID of { id : string; loc : loc }
   | UnknownAttribute of { attr : string; loc : loc }
-  | General of {
-      code : string;
-      msg : string;
-      labels : (string * loc) list;
-      notes : string list;
+  | UnknownFrontmatterField of {
+      key : string;
+      loc : loc;
+      allowed_keys : string list;
     }
+  | FrontmatterParsing of { key : string; msg : string; loc : loc }
+  | InvalidFrontmatterLine of { loc : loc }
+  | ChildrenClassWithValue of { loc : loc }
 
 (* This is currently used to render issues on things that don't have location:
    mostly CLI input. CLI input have much less errors they can raise, so it's OK
@@ -49,13 +51,21 @@ let pp ppf = function
       Format.fprintf ppf "Action argument parsing failure: %s" msg
   | MissingID { id; loc = _ } ->
       Format.fprintf ppf "Id '%s' could not be found" id
-  | General { msg; labels = _; notes = _; code = _ } ->
-      Format.fprintf ppf "%s" msg (* TODO: improve *)
   | UnknownAttribute { attr; loc = _ } ->
       Format.fprintf ppf
         "Attribute '%s' is neither a standard HTML attribute nor a slipshow \
          specific one"
         attr
+  | UnknownFrontmatterField { key; _ } ->
+      Format.fprintf ppf "Frontmatter field '%s' is not interpreted by slipshow"
+        key
+  | InvalidFrontmatterLine _ ->
+      Format.fprintf ppf
+        "Invalid frontmatter entry: Frontmatter have to be of the form \
+         \"key:value\" on a single line."
+  | FrontmatterParsing { msg; _ } -> Format.fprintf ppf "%s" msg
+  | ChildrenClassWithValue _ ->
+      Format.fprintf ppf "%s" "Children classes cannot have a value"
 
 let with_range source_map loc f =
   let open Grace in
@@ -162,17 +172,30 @@ let to_grace source_map error =
       Some
         (Diagnostic.createf ~labels Warning "No element with id '%s' was found"
            id)
-  | General { msg; labels; notes; code = _ } ->
+  | UnknownFrontmatterField { key; loc; allowed_keys } ->
       let labels =
-        List.filter_map
-          (fun (msg, loc) ->
-            with_range loc @@ Diagnostic.Label.primaryf "%s" msg)
-          labels
+        List.filter_map Fun.id
+          [ with_range loc @@ Diagnostic.Label.primaryf "" ]
       in
-      let notes =
-        List.map (fun msg -> Diagnostic.Message.createf "%s" msg) notes
+      let note =
+        Diagnostic.Message.createf "Recognized fields are: '%s'"
+          (String.concat "', '" allowed_keys)
       in
-      Some (Diagnostic.createf ~labels ~notes Warning "%s" msg)
+      Some
+        (Diagnostic.createf ~labels ~notes:[ note ] Warning
+           "Frontmatter field '%s' is not interpreted by slipshow" key)
+  | InvalidFrontmatterLine { loc } ->
+      let labels =
+        List.filter_map Fun.id
+          [ with_range loc @@ Diagnostic.Label.primaryf "" ]
+      in
+      let note =
+        Diagnostic.Message.createf "%s"
+          "Frontmatter have to be of the form \"key:value\" on a single line."
+      in
+      let notes = [ note ] in
+      Some
+        (Diagnostic.createf ~notes ~labels Warning "Invalid frontmatter entry")
   | UnknownAttribute { attr; loc } ->
       let labels =
         List.filter_map Fun.id
@@ -180,6 +203,22 @@ let to_grace source_map error =
       in
       Some
         (Diagnostic.createf ~labels Warning "Non standard attribute: '%s'" attr)
+  | FrontmatterParsing { key; msg; loc } ->
+      let labels =
+        List.filter_map Fun.id
+          [ with_range loc @@ Diagnostic.Label.primaryf "%s" msg ]
+      in
+      Some
+        (Diagnostic.createf ~labels Warning
+           "Error while parsing frontmatter field '%s'" key)
+  | ChildrenClassWithValue { loc } ->
+      let labels =
+        List.filter_map Fun.id
+          [ with_range loc @@ Diagnostic.Label.primaryf "" ]
+      in
+      Some
+        (Diagnostic.createf ~labels Warning
+           "Children classes cannot have a value")
 
 let errors_acc = ref []
 let add x = errors_acc := x :: !errors_acc
@@ -207,7 +246,10 @@ let to_code = function
   | ParsingWarnor _ -> "ActionParsing"
   | MissingID _ -> "IDNotFound"
   | UnknownAttribute _ -> "UnknownAttribute"
-  | General { code; _ } -> code
+  | UnknownFrontmatterField _ -> "UnknownFrontmatterField"
+  | InvalidFrontmatterLine _ -> "InvalidFrontmatterLine"
+  | FrontmatterParsing _ -> "FrontmatterParsing"
+  | ChildrenClassWithValue _ -> "ChildrenClassWithValue"
 
 let report_no_src fmt x =
   let msg = Format.asprintf "%a" pp x in

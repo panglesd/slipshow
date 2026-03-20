@@ -364,13 +364,7 @@ module Stage2 = struct
                     | `Kv c, _ -> Attributes.add (c, meta) value acc
                     | `Class c, Some (_, v_meta) ->
                         Diagnosis.add
-                          (General
-                             {
-                               msg = "Children classes cannot have a value";
-                               labels = [ ("", Meta.textloc v_meta) ];
-                               notes = [];
-                               code = "ChildrenAttrs";
-                             });
+                          (ChildrenClassWithValue { loc = Meta.textloc v_meta });
                         Attributes.add (c, meta) value acc))
               Attributes.empty kvs
           in

@@ -200,7 +200,7 @@ let fields_map =
   |> List.map (fun ((module X : Field) as m) -> (X.key, m))
   |> SMap.of_list
 
-let fields_names = all_fields |> List.map (fun (module X : Field) -> X.key)
+let allowed_keys = all_fields |> List.map (fun (module X : Field) -> X.key)
 
 type 'a t =
   | Unresolved : string fm -> unresolved t
@@ -266,24 +266,11 @@ let cut file offset (i, line, (byte_start, _)) c =
      let v = (String.trim v, update_loc loc) in
      (key, v)
 
-let send_unrecognized_field ~key ~kloc =
-  let msg = "Frontmatter field '" ^ key ^ "' is not interpreted by slipshow" in
-  let n =
-    "Recognized fields are: '" ^ String.concat "', '" fields_names ^ "'"
-  in
-  Diagnosis.add
-    (General
-       { msg; notes = [ n ]; labels = [ ("", kloc) ]; code = "Frontmatter" })
+let send_unrecognized_field ~key ~kloc:loc =
+  Diagnosis.add (UnknownFrontmatterField { key; loc; allowed_keys })
 
 let send_general_error ~key ~msg ~vloc =
-  Diagnosis.add
-    (General
-       {
-         msg = "Error while parsing frontmatter field '" ^ key ^ "'";
-         notes = [];
-         labels = [ (msg, vloc) ];
-         code = "Frontmatter";
-       })
+  Diagnosis.add (FrontmatterParsing { key; msg; loc = vloc })
 
 let of_string file offset s =
   let raise_warning line =
@@ -295,13 +282,7 @@ let of_string file offset s =
       Cmarkit.Textloc.v ~file ~first_line:(i, byte_start)
         ~last_line:(i, byte_start) ~first_byte ~last_byte
     in
-    let msg = "Invalid frontmatter entry" in
-    let note =
-      "Frontmatter have to be of the form \"key:value\" on a single line."
-    in
-    let notes = [ note ] in
-    Diagnosis.add
-      (General { msg; notes; labels = [ ("", loc) ]; code = "Frontmatter" })
+    Diagnosis.add (InvalidFrontmatterLine { loc })
   in
   let assoc =
     s |> split_in_lines
