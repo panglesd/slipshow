@@ -18,9 +18,11 @@ let create ~loc ?ploc msg =
     match ploc with None -> loc | Some ploc -> Diagnosis.loc_of_ploc loc ploc
   in
   let range = linoloc_of_textloc loc in
+  let severity = Linol_lwt.DiagnosticSeverity.Warning in
   Format.kasprintf
     (fun msg ->
-      Linol.Lsp.Types.Diagnostic.create ~message:(`String msg) ~range ())
+      Linol.Lsp.Types.Diagnostic.create ~severity ~message:(`String msg) ~range
+        ())
     msg
 
 let of_error (e : Diagnosis.t) =
