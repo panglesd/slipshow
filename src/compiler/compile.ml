@@ -365,7 +365,7 @@ module Stage2 = struct
                     | `Class c, Some (_, v_meta) ->
                         Diagnosis.add
                           (ChildrenClassWithValue { loc = Meta.textloc v_meta });
-                        Attributes.add (c, meta) value acc))
+                        Attributes.add_class acc (c, meta)))
               Attributes.empty kvs
           in
           let bs = List.map (Ast.Utils.Block.merge_attribute new_attrs) bs in
