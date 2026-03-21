@@ -279,8 +279,8 @@ let of_string file offset s =
       let i = i + 1 in
       let first_byte = byte_start + offset
       and last_byte = byte_end + offset - 1 in
-      Cmarkit.Textloc.v ~file ~first_line:(i, byte_start)
-        ~last_line:(i, byte_start) ~first_byte ~last_byte
+      Cmarkit.Textloc.v ~file ~first_line:(i, first_byte)
+        ~last_line:(i, first_byte) ~first_byte ~last_byte
     in
     Diagnosis.add (InvalidFrontmatterLine { loc })
   in
