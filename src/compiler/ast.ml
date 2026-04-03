@@ -339,6 +339,8 @@ module Utils = struct
         | _ -> assert false
       in
       Block.meta ~ext b
+
+    let textloc b = b |> meta |> Meta.textloc
   end
 
   module Inline = struct
@@ -439,6 +441,8 @@ module Utils = struct
         | _ -> assert false
       in
       Inline.meta ~ext i
+
+    let textloc i = i |> meta |> Meta.textloc
   end
 end
 

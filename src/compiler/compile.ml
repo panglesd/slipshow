@@ -151,8 +151,12 @@ module Stage1 = struct
             | None -> Mapper.default
             | Some mapped_blocks ->
                 let attrs = Mapper.map_attrs m attrs in
+                let textloc =
+                  mapped_blocks |> Ast.Utils.Block.meta |> Cmarkit.Meta.textloc
+                in
                 Mapper.ret
-                  (Ast.included ((mapped_blocks, (attrs, meta)), Meta.none))))
+                  (Ast.included
+                     ((mapped_blocks, (attrs, meta)), Meta.make ~textloc ()))))
     | _ -> Mapper.default
 
   let get_link_definition (defs : Cmarkit.Label.defs) l =
@@ -216,12 +220,25 @@ module Stage1 = struct
       let attrs = Mapper.map_attrs m attrs in
       let blocks =
         match blocks with
+        | [] -> Mapper.map_block m @@ Block.Blocks (blocks, Meta.none)
         | [ b ] -> Mapper.map_block m b
-        | blocks -> Mapper.map_block m @@ Block.Blocks (blocks, Meta.none)
+        | fb :: _ as blocks ->
+            let to_textloc b =
+              b |> Ast.Utils.Block.meta |> Cmarkit.Meta.textloc
+            in
+            let textloc =
+              List.map to_textloc blocks
+              |> List.fold_left Cmarkit.Textloc.span (to_textloc fb)
+            in
+            Mapper.map_block m @@ Block.Blocks (blocks, Meta.make ~textloc ())
       in
       match blocks with
       | None -> None
-      | Some blocks -> Some (Ast.div ((blocks, (attrs, am)), Meta.none))
+      | Some blocks ->
+          let textloc =
+            blocks |> Ast.Utils.Block.meta |> Cmarkit.Meta.textloc
+          in
+          Some (Ast.div ((blocks, (attrs, am)), Meta.make ~textloc ()))
     in
     let find_biggest blocks =
       let find_biggest biggest block =
@@ -426,21 +443,26 @@ module Stage3 = struct
       | None -> Mapper.default
       | Some (block, (attrs, meta2))
         when Attributes.mem Special_attrs.blockquote attrs ->
+          let textloc = block |> Ast.Utils.Block.meta |> Cmarkit.Meta.textloc in
           let block, attrs = map ~may_enter:false block (attrs, meta2) in
           let block = Block.Block_quote.make block in
-          Mapper.ret @@ Block.Block_quote ((block, attrs), Meta.none)
+          Mapper.ret @@ Block.Block_quote ((block, attrs), Meta.make ~textloc ())
       | Some (block, (attrs, meta2))
         when Attributes.mem Special_attrs.slide attrs ->
+          let textloc = block |> Ast.Utils.Block.meta |> Cmarkit.Meta.textloc in
           let block, attrs = map ~may_enter:true block (attrs, meta2) in
           let block, title = extract_title block in
           Mapper.ret
-          @@ Ast.slide (({ content = block; title }, attrs), Meta.none)
+          @@ Ast.slide
+               (({ content = block; title }, attrs), Meta.make ~textloc ())
       | Some (block, (attrs, meta2))
         when Attributes.mem Special_attrs.slip attrs ->
+          let textloc = block |> Ast.Utils.Block.meta |> Cmarkit.Meta.textloc in
           let block, (attrs, meta) = map ~may_enter:true block (attrs, meta2) in
-          Mapper.ret @@ Ast.slip ((block, (attrs, meta)), Meta.none)
+          Mapper.ret @@ Ast.slip ((block, (attrs, meta)), Meta.make ~textloc ())
       | Some (block, (attrs, meta2))
         when Attributes.mem Special_attrs.carousel attrs ->
+          let textloc = block |> Ast.Utils.Block.meta |> Cmarkit.Meta.textloc in
           let block, attrs = map ~may_enter:false block (attrs, meta2) in
           let children =
             match block with
@@ -452,7 +474,7 @@ module Stage3 = struct
               (function Block.Blank_line _ -> None | x -> Some x)
               children
           in
-          Mapper.ret @@ Ast.carousel ((children, attrs), Meta.none)
+          Mapper.ret @@ Ast.carousel ((children, attrs), Meta.make ~textloc ())
       | Some _ -> Mapper.default
     in
     Ast.Mapper.make ~block ()
@@ -610,7 +632,13 @@ let compile ?file ?loc_offset ~attrs ~fm ?(read_file = fun _ -> Ok None) s =
   let md =
     let doc = Cmarkit_proxy.of_string ?loc_offset ~file s in
     let bq = Block.Block_quote.make (Doc.block doc) in
-    let block = Block.Block_quote ((bq, (attrs, Meta.none)), Meta.none) in
+    let textloc =
+      doc |> Doc.block |> Ast.Utils.Block.meta |> Cmarkit.Meta.textloc
+    in
+    let meta = Cmarkit.Meta.make ~textloc () in
+    let block =
+      Block.Block_quote ((bq, (attrs, Meta.none (* TODO: DO *))), meta)
+    in
     Doc.make block
   in
   of_cmarkit ~read_file ~fm md
