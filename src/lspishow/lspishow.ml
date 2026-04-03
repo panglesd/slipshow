@@ -64,28 +64,49 @@ class lsp_server =
 
     method! on_req_hover ~notify_back:_ ~id:_ ~uri:_ ~pos ~workDoneToken:_ _ :
         Linol_lwt.Hover.t option Lwt.t =
-      let range =
-        let line = pos.line in
-        let character = pos.character in
-        let start = Linol_lwt.Position.create ~line ~character
-        and end_ = Linol_lwt.Position.create ~line ~character:(character + 3) in
-        Linol_lwt.Range.create ~start ~end_
+      let r =
+        match !current_ast with
+        | None -> None
+        | Some ast -> (
+            match Current_ast.get_leave pos ast.doc with
+            | { attribute = Some a; _ } ->
+                let locdoc =
+                  match a with
+                  | Key ((key, meta), _) | Value ((key, meta), _) ->
+                      let maybemod =
+                        List.find_opt
+                          (fun (module X : Actions_arguments.S) -> key = X.on)
+                          Actions_arguments.all_actions
+                      in
+                      let res =
+                        match maybemod with
+                        | None -> None
+                        | Some (module X) ->
+                            Some (X.doc, Cmarkit.Meta.textloc meta)
+                      in
+                      res
+                  | _ -> None
+                in
+                locdoc
+            | _ ->
+                let res =
+                  Format.asprintf "Loc is: %d:%d\n\n```\n%a\n```\n" pos.line
+                    pos.character Debug.Ast_printer.pp_block
+                    (ast.doc |> Cmarkit.Doc.block)
+                in
+                Some (res, Cmarkit.Textloc.none))
       in
-      let contents =
-        let value =
-          match !current_ast with
-          | None ->
-              "Hi [click me](https://example.org)!\nThis is `me`, **Mario**!"
-          | Some doc ->
-              Format.asprintf "Loc is: %d:%d\n\n```\n%a\n```\n" pos.line
-                pos.character Debug.Ast_printer.pp_block
-                (doc.doc |> Cmarkit.Doc.block)
-        in
-        Linol_lwt.MarkupContent.create ~kind:Markdown ~value
-      in
-      let contents = `MarkupContent contents in
-      let res = Linol_lwt.Hover.create ~contents ~range () in
-      Lwt.return (Some res)
+      match r with
+      | None -> Lwt.return_none
+      | Some (doc, loc) ->
+          let contents =
+            let value = doc in
+            Linol_lwt.MarkupContent.create ~kind:Markdown ~value
+          in
+          let contents = `MarkupContent contents in
+          let range = Diagnostic.linoloc_of_textloc loc in
+          let res = Linol_lwt.Hover.create ~contents ~range () in
+          Lwt.return (Some res)
 
     method! config_modify_capabilities capabilities =
       let capabilities = super#config_modify_capabilities capabilities in
