@@ -231,28 +231,28 @@ struct
 end
 
 module Up = Move (struct
-  let on = "up-at-unpause"
-  let action_name = "up"
+  include Actions_arguments.Up
+
   let move = Universe.Move.up
 end)
 
 module _ : S = Up
 
 module Down = Move (struct
-  let on = "down-at-unpause"
-  let action_name = "down"
+  include Actions_arguments.Down
+
   let move = Universe.Move.down
 end)
 
 module Center = Move (struct
-  let on = "center-at-unpause"
-  let action_name = "center"
+  include Actions_arguments.Center
+
   let move = Universe.Move.center
 end)
 
 module Scroll = Move (struct
-  let on = "scroll-at-unpause"
-  let action_name = "scroll"
+  include Actions_arguments.Scroll
+
   let move = Universe.Move.scroll
 end)
 
@@ -267,8 +267,7 @@ module Enter = struct
   let stack = Stack.create ()
 
   include Move (struct
-    let on = "enter-at-unpause"
-    let action_name = "enter"
+    include Actions_arguments.Enter
 
     let move ?duration ?margin mode window element_entered =
       let> () =
@@ -311,8 +310,8 @@ let exit ~mode window to_elem =
   exit ()
 
 module Unstatic = SetClass (struct
-  let on = "unstatic-at-unpause"
-  let action_name = "unstatic"
+  include Actions_arguments.Unstatic
+
   let class_ = "unstatic"
   let state = true
 end)
@@ -320,8 +319,8 @@ end)
 module _ : S = Unstatic
 
 module Static = SetClass (struct
-  let on = "static-at-unpause"
-  let action_name = "static"
+  include Actions_arguments.Static
+
   let class_ = "unstatic"
   let state = false
 end)
@@ -399,29 +398,29 @@ end
 module _ : S = Unfocus
 
 module Reveal = SetClass (struct
-  let on = "reveal-at-unpause"
-  let action_name = "reveal"
+  include Actions_arguments.Reveal
+
   let class_ = "unrevealed"
   let state = false
 end)
 
 module Unreveal = SetClass (struct
-  let on = "unreveal-at-unpause"
-  let action_name = "unreveal"
+  include Actions_arguments.Unreveal
+
   let class_ = "unrevealed"
   let state = true
 end)
 
 module Emph = SetClass (struct
-  let on = "emph-at-unpause"
-  let action_name = "emph"
+  include Actions_arguments.Emph
+
   let class_ = "emphasized"
   let state = true
 end)
 
 module Unemph = SetClass (struct
-  let on = "unemph-at-unpause"
-  let action_name = "unemph"
+  include Actions_arguments.Unemph
+
   let class_ = "emphasized"
   let state = false
 end)
