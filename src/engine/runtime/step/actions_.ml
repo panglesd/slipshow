@@ -175,6 +175,7 @@ module _ : S = Pause
 module Move (X : sig
   val on : string
   val action_name : string
+  val doc : string
 
   val move :
     ?duration:float ->
@@ -211,6 +212,7 @@ module SetClass (X : sig
   val action_name : string
   val class_ : string
   val state : bool
+  val doc : string
 end) =
 struct
   include Actions_arguments.SetClass (X)
