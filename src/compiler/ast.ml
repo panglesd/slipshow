@@ -461,40 +461,52 @@ module Ast_printer = struct
     if Textloc.is_none loc then fprintf ppf "<no location>"
     else Textloc.pp_dump ppf loc
 
-  (** Recursively prints Inline.t nodes with their locations *)
+  (** Prints the location of attributes if they exist *)
+  let pp_attrs ppf (attrs, meta) =
+    if not (Attributes.is_empty attrs) then
+      fprintf ppf "@ (Attrs : %a)" pp_loc meta
+
+  (** Recursively prints Inline.t nodes with their locations and attributes *)
   let rec pp_inline ppf inline =
     let meta = Utils.Inline.meta inline in
     fprintf ppf "@[<hv 2>(";
     (match inline with
     (* Standard Cmarkit Inlines *)
-    | Inline.Autolink _ -> fprintf ppf "Autolink"
+    | Inline.Autolink ((_al, attrs), _) ->
+        fprintf ppf "Autolink%a" pp_attrs attrs
     | Inline.Break (b, _) ->
         let t =
           match Inline.Break.type' b with `Hard -> "Hard" | `Soft -> "Soft"
         in
         fprintf ppf "Break(%s)" t
-    | Inline.Code_span _ -> fprintf ppf "Code_span"
-    | Inline.Emphasis ((e, _attrs), _) ->
-        fprintf ppf "Emphasis@ %a" pp_inline (Inline.Emphasis.inline e)
-    | Inline.Image ((l, _attrs), _) ->
-        fprintf ppf "Image@ %a" pp_inline (Inline.Link.text l)
+    | Inline.Code_span ((_cs, attrs), _) ->
+        fprintf ppf "Code_span%a" pp_attrs attrs
+    | Inline.Emphasis ((e, attrs), _) ->
+        fprintf ppf "Emphasis%a@ %a" pp_attrs attrs pp_inline
+          (Inline.Emphasis.inline e)
+    | Inline.Image ((l, attrs), _) ->
+        fprintf ppf "Image%a@ %a" pp_attrs attrs pp_inline (Inline.Link.text l)
     | Inline.Inlines (is, _) ->
         fprintf ppf "Inlines@ @[<v>%a@]" (pp_print_list pp_inline) is
-    | Inline.Link ((l, _attrs), _) ->
-        fprintf ppf "Link@ %a" pp_inline (Inline.Link.text l)
+    | Inline.Link ((l, attrs), _) ->
+        fprintf ppf "Link%a@ %a" pp_attrs attrs pp_inline (Inline.Link.text l)
     | Inline.Raw_html _ -> fprintf ppf "Raw_html"
-    | Inline.Strong_emphasis ((e, _attrs), _) ->
-        fprintf ppf "Strong_emphasis@ %a" pp_inline (Inline.Emphasis.inline e)
-    | Inline.Text ((txt, _attrs), _) -> fprintf ppf "Text %S" txt
+    | Inline.Strong_emphasis ((e, attrs), _) ->
+        fprintf ppf "Strong_emphasis%a@ %a" pp_attrs attrs pp_inline
+          (Inline.Emphasis.inline e)
+    | Inline.Text ((txt, attrs), _) ->
+        fprintf ppf "Text%a %S" pp_attrs attrs txt
     (* Cmarkit Extension Inlines *)
-    | Inline.Ext_strikethrough ((strk, _attrs), _) ->
-        fprintf ppf "Ext_strikethrough@ %a" pp_inline
+    | Inline.Ext_strikethrough ((strk, attrs), _) ->
+        fprintf ppf "Ext_strikethrough%a@ %a" pp_attrs attrs pp_inline
           (Inline.Strikethrough.inline strk)
-    | Inline.Ext_math_span ((ms, _attrs), _) ->
+    | Inline.Ext_math_span ((ms, attrs), _) ->
         let t = if Inline.Math_span.display ms then "Display" else "Inline" in
-        fprintf ppf "Ext_math_span(%s)" t
+        fprintf ppf "Ext_math_span(%s)%a" t pp_attrs attrs
     | Inline.Ext_attrs (attr_span, _) ->
-        fprintf ppf "Ext_attrs@ %a" pp_inline
+        fprintf ppf "Ext_attrs%a@ %a" pp_attrs
+          (Inline.Attributes_span.attrs attr_span)
+          pp_inline
           (Inline.Attributes_span.content attr_span)
     (* Slipshow Inlines *)
     | S_inline (Image _) -> fprintf ppf "S_inline(Image)"
@@ -508,52 +520,66 @@ module Ast_printer = struct
 
     fprintf ppf "@ : %a)@]" pp_loc meta
 
-  (** Recursively prints Block.t nodes with their locations *)
+  (** Recursively prints Block.t nodes with their locations and attributes *)
   let rec pp_block ppf block =
     let meta = Utils.Block.meta block in
     fprintf ppf "@[<hv 2>(";
     (match block with
     (* Standard Cmarkit Blocks *)
     | Block.Blank_line _ -> fprintf ppf "Blank_line"
-    | Block.Block_quote ((bq, _attrs), _) ->
-        fprintf ppf "Block_quote@ %a" pp_block (Block.Block_quote.block bq)
+    | Block.Block_quote ((bq, attrs), _) ->
+        fprintf ppf "Block_quote%a@ %a" pp_attrs attrs pp_block
+          (Block.Block_quote.block bq)
     | Block.Blocks (bs, _) ->
         fprintf ppf "Blocks@ @[<v>%a@]" (pp_print_list pp_block) bs
-    | Block.Code_block _ -> fprintf ppf "Code_block"
-    | Block.Heading ((h, _attrs), _) ->
-        fprintf ppf "Heading(lvl %d)@ %a" (Block.Heading.level h) pp_inline
-          (Block.Heading.inline h)
-    | Block.Html_block _ -> fprintf ppf "Html_block"
-    | Block.Link_reference_definition _ ->
-        fprintf ppf "Link_reference_definition"
-    | Block.List ((l, _attrs), _) ->
-        fprintf ppf "List@ @[<v>%a@]"
+    | Block.Code_block ((_cb, attrs), _) ->
+        fprintf ppf "Code_block%a" pp_attrs attrs
+    | Block.Heading ((h, attrs), _) ->
+        fprintf ppf "Heading(lvl %d)%a@ %a" (Block.Heading.level h) pp_attrs
+          attrs pp_inline (Block.Heading.inline h)
+    | Block.Html_block ((_hb, attrs), _) ->
+        fprintf ppf "Html_block%a" pp_attrs attrs
+    | Block.Link_reference_definition ((_ld, attrs), _) ->
+        fprintf ppf "Link_reference_definition%a" pp_attrs attrs
+    | Block.List ((l, attrs), _) ->
+        fprintf ppf "List%a@ @[<v>%a@]" pp_attrs attrs
           (pp_print_list (fun fmt (item, _) ->
                pp_block fmt (Block.List_item.block item)))
           (Block.List'.items l)
-    | Block.Paragraph ((p, _attrs), _) ->
-        fprintf ppf "Paragraph@ %a" pp_inline (Block.Paragraph.inline p)
-    | Block.Thematic_break _ -> fprintf ppf "Thematic_break"
+    | Block.Paragraph ((p, attrs), _) ->
+        fprintf ppf "Paragraph%a@ %a" pp_attrs attrs pp_inline
+          (Block.Paragraph.inline p)
+    | Block.Thematic_break ((_tb, attrs), _) ->
+        fprintf ppf "Thematic_break%a" pp_attrs attrs
     (* Cmarkit Extension Blocks *)
-    | Block.Ext_math_block _ -> fprintf ppf "Ext_math_block"
-    | Block.Ext_table _ -> fprintf ppf "Ext_table"
-    | Block.Ext_footnote_definition _ -> fprintf ppf "Ext_footnote_definition"
-    | Block.Ext_standalone_attributes _ ->
-        fprintf ppf "Ext_standalone_attributes"
-    | Block.Ext_attribute_definition _ -> fprintf ppf "Ext_attribute_definition"
+    | Block.Ext_math_block ((_mb, attrs), _) ->
+        fprintf ppf "Ext_math_block%a" pp_attrs attrs
+    | Block.Ext_table ((_t, attrs), _) ->
+        fprintf ppf "Ext_table%a" pp_attrs attrs
+    | Block.Ext_footnote_definition ((_fn, attrs), _) ->
+        fprintf ppf "Ext_footnote_definition%a" pp_attrs attrs
+    | Block.Ext_standalone_attributes attrs ->
+        fprintf ppf "Ext_standalone_attributes%a" pp_attrs attrs
+    | Block.Ext_attribute_definition ((_def, attrs), _) ->
+        fprintf ppf "Ext_attribute_definition%a" pp_attrs attrs
     (* Slipshow Blocks *)
-    | S_block (Included ((b, _attrs), _)) ->
-        fprintf ppf "Included@ %a" pp_block b
-    | S_block (Div ((b, _attrs), _)) -> fprintf ppf "Div@ %a" pp_block b
-    | S_block (Slide (({ content; title }, _attrs), _)) ->
-        fprintf ppf "Slide@ Title: %a@ Content: %a"
+    | S_block (Included ((b, attrs), _)) ->
+        fprintf ppf "Included%a@ %a" pp_attrs attrs pp_block b
+    | S_block (Div ((b, attrs), _)) ->
+        fprintf ppf "Div%a@ %a" pp_attrs attrs pp_block b
+    | S_block (Slide (({ content; title }, attrs), _)) ->
+        fprintf ppf "Slide%a@ Title: %a@ Content: %a" pp_attrs attrs
           (pp_print_option (fun fmt (t, _) -> pp_inline fmt t))
           title pp_block content
-    | S_block (Slip ((b, _attrs), _)) -> fprintf ppf "Slip@ %a" pp_block b
-    | S_block (SlipScript _) -> fprintf ppf "SlipScript"
-    | S_block (MermaidJS _) -> fprintf ppf "MermaidJS"
-    | S_block (Carousel ((l, _attrs), _)) ->
-        fprintf ppf "Carousel@ @[<v>%a@]" (pp_print_list pp_block) l
+    | S_block (Slip ((b, attrs), _)) ->
+        fprintf ppf "Slip%a@ %a" pp_attrs attrs pp_block b
+    | S_block (SlipScript ((_s, attrs), _)) ->
+        fprintf ppf "SlipScript%a" pp_attrs attrs
+    | S_block (MermaidJS ((_s, attrs), _)) ->
+        fprintf ppf "MermaidJS%a" pp_attrs attrs
+    | S_block (Carousel ((l, attrs), _)) ->
+        fprintf ppf "Carousel%a@ @[<v>%a@]" pp_attrs attrs
+          (pp_print_list pp_block) l
     (* Catch-all for open variants *)
     | _ -> fprintf ppf "Unknown_block");
 
