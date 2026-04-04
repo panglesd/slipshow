@@ -45,13 +45,13 @@ let diagnostics (uri : Linol.Lsp.Types.DocumentUri.t) (s : string) :
       frontmatter.toplevel_attributes
       |> Option.value ~default:Frontmatter.Toplevel_attributes.default
     in
-    let (md, _htbl_include), errors =
+    let ({ Compile.ast = md; _ } as v), errors =
       Compile.compile ~loc_offset ~file ~attrs:toplevel_attributes ~read_file
         ~fm:(Frontmatter.Resolved frontmatter) rest
     in
     Format.eprintf "%a" Ast.Ast_printer.pp_bol
       (`Block (Cmarkit.Doc.block md.doc));
-    current_ast := Some md;
+    current_ast := Some v;
     fm_errors @ errors
   in
   List.concat_map Diagnostic.of_error errors
@@ -68,7 +68,7 @@ class lsp_server =
         match !current_ast with
         | None -> None
         | Some ast -> (
-            match Current_ast.get_leave pos ast.doc with
+            match Current_ast.get_leave pos ast.ast.doc with
             | { attribute = Some a; _ } ->
                 let locdoc =
                   match a with
@@ -92,7 +92,7 @@ class lsp_server =
                 let res =
                   Format.asprintf "Loc is: %d:%d\n\n```\n%a\n```\n" pos.line
                     pos.character Debug.Ast_printer.pp_block
-                    (ast.doc |> Cmarkit.Doc.block)
+                    (ast.ast.doc |> Cmarkit.Doc.block)
                 in
                 Some (res, Cmarkit.Textloc.none))
       in
@@ -131,7 +131,7 @@ class lsp_server =
         match !current_ast with
         | None -> None
         | Some ast -> (
-            match Current_ast.get_leave params.position ast.doc with
+            match Current_ast.get_leave params.position ast.ast.doc with
             | { attribute = None; inline = []; block = [] } ->
                 prerr_endline "Nothing found";
                 None

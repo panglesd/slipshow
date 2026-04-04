@@ -1,10 +1,16 @@
 type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
 
+type t = {
+  ast : Ast.t;
+  included_files : (string, string) Hashtbl.t;
+  id_map : Id_map.t;
+}
+
 val of_cmarkit :
   read_file:file_reader ->
   fm:Frontmatter.resolved Frontmatter.t ->
   Cmarkit.Doc.t ->
-  Ast.t * (string, string) Hashtbl.t
+  t
 
 val to_cmarkit : Ast.t -> Cmarkit.Doc.t
 
@@ -15,4 +21,4 @@ val compile :
   fm:Frontmatter.resolved Frontmatter.t ->
   ?read_file:file_reader ->
   string ->
-  (Ast.t * (string, string) Hashtbl.t) * Diagnosis.t list
+  t * Diagnosis.t list

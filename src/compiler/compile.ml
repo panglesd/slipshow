@@ -482,6 +482,12 @@ module Stage3 = struct
   let execute md = Cmarkit.Mapper.map_doc execute md
 end
 
+type t = {
+  ast : Ast.t;
+  included_files : (string, string) Hashtbl.t;
+  id_map : Id_map.t;
+}
+
 module Stage4 = struct
   let fpath_map_add_to_list x data m =
     let add = function None -> Some [ data ] | Some l -> Some (data :: l) in
@@ -495,7 +501,7 @@ module Stage4 = struct
         | Some (_, (attrs, meta)) -> (
             match Attributes.id attrs with
             | None -> (x, id_list)
-            | Some id -> (x, (id, `Block c, meta) :: id_list))
+            | Some id -> (x, { Id_map.id; elem = `Block c; meta } :: id_list))
       in
       let res = Ast.Folder.continue_block f c acc in
       Folder.ret res
@@ -507,7 +513,7 @@ module Stage4 = struct
         | Some (_, (attrs, meta)) -> (
             match Attributes.id attrs with
             | None -> id_list
-            | Some id -> (id, `Inline i, meta) :: id_list)
+            | Some id -> { Id_map.id; elem = `Inline i; meta } :: id_list)
       in
       let acc =
         match i with
@@ -534,24 +540,24 @@ module Stage4 = struct
     let (Frontmatter.Resolved fm) = fm in
     let external_ids =
       fm.external_ids
-      |> List.map (fun x -> ((x, Meta.none), `External, Meta.none))
+      |> List.map (fun x ->
+          { Id_map.id = (x, Meta.none); elem = `External; meta = Meta.none })
     in
     let asset_map, id_list =
       Cmarkit.Folder.fold_doc execute (Fpath.Map.empty, external_ids) md
     in
     let id_list = List.rev id_list in
-    let module Map = Map.Make (String) in
     let id_map =
       List.fold_left
-        (fun acc (((id, _meta1), _b1, _meta_attrs) as value) ->
-          Map.update id
+        (fun acc ({ Id_map.id = id, _meta1; _ } as value) ->
+          Id_map.SMap.update id
             (function
               | None -> Some [ value ] | Some same -> Some (value :: same))
             acc)
-        Map.empty id_list
+        Id_map.SMap.empty id_list
     in
     let id_map =
-      Map.filter_map
+      Id_map.SMap.filter_map
         (fun id list ->
           match list with
           | [] -> assert false
@@ -559,7 +565,8 @@ module Stage4 = struct
           | x :: _ :: _ ->
               let occurrences =
                 List.map
-                  (fun ((_id, meta1), _b1, _meta_attrs) -> Meta.textloc meta1)
+                  (fun { Id_map.id = _id, meta1; elem = _; meta = _ } ->
+                    Meta.textloc meta1)
                   list
               in
               Diagnosis.add @@ DuplicateID { id; occurrences };
@@ -589,8 +596,6 @@ module Stage4 = struct
 end
 
 module Stage5 = struct
-  module M = Map.Make (String)
-
   let check_attribute ~id_map block_or_inline (attrs, _meta) =
     List.iter (fun check -> check id_map attrs block_or_inline) Check.all_checks
 
@@ -624,7 +629,7 @@ let of_cmarkit ~read_file ~(fm : Frontmatter.resolved Frontmatter.t) md =
   let md2 = Stage2.execute md1 in
   let md3 = Stage3.execute md2 in
   let md4, id_map = Stage4.execute ~read_file ~fm md3 in
-  (Stage5.execute ~id_map md4, htbl_include)
+  { ast = Stage5.execute ~id_map md4; included_files = htbl_include; id_map }
 
 let compile ?file ?loc_offset ~attrs ~fm ?(read_file = fun _ -> Ok None) s =
   Diagnosis.with_ @@ fun () ->

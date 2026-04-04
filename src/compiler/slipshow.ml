@@ -258,7 +258,7 @@ let convert_to_md ~read_file content =
     Cmarkit.Doc.of_string ~loc_offset ~heading_auto_ids:false ~strict:false
       content
   in
-  let sd, _htbl_include = Compile.of_cmarkit ~read_file ~fm md in
+  let { Compile.ast = sd; _ } = Compile.of_cmarkit ~read_file ~fm md in
   let sd = Compile.to_cmarkit sd in
   Cmarkit_commonmark.of_doc ~include_attributes:false sd
 
@@ -317,7 +317,7 @@ let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty) ?file
       frontmatter.highlightjs_theme
   in
   let math_link = frontmatter.math_link in
-  let (md, htbl_include), errors =
+  let { Compile.ast = md; included_files = htbl_include; _ }, errors =
     Compile.compile ~loc_offset ?file ~attrs:toplevel_attributes
       ~fm:(Frontmatter.Resolved frontmatter) ~read_file s
   in

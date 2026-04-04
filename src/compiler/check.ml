@@ -1,5 +1,4 @@
 open Cmarkit
-module M = Map.Make (String)
 
 module Is = struct
   let carousel_or_pdf (bol : Ast.Bol.t) =
@@ -52,13 +51,13 @@ let parse_args (type args)
         warnings;
       f args val_loc
 
-let handle_id_get id_map val_loc (id, loc) =
+let handle_id_get (id_map : Id_map.t) val_loc (id, loc) =
   let loc = Diagnosis.loc_of_ploc val_loc loc in
-  match M.find_opt id id_map with
+  match Id_map.SMap.find_opt id id_map with
   | None ->
       Diagnosis.add @@ MissingID { id; loc };
       None
-  | Some (_, bol, _) -> Some (bol, Some loc)
+  | Some { elem = bol; _ } -> Some (bol, Some loc)
 
 let handle_id id_map val_loc (id, loc) =
   handle_id_get id_map val_loc (id, loc) |> ignore
@@ -93,9 +92,7 @@ let exec id_map attrs block_or_inline =
   parse_args (module Actions_arguments.Execute) attrs @@ fun args val_loc ->
   check_targets Is.slip_script id_map block_or_inline val_loc args
 
-type id_map = ((string * Meta.t) * [ Ast.Bol.t | `External ] * Meta.t) M.t
-
-let move (module A : Actions_arguments.Move) (id_map : id_map) attrs
+let move (module A : Actions_arguments.Move) (id_map : Id_map.t) attrs
     (_block_or_inline : Ast.Bol.t) =
   parse_args (module A) attrs @@ fun args val_loc ->
   match args.target with `Self -> () | `Id id -> handle_id id_map val_loc id
@@ -106,16 +103,16 @@ let center = move (module Actions_arguments.Center)
 let scroll = move (module Actions_arguments.Scroll)
 let enter = move (module Actions_arguments.Enter)
 
-let focus (id_map : id_map) attrs _block_or_inline =
+let focus (id_map : Id_map.t) attrs _block_or_inline =
   parse_args (module Actions_arguments.Focus) attrs @@ fun args val_loc ->
   match args.target with
   | `Self -> ()
   | `Ids ids -> handle_ids id_map val_loc ids
 
-let unfocus (_id_map : id_map) attrs _block_or_inline =
+let unfocus (_id_map : Id_map.t) attrs _block_or_inline =
   parse_args (module Actions_arguments.Unfocus) attrs @@ fun _ _ -> ()
 
-let set_class (module A : Actions_arguments.SetClass) (id_map : id_map) attrs
+let set_class (module A : Actions_arguments.SetClass) (id_map : Id_map.t) attrs
     (_block_or_inline : Ast.Bol.t) =
   parse_args (module A) attrs @@ fun args val_loc ->
   match args with `Self -> () | `Ids ids -> handle_ids id_map val_loc ids
