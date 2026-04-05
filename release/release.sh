@@ -39,4 +39,4 @@ fi
 mkdir -p $OUTPUT
 
 # Executables are symlinks, follow with -h.
-tar hcf "$archive_name" -C _build\install\default bin\slipshow
+tar hcf "$archive_name" -C _build\\install\\default bin\\slipshow
