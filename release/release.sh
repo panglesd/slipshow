@@ -1,7 +1,7 @@
 #/usr/bin/env bash
 set -xeuo pipefail
 
-archive_name=$OUTPUT/slipshow-$TARGETOS-$TARGETARCH.tar
+archive_name=$OUTPUT\slipshow-$TARGETOS-$TARGETARCH.tar
 
 dune subst
 
