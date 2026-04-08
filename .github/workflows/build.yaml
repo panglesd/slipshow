@@ -157,6 +157,19 @@ jobs:
           # create release dir (PowerShell)
           New-Item -Path new_release -ItemType Directory -Force | Out-Null
 
+          # Access right
+          $utilisateur = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+          icacls new_release /grant $utilisateur":F"
+
+          # pour debug
+          Write-Output "Utilisateur : $utilisateur"
+          Write-Output "Dossier new_release"
+          Write-Output "==================="
+          Get-Acl new_release
+          Write-Output "Contenu du dossier courant"
+          Write-Output "=========================="
+          Get-ChildItem
+
           # build a forward-slash path for bash (e.g. C:/...)
           $out = ($PWD.Path -replace '\\','/') + '/new_release'
           $env:OUTPUT = $out
