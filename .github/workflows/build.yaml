@@ -155,7 +155,7 @@ jobs:
       - name: Build release
         run: |
           # create release dir (PowerShell)
-          New-Item -ItemPath new_release -ItemType Directory -Force | Out-Null
+          New-Item -Path new_release -ItemType Directory -Force | Out-Null
 
           # build a forward-slash path for bash (e.g. C:/...)
           $out = ($PWD.Path -replace '\\','/') + '/new_release'
