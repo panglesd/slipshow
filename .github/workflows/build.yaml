@@ -154,11 +154,16 @@ jobs:
 
       - name: Build release
         run: |
-          mkdir -p new_release
-          $env:OUTPUT = "$PWD\new_release"
+          # create release dir (PowerShell)
+          New-Item -ItemPath new_release -ItemType Directory -Force | Out-Null
+
+          # build a forward-slash path for bash (e.g. C:/...)
+          $out = ($PWD.Path -replace '\\','/') + '/new_release'
+          $env:OUTPUT = $out
           $env:TARGETOS = "windows"
           $env:TARGETARCH = "${{ matrix.config.arch }}"
-          $env:VERSION = "$env:GITHUB_REF_NAME"
+          $env:VERSION = $env:GITHUB_REF_NAME
+
           opam exec -- bash release/release.sh
         shell: pwsh
 
