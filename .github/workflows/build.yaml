@@ -101,6 +101,8 @@ jobs:
       - name: Fetch tags
         run: git fetch --tags --force origin
 
+
+        # Is caching working?
       - name: Use OCaml ${{ matrix.ocaml-compiler }}
         uses: ocaml/setup-ocaml@v3
         with:
