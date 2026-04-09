@@ -108,11 +108,13 @@ jobs:
 
       # Is it working?
       - uses: actions/cache@v5
+        id: cache
         with:
           path: ~/.opam
           key: ${{ runner.os }}-${{ hashFiles('*.opam') }}-${{ github.head_ref }}
 
       - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
         run: opam install --deps-only --with-test --with-doc -y .
 
       - name: Build release tarball
