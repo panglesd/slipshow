@@ -28,9 +28,9 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
         with:
-          fetch-depth: 0 # Needed to fetch tags
+          fetch-tags: true # Needed to fetch tags
 
       # The latest tag is needed to build the release tarball but
       # actions/checkout fails to fetch it properly.
