@@ -26,8 +26,8 @@ module _ : S = Pause
 
 module type Move = sig
   type args = {
-    margin : float option;
-    duration : float option;
+    margin : float W.node option;
+    duration : float W.node option;
     target : id_or_self;
   }
 
@@ -44,8 +44,8 @@ end) : Move = struct
   let doc = X.doc
 
   type args = {
-    margin : float option;
-    duration : float option;
+    margin : float W.node option;
+    duration : float W.node option;
     target : id_or_self;
   }
 
@@ -203,8 +203,8 @@ module _ : S = Step
 
 module Focus = struct
   type args = {
-    margin : float option;
-    duration : float option;
+    margin : float W.node option;
+    duration : float W.node option;
     target : ids_or_self;
   }
 
@@ -272,7 +272,7 @@ module _ : S = Play_media
 
 module Change_page = struct
   type change = Absolute of int | Relative of int | All | Range of int * int
-  type arg = { target : id_or_self; n : change list }
+  type arg = { target : id_or_self; n : change W.node list }
   type args = arg list
 
   let on = "change-page"
@@ -281,30 +281,35 @@ module Change_page = struct
   let ( let* ) x f = Result.bind x f
 
   let parse_change (s, loc) =
-    if String.equal "all" s then Some All
-    else
-      match int_of_string_opt s with
-      | None -> (
-          match String.split_on_char '-' s with
-          | [ a; b ] -> (
-              match (int_of_string_opt a, int_of_string_opt b) with
-              | Some a, Some b -> Some (Range (a, b))
-              | _ ->
-                  let msg = "Could not parse parameter" in
-                  W.add (W.Parsing_failure { msg; loc });
-                  None)
-          | _ ->
-              let msg = "Could not parse parameter" in
-              W.add (W.Parsing_failure { msg; loc });
-              None)
-      | Some x -> (
-          match s.[0] with
-          | '+' | '-' -> Some (Relative x)
-          | _ -> Some (Absolute x))
+    let res =
+      if String.equal "all" s then Some All
+      else
+        match int_of_string_opt s with
+        | None -> (
+            match String.split_on_char '-' s with
+            | [ a; b ] -> (
+                match (int_of_string_opt a, int_of_string_opt b) with
+                | Some a, Some b -> Some (Range (a, b))
+                | _ ->
+                    let msg = "Could not parse parameter" in
+                    W.add (W.Parsing_failure { msg; loc });
+                    None)
+            | _ ->
+                let msg = "Could not parse parameter" in
+                W.add (W.Parsing_failure { msg; loc });
+                None)
+        | Some x -> (
+            match s.[0] with
+            | '+' | '-' -> Some (Relative x)
+            | _ -> Some (Absolute x))
+    in
+    Option.map (fun x -> (x, loc)) res
 
   let parse_single_action
       { Parse.p_named = ([ n_opt ] : _ Parse.output_tuple); p_pos = elem_ids } =
-    let n = Option.value ~default:[ Relative 1 ] n_opt in
+    let n_opt = Option.map fst n_opt in
+    let n = Option.value ~default:[ (Relative 1, (-1, -1)) ] n_opt in
+    (* TODO: officially make ([-1, -1]) be none *)
     let open W.M in
     let$+ id_or_self =
       match elem_ids with
@@ -356,7 +361,7 @@ module Change_page = struct
         | Absolute x -> string_of_int x
         | Range (x, y) -> string_of_int x ^ "-" ^ string_of_int y
       in
-      let s = n |> List.map to_string |> String.concat " " in
+      let s = n |> List.map (fun (n, _) -> to_string n) |> String.concat " " in
       let n = "~n:\"" ^ s ^ "\"" in
       let original_id =
         match target with `Self -> "" | `Id (s, _) -> " " ^ s

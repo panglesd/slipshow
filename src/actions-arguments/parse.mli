@@ -11,7 +11,7 @@ type _ descr_tuple =
 
 type _ output_tuple =
   | [] : unit output_tuple
-  | ( :: ) : 'a option * 'b output_tuple -> ('a * 'b) output_tuple
+  | ( :: ) : 'a W.node option * 'b output_tuple -> ('a * 'b) output_tuple
 
 type 'a non_empty_list = 'a * 'a list
 

@@ -30,11 +30,7 @@ module type S = sig
 end
 
 module type Move = sig
-  type args = {
-    margin : float option;
-    duration : float option;
-    target : [ `Self | `Id of string Actions_arguments.W.node ];
-  }
+  include Actions_arguments.Move
 
   type js_args = {
     elem : Brr.El.t;
@@ -204,6 +200,8 @@ struct
   let do_ ~mode window elem { margin; duration; target } =
     only_if_not_counting mode @@ fun _mode ->
     let< elem = elem_of_id_or_self target elem ~none:(Undoable.return ()) in
+    let margin = Option.map fst margin in
+    let duration = Option.map fst duration in
     do_js ~mode window { elem; margin; duration }
 end
 
@@ -304,7 +302,8 @@ let exit ~mode window to_elem =
                   match Enter.parse_args (Jstr.to_string s) with
                   | Error _ -> duration
                   | Ok (v, _warnings) ->
-                      Option.value ~default:duration v.duration)
+                      v.duration |> Option.map fst
+                      |> Option.value ~default:duration)
             in
             Universe.Move.move mode window coord_left ~duration
         | Some _ -> exit ())
@@ -367,6 +366,8 @@ module Focus = struct
   let do_ ~mode window el { target; margin; duration } =
     only_if_not_counting mode @@ fun _mode ->
     let elems = elems_of_ids_or_self target el in
+    let margin = Option.map fst margin in
+    let duration = Option.map fst duration in
     do_js ~mode window { elems; margin; duration }
 
   let setup = None
@@ -662,17 +663,19 @@ module Change_page = struct
       match n with
       | [] -> Undoable.return []
       | change :: rest -> (
-          let> overflow = do_js' ~mode window { elem = target_elem; change } in
+          let> overflow =
+            do_js' ~mode window { elem = target_elem; change = fst change }
+          in
           match overflow with
           | None -> Undoable.return []
           | Some overflow -> (
               match change with
-              | All when not overflow -> Undoable.return n
-              | Range (a, b) when a < b ->
-                  Undoable.return (Range (a + 1, b) :: rest)
-              | Range (a, b) when a = b -> Undoable.return rest
-              | Range (a, b) (* when a > b *) ->
-                  Undoable.return (Range (a - 1, b) :: rest)
+              | All, _ when not overflow -> Undoable.return n
+              | Range (a, b), l when a < b ->
+                  Undoable.return ((Range (a + 1, b), l) :: rest)
+              | Range (a, b), _ when a = b -> Undoable.return rest
+              | Range (a, b), l (* when a > b *) ->
+                  Undoable.return ((Range (a - 1, b), l) :: rest)
               | _ -> Undoable.return rest))
     in
     Undoable.return

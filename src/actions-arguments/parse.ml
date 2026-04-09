@@ -195,7 +195,7 @@ type _ descr_tuple =
 
 type _ output_tuple =
   | [] : unit output_tuple
-  | ( :: ) : 'a option * 'b output_tuple -> ('a * 'b) output_tuple
+  | ( :: ) : 'a W.node option * 'b output_tuple -> ('a * 'b) output_tuple
 
 type 'a non_empty_list = 'a * 'a list
 
@@ -243,7 +243,7 @@ let rec parsed_names : type a. action -> a descr_tuple -> a output_tuple =
         | Some (Error (`Msg msg), loc) ->
             W.add @@ Parsing_failure { msg; loc };
             None
-        | Some (Ok a, _) -> Some a
+        | Some (Ok a, loc) -> Some (a, loc)
       in
       parsed :: parsed_names action rest
 
