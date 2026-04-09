@@ -121,7 +121,7 @@ jobs:
 
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit
-        run: opam install --deps-only --with-test --depext-only --with-doc -y .
+        run: opam install --deps-only --with-test --depext-only --with-doc -y . && opam upgrade
 
       - name: Build release tarball
         # if: startsWith(github.ref, 'refs/tags/')
