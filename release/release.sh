@@ -7,5 +7,7 @@ dune subst
 
 dune build --profile release -p slipshow
 
+mkdir -p $OUTPUT
+
 # Executables are symlinks, follow with -h.
 tar hcf "$archive_name" -C _build/install/default bin/slipshow
