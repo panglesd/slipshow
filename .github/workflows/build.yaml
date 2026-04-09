@@ -101,12 +101,15 @@ jobs:
       - name: Fetch tags
         run: git fetch --tags --force origin
 
-
-        # Is caching working?
       - name: Use OCaml ${{ matrix.ocaml-compiler }}
         uses: ocaml/setup-ocaml@v3
         with:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
+
+      - uses: actions/cache@v5
+        with:
+          path: .opam
+          key: ${{ runner.os }}-${{ hashFiles('*.opam') }}-${{ github.base_ref }}
 
       - name: Install dependencies
         run: opam install --deps-only --with-test --with-doc -y .
