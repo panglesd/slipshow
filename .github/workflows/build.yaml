@@ -150,7 +150,7 @@ jobs:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
 
       - name: Install something that triggers mingw-w64-shims recompilation
-        run: opam install conf-mingw-w64-gcc-i686 -y
+        run: opam install conf-mingw-w64-gmp-x86_64 conf-mingw-w64-libffi-x86_64 conf-mingw-w64-openssl-x86_64 -y
 
       - name: Install dependencies
         run: opam install --deps-only --with-test --with-doc -y .
