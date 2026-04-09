@@ -15,11 +15,11 @@ RUN sed -i 's/"()"/"(-cclib -static -cclib -no-pie)"/g' src/cli/static-linking-f
 ARG VERSION
 ARG TARGETOS
 ARG TARGETARCH
-ENV VERSION=$VERSION TARGETOS=$TARGETOS TARGETARCH=$TARGETARCH OUTPUT=/release
+ENV VERSION=$VERSION TARGETOS=$TARGETOS TARGETARCH=$TARGETARCH OUTPUT=/tmp/release
 
 # Run the release script inside the build
 RUN opam exec -- bash release/release.sh
 
 # Export ONLY the compiled binaries to the host
 FROM scratch
-COPY --from=0 /release /
+COPY --from=0 /tmp/release /
