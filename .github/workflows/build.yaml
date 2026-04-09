@@ -57,7 +57,7 @@ jobs:
       - name: Check images
         run: docker image ls
 
-        # Baseline to compare
+        # Baseline to compare with cache?
       - name: Build release tarball
         # if: startsWith(github.ref, 'refs/tags/')
         run: |
