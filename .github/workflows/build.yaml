@@ -131,7 +131,7 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - { os: "windows-2022", arch: "x86_64", target: "x64" }
+          - { name: "windows", os: "windows-2022", arch: "x86_64", target: "x64" }
         ocaml-compiler:
           - 4.14.x
     runs-on: ${{ matrix.config.os }}
@@ -152,30 +152,37 @@ jobs:
       - name: Install dependencies
         run: opam install --deps-only --with-test --with-doc -y .
 
-      - name: Build release
+      - name: Build Windows executable
         run: |
-          # create release dir (PowerShell)
-          New-Item -Path new_release -ItemType Directory -Force | Out-Null
+          opam exec -- dune build --profile release -p slipshow
+          # Copie l'exécutable dans un dossier dédié
+          mkdir -p new_release
+          cp _build/install/default/bin/slipshow.exe new_release/slipshow.exe
 
-          # Access right
-          #$utilisateur = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
-          #icacls new_release /grant $utilisateur":F"
+      - name: Verify executables
+        run: |
+          Test-Path _build/install/default/bin/slipshow.exe
+          Test-Path new_release/slipshow.exe
 
-          # build a forward-slash path for bash (e.g. C:/...)
-          $out = (($PWD.Path -replace '[\\]', '/') -replace '^([a-zA-Z]):', '/$1') + '/new_release'
-          $env:OUTPUT = $out
-          $env:TARGETOS = "windows"
-          $env:TARGETARCH = "${{ matrix.config.arch }}"
-          $env:VERSION = $env:GITHUB_REF_NAME
+      - name: Install 7-Zip
+        run: |
+          choco install 7zip -y
 
-          opam exec -- bash release/release.sh
-        shell: pwsh
+      - name: Create ZIP archive slipshow-${{ matrix.config.name }}-${{ matrix.config.target }}.zip
+        run: |
+          $zipPath = "${{ env.ProgramFiles }}\7-Zip\7z.exe"
+          if (Test-Path $zipPath) {
+            & $zipPath a -tzip new_release/slipshow-${{ matrix.config.name }}-${{ matrix.config.target }}.zip new_release/slipshow.exe
+          } else {
+            Write-Error "7-Zip is not installed in the expected location: $zipPath"
+            exit 1
+          }
 
       - name: Upload archives
         uses: actions/upload-artifact@v4
         with:
           name: archives-windows-${{ matrix.config.arch }}
-          path: new_release/*
+          path: new_release/*.zip
 
   release:
     if: startsWith(github.ref, 'refs/tags/')
