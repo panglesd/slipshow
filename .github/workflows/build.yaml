@@ -147,10 +147,14 @@ jobs:
       - name: Install OCaml ${{ matrix.ocaml-compiler }}
         uses: ocaml/setup-ocaml@v3
         with:
-          ocaml-compiler: ${{ matrix.ocaml-compiler }}
+          cache-prefix: v3
+          ocaml-compiler: 4.14
+          opam-pin: false
+          opam-repositories: |
+            default: https://github.com/punchagan/opam-repository.git#f1c70a26b442142ba1c3bd040bf8621060c94912
 
-      - name: Install something that triggers mingw-w64-shims recompilation
-        run: opam install conf-mingw-w64-gmp-x86_64 conf-mingw-w64-libffi-x86_64 conf-mingw-w64-openssl-x86_64 -y
+      # - name: Install something that triggers mingw-w64-shims recompilation
+      #   run: opam install conf-mingw-w64-gmp-x86_64 conf-mingw-w64-libffi-x86_64 conf-mingw-w64-openssl-x86_64 -y
 
       - name: Install dependencies
         run: opam install --deps-only --with-test --with-doc -y .
