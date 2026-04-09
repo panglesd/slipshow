@@ -58,13 +58,20 @@ jobs:
         run: docker image ls
 
         # Baseline to compare with cache?
+      - name: Install dependencies in Docker
+        run: |
+          docker buildx build --platform ${{ matrix.platform.name }} \
+            --target deps \
+            --cache-to type=gha,mode=max,scope=${{ matrix.platform.filename_suffix }}-deps \
+            --cache-from type=gha,scope=${{ matrix.platform.filename_suffix }}-deps \
+            -f release/Dockerfile .
+
       - name: Build release tarball
         # if: startsWith(github.ref, 'refs/tags/')
         run: |
           mkdir -p new_release; chmod a+rw new_release;
           docker buildx build --platform ${{ matrix.platform.name }} \
-            --cache-to type=gha,mode=max \
-            --cache-from type=gha \
+            --cache-from type=gha,scope=${{ matrix.platform.filename_suffix }}-deps \
             --build-arg VERSION=$GITHUB_REF_NAME \
             --build-arg TARGETOS=linux \
             --build-arg TARGETARCH=${{ matrix.platform.target_arch }} \
