@@ -155,7 +155,6 @@ jobs:
       - name: Build Windows executable
         run: |
           opam exec -- dune build --profile release -p slipshow
-          # Copie l'exécutable dans un dossier dédié
           mkdir -p new_release
           cp _build/install/default/bin/slipshow.exe new_release/slipshow.exe
 
@@ -164,20 +163,9 @@ jobs:
           Test-Path _build/install/default/bin/slipshow.exe
           Test-Path new_release/slipshow.exe
 
-      - name: Install 7-Zip
-        run: |
-          choco install 7zip -y
-
       - name: Create ZIP archive slipshow-${{ matrix.config.name }}-${{ matrix.config.target }}.zip
-        run: |
-          $zipPath = "${{ env.ProgramFiles }}\7-Zip\7z.exe"
-          if (Test-Path $zipPath) {
-            & $zipPath a -tzip new_release/slipshow-${{ matrix.config.name }}-${{ matrix.config.target }}.zip new_release/slipshow.exe
-          } else {
-            Write-Error "7-Zip is not installed in the expected location: $zipPath"
-            exit 1
-          }
-
+        run: Compress-Archive -Path new_release/slipshow.exe -DestinationPath new_release/slipshow-${{ matrix.config.name }}-${{ matrix.config.target }}.zip
+        
       - name: Upload archives
         uses: actions/upload-artifact@v4
         with:
