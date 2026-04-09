@@ -108,7 +108,7 @@ jobs:
           path: |
             ~/.opam
             _opam
-          key: ${{ runner.os }}-${{ hashFiles('*.opam') }}-${{ github.head_ref }}-1
+          key: ${{ matrix.config.os }}-${{ hashFiles('*.opam') }}
 
       - name: Use OCaml ${{ matrix.ocaml-compiler }}
         uses: ocaml/setup-ocaml@v3
