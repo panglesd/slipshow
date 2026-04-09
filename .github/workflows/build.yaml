@@ -62,18 +62,14 @@ jobs:
         # if: startsWith(github.ref, 'refs/tags/')
         run: |
           mkdir -p new_release; chmod a+rw new_release;
-          docker buildx build --platform ${{ matrix.platform.name }} --load \
+          docker buildx build --platform ${{ matrix.platform.name }} \
             --cache-to type=gha,mode=max \
             --cache-from type=gha \
+            --build-arg VERSION=$GITHUB_REF_NAME \
+            --build-arg TARGETOS=linux \
+            --build-arg TARGETARCH=${{ matrix.platform.target_arch }} \
             -f release/Dockerfile \
-            -t slipshow-release-${{ matrix.platform.name }} .
-          docker run --platform ${{ matrix.platform.name }} -v $PWD/new_release:/release \
-            -e VERSION=$GITHUB_REF_NAME \
-            -e TARGETOS=linux \
-            -e TARGETARCH=${{ matrix.platform.target_arch }} \
-            -e OUTPUT=/release \
-            slipshow-release-${{ matrix.platform.name }} \
-            opam exec -- bash release/release.sh
+            --output type=local,dest=new_release .
 
       - name: upload archives
         # if: startsWith(github.ref, 'refs/tags/')

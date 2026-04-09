@@ -12,3 +12,14 @@ RUN opam exec -- dune subst
 
 RUN sed -i 's/"()"/"(-cclib -static -cclib -no-pie)"/g' src/cli/static-linking-flags/static_linking_flags.ml
 
+ARG VERSION
+ARG TARGETOS
+ARG TARGETARCH
+ENV VERSION=$VERSION TARGETOS=$TARGETOS TARGETARCH=$TARGETARCH OUTPUT=/release
+
+# Run the release script inside the build
+RUN opam exec -- bash release/release.sh
+
+# Export ONLY the compiled binaries to the host
+FROM scratch
+COPY --from=0 /release /
