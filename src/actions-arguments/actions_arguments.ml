@@ -3,6 +3,29 @@ module W = Warnings
 type id_or_self = [ `Self | `Id of string W.node ]
 type ids_or_self = [ `Self | `Ids of string W.node list ]
 
+type repr =
+  | Enter
+  | Clear_draw
+  | Draw
+  | Pause
+  | Step
+  | Up
+  | Down
+  | Center
+  | Scroll
+  | Change_page
+  | Focus
+  | Unfocus
+  | Execute
+  | Unstatic
+  | Static
+  | Reveal
+  | Unreveal
+  | Emph
+  | Unemph
+  | Speaker_note
+  | Play_media
+
 module type S = sig
   type args
 
@@ -10,6 +33,7 @@ module type S = sig
   val action_name : string
   val parse_args : string -> (args W.t, [> `Msg of string ]) result
   val doc : string
+  val repr : repr
 end
 
 module Pause = struct
@@ -20,6 +44,7 @@ module Pause = struct
 
   let parse_args = Parse.parse_only_els ~action_name
   let doc = "Hide what follows, until the action is executed"
+  let repr = Pause
 end
 
 module _ : S = Pause
@@ -38,10 +63,9 @@ module Move (X : sig
   val on : string
   val action_name : string
   val doc : string
+  val repr : repr
 end) : Move = struct
-  let on = X.on
-  let action_name = X.action_name
-  let doc = X.doc
+  include X
 
   type args = {
     margin : float W.node option;
@@ -75,6 +99,8 @@ module Up = Move (struct
 
   let doc =
     "Move the screen vertically so that the target is at the top of the screen"
+
+  let repr = Up
 end)
 
 module _ : S = Up
@@ -86,6 +112,8 @@ module Down = Move (struct
   let doc =
     "Move the screen vertically so that the target is at the bottom of the \
      screen"
+
+  let repr = Down
 end)
 
 module _ : S = Down
@@ -97,6 +125,8 @@ module Center = Move (struct
   let doc =
     "Move the screen vertically so that the target is at the center of the \
      screen"
+
+  let repr = Center
 end)
 
 module _ : S = Center
@@ -105,6 +135,7 @@ module Scroll = Move (struct
   let on = "scroll-at-unpause"
   let action_name = "scroll"
   let doc = "Move the screen vertically until the element is fully visible"
+  let repr = Scroll
 end)
 
 module _ : S = Scroll
@@ -113,6 +144,7 @@ module Enter = Move (struct
   let on = "enter-at-unpause"
   let action_name = "enter"
   let doc = "Enter a slide or a slip"
+  let repr = Enter
 end)
 
 module _ : S = Enter
@@ -123,10 +155,9 @@ module SetClass (X : sig
   val on : string
   val action_name : string
   val doc : string
+  val repr : repr
 end) : SetClass = struct
-  let on = X.on
-  let action_name = X.action_name
-  let doc = X.doc
+  include X
 
   type args = ids_or_self
 
@@ -137,6 +168,7 @@ module Unstatic = SetClass (struct
   let on = "unstatic-at-unpause"
   let action_name = "unstatic"
   let doc = "Remove the target from the document"
+  let repr = Unstatic
 end)
 
 module _ : S = Unstatic
@@ -148,6 +180,8 @@ module Static = SetClass (struct
   let doc =
     "Add the target to the document (if it was removed by the `unstatic` \
      action or the `.unstatic` class)"
+
+  let repr = Static
 end)
 
 module _ : S = Static
@@ -159,6 +193,8 @@ module Reveal = SetClass (struct
   let doc =
     "Reveal the target (if it was hidden by the `unreveal` action or the \
      `.unrevealed` class)"
+
+  let repr = Reveal
 end)
 
 module _ : S = Reveal
@@ -167,6 +203,7 @@ module Unreveal = SetClass (struct
   let on = "unreveal-at-unpause"
   let action_name = "unreveal"
   let doc = "Hide the target"
+  let repr = Unreveal
 end)
 
 module _ : S = Unreveal
@@ -175,6 +212,7 @@ module Emph = SetClass (struct
   let on = "emph-at-unpause"
   let action_name = "emph"
   let doc = "Emphasize the target"
+  let repr = Emph
 end)
 
 module _ : S = Emph
@@ -186,6 +224,8 @@ module Unemph = SetClass (struct
   let doc =
     "Remove the emphasize from the target (if it was emphasize through the \
      `emph` action or the `.emphasized` class)"
+
+  let repr = Unemph
 end)
 
 module _ : S = Unemph
@@ -197,6 +237,7 @@ module Step = struct
   let action_name = on
   let parse_args s = Parse.no_args ~action_name s
   let doc = "Does nothing. Useful to change slips."
+  let repr = Step
 end
 
 module _ : S = Step
@@ -231,6 +272,8 @@ module Focus = struct
   let doc =
     "Move and rescale the screen to make see all the targets the biggest \
      possible"
+
+  let repr = Focus
 end
 
 module _ : S = Focus
@@ -242,6 +285,7 @@ module Unfocus = struct
   let action_name = "unfocus"
   let parse_args s = Parse.no_args ~action_name s
   let doc = "Move back to where the screen was before starting focusing"
+  let repr = Unfocus
 end
 
 module _ : S = Unfocus
@@ -254,6 +298,7 @@ module Speaker_note = struct
 
   let parse_args = Parse.parse_only_el ~action_name
   let doc = "Send the content of the target to the speaker notes"
+  let repr = Speaker_note
 end
 
 module _ : S = Speaker_note
@@ -266,6 +311,7 @@ module Play_media = struct
 
   let parse_args = Parse.parse_only_els ~action_name
   let doc = "Play the target media (audio or video)"
+  let repr = Play_media
 end
 
 module _ : S = Play_media
@@ -371,6 +417,7 @@ module Change_page = struct
     args |> List.map arg_to_string |> String.concat " ; "
 
   let doc = "Change the currently visible page of a carousel or pdf"
+  let repr = Change_page
 end
 
 module _ : S = Change_page
@@ -383,6 +430,7 @@ module Draw = struct
 
   let parse_args = Parse.parse_only_els ~action_name
   let doc = "Draw a pre-recorded target drawing"
+  let repr = Draw
 end
 
 module _ : S = Draw
@@ -395,6 +443,7 @@ module Clear_draw = struct
 
   let parse_args = Parse.parse_only_els ~action_name
   let doc = "Clear a pre-recorded target drawing"
+  let repr = Clear_draw
 end
 
 module _ : S = Clear_draw
@@ -406,6 +455,7 @@ module Execute = struct
   let action_name = "exec"
   let parse_args = Parse.parse_only_els ~action_name
   let doc = "Execute the target slip script"
+  let repr = Execute
 end
 
 module _ : S = Execute
