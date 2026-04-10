@@ -3,6 +3,7 @@ module Frontmatter = Frontmatter
 module Compile = Compile
 module Ast = Ast
 module Id_map = Id_map
+module Action_plan = Action_plan
 
 type starting_state = int
 type delayed

@@ -134,6 +134,8 @@ module Attributes = struct
   and value = {v : string ; delimiter: char option}
   (** The type for attributes values. *)
 
+  type kv = key node * value node option
+
   let empty = {class' = [] ; id = None ; kv_attributes = []}
   (** [empty] is for when there is no attributes, no class, no id. *)
 

@@ -69,26 +69,7 @@ class lsp_server =
       let ( let+ ) x f = Option.map f x in
       let res =
         let* ast = !current_ast in
-        let* value, meta_v =
-          match Current_ast.get_leave pos ast.ast.doc with
-          | { attribute = Some (Value ((_key, _meta), (value, meta_v))); _ } ->
-              Some (value, meta_v)
-          | _ -> None
-        in
-        let parsed = Actions_arguments.Focus.parse_args value.v in
-        let* res, _warning = Result.to_option parsed in
-        let* ids =
-          match res.target with `Self -> None | `Ids ids -> Some ids
-        in
-        let loc = Cmarkit.Meta.textloc meta_v in
-        let ids =
-          List.map (fun (v, ploc) -> (v, Diagnosis.loc_of_ploc loc ploc)) ids
-        in
-        let* id, _ =
-          List.find_opt
-            (fun (_, loc) -> Current_ast.pos_in_textloc ~pos ~loc)
-            ids
-        in
+        let* id = Current_ast.get_target pos ast.action_plan in
         let+ x = Slipshow.Id_map.SMap.find_opt id ast.id_map in
         let meta = snd x.id in
         let range = Diagnostic.linoloc_of_textloc (Cmarkit.Meta.textloc meta) in

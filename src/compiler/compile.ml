@@ -486,6 +486,7 @@ type t = {
   ast : Ast.t;
   included_files : (string, string) Hashtbl.t;
   id_map : Id_map.t;
+  action_plan : Action_plan.t;
 }
 
 module Stage4 = struct
@@ -595,41 +596,14 @@ module Stage4 = struct
     ({ Ast.doc = md; files }, id_map)
 end
 
-module Stage5 = struct
-  let check_attribute ~id_map block_or_inline (attrs, _meta) =
-    List.iter (fun check -> check id_map attrs block_or_inline) Check.all_checks
-
-  let folder ~id_map =
-    let block _f () c =
-      let () =
-        match Ast.Utils.Block.get_attribute c with
-        | None -> ()
-        | Some (_, attrs) -> check_attribute ~id_map (`Block c) attrs
-      in
-      Folder.default
-    in
-    let inline _f () i =
-      let () =
-        match Ast.Utils.Inline.get_attribute i with
-        | None -> ()
-        | Some (_, attrs) -> check_attribute ~id_map (`Inline i) attrs
-      in
-      Folder.default
-    in
-    Ast.Folder.make ~block ~inline ()
-
-  let execute ~id_map ast =
-    let () = Cmarkit.Folder.fold_doc (folder ~id_map) () ast.Ast.doc in
-    ast
-end
-
 let of_cmarkit ~read_file ~(fm : Frontmatter.resolved Frontmatter.t) md =
   let defs = Cmarkit.Doc.defs md in
   let md1, htbl_include = Stage1.execute defs read_file md in
   let md2 = Stage2.execute md1 in
   let md3 = Stage3.execute md2 in
   let md4, id_map = Stage4.execute ~read_file ~fm md3 in
-  { ast = Stage5.execute ~id_map md4; included_files = htbl_include; id_map }
+  let action_plan = Action_plan.execute ~id_map md4 in
+  { ast = md4; included_files = htbl_include; id_map; action_plan }
 
 let compile ?file ?loc_offset ~attrs ~fm ?(read_file = fun _ -> Ok None) s =
   Diagnosis.with_ @@ fun () ->

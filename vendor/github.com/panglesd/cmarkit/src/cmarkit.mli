@@ -279,12 +279,14 @@ module Attributes : sig
   type value = {v : string ; delimiter: char option}
   (** The type for attributes values. *)
 
+  type kv = key node * value node option
+  
   val empty : t
   (** [empty] is for when there is no attributes. *)
 
   val is_empty : t -> bool
 
-  val make : ?kv_attributes:(key node * value node option) list ->
+  val make : ?kv_attributes:kv list ->
 ?id:string node option -> ?class':string node list -> unit -> t
   (** [make ~attributes] is TODO. *)
 

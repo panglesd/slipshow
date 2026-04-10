@@ -4,6 +4,7 @@ type t = {
   ast : Ast.t;
   included_files : (string, string) Hashtbl.t;
   id_map : Id_map.t;
+  action_plan : Action_plan.t;
 }
 
 val of_cmarkit :

@@ -202,3 +202,54 @@ let get_leave pos doc =
   let acc = { attribute = None; inline = []; block = [] } in
   let block = Cmarkit.Doc.block doc in
   if pos_in_block block ~pos then enter_block acc pos block else acc
+
+let get_target pos (action_plan : Slipshow.Action_plan.t) =
+  List.find_map
+    (fun { Slipshow.Action_plan.actions; attrs = _, meta; _ } ->
+      if not @@ pos_in ~pos ~meta then None
+      else
+        List.find_map
+          (fun (arg, (_, value)) ->
+            Option.bind value @@ fun (_, meta) ->
+            let loc = Cmarkit.Meta.textloc meta in
+            if not @@ pos_in_textloc ~pos ~loc then None
+            else
+              let targets =
+                let id_or_self = function `Self -> [] | `Id id -> [ id ] in
+                let ids_or_self = function `Self -> [] | `Ids ids -> ids in
+                match arg with
+                | Slipshow.Action_plan.Enter { target; _ }
+                | Speaker_note target
+                | Up { target; _ }
+                | Down { target; _ }
+                | Center { target; _ }
+                | Scroll { target; _ } ->
+                    id_or_self target
+                | Focus { target = targets; _ }
+                | Execute targets
+                | Pause targets
+                | Draw targets
+                | Unstatic targets
+                | Static targets
+                | Reveal targets
+                | Unreveal targets
+                | Emph targets
+                | Play_media targets
+                | Unemph targets
+                | Clear_draw targets ->
+                    ids_or_self targets
+                | Unfocus _ | Step _ -> []
+                | Change_page argl ->
+                    List.concat_map
+                      (function
+                        | { Actions_arguments.Change_page.target; _ } ->
+                            id_or_self target)
+                      argl
+              in
+              List.find_map
+                (fun (t, ploc) ->
+                  let loc = Diagnosis.loc_of_ploc loc ploc in
+                  if pos_in_textloc ~pos ~loc then Some t else None)
+                targets)
+          actions)
+    action_plan

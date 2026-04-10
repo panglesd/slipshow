@@ -3,6 +3,7 @@ module Frontmatter = Frontmatter
 module Compile = Compile
 module Ast = Ast
 module Id_map = Id_map
+module Action_plan = Action_plan
 
 type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
 
