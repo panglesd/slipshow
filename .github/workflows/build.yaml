@@ -144,6 +144,14 @@ jobs:
       - name: Fetch tags
         run: git fetch --tags --force origin
 
+      - uses: actions/cache@v5
+        id: wincache
+        with:
+          path: |
+            ~/.opam
+            _opam
+          key: windows-${{ hashFiles('*.opam') }}
+
       - name: Install OCaml ${{ matrix.ocaml-compiler }}
         uses: ocaml/setup-ocaml@v3
         with:
@@ -157,7 +165,12 @@ jobs:
       #   run: opam install conf-mingw-w64-gmp-x86_64 conf-mingw-w64-libffi-x86_64 conf-mingw-w64-openssl-x86_64 -y
 
       - name: Install dependencies
+        if: steps.wincache.outputs.cache-hit != 'true'
         run: opam install --deps-only --with-test --with-doc -y .
+
+      - name: Install dependencies
+        if: steps.wincache.outputs.cache-hit
+        run: opam install --deps-only --with-test --depext-only --with-doc -y . && opam upgrade
 
       # - name: Build Windows executable
         # run: |
