@@ -2,6 +2,7 @@ module Asset = Asset
 module Frontmatter = Frontmatter
 module Compile = Compile
 module Ast = Ast
+module Id_map = Id_map
 
 type starting_state = int
 type delayed

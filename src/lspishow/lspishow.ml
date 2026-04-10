@@ -61,6 +61,41 @@ class lsp_server =
     inherit Linol_lwt.Jsonrpc2.server as super
     method spawn_query_handler f = Linol_lwt.spawn f
     method! config_hover = Some (`Bool true)
+    method! config_definition = Some (`Bool true)
+
+    method! on_req_definition ~notify_back:_ ~id:_ ~uri ~pos ~workDoneToken:_
+        ~partialResultToken:_ _doc_state =
+      let ( let* ) = Option.bind in
+      let ( let+ ) x f = Option.map f x in
+      let res =
+        let* ast = !current_ast in
+        let* value, meta_v =
+          match Current_ast.get_leave pos ast.ast.doc with
+          | { attribute = Some (Value ((_key, _meta), (value, meta_v))); _ } ->
+              Some (value, meta_v)
+          | _ -> None
+        in
+        let parsed = Actions_arguments.Focus.parse_args value.v in
+        let* res, _warning = Result.to_option parsed in
+        let* ids =
+          match res.target with `Self -> None | `Ids ids -> Some ids
+        in
+        let loc = Cmarkit.Meta.textloc meta_v in
+        let ids =
+          List.map (fun (v, ploc) -> (v, Diagnosis.loc_of_ploc loc ploc)) ids
+        in
+        let* id, _ =
+          List.find_opt
+            (fun (_, loc) -> Current_ast.pos_in_textloc ~pos ~loc)
+            ids
+        in
+        let+ x = Slipshow.Id_map.SMap.find_opt id ast.id_map in
+        let meta = snd x.id in
+        let range = Diagnostic.linoloc_of_textloc (Cmarkit.Meta.textloc meta) in
+        let loc = Linol_lwt.Location.create ~range ~uri in
+        `Location [ loc ]
+      in
+      Lwt.return res
 
     method! on_req_hover ~notify_back:_ ~id:_ ~uri:_ ~pos ~workDoneToken:_ _ :
         Linol_lwt.Hover.t option Lwt.t =

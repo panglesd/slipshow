@@ -1,8 +1,8 @@
 let ast : Slipshow.Ast.t option ref = ref None
 let set_ast x = ast := Some x
 
-let pos_in ~(pos : Linol_lwt.Position.t) ~meta =
-  let range = Cmarkit.Meta.textloc meta in
+let pos_in_textloc ~(pos : Linol_lwt.Position.t) ~loc =
+  let range = loc in
   let range = Diagnostic.linoloc_of_textloc range in
   Format.eprintf "is %d:%d in %d:%d -> %d:%d?\n" pos.line pos.character
     range.start.line range.start.character range.end_.line range.end_.character;
@@ -14,6 +14,10 @@ let pos_in ~(pos : Linol_lwt.Position.t) ~meta =
   in
   Format.eprintf "%s\n%!" (if res then "yes" else "no");
   res
+
+let pos_in ~(pos : Linol_lwt.Position.t) ~meta =
+  let loc = Cmarkit.Meta.textloc meta in
+  pos_in_textloc ~pos ~loc
 
 let pos_in_inline inline ~pos =
   let meta = Slipshow.Ast.Utils.Inline.meta inline in
