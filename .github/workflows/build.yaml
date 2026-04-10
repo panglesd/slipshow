@@ -159,21 +159,39 @@ jobs:
       - name: Install dependencies
         run: opam install --deps-only --with-test --with-doc -y .
 
-      - name: Build Windows executable
-        run: |
-          opam exec -- dune build --profile release -p slipshow
-          mkdir -p new_release
-          cp _build/install/default/bin/slipshow.exe new_release/slipshow.exe
+      # - name: Build Windows executable
+        # run: |
+          # opam exec -- dune build --profile release -p slipshow
+          # mkdir -p new_release
+          # cp _build/install/default/bin/slipshow.exe new_release/slipshow.exe
 
-      - name: Verify executables
-        run: |
-          Write-Output "Test new_release/slipshow.exe : $(Test-Path new_release/slipshow.exe)"
-          Write-Output "Test _build/install/default/bin/slipshow.exe : $(Test-Path _build/install/default/bin/slipshow.exe)"
-          Get-ChildItem -Path _build/install/default/bin
+      # - name: Verify executables
+        # run: |
+          # Write-Output "Test new_release/slipshow.exe : $(Test-Path new_release/slipshow.exe)"
+          # Write-Output "Test _build/install/default/bin/slipshow.exe : $(Test-Path _build/install/default/bin/slipshow.exe)"
+          # Get-ChildItem -Path _build/install/default/bin
 
-      - name: Create ZIP archive slipshow-${{ matrix.config.name }}-${{ matrix.config.target }}.zip
-        run: Compress-Archive -Path new_release/slipshow.exe -DestinationPath new_release/slipshow-${{ matrix.config.name }}-${{ matrix.config.target }}.zip
+      # - name: Create ZIP archive slipshow-${{ matrix.config.name }}-${{ matrix.config.target }}.zip
+        # run: Compress-Archive -Path new_release/slipshow.exe -DestinationPath new_release/slipshow-${{ matrix.config.name }}-${{ matrix.config.target }}.zip
+
+      - name: Build installable artifacts
+        run: opam exec -- dune build --profile release @install
+      
+      - name: Install into relocatable bundle
+        run: opam exec -- dune install --relocatable --prefix ${{ github.workspace }}/bundle slipshow
         
+      - name: Verify bundle
+        run: |
+          Write-Output "Test ${{ github.workspace }}/bundle : $(Test-Path ${{ github.workspace }}/bundle)"
+          Get-ChildItem -Path ${{ github.workspace }}/bundle
+  
+      - name: Prepare release directory
+        run: |
+          New-Item -ItemType Directory -Force -Path new_release
+  
+      - name: Create ZIP archive slipshow-${{ matrix.config.name }}-${{ matrix.config.target }}.zip
+        run: Compress-Archive -Path ${{ github.workspace }}/bundle/* -DestinationPath new_release/slipshow-${{ matrix.config.name }}-${{ matrix.config.target }}.zip
+  
       - name: Upload archives
         uses: actions/upload-artifact@v4
         with:
