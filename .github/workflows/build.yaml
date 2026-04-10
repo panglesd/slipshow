@@ -167,8 +167,8 @@ jobs:
 
       - name: Verify executables
         run: |
-          Write-Output "Test new_release/slipshow.exe : $(Test-Path new_release/slipshow.exe)
-          Write-Output "Test _build/install/default/bin/slipshow.exe : $(Test-Path _build/install/default/bin/slipshow.exe)
+          Write-Output "Test new_release/slipshow.exe : $(Test-Path new_release/slipshow.exe)"
+          Write-Output "Test _build/install/default/bin/slipshow.exe : $(Test-Path _build/install/default/bin/slipshow.exe)"
           Get-ChildItem -Path _build/install/default/bin
 
       - name: Create ZIP archive slipshow-${{ matrix.config.name }}-${{ matrix.config.target }}.zip
