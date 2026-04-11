@@ -168,13 +168,13 @@ module Check = struct
     targets is id_map ~args ~val_loc bol
 
   let no_constraint _id_map ~args:_ ~val_loc:_ _bol = ()
-  let exec id_map ~args = targets Is.slip_script id_map ~args
   let bol_target = target Is.(not slip_script)
   let bol_targets = targets Is.(not slip_script)
   let with_bol_target extract = with_target extract Is.(not slip_script)
   let with_bol_targets extract = with_targets extract Is.(not slip_script)
 
   (* The action checks *)
+  let exec = targets Is.slip_script
   let enter = with_target (fun args -> args.Enter.target) Is.(slip ||| slide)
   let move = with_bol_target
   let up = move (fun args -> args.Up.target)
