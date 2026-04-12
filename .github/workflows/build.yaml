@@ -188,7 +188,7 @@ jobs:
         # run: Compress-Archive -Path new_release/slipshow.exe -DestinationPath new_release/slipshow-${{ matrix.config.name }}-${{ matrix.config.target }}.zip
 
       - name: Build installable artifacts
-        run: opam exec -- dune build --profile release @install
+        run: opam exec -- dune build --profile release @install --ignore-promoted-rules
       
       - name: Install into relocatable bundle
         run: opam exec -- dune install --relocatable --prefix ${{ github.workspace }}/bundle slipshow
@@ -198,6 +198,40 @@ jobs:
           Write-Output "Test ${{ github.workspace }}/bundle : $(Test-Path ${{ github.workspace }}/bundle)"
           Get-ChildItem -Path ${{ github.workspace }}/bundle
   
+      - name: Copy missing DLLs into "${{ github.workspace }}\bundle\bin"
+        shell: pwsh
+        run: |
+          $bundleBin = "${{ github.workspace }}\bundle\bin"
+          $exe       = "$bundleBin\slipshow.exe"
+
+          # Searches for DLLs in the typical Cygwin locations managed by OPAM
+          $searchRoots = @(
+            "$env:LOCALAPPDATA\opam\.cygwin\usr\bin",
+            "$env:LOCALAPPDATA\opam\.cygwin\bin",
+            "$env:LOCALAPPDATA\opam\.cygwin\root\usr\x86_64-w64-mingw32\sys-root\mingw\bin",
+            "C:\cygwin64\bin",
+            "C:\msys64\usr\bin",
+            "C:\msys64\mingw64\bin"
+          ) + ($env:PATH -split ";")
+
+          # List of DLLs to copy 
+          $dlls = @(
+            "libcrypto-3.dll",
+            "libssl-3.dll",
+            "zlib1.dll"
+          )
+
+          foreach ($dll in $dlls) {
+            foreach ($root in $searchRoots) {
+              $candidate = Join-Path $root $dll
+              if (Test-Path $candidate) {
+                Write-Output "Copying $candidate -> $bundleBin"
+                Copy-Item $candidate $bundleBin -Force
+                break
+              }
+            }
+          }
+
       - name: Prepare release directory
         run: |
           New-Item -ItemType Directory -Force -Path new_release
