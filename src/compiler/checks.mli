@@ -5,7 +5,7 @@ module Unknow_attributes : sig
 end
 
 type 'a checks :=
-  Id_map.t -> args:'a -> val_loc:Diagnosis.loc -> Ast.Bol.t -> unit
+  Id_map.t -> args:'a -> val_loc:Diagnosis.loc -> Ast.Bol.t -> Id_map.t
 
 val exec : Execute.args checks
 val enter : Enter.args checks

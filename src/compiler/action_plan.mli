@@ -23,6 +23,8 @@ type arg =
   | Speaker_note of Speaker_note.args
   | Play_media of Play_media.args
 
+val targets : arg -> string W.node list
+
 type action = arg * Cmarkit.Attributes.kv
 
 type step = {
@@ -33,4 +35,4 @@ type step = {
 
 type t = step list
 
-val execute : id_map:Id_map.t -> Ast.t -> t
+val execute : id_map:Id_map.t -> Ast.t -> t * Id_map.t

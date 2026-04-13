@@ -125,39 +125,32 @@ class lsp_server =
     method private on_req_document_highlight ~notify_back:_ ~id:_
         (params : Linol_lwt.DocumentHighlightParams.t) :
         Linol_lwt.DocumentHighlight.t list option Lwt.t =
-      let r =
-        match !current_ast with
-        | None -> None
-        | Some ast -> (
-            match Current_ast.get_leave params.position ast.ast.doc with
-            | { attribute = None; inline = []; block = [] } ->
-                prerr_endline "Nothing found";
-                None
-            | { attribute = Some a; _ } ->
-                let loc =
-                  match a with
-                  | Key ((_, meta), _)
-                  | Value (_, (_, meta))
-                  | Class (_, meta)
-                  | Id (_, meta) ->
-                      Cmarkit.Meta.textloc meta
-                in
-                Some loc
-            | { attribute = None; inline = i :: _; _ } ->
-                let loc = Slipshow.Ast.Utils.Inline.textloc i in
-                Some loc
-            | { attribute = None; inline = []; block = b :: _ } ->
-                let loc = Slipshow.Ast.Utils.Block.textloc b in
-                Some loc)
+      let res =
+        let ( let* ) = Option.bind in
+        let ( let+ ) x f = Option.map f x in
+        let* ast = !current_ast in
+        let* id =
+          let res1 = Current_ast.get_target params.position ast.action_plan in
+          match res1 with
+          | Some _ -> res1
+          | None -> (
+              let* tail_attrs =
+                let trail = Current_ast.get_leave params.position ast.ast.doc in
+                trail.attribute
+              in
+              match tail_attrs with Id (id, _) -> Some id | _ -> None)
+        in
+        let+ x = Slipshow.Id_map.SMap.find_opt id ast.id_map in
+        let loc_def = Cmarkit.Meta.textloc @@ snd x.id in
+        let loc_occ = x.rev in
+        let locs = loc_def :: loc_occ in
+        List.map
+          (fun loc ->
+            let range = Diagnostic.linoloc_of_textloc loc in
+            Linol_lwt.DocumentHighlight.create ~range ())
+          locs
       in
-      let h =
-        match r with
-        | None -> []
-        | Some range ->
-            let range = Diagnostic.linoloc_of_textloc range in
-            [ Linol_lwt.DocumentHighlight.create ~range () ]
-      in
-      Lwt.return_some h
+      Lwt.return res
 
     method! on_request_unhandled (type r) ~notify_back ~id
         (r : r Linol_lsp.Client_request.t) : r Lwt.t =

@@ -502,7 +502,8 @@ module Stage4 = struct
         | Some (_, (attrs, meta)) -> (
             match Attributes.id attrs with
             | None -> (x, id_list)
-            | Some id -> (x, { Id_map.id; elem = `Block c; meta } :: id_list))
+            | Some id ->
+                (x, { Id_map.id; elem = `Block c; meta; rev = [] } :: id_list))
       in
       let res = Ast.Folder.continue_block f c acc in
       Folder.ret res
@@ -514,7 +515,8 @@ module Stage4 = struct
         | Some (_, (attrs, meta)) -> (
             match Attributes.id attrs with
             | None -> id_list
-            | Some id -> { Id_map.id; elem = `Inline i; meta } :: id_list)
+            | Some id ->
+                { Id_map.id; elem = `Inline i; meta; rev = [] } :: id_list)
       in
       let acc =
         match i with
@@ -542,7 +544,12 @@ module Stage4 = struct
     let external_ids =
       fm.external_ids
       |> List.map (fun x ->
-          { Id_map.id = (x, Meta.none); elem = `External; meta = Meta.none })
+          {
+            Id_map.id = (x, Meta.none);
+            elem = `External;
+            meta = Meta.none;
+            rev = [];
+          })
     in
     let asset_map, id_list =
       Cmarkit.Folder.fold_doc execute (Fpath.Map.empty, external_ids) md
@@ -566,8 +573,8 @@ module Stage4 = struct
           | x :: _ :: _ ->
               let occurrences =
                 List.map
-                  (fun { Id_map.id = _id, meta1; elem = _; meta = _ } ->
-                    Meta.textloc meta1)
+                  (fun { Id_map.id = _id, meta1; elem = _; meta = _; rev = _ }
+                     -> Meta.textloc meta1)
                   list
               in
               Diagnosis.add @@ DuplicateID { id; occurrences };
@@ -602,7 +609,7 @@ let of_cmarkit ~read_file ~(fm : Frontmatter.resolved Frontmatter.t) md =
   let md2 = Stage2.execute md1 in
   let md3 = Stage3.execute md2 in
   let md4, id_map = Stage4.execute ~read_file ~fm md3 in
-  let action_plan = Action_plan.execute ~id_map md4 in
+  let action_plan, id_map = Action_plan.execute ~id_map md4 in
   { ast = md4; included_files = htbl_include; id_map; action_plan }
 
 let compile ?file ?loc_offset ~attrs ~fm ?(read_file = fun _ -> Ok None) s =

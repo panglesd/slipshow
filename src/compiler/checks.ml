@@ -84,15 +84,25 @@ let get_id (id_map : Id_map.t) val_loc (id, loc) =
   match Id_map.SMap.find_opt id id_map with
   | None ->
       Diagnosis.add @@ MissingID { id; loc };
-      None
-  | Some { elem = bol; _ } -> Some (bol, Some loc)
+      (id_map, None)
+  | Some ({ elem = bol; rev; _ } as entry) ->
+      let id_map = Id_map.SMap.add id { entry with rev = loc :: rev } id_map in
+      (id_map, Some (bol, Some loc))
 
 let targets (is, expected_type) id_map ~args ~val_loc bol =
-  let targets =
+  let targets, id_map =
     match args with
-    | `Self -> [ ((bol : Ast.Bol.t :> [ Ast.Bol.t | `External ]), None) ]
-    | `Ids ids -> List.filter_map (get_id id_map val_loc) ids
+    | `Self ->
+        ([ ((bol : Ast.Bol.t :> [ Ast.Bol.t | `External ]), None) ], id_map)
+    | `Ids ids ->
+        List.fold_left
+          (fun (targets, id_map) target ->
+            match get_id id_map val_loc target with
+            | id_map, None -> (targets, id_map)
+            | id_map, Some target -> (target :: targets, id_map))
+          ([], id_map) ids
   in
+  let targets = List.rev targets in
   List.iter
     (fun (bol, id_loc) ->
       match bol with
@@ -105,7 +115,7 @@ let targets (is, expected_type) id_map ~args ~val_loc bol =
             Diagnosis.add @@ WrongType { loc_reason; loc_block; expected_type }
       | `External -> ())
     targets;
-  ()
+  id_map
 
 let target is id_map ~args ~val_loc bol =
   let args = match args with `Self -> `Self | `Id id -> `Ids [ id ] in
@@ -121,7 +131,7 @@ let with_targets extract_targets =
   let args = extract_targets args in
   targets is id_map ~args ~val_loc bol
 
-let no_constraint _id_map ~args:_ ~val_loc:_ _bol = ()
+let no_constraint id_map ~args:_ ~val_loc:_ _bol = id_map
 let bol_target = target Is.(not slip_script)
 let bol_targets = targets Is.(not slip_script)
 let with_bol_target extract = with_target extract Is.(not slip_script)
@@ -148,10 +158,10 @@ let speaker_note = bol_target
 let play_media = targets Is.playable_media
 
 let change_page id_map ~args ~val_loc bol =
-  List.iter
-    (fun (arg : Actions_arguments.Change_page.arg) ->
+  List.fold_left
+    (fun id_map (arg : Actions_arguments.Change_page.arg) ->
       target Is.(carousel ||| pdf) id_map ~args:arg.target ~val_loc bol)
-    args
+    id_map args
 
 let draw = targets Is.draw
 let clear = targets Is.draw
