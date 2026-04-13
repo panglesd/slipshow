@@ -63,6 +63,39 @@ class lsp_server =
     method! config_hover = Some (`Bool true)
     method! config_definition = Some (`Bool true)
 
+    method! config_completion =
+      Some (Linol_lwt.CompletionOptions.create ~triggerCharacters:[ "#" ] ())
+
+    method! on_req_completion ~notify_back:_ ~id:_ ~uri:_ ~pos ~ctx:_
+        ~workDoneToken:_ ~partialResultToken:_ _doc_state =
+      let ( let* ) = Option.bind in
+      let ( let+ ) x f = Option.map f x in
+      let res =
+        let* ast = !current_ast in
+        let+ () =
+          match Current_ast.get_target pos ast.action_plan with
+          | Some _ -> Some ()
+          | None -> (
+              let pos =
+                { pos with character = Int.max 0 (pos.character - 1) }
+              in
+              match Current_ast.get_target pos ast.action_plan with
+              | Some _ -> Some ()
+              | None -> None)
+        in
+        (* Line above just as a way to test we are in the context of a target *)
+        let all_ids =
+          Slipshow.Id_map.SMap.bindings ast.id_map |> List.map fst
+        in
+        let completions =
+          List.map
+            (fun id -> Linol_lwt.CompletionItem.create ~label:id ())
+            all_ids
+        in
+        `List completions
+      in
+      Lwt.return res
+
     method! on_req_definition ~notify_back:_ ~id:_ ~uri ~pos ~workDoneToken:_
         ~partialResultToken:_ _doc_state =
       let ( let* ) = Option.bind in
