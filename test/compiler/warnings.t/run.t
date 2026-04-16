@@ -144,15 +144,15 @@ Testing with an include
       │  This expects the id of a slip-script
       │  This is not a slip-script
   
-  warning: Non standard attribute: 'dqzd'
-      ┌─ all.md:2:30
-    2 │  toplevel-attributes: exec=yo dqzd
-      │                               ^^^^ 
-  
   warning: No element with id 'yo' was found
       ┌─ all.md:2:27
     2 │  toplevel-attributes: exec=yo dqzd
       │                            ^^ This should be an ID present in the document
+  
+  warning: Non standard attribute: 'dqzd'
+      ┌─ all.md:2:30
+    2 │  toplevel-attributes: exec=yo dqzd
+      │                               ^^^^ 
   
   warning: file 'missing.md' could not be read: missing.md: No such file or directory
       ┌─ all.md:11:4
