@@ -73,17 +73,9 @@ class lsp_server =
       let res =
         let* ast = !current_ast in
         let+ () =
-          match Current_ast.get_target pos ast.action_plan with
-          | Some _ -> Some ()
-          | None -> (
-              let pos =
-                { pos with character = Int.max 0 (pos.character - 1) }
-              in
-              match Current_ast.get_target pos ast.action_plan with
-              | Some _ -> Some ()
-              | None -> None)
+          Current_ast.get_target pos ast.action_plan |> Option.map ignore
+          (* Just as a way to test we are in the context of a target *)
         in
-        (* Line above just as a way to test we are in the context of a target *)
         let all_ids =
           Slipshow.Id_map.SMap.bindings ast.id_map |> List.map fst
         in
