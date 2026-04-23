@@ -189,25 +189,22 @@ jobs:
           Write-Output "Test ${{ github.workspace }}/bundle : $(Test-Path ${{ github.workspace }}/bundle)"
           Get-ChildItem -Path ${{ github.workspace }}/bundle
 
-      - name: Copy required DLLs using ntldd
+      - name: Copy required DLLs
         shell: pwsh
         run: |
           $bundleBin = "${{ github.workspace }}\bundle\bin"
           $binary = "$bundleBin\slipshow.exe"
-
-          # ntldd est disponible dans l'environnement mingw d'opam
-          $ntldd = (opam exec -- where ntldd 2>$null) ?? "ntldd"
-          Write-Output "ntldd = $ntldd"
-
-          # Liste les DLLs non-système requises par le binaire
-          $deps = & $ntldd --recursive $binary 2>$null `
-            | Where-Object { $_ -match "=> (.+\.dll)" -and $_ -notmatch "not found" } `
-            | ForEach-Object { $matches[1].Trim() } `
-            | Where-Object { $_ -notmatch "^(C:\\Windows|WINDOWS)" }
-
-          foreach ($dll in $deps) {
-            Write-Output "Copying $dll"
-            Copy-Item $dll $bundleBin -Force -ErrorAction SilentlyContinue
+          $dlls = @("zlib1.dll", "libssl-3.dll", "libcrypto-3.dll")
+          
+          foreach ($dll in $dlls) {
+              $sourceFile = Get-ChildItem "$env:LOCALAPPDATA\opam\.cygwin" -Recurse -Filter $dll |
+                            Select-Object -First 1 -ExpandProperty FullName
+              if (($null -ne $sourceFile) -and (Test-Path $sourceFile)) {
+                  Copy-Item $sourceFile $bundleBin -Force
+                  Write-Host "Library $dll copied to $bundleBin"
+              } else {
+                  Write-Warning "Library $dll cannot be found : $sourceFile"
+              }
           }
 
       - name: Prepare release directory
