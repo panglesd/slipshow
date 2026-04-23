@@ -189,37 +189,26 @@ jobs:
           Write-Output "Test ${{ github.workspace }}/bundle : $(Test-Path ${{ github.workspace }}/bundle)"
           Get-ChildItem -Path ${{ github.workspace }}/bundle
 
-      - name: Copy DLLs into bundle
+      - name: Copy required DLLs using ntldd
         shell: pwsh
         run: |
           $bundleBin = "${{ github.workspace }}\bundle\bin"
-          
-          # On récupère le chemin racine de Cygwin/MSYS2 utilisé par opam
-          $cygwinBin = opam var cygwin:root | Join-Path -ChildPath "bin"
-          $mingwBin = opam var cygwin:root | Join-Path -ChildPath "usr\x86_64-w64-mingw32\sys-root\mingw\bin"
-          
-          $searchPaths = @($cygwinBin, $mingwBin) + ($env:PATH -split ";")
-          
-          # Patterns pour matcher les DLL (OpenSSL 3 utilise souvent des suffixes)
-          $dllPatterns = @("libcrypto-3*.dll", "libssl-3*.dll", "zlib1.dll")
+          $binary = "$bundleBin\slipshow.exe"
 
-          foreach ($pattern in $dllPatterns) {
-              $found = $false
-              foreach ($path in $searchPaths) {
-                  if (Test-Path $path) {
-                      $dllFile = Get-ChildItem -Path $path -Filter $pattern | Select-Object -First 1
-                      if ($dllFile) {
-                          Write-Output "Found $($dllFile.FullName), copying to $bundleBin"
-                          Copy-Item $dllFile.FullName $bundleBin -Force
-                          $found = $true
-                          break
-                      }
-                  }
-              }
-              if (-not $found) { 
-                  Write-Warning "Could not find DLL for pattern $pattern" 
-              }
-          }          
+          # ntldd est disponible dans l'environnement mingw d'opam
+          $ntldd = (opam exec -- where ntldd 2>$null) ?? "ntldd"
+          Write-Output "ntldd = $ntldd"
+
+          # Liste les DLLs non-système requises par le binaire
+          $deps = & $ntldd --recursive $binary 2>$null `
+            | Where-Object { $_ -match "=> (.+\.dll)" -and $_ -notmatch "not found" } `
+            | ForEach-Object { $matches[1].Trim() } `
+            | Where-Object { $_ -notmatch "^(C:\\Windows|WINDOWS)" }
+
+          foreach ($dll in $deps) {
+            Write-Output "Copying $dll"
+            Copy-Item $dll $bundleBin -Force -ErrorAction SilentlyContinue
+          }
 
       - name: Prepare release directory
         run: |
