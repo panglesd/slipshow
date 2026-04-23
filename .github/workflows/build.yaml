@@ -179,8 +179,7 @@ jobs:
         run: opam install --deps-only --with-test --depext-only --with-doc -y . && opam upgrade
 
       - name: Build installable artifacts
-        # run: opam exec -- dune build --profile release @install --ignore-promoted-rules      
-        run: opam exec -- dune build --profile release @install
+        run: opam exec -- dune build --profile release @install --ignore-promoted-rules      
 
       - name: Install into relocatable bundle
         run: opam exec -- dune install --relocatable --prefix ${{ github.workspace }}/bundle slipshow
