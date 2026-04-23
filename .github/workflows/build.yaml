@@ -164,6 +164,12 @@ jobs:
       # - name: Install something that triggers mingw-w64-shims recompilation
       #   run: opam install conf-mingw-w64-gmp-x86_64 conf-mingw-w64-libffi-x86_64 conf-mingw-w64-openssl-x86_64 -y
 
+      - name: Install system dependencies
+        run: |
+          opam depext conf-openssl conf-zlib -y
+          # On s'assure que les paquets sont bien là pour la compilation
+          opam install conf-openssl conf-zlib -y
+
       - name: Install dependencies
         if: steps.wincache.outputs.cache-hit != 'true'
         run: opam install --deps-only --with-test --with-doc -y .
@@ -172,65 +178,49 @@ jobs:
         if: steps.wincache.outputs.cache-hit
         run: opam install --deps-only --with-test --depext-only --with-doc -y . && opam upgrade
 
-      # - name: Build Windows executable
-        # run: |
-          # opam exec -- dune build --profile release -p slipshow
-          # mkdir -p new_release
-          # cp _build/install/default/bin/slipshow.exe new_release/slipshow.exe
-
-      # - name: Verify executables
-        # run: |
-          # Write-Output "Test new_release/slipshow.exe : $(Test-Path new_release/slipshow.exe)"
-          # Write-Output "Test _build/install/default/bin/slipshow.exe : $(Test-Path _build/install/default/bin/slipshow.exe)"
-          # Get-ChildItem -Path _build/install/default/bin
-
-      # - name: Create ZIP archive slipshow-${{ matrix.config.name }}-${{ matrix.config.target }}.zip
-        # run: Compress-Archive -Path new_release/slipshow.exe -DestinationPath new_release/slipshow-${{ matrix.config.name }}-${{ matrix.config.target }}.zip
-
       - name: Build installable artifacts
-        run: opam exec -- dune build --profile release @install --ignore-promoted-rules
-      
+        # run: opam exec -- dune build --profile release @install --ignore-promoted-rules      
+        run: opam exec -- dune build --profile release @install
+
       - name: Install into relocatable bundle
         run: opam exec -- dune install --relocatable --prefix ${{ github.workspace }}/bundle slipshow
         
-      - name: Verify bundle
+      - name: Verify "${{ github.workspace }}\bundle"
         run: |
           Write-Output "Test ${{ github.workspace }}/bundle : $(Test-Path ${{ github.workspace }}/bundle)"
           Get-ChildItem -Path ${{ github.workspace }}/bundle
-  
-      - name: Copy missing DLLs into "${{ github.workspace }}\bundle\bin"
+
+      - name: Copy DLLs into bundle
         shell: pwsh
         run: |
           $bundleBin = "${{ github.workspace }}\bundle\bin"
-          $exe       = "$bundleBin\slipshow.exe"
+          
+          # On récupère le chemin racine de Cygwin/MSYS2 utilisé par opam
+          $cygwinBin = opam var cygwin:root | Join-Path -ChildPath "bin"
+          $mingwBin = opam var cygwin:root | Join-Path -ChildPath "usr\x86_64-w64-mingw32\sys-root\mingw\bin"
+          
+          $searchPaths = @($cygwinBin, $mingwBin) + ($env:PATH -split ";")
+          
+          # Patterns pour matcher les DLL (OpenSSL 3 utilise souvent des suffixes)
+          $dllPatterns = @("libcrypto-3*.dll", "libssl-3*.dll", "zlib1.dll")
 
-          # Searches for DLLs in the typical Cygwin locations managed by OPAM
-          $searchRoots = @(
-            "$env:LOCALAPPDATA\opam\.cygwin\usr\bin",
-            "$env:LOCALAPPDATA\opam\.cygwin\bin",
-            "$env:LOCALAPPDATA\opam\.cygwin\root\usr\x86_64-w64-mingw32\sys-root\mingw\bin",
-            "C:\cygwin64\bin",
-            "C:\msys64\usr\bin",
-            "C:\msys64\mingw64\bin"
-          ) + ($env:PATH -split ";")
-
-          # List of DLLs to copy 
-          $dlls = @(
-            "libcrypto-3.dll",
-            "libssl-3.dll",
-            "zlib1.dll"
-          )
-
-          foreach ($dll in $dlls) {
-            foreach ($root in $searchRoots) {
-              $candidate = Join-Path $root $dll
-              if (Test-Path $candidate) {
-                Write-Output "Copying $candidate -> $bundleBin"
-                Copy-Item $candidate $bundleBin -Force
-                break
+          foreach ($pattern in $dllPatterns) {
+              $found = $false
+              foreach ($path in $searchPaths) {
+                  if (Test-Path $path) {
+                      $dllFile = Get-ChildItem -Path $path -Filter $pattern | Select-Object -First 1
+                      if ($dllFile) {
+                          Write-Output "Found $($dllFile.FullName), copying to $bundleBin"
+                          Copy-Item $dllFile.FullName $bundleBin -Force
+                          $found = $true
+                          break
+                      }
+                  }
               }
-            }
-          }
+              if (-not $found) { 
+                  Write-Warning "Could not find DLL for pattern $pattern" 
+              }
+          }          
 
       - name: Prepare release directory
         run: |
