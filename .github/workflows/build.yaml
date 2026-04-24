@@ -184,7 +184,7 @@ jobs:
       - name: Install into relocatable bundle
         run: opam exec -- dune install --relocatable --prefix ${{ github.workspace }}/bundle slipshow
         
-      - name: Verify "${{ github.workspace }}\bundle"
+      - name: Debug - Verify "${{ github.workspace }}\bundle"
         run: |
           Write-Output "Test ${{ github.workspace }}/bundle : $(Test-Path ${{ github.workspace }}/bundle)"
           Get-ChildItem -Path ${{ github.workspace }}/bundle
@@ -268,16 +268,19 @@ jobs:
           echo "$dotnetToolsPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           Write-Host "WiX installed, tools path: $dotnetToolsPath"
 
-      - name: Install OUI via opam
-        run: opam install oui -y
+      # - name: Install OUI via opam
+      #   run: opam install oui -y
+      - name: Install OUI via opam (depuis les sources)
+        run: opam pin add oui https://github.com/OCamlPro/ocaml-universal-installer.git#master --no-action -y && opam install oui -y
 
       - name: Write oui.json
         shell: pwsh
         run: |
-          # Récupérer la version depuis le tag git (ex: v1.2.3 → 1.2.3)
+          # Récupérer la version depuis le tag git (ex: v1.2.3 → 1.2.3) + WiX exige major.minor.patch strictement numériques ; fallback sur 0.0.1
           $version = (git describe --tags --abbrev=0 2>$null) -replace '^v', ''
-          # WiX exige major.minor.patch strictement numériques ; fallback sur 0.0.1
-          if ($version -notmatch '^\d+\.\d+\.\d+$') { $version = "0.0.1" }
+          if (($version -eq $null) -ot ($version -notmatch '^\d+\.\d+\.\d+$')) { $version = "0.0.1" }
+          Write-host "version = $version"
+
           $config = @{
             name             = "slipshow"
             fullname         = "Slipshow"
@@ -299,6 +302,11 @@ jobs:
           New-Item -ItemType Directory -Force -Path new_release
           opam exec -- oui build oui.json ${{ github.workspace }}/bundle --output-dir ${{ github.workspace }}/new_release
         shell: pwsh
+
+      - name: Debug - Verify "${{ github.workspace }}/new_release"
+        run: |
+          Write-Output "Test ${{ github.workspace }}/new_release : $(Test-Path ${{ github.workspace }}/new_release)"
+          Get-ChildItem -Path ${{ github.workspace }}/new_release
 
       - name: Upload installer
         uses: actions/upload-artifact@v4
