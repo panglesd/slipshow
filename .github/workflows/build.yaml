@@ -261,14 +261,12 @@ jobs:
       - name: Install WiX 6 (required by OUI for Windows MSI)
         shell: pwsh
         run: |
-          $wixVersion = "6.0.2"
-          $wixUrl = "https://github.com/wixtoolset/wix/releases/download/v${wixVersion}/wix-${wixVersion}-x64.exe"
-          $installer = "$env:TEMP\wix-installer.exe"
-          Invoke-WebRequest -Uri $wixUrl -OutFile $installer
-          Start-Process -FilePath $installer -ArgumentList "/quiet" -Wait
-          # Ajouter WiX au PATH pour la session courante
-          $wixPath = "$env:ProgramFiles\WiX Toolset v6.0\bin"
-          echo "$wixPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          dotnet tool install --global wix --version 6.0.2
+      
+          # Ajouter le dossier des outils .NET globaux au PATH
+          $dotnetToolsPath = "$env:USERPROFILE\.dotnet\tools"
+          echo "$dotnetToolsPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          Write-Host "WiX installed, tools path: $dotnetToolsPath"
 
       - name: Install OUI via opam
         run: opam install oui -y
