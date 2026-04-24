@@ -15,18 +15,12 @@ let read_file parent s =
   Some res
 
 let current_ast = ref None
+let entry_points : Fpath.t list option ref = ref None
 
 let diagnostics (uri : Linol.Lsp.Types.DocumentUri.t) (s : string) :
     Linol.Lsp.Types.Diagnostic.t list =
   let errors =
-    let file = Linol.Lsp.Types.DocumentUri.to_string uri in
-    let file =
-      let prefix = "file://" in
-      if String.starts_with ~prefix file then
-        String.sub file (String.length prefix)
-          (String.length file - String.length prefix)
-      else file
-    in
+    let file = Linol.Lsp.Types.DocumentUri.to_path uri in
     let open Slipshow in
     let frontmatter = Frontmatter.empty in
     let read_file = read_file Fpath.(parent @@ v file) in
@@ -56,12 +50,72 @@ let diagnostics (uri : Linol.Lsp.Types.DocumentUri.t) (s : string) :
   in
   List.concat_map Diagnostic.of_error errors
 
+(* Find all markdown files in the given directory (recursing over subdirectories) *)
+let find_markdown_files path =
+  Bos.OS.Dir.fold_contents ~traverse:`Any
+    ~elements:(`Sat (fun p -> Ok (Fpath.has_ext "md" p)))
+    (fun p acc -> p :: acc)
+    [] path
+
 class lsp_server =
   object (self)
     inherit Linol_lwt.Jsonrpc2.server as super
     method spawn_query_handler f = Linol_lwt.spawn f
     method! config_hover = Some (`Bool true)
     method! config_definition = Some (`Bool true)
+
+    method! on_req_initialize ~notify_back
+        (params : Linol_lwt.InitializeParams.t) =
+      let _wsf = params.workspaceFolders in
+      let _uri = params.rootUri in
+      let _pth = params.rootPath in
+      (* let () = *)
+      (*   match wsf with *)
+      (*   | Some (Some l) -> *)
+      (*       List.iter *)
+      (*         (fun ws -> *)
+      (*           let open Linol_lwt.WorkspaceFolder in *)
+      (*           Format.eprintf "name: %s uri: %s\n%!" ws.name *)
+      (*             (Linol_lwt.DocumentUri.to_string ws.uri)) *)
+      (*         l *)
+      (*   | Some None -> Format.eprintf "Some but No workspace\n%!" *)
+      (*   | None -> Format.eprintf "No workspace\n%!" *)
+      (* in *)
+      (* let () = *)
+      (*   match uri with *)
+      (*   | Some uri -> *)
+      (*       Format.eprintf "Uri: %s\n%!" (Linol_lsp.Uri0.to_string uri) *)
+      (*   | None -> Format.eprintf "No uri\n%!" *)
+      (* in *)
+      (* let () = *)
+      (*   match pth with *)
+      (*   | Some (Some path) -> Format.eprintf "Path: %s\n%!" path *)
+      (*   | Some None -> Format.eprintf "Some but No path\n%!" *)
+      (*   | None -> Format.eprintf "No path\n%!" *)
+      (* in *)
+      let root =
+        match params.workspaceFolders with
+        | Some ws ->
+            Option.map
+              (List.map (fun (x : Linol_lwt.WorkspaceFolder.t) -> x.uri))
+              ws
+        | None -> (
+            match params.rootUri with
+            | Some root -> Some [ root ]
+            | None -> None)
+      in
+      let roots = Option.value root ~default:[] in
+      let () =
+        List.iter
+          (fun root ->
+            let path = root |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
+            Format.eprintf "Root: %a\n%!" Fpath.pp path;
+            match find_markdown_files path with
+            | Error (`Msg s) -> Format.eprintf "  error: %s\n%!" s
+            | Ok mds -> List.iter (Format.eprintf "  md: %a\n%!" Fpath.pp) mds)
+          roots
+      in
+      super#on_req_initialize ~notify_back params
 
     method! config_completion =
       Some (Linol_lwt.CompletionOptions.create ~triggerCharacters:[ "#" ] ())

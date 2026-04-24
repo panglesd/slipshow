@@ -1,7 +1,7 @@
 (executable
  (name lspishow)
  (public_name lspishow)
- (libraries linol linol-lwt slipshow logs dream proto)
+ (libraries linol linol-lwt slipshow logs dream proto bos)
  (preprocessor_deps
   (file ../server/client/client.bc.js))
  (preprocess (pps ppx_blob)))
