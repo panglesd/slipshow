@@ -20,7 +20,6 @@ val create_previewer :
 
 val preview :
   ?slipshow_js:Slipshow.Asset.t ->
-  ?frontmatter:Slipshow.Frontmatter.resolved Slipshow.Frontmatter.t ->
   ?read_file:Slipshow.file_reader ->
   previewer ->
   string ->

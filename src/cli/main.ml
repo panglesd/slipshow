@@ -16,32 +16,6 @@ let setup_log =
 let handle_error = function Ok _ as x -> x | Error (`Msg msg) -> Error msg
 
 module Custom_conv = struct
-  let toplevel_attributes =
-    let parser s =
-      Slipshow.Frontmatter.Toplevel_attributes.of_string
-        (s, Cmarkit.Textloc.none)
-      |> Result.map @@ fun s -> Some s
-    in
-    let printer fmt attrs =
-      let attrs =
-        Option.value ~default:Slipshow.Frontmatter.Toplevel_attributes.default
-          attrs
-      in
-      let doc =
-        Cmarkit.Doc.make
-          (Cmarkit.Block.Ext_standalone_attributes (attrs, Cmarkit.Meta.none))
-      in
-      let s =
-        let renderer =
-          Cmarkit_commonmark.renderer ~include_attributes:true ()
-        in
-        Cmarkit_renderer.doc_to_string renderer doc
-      in
-      let s = String.trim s in
-      Format.fprintf fmt "%s" s
-    in
-    Arg.conv (parser, printer)
-
   let io std =
     let parser_ s =
       match s with "-" -> Ok std | s -> Ok (`File (Fpath.v s))
@@ -54,109 +28,9 @@ module Custom_conv = struct
 
   let input = io `Stdin
   let output = io `Stdout
-
-  let theme =
-    let parser_ s =
-      Result.map Option.some
-        (Slipshow.Frontmatter.Theme.of_string (s, Cmarkit.Textloc.none))
-    in
-    let rec printer fmt = function
-      | Some (`Builtin s) -> Format.fprintf fmt "%s" (Themes.to_string s)
-      | Some (`External s) -> Format.fprintf fmt "%s" s
-      | None -> printer fmt (Some Slipshow.Frontmatter.Theme.default)
-    in
-    Arg.conv (parser_, printer)
-
-  let math_mode =
-    let parser_ s =
-      Result.map (fun x -> Some x)
-      @@ Slipshow.Frontmatter.Math_mode.of_string (s, Cmarkit.Textloc.none)
-    in
-    let rec printer fmt = function
-      | Some `Mathjax -> Format.fprintf fmt "mathjax"
-      | Some `Katex -> Format.fprintf fmt "katex"
-      | None -> printer fmt (Some Slipshow.Frontmatter.Math_mode.default)
-    in
-    Arg.conv (parser_, printer)
-
-  let dimension =
-    let int_printer = Cmdliner.Arg.(conv_printer int) in
-    let parser_ s =
-      Result.map (fun x -> Some x)
-      @@ Slipshow.Frontmatter.Dimension.of_string (s, Cmarkit.Textloc.none)
-    in
-    let rec printer fmt x =
-      match x with
-      | Some (1440, 1080) -> Format.fprintf fmt "4:3"
-      | Some (1920, 1080) -> Format.fprintf fmt "16:9"
-      | Some (w, h) -> Format.fprintf fmt "%ax%a" int_printer w int_printer h
-      | None -> printer fmt (Some Slipshow.Frontmatter.Dimension.default)
-    in
-    Cmdliner.Arg.conv ~docv:"WIDTHxHEIGHT" (parser_, printer)
 end
 
 module Compile_args = struct
-  let css_links =
-    let doc =
-      "CSS files to add to the presentation. Can be a local file or a remote \
-       URL"
-    in
-    Arg.(value & opt_all string [] & info ~docv:"URL" ~doc [ "css" ])
-
-  let js_links =
-    let doc =
-      "JS files to add to the presentation. Can be a local file or a remote URL"
-    in
-    Arg.(value & opt_all string [] & info ~docv:"URL" ~doc [ "js" ])
-
-  let theme =
-    let doc =
-      "Slipshow theme to use in the presentation. Can be \"default\" for the \
-       default theme, \"none\" for no theme, a local file or a remote URL."
-    in
-    Arg.(value & opt Custom_conv.theme None & info ~docv:"URL" ~doc [ "theme" ])
-
-  let highlightjs_theme =
-    let doc = "Highlightjs theme to use when highlighting code blocks." in
-    Arg.(
-      value
-      & opt (some string) None
-      & info ~docv:"THEME_NAME" ~doc [ "highlightjs-theme" ])
-
-  let math_link =
-    let doc =
-      "Where to find the javascript file for rendering math. Optional. When \
-       absent, uses mathjax.3.2.2 or katex.0.16.28, depending on the value of \
-       math-mode. If URL is an absolute URL, links to it, otherwise the \
-       content is embedded in the html file."
-    in
-    Arg.(
-      value
-      & opt (some string) None
-      & info ~docv:"URL" ~doc [ "m"; "math-script" ])
-
-  let dim =
-    let doc =
-      "The fixed dimension (in pixels) for your presentation. Can be either \
-       WIDTHxHEIGHT where both are integers, or 4:3 (which corresponds to \
-       1440x1080), or 16:9 (which corresponds to 1920x1080)."
-    in
-    Arg.(
-      value
-      & opt Custom_conv.dimension None
-      & info ~docv:"WIDTHxHEIGHT" ~doc [ "d"; "dimension"; "dim" ])
-
-  let toplevel_attributes =
-    let doc =
-      "The attributes given to the toplevel element containing all the \
-       presentation. Can be enclosed in '{ ... }' or not. Same syntax as \
-       attributes in the source file. For experts!"
-    in
-    Arg.(
-      value
-      & opt Custom_conv.toplevel_attributes None
-      & info ~docv:"ATTRIBUTES" ~doc [ "toplevel-attributes" ])
-
   let output =
     let doc =
       "Output file path. When absent, generate a filename based on the input \
@@ -174,51 +48,15 @@ module Compile_args = struct
     in
     Arg.(value & pos 0 Custom_conv.input `Stdin & info [] ~doc ~docv:"FILE.md")
 
-  let math_mode =
-    let doc =
-      "Whether to use KaTeX or MathJax to render mathematics. Can be \
-       $(b,mathjax) or $(b,katex)."
-    in
-    Arg.(
-      value
-      & opt Custom_conv.math_mode None
-      & info [ "math-mode" ] ~doc ~docv:"MODE")
-
   type compile_args = {
-    cli_frontmatter : Slipshow.Frontmatter.unresolved Slipshow.Frontmatter.t;
     input : [ `File of Fpath.t | `Stdin ];
     output : [ `File of Fpath.t | `Stdout ] option;
   }
 
   let term =
     let open Term.Syntax in
-    let+ math_link = math_link
-    and+ math_mode = math_mode
-    and+ theme = theme
-    and+ highlightjs_theme = highlightjs_theme
-    and+ css_links = css_links
-    and+ js_links = js_links
-    and+ input = input
-    and+ output = output
-    and+ dimension = dim
-    and+ toplevel_attributes = toplevel_attributes in
-    {
-      cli_frontmatter =
-        Slipshow.Frontmatter.Unresolved
-          {
-            math_link;
-            theme;
-            css_links;
-            dimension;
-            toplevel_attributes;
-            js_links;
-            highlightjs_theme;
-            math_mode;
-            external_ids = [];
-          };
-      input;
-      output;
-    }
+    let+ input = input and+ output = output in
+    { input; output }
 end
 
 module Utils = struct
@@ -249,15 +87,12 @@ module Compile = struct
     | `File o -> Ok (input, o)
     | `Stdout -> Error "Standard output cannot be used in serve nor watch mode"
 
-  let compile ~watch
-      ~compile_args:{ Compile_args.input; output; cli_frontmatter } =
+  let compile ~watch ~compile_args:{ Compile_args.input; output } =
     let output = Utils.output_of_input ~ext:"html" output input in
     if watch then
       let* input, output = force_file_io input output in
-      Run.watch ~cli_frontmatter ~input ~output |> handle_error
-    else
-      Run.compile ~input ~output ~cli_frontmatter
-      |> Result.map ignore |> handle_error
+      Run.watch ~input ~output |> handle_error
+    else Run.compile ~input ~output |> Result.map ignore |> handle_error
 
   let term =
     let open Term.Syntax in
@@ -278,11 +113,10 @@ end
 module Serve = struct
   let ( let* ) = Result.bind
 
-  let serve ~port ~compile_args:{ Compile_args.input; output; cli_frontmatter }
-      =
+  let serve ~port ~compile_args:{ Compile_args.input; output } =
     let output = Utils.output_of_input ~ext:"html" output input in
     let* input, output = Compile.force_file_io input output in
-    Run.serve ~input ~output ~cli_frontmatter ~port |> handle_error
+    Run.serve ~input ~output ~port |> handle_error
 
   let port =
     let doc = "Which port to use." in

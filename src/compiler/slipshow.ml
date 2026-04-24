@@ -247,9 +247,10 @@ let convert_to_md ~read_file content =
     | None -> (Frontmatter.empty, content, (0, 0))
     | Some { frontmatter; rest; rest_offset; fm_offset } ->
         let file = "-" in
-        let frontmatter = Frontmatter.of_string file fm_offset frontmatter in
         let to_asset = Asset.of_string ~read_file in
-        let frontmatter = Frontmatter.resolve frontmatter ~to_asset in
+        let frontmatter =
+          Frontmatter.of_string ~to_asset file fm_offset frontmatter
+        in
         (frontmatter, rest, rest_offset)
   in
   let md =
@@ -272,32 +273,34 @@ let to_grace file whole_content htbl_include er =
             Grace.Source.(`String { name = file; content = whole_content }))
     er
 
-let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty) ?file
-    ?(read_file = fun _ -> Ok None) ~has_speaker_view s =
+let delayed ?slipshow_js ?file ?(read_file = fun _ -> Ok None) ~has_speaker_view
+    s =
   let whole_content = s in
-  let (Frontmatter.Resolved frontmatter, s, loc_offset), warnings =
+  let (frontmatter, s, loc_offset), warnings =
     Diagnosis.with_ @@ fun () ->
     match Frontmatter.extract s with
-    | None -> (frontmatter, s, (0, 0))
+    | None -> (Frontmatter.empty, s, (0, 0))
     | Some { frontmatter = txt_fm; rest; rest_offset; fm_offset } ->
         let file = Option.value ~default:"-" file in
-        let txt_fm = Frontmatter.of_string file fm_offset txt_fm in
         let to_asset = Asset.of_string ~read_file in
-        let txt_frontmatter = Frontmatter.resolve txt_fm ~to_asset in
-        let frontmatter = Frontmatter.combine txt_frontmatter frontmatter in
+        let frontmatter =
+          Frontmatter.of_string ~to_asset file fm_offset txt_fm
+        in
         (frontmatter, rest, rest_offset)
   in
   let toplevel_attributes =
-    frontmatter.toplevel_attributes
+    frontmatter.local.toplevel_attributes
     |> Option.value ~default:Frontmatter.Toplevel_attributes.default
   in
   let dimension =
-    frontmatter.dimension |> Option.value ~default:Frontmatter.Dimension.default
+    frontmatter.global.dimension
+    |> Option.value ~default:Frontmatter.Dimension.default
   in
-  let css_links = frontmatter.css_links in
-  let js_links = frontmatter.js_links in
+  let css_links = frontmatter.local.css_links in
+  let js_links = frontmatter.local.js_links in
   let math_mode =
-    Option.value ~default:Frontmatter.Math_mode.default frontmatter.math_mode
+    Option.value ~default:Frontmatter.Math_mode.default
+      frontmatter.global.math_mode
   in
   let resolve_theme = function
     | `Builtin _ as x -> x
@@ -306,18 +309,18 @@ let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty) ?file
         `External asset
   in
   let theme =
-    match frontmatter.theme with
+    match frontmatter.global.theme with
     | None -> resolve_theme Frontmatter.Theme.default
     | Some t -> resolve_theme t
   in
   let highlightjs_theme =
     Option.value ~default:Frontmatter.Hljs_theme.default
-      frontmatter.highlightjs_theme
+      frontmatter.global.highlightjs_theme
   in
-  let math_link = frontmatter.math_link in
+  let math_link = frontmatter.global.math_link in
   let (md, htbl_include), errors =
-    Compile.compile ~loc_offset ?file ~attrs:toplevel_attributes
-      ~fm:(Frontmatter.Resolved frontmatter) ~read_file s
+    Compile.compile ~loc_offset ?file ~attrs:toplevel_attributes ~fm:frontmatter
+      ~read_file s
   in
   let warnings =
     List.filter_map
@@ -392,10 +395,8 @@ let add_starting_state ?(autofocus = true) (start, end_, has_speaker_view)
   in
   if has_speaker_view then html else orig_html
 
-let convert ~has_speaker_view ?autofocus ?slipshow_js ?frontmatter ?file
-    ?starting_state ?read_file s =
-  let delayed, w =
-    delayed ~has_speaker_view ?slipshow_js ?frontmatter ?file ?read_file s
-  in
+let convert ~has_speaker_view ?autofocus ?slipshow_js ?file ?starting_state
+    ?read_file s =
+  let delayed, w = delayed ~has_speaker_view ?slipshow_js ?file ?read_file s in
   let res = add_starting_state ?autofocus delayed starting_state in
   (res, w)

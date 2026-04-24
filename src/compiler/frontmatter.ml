@@ -1,19 +1,51 @@
-type resolved = [ `Resolved ]
-type unresolved = [ `Unresolved ]
+module Local = struct
+  type t = {
+    toplevel_attributes : Cmarkit.Attributes.t option;
+    css_links : Asset.t list;
+    js_links : Asset.t list;
+    external_ids : string list;
+  }
 
-type 'a fm = {
-  toplevel_attributes : Cmarkit.Attributes.t option;
-  math_link : 'a option;
-  theme : [ `Builtin of Themes.t | `External of string ] option;
-  css_links : 'a list;
-  js_links : 'a list;
-  dimension : (int * int) option;
-  highlightjs_theme : string option;
-  math_mode : [ `Mathjax | `Katex ] option;
-  external_ids : string list;
-}
-(** We keep an option even though there are default value to be able to merge
-    two frontmatter. None and default value represent different things. *)
+  type 'a with_ = { x : 'a; fm : t }
+
+  let empty =
+    {
+      toplevel_attributes = None;
+      css_links = [];
+      js_links = [];
+      external_ids = [];
+    }
+
+  let with_empty x = { x; fm = empty }
+end
+
+module Global = struct
+  type t = {
+    math_link : Asset.t option;
+    theme : [ `Builtin of Themes.t | `External of string ] option;
+    dimension : (int * int) option;
+    highlightjs_theme : string option;
+    math_mode : [ `Mathjax | `Katex ] option;
+  }
+  (** We keep an option even though there are default value to be able to merge
+      two frontmatter. None and default value represent different things. *)
+
+  type 'a with_ = { x : 'a; fm : t }
+
+  let empty =
+    {
+      math_link = None;
+      theme = None;
+      dimension = None;
+      highlightjs_theme = None;
+      math_mode = None;
+    }
+
+  let with_empty x = { x; fm = empty }
+end
+
+type t = { local : Local.t; global : Global.t }
+type fm = t
 
 module Toplevel_attributes = struct
   type t = Cmarkit.Attributes.t
@@ -30,7 +62,7 @@ module Toplevel_attributes = struct
         ]
       ()
 
-  let of_string (s, loc) =
+  let of_string ~to_asset:_ (s, loc) =
     let s = String.trim s in
     let s =
       if String.length s > 0 && s.[0] = '{' then
@@ -50,16 +82,18 @@ module Toplevel_attributes = struct
     | Cmarkit.Block.Ext_standalone_attributes (attrs, _) -> Ok attrs
     | _ -> Error (`Msg "Failed to parse the attributes")
 
-  let update_frontmatter (fm : _ fm) v =
-    { fm with toplevel_attributes = Some v }
+  let update_frontmatter (fm : fm) v =
+    { fm with local = { fm.local with toplevel_attributes = Some v } }
 end
 
 module Math_link = struct
-  type t = string
+  type t = Asset.t
 
   let key = "math-link"
-  let of_string (s, _) = Ok s
-  let update_frontmatter (fm : _ fm) v = { fm with math_link = Some v }
+  let of_string ~to_asset (s, _) = Ok (to_asset s)
+
+  let update_frontmatter (fm : fm) v =
+    { fm with global = { fm.global with math_link = Some v } }
 end
 
 module Theme = struct
@@ -68,39 +102,41 @@ module Theme = struct
   let key = "theme"
   let default = `Builtin Themes.Default
 
-  let of_string (s, _) =
+  let of_string ~to_asset:_ (s, _) =
     match Themes.of_string s with
     | Some theme -> Ok (`Builtin theme)
     | None -> Ok (`External s)
 
-  let update_frontmatter (fm : _ fm) v = { fm with theme = Some v }
+  let update_frontmatter (fm : fm) v =
+    { fm with global = { fm.global with theme = Some v } }
 end
 
 module Css_links = struct
-  type t = string list
+  type t = Asset.t list
 
   let key = "css"
 
-  let of_string (s, _) =
+  let of_string ~to_asset (s, _) =
     s |> String.split_on_char ' '
-    |> List.filter (fun x -> not (String.equal "" x))
+    |> List.filter_map (function "" -> None | x -> Some (to_asset x))
     |> Result.ok
 
-  let update_frontmatter (fm : _ fm) v =
-    { fm with css_links = v @ fm.css_links }
+  let update_frontmatter (fm : fm) v =
+    { fm with local = { fm.local with css_links = v @ fm.local.css_links } }
 end
 
 module Js_links = struct
-  type t = string list
+  type t = Asset.t list
 
   let key = "js"
 
-  let of_string (s, _) =
+  let of_string ~to_asset (s, _) =
     s |> String.split_on_char ' '
-    |> List.filter (fun x -> not (String.equal "" x))
+    |> List.filter_map (function "" -> None | x -> Some (to_asset x))
     |> Result.ok
 
-  let update_frontmatter (fm : _ fm) v = { fm with js_links = v @ fm.js_links }
+  let update_frontmatter (fm : fm) v =
+    { fm with local = { fm.local with js_links = v @ fm.local.js_links } }
 end
 
 module Dimension = struct
@@ -109,7 +145,7 @@ module Dimension = struct
   let key = "dimension"
   let default = (1440, 1080)
 
-  let of_string (s, _) =
+  let of_string ~to_asset:_ (s, _) =
     let ( let* ) = Result.bind in
     let error =
       Error
@@ -127,16 +163,19 @@ module Dimension = struct
         Ok (width, height)
     | _ -> error
 
-  let update_frontmatter (fm : _ fm) v = { fm with dimension = Some v }
+  let update_frontmatter (fm : fm) v =
+    { fm with global = { fm.global with dimension = Some v } }
 end
 
 module Hljs_theme = struct
   type t = string
 
   let key = "highlightjs-theme"
-  let of_string = fun (x, _) -> Ok x
+  let of_string ~to_asset:_ = fun (x, _) -> Ok x
   let default = "default"
-  let update_frontmatter (fm : _ fm) v = { fm with highlightjs_theme = Some v }
+
+  let update_frontmatter (fm : fm) v =
+    { fm with global = { fm.global with highlightjs_theme = Some v } }
 end
 
 module Math_mode = struct
@@ -144,21 +183,28 @@ module Math_mode = struct
 
   let key = "math-mode"
 
-  let of_string = function
+  let of_string ~to_asset:_ = function
     | "mathjax", _ -> Ok `Mathjax
     | "katex", _ -> Ok `Katex
     | _ -> Error (`Msg "Expected \"mathjax\" or \"katex\"")
 
   let default = `Mathjax
-  let update_frontmatter (fm : _ fm) v = { fm with math_mode = Some v }
+
+  let update_frontmatter (fm : fm) v =
+    { fm with global = { fm.global with math_mode = Some v } }
 end
 
 module type Field = sig
   type t
 
   val key : string
-  val of_string : string * Cmarkit.Textloc.t -> (t, [ `Msg of string ]) result
-  val update_frontmatter : string fm -> t -> string fm
+
+  val of_string :
+    to_asset:(string -> Asset.t) ->
+    string * Cmarkit.Textloc.t ->
+    (t, [ `Msg of string ]) result
+
+  val update_frontmatter : fm -> t -> fm
 end
 
 module External_ids = struct
@@ -166,13 +212,16 @@ module External_ids = struct
 
   let key = "external-ids"
 
-  let of_string (s, _) =
+  let of_string ~to_asset:_ (s, _) =
     String.split_on_char ' ' s
     |> List.filter (fun x -> not @@ String.equal String.empty x)
     |> Result.ok
 
-  let update_frontmatter (fm : _ fm) v =
-    { fm with external_ids = v @ fm.external_ids }
+  let update_frontmatter (fm : fm) v =
+    {
+      fm with
+      local = { fm.local with external_ids = v @ fm.local.external_ids };
+    }
 end
 
 let all_fields =
@@ -201,38 +250,7 @@ let fields_map =
   |> SMap.of_list
 
 let fields_names = all_fields |> List.map (fun (module X : Field) -> X.key)
-
-type 'a t =
-  | Unresolved : string fm -> unresolved t
-  | Resolved : Asset.t fm -> resolved t
-
-let resolve (Unresolved fm) ~to_asset =
-  Resolved
-    {
-      fm with
-      math_link = Option.map to_asset fm.math_link;
-      css_links = List.map to_asset fm.css_links;
-      js_links = List.map to_asset fm.js_links;
-    }
-
-let empty_fm =
-  {
-    dimension = None;
-    toplevel_attributes = None;
-    math_link = None;
-    theme = None;
-    css_links = [];
-    js_links = [];
-    highlightjs_theme = None;
-    math_mode = None;
-    external_ids = [];
-  }
-
-let empty = Resolved empty_fm
-
-(* let get (field_name, convert) kv = *)
-(*   List.assoc_opt field_name kv |> Option.map convert *)
-
+let empty = { local = Local.empty; global = Global.empty }
 let string_sub s idx idx' = (String.sub s idx idx', (idx, idx + idx' - 1))
 
 let split_in_lines s =
@@ -285,7 +303,7 @@ let send_general_error ~key ~msg ~vloc =
          code = "Frontmatter";
        })
 
-let of_string file offset s =
+let of_string ~to_asset file offset s =
   let raise_warning line =
     let loc =
       let i, _, (byte_start, byte_end) = line in
@@ -318,14 +336,13 @@ let of_string file offset s =
         send_unrecognized_field ~key ~kloc;
         fm
     | Some (module F) -> (
-        match F.of_string value with
+        match F.of_string ~to_asset value with
         | Ok x -> F.update_frontmatter fm x
         | Error (`Msg msg) ->
             send_general_error ~key ~msg ~vloc;
             fm)
   in
-  let fm = List.fold_left handle_line empty_fm assoc in
-  Unresolved fm
+  List.fold_left handle_line empty assoc
 
 let ( let* ) x f = Option.bind x f
 let ( let+ ) x f = Option.map f x
@@ -378,33 +395,3 @@ let extract s =
     (after, n_lines 0 (after - 1))
   in
   { frontmatter; rest; rest_offset = offset; fm_offset = start }
-
-let combine (Resolved cli_frontmatter) (Resolved frontmatter) =
-  let combine_opt cli f = match cli with Some _ as x -> x | None -> f in
-  (* TODO: warn on cli erasing frontmatter *)
-  let toplevel_attributes =
-    combine_opt cli_frontmatter.toplevel_attributes
-      frontmatter.toplevel_attributes
-  in
-  let math_link = combine_opt cli_frontmatter.math_link frontmatter.math_link in
-  let math_mode = combine_opt cli_frontmatter.math_mode frontmatter.math_mode in
-  let theme = combine_opt cli_frontmatter.theme frontmatter.theme in
-  let dimension = combine_opt cli_frontmatter.dimension frontmatter.dimension in
-  let css_links = cli_frontmatter.css_links @ frontmatter.css_links in
-  let js_links = cli_frontmatter.js_links @ frontmatter.js_links in
-  let highlightjs_theme =
-    combine_opt cli_frontmatter.highlightjs_theme frontmatter.highlightjs_theme
-  in
-  let external_ids = cli_frontmatter.external_ids @ frontmatter.external_ids in
-  Resolved
-    {
-      toplevel_attributes;
-      math_link;
-      theme;
-      css_links;
-      dimension;
-      js_links;
-      highlightjs_theme;
-      math_mode;
-      external_ids;
-    }

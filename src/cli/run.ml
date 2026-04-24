@@ -23,39 +23,31 @@ module Io = struct
     with exn -> Error (`Msg (Printexc.to_string exn))
 end
 
-let read_file parent () =
+let with_read_file parent f =
   let l = ref Fpath.Set.empty in
-  ( l,
-    fun s ->
-      let ( // ) = Fpath.( // ) in
-      let fp = Fpath.normalize @@ (parent // s) in
-      let normalized = Fpath.normalize @@ (Fpath.v (Sys.getcwd ()) // fp) in
-      l := Fpath.Set.add normalized !l;
-      let+ res = Io.read (`File fp) in
-      Some res )
+  let read_file =
+   fun s ->
+    let ( // ) = Fpath.( // ) in
+    let fp = Fpath.normalize @@ (parent // s) in
+    let normalized = Fpath.normalize @@ (Fpath.v (Sys.getcwd ()) // fp) in
+    l := Fpath.Set.add normalized !l;
+    let+ res = Io.read (`File fp) in
+    Some res
+  in
+  let res = f read_file in
+  (res, !l)
 
-let compile ~input ~output ~cli_frontmatter =
-  let asset_files, to_asset =
-    let used_files, read_file = read_file (Fpath.v "./") () in
-    (used_files, Slipshow.Asset.of_string ~read_file)
-  in
-  let cli_frontmatter, warnings =
-    Diagnosis.with_ @@ fun () ->
-    Slipshow.Frontmatter.resolve cli_frontmatter ~to_asset
-  in
-  List.iter (Format.printf "%a" Diagnosis.report_no_src) warnings;
+let compile ~input ~output =
   let* content = Io.read input in
-  let used_files, read_file =
-    read_file
-      (match input with `Stdin -> Fpath.v "./" | `File f -> Fpath.parent f)
-      ()
-  in
-  let html, warnings =
+  let (html, warnings), used_files =
+    let parent =
+      match input with `Stdin -> Fpath.v "./" | `File f -> Fpath.parent f
+    in
     let file =
       match input with `File f -> Some (Fpath.to_string f) | _ -> None
     in
-    Slipshow.convert ~has_speaker_view:true ~frontmatter:cli_frontmatter ?file
-      ~read_file content
+    with_read_file parent @@ fun read_file ->
+    Slipshow.convert ~has_speaker_view:true ?file ~read_file content
   in
   let () =
     List.iter
@@ -64,47 +56,37 @@ let compile ~input ~output ~cli_frontmatter =
             ~code_to_string:Diagnosis.to_code))
       warnings
   in
-  let all_used_files = Fpath.Set.union !asset_files !used_files in
   match output with
   | `Stdout ->
       print_string html;
-      Ok all_used_files
+      Ok used_files
   | `File output -> (
       let+ () = Io.write output html in
       match input with
-      | `Stdin -> !used_files
+      | `Stdin -> used_files
       | `File f ->
           Fpath.Set.add
             (Fpath.normalize (Fpath.( // ) (Fpath.v (Sys.getcwd ())) f))
-            all_used_files)
+            used_files)
 
-let watch ~input ~output ~cli_frontmatter =
+let watch ~input ~output =
   let input_fpath = input in
   let input = `File input and output = `File output in
   let compile () =
     Logs.app (fun m -> m "Compiling...");
-    compile ~input ~output ~cli_frontmatter
+    compile ~input ~output
   in
   let () = Slipshow_server.do_watch input_fpath compile in
   (* [do_watch] never ends! *)
   Ok ()
 
-let serve ~input ~output ~cli_frontmatter ~port =
+let serve ~input ~output ~port =
   let compile () =
-    let asset_files, to_asset =
-      let used_files, read_file = read_file (Fpath.v "./") () in
-      (used_files, Slipshow.Asset.of_string ~read_file)
-    in
-    let cli_frontmatter, warnings_cli_frontmatter =
-      Diagnosis.with_ @@ fun () ->
-      Slipshow.Frontmatter.resolve cli_frontmatter ~to_asset
-    in
     let* content = Io.read (`File input) in
-    let used_files, read_file = read_file (Fpath.parent input) () in
-    let result, warnings =
+    let (result, warnings), used_files =
       let file = Fpath.to_string input in
-      Slipshow.delayed ~has_speaker_view:true ~frontmatter:cli_frontmatter
-        ~read_file ~file content
+      with_read_file (Fpath.parent input) @@ fun read_file ->
+      Slipshow.delayed ~has_speaker_view:true ~read_file ~file content
     in
     let warnings =
       List.map
@@ -114,19 +96,13 @@ let serve ~input ~output ~cli_frontmatter ~port =
         warnings
     in
     let warnings = List.map (Ansi.process (Ansi.create ())) warnings in
-    let cli_warnings =
-      List.map
-        (Format.asprintf "%a" Diagnosis.report_no_src)
-        warnings_cli_frontmatter
-    in
-    let warnings = cli_warnings @ warnings |> String.concat "" in
-    let all_used_files = Fpath.Set.union !asset_files !used_files in
+    let warnings = warnings |> String.concat "" in
     let html = Slipshow.add_starting_state result None in
     let+ () = Io.write output html in
     ( (result, warnings),
       Fpath.Set.add
         (Fpath.normalize (Fpath.( // ) (Fpath.v (Sys.getcwd ())) input))
-        all_used_files )
+        used_files )
   in
   let () = Slipshow_server.do_serve ~port input compile in
   (* [do_serve] never ends! *)
@@ -134,12 +110,11 @@ let serve ~input ~output ~cli_frontmatter ~port =
 
 let markdown_compile ~input ~output =
   let* content = Io.read input in
-  let _used_files, read_file =
-    read_file
+  let md, _used_files =
+    with_read_file
       (match input with `Stdin -> Fpath.v "./" | `File f -> Fpath.parent f)
-      ()
+    @@ fun read_file -> Slipshow.convert_to_md ~read_file content
   in
-  let md = Slipshow.convert_to_md ~read_file content in
   match output with
   | `Stdout ->
       print_string md;

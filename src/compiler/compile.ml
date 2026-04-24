@@ -514,10 +514,10 @@ module Stage4 = struct
     in
     Ast.Folder.make ~block ~inline ()
 
-  let execute ~(fm : Frontmatter.resolved Frontmatter.t) ~read_file md =
-    let (Frontmatter.Resolved fm) = fm in
+  let execute ~(fm : Frontmatter.t) ~read_file md =
+    let fm = fm in
     let external_ids =
-      fm.external_ids
+      fm.local.external_ids
       |> List.map (fun x -> ((x, Meta.none), `External, Meta.none))
     in
     let asset_map, id_list =
@@ -602,7 +602,7 @@ module Stage5 = struct
     ast
 end
 
-let of_cmarkit ~read_file ~(fm : Frontmatter.resolved Frontmatter.t) md =
+let of_cmarkit ~read_file ~(fm : Frontmatter.t) md =
   let defs = Cmarkit.Doc.defs md in
   let md1, htbl_include = Stage1.execute defs read_file md in
   let md2 = Stage2.execute md1 in
