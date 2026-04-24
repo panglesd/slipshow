@@ -270,43 +270,111 @@ jobs:
 
       # - name: Install OUI via opam
       #   run: opam install oui -y
-      - name: Install OUI via opam (depuis les sources)
-        run: opam pin add oui https://github.com/OCamlPro/ocaml-universal-installer.git#master --no-action -y && opam install oui -y
+      # - name: Install OUI via opam (depuis les sources)
+      #   run: opam pin add oui https://github.com/OCamlPro/ocaml-universal-installer.git#master --no-action -y && opam install oui -y
 
-      - name: Write oui.json
+      # - name: Write oui.json
+      #   shell: pwsh
+      #   run: |
+      #     # Récupérer la version depuis le tag git (ex: v1.2.3 → 1.2.3) + WiX exige major.minor.patch strictement numériques ; fallback sur 0.0.1
+      #     $version = (git describe --tags --abbrev=0 2>$null) -replace '^v', ''
+      #     if (($version -eq $null) -ot ($version -notmatch '^\d+\.\d+\.\d+$')) { $version = "0.0.1" }
+      #     Write-host "version = $version"
+
+      #     $config = @{
+      #       name             = "slipshow"
+      #       fullname         = "Slipshow"
+      #       version          = $version
+      #       unique_id        = "com.slipshow.slipshow"
+      #       wix_manufacturer = "Paul-Elliot"
+      #       wix_description  = "Slipshow is an engine to write slips, a concept evolved from slides."
+      #       exec_files       = @("bin/slipshow.exe")
+      #     }
+      #     $config | ConvertTo-Json -Depth 5 | Set-Content oui.json -Encoding UTF8
+      #     Write-Host "oui.json generated:"
+      #     Get-Content oui.json
+
+      # - name: Lint oui.json
+      #   run: opam exec -- oui lint oui.json ${{ github.workspace }}/bundle
+
+      # - name: Generate MSI installer with OUI
+      #   run: |
+      #     New-Item -ItemType Directory -Force -Path new_release
+      #     opam exec -- oui build oui.json ${{ github.workspace }}/bundle --output-dir ${{ github.workspace }}/new_release
+      #   shell: pwsh
+
+      # - name: Debug - Verify "${{ github.workspace }}/new_release"
+      #   run: |
+      #     Write-Output "Test ${{ github.workspace }}/new_release : $(Test-Path ${{ github.workspace }}/new_release)"
+      #     Get-ChildItem -Path ${{ github.workspace }}/new_release
+
+      - name: Prepare release directory
+        shell: pwsh
+        run: New-Item -ItemType Directory -Force -Path new_release
+
+      - name: Get version from git tag
+        id: version
         shell: pwsh
         run: |
-          # Récupérer la version depuis le tag git (ex: v1.2.3 → 1.2.3) + WiX exige major.minor.patch strictement numériques ; fallback sur 0.0.1
           $version = (git describe --tags --abbrev=0 2>$null) -replace '^v', ''
-          if (($version -eq $null) -ot ($version -notmatch '^\d+\.\d+\.\d+$')) { $version = "0.0.1" }
-          Write-host "version = $version"
+          if ($version -notmatch '^\d+\.\d+\.\d+$') { $version = "0.0.1" }
+          echo "VERSION=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          Write-Host "Version: $version"
 
-          $config = @{
-            name             = "slipshow"
-            fullname         = "Slipshow"
-            version          = $version
-            unique_id        = "com.slipshow.slipshow"
-            wix_manufacturer = "Paul-Elliot"
-            wix_description  = "Slipshow is an engine to write slips, a concept evolved from slides."
-            exec_files       = @("bin/slipshow.exe")
-          }
-          $config | ConvertTo-Json -Depth 5 | Set-Content oui.json -Encoding UTF8
-          Write-Host "oui.json generated:"
-          Get-Content oui.json
-
-      - name: Lint oui.json
-        run: opam exec -- oui lint oui.json ${{ github.workspace }}/bundle
-
-      - name: Generate MSI installer with OUI
-        run: |
-          New-Item -ItemType Directory -Force -Path new_release
-          opam exec -- oui build oui.json ${{ github.workspace }}/bundle --output-dir ${{ github.workspace }}/new_release
+      - name: Write WiX source file (slipshow.wxs)
         shell: pwsh
-
-      - name: Debug - Verify "${{ github.workspace }}/new_release"
         run: |
-          Write-Output "Test ${{ github.workspace }}/new_release : $(Test-Path ${{ github.workspace }}/new_release)"
-          Get-ChildItem -Path ${{ github.workspace }}/new_release
+          $version = "${{ steps.version.outputs.VERSION }}"
+          $bundle  = "${{ github.workspace }}\bundle"
+          
+          # Générer la liste des fichiers du bundle
+          $files = Get-ChildItem -Path "$bundle\bin" -File
+          $fileEntries = ($files | ForEach-Object {
+            $id = $_.Name -replace '[^a-zA-Z0-9]', '_'
+            "        <File Id=""$id"" Source=""$bundle\bin\$($_.Name)"" />"
+          }) -join "`n"
+
+          $wxs = @"
+          <?xml version="1.0" encoding="UTF-8"?>
+          <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+            <Package
+              Name="Slipshow"
+              Version="$version"
+              Manufacturer="Paul-Elliot"
+              UpgradeCode="ab3dec57-e72b-4fe1-bfae-62dcc4a5d554"
+              Scope="perUser">
+
+              <MajorUpgrade DowngradeErrorMessage="A newer version is already installed." />
+
+              <Feature Id="Main" Title="Slipshow" Level="1">
+                <ComponentGroupRef Id="MainComponents" />
+              </Feature>
+
+              <StandardDirectory Id="LocalAppDataFolder">
+                <Directory Id="INSTALLFOLDER" Name="Slipshow">
+                  <ComponentGroup Id="MainComponents">
+                    <Component Id="MainBinaries" Guid="*">
+          $fileEntries
+                    </Component>
+                  </ComponentGroup>
+                </Directory>
+              </StandardDirectory>
+
+            </Package>
+          </Wix>
+          "@
+
+          $wxs | Set-Content slipshow.wxs -Encoding UTF8
+          Write-Host "slipshow.wxs generated"
+          Get-Content slipshow.wxs
+
+      - name: Build MSI with WiX
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.VERSION }}"
+          wix build slipshow.wxs -o "new_release\slipshow-windows-x64-${version}.msi"
+          Write-Host "MSI generated:"
+          Get-ChildItem new_release
 
       - name: Upload installer
         uses: actions/upload-artifact@v4
