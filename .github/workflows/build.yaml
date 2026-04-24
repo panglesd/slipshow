@@ -195,9 +195,8 @@ jobs:
           $bundleBin = "${{ github.workspace }}\bundle\bin"
           $exe       = "$bundleBin\slipshow.exe"
 
-          # Retrieve cygwin installation folder
-          $cygwinpath = opam var cygwin:root
-          if ($null -eq $cygwinpath ) { $cygwinpath = "$env:LOCALAPPDATA\opam\.cygwin" }
+          # Retrieve Cygwin folder
+          $cygwinpath = "$env:LOCALAPPDATA\opam\.cygwin"
           Write-host "cygwinpath = $cygwinpath"
 
           # Searches for DLLs in the typical Cygwin locations managed by OPAM
@@ -216,22 +215,25 @@ jobs:
 
           foreach ($dll in $dlls) {
             $found = $false
+
+            # Try to find the dll into typical Cygwin locations
             if (Test-Path $cygwinpath) {
               $sourceFile = Get-ChildItem $cygwinpath -Recurse -Filter $dll |
                             Select-Object -First 1 -ExpandProperty FullName
               if (($null -ne $sourceFile) -and (Test-Path $sourceFile)) {
                 Copy-Item $sourceFile $bundleBin -Force
-                Write-Host "Library $dll copied to $bundleBin"
+                Write-Host "Library $dll copied from $sourceFile to $bundleBin"
                 $found = $true
               }
             }
 
             if (-not $found) { 
+              # Try to find the dll into the Cygwin folder
               foreach ($root in $searchRoots) {
                 $sourceFile = Join-Path $root $dll
                 if (Test-Path $sourceFile) {
                   Copy-Item $sourceFile $bundleBin -Force
-                  Write-Host "Library $dll copied to $bundleBin"
+                  Write-Host "Library $dll copied from $sourceFile to $bundleBin"
                   $found = $true
                   break
                 }
@@ -243,18 +245,68 @@ jobs:
             }
           }
 
-      - name: Prepare release directory
+      # - name: Prepare release directory
+      #   run: |
+      #     New-Item -ItemType Directory -Force -Path new_release
+  
+      # - name: Create ZIP archive slipshow-${{ matrix.config.name }}-${{ matrix.config.target }}.zip
+      #   run: Compress-Archive -Path ${{ github.workspace }}/bundle/* -DestinationPath new_release/slipshow-${{ matrix.config.name }}-${{ matrix.config.target }}.zip
+  
+      # - name: Upload archives
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: archives-windows-${{ matrix.config.arch }}
+      #     path: new_release/*.zip
+
+      - name: Install WiX 6 (required by OUI for Windows MSI)
+        shell: pwsh
+        run: |
+          $wixVersion = "6.0.2"
+          $wixUrl = "https://github.com/wixtoolset/wix/releases/download/v${wixVersion}/wix-${wixVersion}-x64.exe"
+          $installer = "$env:TEMP\wix-installer.exe"
+          Invoke-WebRequest -Uri $wixUrl -OutFile $installer
+          Start-Process -FilePath $installer -ArgumentList "/quiet" -Wait
+          # Ajouter WiX au PATH pour la session courante
+          $wixPath = "$env:ProgramFiles\WiX Toolset v6.0\bin"
+          echo "$wixPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Install OUI via opam
+        run: opam install oui -y
+
+      - name: Write oui.json
+        shell: pwsh
+        run: |
+          # Récupérer la version depuis le tag git (ex: v1.2.3 → 1.2.3)
+          $version = (git describe --tags --abbrev=0 2>$null) -replace '^v', ''
+          # WiX exige major.minor.patch strictement numériques ; fallback sur 0.0.1
+          if ($version -notmatch '^\d+\.\d+\.\d+$') { $version = "0.0.1" }
+          $config = @{
+            name             = "slipshow"
+            fullname         = "Slipshow"
+            version          = $version
+            unique_id        = "com.slipshow.slipshow"
+            wix_manufacturer = "Paul-Elliot"
+            wix_description  = "Slipshow is an engine to write slips, a concept evolved from slides."
+            exec_files       = @("bin/slipshow.exe")
+          }
+          $config | ConvertTo-Json -Depth 5 | Set-Content oui.json -Encoding UTF8
+          Write-Host "oui.json generated:"
+          Get-Content oui.json
+
+      - name: Lint oui.json
+        run: opam exec -- oui lint oui.json ${{ github.workspace }}/bundle
+
+      - name: Generate MSI installer with OUI
         run: |
           New-Item -ItemType Directory -Force -Path new_release
-  
-      - name: Create ZIP archive slipshow-${{ matrix.config.name }}-${{ matrix.config.target }}.zip
-        run: Compress-Archive -Path ${{ github.workspace }}/bundle/* -DestinationPath new_release/slipshow-${{ matrix.config.name }}-${{ matrix.config.target }}.zip
-  
-      - name: Upload archives
+          opam exec -- oui build oui.json ${{ github.workspace }}/bundle --output-dir ${{ github.workspace }}/new_release
+        shell: pwsh
+
+      - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
           name: archives-windows-${{ matrix.config.arch }}
-          path: new_release/*.zip
+          path: new_release/*.msi
 
   release:
     if: startsWith(github.ref, 'refs/tags/')
