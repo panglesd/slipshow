@@ -168,10 +168,20 @@ jobs:
       - name: Install dependencies
         if: steps.wincache.outputs.cache-hit
         run: opam install --deps-only --with-test --depext-only --with-doc -y . && opam upgrade
-
         # Just to test caching
       - name: Try building
         run: opam exec -- dune build --ignore-promoted-rules
+
+      - name: Install WiX 6 (required by OUI for Windows MSI)
+        shell: pwsh
+        run: |
+          dotnet tool install --global wix --version 6.0.2
+
+      - name: install oui
+        run: opam install oui
+
+      - name: run installer
+        run: mkdir -p bundle/bin/slipshow/ && cp _build/install/bin/slipshow* bundle/bin && oui build oui.json bundle
 
   release:
     if: startsWith(github.ref, 'refs/tags/')
