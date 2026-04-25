@@ -194,6 +194,16 @@ jobs:
           --remove-packages mingw64-i686-gcc-core,mingw64-i686-gmp,mingw64-i686-libffi,mingw64-i686-openssl
         #mingw64-x86_64-gmp,mingw64-x86_64-libffi,mingw64-x86_64-openssl,pkgconf
 
+      - name: Try depexts
+        run: opam list --required-by slipshow --external --recursive
+
+      - name: Nuke 32-bit cygwin dlls
+        run: |
+          $bad_path = "C:\.opam\.cygwin\root\usr\i686-w64-mingw32\sys-root\mingw\bin"
+          if (Test-Path $bad_path) {
+            Remove-Item -Path "$bad_path\*.dll" -Force
+          }
+
       - name: Install 64-bit packages
         run: >
          C:\.opam\.cygwin\setup-x86_64.exe "--root" "C:\\.opam\\.cygwin\\root" "--quiet-mode" "noinput" "--no-shortcuts" "--no-startmenu" "--no-desktop" "--no-admin" "--no-version-check" "--no-write-registry" "--packages" "mingw64-x86_64-gcc-core" "--symlink-type" "native" "--upgrade-also" "--only-site" "--site" "https://cygwin.mirror.constant.com/" "--local-package-dir" "C:\\.opam\\.cygwin\\cache" 
