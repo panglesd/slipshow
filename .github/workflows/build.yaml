@@ -161,7 +161,19 @@ jobs:
 
       - name: Install dependencies
         if: steps.wincache.outputs.cache-hit != 'true'
-        run: opam install --depext-only --deps-only --with-test --with-doc -y .
+        run: opam install conf-gmp
+
+      - name: Install dependencies
+        if: steps.wincache.outputs.cache-hit != 'true'
+        run: opam install conf-libssl
+
+      - name: Install dependencies
+        if: steps.wincache.outputs.cache-hit != 'true'
+        run: opam install conf-pkg-config
+
+      - name: Install dependencies
+        if: steps.wincache.outputs.cache-hit != 'true'
+        run: opam install conf-gmp-powm-sec
 
       - name: Install dependencies
         if: steps.wincache.outputs.cache-hit != 'true'
