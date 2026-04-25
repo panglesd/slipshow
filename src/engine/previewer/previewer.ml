@@ -177,13 +177,13 @@ let set_srcdoc { index; panels; errors_el; preview_status; _ }
     El.set_class preview_status_class true preview_status;
     Console.(log [ "exception"; Printexc.to_string exn ])
 
-let preview ?slipshow_js ?read_file previewer source =
+let preview ?options ?slipshow_js ?read_file previewer source =
   let () = El.set_class preview_status_class false previewer.preview_status in
   let starting_state = !(previewer.stage) in
   let has_speaker_view = previewer.include_speaker_view in
   let slipshow, warnings =
-    Slipshow.convert ~file:"-" ~has_speaker_view ?slipshow_js ?read_file
-      ~autofocus:false ~starting_state source
+    Slipshow.convert ~file:"-" ~has_speaker_view ?slipshow_js ?options
+      ?read_file ~autofocus:false ~starting_state source
   in
   let warnings =
     List.map

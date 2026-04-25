@@ -259,12 +259,13 @@ let to_grace file whole_content htbl_include er =
             Grace.Source.(`String { name = file; content = whole_content }))
     er
 
-let delayed ?slipshow_js ?file ?(read_file = fun _ -> Ok None) ~has_speaker_view
-    s =
+let delayed ?(options = Frontmatter.empty) ?slipshow_js ?file
+    ?(read_file = fun _ -> Ok None) ~has_speaker_view s =
   let whole_content = s in
   let (md, htbl_include, frontmatter), errors =
     Compile.compile ?file ~read_file s
   in
+  let frontmatter = Frontmatter.combine options frontmatter in
   let dimension =
     frontmatter.global.dimension
     |> Option.value ~default:Frontmatter.Dimension.default
@@ -362,8 +363,10 @@ let add_starting_state ?(autofocus = true) (start, end_, has_speaker_view)
   in
   if has_speaker_view then html else orig_html
 
-let convert ~has_speaker_view ?autofocus ?slipshow_js ?file ?starting_state
-    ?read_file s =
-  let delayed, w = delayed ~has_speaker_view ?slipshow_js ?file ?read_file s in
+let convert ?options ~has_speaker_view ?autofocus ?slipshow_js ?file
+    ?starting_state ?read_file s =
+  let delayed, w =
+    delayed ?options ~has_speaker_view ?slipshow_js ?file ?read_file s
+  in
   let res = add_starting_state ?autofocus delayed starting_state in
   (res, w)

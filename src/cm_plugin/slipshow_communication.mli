@@ -3,6 +3,7 @@
 
 val slipshow_plugin :
   ?slipshow_js:Slipshow.Asset.t ->
+  ?options:Slipshow.Frontmatter.t ->
   ?read_file:Slipshow.file_reader ->
   errors_el:Brr.El.t ->
   Brr.El.t ->

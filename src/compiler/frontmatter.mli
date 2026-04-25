@@ -10,6 +10,7 @@ module Local : sig
 
   val empty : t
   val with_empty : 'a -> 'a with_
+  val combine : t -> t -> t
 end
 
 module Global : sig
@@ -25,11 +26,13 @@ module Global : sig
 
   val empty : t
   val with_empty : 'a -> 'a with_
+  val combine : t -> t -> t
 end
 
 type t = { local : Local.t; global : Global.t }
 
 val empty : t
+val combine : t -> t -> t
 
 type fm := t
 
@@ -62,7 +65,13 @@ module Theme :
 
 module Css_links : Field with type t = Asset.t list
 module Js_links : Field with type t = Asset.t list
-module Dimension : Field_with_default with type t = int * int
+
+module Dimension : sig
+  include Field_with_default with type t = int * int
+
+  val of_string' : string * Cmarkit.Textloc.t -> (t, [ `Msg of string ]) result
+end
+
 module Hljs_theme : Field_with_default with type t = string
 module Math_mode : Field_with_default with type t = [ `Mathjax | `Katex ]
 

@@ -17,6 +17,15 @@ module Local = struct
     }
 
   let with_empty x = { x; fm = empty }
+
+  let combine x y =
+    let opt x y = match x with Some _ -> x | _ -> y in
+    {
+      toplevel_attributes = opt x.toplevel_attributes y.toplevel_attributes;
+      css_links = x.css_links @ y.css_links;
+      js_links = x.js_links @ y.js_links;
+      external_ids = x.external_ids @ y.external_ids;
+    }
 end
 
 module Global = struct
@@ -42,10 +51,26 @@ module Global = struct
     }
 
   let with_empty x = { x; fm = empty }
+
+  let combine x y =
+    let opt x y = match x with Some _ -> x | _ -> y in
+    {
+      math_link = opt x.math_link y.math_link;
+      theme = opt x.theme y.theme;
+      dimension = opt x.dimension y.dimension;
+      highlightjs_theme = opt x.highlightjs_theme y.highlightjs_theme;
+      math_mode = opt x.math_mode y.math_mode;
+    }
 end
 
 type t = { local : Local.t; global : Global.t }
 type fm = t
+
+let combine x y =
+  {
+    local = Local.combine x.local y.local;
+    global = Global.combine x.global y.global;
+  }
 
 module Toplevel_attributes = struct
   type t = Cmarkit.Attributes.t
@@ -162,6 +187,8 @@ module Dimension = struct
         let* height = int_parser height in
         Ok (width, height)
     | _ -> error
+
+  let of_string' = of_string ~to_asset:()
 
   let update_frontmatter (fm : fm) v =
     { fm with global = { fm.global with dimension = Some v } }

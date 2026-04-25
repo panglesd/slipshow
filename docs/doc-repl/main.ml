@@ -11,6 +11,10 @@ let view ~dimension ~preview_el ~errors_el ~editor_el starting =
   let markdown_extension =
     Jv.apply (Jv.get Jv.global "__CM__markdown") [||] |> Extension.of_jv
   in
+  let options =
+    let open Slipshow.Frontmatter in
+    { empty with global = { Global.empty with dimension } }
+  in
   let config =
     State.Config.create ~doc:(Jstr.v starting)
       ~extensions:
@@ -18,7 +22,7 @@ let view ~dimension ~preview_el ~errors_el ~editor_el starting =
           basic_setup;
           markdown_extension;
           dark_mode;
-          Slipshow_communication.slipshow_plugin ~errors_el preview_el;
+          Slipshow_communication.slipshow_plugin ~options ~errors_el preview_el;
         |]
       ()
   in
@@ -45,7 +49,7 @@ let handle_elem =
     El.at !!"dimension" el |> Option.map Jstr.to_string |> fun x ->
     Option.bind x (fun s ->
         match
-          Slipshow.Frontmatter.Dimension.of_string (s, Cmarkit.Textloc.none)
+          Slipshow.Frontmatter.Dimension.of_string' (s, Cmarkit.Textloc.none)
         with
         | Ok x -> Some x
         | Error _ -> None)
