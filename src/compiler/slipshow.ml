@@ -241,23 +241,9 @@ let string_to_delayed s =
   Option.bind s @@ fun s -> try Some (Marshal.from_string s 0) with _ -> None
 
 let convert_to_md ~read_file content =
-  let (fm, content, loc_offset), _warnings =
-    Diagnosis.with_ @@ fun () ->
-    match Frontmatter.extract content with
-    | None -> (Frontmatter.empty, content, (0, 0))
-    | Some { frontmatter; rest; rest_offset; fm_offset } ->
-        let file = "-" in
-        let to_asset = Asset.of_string ~read_file in
-        let frontmatter =
-          Frontmatter.of_string ~to_asset file fm_offset frontmatter
-        in
-        (frontmatter, rest, rest_offset)
+  let (sd, _htbl_include, _frontmatter), _ =
+    Compile.compile ~read_file content
   in
-  let md =
-    Cmarkit.Doc.of_string ~loc_offset ~heading_auto_ids:false ~strict:false
-      content
-  in
-  let sd, _htbl_include = Compile.of_cmarkit ~read_file ~fm md in
   let sd = Compile.to_cmarkit sd in
   Cmarkit_commonmark.of_doc ~include_attributes:false sd
 
@@ -276,21 +262,8 @@ let to_grace file whole_content htbl_include er =
 let delayed ?slipshow_js ?file ?(read_file = fun _ -> Ok None) ~has_speaker_view
     s =
   let whole_content = s in
-  let (frontmatter, s, loc_offset), warnings =
-    Diagnosis.with_ @@ fun () ->
-    match Frontmatter.extract s with
-    | None -> (Frontmatter.empty, s, (0, 0))
-    | Some { frontmatter = txt_fm; rest; rest_offset; fm_offset } ->
-        let file = Option.value ~default:"-" file in
-        let to_asset = Asset.of_string ~read_file in
-        let frontmatter =
-          Frontmatter.of_string ~to_asset file fm_offset txt_fm
-        in
-        (frontmatter, rest, rest_offset)
-  in
-  let toplevel_attributes =
-    frontmatter.local.toplevel_attributes
-    |> Option.value ~default:Frontmatter.Toplevel_attributes.default
+  let (md, htbl_include, frontmatter), errors =
+    Compile.compile ?file ~read_file s
   in
   let dimension =
     frontmatter.global.dimension
@@ -318,14 +291,8 @@ let delayed ?slipshow_js ?file ?(read_file = fun _ -> Ok None) ~has_speaker_view
       frontmatter.global.highlightjs_theme
   in
   let math_link = frontmatter.global.math_link in
-  let (md, htbl_include), errors =
-    Compile.compile ~loc_offset ?file ~attrs:toplevel_attributes ~fm:frontmatter
-      ~read_file s
-  in
   let warnings =
-    List.filter_map
-      (to_grace file whole_content htbl_include)
-      (warnings @ errors)
+    List.filter_map (to_grace file whole_content htbl_include) errors
   in
   let content = Renderers.to_html_string md in
   let has = Has.find_out md in

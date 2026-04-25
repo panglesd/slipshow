@@ -608,18 +608,35 @@ let of_cmarkit ~read_file ~(fm : Frontmatter.t) md =
   let md2 = Stage2.execute md1 in
   let md3 = Stage3.execute md2 in
   let md4, id_map = Stage4.execute ~read_file ~fm md3 in
-  (Stage5.execute ~id_map md4, htbl_include)
+  (Stage5.execute ~id_map md4, htbl_include, fm)
 
-let compile ?file ?loc_offset ~attrs ~fm ?(read_file = fun _ -> Ok None) s =
+let compile ?file ?(read_file = fun _ -> Ok None) s =
   Diagnosis.with_ @@ fun () ->
   let open Cmarkit in
+  let frontmatter, s, loc_offset =
+    match Frontmatter.extract s with
+    | None -> (Frontmatter.empty, s, (0, 0))
+    | Some { frontmatter = txt_fm; rest; rest_offset; fm_offset } ->
+        let file = Option.value ~default:"-" file in
+        let to_asset = Asset.of_string ~read_file in
+        let frontmatter =
+          Frontmatter.of_string ~to_asset file fm_offset txt_fm
+        in
+        (frontmatter, rest, rest_offset)
+  in
   let md =
-    let doc = Cmarkit_proxy.of_string ?loc_offset ~file s in
+    let doc = Cmarkit_proxy.of_string ~loc_offset ~file s in
     let bq = Block.Block_quote.make (Doc.block doc) in
-    let block = Block.Block_quote ((bq, (attrs, Meta.none)), Meta.none) in
+    let block =
+      let toplevel_attributes =
+        frontmatter.local.toplevel_attributes
+        |> Option.value ~default:Frontmatter.Toplevel_attributes.default
+      in
+      Block.Block_quote ((bq, (toplevel_attributes, Meta.none)), Meta.none)
+    in
     Doc.make block
   in
-  of_cmarkit ~read_file ~fm md
+  of_cmarkit ~read_file md ~fm:frontmatter
 
 let to_cmarkit =
   let ( let* ) x f = Option.bind x f in
