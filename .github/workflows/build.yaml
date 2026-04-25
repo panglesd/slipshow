@@ -144,45 +144,54 @@ jobs:
       - name: Fetch tags
         run: git fetch --tags --force origin
 
-      - uses: actions/cache@v5
-        id: wincache
-        with:
-          path: |
-            ~/.opam
-            _opam
-          key: windows-${{ hashFiles('*.opam') }}-ocaml.5.4
+      # - uses: actions/cache@v5
+      #   id: wincache
+      #   with:
+      #     path: |
+      #       ~/.opam
+      #       _opam
+      #     key: windows-${{ hashFiles('*.opam') }}-ocaml.5.4
 
-      - name: Install OCaml ${{ matrix.ocaml-compiler }}
-        uses: ocaml/setup-ocaml@v3
-        with:
-          cache-prefix: v4
-          ocaml-compiler: 5.4
-          opam-pin: false
+      # - name: Install OCaml ${{ matrix.ocaml-compiler }}
+      #   uses: ocaml/setup-ocaml@v3
+      #   with:
+      #     cache-prefix: v4
+      #     ocaml-compiler: 5.4
+      #     opam-pin: false
 
-      - name: Install dependencies
-        if: steps.wincache.outputs.cache-hit != 'true'
-        run: opam install conf-gmp
+      # - name: Install dependencies
+      #   if: steps.wincache.outputs.cache-hit != 'true'
+      #   run: opam install conf-gmp
 
-      - name: Install dependencies
-        if: steps.wincache.outputs.cache-hit != 'true'
-        run: opam install conf-libssl
+      # - name: Install dependencies
+      #   if: steps.wincache.outputs.cache-hit != 'true'
+      #   run: opam install conf-libssl
 
-      - name: Install dependencies
-        if: steps.wincache.outputs.cache-hit != 'true'
-        run: opam install conf-pkg-config
+      # - name: Install dependencies
+      #   if: steps.wincache.outputs.cache-hit != 'true'
+      #   run: opam install conf-pkg-config
 
-      - name: Install dependencies
-        if: steps.wincache.outputs.cache-hit != 'true'
-        run: opam install conf-gmp-powm-sec
+      # - name: Install dependencies
+      #   if: steps.wincache.outputs.cache-hit != 'true'
+      #   run: opam install conf-gmp-powm-sec
 
-      - name: Install dependencies
-        if: steps.wincache.outputs.cache-hit != 'true'
-        run: opam install --deps-only --with-test --with-doc -y .
+      # - name: Install dependencies
+      #   if: steps.wincache.outputs.cache-hit != 'true'
+      #   run: opam install --deps-only --with-test --with-doc -y .
 
-      - name: Install dependencies
-        if: steps.wincache.outputs.cache-hit
-        run: C:\.opam\.cygwin\setup-x86_64.exe "--root" "C:\\.opam\\.cygwin\\root" "--quiet-mode" "noinput" "--no-shortcuts" "--no-startmenu" "--no-desktop" "--no-admin" "--no-version-check" "--no-write-registry" "--packages" "mingw64-x86_64-gcc-core,mingw64-x86_64-gmp,mingw64-x86_64-libffi,mingw64-x86_64-openssl,pkgconf" "--symlink-type" "native" "--upgrade-also" "--only-site" "--site" "https://cygwin.mirror.constant.com/" "--local-package-dir" "C:\\.opam\\.cygwin\\cache"
-          #opam install --deps-only --with-test --depext-only --with-doc -y . && opam upgrade
+      # - name: Install dependencies
+      #   if: steps.wincache.outputs.cache-hit
+      #   run: C:\.opam\.cygwin\setup-x86_64.exe "--root" "C:\\.opam\\.cygwin\\root" "--quiet-mode" "noinput" "--no-shortcuts" "--no-startmenu" "--no-desktop" "--no-admin" "--no-version-check" "--no-write-registry" "--packages" "mingw64-x86_64-gcc-core,mingw64-x86_64-gmp,mingw64-x86_64-libffi,mingw64-x86_64-openssl,pkgconf" "--symlink-type" "native" "--upgrade-also" "--only-site" "--site" "https://cygwin.mirror.constant.com/" "--local-package-dir" "C:\\.opam\\.cygwin\\cache"
+      #     #opam install --deps-only --with-test --depext-only --with-doc -y . && opam upgrade
+
+      - name: Install OCaml
+        run: winget install Git.Git OCaml.opam
+
+      - name: opam init
+        run: opam init --auto-setup --bare --cygwin-internal-install --enable-shell-hook
+
+      - name: install deps
+        run: opam install . --deps-only
 
         # Just to test caching
       - name: Try building
