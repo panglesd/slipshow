@@ -161,6 +161,10 @@ jobs:
 
       - name: Install dependencies
         if: steps.wincache.outputs.cache-hit != 'true'
+        run: opam install --depext-only --deps-only --with-test --with-doc -y .
+
+      - name: Install dependencies
+        if: steps.wincache.outputs.cache-hit != 'true'
         run: opam install --deps-only --with-test --with-doc -y .
 
       - name: Install dependencies
