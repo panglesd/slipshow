@@ -155,7 +155,7 @@ jobs:
       - name: Install OCaml ${{ matrix.ocaml-compiler }}
         uses: ocaml/setup-ocaml@v3
         with:
-          cache-prefix: v3
+          cache-prefix: v4
           ocaml-compiler: 5.4
           opam-pin: false
 
