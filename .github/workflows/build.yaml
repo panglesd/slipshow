@@ -191,8 +191,7 @@ jobs:
           C:\.opam\.cygwin\setup-x86_64.exe 
           --root "C:\.opam\.cygwin\root" 
           --quiet-mode 
-          --uninstall 
-          --packages mingw64-i686-gcc-core,mingw64-i686-gmp,mingw64-i686-libffi,mingw64-i686-openssl
+          --remove-packages mingw64-i686-gcc-core,mingw64-i686-gmp,mingw64-i686-libffi,mingw64-i686-openssl
         #mingw64-x86_64-gmp,mingw64-x86_64-libffi,mingw64-x86_64-openssl,pkgconf
 
       - name: Install 64-bit packages
