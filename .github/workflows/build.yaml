@@ -169,6 +169,7 @@ jobs:
         if: steps.wincache.outputs.cache-hit
         run: opam install --deps-only --with-test --depext-only --with-doc -y . && opam upgrade
 
+        # Just to test caching
       - name: Try building
         run: opam exec -- dune build --ignore-promoted-rules
 
