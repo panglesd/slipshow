@@ -177,6 +177,12 @@ jobs:
         run: |
           dotnet tool install --global wix --version 6.0.2
 
+      - name: check opam-client version
+        run: opam show opam-client
+
+      - name: check opam-client version
+        run: opam update && opam show opam-client
+
       - name: install oui
         run: opam install oui
 
