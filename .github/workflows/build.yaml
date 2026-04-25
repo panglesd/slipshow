@@ -150,7 +150,7 @@ jobs:
           path: |
             ~/.opam
             _opam
-          key: windows-${{ hashFiles('*.opam') }}-5.4
+          key: windows-${{ hashFiles('*.opam') }}-ocaml.5.4
 
       - name: Install OCaml ${{ matrix.ocaml-compiler }}
         uses: ocaml/setup-ocaml@v3
