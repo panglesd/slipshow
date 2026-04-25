@@ -158,8 +158,6 @@ jobs:
           cache-prefix: v3
           ocaml-compiler: 5.4
           opam-pin: false
-          opam-repositories: |
-            default: https://github.com/punchagan/opam-repository.git#f1c70a26b442142ba1c3bd040bf8621060c94912
 
       - name: Install dependencies
         if: steps.wincache.outputs.cache-hit != 'true'
