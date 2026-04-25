@@ -313,11 +313,13 @@ jobs:
         run: New-Item -ItemType Directory -Force -Path new_release
 
       - name: Get version from git tag
+        continue-on-error: true
         id: version
         shell: pwsh
         run: |
-          $version = (git describe --tags --abbrev=0 2>$null) -replace '^v', ''
-          if ($version -notmatch '^\d+\.\d+\.\d+$') { $version = "0.0.1" }
+          # $version = (git describe --tags --abbrev=0 2>$null) -replace '^v', ''
+          # if ($version -notmatch '^\d+\.\d+\.\d+$') { $version = "0.0.1" }
+          $version = "0.0.1"
           echo "VERSION=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           Write-Host "Version: $version"
 
