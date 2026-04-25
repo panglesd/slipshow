@@ -190,6 +190,8 @@ jobs:
         shell: pwsh
         run: |
           dotnet tool install --global wix --version 6.0.2
+          wix extension add WixToolset.UI.wixext
+          wix extension add WixToolset.Util.wixext
 
       - name: install oui
         run: opam install oui
