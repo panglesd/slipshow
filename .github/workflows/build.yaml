@@ -170,7 +170,7 @@ jobs:
         run: opam install --deps-only --with-test --depext-only --with-doc -y . && opam upgrade
 
       - name: Try building
-        run: opam exec -- dune build
+        run: opam exec -- dune build --ignore-promoted-rules
 
   release:
     if: startsWith(github.ref, 'refs/tags/')
