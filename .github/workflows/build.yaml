@@ -181,7 +181,9 @@ jobs:
 
       - name: Install dependencies
         if: steps.wincache.outputs.cache-hit
-        run: opam install --deps-only --with-test --depext-only --with-doc -y . && opam upgrade
+        run: C:\.opam\.cygwin\setup-x86_64.exe "--root" "C:\\.opam\\.cygwin\\root" "--quiet-mode" "noinput" "--no-shortcuts" "--no-startmenu" "--no-desktop" "--no-admin" "--no-version-check" "--no-write-registry" "--packages" "mingw64-x86_64-gmp,mingw64-x86_64-libffi,mingw64-x86_64-openssl,pkgconf" "--symlink-type" "native" "--upgrade-also" "--only-site" "--site" "https://cygwin.mirror.constant.com/" "--local-package-dir" "C:\\.opam\\.cygwin\\cache"
+          #opam install --deps-only --with-test --depext-only --with-doc -y . && opam upgrade
+
         # Just to test caching
       - name: Try building
         run: opam exec -- dune build --ignore-promoted-rules
