@@ -189,7 +189,8 @@ jobs:
       - name: Install WiX 6 (required by OUI for Windows MSI)
         shell: pwsh
         run: |
-          dotnet tool install --global wix --version 6.0.2
+          dotnet tool install --global wix --version 7.0.0
+          wix eula accept wix7
           wix extension add WixToolset.UI.wixext
           wix extension add WixToolset.Util.wixext
 
