@@ -2,10 +2,10 @@ open Cmarkit
 module M = Map.Make (String)
 
 module Is = struct
-  let carousel_or_pdf (bol : Ast.Bol.t) =
+  let carousel_or_pdf (bol : Iterators.Bol.t) =
     match bol with
-    | `Block (Ast.S_block (Carousel _)) -> true
-    | `Inline (Ast.S_inline (Pdf _)) -> true
+    | `Block (Carousel _) -> true
+    | `Inline (Pdf _) -> true
     | _ -> false
 
   let carousel_or_pdf = (carousel_or_pdf, "carousel or pdf")

@@ -872,6 +872,7 @@ module Block = struct
   | Ext_math_block (_, m) | Ext_table (_, m)
   | Ext_footnote_definition (_, m) -> m
   | Ext_standalone_attributes (_, m) -> m
+  | Ext_attribute_definition (_, m) -> m
   | b -> ext b
 
   let rec normalize ?(ext = ext_none) = function
