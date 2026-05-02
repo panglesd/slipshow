@@ -3,6 +3,7 @@ open Ast
 module Fold_mapper = struct
   type 'a t = {
     block : 'a t -> 'a -> Block.t -> 'a * Block.t;
+    attrs : 'a t -> 'a -> Attributes.t -> 'a * Attributes.t;
     inline : 'a t -> 'a -> Inline.t -> 'a * Inline.t;
   }
 
@@ -147,13 +148,15 @@ module Fold_mapper = struct
         let origin = (({ link with text }, attrs), meta) in
         (acc, Image { media with origin })
 
-  let default = { block; inline }
+  let attrs _f acc attrs = (acc, attrs)
+  let default = { block; inline; attrs }
 end
 
 module Folder = struct
   type 'a t = {
     block : 'a t -> 'a -> Block.t -> 'a;
     inline : 'a t -> 'a -> Inline.t -> 'a;
+    attrs : 'a t -> 'a -> Attributes.t -> 'a;
   }
 
   let block f acc = function
@@ -209,13 +212,15 @@ module Folder = struct
     | Image { origin = ({ text; _ }, _), _; _ } ->
         f.inline f acc text
 
-  let default = { block; inline }
+  let attrs _f acc _attrs = acc
+  let default = { block; inline; attrs }
 end
 
 module Mapper = struct
   type 'a t = {
     block : 'a t -> Block.t -> Block.t;
     inline : 'a t -> Inline.t -> Inline.t;
+    attrs : 'a t -> Attributes.t -> Attributes.t;
   }
 
   let rec of_fold_mapper f_orig' =
@@ -229,7 +234,12 @@ module Mapper = struct
       let (), res = f_orig'.Fold_mapper.inline f' () b in
       res
     in
-    { block; inline }
+    let attrs f a =
+      let f' = to_fold_mapper f in
+      let (), res = f_orig'.Fold_mapper.attrs f' () a in
+      res
+    in
+    { block; inline; attrs }
 
   and to_fold_mapper f_orig =
     let block f' () b =
@@ -240,7 +250,11 @@ module Mapper = struct
       let f = of_fold_mapper f' in
       ((), f.inline f b)
     in
-    { Fold_mapper.block; inline }
+    let attrs f' () b =
+      let f = of_fold_mapper f' in
+      ((), f.attrs f b)
+    in
+    { Fold_mapper.block; inline; attrs }
 
   let default = of_fold_mapper Fold_mapper.default
   (* let ( let* ) = Option.bind *)

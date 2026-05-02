@@ -76,25 +76,638 @@ end = struct
     res
 end
 
-let classify_image p =
-  match Fpath.get_ext p with
-  | ".3gp" | ".mpg" | ".mpeg" | ".mp4" | ".m4v" | ".m4p" | ".ogv" | ".ogg"
-  | ".mov" | ".webm" ->
-      `Video
-  | ".aac" | ".flac" | ".mp3" | ".oga" | ".wav" -> `Audio
-  | ".pdf" -> `Pdf
-  | ".apng" | ".avif" | ".gif" | ".jpeg" | ".jpg" | ".jpe" | ".jig" | ".jfif"
-  | ".png" | ".webp" ->
-      (* https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types#image_types *)
-      `Image
-  | ".svg" -> `Svg
-  | ".draw" -> `Draw
-  | _ -> `Image
+let compile_attrs attrs =
+  let change = function
+    | `Kv (("up", m), v) -> Some (`Kv (("up-at-unpause", m), v))
+    | `Kv (("center", m), v) -> Some (`Kv (("center-at-unpause", m), v))
+    | `Kv (("down", m), v) -> Some (`Kv (("down-at-unpause", m), v))
+    | `Kv (("exec", m), v) -> Some (`Kv (("exec-at-unpause", m), v))
+    | `Kv (("scroll", m), v) -> Some (`Kv (("scroll-at-unpause", m), v))
+    | `Kv (("enter", m), v) -> Some (`Kv (("enter-at-unpause", m), v))
+    | `Kv (("emph", m), v) -> Some (`Kv (("emph-at-unpause", m), v))
+    | `Kv (("focus", m), v) -> Some (`Kv (("focus-at-unpause", m), v))
+    | `Kv (("reveal", m), v) -> Some (`Kv (("reveal-at-unpause", m), v))
+    | `Kv (("static", m), v) -> Some (`Kv (("static-at-unpause", m), v))
+    | `Kv (("unemph", m), v) -> Some (`Kv (("unemph-at-unpause", m), v))
+    | `Kv (("unfocus", m), v) -> Some (`Kv (("unfocus-at-unpause", m), v))
+    | `Kv (("unreveal", m), v) -> Some (`Kv (("unreveal-at-unpause", m), v))
+    | `Kv (("unstatic", m), v) -> Some (`Kv (("unstatic-at-unpause", m), v))
+    (* TODO: Improve this (eg by moving it to another phase) *)
+    | `Kv (("children:up", m), v) ->
+        Some (`Kv (("children:up-at-unpause", m), v))
+    | `Kv (("children:center", m), v) ->
+        Some (`Kv (("children:center-at-unpause", m), v))
+    | `Kv (("children:down", m), v) ->
+        Some (`Kv (("children:down-at-unpause", m), v))
+    | `Kv (("children:exec", m), v) ->
+        Some (`Kv (("children:exec-at-unpause", m), v))
+    | `Kv (("children:scroll", m), v) ->
+        Some (`Kv (("children:scroll-at-unpause", m), v))
+    | `Kv (("children:enter", m), v) ->
+        Some (`Kv (("children:enter-at-unpause", m), v))
+    | `Kv (("children:emph", m), v) ->
+        Some (`Kv (("children:emph-at-unpause", m), v))
+    | `Kv (("children:focus", m), v) ->
+        Some (`Kv (("children:focus-at-unpause", m), v))
+    | `Kv (("children:reveal", m), v) ->
+        Some (`Kv (("children:reveal-at-unpause", m), v))
+    | `Kv (("children:static", m), v) ->
+        Some (`Kv (("children:static-at-unpause", m), v))
+    | `Kv (("children:unemph", m), v) ->
+        Some (`Kv (("children:unemph-at-unpause", m), v))
+    | `Kv (("children:unfocus", m), v) ->
+        Some (`Kv (("children:unfocus-at-unpause", m), v))
+    | `Kv (("children:unreveal", m), v) ->
+        Some (`Kv (("children:unreveal-at-unpause", m), v))
+    | `Kv (("children:unstatic", m), v) ->
+        Some (`Kv (("children:unstatic-at-unpause", m), v))
+    | x -> Some x
+  in
+  Attributes.map change attrs
+
+let compile_attrs (attrs, meta) = (compile_attrs attrs, meta)
 
 let resolve_file ps s =
   match Asset.Uri.of_string s with
   | Link _ as l -> l
   | Path p -> Path (Path_entering.relativize ps p)
+
+module Image_handler = struct
+  let classify_image p =
+    match Fpath.get_ext p with
+    | ".3gp" | ".mpg" | ".mpeg" | ".mp4" | ".m4v" | ".m4p" | ".ogv" | ".ogg"
+    | ".mov" | ".webm" ->
+        `Video
+    | ".aac" | ".flac" | ".mp3" | ".oga" | ".wav" -> `Audio
+    | ".pdf" -> `Pdf
+    | ".apng" | ".avif" | ".gif" | ".jpeg" | ".jpg" | ".jpe" | ".jig" | ".jfif"
+    | ".png" | ".webp" ->
+        (* https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types#image_types *)
+        `Image
+    | ".svg" -> `Svg
+    | ".draw" -> `Draw
+    | _ -> `Image
+
+  let get_link_definition (defs : Cmarkit.Label.defs) l =
+    match Inline.Link.reference_definition defs l with
+    | Some (Cmarkit.Link_definition.Def ld) -> Some ld
+    | _ -> None
+
+  let classify_link_definition (ld : Cmarkit.Link_definition.t) attrs =
+    let has_attrs x = Cmarkit.Attributes.find x attrs |> Option.is_some in
+    if has_attrs Special_attrs.video then `Video
+    else if has_attrs Special_attrs.audio then `Audio
+    else if has_attrs Special_attrs.image then `Image
+    else if has_attrs Special_attrs.svg then `Svg
+    (* else if has_attrs "pdf" then `Pdf *)
+    (* else if has_attrs "draw" then `Draw
+       We don't want to pollute too much the namespace.  *)
+      else
+      let d, _meta = Cmarkit.Link_definition.dest ld in
+      match Fpath.of_string d with
+      | Error _ -> `Image
+      | Ok p -> classify_image p
+
+  let update_link_definition current_path (ld, meta) =
+    let label, layout, defined_label, (dest, meta_dest), title =
+      Link_definition.(label ld, layout ld, defined_label ld, dest ld, title ld)
+    in
+    let uri = resolve_file current_path dest in
+    let dest = (Asset.Uri.to_string uri, meta_dest) in
+    ( (uri, meta),
+      Link_definition.make ~layout ~defined_label ?label ~dest ?title () )
+
+  let handle_image_inlining compile_i defs current_path
+      ((l, (attrs, meta2)), meta) =
+    let text = Inline.Link.text l in
+    let ( let* ) x f =
+      match x with None -> Ast.Inline.Inlines ([], Meta.none) | Some x -> f x
+    in
+    let* kind, ld, uri =
+      match get_link_definition defs l with
+      | None -> None
+      | Some ((ld, (attrs_ld, meta2)), meta) ->
+          let attrs =
+            Cmarkit.Attributes.merge ~base:attrs ~new_attrs:attrs_ld
+          in
+          let kind = classify_link_definition ld attrs in
+          let attrs_ld = (* Mapper.map_attrs m *) attrs_ld in
+          let dest, ld = update_link_definition current_path (ld, meta) in
+          Some (kind, ((ld, (attrs_ld, meta2)), meta), dest)
+    in
+    let reference = `Inline ld in
+    let text = compile_i defs current_path text in
+    let l = { Ast.Inline.Link.text; reference } in
+    (* let attrs = Mapper.map_attrs m attrs in *)
+    let origin = ((l, (attrs, meta2)), meta) in
+    match kind with
+    | `Image -> Ast.Inline.Image { uri; origin; id = Id.gen () }
+    | `Svg -> Ast.Inline.Svg { uri; origin; id = Id.gen () }
+    | `Video -> Ast.Inline.Video { uri; origin; id = Id.gen () }
+    | `Audio -> Ast.Inline.Audio { uri; origin; id = Id.gen () }
+    | `Draw -> Ast.Inline.Hand_drawn { uri; origin; id = Id.gen () }
+    | `Pdf -> Ast.Inline.Pdf { uri; origin; id = Id.gen () }
+end
+
+let rec compile_i defs current_path (inline : Cmarkit.Inline.t) : Ast.Inline.t =
+  let inline =
+    match inline with
+    | Inline.Image img ->
+        Image_handler.handle_image_inlining compile_i defs current_path img
+    | Inline.Autolink al -> Autolink al
+    | Inline.Break br -> Break br
+    | Inline.Code_span cs -> Code_span cs
+    | Inline.Emphasis ((em, attrs), meta) ->
+        let delim = Inline.Emphasis.delim em in
+        let inline = Inline.Emphasis.inline em in
+        let inline = compile_i defs current_path inline in
+        Emphasis (({ delim; inline }, attrs), meta)
+    | Inline.Strong_emphasis ((em, attrs), meta) ->
+        let delim = Inline.Emphasis.delim em in
+        let inline = Inline.Emphasis.inline em in
+        let inline = compile_i defs current_path inline in
+        Strong_emphasis (({ delim; inline }, attrs), meta)
+    | Inline.Inlines (is, meta) ->
+        let is = List.map (compile_i defs current_path) is in
+        Inlines (is, meta)
+    | Inline.Link ((l, attrs), meta) ->
+        let text = Inline.Link.text l in
+        let text = compile_i defs current_path text in
+        let reference = Inline.Link.reference l in
+        Link (({ text; reference }, attrs), meta)
+    | Inline.Raw_html (html, meta) -> Raw_html (html, meta)
+    | Inline.Text ((text, attrs), meta) -> Text ((text, attrs), meta)
+    | Inline.Ext_attrs (attrs, meta) ->
+        let content = Inline.Attributes_span.content attrs in
+        let content = compile_i defs current_path content in
+        let attrs = Inline.Attributes_span.attrs attrs in
+        Attrs_span ({ attrs; content }, meta)
+    | Inline.Ext_math_span ((ms, attrs), meta) -> Math_span ((ms, attrs), meta)
+    | Inline.Ext_strikethrough ((st, attrs), meta) ->
+        let st = Inline.Strikethrough.inline st in
+        let st = compile_i defs current_path st in
+        Strikethrough ((st, attrs), meta)
+    | _ -> assert false
+  in
+  Ast.Inline.map_attrs compile_attrs inline
+
+let handle_slip_scripts_creation ((cb, (attrs, meta)), meta2) =
+  match Block.Code_block.info_string cb with
+  | None -> Ast.Block.Code_block ((cb, (attrs, meta)), meta2)
+  | Some (info, _) -> (
+      match Block.Code_block.language_of_info_string info with
+      | Some ("slip-script", _) ->
+          Ast.Block.SlipScript ((cb, (attrs, meta)), meta2)
+      | Some ("=mermaid", _) -> Ast.Block.MermaidJS ((cb, (attrs, meta)), meta2)
+      | _ -> Ast.Block.Code_block ((cb, (attrs, meta)), meta2))
+
+let turn_block_quotes_into_divs compile_b ((bq, (attrs, meta2)), meta) =
+  let b = Block.Block_quote.block bq in
+  let b = compile_b b in
+  Ast.Block.Div ((b, (attrs, meta2)), meta)
+
+let handle_includes compile_b ~htbl_include read_file current_path (attrs, meta)
+    =
+  let default () = Ast.Block.Standalone_attributes (attrs, meta) in
+  match
+    ( Attributes.find Special_attrs.include_ attrs,
+      Attributes.find Special_attrs.src attrs )
+  with
+  | Some (_, None), Some (_, Some ({ v = src; _ }, filepath_meta)) -> (
+      let relativized_path =
+        Path_entering.relativize current_path (Fpath.v src)
+      in
+      match read_file relativized_path with
+      | Ok None -> default ()
+      | Error (`Msg err) ->
+          let locs = [ Meta.textloc filepath_meta ] in
+          Diagnosis.add
+            (MissingFile
+               {
+                 file = Fpath.to_string relativized_path;
+                 error_msg = err;
+                 locs;
+               });
+          default ()
+      | Ok (Some contents) ->
+          Hashtbl.add htbl_include (Fpath.to_string relativized_path) contents;
+          let md =
+            let file = Some (Fpath.to_string relativized_path) in
+            Cmarkit_proxy.of_string ~file contents
+          in
+          Path_entering.in_path current_path (Fpath.parent (Fpath.v src))
+          @@ fun () ->
+          let mapped_blocks = compile_b (Doc.block md) in
+          Ast.Block.Included ((mapped_blocks, (attrs, meta)), Meta.none))
+  | _ -> default ()
+
+let handle_dash_separated_blocks compile_b (blocks, meta) =
+  let blocks = List.map compile_b blocks in
+  let div ((attrs, am), blocks) =
+    let blocks =
+      match blocks with
+      | [ b ] -> b
+      | blocks -> Ast.Block.Blocks (blocks, Meta.none)
+    in
+    Ast.Block.Div ((blocks, (attrs, am)), Meta.none)
+  in
+  let find_biggest blocks =
+    let find_biggest biggest block =
+      let max x = function None -> Some x | Some y -> Some (Int.max x y) in
+      match block with
+      | Ast.Block.Thematic_break ((tb, _), _)
+        when String.for_all (fun c -> c = '-') (Block.Thematic_break.layout tb)
+        ->
+          max (String.length (Block.Thematic_break.layout tb)) biggest
+      | _ -> biggest
+    in
+    List.fold_left find_biggest None blocks
+  in
+  let rec collect_until_dash ?(first = false) ~separator (acc_attrs, acc1)
+      global_acc blocks =
+    let add_to_global_acc (acc_attrs, acc1) global_acc =
+      if global_acc = [] && acc1 = [] && first then []
+        (* We do not add empty first element to give a chance to add attributes to the (new) first element *)
+      else (acc_attrs, List.rev acc1) :: global_acc
+    in
+    match blocks with
+    | Ast.Block.Thematic_break ((tb, tb_attrs), _tb_meta) :: rest
+      when String.equal separator (Block.Thematic_break.layout tb) ->
+        let global_acc = add_to_global_acc (acc_attrs, acc1) global_acc in
+        collect_until_dash ~separator (tb_attrs, []) global_acc rest
+    | e :: rest ->
+        collect_until_dash ~separator (acc_attrs, e :: acc1) global_acc rest
+    | [] -> List.rev ((acc_attrs, List.rev acc1) :: global_acc)
+  in
+  match find_biggest blocks with
+  | None -> Ast.Block.Blocks (blocks, meta)
+  | Some n ->
+      let separator = String.make n '-' in
+      let res =
+        collect_until_dash ~first:true ~separator
+          ((Attributes.empty, Meta.none), [])
+          [] blocks
+      in
+      let res = List.map div res in
+      Ast.Block.Blocks (res, meta)
+
+let rec compile_b defs current_path ~htbl_include read_file
+    (block : Cmarkit.Block.t) : Ast.Block.t =
+  let block =
+    match block with
+    | Block.Blank_line bl -> Ast.Block.Blank_line bl
+    | Block.Code_block cb -> handle_slip_scripts_creation cb
+    | Block.Block_quote bq ->
+        turn_block_quotes_into_divs
+          (compile_b defs current_path ~htbl_include read_file)
+          bq
+    | Block.Ext_standalone_attributes sa ->
+        handle_includes
+          (compile_b defs current_path ~htbl_include read_file)
+          ~htbl_include read_file current_path sa
+    | Block.Blocks bs ->
+        handle_dash_separated_blocks
+          (compile_b defs current_path ~htbl_include read_file)
+          bs
+    | Block.Ext_attribute_definition ((ad, attrs2), meta) ->
+        let indent = Block.Attribute_definition.indent ad in
+        let label = Block.Attribute_definition.label ad in
+        let attrs = Block.Attribute_definition.attrs ad in
+        Ast.Block.Attribute_definition (({ indent; label; attrs }, attrs2), meta)
+    | Block.Ext_footnote_definition _ -> failwith "TODO"
+    | Block.Ext_math_block mb -> Math_block mb
+    | Block.Ext_table ((tbl, attrs), meta) ->
+        let indent = Block.Table.indent tbl in
+        let col_count = Block.Table.col_count tbl in
+        let rows = Block.Table.rows tbl in
+        let rows =
+          List.map
+            (fun ((row, meta), layout) ->
+              let row =
+                match row with
+                | `Sep _ as s -> s
+                | `Header row ->
+                    `Header
+                      (List.map
+                         (fun (il, layout) ->
+                           (compile_i defs current_path il, layout))
+                         row)
+                | `Data row ->
+                    `Data
+                      (List.map
+                         (fun (il, layout) ->
+                           (compile_i defs current_path il, layout))
+                         row)
+              in
+              ((row, meta), layout))
+            rows
+        in
+        Table (({ rows; col_count; indent }, attrs), meta)
+    | Block.Heading ((h, attrs), meta) ->
+        let layout = Block.Heading.layout h in
+        let level = Block.Heading.level h in
+        let inline = Block.Heading.inline h in
+        let inline = compile_i defs current_path inline in
+        Heading (({ layout; level; inline }, attrs), meta)
+    | Block.Html_block html -> Html_block html
+    | Block.Link_reference_definition ((lrd, attrs), meta) ->
+        Link_reference_definition ((lrd, attrs), meta)
+    | Block.List ((l, attrs), meta) ->
+        let type' = Block.List'.type' l in
+        let tight = Block.List'.tight l in
+        let items = Block.List'.items l in
+        let items =
+          List.map
+            (fun (li, meta) ->
+              let before_marker = Block.List_item.before_marker li in
+              let marker = Block.List_item.marker li in
+              let after_marker = Block.List_item.after_marker li in
+              let block = Block.List_item.block li in
+              let ext_task_marker = Block.List_item.ext_task_marker li in
+              let block =
+                compile_b defs current_path ~htbl_include read_file block
+              in
+              let li =
+                {
+                  Ast.Block.List_item.before_marker;
+                  marker;
+                  after_marker;
+                  block;
+                  ext_task_marker;
+                }
+              in
+              (li, meta))
+            items
+        in
+        List (({ type'; tight; items }, attrs), meta)
+    | Block.Paragraph ((p, attrs), meta) ->
+        let leading_indent = Block.Paragraph.leading_indent p in
+        let trailing_blanks = Block.Paragraph.trailing_blanks p in
+        let inline = Block.Paragraph.inline p in
+        let inline = compile_i defs current_path inline in
+        Ast.Block.Paragraph
+          (({ inline; trailing_blanks; leading_indent }, attrs), meta)
+    | Block.Thematic_break tb -> Thematic_break tb
+    | _ -> assert false
+  in
+  Ast.Block.map_attrs compile_attrs block
+
+let stage1 defs read_file md =
+  let htbl_include = Hashtbl.create 3 in
+  let current_path = Path_entering.make () in
+  let res = compile_b defs current_path ~htbl_include read_file md in
+  (res, htbl_include)
+
+let stage2 ast =
+  let inline _i inline = inline in
+  let block b block =
+    match block with
+    | Ast.Block.Div ((Blocks (bs, m_bs), (attrs, m_attrs)), m_div) ->
+        let kvs = Attributes.kv_attributes attrs in
+        let rem_prefix ~prefix s =
+          if String.starts_with ~prefix s then
+            Some
+              (String.sub s (String.length prefix)
+                 (String.length s - String.length prefix))
+          else None
+        in
+        let categorize key =
+          match rem_prefix ~prefix:"." key with
+          | Some c -> `Class c
+          | None -> `Kv key
+        in
+        let new_attrs =
+          List.fold_left
+            (fun acc ((key, meta), value) ->
+              match rem_prefix ~prefix:"children:" key with
+              | None -> acc
+              | Some key -> (
+                  match (categorize key, value) with
+                  | `Class c, None -> Attributes.add_class acc (c, meta)
+                  | `Kv c, _ -> Attributes.add (c, meta) value acc
+                  | `Class c, Some (_, v_meta) ->
+                      Diagnosis.add
+                        (General
+                           {
+                             msg = "Children classes cannot have a value";
+                             labels = [ ("", Meta.textloc v_meta) ];
+                             notes = [];
+                             code = "ChildrenAttrs";
+                           });
+                      Attributes.add (c, meta) value acc))
+            Attributes.empty kvs
+        in
+        let bs =
+          List.map (Iterators.Utils.Block.merge_attribute new_attrs) bs
+        in
+        let bs =
+          Iterators.Mapper.default.block b (Ast.Block.Blocks (bs, m_bs))
+        in
+        Ast.Block.Div ((bs, (attrs, m_attrs)), m_div)
+    | _ -> Iterators.Mapper.default.block b block
+  in
+  let iterator = { Iterators.Mapper.default with block; inline } in
+  iterator.block iterator ast
+
+let stage3 ast =
+  let inline _m inline = inline in
+  let block m b =
+    let rec extract_title block =
+      match block with
+      | Ast.Block.Div ((h, attrs), meta) ->
+          let block, title = extract_title h in
+          (Ast.Block.Div ((block, attrs), meta), title)
+      | Heading (({ level = 1; inline; _ }, attrs), _) ->
+          (Blocks ([], Meta.none), Some (inline, attrs))
+      | Blocks (Heading (({ level = 1; inline; _ }, attrs), _) :: blocks, meta)
+        ->
+          (Blocks (blocks, meta), Some (inline, attrs))
+      | Blocks ((Blank_line _ as bl) :: blocks, meta) ->
+          let block, title = extract_title (Blocks (blocks, meta)) in
+          let blocks =
+            match block with Blocks (bs, _) -> bl :: bs | _ -> bl :: [ block ]
+          in
+          (Blocks (blocks, meta), title)
+      | _ -> (block, None)
+    in
+    let map ~may_enter block (attrs, meta2) =
+      let b = Iterators.Mapper.default.block m block in
+      let attrs =
+        if
+          (Attributes.mem Special_attrs.no_enter attrs
+          || Attributes.mem Actions_arguments.Enter.on attrs)
+          || not may_enter
+        then attrs
+        else Attributes.add (Actions_arguments.Enter.on, Meta.none) None attrs
+      in
+      (* let attrs = Mapper.map_attrs m attrs in *)
+      (b, (attrs, meta2))
+    in
+    match Ast.Block.get_attrs b with
+    | None -> Iterators.Mapper.default.block m b
+    | Some (block, attrs)
+      when Attributes.mem Special_attrs.blockquote (fst attrs) ->
+        let block, attrs = map ~may_enter:false block attrs in
+        Ast.Block.Block_quote
+          (({ block; indent = 0 }, attrs), Ast.Block.meta block)
+    | Some (block, attrs) when Attributes.mem Special_attrs.slide (fst attrs) ->
+        let block, attrs = map ~may_enter:true block attrs in
+        let block, title = extract_title block in
+        Ast.Block.Slide (({ content = block; title }, attrs), Meta.none)
+    | Some (block, (attrs, meta2)) when Attributes.mem Special_attrs.slip attrs
+      ->
+        let block, (attrs, meta) = map ~may_enter:true block (attrs, meta2) in
+        Ast.Block.Slip ((block, (attrs, meta)), Meta.none)
+    | Some (block, (attrs, meta2))
+      when Attributes.mem Special_attrs.carousel attrs ->
+        let block, attrs = map ~may_enter:false block (attrs, meta2) in
+        let children =
+          match block with Div ((Blocks (l, _), _), _) -> l | _ -> [ block ]
+        in
+        let children =
+          List.filter_map
+            (function Ast.Block.Blank_line _ -> None | x -> Some x)
+            children
+        in
+        Ast.Block.Carousel ((children, attrs), Meta.none)
+    | Some _ -> Iterators.Mapper.default.block m b
+  in
+  let iterator = { Iterators.Mapper.default with block; inline } in
+  iterator.block iterator ast
+
+let stage4 ~(fm : Frontmatter.t) ~read_file ast =
+  let fpath_map_add_to_list x data m =
+    let add = function None -> Some [ data ] | Some l -> Some (data :: l) in
+    Fpath.Map.update x add m
+  in
+  let block (f : _ Iterators.Folder.t) (x, id_list) c =
+    let acc =
+      match Ast.Block.get_attrs c with
+      | None -> (x, id_list)
+      | Some (_, (attrs, meta)) -> (
+          match Attributes.id attrs with
+          | None -> (x, id_list)
+          | Some id -> (x, (id, `Block c, meta) :: id_list))
+    in
+    Iterators.Folder.default.block f acc c
+  in
+  let inline (f : _ Iterators.Folder.t) (acc, id_list) i =
+    let id_list =
+      match Ast.Inline.get_attrs i with
+      | None -> id_list
+      | Some (attrs, meta) -> (
+          match Attributes.id attrs with
+          | None -> id_list
+          | Some id -> (id, `Inline i, meta) :: id_list)
+    in
+    let acc =
+      match i with
+      | Ast.Inline.Video media
+      | Pdf media
+      | Audio media
+      | Hand_drawn media
+      | Svg media
+      | Image media -> (
+          match media with
+          | { uri = Path p, meta; id; origin } ->
+              fpath_map_add_to_list p (id, (origin, meta)) acc
+          | _ -> acc)
+      | _ -> acc
+    in
+    Iterators.Folder.default.inline f (acc, id_list) i
+  in
+  let iter = { Iterators.Folder.default with block; inline } in
+  let external_ids =
+    fm.local.external_ids
+    |> List.map (fun x -> ((x, Meta.none), `External, Meta.none))
+  in
+  let asset_map, id_list =
+    iter.block iter (Fpath.Map.empty, external_ids) ast
+  in
+  let id_list = List.rev id_list in
+  let module Map = Map.Make (String) in
+  let id_map =
+    List.fold_left
+      (fun acc (((id, _meta1), _b1, _meta_attrs) as value) ->
+        Map.update id
+          (function
+            | None -> Some [ value ] | Some same -> Some (value :: same))
+          acc)
+      Map.empty id_list
+  in
+  let id_map =
+    Map.filter_map
+      (fun id list ->
+        match list with
+        | [] -> assert false
+        | [ x ] -> Some x
+        | x :: _ :: _ ->
+            let occurrences =
+              List.map
+                (fun ((_id, meta1), _b1, _meta_attrs) -> Meta.textloc meta1)
+                list
+            in
+            Diagnosis.add @@ DuplicateID { id; occurrences };
+            Some x)
+      id_map
+  in
+  let files =
+    Fpath.Map.filter_map
+      (fun path used_by ->
+        let read_file : file_reader = read_file in
+        let mode = `Base64 in
+        match read_file path with
+        | Ok (Some content) ->
+            let used_by = List.map fst used_by in
+            Some { Ast.Files.content; mode; used_by; path }
+        | Ok None -> None
+        | Error (`Msg error_msg) ->
+            let locs =
+              List.map (fun (_id, (_node, meta)) -> Meta.textloc meta) used_by
+            in
+            Diagnosis.add
+              (MissingFile { file = Fpath.to_string path; error_msg; locs });
+            None)
+      asset_map
+  in
+  (ast, files, id_map)
+
+let stage5 ~id_map ast =
+  let open struct
+    module M = Map.Make (String)
+  end in
+  let check_attribute ~id_map block_or_inline (attrs, _meta) =
+    List.iter (fun check -> check id_map attrs block_or_inline) Check.all_checks
+  in
+  let iterator =
+    let block f () c =
+      let () =
+        match Ast.Block.get_attrs c with
+        | None -> ()
+        | Some (_, attrs) -> check_attribute ~id_map (`Block c) attrs
+      in
+      Iterators.Folder.default.block f () c
+    in
+    let inline f () i =
+      let () =
+        match Ast.Inline.get_attrs i with
+        | None -> ()
+        | Some attrs -> check_attribute ~id_map (`Inline i) attrs
+      in
+      Iterators.Folder.default.inline f () i
+    in
+    { Iterators.Folder.default with block; inline }
+  in
+  iterator.block iterator () ast
+
+let compile ~read_file ~(fm : Frontmatter.t) (doc : Cmarkit.Doc.t) =
+  let defs = Cmarkit.Doc.defs doc in
+  let ast, htbl_include = stage1 defs read_file (Cmarkit.Doc.block doc) in
+  let ast = stage2 ast in
+  let ast = stage3 ast in
+  let ast, files, id_map = stage4 ~read_file ~fm ast in
+  let () = stage5 ~id_map ast in
+  ({ Ast.doc = ast; files; defs }, htbl_include, fm)
 
 module Stage1 = struct
   let turn_block_quotes_into_divs m ((bq, (attrs, meta2)), meta) =

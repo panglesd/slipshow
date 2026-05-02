@@ -124,6 +124,56 @@ module Inline = struct
       | [] -> List.rev (List.rev (List.hd acc) :: List.tl acc)
     in
     loop ~break_on_soft ([] :: []) [ i ]
+
+  let map_attrs f (i : t) =
+    match i with
+    | Strikethrough ((st, attrs), meta) -> Strikethrough ((st, f attrs), meta)
+    | Math_span ((ms, attrs), meta) -> Math_span ((ms, f attrs), meta)
+    | Attrs_span ({ content; attrs }, meta) ->
+        Attrs_span ({ content; attrs = f attrs }, meta)
+    | Autolink ((al, attrs), meta) -> Autolink ((al, f attrs), meta)
+    | Break _ as br -> br
+    | Code_span ((cs, attrs), meta) -> Code_span ((cs, f attrs), meta)
+    | Emphasis ((em, attrs), meta) -> Emphasis ((em, f attrs), meta)
+    | Inlines _ as is -> is
+    | Link ((l, attrs), meta) -> Link ((l, f attrs), meta)
+    | Raw_html _ as html -> html
+    | Strong_emphasis ((sem, attrs), meta) ->
+        Strong_emphasis ((sem, f attrs), meta)
+    | Text ((text, attrs), meta) -> Text ((text, f attrs), meta)
+    | Image { uri; id; origin = (l, attrs), meta } ->
+        Image { uri; id; origin = ((l, f attrs), meta) }
+    | Svg { uri; id; origin = (l, attrs), meta } ->
+        Svg { uri; id; origin = ((l, f attrs), meta) }
+    | Video { uri; id; origin = (l, attrs), meta } ->
+        Video { uri; id; origin = ((l, f attrs), meta) }
+    | Audio { uri; id; origin = (l, attrs), meta } ->
+        Audio { uri; id; origin = ((l, f attrs), meta) }
+    | Pdf { uri; id; origin = (l, attrs), meta } ->
+        Pdf { uri; id; origin = ((l, f attrs), meta) }
+    | Hand_drawn { uri; id; origin = (l, attrs), meta } ->
+        Hand_drawn { uri; id; origin = ((l, f attrs), meta) }
+
+  let get_attrs (i : t) =
+    match i with
+    | Strikethrough ((_, attrs), _) -> Some attrs
+    | Math_span ((_, attrs), _) -> Some attrs
+    | Attrs_span ({ content = _; attrs }, _) -> Some attrs
+    | Autolink ((_, attrs), _) -> Some attrs
+    | Break _ -> None
+    | Code_span ((_, attrs), _) -> Some attrs
+    | Emphasis ((_, attrs), _) -> Some attrs
+    | Inlines _ -> None
+    | Link ((_, attrs), _) -> Some attrs
+    | Raw_html _ -> None
+    | Strong_emphasis ((_, attrs), _) -> Some attrs
+    | Text ((_, attrs), _) -> Some attrs
+    | Image { origin = (_, attrs), _; _ } -> Some attrs
+    | Svg { origin = (_, attrs), _; _ } -> Some attrs
+    | Video { origin = (_, attrs), _; _ } -> Some attrs
+    | Audio { origin = (_, attrs), _; _ } -> Some attrs
+    | Pdf { origin = (_, attrs), _; _ } -> Some attrs
+    | Hand_drawn { origin = (_, attrs), _; _ } -> Some attrs
 end
 
 module Block = struct
@@ -131,13 +181,11 @@ module Block = struct
   module Thematic_break = Block.Thematic_break
 
   module Heading = struct
-    type layout = {
-      indent : Layout.indent;
-      after_opening : Layout.blanks;
-      closing : Layout.string;
+    type t = {
+      layout : Cmarkit.Block.Heading.layout;
+      level : int;
+      inline : Inline.t;
     }
-
-    type t = { layout : layout; level : int; inline : Inline.t }
   end
 
   module Html_block = Block.Html_block
@@ -232,6 +280,100 @@ module Block = struct
     T
 
   include T
+
+  let meta (b : t) =
+    match b with
+    | Blank_line (_, meta) -> meta
+    | Block_quote (_, meta) -> meta
+    | Blocks (_, meta) -> meta
+    | Code_block (_, meta) -> meta
+    | Heading (_, meta) -> meta
+    | Html_block (_, meta) -> meta
+    | Link_reference_definition (_, meta) -> meta
+    | List (_, meta) -> meta
+    | Paragraph (_, meta) -> meta
+    | Thematic_break (_, meta) -> meta
+    | Included (_, meta) -> meta
+    | Div (_, meta) -> meta
+    | Slide (_, meta) -> meta
+    | Slip (_, meta) -> meta
+    | SlipScript (_, meta) -> meta
+    | Carousel (_, meta) -> meta
+    | MermaidJS (_, meta) -> meta
+    | Math_block (_, meta) -> meta
+    | Table (_, meta) -> meta
+    | Standalone_attributes (_, meta) -> meta
+    | Attribute_definition (_, meta) -> meta
+
+  let map_attrs f (b : t) =
+    match b with
+    | Blank_line _ as bl -> bl
+    | Block_quote ((bq, attrs), meta) -> Block_quote ((bq, f attrs), meta)
+    | Blocks _ as bs -> bs
+    | Code_block ((cb, attrs), meta) -> Code_block ((cb, f attrs), meta)
+    | Heading ((h, attrs), meta) -> Heading ((h, f attrs), meta)
+    | Html_block ((html_block, attrs), meta) ->
+        Html_block ((html_block, f attrs), meta)
+    | Link_reference_definition ((lrd, attrs), meta) ->
+        Link_reference_definition ((lrd, f attrs), meta)
+    | List ((l, attrs), meta) -> List ((l, f attrs), meta)
+    | Paragraph ((p, attrs), meta) -> Paragraph ((p, f attrs), meta)
+    | Thematic_break ((tb, attrs), meta) -> Thematic_break ((tb, f attrs), meta)
+    | Included ((inc, attrs), meta) -> Included ((inc, f attrs), meta)
+    | Div ((div, attrs), meta) -> Div ((div, f attrs), meta)
+    | Slide ((slide, attrs), meta) -> Slide ((slide, f attrs), meta)
+    | Slip ((slip, attrs), meta) -> Slip ((slip, f attrs), meta)
+    | SlipScript ((sc, attrs), meta) -> SlipScript ((sc, f attrs), meta)
+    | Carousel ((c, attrs), meta) -> Carousel ((c, f attrs), meta)
+    | MermaidJS ((mer, attrs), meta) -> MermaidJS ((mer, f attrs), meta)
+    | Math_block ((mb, attrs), meta) -> Math_block ((mb, f attrs), meta)
+    | Table ((table, attrs), meta) -> Table ((table, f attrs), meta)
+    | Standalone_attributes _ as attrs -> attrs
+    | Attribute_definition ((ad, attrs), meta) ->
+        Attribute_definition ((ad, f attrs), meta)
+
+  let get_attrs (b : t) =
+    match b with
+    | Blank_line _ -> None
+    | Block_quote ((_, attrs), _) ->
+        Some (map_attrs (fun _ -> (Attributes.empty, Meta.none)) b, attrs)
+    | Blocks _ -> None
+    | Code_block ((_, attrs), _) ->
+        Some (map_attrs (fun _ -> (Attributes.empty, Meta.none)) b, attrs)
+    | Heading ((_, attrs), _) ->
+        Some (map_attrs (fun _ -> (Attributes.empty, Meta.none)) b, attrs)
+    | Html_block ((_, attrs), _) ->
+        Some (map_attrs (fun _ -> (Attributes.empty, Meta.none)) b, attrs)
+    | Link_reference_definition ((_, attrs), _) ->
+        Some (map_attrs (fun _ -> (Attributes.empty, Meta.none)) b, attrs)
+    | List ((_, attrs), _) ->
+        Some (map_attrs (fun _ -> (Attributes.empty, Meta.none)) b, attrs)
+    | Paragraph ((_, attrs), _) ->
+        Some (map_attrs (fun _ -> (Attributes.empty, Meta.none)) b, attrs)
+    | Thematic_break ((_, attrs), _) ->
+        Some (map_attrs (fun _ -> (Attributes.empty, Meta.none)) b, attrs)
+    | Included ((_, attrs), _) ->
+        Some (map_attrs (fun _ -> (Attributes.empty, Meta.none)) b, attrs)
+    | Div ((_, attrs), _) ->
+        Some (map_attrs (fun _ -> (Attributes.empty, Meta.none)) b, attrs)
+    | Slide ((_, attrs), _) ->
+        Some (map_attrs (fun _ -> (Attributes.empty, Meta.none)) b, attrs)
+    | Slip ((_, attrs), _) ->
+        Some (map_attrs (fun _ -> (Attributes.empty, Meta.none)) b, attrs)
+    | SlipScript ((_, attrs), _) ->
+        Some (map_attrs (fun _ -> (Attributes.empty, Meta.none)) b, attrs)
+    | Carousel ((_, attrs), _) ->
+        Some (map_attrs (fun _ -> (Attributes.empty, Meta.none)) b, attrs)
+    | MermaidJS ((_, attrs), _) ->
+        Some (map_attrs (fun _ -> (Attributes.empty, Meta.none)) b, attrs)
+    | Math_block ((_, attrs), _) ->
+        Some (map_attrs (fun _ -> (Attributes.empty, Meta.none)) b, attrs)
+    | Table ((_, attrs), _) ->
+        Some (map_attrs (fun _ -> (Attributes.empty, Meta.none)) b, attrs)
+    | Standalone_attributes attrs ->
+        Some (map_attrs (fun _ -> (Attributes.empty, Meta.none)) b, attrs)
+    | Attribute_definition ((_, attrs), _) ->
+        Some (map_attrs (fun _ -> (Attributes.empty, Meta.none)) b, attrs)
 end
 
 module Files = struct
