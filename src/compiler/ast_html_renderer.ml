@@ -568,7 +568,8 @@ let inline c = function
       strong_emphasis c e attrs;
       true
   | Text ((t, (attrs, _)), _) ->
-      (in_block c "span" attrs @@ fun () -> html_escaped_string c t);
+      ( in_block ~with_newline:false c "span" attrs @@ fun () ->
+        html_escaped_string c t );
       true
   | Strikethrough ((s, (attrs, _)), _) ->
       strikethrough c s attrs;

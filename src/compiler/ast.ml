@@ -179,6 +179,7 @@ end
 module Block = struct
   module Code_block = Block.Code_block
   module Thematic_break = Block.Thematic_break
+  module Attribute_definition = Block.Attribute_definition
 
   module Heading = struct
     type t = {
@@ -243,15 +244,6 @@ module Block = struct
     }
   end =
     Table
-
-  and Attribute_definition : sig
-    type t = {
-      indent : Layout.indent;
-      label : Label.t;
-      attrs : Attributes.t node;
-    }
-  end =
-    Attribute_definition
 
   and T : sig
     type t =
@@ -328,7 +320,7 @@ module Block = struct
     | MermaidJS ((mer, attrs), meta) -> MermaidJS ((mer, f attrs), meta)
     | Math_block ((mb, attrs), meta) -> Math_block ((mb, f attrs), meta)
     | Table ((table, attrs), meta) -> Table ((table, f attrs), meta)
-    | Standalone_attributes _ as attrs -> attrs
+    | Standalone_attributes attrs -> Standalone_attributes (f attrs)
     | Attribute_definition ((ad, attrs), meta) ->
         Attribute_definition ((ad, f attrs), meta)
 

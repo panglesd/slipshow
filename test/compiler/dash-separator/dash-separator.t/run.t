@@ -15,6 +15,8 @@ However, dash lines are used as separator to group in divs
     <div>
       <p><span>aaa</span>
       </p>
+      <hr>
+      
       <p>
         <span>
           bbb</span>
@@ -29,6 +31,8 @@ However, dash lines are used as separator to group in divs
         <span>
           ddd</span>
       </p>
+      <hr>
+      
       <p>
         <span>
           eee</span>

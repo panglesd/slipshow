@@ -220,43 +220,204 @@ module Mapper = struct
   type 'a t = {
     block : 'a t -> Block.t -> Block.t;
     inline : 'a t -> Inline.t -> Inline.t;
-    attrs : 'a t -> Attributes.t -> Attributes.t;
+    attrs : 'a t -> Attributes.t node -> Attributes.t node;
   }
 
-  let rec of_fold_mapper f_orig' =
-    let block f b =
-      let f' = to_fold_mapper f in
-      let (), res = f_orig'.Fold_mapper.block f' () b in
-      res
-    in
-    let inline f b =
-      let f' = to_fold_mapper f in
-      let (), res = f_orig'.Fold_mapper.inline f' () b in
-      res
-    in
-    let attrs f a =
-      let f' = to_fold_mapper f in
-      let (), res = f_orig'.Fold_mapper.attrs f' () a in
-      res
-    in
-    { block; inline; attrs }
+  let block f b =
+    match b with
+    | Block.Blank_line _ as x -> x
+    | Standalone_attributes attrs -> Standalone_attributes (f.attrs f attrs)
+    | Thematic_break ((x, attrs), meta) ->
+        let attrs = f.attrs f attrs in
+        Thematic_break ((x, attrs), meta)
+    | Html_block ((x, attrs), meta) ->
+        let attrs = f.attrs f attrs in
+        Html_block ((x, attrs), meta)
+    | Math_block ((x, attrs), meta) ->
+        let attrs = f.attrs f attrs in
+        Math_block ((x, attrs), meta)
+    | Attribute_definition ((x, attrs), meta) ->
+        let attrs = f.attrs f attrs in
+        Attribute_definition ((x, attrs), meta)
+    | Link_reference_definition ((x, attrs), meta) ->
+        let attrs = f.attrs f attrs in
+        Link_reference_definition ((x, attrs), meta)
+    | SlipScript ((x, attrs), meta) ->
+        let attrs = f.attrs f attrs in
+        SlipScript ((x, attrs), meta)
+    | MermaidJS ((x, attrs), meta) ->
+        let attrs = f.attrs f attrs in
+        MermaidJS ((x, attrs), meta)
+    | Code_block ((x, attrs), meta) ->
+        let attrs = f.attrs f attrs in
+        Code_block ((x, attrs), meta)
+    | Paragraph ((({ inline; _ } as p), attrs), meta) ->
+        let attrs = f.attrs f attrs in
+        let inline = f.inline f inline in
+        Paragraph (({ p with inline }, attrs), meta)
+    | Heading ((({ inline; _ } as h), attrs), meta) ->
+        let attrs = f.attrs f attrs in
+        let inline = f.inline f inline in
+        Heading (({ h with inline }, attrs), meta)
+    | Included ((block, attrs), meta) ->
+        let attrs = f.attrs f attrs in
+        let block = f.block f block in
+        Included ((block, attrs), meta)
+    | Div ((block, attrs), meta) ->
+        let attrs = f.attrs f attrs in
+        let block = f.block f block in
+        Div ((block, attrs), meta)
+    | Slip ((block, attrs), meta) ->
+        let attrs = f.attrs f attrs in
+        let block = f.block f block in
+        Slip ((block, attrs), meta)
+    | Block_quote ((bq, attrs), meta) ->
+        let attrs = f.attrs f attrs in
+        let block = f.block f bq.block in
+        Block_quote (({ bq with block }, attrs), meta)
+    | Slide (({ content; title }, attrs), meta) ->
+        let attrs = f.attrs f attrs in
+        let title =
+          match title with
+          | None -> None
+          | Some (title, meta) ->
+              let title = f.inline f title in
+              Some (title, meta)
+        in
+        let content = f.block f content in
+        Slide (({ content; title }, attrs), meta)
+    | Carousel ((blocks, attrs), meta) ->
+        let attrs = f.attrs f attrs in
+        let l =
+          List.fold_left
+            (fun l b ->
+              let b = f.block f b in
+              b :: l)
+            [] blocks
+        in
+        Carousel ((List.rev l, attrs), meta)
+    | Blocks (blocks, meta) ->
+        let l =
+          List.fold_left
+            (fun l b ->
+              let b = f.block f b in
+              b :: l)
+            [] blocks
+        in
+        Blocks (List.rev l, meta)
+    | List ((lis, attrs), meta) ->
+        let attrs = f.attrs f attrs in
+        let items =
+          List.fold_left
+            (fun l (({ Block.List_item.block; _ } as li), meta) ->
+              let block = f.block f block in
+              ({ li with block }, meta) :: l)
+            [] lis.items
+        in
+        let items = List.rev items in
+        List (({ lis with items }, attrs), meta)
+    | Table ((table, attrs), meta) ->
+        let attrs = f.attrs f attrs in
+        let rows =
+          List.fold_left
+            (fun l ((row, attrs), meta) ->
+              match row with
+              | `Sep _ -> ((row, attrs), meta) :: l
+              | (`Header lds | `Data lds) as i ->
+                  let lds =
+                    List.fold_left
+                      (fun l (inline, meta) ->
+                        let inline = f.inline f inline in
+                        (inline, meta) :: l)
+                      [] lds
+                  in
+                  let r x =
+                    match i with `Header _ -> `Header x | `Data _ -> `Data x
+                  in
+                  ((r (List.rev lds), attrs), meta) :: l)
+            [] table.rows
+        in
+        let rows = List.rev rows in
+        let table = { table with rows } in
+        Table ((table, attrs), meta)
 
-  and to_fold_mapper f_orig =
-    let block f' () b =
-      let f = of_fold_mapper f' in
-      ((), f_orig.block f b)
-    in
-    let inline f' () b =
-      let f = of_fold_mapper f' in
-      ((), f.inline f b)
-    in
-    let attrs f' () b =
-      let f = of_fold_mapper f' in
-      ((), f.attrs f b)
-    in
-    { Fold_mapper.block; inline; attrs }
+  let inline f = function
+    | Inline.Autolink ((x, attrs), meta) ->
+        let attrs = f.attrs f attrs in
+        Inline.Autolink ((x, attrs), meta)
+    | Math_span ((x, attrs), meta) ->
+        let attrs = f.attrs f attrs in
+        Math_span ((x, attrs), meta)
+    | Text ((x, attrs), meta) ->
+        let attrs = f.attrs f attrs in
+        Text ((x, attrs), meta)
+    | Code_span ((x, attrs), meta) ->
+        let attrs = f.attrs f attrs in
+        Code_span ((x, attrs), meta)
+    | (Break _ | Raw_html _) as x -> x
+    | Strong_emphasis ((({ inline; _ } as se), attrs), meta) ->
+        let attrs = f.attrs f attrs in
+        let inline = f.inline f inline in
+        Strong_emphasis (({ se with inline }, attrs), meta)
+    | Emphasis ((({ inline; _ } as e), attrs), meta) ->
+        let attrs = f.attrs f attrs in
+        let inline = f.inline f inline in
+        Emphasis (({ e with inline }, attrs), meta)
+    | Strikethrough ((inline, attrs), meta) ->
+        let attrs = f.attrs f attrs in
+        let inline = f.inline f inline in
+        Strikethrough ((inline, attrs), meta)
+    | Attrs_span ({ content; attrs }, meta) ->
+        let attrs = f.attrs f attrs in
+        let content = f.inline f content in
+        Attrs_span ({ content; attrs }, meta)
+    | Inlines (inlines, meta) ->
+        let inlines =
+          List.fold_left
+            (fun l inline ->
+              let inline = f.inline f inline in
+              inline :: l)
+            [] inlines
+        in
+        Inlines (List.rev inlines, meta)
+    | Link ((({ text; _ } as media), attrs), meta) ->
+        let attrs = f.attrs f attrs in
+        let text = f.inline f text in
+        Link (({ media with text }, attrs), meta)
+    | Svg ({ origin = (({ text; _ } as link), attrs), meta; _ } as media) ->
+        let attrs = f.attrs f attrs in
+        let text = f.inline f text in
+        let origin = (({ link with text }, attrs), meta) in
+        Svg { media with origin }
+    | Video ({ origin = (({ text; _ } as link), attrs), meta; _ } as media) ->
+        let attrs = f.attrs f attrs in
+        let text = f.inline f text in
+        let origin = (({ link with text }, attrs), meta) in
+        Video { media with origin }
+    | Pdf ({ origin = (({ text; _ } as link), attrs), meta; _ } as media) ->
+        let attrs = f.attrs f attrs in
+        let text = f.inline f text in
+        let origin = (({ link with text }, attrs), meta) in
+        Pdf { media with origin }
+    | Audio ({ origin = (({ text; _ } as link), attrs), meta; _ } as media) ->
+        let attrs = f.attrs f attrs in
+        let text = f.inline f text in
+        let origin = (({ link with text }, attrs), meta) in
+        Audio { media with origin }
+    | Hand_drawn ({ origin = (({ text; _ } as link), attrs), meta; _ } as media)
+      ->
+        let attrs = f.attrs f attrs in
+        let text = f.inline f text in
+        let origin = (({ link with text }, attrs), meta) in
+        Hand_drawn { media with origin }
+    | Image ({ origin = (({ text; _ } as link), attrs), meta; _ } as media) ->
+        let attrs = f.attrs f attrs in
+        let text = f.inline f text in
+        let origin = (({ link with text }, attrs), meta) in
+        Image { media with origin }
 
-  let default = of_fold_mapper Fold_mapper.default
+  let attrs _f attrs = attrs
+  let default = { block; inline; attrs }
   (* let ( let* ) = Option.bind *)
   (* let ( let+ ) x f = Option.map f x *)
 

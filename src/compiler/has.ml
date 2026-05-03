@@ -4,30 +4,28 @@ module StringSet = Set.Make (String)
 type t = { math : bool; pdf : bool; mermaid : bool; code_blocks : StringSet.t }
 
 let has =
-  let block _ acc = function
-    | Block.Ext_math_block _ -> Folder.ret { acc with math = true }
-    | Ast.S_block (MermaidJS _) -> Folder.ret { acc with mermaid = true }
-    | Block.Code_block ((cb, _), _) -> (
+  let block f acc = function
+    | Ast.Block.Math_block _ -> { acc with math = true }
+    | MermaidJS _ -> { acc with mermaid = true }
+    | Code_block ((cb, _), _) -> (
         match Block.Code_block.info_string cb with
-        | None -> Folder.default
+        | None -> acc
         | Some (info_string, _) -> (
             match Block.Code_block.language_of_info_string info_string with
-            | None -> Folder.default
+            | None -> acc
             | Some (lang, _) ->
-                Folder.ret
-                  { acc with code_blocks = StringSet.add lang acc.code_blocks })
-        )
-    | _ -> Folder.default
+                { acc with code_blocks = StringSet.add lang acc.code_blocks }))
+    | b -> Iterators.Folder.default.block f acc b
   in
-  let inline _ acc = function
-    | Inline.Ext_math_span _ -> Folder.ret { acc with math = true }
-    | Ast.S_inline (Pdf _) -> Folder.ret { acc with pdf = true }
-    | _ -> Folder.default
+  let inline f acc = function
+    | Ast.Inline.Math_span _ -> { acc with math = true }
+    | Pdf _ -> { acc with pdf = true }
+    | i -> Iterators.Folder.default.inline f acc i
   in
-  Ast.Folder.make ~block ~inline ()
+  { Iterators.Folder.default with block; inline }
 
 let find_out (doc : Ast.t) =
-  Cmarkit.Folder.fold_doc has
+  has.block has
     {
       math = false;
       pdf = false;

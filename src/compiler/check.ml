@@ -10,20 +10,18 @@ module Is = struct
 
   let carousel_or_pdf = (carousel_or_pdf, "carousel or pdf")
 
-  let playable_media (bol : Ast.Bol.t) =
-    match bol with
-    | `Inline (Ast.S_inline (Video _ | Audio _)) -> true
-    | _ -> false
+  let playable_media (bol : Iterators.Bol.t) =
+    match bol with `Inline (Video _ | Audio _) -> true | _ -> false
 
   let playable_media = (playable_media, "video or audio")
 
-  let slip_script (bol : Ast.Bol.t) =
-    match bol with `Block (Ast.S_block (SlipScript _)) -> true | _ -> false
+  let slip_script (bol : Iterators.Bol.t) =
+    match bol with `Block (SlipScript _) -> true | _ -> false
 
   let slip_script = (slip_script, "slip-script")
 
-  let draw (bol : Ast.Bol.t) =
-    match bol with `Inline (Ast.S_inline (Hand_drawn _)) -> true | _ -> false
+  let draw (bol : Iterators.Bol.t) =
+    match bol with `Inline (Hand_drawn _) -> true | _ -> false
 
   let draw = (draw, "drawing")
 end
@@ -68,17 +66,18 @@ let handle_ids id_map val_loc ids = List.iter (handle_id id_map val_loc) ids
 let check_targets (is, expected_type) id_map bol val_loc targets =
   let targets =
     match targets with
-    | `Self -> [ ((bol : Ast.Bol.t :> [ Ast.Bol.t | `External ]), None) ]
+    | `Self ->
+        [ ((bol : Iterators.Bol.t :> [ Iterators.Bol.t | `External ]), None) ]
     | `Ids ids -> List.filter_map (handle_id_get id_map val_loc) ids
   in
   List.iter
     (fun (bol, id_loc) ->
       match bol with
-      | #Ast.Bol.t as bol ->
+      | #Iterators.Bol.t as bol ->
           if not (is bol) then
-            let loc_block = Ast.Bol.text_loc bol in
+            let loc_block = Iterators.Bol.text_loc bol in
             let loc_reason =
-              Option.value id_loc ~default:(Ast.Bol.text_loc bol)
+              Option.value id_loc ~default:(Iterators.Bol.text_loc bol)
             in
             Diagnosis.add @@ WrongType { loc_reason; loc_block; expected_type }
       | `External -> ())
@@ -93,10 +92,10 @@ let exec id_map attrs block_or_inline =
   parse_args (module Actions_arguments.Execute) attrs @@ fun args val_loc ->
   check_targets Is.slip_script id_map block_or_inline val_loc args
 
-type id_map = ((string * Meta.t) * [ Ast.Bol.t | `External ] * Meta.t) M.t
+type id_map = ((string * Meta.t) * [ Iterators.Bol.t | `External ] * Meta.t) M.t
 
 let move (module A : Actions_arguments.Move) (id_map : id_map) attrs
-    (_block_or_inline : Ast.Bol.t) =
+    (_block_or_inline : Iterators.Bol.t) =
   parse_args (module A) attrs @@ fun args val_loc ->
   match args.target with `Self -> () | `Id id -> handle_id id_map val_loc id
 
@@ -116,7 +115,7 @@ let unfocus (_id_map : id_map) attrs _block_or_inline =
   parse_args (module Actions_arguments.Unfocus) attrs @@ fun _ _ -> ()
 
 let set_class (module A : Actions_arguments.SetClass) (id_map : id_map) attrs
-    (_block_or_inline : Ast.Bol.t) =
+    (_block_or_inline : Iterators.Bol.t) =
   parse_args (module A) attrs @@ fun args val_loc ->
   match args with `Self -> () | `Ids ids -> handle_ids id_map val_loc ids
 
