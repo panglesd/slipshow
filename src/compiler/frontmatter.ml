@@ -1,31 +1,13 @@
 module Local = struct
-  type t = {
-    toplevel_attributes : Cmarkit.Attributes.t option;
-    css_links : Asset.t list;
-    js_links : Asset.t list;
-    external_ids : string list;
-  }
-
+  type t = { toplevel_attributes : Cmarkit.Attributes.t Cmarkit.node option }
   type 'a with_ = { x : 'a; fm : t }
 
-  let empty =
-    {
-      toplevel_attributes = None;
-      css_links = [];
-      js_links = [];
-      external_ids = [];
-    }
-
+  let empty = { toplevel_attributes = None }
   let with_empty x = { x; fm = empty }
 
   let combine x y =
     let opt x y = match x with Some _ -> x | _ -> y in
-    {
-      toplevel_attributes = opt x.toplevel_attributes y.toplevel_attributes;
-      css_links = x.css_links @ y.css_links;
-      js_links = x.js_links @ y.js_links;
-      external_ids = x.external_ids @ y.external_ids;
-    }
+    { toplevel_attributes = opt x.toplevel_attributes y.toplevel_attributes }
 end
 
 module Global = struct
@@ -35,6 +17,9 @@ module Global = struct
     dimension : (int * int) option;
     highlightjs_theme : string option;
     math_mode : [ `Mathjax | `Katex ] option;
+    css_links : Asset.t list;
+    js_links : Asset.t list;
+    external_ids : string list;
   }
   (** We keep an option even though there are default value to be able to merge
       two frontmatter. None and default value represent different things. *)
@@ -48,6 +33,9 @@ module Global = struct
       dimension = None;
       highlightjs_theme = None;
       math_mode = None;
+      css_links = [];
+      js_links = [];
+      external_ids = [];
     }
 
   let with_empty x = { x; fm = empty }
@@ -60,6 +48,9 @@ module Global = struct
       dimension = opt x.dimension y.dimension;
       highlightjs_theme = opt x.highlightjs_theme y.highlightjs_theme;
       math_mode = opt x.math_mode y.math_mode;
+      css_links = x.css_links @ y.css_links;
+      js_links = x.js_links @ y.js_links;
+      external_ids = x.external_ids @ y.external_ids;
     }
 end
 
@@ -73,19 +64,21 @@ let combine x y =
   }
 
 module Toplevel_attributes = struct
-  type t = Cmarkit.Attributes.t
+  type t = Cmarkit.Attributes.t Cmarkit.node
 
   let key = "toplevel-attributes"
 
   let default =
-    Cmarkit.Attributes.make
-      ~kv_attributes:
-        [
-          (("slip", Cmarkit.Meta.none), None);
-          ( ("enter", Cmarkit.Meta.none),
-            Some ({ v = "~duration:0"; delimiter = None }, Cmarkit.Meta.none) );
-        ]
-      ()
+    ( Cmarkit.Attributes.make
+        ~kv_attributes:
+          [
+            (("slip", Cmarkit.Meta.none), None);
+            ( ("enter", Cmarkit.Meta.none),
+              Some ({ v = "~duration:0"; delimiter = None }, Cmarkit.Meta.none)
+            );
+          ]
+        (),
+      Cmarkit.Meta.none )
 
   let of_string ~to_asset:_ (s, loc) =
     let s = String.trim s in
@@ -104,11 +97,11 @@ module Toplevel_attributes = struct
     in
     let cmarkit = Cmarkit.Doc.block cmarkit in
     match cmarkit with
-    | Cmarkit.Block.Ext_standalone_attributes (attrs, _) -> Ok attrs
+    | Cmarkit.Block.Ext_standalone_attributes attrs -> Ok attrs
     | _ -> Error (`Msg "Failed to parse the attributes")
 
   let update_frontmatter (fm : fm) v =
-    { fm with local = { fm.local with toplevel_attributes = Some v } }
+    { fm with local = { toplevel_attributes = Some v } }
 end
 
 module Math_link = struct
@@ -147,7 +140,7 @@ module Css_links = struct
     |> Result.ok
 
   let update_frontmatter (fm : fm) v =
-    { fm with local = { fm.local with css_links = v @ fm.local.css_links } }
+    { fm with global = { fm.global with css_links = v @ fm.global.css_links } }
 end
 
 module Js_links = struct
@@ -161,7 +154,7 @@ module Js_links = struct
     |> Result.ok
 
   let update_frontmatter (fm : fm) v =
-    { fm with local = { fm.local with js_links = v @ fm.local.js_links } }
+    { fm with global = { fm.global with js_links = v @ fm.global.js_links } }
 end
 
 module Dimension = struct
@@ -247,7 +240,7 @@ module External_ids = struct
   let update_frontmatter (fm : fm) v =
     {
       fm with
-      local = { fm.local with external_ids = v @ fm.local.external_ids };
+      global = { fm.global with external_ids = v @ fm.global.external_ids };
     }
 end
 

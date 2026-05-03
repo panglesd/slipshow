@@ -59,7 +59,7 @@ module Files = struct
   type map = t Fpath.Map.t
 end
 
-type t = { doc : Cmarkit.Doc.t; files : Files.map }
+type t = { doc : Doc.t; files : Files.map }
 
 module Folder = struct
   let block_ext_default f acc = function

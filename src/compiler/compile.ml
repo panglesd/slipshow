@@ -144,15 +144,29 @@ module Stage1 = struct
         | Ok None -> `Default
         | Ok (Some contents) -> (
             Hashtbl.add htbl_include (Fpath.to_string relativized_path) contents;
-            let md =
+            let md, { Frontmatter.global; local = { toplevel_attributes } } =
               let file = Some (Fpath.to_string relativized_path) in
-              Cmarkit_proxy.of_string ~file contents
+              Cmarkit_proxy.of_string ~file ~read_file contents
+            in
+            let fm =
+              {
+                fm with
+                Frontmatter.global =
+                  Frontmatter.Global.combine fm.Frontmatter.global global;
+              }
             in
             Path_entering.in_path current_path (Fpath.parent (Fpath.v src))
             @@ fun () ->
             match m.block m fm (Doc.block md) with
             | _, None -> `Default
             | fm, Some mapped_blocks ->
+                let attrs =
+                  match toplevel_attributes with
+                  | None -> attrs
+                  | Some (toplevel_attributes, _) ->
+                      Attributes.merge ~base:toplevel_attributes
+                        ~new_attrs:attrs
+                in
                 let fm, attrs = m.attrs fm attrs in
                 `Return
                   ( fm,
@@ -547,7 +561,7 @@ module Stage4 = struct
 
   let execute ~(fm : Frontmatter.t) ~read_file md =
     let external_ids =
-      fm.local.external_ids
+      fm.global.external_ids
       |> List.map (fun x -> ((x, Meta.none), `External, Meta.none))
     in
     let asset_map, id_list =
@@ -643,26 +657,15 @@ let of_cmarkit ~read_file ~(fm : Frontmatter.t) md =
 let compile ?file ?(read_file = fun _ -> Ok None) s =
   Diagnosis.with_ @@ fun () ->
   let open Cmarkit in
-  let frontmatter, s, loc_offset =
-    match Frontmatter.extract s with
-    | None -> (Frontmatter.empty, s, (0, 0))
-    | Some { frontmatter = txt_fm; rest; rest_offset; fm_offset } ->
-        let file = Option.value ~default:"-" file in
-        let to_asset = Asset.of_string ~read_file in
-        let frontmatter =
-          Frontmatter.of_string ~to_asset file fm_offset txt_fm
-        in
-        (frontmatter, rest, rest_offset)
-  in
+  let doc, frontmatter = Cmarkit_proxy.of_string ~read_file ~file s in
   let md =
-    let doc = Cmarkit_proxy.of_string ~loc_offset ~file s in
     let bq = Block.Block_quote.make (Doc.block doc) in
     let block =
       let toplevel_attributes =
         frontmatter.local.toplevel_attributes
         |> Option.value ~default:Frontmatter.Toplevel_attributes.default
       in
-      Block.Block_quote ((bq, (toplevel_attributes, Meta.none)), Meta.none)
+      Block.Block_quote ((bq, toplevel_attributes), Meta.none)
     in
     Doc.make block
   in

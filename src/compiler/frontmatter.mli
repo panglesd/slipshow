@@ -1,11 +1,5 @@
 module Local : sig
-  type t = {
-    toplevel_attributes : Cmarkit.Attributes.t option;
-    css_links : Asset.t list;
-    js_links : Asset.t list;
-    external_ids : string list;
-  }
-
+  type t = { toplevel_attributes : Cmarkit.Attributes.t Cmarkit.node option }
   type 'a with_ = { x : 'a; fm : t }
 
   val empty : t
@@ -20,6 +14,9 @@ module Global : sig
     dimension : (int * int) option;
     highlightjs_theme : string option;
     math_mode : [ `Mathjax | `Katex ] option;
+    css_links : Asset.t list;
+    js_links : Asset.t list;
+    external_ids : string list;
   }
 
   type 'a with_ = { x : 'a; fm : t }
@@ -56,7 +53,7 @@ module type Field_with_default := sig
 end
 
 module Toplevel_attributes :
-  Field_with_default with type t = Cmarkit.Attributes.t
+  Field_with_default with type t = Cmarkit.Attributes.t Cmarkit.node
 
 module Math_link : Field with type t = Asset.t
 

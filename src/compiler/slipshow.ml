@@ -270,8 +270,8 @@ let delayed ?(options = Frontmatter.empty) ?slipshow_js ?file
     frontmatter.global.dimension
     |> Option.value ~default:Frontmatter.Dimension.default
   in
-  let css_links = frontmatter.local.css_links in
-  let js_links = frontmatter.local.js_links in
+  let css_links = frontmatter.global.css_links in
+  let js_links = frontmatter.global.js_links in
   let math_mode =
     Option.value ~default:Frontmatter.Math_mode.default
       frontmatter.global.math_mode
