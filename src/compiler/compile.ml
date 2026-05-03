@@ -275,7 +275,7 @@ module Stage1 = struct
       | _ -> Mapper.default
     in
     let inline i = function
-      | Inline.Image img -> handle_image_inlining i defs current_path img
+      | Inline.Base (Image img) -> handle_image_inlining i defs current_path img
       | _ -> Mapper.default
     in
     let attrs = function
@@ -674,7 +674,7 @@ let to_cmarkit =
     | Hand_drawn { origin; _ }
     | Svg { origin; _ }
     | Image { origin; _ } ->
-        `Map (Mapper.map_inline m (Inline.Image origin))
+        `Map (Mapper.map_inline m (Inline.Base (Image origin)))
   in
   let inline m = function
     | Ast.S_inline i -> inline m i

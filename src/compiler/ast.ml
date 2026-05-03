@@ -143,25 +143,28 @@ module Folder = struct
   let continue_inline f i acc =
     let open Inline in
     match i with
-    | Autolink _ | Break _ | Code_span _ | Raw_html _ | Text _ | Ext_math_span _
-      ->
-        acc
-    | Image ((l, _), _) | Link ((l, _), _) ->
-        let text = Link.text l in
-        Folder.fold_inline f acc text
-    | Ext_attrs (attrs, _) ->
-        let inline = Attributes_span.content attrs in
-        Folder.fold_inline f acc inline
-    | Emphasis ((e, _), _) ->
-        let inline = Emphasis.inline e in
-        Folder.fold_inline f acc inline
-    | Strong_emphasis ((e, _), _) ->
-        let inline = Emphasis.inline e in
-        Folder.fold_inline f acc inline
-    | Inlines (is, _) -> List.fold_left (Folder.fold_inline f) acc is
-    | Ext_strikethrough ((inline, _), _) ->
-        let inline = Strikethrough.inline inline in
-        Folder.fold_inline f acc inline
+    | Base b -> (
+        match b with
+        | Autolink _ | Break _ | Code_span _ | Raw_html _ | Text _ -> acc
+        | Image ((l, _), _) | Link ((l, _), _) ->
+            let text = Link.text l in
+            Folder.fold_inline f acc text
+        | Emphasis ((e, _), _) ->
+            let inline = Emphasis.inline e in
+            Folder.fold_inline f acc inline
+        | Strong_emphasis ((e, _), _) ->
+            let inline = Emphasis.inline e in
+            Folder.fold_inline f acc inline
+        | Inlines (is, _) -> List.fold_left (Folder.fold_inline f) acc is)
+    | Ext e -> (
+        match e with
+        | Ext_math_span _ -> acc
+        | Ext_attrs (attrs, _) ->
+            let inline = Attributes_span.content attrs in
+            Folder.fold_inline f acc inline
+        | Ext_strikethrough ((inline, _), _) ->
+            let inline = Strikethrough.inline inline in
+            Folder.fold_inline f acc inline)
     | S_inline ext -> (
         match ext with
         | Hand_drawn m | Image m | Svg m | Video m | Audio m | Pdf m ->
@@ -352,34 +355,41 @@ module Utils = struct
       let open Inline in
       function
       (* Standard Cmarkit nodes *)
-      | Autolink ((al, attrs), meta) ->
-          Some (Autolink ((al, attr_upd attrs), meta), attrs)
-      | Break _ -> None
-      | Code_span ((cs, attrs), meta) ->
-          Some (Code_span ((cs, attr_upd attrs), meta), attrs)
-      | Emphasis ((em, attrs), meta) ->
-          Some (Emphasis ((em, attr_upd attrs), meta), attrs)
-      | Image ((im, attrs), meta) ->
-          Some (Image ((im, attr_upd attrs), meta), attrs)
-      | Inlines _ -> None
-      | Link ((link, attrs), meta) ->
-          Some (Link ((link, attr_upd attrs), meta), attrs)
-      | Raw_html _ -> None
-      | Strong_emphasis ((sem, attrs), meta) ->
-          Some (Strong_emphasis ((sem, attr_upd attrs), meta), attrs)
-      | Text ((txt, attrs), meta) ->
-          Some (Text ((txt, attr_upd attrs), meta), attrs)
+      | Base b -> (
+          match b with
+          | Autolink ((al, attrs), meta) ->
+              Some (Base (Autolink ((al, attr_upd attrs), meta)), attrs)
+          | Break _ -> None
+          | Code_span ((cs, attrs), meta) ->
+              Some (Base (Code_span ((cs, attr_upd attrs), meta)), attrs)
+          | Emphasis ((em, attrs), meta) ->
+              Some (Base (Emphasis ((em, attr_upd attrs), meta)), attrs)
+          | Image ((im, attrs), meta) ->
+              Some (Base (Image ((im, attr_upd attrs), meta)), attrs)
+          | Inlines _ -> None
+          | Link ((link, attrs), meta) ->
+              Some (Base (Link ((link, attr_upd attrs), meta)), attrs)
+          | Raw_html _ -> None
+          | Strong_emphasis ((sem, attrs), meta) ->
+              Some (Base (Strong_emphasis ((sem, attr_upd attrs), meta)), attrs)
+          | Text ((txt, attrs), meta) ->
+              Some (Base (Text ((txt, attr_upd attrs), meta)), attrs))
       (* Extension Cmarkit nodes *)
-      | Ext_strikethrough ((strk, attrs), meta) ->
-          Some (Ext_strikethrough ((strk, attr_upd attrs), meta), attrs)
-      | Ext_math_span ((ms, attrs), meta) ->
-          Some (Ext_math_span ((ms, attr_upd attrs), meta), attrs)
-      | Ext_attrs (attr_span, meta) ->
-          let inline = Attributes_span.content attr_span in
-          let attrs = Attributes_span.attrs attr_span in
-          Some
-            ( Ext_attrs (Attributes_span.make inline (attr_upd attrs), meta),
-              attrs )
+      | Ext e -> (
+          match e with
+          | Ext_strikethrough ((strk, attrs), meta) ->
+              Some
+                (Ext (Ext_strikethrough ((strk, attr_upd attrs), meta)), attrs)
+          | Ext_math_span ((ms, attrs), meta) ->
+              Some (Ext (Ext_math_span ((ms, attr_upd attrs), meta)), attrs)
+          | Ext_attrs (attr_span, meta) ->
+              let inline = Attributes_span.content attr_span in
+              let attrs = Attributes_span.attrs attr_span in
+              Some
+                ( Ext
+                    (Ext_attrs
+                       (Attributes_span.make inline (attr_upd attrs), meta)),
+                  attrs ))
       (* Slipshow nodes *)
       | S_inline i -> (
           match i with

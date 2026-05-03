@@ -887,7 +887,7 @@ module Inline : sig
         {{:https://spec.commonmark.org/0.30/#entity-and-numeric-character-references}character references}. *)
   end
 
-  type t +=
+  type base =
   | Autolink of Autolink.t attributed node
   | Break of Break.t node
   | Code_span of Code_span.t attributed node
@@ -900,6 +900,8 @@ module Inline : sig
   | Text of Text.t attributed node (** *)
   (** The
       CommonMark {{:https://spec.commonmark.org/0.30/#inlines}inlines}. *)
+
+  type t += Base of base
 
   val empty : t
   (** [empty] is [Inlines ([], Meta.none)]. *)
@@ -955,12 +957,14 @@ module Inline : sig
     val attrs : t -> Attributes.t node
   end
 
-  type t +=
+  type ext =
   | Ext_strikethrough of Strikethrough.t attributed node
   | Ext_math_span of Math_span.t attributed node
   | Ext_attrs of Attributes_span.t node (** *)
   (** The supported inline extensions. These inlines are only parsed when
       {!Doc.of_string} is called with [strict:false]. *)
+
+  type t += Ext of ext
 
   (** {1:funs Functions} *)
 

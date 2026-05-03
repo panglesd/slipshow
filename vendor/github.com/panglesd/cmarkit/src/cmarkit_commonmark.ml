@@ -322,19 +322,21 @@ let math_span c ms attrs =
   attributes ~inline:true c attrs
 
 let inline c = function
-| Inline.Autolink ((a, (attrs, _)), _) -> autolink c a attrs; true
-| Inline.Break (b, _) -> break c b; true
-| Inline.Code_span ((cs, (attrs, _)), _) -> code_span c cs attrs; true
-| Inline.Emphasis ((e, (attrs, _)), _) -> emphasis c e attrs; true
-| Inline.Image ((i, (attrs, _)), _) -> image c i attrs; true
-| Inline.Inlines (is, _) -> inlines c is; true
-| Inline.Link ((l, (attrs, _)), _) -> link c l attrs; true
-| Inline.Raw_html (html, _) -> raw_html c html; true
-| Inline.Strong_emphasis ((e, (attrs, _)), _) -> strong_emphasis c e attrs; true
-| Inline.Text ((t, (attrs, _)), _) -> text c t attrs; true
-| Inline.Ext_strikethrough ((s, (attrs, _)), _) -> strikethrough c s attrs; true
-| Inline.Ext_math_span ((m, (attrs, _)), _) -> math_span c m attrs; true
-| Inline.Ext_attrs (span, _) -> attrs_span c span; true
+| Inline.Base b -> (match b with
+  | Autolink ((a, (attrs, _)), _) -> autolink c a attrs; true
+  | Break (b, _) -> break c b; true
+  | Code_span ((cs, (attrs, _)), _) -> code_span c cs attrs; true
+  | Emphasis ((e, (attrs, _)), _) -> emphasis c e attrs; true
+  | Image ((i, (attrs, _)), _) -> image c i attrs; true
+  | Inlines (is, _) -> inlines c is; true
+  | Link ((l, (attrs, _)), _) -> link c l attrs; true
+  | Raw_html (html, _) -> raw_html c html; true
+  | Strong_emphasis ((e, (attrs, _)), _) -> strong_emphasis c e attrs; true
+  | Text ((t, (attrs, _)), _) -> text c t attrs; true)
+| Inline.Ext e -> (match e with
+  | Ext_strikethrough ((s, (attrs, _)), _) -> strikethrough c s attrs; true
+  | Ext_math_span ((m, (attrs, _)), _) -> math_span c m attrs; true
+  | Ext_attrs (span, _) -> attrs_span c span; true)
 | _ -> C.string c "<!-- Unknown Cmarkit inline -->"; true
 
 (* Block rendering *)

@@ -235,7 +235,7 @@ let custom_html_renderer (files : Ast.Files.map) =
           true
     in
     let inline c = function
-      | Inline.Text ((t, (attrs, _)), _) ->
+      | Inline.Base (Text ((t, (attrs, _)), _)) ->
           (* Put text inside spans to be able to apply styles on them *)
           Context.string c "<span";
           add_attrs c attrs;
