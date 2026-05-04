@@ -613,7 +613,7 @@ module Stage4 = struct
               None)
         asset_map
     in
-    ({ Ast.doc = md; files }, id_map)
+    ({ Ast.doc = md; files; options = fm.global }, id_map)
 end
 
 module Stage5 = struct
@@ -652,7 +652,7 @@ let of_cmarkit ~read_file ~(fm : Frontmatter.t) md =
   let md2 = Stage2.execute md1 in
   let md3 = Stage3.execute md2 in
   let md4, id_map = Stage4.execute ~read_file ~fm md3 in
-  (Stage5.execute ~id_map md4, htbl_include, fm)
+  (Stage5.execute ~id_map md4, htbl_include)
 
 let compile ?file ?(read_file = fun _ -> Ok None) s =
   Diagnosis.with_ @@ fun () ->

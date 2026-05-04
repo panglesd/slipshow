@@ -59,7 +59,8 @@ module Files = struct
   type map = t Fpath.Map.t
 end
 
-type t = { doc : Doc.t; files : Files.map }
+type options = Frontmatter.Global.t
+type t = { doc : Doc.t; files : Files.map; options : options }
 
 module Folder = struct
   let block_ext_default f acc = function

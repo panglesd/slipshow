@@ -241,9 +241,7 @@ let string_to_delayed s =
   Option.bind s @@ fun s -> try Some (Marshal.from_string s 0) with _ -> None
 
 let convert_to_md ~read_file content =
-  let (sd, _htbl_include, _frontmatter), _ =
-    Compile.compile ~read_file content
-  in
+  let (sd, _htbl_include), _ = Compile.compile ~read_file content in
   let sd = Compile.to_cmarkit sd in
   Cmarkit_commonmark.of_doc ~include_attributes:false sd
 
@@ -259,22 +257,19 @@ let to_grace file whole_content htbl_include er =
             Grace.Source.(`String { name = file; content = whole_content }))
     er
 
-let delayed ?(options = Frontmatter.empty) ?slipshow_js ?file
+let delayed ?(options = Frontmatter.Global.empty) ?slipshow_js ?file
     ?(read_file = fun _ -> Ok None) ~has_speaker_view s =
   let whole_content = s in
-  let (md, htbl_include, frontmatter), errors =
-    Compile.compile ?file ~read_file s
-  in
-  let frontmatter = Frontmatter.combine options frontmatter in
+  let (ast, htbl_include), errors = Compile.compile ?file ~read_file s in
+  let options = Frontmatter.Global.combine options ast.Ast.options in
+  let ast = { ast with options } in
   let dimension =
-    frontmatter.global.dimension
-    |> Option.value ~default:Frontmatter.Dimension.default
+    options.dimension |> Option.value ~default:Frontmatter.Dimension.default
   in
-  let css_links = frontmatter.global.css_links in
-  let js_links = frontmatter.global.js_links in
+  let css_links = options.css_links in
+  let js_links = options.js_links in
   let math_mode =
-    Option.value ~default:Frontmatter.Math_mode.default
-      frontmatter.global.math_mode
+    Option.value ~default:Frontmatter.Math_mode.default options.math_mode
   in
   let resolve_theme = function
     | `Builtin _ as x -> x
@@ -283,20 +278,20 @@ let delayed ?(options = Frontmatter.empty) ?slipshow_js ?file
         `External asset
   in
   let theme =
-    match frontmatter.global.theme with
+    match options.theme with
     | None -> resolve_theme Frontmatter.Theme.default
     | Some t -> resolve_theme t
   in
   let highlightjs_theme =
     Option.value ~default:Frontmatter.Hljs_theme.default
-      frontmatter.global.highlightjs_theme
+      options.highlightjs_theme
   in
-  let math_link = frontmatter.global.math_link in
+  let math_link = options.math_link in
   let warnings =
     List.filter_map (to_grace file whole_content htbl_include) errors
   in
-  let content = Renderers.to_html_string md in
-  let has = Has.find_out md in
+  let content = Renderers.to_html_string ast in
+  let has = Has.find_out ast in
   let res =
     embed_in_page ~has_speaker_view ~slipshow_js ~dimension ~has ~math_link
       ~theme ~css_links ~js_links content ~highlightjs_theme ~math_mode
