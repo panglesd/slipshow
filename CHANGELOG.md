@@ -6,6 +6,7 @@
 
 - Add a visual indicator for the state of the previewer (disconnected,
   refreshing, ...) (#220, #222)
+- Allow frontmatter in included files (#228)
 
 ### Fixed
 
