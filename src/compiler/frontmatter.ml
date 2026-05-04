@@ -1,3 +1,5 @@
+type 'a loced = 'a * Cmarkit.Textloc.t
+
 module Local = struct
   type t = { toplevel_attributes : Cmarkit.Attributes.t Cmarkit.node option }
   type 'a with_ = { x : 'a; fm : t }
@@ -8,11 +10,11 @@ end
 
 module Global = struct
   type t = {
-    math_link : Asset.t option;
-    theme : [ `Builtin of Themes.t | `External of string ] option;
-    dimension : (int * int) option;
-    highlightjs_theme : string option;
-    math_mode : [ `Mathjax | `Katex ] option;
+    math_link : Asset.t loced option;
+    theme : [ `Builtin of Themes.t | `External of string ] loced option;
+    dimension : (int * int) loced option;
+    highlightjs_theme : string loced option;
+    math_mode : [ `Mathjax | `Katex ] loced option;
     css_links : Asset.t list;
     js_links : Asset.t list;
     external_ids : string list;
@@ -95,25 +97,25 @@ module Toplevel_attributes = struct
 end
 
 module Math_link = struct
-  type t = Asset.t
+  type t = Asset.t loced
 
   let key = "math-link"
-  let of_string ~to_asset (s, _) = Ok (to_asset s)
+  let of_string ~to_asset (s, loc) = Ok (to_asset s, loc)
 
   let update_frontmatter (fm : fm) v =
     { fm with global = { fm.global with math_link = Some v } }
 end
 
 module Theme = struct
-  type t = [ `Builtin of Themes.t | `External of string ]
+  type t = [ `Builtin of Themes.t | `External of string ] loced
 
   let key = "theme"
-  let default = `Builtin Themes.Default
+  let default = (`Builtin Themes.Default, Cmarkit.Textloc.none)
 
-  let of_string ~to_asset:_ (s, _) =
+  let of_string ~to_asset:_ (s, loc) =
     match Themes.of_string s with
-    | Some theme -> Ok (`Builtin theme)
-    | None -> Ok (`External s)
+    | Some theme -> Ok (`Builtin theme, loc)
+    | None -> Ok (`External s, loc)
 
   let update_frontmatter (fm : fm) v =
     { fm with global = { fm.global with theme = Some v } }
@@ -148,12 +150,12 @@ module Js_links = struct
 end
 
 module Dimension = struct
-  type t = int * int
+  type t = (int * int) loced
 
   let key = "dimension"
-  let default = (1440, 1080)
+  let default = ((1440, 1080), Cmarkit.Textloc.none)
 
-  let of_string ~to_asset:_ (s, _) =
+  let of_string ~to_asset:_ (s, loc) =
     let ( let* ) = Result.bind in
     let error =
       Error
@@ -162,14 +164,17 @@ module Dimension = struct
     let int_parser i =
       match int_of_string_opt i with Some i -> Ok i | None -> error
     in
-    match String.split_on_char 'x' s with
-    | [ "4:3" ] -> Ok (1440, 1080)
-    | [ "16:9" ] -> Ok (1920, 1080)
-    | [ width; height ] ->
-        let* width = int_parser width in
-        let* height = int_parser height in
-        Ok (width, height)
-    | _ -> error
+    let res =
+      match String.split_on_char 'x' s with
+      | [ "4:3" ] -> Ok (1440, 1080)
+      | [ "16:9" ] -> Ok (1920, 1080)
+      | [ width; height ] ->
+          let* width = int_parser width in
+          let* height = int_parser height in
+          Ok (width, height)
+      | _ -> error
+    in
+    Result.map (fun x -> (x, loc)) res
 
   let of_string' = of_string ~to_asset:()
 
@@ -178,27 +183,27 @@ module Dimension = struct
 end
 
 module Hljs_theme = struct
-  type t = string
+  type t = string loced
 
   let key = "highlightjs-theme"
-  let of_string ~to_asset:_ = fun (x, _) -> Ok x
-  let default = "default"
+  let of_string ~to_asset:_ = fun (x, loc) -> Ok (x, loc)
+  let default = ("default", Cmarkit.Textloc.none)
 
   let update_frontmatter (fm : fm) v =
     { fm with global = { fm.global with highlightjs_theme = Some v } }
 end
 
 module Math_mode = struct
-  type t = [ `Mathjax | `Katex ]
+  type t = [ `Mathjax | `Katex ] loced
 
   let key = "math-mode"
 
   let of_string ~to_asset:_ = function
-    | "mathjax", _ -> Ok `Mathjax
-    | "katex", _ -> Ok `Katex
+    | "mathjax", loc -> Ok (`Mathjax, loc)
+    | "katex", loc -> Ok (`Katex, loc)
     | _ -> Error (`Msg "Expected \"mathjax\" or \"katex\"")
 
-  let default = `Mathjax
+  let default = (`Mathjax, Cmarkit.Textloc.none)
 
   let update_frontmatter (fm : fm) v =
     { fm with global = { fm.global with math_mode = Some v } }

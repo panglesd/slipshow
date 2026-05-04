@@ -1,3 +1,5 @@
+type 'a loced := 'a * Cmarkit.Textloc.t
+
 module Local : sig
   type t = { toplevel_attributes : Cmarkit.Attributes.t Cmarkit.node option }
   type 'a with_ = { x : 'a; fm : t }
@@ -8,11 +10,11 @@ end
 
 module Global : sig
   type t = {
-    math_link : Asset.t option;
-    theme : [ `Builtin of Themes.t | `External of string ] option;
-    dimension : (int * int) option;
-    highlightjs_theme : string option;
-    math_mode : [ `Mathjax | `Katex ] option;
+    math_link : Asset.t loced option;
+    theme : [ `Builtin of Themes.t | `External of string ] loced option;
+    dimension : (int * int) loced option;
+    highlightjs_theme : string loced option;
+    math_mode : [ `Mathjax | `Katex ] loced option;
     css_links : Asset.t list;
     js_links : Asset.t list;
     external_ids : string list;
@@ -53,22 +55,23 @@ end
 module Toplevel_attributes :
   Field_with_default with type t = Cmarkit.Attributes.t Cmarkit.node
 
-module Math_link : Field with type t = Asset.t
+module Math_link : Field with type t = Asset.t loced
 
 module Theme :
-  Field_with_default with type t = [ `Builtin of Themes.t | `External of string ]
+  Field_with_default
+    with type t = [ `Builtin of Themes.t | `External of string ] loced
 
 module Css_links : Field with type t = Asset.t list
 module Js_links : Field with type t = Asset.t list
 
 module Dimension : sig
-  include Field_with_default with type t = int * int
+  include Field_with_default with type t = (int * int) loced
 
   val of_string' : string * Cmarkit.Textloc.t -> (t, [ `Msg of string ]) result
 end
 
-module Hljs_theme : Field_with_default with type t = string
-module Math_mode : Field_with_default with type t = [ `Mathjax | `Katex ]
+module Hljs_theme : Field_with_default with type t = string loced
+module Math_mode : Field_with_default with type t = [ `Mathjax | `Katex ] loced
 
 val of_string : to_asset:(string -> Asset.t) -> string -> int -> string -> t
 

@@ -264,12 +264,14 @@ let delayed ?(options = Frontmatter.Global.empty) ?slipshow_js ?file
   let options = Frontmatter.Global.combine options ast.Ast.options in
   let ast = { ast with options } in
   let dimension =
-    options.dimension |> Option.value ~default:Frontmatter.Dimension.default
+    options.dimension
+    |> Option.value ~default:Frontmatter.Dimension.default
+    |> fst
   in
   let css_links = options.css_links in
   let js_links = options.js_links in
   let math_mode =
-    Option.value ~default:Frontmatter.Math_mode.default options.math_mode
+    Option.value ~default:Frontmatter.Math_mode.default options.math_mode |> fst
   in
   let resolve_theme = function
     | `Builtin _ as x -> x
@@ -279,14 +281,15 @@ let delayed ?(options = Frontmatter.Global.empty) ?slipshow_js ?file
   in
   let theme =
     match options.theme with
-    | None -> resolve_theme Frontmatter.Theme.default
-    | Some t -> resolve_theme t
+    | None -> resolve_theme (fst Frontmatter.Theme.default)
+    | Some t -> resolve_theme (fst t)
   in
   let highlightjs_theme =
     Option.value ~default:Frontmatter.Hljs_theme.default
       options.highlightjs_theme
+    |> fst
   in
-  let math_link = options.math_link in
+  let math_link = options.math_link |> Option.map fst in
   let warnings =
     List.filter_map (to_grace file whole_content htbl_include) errors
   in
