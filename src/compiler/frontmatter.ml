@@ -8,6 +8,15 @@ module Local = struct
   let with_empty x = { x; fm = empty }
 end
 
+let math_link_key = "math-link"
+let theme_key = "theme"
+let dimension_key = "dimension"
+let highlightjs_theme_key = "highlightjs-theme"
+let math_mode_key = "math-mode"
+let css_links_key = "css"
+let js_links_key = "js"
+let external_ids_key = "external-ids"
+
 module Global = struct
   type t = {
     math_link : Asset.t loced option;
@@ -39,13 +48,21 @@ module Global = struct
   let with_empty x = { x; fm = empty }
 
   let combine x y =
-    let opt x y = match x with Some _ -> x | _ -> y in
+    let opt option_name x y =
+      match (x, y) with
+      | Some (alpha, loc1), Some (beta, loc2) when alpha <> beta ->
+          Diagnosis.add @@ InconsistentOption { option_name; loc1; loc2 };
+          x
+      | Some _, _ -> x
+      | None, _ -> y
+    in
     {
-      math_link = opt x.math_link y.math_link;
-      theme = opt x.theme y.theme;
-      dimension = opt x.dimension y.dimension;
-      highlightjs_theme = opt x.highlightjs_theme y.highlightjs_theme;
-      math_mode = opt x.math_mode y.math_mode;
+      math_link = opt math_link_key x.math_link y.math_link;
+      theme = opt theme_key x.theme y.theme;
+      dimension = opt dimension_key x.dimension y.dimension;
+      highlightjs_theme =
+        opt highlightjs_theme_key x.highlightjs_theme y.highlightjs_theme;
+      math_mode = opt math_mode_key x.math_mode y.math_mode;
       css_links = x.css_links @ y.css_links;
       js_links = x.js_links @ y.js_links;
       external_ids = x.external_ids @ y.external_ids;
@@ -99,7 +116,7 @@ end
 module Math_link = struct
   type t = Asset.t loced
 
-  let key = "math-link"
+  let key = math_link_key
   let of_string ~to_asset (s, loc) = Ok (to_asset s, loc)
 
   let update_frontmatter (fm : fm) v =
@@ -109,7 +126,7 @@ end
 module Theme = struct
   type t = [ `Builtin of Themes.t | `External of string ] loced
 
-  let key = "theme"
+  let key = theme_key
   let default = (`Builtin Themes.Default, Cmarkit.Textloc.none)
 
   let of_string ~to_asset:_ (s, loc) =
@@ -124,7 +141,7 @@ end
 module Css_links = struct
   type t = Asset.t list
 
-  let key = "css"
+  let key = css_links_key
 
   let of_string ~to_asset (s, _) =
     s |> String.split_on_char ' '
@@ -138,7 +155,7 @@ end
 module Js_links = struct
   type t = Asset.t list
 
-  let key = "js"
+  let key = js_links_key
 
   let of_string ~to_asset (s, _) =
     s |> String.split_on_char ' '
@@ -152,7 +169,7 @@ end
 module Dimension = struct
   type t = (int * int) loced
 
-  let key = "dimension"
+  let key = dimension_key
   let default = ((1440, 1080), Cmarkit.Textloc.none)
 
   let of_string ~to_asset:_ (s, loc) =
@@ -185,7 +202,7 @@ end
 module Hljs_theme = struct
   type t = string loced
 
-  let key = "highlightjs-theme"
+  let key = highlightjs_theme_key
   let of_string ~to_asset:_ = fun (x, loc) -> Ok (x, loc)
   let default = ("default", Cmarkit.Textloc.none)
 
@@ -196,7 +213,7 @@ end
 module Math_mode = struct
   type t = [ `Mathjax | `Katex ] loced
 
-  let key = "math-mode"
+  let key = math_mode_key
 
   let of_string ~to_asset:_ = function
     | "mathjax", loc -> Ok (`Mathjax, loc)
@@ -225,7 +242,7 @@ end
 module External_ids = struct
   type t = string list
 
-  let key = "external-ids"
+  let key = external_ids_key
 
   let of_string ~to_asset:_ (s, _) =
     String.split_on_char ' ' s
