@@ -11,10 +11,7 @@ let view ~dimension ~preview_el ~errors_el ~editor_el starting =
   let markdown_extension =
     Jv.apply (Jv.get Jv.global "__CM__markdown") [||] |> Extension.of_jv
   in
-  let options =
-    let open Slipshow.Frontmatter in
-    { empty with global = { Global.empty with dimension } }
-  in
+  let options = { Slipshow.Frontmatter.Global.empty with dimension } in
   let config =
     State.Config.create ~doc:(Jstr.v starting)
       ~extensions:
