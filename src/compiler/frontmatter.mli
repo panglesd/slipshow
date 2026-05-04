@@ -4,7 +4,6 @@ module Local : sig
 
   val empty : t
   val with_empty : 'a -> 'a with_
-  val combine : t -> t -> t
 end
 
 module Global : sig
@@ -29,7 +28,6 @@ end
 type t = { local : Local.t; global : Global.t }
 
 val empty : t
-val combine : t -> t -> t
 
 type fm := t
 

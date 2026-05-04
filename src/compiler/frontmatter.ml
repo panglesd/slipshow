@@ -4,10 +4,6 @@ module Local = struct
 
   let empty = { toplevel_attributes = None }
   let with_empty x = { x; fm = empty }
-
-  let combine x y =
-    let opt x y = match x with Some _ -> x | _ -> y in
-    { toplevel_attributes = opt x.toplevel_attributes y.toplevel_attributes }
 end
 
 module Global = struct
@@ -56,12 +52,6 @@ end
 
 type t = { local : Local.t; global : Global.t }
 type fm = t
-
-let combine x y =
-  {
-    local = Local.combine x.local y.local;
-    global = Global.combine x.global y.global;
-  }
 
 module Toplevel_attributes = struct
   type t = Cmarkit.Attributes.t Cmarkit.node
