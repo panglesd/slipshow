@@ -9,7 +9,7 @@ type t = {
 
 val of_cmarkit :
   read_file:file_reader ->
-  fm:Frontmatter.resolved Frontmatter.t ->
+  fm:Frontmatter.t ->
   Cmarkit.Doc.t ->
   t
 
@@ -17,9 +17,6 @@ val to_cmarkit : Ast.t -> Cmarkit.Doc.t
 
 val compile :
   ?file:string ->
-  ?loc_offset:int * int ->
-  attrs:Cmarkit.Attributes.t ->
-  fm:Frontmatter.resolved Frontmatter.t ->
   ?read_file:file_reader ->
   string ->
   t * Diagnosis.t list

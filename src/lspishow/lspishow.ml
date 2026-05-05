@@ -15,39 +15,18 @@ let read_file parent s =
   Some res
 
 let current_ast = ref None
-let entry_points : Fpath.t list option ref = ref None
+let _entry_points : Fpath.t list option ref = ref None
 
 let diagnostics (uri : Linol.Lsp.Types.DocumentUri.t) (s : string) :
     Linol.Lsp.Types.Diagnostic.t list =
-  let errors =
-    let file = Linol.Lsp.Types.DocumentUri.to_path uri in
-    let open Slipshow in
-    let frontmatter = Frontmatter.empty in
-    let read_file = read_file Fpath.(parent @@ v file) in
-    let (Frontmatter.Resolved frontmatter, rest, loc_offset), fm_errors =
-      Diagnosis.with_ @@ fun () ->
-      match Frontmatter.extract s with
-      | None -> (frontmatter, s, (0, 0))
-      | Some { frontmatter = f; rest; rest_offset; fm_offset } ->
-          let txt_frontmatter = Frontmatter.of_string file fm_offset f in
-          let to_asset = Asset.of_string ~read_file in
-          let txt_frontmatter = Frontmatter.resolve txt_frontmatter ~to_asset in
-          let frontmatter = Frontmatter.combine txt_frontmatter frontmatter in
-          (frontmatter, rest, rest_offset)
-    in
-    let toplevel_attributes =
-      frontmatter.toplevel_attributes
-      |> Option.value ~default:Frontmatter.Toplevel_attributes.default
-    in
-    let ({ Compile.ast = md; _ } as v), errors =
-      Compile.compile ~loc_offset ~file ~attrs:toplevel_attributes ~read_file
-        ~fm:(Frontmatter.Resolved frontmatter) rest
-    in
-    Format.eprintf "%a" Ast.Ast_printer.pp_bol
-      (`Block (Cmarkit.Doc.block md.doc));
-    current_ast := Some v;
-    fm_errors @ errors
+  let file = Linol.Lsp.Types.DocumentUri.to_path uri in
+  let open Slipshow in
+  let read_file = read_file Fpath.(parent @@ v file) in
+  let ({ Compile.ast = md; _ } as v), errors =
+    Compile.compile ~file ~read_file s
   in
+  Format.eprintf "%a" Ast.Ast_printer.pp_bol (`Block (Cmarkit.Doc.block md.doc));
+  current_ast := Some v;
   List.concat_map Diagnostic.of_error errors
 
 (* Find all markdown files in the given directory (recursing over subdirectories) *)

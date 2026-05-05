@@ -3681,6 +3681,208 @@ module Mapper = struct
     { d with Doc.block; defs }
 end
 
+module Fold_mapper = struct
+
+  type 'a t = {
+    block : 'a t -> 'a -> Block.t -> 'a * Block.t option;
+    inline : 'a t -> 'a -> Inline.t -> 'a * Inline.t option;
+    attrs : 'a -> Attributes.t -> 'a * Attributes.t;
+  }
+
+  let ($) f (x, meta) = let acc, res = f x in acc, (res, meta)
+
+  let inline m acc = function
+  | Inline.Break _ | Inline.Raw_html _ as i -> acc, Some i
+  | Inline.Autolink ((al, attrs), meta) ->
+      let acc, attrs = m.attrs acc $ attrs in
+      acc, Some (Inline.Autolink ((al, attrs), meta))
+  | Inline.Code_span ((cs, attrs), meta) ->
+      let acc, attrs = m.attrs acc $ attrs in
+      acc, Some (Inline.Code_span ((cs, attrs), meta))
+  | Inline.Text ((t, attrs), meta) ->
+      let acc, attrs = m.attrs acc $ attrs in
+      acc, Some (Inline.Text ((t, attrs), meta))
+  | Inline.Ext_math_span ((ms, attrs), meta) ->
+      let acc, attrs = m.attrs acc $ attrs in
+      acc, Some (Inline.Ext_math_span ((ms, attrs), meta))
+  | Inline.Image ((l, attrs), meta) ->
+      let acc, attrs = m.attrs acc $ attrs in
+      let acc, text = m.inline m acc l.text in
+      let text = Option.value ~default:Inline.empty text in
+      acc, Some (Inline.Image (({ l with text }, attrs), meta))
+  | Inline.Link ((l, attrs), meta) ->
+      let acc, attrs = m.attrs acc $ attrs in
+      let acc, text = m.inline m acc l.text in
+      let inline =
+        Option.map
+          (fun text -> Inline.Link (({ l with text }, attrs), meta))
+          text
+      in
+      acc, inline
+  | Inline.Emphasis ((e, attrs), meta) ->
+      let acc, attrs = m.attrs acc $ attrs in
+      let acc, inline = m.inline m acc e.inline in
+      let inline =
+        Option.map
+          (fun inline -> Inline.Emphasis (({ e with inline }, attrs), meta))
+          inline
+      in
+      acc, inline
+  | Inline.Strong_emphasis ((e, attrs), meta) ->
+      let acc, attrs = m.attrs acc $ attrs in
+      let acc, inline = m.inline m acc e.inline in
+      let inline =
+        Option.map
+          (fun inline ->
+            Inline.Strong_emphasis (({ e with inline }, attrs), meta))
+          inline
+      in
+      acc, inline
+  | Inline.Inlines (is, meta) ->
+      let acc, is = List.fold_left_map (m.inline m) acc is in
+      (match List.filter_map Fun.id is with
+       | [] -> acc, None
+       | is -> acc, Some (Inline.Inlines (is, meta)))
+  | Inline.Ext_strikethrough ((s, attrs), meta) ->
+      let acc, attrs = m.attrs acc $ attrs in
+      let acc, s = m.inline m acc s in
+      let inline =
+        Option.map
+          (fun s -> Inline.Ext_strikethrough ((s, attrs), meta))
+          s
+      in
+      acc, inline
+  | Inline.Ext_attrs ({ content; attrs }, meta) ->
+      let acc, attrs = m.attrs acc $ attrs in
+      let acc, content = m.inline m acc content in
+      let content =
+        Option.value ~default:(Inline.Inlines ([], Meta.none)) content
+      in
+      acc, Some (Inline.Ext_attrs ({ content; attrs }, meta))
+  | i -> acc, Some i
+
+  let block m acc = function
+  | Block.Blank_line _ as b -> acc, Some b
+  | Block.Block_quote ((bq, attrs), meta) ->
+      let acc, attrs = m.attrs acc $ attrs in
+      let acc, block = m.block m acc bq.block in
+      let block = Option.value ~default:(Block.Blocks ([], Meta.none)) block in
+      acc, Some (Block.Block_quote (({ bq with block }, attrs), meta))
+  | Block.Blocks (bs, meta) ->
+      let acc, bs = List.fold_left_map (m.block m) acc bs in
+      (match List.filter_map Fun.id bs with
+       | [] -> acc, None
+       | bs -> acc, Some (Block.Blocks (bs, meta)))
+  | Block.Code_block ((cb, attrs), meta) ->
+      let acc, attrs = m.attrs acc $ attrs in
+      acc, Some (Block.Code_block ((cb, attrs), meta))
+  | Block.Ext_attribute_definition ((atd, attrs), meta) ->
+      let acc, attrs = m.attrs acc $ attrs in
+      let acc, ext_attrs = m.attrs acc $ atd.attrs in
+      acc, Some (Block.Ext_attribute_definition
+                   (({ atd with attrs = ext_attrs }, attrs), meta))
+  | Block.Ext_footnote_definition ((fn, attrs), meta) ->
+      let acc, attrs = m.attrs acc $ attrs in
+      let acc, block = m.block m acc fn.block in
+      let block = Option.value ~default:(Block.Blocks ([], Meta.none)) block in
+      acc, Some (Block.Ext_footnote_definition (({ fn with block }, attrs), meta))
+  | Block.Ext_math_block ((mb, attrs), meta) ->
+      let acc, attrs = m.attrs acc $ attrs in
+      acc, Some (Block.Ext_math_block ((mb, attrs), meta))
+  | Block.Ext_standalone_attributes attrs ->
+      let acc, attrs = m.attrs acc $ attrs in
+      acc, Some (Block.Ext_standalone_attributes attrs)
+  | Block.Ext_table ((t, attrs), meta) ->
+      let acc, attrs = m.attrs acc $ attrs in
+      let map_col acc (i, layout) =
+        let acc, i = m.inline m acc i in
+        let i = Option.value ~default:Inline.empty i in
+        acc, (i, layout)
+      in
+      let map_row acc (((r, meta), blanks) as row) = match r with
+      | `Header is ->
+          let acc, is = List.fold_left_map map_col acc is in
+          acc, ((`Header is, meta), blanks)
+      | `Sep _ -> acc, row
+      | `Data is ->
+          let acc, is = List.fold_left_map map_col acc is in
+          acc, ((`Data is, meta), blanks)
+      in
+      let acc, rows = List.fold_left_map map_row acc t.rows in
+      acc, Some (Block.Ext_table (({ t with Block.Table.rows }, attrs), meta))
+  | Block.Heading ((h, attrs), meta) ->
+      let acc, attrs = m.attrs acc $ attrs in
+      let acc, inline = m.inline m acc (Block.Heading.inline h) in
+      let inline =
+        Option.value ~default:(Inline.Inlines ([], Meta.none)) inline
+      in
+      acc, Some (Block.Heading (({ h with inline }, attrs), meta))
+  | Block.Html_block ((hb, attrs), meta) ->
+      let acc, attrs = m.attrs acc $ attrs in
+      acc, Some (Block.Html_block ((hb, attrs), meta))
+  | Block.Link_reference_definition ((lrd, attrs), meta) ->
+      let acc, attrs = m.attrs acc $ attrs in
+      acc, Some (Block.Link_reference_definition ((lrd, attrs), meta))
+  | Block.List ((l, attrs), meta) ->
+      let acc, attrs = m.attrs acc $ attrs in
+      let map_item acc (i, meta) =
+        let acc, block = m.block m acc (Block.List_item.block i) in
+        let item =
+          Option.map
+            (fun block -> { i with Block.List_item.block }, meta)
+            block
+        in
+        acc, item
+      in
+      let acc, items = List.fold_left_map map_item acc l.items in
+      (match List.filter_map Fun.id items with
+       | [] -> acc, None
+       | items -> acc, Some (Block.List (({ l with items }, attrs), meta)))
+  | Block.Paragraph ((p, attrs), meta) ->
+      let acc, attrs = m.attrs acc $ attrs in
+      let acc, inline = m.inline m acc (Block.Paragraph.inline p) in
+      let block =
+        Option.map
+          (fun inline -> Block.Paragraph (({ p with inline }, attrs), meta))
+          inline
+      in
+      acc, block
+  | Block.Thematic_break ((tb, attrs), meta) ->
+      let acc, attrs = m.attrs acc $ attrs in
+      acc, Some (Block.Thematic_break ((tb, attrs), meta))
+  | b -> acc, Some b
+
+  let attrs acc a = acc, a
+
+  let default = {block; inline; attrs}
+
+  let make ?(block = block) ?(inline = inline) ?(attrs = attrs) () =
+    { block; inline; attrs }
+
+  let fold_map_doc m acc d =
+    let fold_map_def acc = function
+    | Block.Footnote.Def ((fn, attrs), meta) ->
+        let acc, attrs = m.attrs acc $ attrs in
+        let acc, block = m.block m acc (Block.Footnote.block fn) in
+        let block = Option.value ~default:Block.empty block in
+        acc, Block.Footnote.Def (({ fn with block }, attrs), meta)
+    | Block.Attribute_definition.Def ((label, attrs), meta) ->
+        let acc, attrs = m.attrs acc attrs in
+        acc, Block.Attribute_definition.Def ((label, attrs), meta)
+    | def -> acc, def
+    in
+    let acc, block = m.block m acc (Doc.block d) in
+    let block = Option.value ~default:Block.empty block in
+    let acc, defs =
+      Label.Map.fold (fun k def (acc, defs) ->
+          let acc, def = fold_map_def acc def in
+          acc, Label.Map.add k def defs)
+        (Doc.defs d) (acc, Label.Map.empty)
+    in
+    acc, { d with Doc.block; defs }
+
+end
+
 module Folder = struct
   type 'a result = [ `Default | `Fold of 'a ]
   let default = `Default

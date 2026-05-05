@@ -15,6 +15,7 @@ type t =
   | WrongType of { loc_reason : loc; loc_block : loc; expected_type : string }
   | ParsingError of { action : string; msg : string; loc : loc }
   | ParsingWarnor of { warnor : Actions_arguments.W.warnor; loc : loc }
+  | InconsistentOption of { option_name : string; loc1 : loc; loc2 : loc }
   | MissingID of { id : string; loc : loc }
   | UnknownAttribute of { attr : string; loc : loc }
   | UnknownFrontmatterField of {
@@ -66,6 +67,8 @@ let pp ppf = function
   | FrontmatterParsing { msg; _ } -> Format.fprintf ppf "%s" msg
   | ChildrenClassWithValue _ ->
       Format.fprintf ppf "%s" "Children classes cannot have a value"
+  | InconsistentOption { option_name; _ } ->
+      Format.fprintf ppf "option '%s' is provided multiple times" option_name
 
 let with_range source_map loc f =
   let open Grace in
@@ -219,6 +222,18 @@ let to_grace source_map error =
       Some
         (Diagnostic.createf ~labels Warning
            "Children classes cannot have a value")
+  | InconsistentOption { option_name; loc1; loc2 } ->
+      let labels =
+        List.filter_map Fun.id
+          [
+            with_range loc1 @@ Diagnostic.Label.primaryf "";
+            with_range loc2 @@ Diagnostic.Label.primaryf "";
+          ]
+      in
+      Some
+        (Diagnostic.createf ~labels Warning
+           "Option '%s' is assigned multiple times in incompatible ways"
+           option_name)
 
 let errors_acc = ref []
 let add x = errors_acc := x :: !errors_acc
@@ -250,6 +265,7 @@ let to_code = function
   | InvalidFrontmatterLine _ -> "InvalidFrontmatterLine"
   | FrontmatterParsing _ -> "FrontmatterParsing"
   | ChildrenClassWithValue _ -> "ChildrenClassWithValue"
+  | InconsistentOption _ -> "InconsistentOption"
 
 let report_no_src fmt x =
   let msg = Format.asprintf "%a" pp x in

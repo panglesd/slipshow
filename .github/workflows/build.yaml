@@ -28,22 +28,15 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
         with:
-          fetch-depth: 0 # Needed to fetch tags
+          fetch-tags: true # Needed to fetch tags
 
       # The latest tag is needed to build the release tarball but
       # actions/checkout fails to fetch it properly.
       # https://github.com/actions/checkout/issues/882
       - name: Fetch tags
         run: git fetch --tags --force origin
-
-      - name: Set up QEMU
-        id: qemu
-        uses: docker/setup-qemu-action@v3
-        # with:
-        #   image: tonistiigi/binfmt:latest
-        #   platforms: all
 
       - name: Expose GitHub Runtime
         uses: crazy-max/ghaction-github-runtime@v3
@@ -57,22 +50,25 @@ jobs:
       - name: Check images
         run: docker image ls
 
+      - name: Install dependencies in Docker
+        run: |
+          docker buildx build --platform ${{ matrix.platform.name }} \
+            --target deps \
+            --cache-to type=gha,mode=max,scope=${{ matrix.platform.filename_suffix }}-deps \
+            --cache-from type=gha,scope=${{ matrix.platform.filename_suffix }}-deps \
+            -f release/Dockerfile .
+
       - name: Build release tarball
         # if: startsWith(github.ref, 'refs/tags/')
         run: |
           mkdir -p new_release; chmod a+rw new_release;
-          docker buildx build --platform ${{ matrix.platform.name }} --load \
-            --cache-to type=gha,mode=max \
-            --cache-from type=gha \
+          docker buildx build --platform ${{ matrix.platform.name }} \
+            --cache-from type=gha,scope=${{ matrix.platform.filename_suffix }}-deps \
+            --build-arg VERSION=$GITHUB_REF_NAME \
+            --build-arg TARGETOS=linux \
+            --build-arg TARGETARCH=${{ matrix.platform.target_arch }} \
             -f release/Dockerfile \
-            -t slipshow-release-${{ matrix.platform.name }} .
-          docker run --platform ${{ matrix.platform.name }} -v $PWD/new_release:/release \
-            -e VERSION=$GITHUB_REF_NAME \
-            -e TARGETOS=linux \
-            -e TARGETARCH=${{ matrix.platform.target_arch }} \
-            -e OUTPUT=/release \
-            slipshow-release-${{ matrix.platform.name }} \
-            opam exec -- bash release/release.sh
+            --output type=local,dest=new_release .
 
       - name: upload archives
         # if: startsWith(github.ref, 'refs/tags/')
@@ -93,21 +89,34 @@ jobs:
     runs-on: ${{ matrix.config.os }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
         with:
-          fetch-depth: 0
+          fetch-tags: true
 
       # See the same step in the linux build
       - name: Fetch tags
         run: git fetch --tags --force origin
 
+      - uses: actions/cache@v5
+        id: cache
+        with:
+          path: |
+            ~/.opam
+            _opam
+          key: ${{ matrix.config.os }}-${{ hashFiles('*.opam') }}
+
       - name: Use OCaml ${{ matrix.ocaml-compiler }}
-        uses: ocaml/setup-ocaml@v2
+        uses: ocaml/setup-ocaml@v3
         with:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
 
       - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
         run: opam install --deps-only --with-test --with-doc -y .
+
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit
+        run: opam install --deps-only --with-test --depext-only --with-doc -y . && opam upgrade
 
       - name: Build release tarball
         # if: startsWith(github.ref, 'refs/tags/')
@@ -132,7 +141,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Download build artifacts
         uses: actions/download-artifact@v4

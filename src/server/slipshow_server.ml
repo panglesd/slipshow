@@ -36,6 +36,16 @@ let () = Random.self_init ()
 let generate_version () =
   String.init 10 (fun _ -> Char.chr (97 + Random.int 26))
 
+let pong () =
+  let c = Proto.Server_to_client.Pong in
+  let c = Proto.Server_to_client.to_string c in
+  Dream.respond ~headers:[ ("Content-Type", "text/plain") ] c
+
+let send_update content =
+  let c = Proto.Server_to_client.Update content in
+  let c = Proto.Server_to_client.to_string c in
+  Dream.respond ~headers:[ ("Content-Type", "text/plain") ] c
+
 let do_serve ~port entry_point compile =
   let () = if Sys.unix then Sys.(set_signal sigpipe Signal_ignore) in
   (* We need this, otherwise the program is killed when sending a long string to
@@ -50,14 +60,24 @@ let do_serve ~port entry_point compile =
           auto-reloading on file changes."
          port);
    let open Lwt.Syntax in
-   let content = ref { Proto.content = ""; version = generate_version () } in
+   let initial_content, _ =
+     Slipshow.delayed ~has_speaker_view:false "Could not compile"
+   in
+   let content =
+     ref
+       { Proto.content = (initial_content, ""); version = generate_version () }
+   in
    let callback () =
-     let ( let* ) = Result.bind in
-     let* s, deps = compile () in
-     let new_content = Slipshow.delayed_to_string s in
-     content := { content = new_content; version = generate_version () };
-     Lwt_condition.broadcast cond `Update;
-     Ok deps
+     let res = compile () in
+     match res with
+     | Error (`Msg err) as e ->
+         content := { !content with content = (initial_content, err) };
+         Lwt_condition.broadcast cond `Update;
+         e
+     | Ok (c, deps) ->
+         content := { content = c; version = generate_version () };
+         Lwt_condition.broadcast cond `Update;
+         Ok deps
    in
    let initial = Fpath.Set.singleton entry_point in
    let wac = Watcher.watch_and_compile initial ~callback in
@@ -70,30 +90,25 @@ let do_serve ~port entry_point compile =
             Dream.get "/" (fun _ ->
                 Dream.log "A browser reloaded";
                 Dream.html html_source);
-            Dream.post "/now" (fun _ ->
-                Dream.respond
-                  ~headers:[ ("Content-Type", "text/plain") ]
-                  (Proto.to_string (Update !content)));
-            Dream.post "/onchange" (fun req ->
+            Dream.post "/long-polling" (fun req ->
                 let* body = Dream.body req in
-                if not @@ String.equal body !content.version then
-                  let c = Proto.Update !content in
-                  let c = Proto.to_string c in
-                  Dream.respond ~headers:[ ("Content-Type", "text/plain") ] c
-                else
-                  let gate = Lwt_condition.wait cond in
-                  let timeout =
-                    let+ () = Lwt_unix.sleep 7. in
-                    `Pong
-                  in
-                  let* event = Lwt.pick [ gate; timeout ] in
-                  let c =
-                    match event with
-                    | `Pong -> Proto.Pong
-                    | `Update -> Update !content
-                  in
-                  let c = Proto.to_string c in
-                  Dream.respond ~headers:[ ("Content-Type", "text/plain") ] c);
+                let msg = Proto.Client_to_server.of_string body in
+                match msg with
+                | None -> Dream.respond ~status:`Bad_Request ""
+                | Some Ping -> pong ()
+                | Some (UpdateFrom version) -> (
+                    if not @@ String.equal version !content.version then
+                      send_update !content
+                    else
+                      let gate = Lwt_condition.wait cond in
+                      let timeout =
+                        let+ () = Lwt_unix.sleep 7. in
+                        `Pong
+                      in
+                      let* event = Lwt.pick [ gate; timeout ] in
+                      match event with
+                      | `Pong -> pong ()
+                      | `Update -> send_update !content));
           ]
    in
    Lwt.both dream wac)

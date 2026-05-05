@@ -1,11 +1,7 @@
-Let's start with an empty file
+No theme provided or "theme:default" is the same
 
-  $ touch file.md
-
-No theme provided or "--theme default" is the same
-
-  $ slipshow compile file.md -o default_theme1.html
-  $ slipshow compile --theme default file.md -o default_theme2.html
+  $ slipshow compile empty.md -o default_theme1.html
+  $ slipshow compile default.md -o default_theme2.html
 
   $ diff -s default_theme1.html default_theme2.html
   Files default_theme1.html and default_theme2.html are identical
@@ -37,7 +33,7 @@ slipshow theme list outputs the list of themes
 
 You can set a builtin theme
 
-  $ slipshow compile --theme vanier file.md -o vanier_theme.html
+  $ slipshow compile vanier.md -o vanier_theme.html
   $ show_source vanier_theme.html | grep "Dosis"
    font-family: 'Dosis';
   	font-family: "Dosis";
@@ -46,32 +42,32 @@ You can set a builtin theme
 
 "--theme none" adds no theme
 
-  $ slipshow compile --theme none file.md -o no_theme.html
+  $ slipshow compile none.md -o no_theme.html
   $ show_source no_theme.html | grep ".slip-body "
   [1]
 
-"--theme <file.css>" replaces the default theme with the local file theme
+"theme: <file.css>" replaces the default theme with the local file theme
 
   $ echo YOYO > my_theme.css
 
-  $ slipshow compile --theme my_theme.css file.md -o local_theme.html
- No default theme included:
+  $ slipshow compile my_theme.md -o local_theme.html
+No default theme included:
   $ show_source local_theme.html | grep ".slip-body "
   [1]
- But local theme included:
+But local theme included:
   $ show_source local_theme.html | grep YOYO -A 1
   <style>YOYO
   </style>
 
 Remote themes also replace the default theme but are included with a link:
 
-  $ slipshow compile --theme https://example.org file.md -o remote_theme.html
+  $ slipshow compile remote.md -o remote_theme.html
   $ show_source remote_theme.html | grep example.org
   <link href="https://example.org" rel="stylesheet" />
 
-Independently, an arbitrary number of css files can be included with "--css", without changing the theme:
+Independently, an arbitrary number of css files can be included with "css", without changing the theme:
 
-  $ slipshow compile --css https://example.org file.md --css my_theme.css -o additional_css.html
+  $ slipshow compile css.md -o additional_css.html
   $ show_source additional_css.html | grep example.org
   <link href="https://example.org" rel="stylesheet" /><style>YOYO
   $ show_source additional_css.html | grep YOYO -A 1

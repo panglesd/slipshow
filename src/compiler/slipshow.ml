@@ -245,22 +245,7 @@ let string_to_delayed s =
   Option.bind s @@ fun s -> try Some (Marshal.from_string s 0) with _ -> None
 
 let convert_to_md ~read_file content =
-  let (fm, content, loc_offset), _warnings =
-    Diagnosis.with_ @@ fun () ->
-    match Frontmatter.extract content with
-    | None -> (Frontmatter.empty, content, (0, 0))
-    | Some { frontmatter; rest; rest_offset; fm_offset } ->
-        let file = "-" in
-        let frontmatter = Frontmatter.of_string file fm_offset frontmatter in
-        let to_asset = Asset.of_string ~read_file in
-        let frontmatter = Frontmatter.resolve frontmatter ~to_asset in
-        (frontmatter, rest, rest_offset)
-  in
-  let md =
-    Cmarkit.Doc.of_string ~loc_offset ~heading_auto_ids:false ~strict:false
-      content
-  in
-  let { Compile.ast = sd; _ } = Compile.of_cmarkit ~read_file ~fm md in
+  let { Compile.ast = sd; _ }, _ = Compile.compile ~read_file content in
   let sd = Compile.to_cmarkit sd in
   Cmarkit_commonmark.of_doc ~include_attributes:false sd
 
@@ -276,32 +261,23 @@ let to_grace file whole_content htbl_include er =
             Grace.Source.(`String { name = file; content = whole_content }))
     er
 
-let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty) ?file
+let delayed ?(options = Frontmatter.Global.empty) ?slipshow_js ?file
     ?(read_file = fun _ -> Ok None) ~has_speaker_view s =
   let whole_content = s in
-  let (Frontmatter.Resolved frontmatter, s, loc_offset), warnings =
-    Diagnosis.with_ @@ fun () ->
-    match Frontmatter.extract s with
-    | None -> (frontmatter, s, (0, 0))
-    | Some { frontmatter = txt_fm; rest; rest_offset; fm_offset } ->
-        let file = Option.value ~default:"-" file in
-        let txt_fm = Frontmatter.of_string file fm_offset txt_fm in
-        let to_asset = Asset.of_string ~read_file in
-        let txt_frontmatter = Frontmatter.resolve txt_fm ~to_asset in
-        let frontmatter = Frontmatter.combine txt_frontmatter frontmatter in
-        (frontmatter, rest, rest_offset)
+  let { Compile.ast; included_files = htbl_include; _ }, errors =
+    Compile.compile ?file ~read_file s
   in
-  let toplevel_attributes =
-    frontmatter.toplevel_attributes
-    |> Option.value ~default:Frontmatter.Toplevel_attributes.default
-  in
+  let options = Frontmatter.Global.combine options ast.Ast.options in
+  let ast = { ast with options } in
   let dimension =
-    frontmatter.dimension |> Option.value ~default:Frontmatter.Dimension.default
+    options.dimension
+    |> Option.value ~default:Frontmatter.Dimension.default
+    |> fst
   in
-  let css_links = frontmatter.css_links in
-  let js_links = frontmatter.js_links in
+  let css_links = options.css_links in
+  let js_links = options.js_links in
   let math_mode =
-    Option.value ~default:Frontmatter.Math_mode.default frontmatter.math_mode
+    Option.value ~default:Frontmatter.Math_mode.default options.math_mode |> fst
   in
   let resolve_theme = function
     | `Builtin _ as x -> x
@@ -310,26 +286,21 @@ let delayed ?slipshow_js ?(frontmatter = Frontmatter.empty) ?file
         `External asset
   in
   let theme =
-    match frontmatter.theme with
-    | None -> resolve_theme Frontmatter.Theme.default
-    | Some t -> resolve_theme t
+    match options.theme with
+    | None -> resolve_theme (fst Frontmatter.Theme.default)
+    | Some t -> resolve_theme (fst t)
   in
   let highlightjs_theme =
     Option.value ~default:Frontmatter.Hljs_theme.default
-      frontmatter.highlightjs_theme
+      options.highlightjs_theme
+    |> fst
   in
-  let math_link = frontmatter.math_link in
-  let { Compile.ast = md; included_files = htbl_include; _ }, errors =
-    Compile.compile ~loc_offset ?file ~attrs:toplevel_attributes
-      ~fm:(Frontmatter.Resolved frontmatter) ~read_file s
-  in
+  let math_link = options.math_link |> Option.map fst in
   let warnings =
-    List.filter_map
-      (to_grace file whole_content htbl_include)
-      (warnings @ errors)
+    List.filter_map (to_grace file whole_content htbl_include) errors
   in
-  let content = Renderers.to_html_string md in
-  let has = Has.find_out md in
+  let content = Renderers.to_html_string ast in
+  let has = Has.find_out ast in
   let res =
     embed_in_page ~has_speaker_view ~slipshow_js ~dimension ~has ~math_link
       ~theme ~css_links ~js_links content ~highlightjs_theme ~math_mode
@@ -396,10 +367,10 @@ let add_starting_state ?(autofocus = true) (start, end_, has_speaker_view)
   in
   if has_speaker_view then html else orig_html
 
-let convert ~has_speaker_view ?autofocus ?slipshow_js ?frontmatter ?file
+let convert ?options ~has_speaker_view ?autofocus ?slipshow_js ?file
     ?starting_state ?read_file s =
   let delayed, w =
-    delayed ~has_speaker_view ?slipshow_js ?frontmatter ?file ?read_file s
+    delayed ?options ~has_speaker_view ?slipshow_js ?file ?read_file s
   in
   let res = add_starting_state ?autofocus delayed starting_state in
   (res, w)

@@ -75,3 +75,12 @@ let of_error (e : Diagnosis.t) =
       ]
   | ChildrenClassWithValue { loc } ->
       [ create ~loc "Children classes cannot have a value" ]
+  | InconsistentOption { option_name; loc1; loc2 } ->
+      [
+        create ~loc:loc1
+          "option '%s' is defined multiple times in an incompatible way"
+          option_name;
+        create ~loc:loc2
+          "option '%s' is defined multiple times in an incompatible way"
+          option_name;
+      ]

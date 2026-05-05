@@ -1,32 +1,58 @@
-Let's start with an empty file
+We can provide the dimension with dimension
 
-  $ touch file.md
+  $ cat > file.md << EOF
+  > ---
+  > dimension: qfdesfesf
+  > ---
+  > EOF
+  $ slipshow compile file.md
+  warning: Error while parsing frontmatter field 'dimension'
+      ┌─ file.md:2:11
+    2 │  dimension: qfdesfesf
+      │            ^^^^^^^^^^ Expected "4:3", "16:9", or two integers separated by a 'x'
+  
 
-We can provide the dimension with --dimension
+  $ cat > file.md << EOF
+  > ---
+  > dimension: wrongxefzefezf
+  > ---
+  > EOF
+  $ slipshow compile file.md
+  warning: Error while parsing frontmatter field 'dimension'
+      ┌─ file.md:2:11
+    2 │  dimension: wrongxefzefezf
+      │            ^^^^^^^^^^^^^^^ Expected "4:3", "16:9", or two integers separated by a 'x'
+  
 
-  $ slipshow compile --dimension qfdesfesf file.md
-  slipshow: option '--dimension': Expected "4:3", "16:9", or two integers
-            separated by a 'x'
-  Usage: slipshow compile [OPTION]… [FILE.md]
-  Try 'slipshow compile --help' or 'slipshow --help' for more information.
-  [124]
-  $ slipshow compile --dimension wrongxefzefezf file.md
-  slipshow: option '--dimension': Expected "4:3", "16:9", or two integers
-            separated by a 'x'
-  Usage: slipshow compile [OPTION]… [FILE.md]
-  Try 'slipshow compile --help' or 'slipshow --help' for more information.
-  [124]
-  $ slipshow compile --dimension 1920xwrong file.md
-  slipshow: option '--dimension': Expected "4:3", "16:9", or two integers
-            separated by a 'x'
-  Usage: slipshow compile [OPTION]… [FILE.md]
-  Try 'slipshow compile --help' or 'slipshow --help' for more information.
-  [124]
-  $ slipshow compile --dimension 16:9 file.md
-  $ slipshow compile --dimension 4:3 file.md
-  $ slipshow compile --dimension 1920x1080 file.md
+  $ cat > file.md << EOF
+  > ---
+  > dimension: 1920xwrong
+  > ---
+  > EOF
+  $ slipshow compile file.md
+  warning: Error while parsing frontmatter field 'dimension'
+      ┌─ file.md:2:11
+    2 │  dimension: 1920xwrong
+      │            ^^^^^^^^^^^ Expected "4:3", "16:9", or two integers separated by a 'x'
+  
 
--d and --dim work too
+  $ cat > file.md << EOF
+  > ---
+  > dimension: 16:9
+  > ---
+  > EOF
+  $ slipshow compile file.md
 
-  $ slipshow compile --dim 16:9 file.md
-  $ slipshow compile -d 16:9 file.md
+  $ cat > file.md << EOF
+  > ---
+  > dimension: 4:3
+  > ---
+  > EOF
+  $ slipshow compile file.md
+
+  $ cat > file.md << EOF
+  > ---
+  > dimension: 1920x1080
+  > ---
+  > EOF
+  $ slipshow compile file.md

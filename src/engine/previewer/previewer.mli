@@ -19,8 +19,8 @@ val create_previewer :
   previewer
 
 val preview :
+  ?options:Slipshow.Frontmatter.Global.t ->
   ?slipshow_js:Slipshow.Asset.t ->
-  ?frontmatter:Slipshow.Frontmatter.resolved Slipshow.Frontmatter.t ->
   ?read_file:Slipshow.file_reader ->
   previewer ->
   string ->

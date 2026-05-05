@@ -45,3 +45,11 @@ The current options for the frontmatter are:
   present even if they do not seem to be present in the document. Accepts a list
   of space-separated ids. This is just in order to silence some warnings. This
   is useful when including svgs or math where some IDs are given.
+
+Multifile presentations
+=======================
+
+When you split your presentation in multiple files, you can define a frontmatter
+in the included files. All options can be duplicated, and will be combined when
+applicable. When not applicable, a warning will be raised.
+``toplevel-attributes`` refers to the included file.
