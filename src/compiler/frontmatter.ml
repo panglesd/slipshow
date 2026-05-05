@@ -1,5 +1,13 @@
 type 'a loced = 'a * Cmarkit.Textloc.t
 
+let combine_opt option_name x y =
+  match (x, y) with
+  | Some (alpha, loc1), Some (beta, loc2) when alpha <> beta ->
+      Diagnosis.add @@ InconsistentOption { option_name; loc1; loc2 };
+      x
+  | Some _, _ -> x
+  | None, _ -> y
+
 module Local = struct
   type t = { toplevel_attributes : Cmarkit.Attributes.t Cmarkit.node option }
   type 'a with_ = { x : 'a; fm : t }
@@ -48,21 +56,14 @@ module Global = struct
   let with_empty x = { x; fm = empty }
 
   let combine x y =
-    let opt option_name x y =
-      match (x, y) with
-      | Some (alpha, loc1), Some (beta, loc2) when alpha <> beta ->
-          Diagnosis.add @@ InconsistentOption { option_name; loc1; loc2 };
-          x
-      | Some _, _ -> x
-      | None, _ -> y
-    in
     {
-      math_link = opt math_link_key x.math_link y.math_link;
-      theme = opt theme_key x.theme y.theme;
-      dimension = opt dimension_key x.dimension y.dimension;
+      math_link = combine_opt math_link_key x.math_link y.math_link;
+      theme = combine_opt theme_key x.theme y.theme;
+      dimension = combine_opt dimension_key x.dimension y.dimension;
       highlightjs_theme =
-        opt highlightjs_theme_key x.highlightjs_theme y.highlightjs_theme;
-      math_mode = opt math_mode_key x.math_mode y.math_mode;
+        combine_opt highlightjs_theme_key x.highlightjs_theme
+          y.highlightjs_theme;
+      math_mode = combine_opt math_mode_key x.math_mode y.math_mode;
       css_links = x.css_links @ y.css_links;
       js_links = x.js_links @ y.js_links;
       external_ids = x.external_ids @ y.external_ids;
@@ -109,8 +110,13 @@ module Toplevel_attributes = struct
     | Cmarkit.Block.Ext_standalone_attributes attrs -> Ok attrs
     | _ -> Error (`Msg "Failed to parse the attributes")
 
-  let update_frontmatter (fm : fm) v =
-    { fm with local = { toplevel_attributes = Some v } }
+  let update_frontmatter (fm : fm) (v, meta1) =
+    let v =
+      match fm.local.toplevel_attributes with
+      | None -> v
+      | Some (a, _meta2) -> Cmarkit.Attributes.merge ~base:a ~new_attrs:v
+    in
+    { fm with local = { toplevel_attributes = Some (v, meta1) } }
 end
 
 module Math_link = struct
@@ -120,7 +126,8 @@ module Math_link = struct
   let of_string ~to_asset (s, loc) = Ok (to_asset s, loc)
 
   let update_frontmatter (fm : fm) v =
-    { fm with global = { fm.global with math_link = Some v } }
+    let math_link = combine_opt key (Some v) fm.global.math_link in
+    { fm with global = { fm.global with math_link } }
 end
 
 module Theme = struct
@@ -135,7 +142,8 @@ module Theme = struct
     | None -> Ok (`External s, loc)
 
   let update_frontmatter (fm : fm) v =
-    { fm with global = { fm.global with theme = Some v } }
+    let theme = combine_opt key (Some v) fm.global.theme in
+    { fm with global = { fm.global with theme } }
 end
 
 module Css_links = struct
@@ -196,7 +204,8 @@ module Dimension = struct
   let of_string' = of_string ~to_asset:()
 
   let update_frontmatter (fm : fm) v =
-    { fm with global = { fm.global with dimension = Some v } }
+    let dimension = combine_opt key (Some v) fm.global.dimension in
+    { fm with global = { fm.global with dimension } }
 end
 
 module Hljs_theme = struct
@@ -207,7 +216,10 @@ module Hljs_theme = struct
   let default = ("default", Cmarkit.Textloc.none)
 
   let update_frontmatter (fm : fm) v =
-    { fm with global = { fm.global with highlightjs_theme = Some v } }
+    let highlightjs_theme =
+      combine_opt key (Some v) fm.global.highlightjs_theme
+    in
+    { fm with global = { fm.global with highlightjs_theme } }
 end
 
 module Math_mode = struct
@@ -223,7 +235,8 @@ module Math_mode = struct
   let default = (`Mathjax, Cmarkit.Textloc.none)
 
   let update_frontmatter (fm : fm) v =
-    { fm with global = { fm.global with math_mode = Some v } }
+    let math_mode = combine_opt key (Some v) fm.global.math_mode in
+    { fm with global = { fm.global with math_mode } }
 end
 
 module type Field = sig
