@@ -64,29 +64,6 @@ Testing with an include
   
 
   $ slipshow compile all.md
-  warning: Error while parsing frontmatter field 'dimension'
-      ┌─ all.md:4:11
-    4 │  dimension: 16:16
-      │            ^^^^^^ Expected "4:3", "16:9", or two integers separated by a 'x'
-  
-  warning: Frontmatter field 'unknown-frontmatter' is not interpreted by slipshow
-      ┌─ all.md:3:1
-    3 │  unknown-frontmatter: field
-      │  ^^^^^^^^^^^^^^^^^^^ 
-      = Recognized fields are: 'dimension', 'toplevel-attributes', 'math-link', 'theme', 'css', 'js', 'highlightjs-theme', 'math-mode', 'external-ids'
-  
-  warning: Invalid frontmatter entry
-      ┌─ all.md:7:1
-    7 │  anothe rwrong line
-      │  ^^^^^^^^^^^^^^^^^^ 
-      = Frontmatter have to be of the form "key:value" on a single line.
-  
-  warning: Invalid frontmatter entry
-      ┌─ all.md:5:1
-    5 │  wrong line
-      │  ^^^^^^^^^^ 
-      = Frontmatter have to be of the form "key:value" on a single line.
-  
   warning: Failed to parse
       ┌─ all.md:44:16
    44 │  {up="~margin:2 ~margin:3"}
@@ -174,4 +151,27 @@ Testing with an include
       ┌─ all.md:27:19
    27 │  {children:.class="have value"}
       │                    ^^^^^^^^^^ 
+  
+  warning: Error while parsing frontmatter field 'dimension'
+      ┌─ all.md:4:11
+    4 │  dimension: 16:16
+      │            ^^^^^^ Expected "4:3", "16:9", or two integers separated by a 'x'
+  
+  warning: Frontmatter field 'unknown-frontmatter' is not interpreted by slipshow
+      ┌─ all.md:3:1
+    3 │  unknown-frontmatter: field
+      │  ^^^^^^^^^^^^^^^^^^^ 
+      = Recognized fields are: 'dimension', 'toplevel-attributes', 'math-link', 'theme', 'css', 'js', 'highlightjs-theme', 'math-mode', 'external-ids'
+  
+  warning: Invalid frontmatter entry
+      ┌─ all.md:7:1
+    7 │  anothe rwrong line
+      │  ^^^^^^^^^^^^^^^^^^ 
+      = Frontmatter have to be of the form "key:value" on a single line.
+  
+  warning: Invalid frontmatter entry
+      ┌─ all.md:5:1
+    5 │  wrong line
+      │  ^^^^^^^^^^ 
+      = Frontmatter have to be of the form "key:value" on a single line.
   

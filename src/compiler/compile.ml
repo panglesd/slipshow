@@ -97,28 +97,31 @@ let resolve_file ps s =
   | Path p -> Path (Path_entering.relativize ps p)
 
 module Stage1 = struct
-  let turn_block_quotes_into_divs m ((bq, (attrs, meta2)), meta) =
+  let turn_block_quotes_into_divs m fm ((bq, (attrs, meta2)), meta) =
     let b = Block.Block_quote.block bq in
-    let b =
-      match Mapper.map_block m b with None -> Block.empty | Some b -> b
+    let fm, b =
+      match m.Fold_mapper.block m fm b with
+      | fm, None -> (fm, Block.empty)
+      | fm, Some b -> (fm, b)
     in
-    let attrs = Mapper.map_attrs m attrs in
-    Mapper.ret (Ast.div ((b, (attrs, meta2)), meta))
+    let fm, attrs = m.attrs fm attrs in
+    (fm, Some (Ast.div ((b, (attrs, meta2)), meta)))
 
-  let handle_slip_scripts_creation m ((cb, (attrs, meta)), meta2) =
+  let handle_slip_scripts_creation m fm ((cb, (attrs, meta)), meta2) =
+    let fm, attrs = m.Fold_mapper.attrs fm attrs in
+    let attrs = (attrs, meta) in
     match Block.Code_block.info_string cb with
-    | None -> Mapper.default
+    | None -> (fm, Some (Block.Code_block ((cb, attrs), meta2)))
     | Some (info, _) -> (
         match Block.Code_block.language_of_info_string info with
         | Some ("slip-script", _) ->
-            Mapper.ret
-              (Ast.slipscript ((cb, (Mapper.map_attrs m attrs, meta)), meta2))
+            (fm, Some (Ast.slipscript ((cb, attrs), meta2)))
         | Some ("=mermaid", _) ->
-            Mapper.ret
-              (Ast.mermaid_js ((cb, (Mapper.map_attrs m attrs, meta)), meta2))
-        | _ -> Mapper.default)
+            (fm, Some (Ast.mermaid_js ((cb, attrs), meta2)))
+        | _ -> (fm, Some (Block.Code_block ((cb, attrs), meta2))))
 
-  let handle_includes ~htbl_include read_file current_path m (attrs, meta) =
+  let handle_includes ~htbl_include fm read_file current_path
+      (m : 'a Fold_mapper.t) (attrs, meta) =
     match
       ( Attributes.find Special_attrs.include_ attrs,
         Attributes.find Special_attrs.src attrs )
@@ -137,23 +140,40 @@ module Stage1 = struct
                    error_msg = err;
                    locs;
                  });
-            Mapper.default
-        | Ok None -> Mapper.default
+            `Default
+        | Ok None -> `Default
         | Ok (Some contents) -> (
             Hashtbl.add htbl_include (Fpath.to_string relativized_path) contents;
-            let md =
+            let md, { Frontmatter.global; local = { toplevel_attributes } } =
               let file = Some (Fpath.to_string relativized_path) in
-              Cmarkit_proxy.of_string ~file contents
+              Cmarkit_proxy.of_string ~file ~read_file contents
+            in
+            let fm =
+              {
+                fm with
+                Frontmatter.global =
+                  Frontmatter.Global.combine fm.Frontmatter.global global;
+              }
             in
             Path_entering.in_path current_path (Fpath.parent (Fpath.v src))
             @@ fun () ->
-            match Mapper.map_block m (Doc.block md) with
-            | None -> Mapper.default
-            | Some mapped_blocks ->
-                let attrs = Mapper.map_attrs m attrs in
-                Mapper.ret
-                  (Ast.included ((mapped_blocks, (attrs, meta)), Meta.none))))
-    | _ -> Mapper.default
+            match m.block m fm (Doc.block md) with
+            | _, None -> `Default
+            | fm, Some mapped_blocks ->
+                let attrs =
+                  match toplevel_attributes with
+                  | None -> attrs
+                  | Some (toplevel_attributes, _) ->
+                      Attributes.merge ~base:toplevel_attributes
+                        ~new_attrs:attrs
+                in
+                let fm, attrs = m.attrs fm attrs in
+                `Return
+                  ( fm,
+                    Some
+                      (Ast.included ((mapped_blocks, (attrs, meta)), Meta.none))
+                  )))
+    | _ -> `Default
 
   let get_link_definition (defs : Cmarkit.Label.defs) l =
     match Inline.Link.reference_definition defs l with
@@ -184,10 +204,10 @@ module Stage1 = struct
     ( (uri, meta),
       Link_definition.make ~layout ~defined_label ?label ~dest ?title () )
 
-  let handle_image_inlining m defs current_path ((l, (attrs, meta2)), meta) =
+  let handle_image_inlining m fm defs current_path ((l, (attrs, meta2)), meta) =
     let text = Inline.Link.text l in
-    let ( let* ) x f = match x with None -> Mapper.default | Some x -> f x in
-    let* kind, ld, uri =
+    let ( let* ) x f = match x with None -> `Default | Some x -> f x in
+    let* fm, kind, ld, uri =
       match get_link_definition defs l with
       | None -> None
       | Some ((ld, (attrs_ld, meta2)), meta) ->
@@ -195,33 +215,39 @@ module Stage1 = struct
             Cmarkit.Attributes.merge ~base:attrs ~new_attrs:attrs_ld
           in
           let kind = classify_link_definition ld attrs in
-          let attrs_ld = Mapper.map_attrs m attrs_ld in
+          let fm, attrs_ld = m.Fold_mapper.attrs fm attrs_ld in
           let dest, ld = update_link_definition current_path (ld, meta) in
-          Some (kind, ((ld, (attrs_ld, meta2)), meta), dest)
+          Some (fm, kind, ((ld, (attrs_ld, meta2)), meta), dest)
     in
     let reference = `Inline ld in
     let l = Inline.Link.make text reference in
-    let attrs = Mapper.map_attrs m attrs in
+    let fm, attrs = m.attrs fm attrs in
     let origin = ((l, (attrs, meta2)), meta) in
-    match kind with
-    | `Image -> Mapper.ret @@ Ast.image { uri; origin; id = Id.gen () }
-    | `Svg -> Mapper.ret @@ Ast.svg { uri; origin; id = Id.gen () }
-    | `Video -> Mapper.ret @@ Ast.video { uri; origin; id = Id.gen () }
-    | `Audio -> Mapper.ret @@ Ast.audio { uri; origin; id = Id.gen () }
-    | `Draw -> Mapper.ret @@ Ast.hand_drawn { uri; origin; id = Id.gen () }
-    | `Pdf -> Mapper.ret @@ Ast.pdf { uri; origin; id = Id.gen () }
+    let res =
+      match kind with
+      | `Image -> Ast.image { uri; origin; id = Id.gen () }
+      | `Svg -> Ast.svg { uri; origin; id = Id.gen () }
+      | `Video -> Ast.video { uri; origin; id = Id.gen () }
+      | `Audio -> Ast.audio { uri; origin; id = Id.gen () }
+      | `Draw -> Ast.hand_drawn { uri; origin; id = Id.gen () }
+      | `Pdf -> Ast.pdf { uri; origin; id = Id.gen () }
+    in
+    `Return (fm, res)
 
-  let handle_dash_separated_blocks m (blocks, meta) =
-    let div ((attrs, am), blocks) =
-      let attrs = Mapper.map_attrs m attrs in
-      let blocks =
+  let handle_dash_separated_blocks (m : 'a Fold_mapper.t) fm (blocks, meta) =
+    let div fm ((attrs, am), blocks) =
+      let fm, attrs = m.Fold_mapper.attrs fm attrs in
+      let fm, blocks =
         match blocks with
-        | [ b ] -> Mapper.map_block m b
-        | blocks -> Mapper.map_block m @@ Block.Blocks (blocks, Meta.none)
+        | [ b ] -> m.block m fm b
+        | blocks -> m.block m fm @@ Block.Blocks (blocks, Meta.none)
       in
-      match blocks with
-      | None -> None
-      | Some blocks -> Some (Ast.div ((blocks, (attrs, am)), Meta.none))
+      let res =
+        match blocks with
+        | None -> None
+        | Some blocks -> Some (Ast.div ((blocks, (attrs, am)), Meta.none))
+      in
+      (fm, res)
     in
     let find_biggest blocks =
       let find_biggest biggest block =
@@ -253,30 +279,46 @@ module Stage1 = struct
       | [] -> List.rev ((acc_attrs, List.rev acc1) :: global_acc)
     in
     match find_biggest blocks with
-    | None -> Mapper.default
-    | Some n ->
+    | None -> Ast.Fold_mapper.default.block m fm (Block.Blocks (blocks, meta))
+    | Some n -> (
         let separator = String.make n '-' in
         let res =
           collect_until_dash ~first:true ~separator
             ((Attributes.empty, Meta.none), [])
             [] blocks
         in
-        let res = List.filter_map div res in
-        Mapper.ret @@ Block.Blocks (res, meta)
+        let fm, res =
+          List.fold_left
+            (fun (fm, acc) b ->
+              let fm, res = div fm b in
+              (fm, match res with None -> acc | Some b -> b :: acc))
+            (fm, []) res
+        in
+        ( fm,
+          match res with
+          | [] -> None
+          | res -> Some (Block.Blocks (List.rev res, meta)) ))
 
   let execute ~htbl_include defs read_file =
     let current_path = Path_entering.make () in
-    let block m = function
-      | Block.Blocks bs -> handle_dash_separated_blocks m bs
-      | Block.Block_quote bq -> turn_block_quotes_into_divs m bq
-      | Block.Code_block cb -> handle_slip_scripts_creation m cb
-      | Block.Ext_standalone_attributes sa ->
-          handle_includes ~htbl_include read_file current_path m sa
-      | _ -> Mapper.default
+    let block m fm = function
+      | Block.Blocks bs -> handle_dash_separated_blocks m fm bs
+      | Block.Block_quote bq -> turn_block_quotes_into_divs m fm bq
+      | Block.Code_block cb -> handle_slip_scripts_creation m fm cb
+      | Block.Ext_standalone_attributes sa as b -> (
+          match
+            handle_includes ~htbl_include fm read_file current_path m sa
+          with
+          | `Default -> Ast.Fold_mapper.default.block m fm b
+          | `Return x -> x)
+      | b -> Ast.Fold_mapper.default.block m fm b
     in
-    let inline i = function
-      | Inline.Image img -> handle_image_inlining i defs current_path img
-      | _ -> Mapper.default
+    let inline i fm = function
+      | Inline.Image img as inl -> (
+          match handle_image_inlining i fm defs current_path img with
+          | `Default -> Ast.Fold_mapper.default.inline i fm inl
+          | `Return (fm, i) -> (fm, Some i))
+      | inl -> Ast.Fold_mapper.default.inline i fm inl
     in
     let attrs = function
       | `Kv (("up", m), v) -> Some (`Kv (("up-at-unpause", m), v))
@@ -324,14 +366,17 @@ module Stage1 = struct
           Some (`Kv (("children:unstatic-at-unpause", m), v))
       | x -> Some x
     in
-    Ast.Mapper.make ~block ~inline ~attrs ()
+    let attrs fm x = (fm, Attributes.map attrs x) in
+    Ast.Fold_mapper.make ~block ~inline ~attrs ()
 
-  let execute defs read_file md =
+  let execute ~fm defs read_file md =
     let htbl_include = Hashtbl.create 3 in
-    let res =
-      Cmarkit.Mapper.map_doc (execute ~htbl_include defs read_file) md
+    let fm, res =
+      Cmarkit.Fold_mapper.fold_map_doc
+        (execute ~htbl_include defs read_file)
+        fm md
     in
-    (res, htbl_include)
+    (fm, res, htbl_include)
 end
 
 module Stage2 = struct
@@ -514,10 +559,9 @@ module Stage4 = struct
     in
     Ast.Folder.make ~block ~inline ()
 
-  let execute ~(fm : Frontmatter.resolved Frontmatter.t) ~read_file md =
-    let (Frontmatter.Resolved fm) = fm in
+  let execute ~(fm : Frontmatter.t) ~read_file md =
     let external_ids =
-      fm.external_ids
+      fm.global.external_ids
       |> List.map (fun x -> ((x, Meta.none), `External, Meta.none))
     in
     let asset_map, id_list =
@@ -569,7 +613,7 @@ module Stage4 = struct
               None)
         asset_map
     in
-    ({ Ast.doc = md; files }, id_map)
+    ({ Ast.doc = md; files; options = fm.global }, id_map)
 end
 
 module Stage5 = struct
@@ -602,24 +646,30 @@ module Stage5 = struct
     ast
 end
 
-let of_cmarkit ~read_file ~(fm : Frontmatter.resolved Frontmatter.t) md =
+let of_cmarkit ~read_file ~(fm : Frontmatter.t) md =
   let defs = Cmarkit.Doc.defs md in
-  let md1, htbl_include = Stage1.execute defs read_file md in
+  let fm, md1, htbl_include = Stage1.execute ~fm defs read_file md in
   let md2 = Stage2.execute md1 in
   let md3 = Stage3.execute md2 in
   let md4, id_map = Stage4.execute ~read_file ~fm md3 in
   (Stage5.execute ~id_map md4, htbl_include)
 
-let compile ?file ?loc_offset ~attrs ~fm ?(read_file = fun _ -> Ok None) s =
+let compile ?file ?(read_file = fun _ -> Ok None) s =
   Diagnosis.with_ @@ fun () ->
   let open Cmarkit in
+  let doc, frontmatter = Cmarkit_proxy.of_string ~read_file ~file s in
   let md =
-    let doc = Cmarkit_proxy.of_string ?loc_offset ~file s in
     let bq = Block.Block_quote.make (Doc.block doc) in
-    let block = Block.Block_quote ((bq, (attrs, Meta.none)), Meta.none) in
+    let block =
+      let toplevel_attributes =
+        frontmatter.local.toplevel_attributes
+        |> Option.value ~default:Frontmatter.Toplevel_attributes.default
+      in
+      Block.Block_quote ((bq, toplevel_attributes), Meta.none)
+    in
     Doc.make block
   in
-  of_cmarkit ~read_file ~fm md
+  of_cmarkit ~read_file md ~fm:frontmatter
 
 let to_cmarkit =
   let ( let* ) x f = Option.bind x f in

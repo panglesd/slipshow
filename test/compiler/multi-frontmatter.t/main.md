@@ -1,0 +1,16 @@
+---
+dimension: 16:9
+css: file.css
+math-mode: mathjax
+---
+
+# A title
+
+## Chapter 1
+
+{include src=chapter1.md}
+
+{pause}
+## Chapter 2
+
+{include src="chapter2/chapter2.md" pause}

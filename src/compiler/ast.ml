@@ -59,7 +59,8 @@ module Files = struct
   type map = t Fpath.Map.t
 end
 
-type t = { doc : Cmarkit.Doc.t; files : Files.map }
+type options = Frontmatter.Global.t
+type t = { doc : Doc.t; files : Files.map; options : options }
 
 module Folder = struct
   let block_ext_default f acc = function
@@ -252,6 +253,117 @@ module Mapper = struct
     | _ -> assert false
 
   let make = Mapper.make ~block_ext_default ~inline_ext_default
+end
+
+module Fold_mapper = struct
+  let ( $ ) f (x, meta) =
+    let acc, res = f x in
+    (acc, (res, meta))
+
+  let map_origin (m : 'a Fold_mapper.t) acc ((l, attrs), meta) =
+    let acc, attrs = m.attrs acc $ attrs in
+    let acc, text = m.inline m acc (Cmarkit.Inline.Link.text l) in
+    let text = Option.value ~default:Cmarkit.Inline.empty text in
+    let reference = Cmarkit.Inline.Link.reference l in
+    let l = Cmarkit.Inline.Link.make text reference in
+    (acc, ((l, attrs), meta))
+
+  let map_media m acc { origin; uri; id } =
+    let acc, origin = map_origin m acc origin in
+    (acc, { origin; uri; id })
+
+  let block (m : 'a Fold_mapper.t) acc = function
+    | S_block b ->
+        let acc, b =
+          match b with
+          | Included ((block, attrs), meta) ->
+              let acc, attrs = m.attrs acc $ attrs in
+              let acc, block = m.block m acc block in
+              let res =
+                Option.map (fun block -> Included ((block, attrs), meta)) block
+              in
+              (acc, res)
+          | Div ((block, attrs), meta) ->
+              let acc, attrs = m.attrs acc $ attrs in
+              let acc, block = m.block m acc block in
+              let res =
+                Option.map (fun block -> Div ((block, attrs), meta)) block
+              in
+              (acc, res)
+          | Slide (({ content; title }, attrs), meta) ->
+              let acc, attrs = m.attrs acc $ attrs in
+              let acc, content = m.block m acc content in
+              let acc, title =
+                match title with
+                | None -> (acc, None)
+                | Some (title, t_attrs) ->
+                    let acc, t_attrs = m.attrs acc $ t_attrs in
+                    let acc, title = m.inline m acc title in
+                    let title =
+                      Option.map (fun title -> (title, t_attrs)) title
+                    in
+                    (acc, title)
+              in
+              let res =
+                Option.map
+                  (fun content -> Slide (({ content; title }, attrs), meta))
+                  content
+              in
+              (acc, res)
+          | Slip ((block, attrs), meta) ->
+              let acc, attrs = m.attrs acc $ attrs in
+              let acc, block = m.block m acc block in
+              let res =
+                Option.map (fun block -> Slip ((block, attrs), meta)) block
+              in
+              (acc, res)
+          | SlipScript ((s, attrs), meta) ->
+              let acc, attrs = m.attrs acc $ attrs in
+              (acc, Some (SlipScript ((s, attrs), meta)))
+          | MermaidJS ((s, attrs), meta) ->
+              let acc, attrs = m.attrs acc $ attrs in
+              (acc, Some (MermaidJS ((s, attrs), meta)))
+          | Carousel ((bs, attrs), meta) -> (
+              let acc, attrs = m.attrs acc $ attrs in
+              let acc, bs = List.fold_left_map (m.block m) acc bs in
+              match List.filter_map Fun.id bs with
+              | [] -> (acc, None)
+              | bs -> (acc, Some (Carousel ((bs, attrs), meta))))
+        in
+        let res = Option.map (fun b -> S_block b) b in
+        (acc, res)
+    | normal -> Fold_mapper.default.block m acc normal
+
+  let inline (m : 'a Fold_mapper.t) acc = function
+    | S_inline i ->
+        let acc, i =
+          match i with
+          | Image media ->
+              let acc, media = map_media m acc media in
+              (acc, Image media)
+          | Svg media ->
+              let acc, media = map_media m acc media in
+              (acc, Svg media)
+          | Video media ->
+              let acc, media = map_media m acc media in
+              (acc, Video media)
+          | Audio media ->
+              let acc, media = map_media m acc media in
+              (acc, Audio media)
+          | Pdf media ->
+              let acc, media = map_media m acc media in
+              (acc, Pdf media)
+          | Hand_drawn media ->
+              let acc, media = map_media m acc media in
+              (acc, Hand_drawn media)
+        in
+        (acc, Some (S_inline i))
+    | normal -> Fold_mapper.default.inline m acc normal
+
+  let default = { Fold_mapper.default with block; inline }
+
+  let make ?(block = block) ?(inline = inline) ?attrs () =
+    Fold_mapper.make ~block ~inline ?attrs ()
 end
 
 module Utils = struct

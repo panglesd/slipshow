@@ -1776,6 +1776,26 @@ let code_block_langs doc =
 ]} *)
 end
 
+module Fold_mapper : sig
+
+  type 'a t = {
+    block : 'a t -> 'a -> Block.t -> 'a * Block.t option;
+    inline : 'a t -> 'a -> Inline.t -> 'a * Inline.t option;
+    attrs : 'a -> Attributes.t -> 'a * Attributes.t;
+  }
+
+  val default : 'a t
+
+  val make :
+    ?block:('a t -> 'a -> Block.t -> 'a * Block.t option) ->
+    ?inline:('a t -> 'a -> Inline.t -> 'a * Inline.t option) ->
+    ?attrs:('a -> Attributes.t -> 'a * Attributes.t) ->
+    unit ->
+    'a t
+
+  val fold_map_doc : 'a t -> 'a -> Doc.t -> 'a * Doc.t
+end
+
 (** {1:extensions Extensions}
 
     For some documents, bare CommonMark just misses it. The extensions

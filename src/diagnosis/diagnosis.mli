@@ -8,6 +8,7 @@ type t =
   | WrongType of { loc_reason : loc; loc_block : loc; expected_type : string }
   | ParsingError of { action : string; msg : string; loc : loc }
   | ParsingWarnor of { warnor : Actions_arguments.W.warnor; loc : loc }
+  | InconsistentOption of { option_name : string; loc1 : loc; loc2 : loc }
   | MissingID of { id : string; loc : loc }
   | UnknownAttribute of { attr : string; loc : loc }
   | General of {
