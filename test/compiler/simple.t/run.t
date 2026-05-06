@@ -9,7 +9,7 @@ We can compile the file using the slip_of_mark binary
           <div id="slipshow-main">
             <div id="slipshow-content">
               <svg id="slipshow-drawing-elem" style="overflow:visible; position: absolute; z-index:1000; pointer-events: none"></svg>
-              <div class="slipshow-rescaler" slip enter-at-unpause=~duration:0>
+              <div class="slipshow-rescaler" enter-at-unpause=~duration:0 slip>
   <div class="slip">
   <div class="slip-body">
   <div>
@@ -49,7 +49,7 @@ If we do not pass an input file, it gets its value from stdin
           <div id="slipshow-main">
             <div id="slipshow-content">
               <svg id="slipshow-drawing-elem" style="overflow:visible; position: absolute; z-index:1000; pointer-events: none"></svg>
-              <div class="slipshow-rescaler" slip enter-at-unpause=~duration:0>
+              <div class="slipshow-rescaler" enter-at-unpause=~duration:0 slip>
   <div class="slip">
   <div class="slip-body">
   <div>

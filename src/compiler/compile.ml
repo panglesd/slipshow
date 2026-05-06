@@ -647,8 +647,20 @@ module Stage4 = struct
     ({ Ast.doc = md; files; options = fm.global }, id_map)
 end
 
-let of_cmarkit ~read_file ~(fm : Frontmatter.t) md =
-  let defs = Cmarkit.Doc.defs md in
+let of_cmarkit ?(file = "-") ~read_file ~(fm : Frontmatter.t) md =
+  let file = Fpath.v file in
+  let md =
+    (* Insert the result inside an "included node" *)
+    let block = Doc.block md in
+    let meta = Ast.Utils.Block.meta block in
+    let toplevel_attributes =
+      fm.local.toplevel_attributes
+      |> Option.value ~default:Frontmatter.Toplevel_attributes.default
+    in
+    let block = Ast.included (((file, block), toplevel_attributes), meta) in
+    Doc.make block
+  in
+  let defs = Doc.defs md in
   let fm, md1, htbl_include = Stage1.execute ~fm defs read_file md in
   let md2 = Stage2.execute md1 in
   let md3 = Stage3.execute md2 in
@@ -658,24 +670,8 @@ let of_cmarkit ~read_file ~(fm : Frontmatter.t) md =
 
 let compile ?file ?(read_file = fun _ -> Ok None) s =
   Diagnosis.with_ @@ fun () ->
-  let open Cmarkit in
   let doc, frontmatter = Cmarkit_proxy.of_string ~read_file ~file s in
-  let md =
-    let bq = Block.Block_quote.make (Doc.block doc) in
-    let textloc =
-      doc |> Doc.block |> Ast.Utils.Block.meta |> Cmarkit.Meta.textloc
-    in
-    let meta = Cmarkit.Meta.make ~textloc () in
-    let block =
-      let toplevel_attributes =
-        frontmatter.local.toplevel_attributes
-        |> Option.value ~default:Frontmatter.Toplevel_attributes.default
-      in
-      Block.Block_quote ((bq, toplevel_attributes), meta)
-    in
-    Doc.make block
-  in
-  of_cmarkit ~read_file md ~fm:frontmatter
+  of_cmarkit ?file ~read_file doc ~fm:frontmatter
 
 let to_cmarkit =
   let ( let* ) x f = Option.bind x f in
