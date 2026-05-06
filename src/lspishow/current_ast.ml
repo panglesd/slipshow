@@ -5,15 +5,15 @@ let pos_in_textloc ?(permissive = false) ~(pos : Linol_lwt.Position.t) ~loc () =
   let ( <? ) = if permissive then ( <= ) else ( < ) in
   let range = loc in
   let range = Diagnostic.linoloc_of_textloc range in
-  Format.eprintf "is %d:%d in %d:%d -> %d:%d?\n" pos.line pos.character
-    range.start.line range.start.character range.end_.line range.end_.character;
+  (* Format.eprintf "is %d:%d in %d:%d -> %d:%d?\n" pos.line pos.character *)
+  (*   range.start.line range.start.character range.end_.line range.end_.character; *)
   let res =
     ((range.start.line = pos.line && range.start.character <= pos.character)
     || range.start.line < pos.line)
     && ((range.end_.line = pos.line && pos.character <? range.end_.character)
        || pos.line < range.end_.line)
   in
-  Format.eprintf "%s\n%!" (if res then "yes" else "no");
+  (* Format.eprintf "%s\n%!" (if res then "yes" else "no"); *)
   res
 
 let pos_in ~(pos : Linol_lwt.Position.t) ~meta =
@@ -170,7 +170,6 @@ let rec enter_block acc pos (block : Cmarkit.Block.t) =
       let block = List_item.block li in
       if pos_in_block block ~pos then enter_block acc pos block else acc
   | Paragraph ((p, _attrs), _) ->
-      prerr_endline "entering paragraph";
       let inline = Paragraph.inline p in
       if pos_in_inline ~pos inline then enter_inline acc pos inline else acc
   | Slipshow.Ast.S_block b -> (

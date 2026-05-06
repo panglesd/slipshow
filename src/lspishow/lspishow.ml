@@ -17,15 +17,35 @@ let read_file parent s =
 let current_ast = ref None
 let _entry_points : Fpath.t list option ref = ref None
 
+let split_by_inclusion (ast : Slipshow.Ast.t) =
+  let folder =
+    Slipshow.Ast.Folder.make
+      ~block:(fun f acc -> function
+        | Slipshow.Ast.S_block (Included (((fpath, b), _attrs), _meta)) ->
+            let acc = Fpath.Map.add fpath b acc in
+            Cmarkit.Folder.ret @@ Slipshow.Ast.Folder.continue_block f b acc
+        | _ -> Cmarkit.Folder.default)
+      ~inline:(fun _ acc _ -> Cmarkit.Folder.ret acc)
+      ()
+  in
+  let map = Cmarkit.Folder.fold_doc folder Fpath.Map.empty ast.doc in
+  let () =
+    Fpath.Map.iter
+      (fun fpath _ -> Format.eprintf "Fpath = %a\n%!" Fpath.pp fpath)
+      map
+  in
+  map
+
 let diagnostics (uri : Linol.Lsp.Types.DocumentUri.t) (s : string) :
     Linol.Lsp.Types.Diagnostic.t list =
   let file = Linol.Lsp.Types.DocumentUri.to_path uri in
   let open Slipshow in
   let read_file = read_file Fpath.(parent @@ v file) in
-  let ({ Compile.ast = md; _ } as v), errors =
-    Compile.compile ~file ~read_file s
-  in
-  Format.eprintf "%a" Ast.Ast_printer.pp_bol (`Block (Cmarkit.Doc.block md.doc));
+  let ({ Compile.ast; _ } as v), errors = Compile.compile ~file ~read_file s in
+
+  let _map = split_by_inclusion ast in
+  Format.eprintf "%a\n\n\n%!" Ast.Ast_printer.pp_bol
+    (`Block (Cmarkit.Doc.block ast.doc));
   current_ast := Some v;
   List.concat_map Diagnostic.of_error errors
 
@@ -176,7 +196,6 @@ class lsp_server =
 
     method private _on_doc ~(notify_back : Linol_lwt.Jsonrpc2.notify_back)
         (uri : Linol.Lsp.Types.DocumentUri.t) (contents : string) =
-      Format.eprintf "error%!";
       let diags = diagnostics uri contents in
       notify_back#send_diagnostic diags
 

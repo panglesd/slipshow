@@ -247,7 +247,7 @@ let custom_html_renderer (files : Ast.Files.map) =
       | _ -> false (* let the default HTML renderer handle that *)
     in
     let block c = function
-      | Ast.Included ((b, (attrs, _)), _) | Ast.Div ((b, (attrs, _)), _) ->
+      | Ast.Included (((_, b), (attrs, _)), _) | Ast.Div ((b, (attrs, _)), _) ->
           let should_include_div =
             let attrs_is_not_empty = not @@ Attributes.is_empty attrs in
             let contains_multiple_blocks =

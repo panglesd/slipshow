@@ -175,8 +175,8 @@ module Stage1 = struct
                   ( fm,
                     Some
                       (Ast.included
-                         ((mapped_blocks, (attrs, meta)), Meta.make ~textloc ()))
-                  )))
+                         ( ((relativized_path, mapped_blocks), (attrs, meta)),
+                           Meta.make ~textloc () )) )))
     | _ -> `Default
 
   let get_link_definition (defs : Cmarkit.Label.defs) l =
@@ -695,7 +695,8 @@ let to_cmarkit =
           | Some b -> b
         in
         Mapper.ret (Block.Blocks (title @ [ b ], meta))
-    | Div ((bq, _), meta) | Slip ((bq, _), meta) | Included ((bq, _), meta) ->
+    | Div ((bq, _), meta) | Slip ((bq, _), meta) | Included (((_, bq), _), meta)
+      ->
         let b =
           match Mapper.map_block m bq with None -> Block.empty | Some b -> b
         in
