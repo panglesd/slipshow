@@ -27,7 +27,7 @@ type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
 val delayed :
   ?options:Frontmatter.Global.t ->
   ?slipshow_js:Asset.t ->
-  ?file:string ->
+  ?file:Fpath.t ->
   ?read_file:file_reader ->
   has_speaker_view:bool ->
   string ->
@@ -44,7 +44,7 @@ val convert :
   has_speaker_view:bool ->
   ?autofocus:bool ->
   ?slipshow_js:Asset.t ->
-  ?file:string ->
+  ?file:Fpath.t ->
   ?starting_state:starting_state ->
   ?read_file:file_reader ->
   string ->

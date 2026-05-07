@@ -249,18 +249,20 @@ let convert_to_md ~read_file content =
   let sd = Compile.to_cmarkit sd in
   Cmarkit_commonmark.of_doc ~include_attributes:false sd
 
-module SMap = Map.Make (String)
-
 let to_grace file whole_content htbl_include er =
   Diagnosis.to_grace
     (fun f ->
-      if file = Some f then
-        Grace.Source.(`String { name = file; content = whole_content })
-      else
-        match SMap.find_opt f htbl_include with
-        | Some content -> Grace.Source.(`String { name = Some f; content })
-        | None ->
-            Grace.Source.(`String { name = file; content = whole_content }))
+      let open Grace.Source in
+      match file with
+      | Some file when Fpath.equal file f ->
+          let name = Fpath.to_string file in
+          `String { name = Some name; content = whole_content }
+      | _ -> (
+          match Fpath.Map.find_opt f htbl_include with
+          | Some content -> `String { name = Some (Fpath.to_string f); content }
+          | None ->
+              let name = Option.map Fpath.to_string file in
+              `String { name; content = whole_content }))
     er
 
 let delayed ?(options = Frontmatter.Global.empty) ?slipshow_js ?file

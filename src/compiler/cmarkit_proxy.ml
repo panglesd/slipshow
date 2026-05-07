@@ -4,6 +4,7 @@ let of_string ?loc_offset ~file =
     ?file
 
 let of_string ~read_file ~file s =
+  let file = Option.map Fpath.to_string file in
   let frontmatter, s, loc_offset =
     match Frontmatter.extract s with
     | None -> (Frontmatter.empty, s, (0, 0))

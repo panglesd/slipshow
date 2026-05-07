@@ -73,7 +73,7 @@ let pp ppf = function
 let with_range source_map loc f =
   let open Grace in
   let range (loc : loc) =
-    let source = source_map (Cmarkit.Textloc.file loc) in
+    let source = source_map (Fpath.v (Cmarkit.Textloc.file loc)) in
     let start = Cmarkit.Textloc.first_byte loc in
     let stop = Cmarkit.Textloc.last_byte loc + 1 in
     Range.create ~source (Byte_index.of_int start) (Byte_index.of_int stop)

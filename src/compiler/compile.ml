@@ -143,9 +143,9 @@ module Stage1 = struct
             `Default
         | Ok None -> `Default
         | Ok (Some contents) -> (
-            Hashtbl.add htbl_include (Fpath.to_string relativized_path) contents;
+            Hashtbl.add htbl_include relativized_path contents;
             let md, { Frontmatter.global; local = { toplevel_attributes } } =
-              let file = Some (Fpath.to_string relativized_path) in
+              let file = Some relativized_path in
               Cmarkit_proxy.of_string ~file ~read_file contents
             in
             let fm =
@@ -529,7 +529,7 @@ end
 
 type t = {
   ast : Ast.t;
-  included_files : string Map.Make(String).t;
+  included_files : string Fpath.Map.t;
   id_map : Id_map.t;
   action_plan : Action_plan.t;
 }
@@ -647,10 +647,7 @@ module Stage4 = struct
     ({ Ast.doc = md; files; options = fm.global }, id_map)
 end
 
-module SMap = Map.Make (String)
-
-let of_cmarkit ?(file = "-") ~read_file ~(fm : Frontmatter.t) md =
-  let file = Fpath.v file in
+let of_cmarkit ?(file = Fpath.v "-") ~read_file ~(fm : Frontmatter.t) md =
   let md =
     (* Insert the result inside an "included node" *)
     let block = Doc.block md in
@@ -668,7 +665,7 @@ let of_cmarkit ?(file = "-") ~read_file ~(fm : Frontmatter.t) md =
   let md3 = Stage3.execute md2 in
   let md4, id_map = Stage4.execute ~read_file ~fm md3 in
   let action_plan, id_map = Action_plan.execute ~id_map md4 in
-  let included_files = htbl_include |> Hashtbl.to_seq |> SMap.of_seq in
+  let included_files = htbl_include |> Hashtbl.to_seq |> Fpath.Map.of_seq in
   { ast = md4; included_files; id_map; action_plan }
 
 let compile ?file ?(read_file = fun _ -> Ok None) s =

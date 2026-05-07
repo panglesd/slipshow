@@ -43,9 +43,7 @@ let compile ~input ~output =
     let parent =
       match input with `Stdin -> Fpath.v "./" | `File f -> Fpath.parent f
     in
-    let file =
-      match input with `File f -> Some (Fpath.to_string f) | _ -> None
-    in
+    let file = match input with `File f -> Some f | _ -> None in
     with_read_file parent @@ fun read_file ->
     Slipshow.convert ~has_speaker_view:true ?file ~read_file content
   in
@@ -84,9 +82,8 @@ let serve ~input ~output ~port =
   let compile () =
     let* content = Io.read (`File input) in
     let (result, warnings), used_files =
-      let file = Fpath.to_string input in
       with_read_file (Fpath.parent input) @@ fun read_file ->
-      Slipshow.delayed ~has_speaker_view:true ~read_file ~file content
+      Slipshow.delayed ~has_speaker_view:true ~read_file ~file:input content
     in
     let warnings =
       List.map
