@@ -1,8 +1,10 @@
 type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
 
+module SMap := Map.Make(String)
+
 type t = {
   ast : Ast.t;
-  included_files : (string, string) Hashtbl.t;
+  included_files : string SMap.t;
   id_map : Id_map.t;
   action_plan : Action_plan.t;
 }

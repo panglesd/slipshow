@@ -529,7 +529,7 @@ end
 
 type t = {
   ast : Ast.t;
-  included_files : (string, string) Hashtbl.t;
+  included_files : string Map.Make(String).t;
   id_map : Id_map.t;
   action_plan : Action_plan.t;
 }
@@ -647,6 +647,8 @@ module Stage4 = struct
     ({ Ast.doc = md; files; options = fm.global }, id_map)
 end
 
+module SMap = Map.Make (String)
+
 let of_cmarkit ?(file = "-") ~read_file ~(fm : Frontmatter.t) md =
   let file = Fpath.v file in
   let md =
@@ -666,7 +668,8 @@ let of_cmarkit ?(file = "-") ~read_file ~(fm : Frontmatter.t) md =
   let md3 = Stage3.execute md2 in
   let md4, id_map = Stage4.execute ~read_file ~fm md3 in
   let action_plan, id_map = Action_plan.execute ~id_map md4 in
-  { ast = md4; included_files = htbl_include; id_map; action_plan }
+  let included_files = htbl_include |> Hashtbl.to_seq |> SMap.of_seq in
+  { ast = md4; included_files; id_map; action_plan }
 
 let compile ?file ?(read_file = fun _ -> Ok None) s =
   Diagnosis.with_ @@ fun () ->
