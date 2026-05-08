@@ -25,62 +25,93 @@ let create ~loc ?ploc msg =
         ())
     msg
 
-let of_error (e : Diagnosis.t) =
+(* let in_file file (e : Diagnosis.t) = *)
+(*   let loc_in_file loc = String.equal (Cmarkit.Textloc.file loc) file in *)
+(*   let if_non_empty l f = match l with [] -> None | _ :: _ -> Some (f ()) in *)
+(*   let open Diagnosis in *)
+(*   match e with *)
+(*   | DuplicateID e -> *)
+(*       let occurrences = List.filter loc_in_file e.occurrences in *)
+(*       if_non_empty occurrences @@ fun () -> DuplicateID { e with occurrences } *)
+(*   | MissingFile e -> *)
+(*       let locs = List.filter loc_in_file e.locs in *)
+(*       if_non_empty locs @@ fun () -> MissingFile { e with locs } *)
+(*   | WrongType { loc_reason; loc_block; expected_type } -> _ *)
+(*   | ParsingError _ -> _ *)
+(*   | ParsingWarnor _ -> _ *)
+(*   | InconsistentOption _ -> _ *)
+(*   | MissingID _ -> _ *)
+(*   | UnknownAttribute _ -> _ *)
+(*   | UnknownFrontmatterField _ -> _ *)
+(*   | FrontmatterParsing _ -> _ *)
+(*   | InvalidFrontmatterLine _ -> _ *)
+(*   | ChildrenClassWithValue _ -> _ *)
+
+let of_error ~file (e : Diagnosis.t) =
+  let loc_in_file loc = String.equal (Cmarkit.Textloc.file loc) file in
+  let if_in loc f = if loc_in_file loc then [ f () ] else [] in
   match e with
   | DuplicateID { id; occurrences } ->
+      let occurrences = List.filter loc_in_file occurrences in
       List.map
         (fun loc -> create ~loc "ID '%s' is not unique in the document" id)
         occurrences
   | MissingFile { file; error_msg; locs } ->
+      let locs = List.filter loc_in_file locs in
       List.map
         (fun loc ->
           create ~loc "Error when reading file '%s': %s" file error_msg)
         locs
   | WrongType { loc_reason; loc_block = _; expected_type } ->
-      [
-        create ~loc:loc_reason "This should have a '%s' as target" expected_type;
-      ]
-  | ParsingError { action = _; msg; loc } -> [ create ~loc "%s" msg ]
+      if_in loc_reason @@ fun () ->
+      create ~loc:loc_reason "This should have a '%s' as target" expected_type
+  | ParsingError { action = _; msg; loc } ->
+      if_in loc @@ fun () -> create ~loc "%s" msg
   | ParsingWarnor { warnor; loc } ->
       let res =
         match warnor with
         | UnusedArgument { action_name; possible_arguments = []; loc = ploc; _ }
           ->
+            if_in loc @@ fun () ->
             create ~loc ~ploc "Action %s takes no named arguments" action_name
         | UnusedArgument
             { action_name; argument_name = _; possible_arguments; loc = ploc }
           ->
+            if_in loc @@ fun () ->
             create ~loc ~ploc "Action %s only takes named arguments: '%s'"
               action_name
               (String.concat "', '" possible_arguments)
-        | Parsing_failure { msg; loc = ploc } -> create ~loc ~ploc "%s" msg
+        | Parsing_failure { msg; loc = ploc } ->
+            if_in loc @@ fun () -> create ~loc ~ploc "%s" msg
       in
-      [ res ]
-  | MissingID { id; loc } -> [ create ~loc "Id '%s' could not be found" id ]
+      res
+  | MissingID { id; loc } ->
+      if_in loc @@ fun () -> create ~loc "Id '%s' could not be found" id
   | UnknownAttribute { attr; loc } ->
-      [ create ~loc "Attribute '%s' is not known by slipshow" attr ]
+      if_in loc @@ fun () ->
+      create ~loc "Attribute '%s' is not known by slipshow" attr
   | UnknownFrontmatterField { key; loc; allowed_keys } ->
-      [
-        create ~loc
-          "Frontmatter field '%s' is not interpreted by slipshow.\n\
-           Recognized fields are: '%s'"
-          key
-          (String.concat "', '" allowed_keys);
-      ]
-  | FrontmatterParsing { key = _; msg; loc } -> [ create ~loc "%s" msg ]
+      if_in loc @@ fun () ->
+      create ~loc
+        "Frontmatter field '%s' is not interpreted by slipshow.\n\
+         Recognized fields are: '%s'"
+        key
+        (String.concat "', '" allowed_keys)
+  | FrontmatterParsing { key = _; msg; loc } ->
+      if_in loc @@ fun () -> create ~loc "%s" msg
   | InvalidFrontmatterLine { loc } ->
-      [
-        create ~loc
-          "Frontmatter have to be of the form \"key:value\" on a single line.";
-      ]
+      if_in loc @@ fun () ->
+      create ~loc
+        "Frontmatter have to be of the form \"key:value\" on a single line."
   | ChildrenClassWithValue { loc } ->
-      [ create ~loc "Children classes cannot have a value" ]
+      if_in loc @@ fun () -> create ~loc "Children classes cannot have a value"
   | InconsistentOption { option_name; loc1; loc2 } ->
-      [
+      ( if_in loc1 @@ fun () ->
         create ~loc:loc1
           "option '%s' is defined multiple times in an incompatible way"
-          option_name;
-        create ~loc:loc2
-          "option '%s' is defined multiple times in an incompatible way"
-          option_name;
-      ]
+          option_name )
+      @ if_in loc2
+      @@ fun () ->
+      create ~loc:loc2
+        "option '%s' is defined multiple times in an incompatible way"
+        option_name

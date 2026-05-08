@@ -24,7 +24,7 @@ let of_uri ~read_file s =
   | Path p -> (
       let fp = Fpath.normalize p in
       match read_file fp with
-      | Ok (Some content) ->
+      | Ok (Some (content, _)) ->
           let mime_type = Some (mime_of_ext (Fpath.filename fp)) in
           Local { mime_type; content; path = fp }
       | Ok None -> Remote (Fpath.to_string fp)

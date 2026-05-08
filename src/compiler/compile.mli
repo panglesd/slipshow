@@ -1,4 +1,5 @@
-type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
+type file_reader =
+  Fpath.t -> ((string * Fpath.t) option, [ `Msg of string ]) result
 
 type t = {
   ast : Ast.t;
@@ -6,6 +7,9 @@ type t = {
   id_map : Id_map.t;
   action_plan : Action_plan.t;
 }
+
+(* val included_files : *)
+(*   ?file:string -> ?read_file:file_reader -> string -> string list *)
 
 val to_cmarkit : Ast.t -> Cmarkit.Doc.t
 

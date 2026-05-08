@@ -32,7 +32,7 @@ let with_read_file parent f =
     let normalized = Fpath.normalize @@ (Fpath.v (Sys.getcwd ()) // fp) in
     l := Fpath.Set.add normalized !l;
     let+ res = Io.read (`File fp) in
-    Some res
+    Some (res, fp)
   in
   let res = f read_file in
   (res, !l)

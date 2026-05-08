@@ -1,6 +1,7 @@
 open Cmarkit
 
-type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
+type file_reader =
+  Fpath.t -> ((string * Fpath.t) option, [ `Msg of string ]) result
 
 (** The compilation from "pure" markdown cmarkit values to compiled slipshow
     values (as extended cmarkit values) is done in several stages. The reason is
@@ -142,8 +143,8 @@ module Stage1 = struct
                  });
             `Default
         | Ok None -> `Default
-        | Ok (Some contents) -> (
-            Hashtbl.add htbl_include relativized_path contents;
+        | Ok (Some (contents, full_path)) -> (
+            Hashtbl.add htbl_include full_path contents;
             let md, { Frontmatter.global; local = { toplevel_attributes } } =
               let file = Some relativized_path in
               Cmarkit_proxy.of_string ~file ~read_file contents
@@ -175,7 +176,7 @@ module Stage1 = struct
                   ( fm,
                     Some
                       (Ast.included
-                         ( ((relativized_path, mapped_blocks), (attrs, meta)),
+                         ( ((full_path, mapped_blocks), (attrs, meta)),
                            Meta.make ~textloc () )) )))
     | _ -> `Default
 
@@ -631,7 +632,7 @@ module Stage4 = struct
           let read_file : file_reader = read_file in
           let mode = `Base64 in
           match read_file path with
-          | Ok (Some content) ->
+          | Ok (Some (content, _)) ->
               let used_by = List.map fst used_by in
               Some { Ast.Files.content; mode; used_by; path }
           | Ok None -> None
@@ -672,6 +673,13 @@ let compile ?file ?(read_file = fun _ -> Ok None) s =
   Diagnosis.with_ @@ fun () ->
   let doc, frontmatter = Cmarkit_proxy.of_string ~read_file ~file s in
   of_cmarkit ?file ~read_file doc ~fm:frontmatter
+
+(* let included_files ~read_file file s = *)
+(*   Diagnosis.with_ @@ fun () -> *)
+(*   let doc, fm = Cmarkit_proxy.of_string ~read_file ~file s in *)
+(*   let defs = Doc.defs doc in *)
+(*   let _fm, _md1, htbl_include = Stage1.execute ~fm defs read_file doc in *)
+(*   htbl_include |> Hashtbl.to_seq_keys |> List.of_seq *)
 
 let to_cmarkit =
   let ( let* ) x f = Option.bind x f in

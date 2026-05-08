@@ -5,7 +5,8 @@ module Ast = Ast
 module Id_map = Id_map
 module Action_plan = Action_plan
 
-type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
+type file_reader =
+  Fpath.t -> ((string * Fpath.t) option, [ `Msg of string ]) result
 
 let math_option_elem math_mode ~has_math =
   let elem =
