@@ -114,7 +114,14 @@ module State = struct
         ()
     | _ -> Lwt.return_unit
 
-  let update_from_buffer (file : Fpath.t) s = update ~only_deps:true file s
+  let update_from_buffer (file : Fpath.t) s =
+    let* res = update ~only_deps:false file s in
+    match res with
+    | `No_change -> (
+        let root = Rev_deps.get_root file in
+
+        match Hashtbl.find_opt buffers root with None -> _ | Some root -> (match update ~only_deps:false root root.source _))
+    | _ -> _
 end
 
 (* let split_by_inclusion (ast : Slipshow.Ast.t) = *)

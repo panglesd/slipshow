@@ -220,8 +220,7 @@ let folder =
     in
     Folder.ret @@ Ast.Folder.continue_inline f i acc
   in
-  Ast.Folder.make ~block ~inline ()
+  Ast.Folder.fold_units ~block ~inline
 
 let execute ~id_map ast =
-  Folder.fold_doc folder ([], id_map) ast.Ast.doc |> fun (steps, id_map) ->
-  (List.rev steps, id_map)
+  folder ([], id_map) ast |> fun (steps, id_map) -> (List.rev steps, id_map)

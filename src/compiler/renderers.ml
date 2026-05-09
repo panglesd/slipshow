@@ -115,10 +115,10 @@ let src uri files =
   | Asset.Uri.Link l -> `Link l
   | Path p -> (
       match Fpath.Map.find_opt p (files : Ast.Files.map) with
-      | None -> `Link (Fpath.to_string p)
-      | Some { content; mode = `Base64; _ } ->
+      | Some { content = Ok (Some content); mode = `Base64; _ } ->
           let mime_type = Magic_mime.lookup (Fpath.filename p) in
-          `Source (content, mime_type))
+          `Source (content, mime_type)
+      | _ -> `Link (Fpath.to_string p))
 
 let src_to_link = function
   | `Link l -> l
@@ -138,12 +138,12 @@ let pdf c ~uri ~files i attrs =
       in
       let src =
         match Fpath.Map.find_opt p (files : Ast.Files.map) with
-        | None ->
-            Logs.warn (fun m -> m "No pdf found: %a" Fpath.pp p);
-            Fpath.to_string p
-        | Some { content; mode = `Base64; _ } ->
+        | Some { content = Ok (Some content); mode = `Base64; _ } ->
             let base64 = Base64.encode_string content in
             Format.sprintf "%s" base64
+        | _ ->
+            Logs.warn (fun m -> m "No pdf found: %a" Fpath.pp p);
+            Fpath.to_string p
       in
       let plain_text i =
         let lines = Inline.to_plain_text ~break_on_soft:false i in
@@ -197,15 +197,15 @@ let pure_embed c uri files attrs =
   | Asset.Uri.Link _ -> Logs.err (fun m -> m "Could not embed a pure embed")
   | Path p -> (
       match Fpath.Map.find_opt p (files : Ast.Files.map) with
-      | None -> Logs.err (fun m -> m "Could not embed a pure embed v2")
-      | Some { content; mode = `Base64; _ } ->
+      | Some { content = Ok (Some content); mode = `Base64; _ } ->
           Context.string c "<span x-data=\"";
           html_escaped_string c content;
           Context.string c "\" ";
           RenderAttrs.add_attrs c attrs;
-          Context.string c "></span>")
+          Context.string c "></span>"
+      | _ -> Logs.err (fun m -> m "Could not embed a pure embed v2"))
 
-let custom_html_renderer (files : Ast.Files.map) =
+let custom_html_renderer (units : Ast.units) (files : Ast.Files.map) =
   let open Cmarkit_renderer in
   let open Cmarkit in
   let open Cmarkit_html in
@@ -234,6 +234,7 @@ let custom_html_renderer (files : Ast.Files.map) =
           pure_embed c uri files attrs;
           true
     in
+
     let inline c = function
       | Inline.Text ((t, (attrs, _)), _) ->
           (* Put text inside spans to be able to apply styles on them *)
@@ -246,27 +247,45 @@ let custom_html_renderer (files : Ast.Files.map) =
       | Ast.S_inline i -> inline c i
       | _ -> false (* let the default HTML renderer handle that *)
     in
-    let block c = function
-      | Ast.Included (((_, b), (attrs, _)), _) | Ast.Div ((b, (attrs, _)), _) ->
-          let should_include_div =
-            let attrs_is_not_empty = not @@ Attributes.is_empty attrs in
-            let contains_multiple_blocks =
-              let is_multiple l =
-                l
-                |> List.filter (function
-                  | Block.Blank_line _ -> false
-                  | _ -> true)
-                |> List.length |> ( <= ) 2
-              in
-              match b with
-              | Block.Blocks (l, _) when is_multiple l -> true
-              | _ -> false
-            in
-            attrs_is_not_empty || contains_multiple_blocks
+
+    let div c b attrs =
+      let should_include_div =
+        let attrs_is_not_empty = not @@ Attributes.is_empty attrs in
+        let contains_multiple_blocks =
+          let is_multiple l =
+            l
+            |> List.filter (function Block.Blank_line _ -> false | _ -> true)
+            |> List.length |> ( <= ) 2
           in
-          if should_include_div then
-            RenderAttrs.in_block c "div" attrs (fun () -> Context.block c b)
-          else Context.block c b;
+          match b with
+          | Block.Blocks (l, _) when is_multiple l -> true
+          | _ -> false
+        in
+        attrs_is_not_empty || contains_multiple_blocks
+      in
+      if should_include_div then
+        RenderAttrs.in_block c "div" attrs (fun () -> Context.block c b)
+      else Context.block c b
+    in
+
+    let block c = function
+      | Ast.Included ((fpath, (attrs, _)), _) ->
+          let () =
+            match Fpath.Map.find_opt fpath units.units with
+            | None ->
+                Format.eprintf "Unit not found: %a\n%!" Fpath.pp fpath;
+                ()
+            | Some unit ->
+                let attrs =
+                  Attributes.merge ~base:attrs
+                    ~new_attrs:(fst unit.Ast.toplevel_attributes)
+                in
+                let b = Doc.block unit.Ast.ast in
+                div c b attrs
+          in
+          true
+      | Ast.Div ((b, (attrs, _)), _) ->
+          div c b attrs;
           true
       | Ast.Carousel ((l, (attrs, _)), _) ->
           let attrs =
@@ -342,5 +361,10 @@ let custom_html_renderer (files : Ast.Files.map) =
   in
   compose default custom_html
 
-let to_html_string (doc : Ast.t) =
-  Cmarkit_renderer.doc_to_string (custom_html_renderer doc.files) doc.doc
+let to_html_string (units : Ast.units) =
+  match Fpath.Map.find_opt units.entry_point units.units with
+  | None -> "Could not find entry point in compiled presentation"
+  | Some unit ->
+      Cmarkit_renderer.doc_to_string
+        (custom_html_renderer units units.files)
+        unit.ast

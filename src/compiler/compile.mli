@@ -1,17 +1,25 @@
 type file_reader =
   Fpath.t -> ((string * Fpath.t) option, [ `Msg of string ]) result
 
-type t = {
-  ast : Ast.t;
-  included_files : string Fpath.Map.t;
-  id_map : Id_map.t;
-  action_plan : Action_plan.t;
-}
-
 (* val included_files : *)
 (*   ?file:string -> ?read_file:file_reader -> string -> string list *)
 
-val to_cmarkit : Ast.t -> Cmarkit.Doc.t
+val to_cmarkit : Ast.units -> Cmarkit.Doc.t
 
-val compile :
-  ?file:Fpath.t -> ?read_file:file_reader -> string -> t * Diagnosis.t list
+val unit :
+  read_file:file_reader ->
+  Fpath.t ->
+  (Ast.units, [ `Msg of string ]) result * Diagnosis.t list
+
+val add_to_compile :
+  Fpath.t ->
+  Ast.units ->
+  read_file:file_reader ->
+  (Ast.units, [ `Msg of string ]) result * Diagnosis.t list
+
+val compile_all :
+  read_file:file_reader ->
+  Fpath.t ->
+  (Ast.units, [ `Msg of string ]) result * Diagnosis.t list
+
+val action_plan : Ast.units -> Action_plan.t

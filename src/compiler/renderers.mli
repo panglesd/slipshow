@@ -1,1 +1,1 @@
-val to_html_string : Ast.t -> string
+val to_html_string : Ast.units -> string

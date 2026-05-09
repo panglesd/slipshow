@@ -5,7 +5,7 @@ open Cmarkit
 type slide = { content : Block.t; title : Inline.t attributed option }
 
 type s_block =
-  | Included of (Fpath.t * Block.t) attributed node
+  | Included of Fpath.t attributed node
   | Div of Block.t attributed node
   | Slide of slide attributed node
   | Slip of Block.t attributed node
@@ -46,21 +46,36 @@ let audio i = S_inline (Audio i)
 let pdf i = S_inline (Pdf i)
 let hand_drawn i = S_inline (Hand_drawn i)
 
+type t = Cmarkit.Doc.t
+
+type unit' = {
+  ast : t;
+  deps : Cmarkit.Textloc.t list Fpath.Map.t;
+      (** Map of dependency -> List of places it is included *)
+  id_map : Id_map.t;
+  source : string;
+  toplevel_attributes : Cmarkit.Attributes.t Cmarkit.node;
+}
+
 module Files = struct
   type mode = [ `Base64 ]
 
   type t = {
     path : Fpath.t;
-    content : string;
-    used_by : string list;
+    content : (string option, [ `Msg of string ]) result;
+    used_by : (string * Textloc.t) list;
     mode : mode;
   }
 
   type map = t Fpath.Map.t
 end
 
-type options = Frontmatter.Global.t
-type t = { doc : Doc.t; files : Files.map; options : options }
+type units = {
+  units : unit' Fpath.Map.t;
+  entry_point : Fpath.t;
+  options : Frontmatter.Global.t;
+  files : Files.map;
+}
 
 module Folder = struct
   let block_ext_default f acc = function
@@ -69,10 +84,9 @@ module Folder = struct
         Folder.fold_block f acc b
     | Slide (({ content = b; title = None }, _), _)
     | Div ((b, _), _)
-    | Included (((_, b), _), _)
     | Slip ((b, _), _) ->
         Folder.fold_block f acc b
-    | MermaidJS _ | SlipScript _ -> acc
+    | Included _ | MermaidJS _ | SlipScript _ -> acc
     | Carousel ((l, _), _) ->
         List.fold_left (fun acc x -> Folder.fold_block f acc x) acc l
 
@@ -95,6 +109,26 @@ module Folder = struct
 
   let make ~block ~inline () =
     Folder.make ~block_ext_default ~inline_ext_default ~block ~inline ()
+
+  let fold_units ~block ~inline acc units =
+    let block f acc = function
+      | S_block (Included ((fpath, (attrs, metattrs)), meta)) as b -> (
+          match Fpath.Map.find_opt fpath units.units with
+          | None -> block f acc b
+          | Some unit ->
+              let b = Doc.block unit.ast in
+              let attrs =
+                Attributes.merge ~base:attrs
+                  ~new_attrs:(fst unit.toplevel_attributes)
+              in
+              let b = S_block (Div ((b, (attrs, metattrs)), meta)) in
+              block f acc b)
+      | b -> block f acc b
+    in
+    let folder = make ~block ~inline () in
+    match Fpath.Map.find_opt units.entry_point units.units with
+    | None -> acc (* TODO: show error somehow *)
+    | Some unit -> Folder.fold_doc folder acc unit.ast
 
   let continue_block f c acc =
     let open Block in
@@ -133,10 +167,9 @@ module Folder = struct
             Folder.fold_block f acc b
         | Slide (({ content = b; title = None }, _), _)
         | Div ((b, _), _)
-        | Included (((_, b), _), _)
         | Slip ((b, _), _) ->
             Folder.fold_block f acc b
-        | MermaidJS _ | SlipScript _ -> acc
+        | Included _ | MermaidJS _ | SlipScript _ -> acc
         | Carousel ((l, _), _) ->
             List.fold_left (fun acc x -> Folder.fold_block f acc x) acc l)
     | _ -> assert false
@@ -181,10 +214,9 @@ module Mapper = struct
         let* b = Mapper.map_block m b in
         let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
         Some (Div ((b, attrs), meta))
-    | Included (((fpath, b), attrs), meta) ->
-        let* b = Mapper.map_block m b in
+    | Included ((fpath, attrs), meta) ->
         let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
-        Some (Included (((fpath, b), attrs), meta))
+        Some (Included ((fpath, attrs), meta))
     | Slide (({ content = b; title }, attrs), meta) ->
         let* b = Mapper.map_block m b in
         let title =
@@ -276,15 +308,10 @@ module Fold_mapper = struct
     | S_block b ->
         let acc, b =
           match b with
-          | Included (((fpath, block), attrs), meta) ->
+          | Included ((fpath, attrs), meta) ->
               let acc, attrs = m.attrs acc $ attrs in
-              let acc, block = m.block m acc block in
-              let res =
-                Option.map
-                  (fun block -> Included (((fpath, block), attrs), meta))
-                  block
-              in
-              (acc, res)
+              let res = Included ((fpath, attrs), meta) in
+              (acc, Some res)
           | Div ((block, attrs), meta) ->
               let acc, attrs = m.attrs acc $ attrs in
               let acc, block = m.block m acc block in
@@ -681,9 +708,8 @@ module Ast_printer = struct
     | Block.Ext_attribute_definition ((_def, attrs), _) ->
         fprintf ppf "Ext_attribute_definition%a" pp_attrs attrs
     (* Slipshow Blocks *)
-    | S_block (Included (((fpath, b), attrs), _)) ->
-        fprintf ppf "Included%a@ %a@ %a" pp_attrs attrs Fpath.pp fpath pp_block
-          b
+    | S_block (Included ((fpath, attrs), _)) ->
+        fprintf ppf "Included%a@ %a" pp_attrs attrs Fpath.pp fpath
     | S_block (Div ((b, attrs), _)) ->
         fprintf ppf "Div%a@ %a" pp_attrs attrs pp_block b
     | S_block (Slide (({ content; title }, attrs), _)) ->

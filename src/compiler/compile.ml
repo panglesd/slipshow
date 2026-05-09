@@ -66,6 +66,8 @@ end = struct
     do_ (path_stack |> Stack.to_seq |> List.of_seq) p |> Fpath.normalize
 end
 
+let () = ignore Path_entering.in_path
+
 module Id : sig
   val gen : unit -> string
 end = struct
@@ -121,63 +123,22 @@ module Stage1 = struct
             (fm, Some (Ast.mermaid_js ((cb, attrs), meta2)))
         | _ -> (fm, Some (Block.Code_block ((cb, attrs), meta2))))
 
-  let handle_includes ~htbl_include fm read_file current_path
-      (m : 'a Fold_mapper.t) (attrs, meta) =
+  let handle_includes ~htbl_include current_path (attrs, meta) =
     match
       ( Attributes.find Special_attrs.include_ attrs,
         Attributes.find Special_attrs.src attrs )
     with
-    | Some (_, None), Some (_, Some ({ v = src; _ }, filepath_meta)) -> (
+    | Some (_, None), Some (_, Some ({ v = src; _ }, filepath_meta)) ->
         let relativized_path =
           Path_entering.relativize current_path (Fpath.v src)
         in
-        match read_file relativized_path with
-        | Error (`Msg err) ->
-            let locs = [ Meta.textloc filepath_meta ] in
-            Diagnosis.add
-              (MissingFile
-                 {
-                   file = Fpath.to_string relativized_path;
-                   error_msg = err;
-                   locs;
-                 });
-            `Default
-        | Ok None -> `Default
-        | Ok (Some (contents, full_path)) -> (
-            Hashtbl.add htbl_include full_path contents;
-            let md, { Frontmatter.global; local = { toplevel_attributes } } =
-              let file = Some relativized_path in
-              Cmarkit_proxy.of_string ~file ~read_file contents
-            in
-            let fm =
-              {
-                fm with
-                Frontmatter.global =
-                  Frontmatter.Global.combine fm.Frontmatter.global global;
-              }
-            in
-            Path_entering.in_path current_path (Fpath.parent (Fpath.v src))
-            @@ fun () ->
-            match m.block m fm (Doc.block md) with
-            | _, None -> `Default
-            | fm, Some mapped_blocks ->
-                let attrs =
-                  match toplevel_attributes with
-                  | None -> attrs
-                  | Some (toplevel_attributes, _) ->
-                      Attributes.merge ~base:toplevel_attributes
-                        ~new_attrs:attrs
-                in
-                let textloc =
-                  mapped_blocks |> Ast.Utils.Block.meta |> Cmarkit.Meta.textloc
-                in
-                let fm, attrs = m.attrs fm attrs in
-                `Return
-                  ( fm,
-                    Some
-                      (Ast.included
-                         ( ((full_path, mapped_blocks), (attrs, meta)),
-                           Meta.make ~textloc () )) )))
+        let old_value =
+          Hashtbl.find_opt htbl_include relativized_path
+          |> Option.value ~default:[]
+        in
+        let new_value = Meta.textloc filepath_meta :: old_value in
+        Hashtbl.replace htbl_include relativized_path new_value;
+        `Return (Some (Ast.included ((relativized_path, (attrs, meta)), meta)))
     | _ -> `Default
 
   let get_link_definition (defs : Cmarkit.Label.defs) l =
@@ -209,7 +170,7 @@ module Stage1 = struct
     ( (uri, meta),
       Link_definition.make ~layout ~defined_label ?label ~dest ?title () )
 
-  let handle_image_inlining m fm defs current_path ((l, (attrs, meta2)), meta) =
+  let handle_image_inlining m () defs current_path ((l, (attrs, meta2)), meta) =
     let text = Inline.Link.text l in
     let ( let* ) x f = match x with None -> `Default | Some x -> f x in
     let* fm, kind, ld, uri =
@@ -220,7 +181,7 @@ module Stage1 = struct
             Cmarkit.Attributes.merge ~base:attrs ~new_attrs:attrs_ld
           in
           let kind = classify_link_definition ld attrs in
-          let fm, attrs_ld = m.Fold_mapper.attrs fm attrs_ld in
+          let fm, attrs_ld = m.Fold_mapper.attrs () attrs_ld in
           let dest, ld = update_link_definition current_path (ld, meta) in
           Some (fm, kind, ((ld, (attrs_ld, meta2)), meta), dest)
     in
@@ -317,26 +278,24 @@ module Stage1 = struct
           | [] -> None
           | res -> Some (Block.Blocks (List.rev res, meta)) ))
 
-  let execute ~htbl_include defs read_file =
+  let execute ~htbl_include defs =
     let current_path = Path_entering.make () in
-    let block m fm = function
-      | Block.Blocks bs -> handle_dash_separated_blocks m fm bs
-      | Block.Block_quote bq -> turn_block_quotes_into_divs m fm bq
-      | Block.Code_block cb -> handle_slip_scripts_creation m fm cb
+    let block m () = function
+      | Block.Blocks bs -> handle_dash_separated_blocks m () bs
+      | Block.Block_quote bq -> turn_block_quotes_into_divs m () bq
+      | Block.Code_block cb -> handle_slip_scripts_creation m () cb
       | Block.Ext_standalone_attributes sa as b -> (
-          match
-            handle_includes ~htbl_include fm read_file current_path m sa
-          with
-          | `Default -> Ast.Fold_mapper.default.block m fm b
-          | `Return x -> x)
-      | b -> Ast.Fold_mapper.default.block m fm b
+          match handle_includes ~htbl_include current_path sa with
+          | `Default -> Ast.Fold_mapper.default.block m () b
+          | `Return x -> ((), x))
+      | b -> Ast.Fold_mapper.default.block m () b
     in
-    let inline i fm = function
+    let inline i () = function
       | Inline.Image img as inl -> (
-          match handle_image_inlining i fm defs current_path img with
-          | `Default -> Ast.Fold_mapper.default.inline i fm inl
-          | `Return (fm, i) -> (fm, Some i))
-      | inl -> Ast.Fold_mapper.default.inline i fm inl
+          match handle_image_inlining i () defs current_path img with
+          | `Default -> Ast.Fold_mapper.default.inline i () inl
+          | `Return ((), i) -> ((), Some i))
+      | inl -> Ast.Fold_mapper.default.inline i () inl
     in
     let attrs = function
       | `Kv (("up", m), v) -> Some (`Kv (("up-at-unpause", m), v))
@@ -387,12 +346,10 @@ module Stage1 = struct
     let attrs fm x = (fm, Attributes.map attrs x) in
     Ast.Fold_mapper.make ~block ~inline ~attrs ()
 
-  let execute ~fm defs read_file md =
+  let execute ~fm:() defs md =
     let htbl_include = Hashtbl.create 3 in
     let fm, res =
-      Cmarkit.Fold_mapper.fold_map_doc
-        (execute ~htbl_include defs read_file)
-        fm md
+      Cmarkit.Fold_mapper.fold_map_doc (execute ~htbl_include defs) () md
     in
     (fm, res, htbl_include)
 end
@@ -528,19 +485,22 @@ module Stage3 = struct
   let execute md = Cmarkit.Mapper.map_doc execute md
 end
 
-type t = {
-  ast : Ast.t;
-  included_files : string Fpath.Map.t;
-  id_map : Id_map.t;
-  action_plan : Action_plan.t;
-}
-
 module Stage4 = struct
-  let fpath_map_add_to_list x data m =
-    let add = function None -> Some [ data ] | Some l -> Some (data :: l) in
-    Fpath.Map.update x add m
+  let fpath_map_add_to_list ~read_file path user fpath_map =
+    let h () =
+      let read_file : file_reader = read_file in
+      let mode = `Base64 in
+      let res = read_file path in
+      let res = res |> Result.map (fun x -> x |> Option.map fst) in
+      { Ast.Files.content = res; mode; used_by = [ user ]; path }
+    in
+    let add = function
+      | None -> Some (h ())
+      | Some file -> Some { file with used_by = user :: file.Ast.Files.used_by }
+    in
+    Fpath.Map.update path add fpath_map
 
-  let execute =
+  let execute ~read_file =
     let block f (x, id_list) c =
       let acc =
         match Ast.Utils.Block.get_attribute c with
@@ -575,8 +535,10 @@ module Stage4 = struct
             | Svg media
             | Image media -> (
                 match media with
-                | { uri = Path p, meta; id; origin } ->
-                    fpath_map_add_to_list p (id, (origin, meta)) acc
+                | { uri = Path p, meta; id; origin = _ } ->
+                    fpath_map_add_to_list ~read_file p
+                      (id, Meta.textloc meta)
+                      acc
                 | _ -> acc))
         | _ -> acc
       in
@@ -585,7 +547,7 @@ module Stage4 = struct
     in
     Ast.Folder.make ~block ~inline ()
 
-  let execute ~(fm : Frontmatter.t) ~read_file md =
+  let execute ~files ~(fm : Frontmatter.t) ~read_file md =
     let external_ids =
       fm.global.external_ids
       |> List.map (fun x ->
@@ -597,7 +559,7 @@ module Stage4 = struct
           })
     in
     let asset_map, id_list =
-      Cmarkit.Folder.fold_doc execute (Fpath.Map.empty, external_ids) md
+      Cmarkit.Folder.fold_doc (execute ~read_file) (files, external_ids) md
     in
     let id_list = List.rev id_list in
     let id_map =
@@ -627,52 +589,95 @@ module Stage4 = struct
         id_map
     in
     let files =
-      Fpath.Map.filter_map
-        (fun path used_by ->
-          let read_file : file_reader = read_file in
-          let mode = `Base64 in
-          match read_file path with
-          | Ok (Some (content, _)) ->
-              let used_by = List.map fst used_by in
-              Some { Ast.Files.content; mode; used_by; path }
-          | Ok None -> None
-          | Error (`Msg error_msg) ->
-              let locs =
-                List.map (fun (_id, (_node, meta)) -> Meta.textloc meta) used_by
-              in
-              Diagnosis.add
-                (MissingFile { file = Fpath.to_string path; error_msg; locs });
-              None)
-        asset_map
+      (* Fpath.Map.filter_map *)
+      (*   (fun path used_by -> *)
+      (*     let read_file : file_reader = read_file in *)
+      (*     let mode = `Base64 in *)
+      (*     match read_file path with *)
+      (*     | Ok (Some (content, _)) -> *)
+      (*         let used_by = List.map fst used_by in *)
+      (*         Some { Ast.Files.content; mode; used_by; path } *)
+      (*     | Ok None -> None *)
+      (*     | Error (`Msg error_msg) -> *)
+      (*         let locs = *)
+      (*           List.map (fun (_id, (_node, meta)) -> Meta.textloc meta) used_by *)
+      (*         in *)
+      (*         Diagnosis.add *)
+      (*           (MissingFile { file = Fpath.to_string path; error_msg; locs }); *)
+      (*         None) *)
+      asset_map
     in
-    ({ Ast.doc = md; files; options = fm.global }, id_map)
+    (md, files, id_map)
+  (* ({ Ast.doc = md; files; options = fm.global }, id_map) *)
 end
 
-let of_cmarkit ?(file = Fpath.v "-") ~read_file ~(fm : Frontmatter.t) md =
-  let md =
-    (* Insert the result inside an "included node" *)
-    let block = Doc.block md in
-    let meta = Ast.Utils.Block.meta block in
-    let toplevel_attributes =
-      fm.local.toplevel_attributes
-      |> Option.value ~default:Frontmatter.Toplevel_attributes.default
-    in
-    let block = Ast.included (((file, block), toplevel_attributes), meta) in
-    Doc.make block
+let action_plan _ = failwith "TODO"
+
+let of_cmarkit (c : Ast.units) ~path ~read_file ~(fm : Frontmatter.t) ~source md
+    =
+  let toplevel_attributes =
+    fm.local.toplevel_attributes
+    |> Option.value ~default:Frontmatter.Toplevel_attributes.default
   in
   let defs = Doc.defs md in
-  let fm, md1, htbl_include = Stage1.execute ~fm defs read_file md in
+  let (), md1, htbl_include = Stage1.execute ~fm:() defs md in
   let md2 = Stage2.execute md1 in
   let md3 = Stage3.execute md2 in
-  let md4, id_map = Stage4.execute ~read_file ~fm md3 in
-  let action_plan, id_map = Action_plan.execute ~id_map md4 in
-  let included_files = htbl_include |> Hashtbl.to_seq |> Fpath.Map.of_seq in
-  { ast = md4; included_files; id_map; action_plan }
+  let md4, files, id_map = Stage4.execute ~files:c.files ~read_file ~fm md3 in
+  let deps = htbl_include |> Hashtbl.to_seq |> Fpath.Map.of_seq in
+  let options = Frontmatter.Global.combine c.options fm.global in
+  let unit = { Ast.ast = md4; deps; id_map; toplevel_attributes; source } in
+  let units = Fpath.Map.add path unit c.units in
+  ({ c with units; options; files }, unit)
 
-let compile ?file ?(read_file = fun _ -> Ok None) s =
+let empty_c entry_point =
+  {
+    Ast.units = Fpath.Map.empty;
+    files = Fpath.Map.empty;
+    options = Frontmatter.Global.empty;
+    entry_point;
+  }
+
+let unit c ~read_file file =
+  match read_file file with
+  | Error _ as e -> e
+  | Ok None -> Error (`Msg "Unable to read the main file")
+  | Ok (Some (s, _)) ->
+      let res =
+        (* TODO: check if we still need read_file to return the whole path now
+           that we changed the organization a bit *)
+        let doc, frontmatter = Cmarkit_proxy.of_string ~read_file ~file s in
+        of_cmarkit ~source:s ~read_file ~path:file c doc ~fm:frontmatter
+      in
+      Ok res
+
+let rec add_to_compile file c ~read_file =
+  let handle_error c = function Error _ -> c | Ok res -> res in
+  match unit c ~read_file file with
+  | Error _ as e -> e
+  | Ok (c, u) ->
+      let c =
+        Fpath.Map.fold
+          (fun dep _ c ->
+            if Fpath.Map.mem dep c.Ast.units then c
+            else add_to_compile dep c ~read_file |> handle_error c)
+          u.deps c
+      in
+      Ok c
+
+let compile_all ~read_file file =
+  let empty_c = empty_c file in
+  add_to_compile file empty_c ~read_file
+
+let unit ~read_file file =
   Diagnosis.with_ @@ fun () ->
-  let doc, frontmatter = Cmarkit_proxy.of_string ~read_file ~file s in
-  of_cmarkit ?file ~read_file doc ~fm:frontmatter
+  unit ~read_file (empty_c file) file |> Result.map fst
+
+let compile_all ~read_file file =
+  Diagnosis.with_ @@ fun () -> compile_all ~read_file file
+
+let add_to_compile file c ~read_file =
+  Diagnosis.with_ @@ fun () -> add_to_compile file c ~read_file
 
 (* let included_files ~read_file file s = *)
 (*   Diagnosis.with_ @@ fun () -> *)
@@ -681,7 +686,7 @@ let compile ?file ?(read_file = fun _ -> Ok None) s =
 (*   let _fm, _md1, htbl_include = Stage1.execute ~fm defs read_file doc in *)
 (*   htbl_include |> Hashtbl.to_seq_keys |> List.of_seq *)
 
-let to_cmarkit =
+let to_cmarkit units =
   let ( let* ) x f = Option.bind x f in
   let ( let+ ) x f = Option.map f x in
 
@@ -699,8 +704,16 @@ let to_cmarkit =
           | Some b -> b
         in
         Mapper.ret (Block.Blocks (title @ [ b ], meta))
-    | Div ((bq, _), meta) | Slip ((bq, _), meta) | Included (((_, bq), _), meta)
-      ->
+    | Included ((path, _), _meta) ->
+        let b =
+          match Fpath.Map.find_opt path units with
+          | None -> None
+          | Some b ->
+              let b = Doc.block b.Ast.ast in
+              Mapper.map_block m b
+        in
+        `Map b
+    | Div ((bq, _), meta) | Slip ((bq, _), meta) ->
         let b =
           match Mapper.map_block m bq with None -> Block.empty | Some b -> b
         in
@@ -735,4 +748,7 @@ let to_cmarkit =
   in
   Ast.Mapper.make ~block ~inline ~attrs ()
 
-let to_cmarkit { Ast.doc = sd; _ } = Cmarkit.Mapper.map_doc to_cmarkit sd
+let to_cmarkit { Ast.units; entry_point; options = _; files = _ } =
+  match Fpath.Map.find_opt entry_point units with
+  | None -> failwith "Fail during markdown output"
+  | Some sd -> Cmarkit.Mapper.map_doc (to_cmarkit units) sd.ast
