@@ -100,28 +100,24 @@ let resolve_file ps s =
   | Path p -> Path (Path_entering.relativize ps p)
 
 module Stage1 = struct
-  let turn_block_quotes_into_divs m fm ((bq, (attrs, meta2)), meta) =
+  let turn_block_quotes_into_divs m ((bq, (attrs, meta2)), meta) =
     let b = Block.Block_quote.block bq in
-    let fm, b =
-      match m.Fold_mapper.block m fm b with
-      | fm, None -> (fm, Block.empty)
-      | fm, Some b -> (fm, b)
+    let b =
+      match Mapper.map_block m b with None -> Block.empty | Some b -> b
     in
-    let fm, attrs = m.attrs fm attrs in
-    (fm, Some (Ast.div ((b, (attrs, meta2)), meta)))
+    let attrs = Mapper.map_attrs m attrs in
+    Some (Ast.div ((b, (attrs, meta2)), meta))
 
-  let handle_slip_scripts_creation m fm ((cb, (attrs, meta)), meta2) =
-    let fm, attrs = m.Fold_mapper.attrs fm attrs in
+  let handle_slip_scripts_creation m ((cb, (attrs, meta)), meta2) =
+    let attrs = Mapper.map_attrs m attrs in
     let attrs = (attrs, meta) in
     match Block.Code_block.info_string cb with
-    | None -> (fm, Some (Block.Code_block ((cb, attrs), meta2)))
+    | None -> Some (Block.Code_block ((cb, attrs), meta2))
     | Some (info, _) -> (
         match Block.Code_block.language_of_info_string info with
-        | Some ("slip-script", _) ->
-            (fm, Some (Ast.slipscript ((cb, attrs), meta2)))
-        | Some ("=mermaid", _) ->
-            (fm, Some (Ast.mermaid_js ((cb, attrs), meta2)))
-        | _ -> (fm, Some (Block.Code_block ((cb, attrs), meta2))))
+        | Some ("slip-script", _) -> Some (Ast.slipscript ((cb, attrs), meta2))
+        | Some ("=mermaid", _) -> Some (Ast.mermaid_js ((cb, attrs), meta2))
+        | _ -> Some (Block.Code_block ((cb, attrs), meta2)))
 
   let handle_includes ~htbl_include current_path (attrs, meta) =
     match
@@ -138,7 +134,7 @@ module Stage1 = struct
         in
         let new_value = Meta.textloc filepath_meta :: old_value in
         Hashtbl.replace htbl_include relativized_path new_value;
-        `Return (Some (Ast.included ((relativized_path, (attrs, meta)), meta)))
+        `Map (Some (Ast.included ((relativized_path, (attrs, meta)), meta)))
     | _ -> `Default
 
   let get_link_definition (defs : Cmarkit.Label.defs) l =
@@ -170,10 +166,10 @@ module Stage1 = struct
     ( (uri, meta),
       Link_definition.make ~layout ~defined_label ?label ~dest ?title () )
 
-  let handle_image_inlining m () defs current_path ((l, (attrs, meta2)), meta) =
+  let handle_image_inlining m defs current_path ((l, (attrs, meta2)), meta) =
     let text = Inline.Link.text l in
-    let ( let* ) x f = match x with None -> `Default | Some x -> f x in
-    let* fm, kind, ld, uri =
+    let ( let* ) x f = match x with None -> Mapper.default | Some x -> f x in
+    let* kind, ld, uri =
       match get_link_definition defs l with
       | None -> None
       | Some ((ld, (attrs_ld, meta2)), meta) ->
@@ -181,13 +177,13 @@ module Stage1 = struct
             Cmarkit.Attributes.merge ~base:attrs ~new_attrs:attrs_ld
           in
           let kind = classify_link_definition ld attrs in
-          let fm, attrs_ld = m.Fold_mapper.attrs () attrs_ld in
+          let attrs_ld = Mapper.map_attrs m attrs_ld in
           let dest, ld = update_link_definition current_path (ld, meta) in
-          Some (fm, kind, ((ld, (attrs_ld, meta2)), meta), dest)
+          Some (kind, ((ld, (attrs_ld, meta2)), meta), dest)
     in
     let reference = `Inline ld in
     let l = Inline.Link.make text reference in
-    let fm, attrs = m.attrs fm attrs in
+    let attrs = Mapper.map_attrs m attrs in
     let origin = ((l, (attrs, meta2)), meta) in
     let res =
       match kind with
@@ -198,15 +194,15 @@ module Stage1 = struct
       | `Draw -> Ast.hand_drawn { uri; origin; id = Id.gen () }
       | `Pdf -> Ast.pdf { uri; origin; id = Id.gen () }
     in
-    `Return (fm, res)
+    Mapper.ret res
 
-  let handle_dash_separated_blocks (m : 'a Fold_mapper.t) fm (blocks, meta) =
-    let div fm ((attrs, am), blocks) =
-      let fm, attrs = m.Fold_mapper.attrs fm attrs in
-      let fm, blocks =
+  let handle_dash_separated_blocks (m : Mapper.t) (blocks, meta) =
+    let div ((attrs, am), blocks) =
+      let attrs = Mapper.map_attrs m attrs in
+      let blocks =
         match blocks with
-        | [] -> m.block m fm @@ Block.Blocks (blocks, Meta.none)
-        | [ b ] -> m.block m fm b
+        | [] -> Mapper.map_block m @@ Block.Blocks (blocks, Meta.none)
+        | [ b ] -> Mapper.map_block m b
         | fb :: _ as blocks ->
             let to_textloc b =
               b |> Ast.Utils.Block.meta |> Cmarkit.Meta.textloc
@@ -215,18 +211,15 @@ module Stage1 = struct
               List.map to_textloc blocks
               |> List.fold_left Cmarkit.Textloc.span (to_textloc fb)
             in
-            m.block m fm @@ Block.Blocks (blocks, Meta.make ~textloc ())
+            Mapper.map_block m @@ Block.Blocks (blocks, Meta.make ~textloc ())
       in
-      let res =
-        match blocks with
-        | None -> None
-        | Some blocks ->
-            let textloc =
-              blocks |> Ast.Utils.Block.meta |> Cmarkit.Meta.textloc
-            in
-            Some (Ast.div ((blocks, (attrs, am)), Meta.make ~textloc ()))
-      in
-      (fm, res)
+      match blocks with
+      | None -> None
+      | Some blocks ->
+          let textloc =
+            blocks |> Ast.Utils.Block.meta |> Cmarkit.Meta.textloc
+          in
+          Some (Ast.div ((blocks, (attrs, am)), Meta.make ~textloc ()))
     in
     let find_biggest blocks =
       let find_biggest biggest block =
@@ -257,45 +250,34 @@ module Stage1 = struct
           collect_until_dash ~separator (acc_attrs, e :: acc1) global_acc rest
       | [] -> List.rev ((acc_attrs, List.rev acc1) :: global_acc)
     in
-    match find_biggest blocks with
-    | None -> Ast.Fold_mapper.default.block m fm (Block.Blocks (blocks, meta))
-    | Some n -> (
-        let separator = String.make n '-' in
-        let res =
-          collect_until_dash ~first:true ~separator
-            ((Attributes.empty, Meta.none), [])
-            [] blocks
-        in
-        let fm, res =
-          List.fold_left
-            (fun (fm, acc) b ->
-              let fm, res = div fm b in
-              (fm, match res with None -> acc | Some b -> b :: acc))
-            (fm, []) res
-        in
-        ( fm,
-          match res with
-          | [] -> None
-          | res -> Some (Block.Blocks (List.rev res, meta)) ))
+    let res =
+      match find_biggest blocks with
+      | None -> List.filter_map (Mapper.map_block m) blocks
+      | Some n ->
+          let separator = String.make n '-' in
+          let res =
+            collect_until_dash ~first:true ~separator
+              ((Attributes.empty, Meta.none), [])
+              [] blocks
+          in
+          List.filter_map div res
+    in
+    match res with [] -> None | res -> Some (Block.Blocks (res, meta))
 
   let execute ~htbl_include defs =
     let current_path = Path_entering.make () in
-    let block m () = function
-      | Block.Blocks bs -> handle_dash_separated_blocks m () bs
-      | Block.Block_quote bq -> turn_block_quotes_into_divs m () bq
-      | Block.Code_block cb -> handle_slip_scripts_creation m () cb
-      | Block.Ext_standalone_attributes sa as b -> (
-          match handle_includes ~htbl_include current_path sa with
-          | `Default -> Ast.Fold_mapper.default.block m () b
-          | `Return x -> ((), x))
-      | b -> Ast.Fold_mapper.default.block m () b
+    let ret x = `Map x in
+    let block m = function
+      | Block.Blocks bs -> ret @@ handle_dash_separated_blocks m bs
+      | Block.Block_quote bq -> ret @@ turn_block_quotes_into_divs m bq
+      | Block.Code_block cb -> ret @@ handle_slip_scripts_creation m cb
+      | Block.Ext_standalone_attributes sa ->
+          handle_includes ~htbl_include current_path sa
+      | _ -> Mapper.default
     in
-    let inline i () = function
-      | Inline.Image img as inl -> (
-          match handle_image_inlining i () defs current_path img with
-          | `Default -> Ast.Fold_mapper.default.inline i () inl
-          | `Return ((), i) -> ((), Some i))
-      | inl -> Ast.Fold_mapper.default.inline i () inl
+    let inline i = function
+      | Inline.Image img -> handle_image_inlining i defs current_path img
+      | _ -> Mapper.default
     in
     let attrs = function
       | `Kv (("up", m), v) -> Some (`Kv (("up-at-unpause", m), v))
@@ -343,15 +325,12 @@ module Stage1 = struct
           Some (`Kv (("children:unstatic-at-unpause", m), v))
       | x -> Some x
     in
-    let attrs fm x = (fm, Attributes.map attrs x) in
-    Ast.Fold_mapper.make ~block ~inline ~attrs ()
+    Mapper.make ~block ~inline ~attrs ()
 
-  let execute ~fm:() defs md =
+  let execute defs md =
     let htbl_include = Hashtbl.create 3 in
-    let fm, res =
-      Cmarkit.Fold_mapper.fold_map_doc (execute ~htbl_include defs) () md
-    in
-    (fm, res, htbl_include)
+    let res = Cmarkit.Mapper.map_doc (execute ~htbl_include defs) md in
+    (res, htbl_include)
 end
 
 module Stage2 = struct
@@ -620,7 +599,7 @@ let of_cmarkit (c : Ast.units) ~path ~read_file ~(fm : Frontmatter.t) ~source md
     |> Option.value ~default:Frontmatter.Toplevel_attributes.default
   in
   let defs = Doc.defs md in
-  let (), md1, htbl_include = Stage1.execute ~fm:() defs md in
+  let md1, htbl_include = Stage1.execute defs md in
   let md2 = Stage2.execute md1 in
   let md3 = Stage3.execute md2 in
   let md4, files, id_map = Stage4.execute ~files:c.files ~read_file ~fm md3 in
