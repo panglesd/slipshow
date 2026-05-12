@@ -220,7 +220,52 @@ let folder =
     in
     Folder.ret @@ Ast.Folder.continue_inline f i acc
   in
-  Ast.Folder.fold_units ~block ~inline
+  Ast.Folder.fold_units' ~block ~inline
 
-let execute ~id_map ast =
-  folder ([], id_map) ast |> fun (steps, id_map) -> (List.rev steps, id_map)
+let rec merge_id_maps (unit : Ast.unit') (units : Ast.unit' Fpath.Map.t) id_map
+    =
+  let id_map =
+    Id_map.SMap.union
+      (fun _id p1 p2 ->
+        Some (Id_map.Unionable_set.union p1 p2)
+        (* let occurrences = *)
+        (*   List.map *)
+        (*     (fun { Id_map.id = _id, meta1; elem = _; meta = _; rev = _ } -> *)
+        (*       Meta.textloc meta1) *)
+        (*     [ p1; p2 ] *)
+        (* in *)
+        (* Diagnosis.add (DuplicateID { id; occurrences }); *)
+        (* Some p1 *))
+      unit.Ast.id_map id_map
+  in
+  let deps = unit.deps in
+  let id_map =
+    Fpath.Map.fold
+      (fun fpath _ id_map ->
+        match Fpath.Map.find_opt fpath units with
+        | None -> id_map
+        | Some unit -> merge_id_maps unit units id_map)
+      deps id_map
+  in
+  let () =
+    Id_map.SMap.iter
+      (fun id u ->
+        let occurrences =
+          u |> Id_map.Unionable_set.to_list
+          |> List.map (fun { Id_map.id = _id, meta1; elem = _; meta = _ } ->
+              Meta.textloc meta1)
+        in
+        match occurrences with
+        | [] | _ :: [] -> ()
+        | _ :: _ :: _ -> Diagnosis.add @@ DuplicateID { id; occurrences })
+      id_map
+  in
+  id_map
+
+let execute entry_point units =
+  let id_map = merge_id_maps entry_point units Id_map.SMap.empty in
+  let id_map =
+    Id_map.SMap.map (fun definition -> { Id_map.definition; usage = [] }) id_map
+  in
+  folder ([], id_map) entry_point units |> fun (steps, id_map) ->
+  (List.rev steps, id_map)

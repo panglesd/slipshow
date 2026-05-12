@@ -114,7 +114,7 @@ let src uri files =
   match uri with
   | Asset.Uri.Link l -> `Link l
   | Path p -> (
-      match Fpath.Map.find_opt p (files : Ast.Files.map) with
+      match Fpath.Map.find_opt p (files : Ast.Files.(read map)) with
       | Some { content = Ok (Some content); mode = `Base64; _ } ->
           let mime_type = Magic_mime.lookup (Fpath.filename p) in
           `Source (content, mime_type)
@@ -137,7 +137,7 @@ let pdf c ~uri ~files i attrs =
         Attributes.add_class attrs ("slipshow__carousel", Meta.none)
       in
       let src =
-        match Fpath.Map.find_opt p (files : Ast.Files.map) with
+        match Fpath.Map.find_opt p (files : Ast.Files.(read map)) with
         | Some { content = Ok (Some content); mode = `Base64; _ } ->
             let base64 = Base64.encode_string content in
             Format.sprintf "%s" base64
@@ -196,7 +196,7 @@ let pure_embed c uri files attrs =
   match uri with
   | Asset.Uri.Link _ -> Logs.err (fun m -> m "Could not embed a pure embed")
   | Path p -> (
-      match Fpath.Map.find_opt p (files : Ast.Files.map) with
+      match Fpath.Map.find_opt p (files : Ast.Files.(read map)) with
       | Some { content = Ok (Some content); mode = `Base64; _ } ->
           Context.string c "<span x-data=\"";
           html_escaped_string c content;
@@ -205,7 +205,7 @@ let pure_embed c uri files attrs =
           Context.string c "></span>"
       | _ -> Logs.err (fun m -> m "Could not embed a pure embed v2"))
 
-let custom_html_renderer (units : Ast.units) (files : Ast.Files.map) =
+let custom_html_renderer (units : Ast.units) (files : Ast.Files.(read map)) =
   let open Cmarkit_renderer in
   let open Cmarkit in
   let open Cmarkit_html in
@@ -276,10 +276,6 @@ let custom_html_renderer (units : Ast.units) (files : Ast.Files.map) =
                 Format.eprintf "Unit not found: %a\n%!" Fpath.pp fpath;
                 ()
             | Some unit ->
-                let attrs =
-                  Attributes.merge ~base:attrs
-                    ~new_attrs:(fst unit.Ast.toplevel_attributes)
-                in
                 let b = Doc.block unit.Ast.ast in
                 div c b attrs
           in

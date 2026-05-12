@@ -5,8 +5,7 @@ module Ast = Ast
 module Id_map = Id_map
 module Action_plan = Action_plan
 
-type file_reader =
-  Fpath.t -> ((string * Fpath.t) option, [ `Msg of string ]) result
+type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
 
 let math_option_elem math_mode ~has_math =
   let elem =
@@ -274,7 +273,7 @@ let delayed ?(options = Frontmatter.Global.empty) ?slipshow_js ?file
     ?(read_file = fun _ -> Ok None) ~has_speaker_view s =
   let file = Option.value file ~default:(Fpath.v "-") in
   let read_file fp =
-    if Fpath.equal fp file then Ok (Some (s, fp)) else read_file fp
+    if Fpath.equal fp file then Ok (Some s) else read_file fp
   in
   let units, errors = Compile.compile_all file ~read_file in
   let units =

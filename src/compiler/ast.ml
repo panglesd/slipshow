@@ -48,33 +48,56 @@ let hand_drawn i = S_inline (Hand_drawn i)
 
 type t = Cmarkit.Doc.t
 
+module Files = struct
+  type mode = [ `Base64 ]
+  type unread = unit
+  type read = (string option, [ `Msg of string ]) result
+
+  type 'a t = {
+    path : Fpath.t;
+    used_by : (string * Textloc.t) list;
+    mode : mode;
+    content : 'a;
+  }
+
+  let compare_usage (s1, loc1) (s2, loc2) =
+    match String.compare s1 s2 with 0 -> Textloc.compare loc1 loc2 | n -> n
+
+  type 'a map = 'a t Fpath.Map.t
+
+  let combine : unread map -> unread map -> unread map =
+    Fpath.Map.union
+      (fun
+        path
+        { mode = `Base64; content = (); used_by = u1; path = _ }
+        { mode = `Base64; content = (); used_by = u2; path = _ }
+      ->
+        Some
+          {
+            mode = `Base64;
+            content = ();
+            used_by = List.sort_uniq compare_usage (u1 @ u2);
+            path;
+          })
+end
+
+(* TODO: turn deps into an associative list to retain the order *)
 type unit' = {
   ast : t;
   deps : Cmarkit.Textloc.t list Fpath.Map.t;
       (** Map of dependency -> List of places it is included *)
-  id_map : Id_map.t;
+  id_map : Id_map.definitions;
   source : string;
-  toplevel_attributes : Cmarkit.Attributes.t Cmarkit.node;
+  files : Files.(unread map);
+  option : Frontmatter.Global.t;
 }
-
-module Files = struct
-  type mode = [ `Base64 ]
-
-  type t = {
-    path : Fpath.t;
-    content : (string option, [ `Msg of string ]) result;
-    used_by : (string * Textloc.t) list;
-    mode : mode;
-  }
-
-  type map = t Fpath.Map.t
-end
 
 type units = {
   units : unit' Fpath.Map.t;
   entry_point : Fpath.t;
   options : Frontmatter.Global.t;
-  files : Files.map;
+  files : Files.(read map);
+  id_map : Id_map.t;
 }
 
 module Folder = struct
@@ -110,25 +133,38 @@ module Folder = struct
   let make ~block ~inline () =
     Folder.make ~block_ext_default ~inline_ext_default ~block ~inline ()
 
-  let fold_units ~block ~inline acc units =
-    let block f acc = function
-      | S_block (Included ((fpath, (attrs, metattrs)), meta)) as b -> (
-          match Fpath.Map.find_opt fpath units.units with
-          | None -> block f acc b
+  let fold_just_units f acc entry_point units =
+    match Fpath.Map.find_opt entry_point units with
+    | None -> acc
+    | Some unit ->
+        let acc = f unit acc in
+        Fpath.Map.fold
+          (fun fpath _ acc ->
+            match Fpath.Map.find_opt fpath units with
+            | None -> acc
+            | Some unit -> f unit acc)
+          unit.deps acc
+
+  let fold_units' ~block ~inline (acc : 'a) entry_point units : 'a =
+    let block (f : 'a Folder.t) (acc : 'a) = function
+      | S_block (Included ((fpath, _), _)) as b -> (
+          let acc =
+            match block f acc b with `Default -> acc | `Fold acc -> acc
+          in
+          match Fpath.Map.find_opt fpath units with
+          | None -> `Fold acc
           | Some unit ->
               let b = Doc.block unit.ast in
-              let attrs =
-                Attributes.merge ~base:attrs
-                  ~new_attrs:(fst unit.toplevel_attributes)
-              in
-              let b = S_block (Div ((b, (attrs, metattrs)), meta)) in
               block f acc b)
       | b -> block f acc b
     in
     let folder = make ~block ~inline () in
+    Folder.fold_doc folder acc entry_point.ast
+
+  let fold_units ~block ~inline (acc : 'a) units : 'a =
     match Fpath.Map.find_opt units.entry_point units.units with
     | None -> acc (* TODO: show error somehow *)
-    | Some unit -> Folder.fold_doc folder acc unit.ast
+    | Some unit -> fold_units' ~block ~inline acc unit units.units
 
   let continue_block f c acc =
     let open Block in

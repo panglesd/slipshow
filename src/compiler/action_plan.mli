@@ -33,6 +33,8 @@ type step = {
   attrs : Cmarkit.Attributes.t Cmarkit.node;
 }
 
+(* val merge_id_maps : Ast.unit' -> Ast.unit' Fpath.Map.t -> Id_map.t *)
+
 type t = step list
 
-val execute : id_map:Id_map.t -> Ast.units -> t * Id_map.t
+val execute : Ast.unit' -> Ast.unit' Fpath.Map.t -> t * Id_map.t

@@ -85,8 +85,13 @@ let get_id (id_map : Id_map.t) val_loc (id, loc) =
   | None ->
       Diagnosis.add @@ MissingID { id; loc };
       (id_map, None)
-  | Some ({ elem = bol; rev; _ } as entry) ->
-      let id_map = Id_map.SMap.add id { entry with rev = loc :: rev } id_map in
+  | Some entry ->
+      let { Id_map.elem = bol; _ } =
+        Id_map.Unionable_set.get entry.definition
+      in
+      let id_map =
+        Id_map.SMap.add id { entry with usage = loc :: entry.usage } id_map
+      in
       (id_map, Some (bol, Some loc))
 
 let targets (is, expected_type) id_map ~args ~val_loc bol =

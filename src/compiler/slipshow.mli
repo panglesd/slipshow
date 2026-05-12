@@ -14,8 +14,7 @@ type delayed
 val delayed_to_string : delayed * string -> string
 val string_to_delayed : string -> (delayed * string) option
 
-type file_reader =
-  Fpath.t -> ((string * Fpath.t) option, [ `Msg of string ]) result
+type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
 (** A value of type [file_reader], given a path [p], outputs:
     - [Ok (Some (content, full_path))] if it could read the file, [content] is
       the content and [full_path] is the full path. In this case, the content
