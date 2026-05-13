@@ -245,12 +245,16 @@ let string_to_delayed s =
   Option.bind s @@ fun s -> try Some (Marshal.from_string s 0) with _ -> None
 
 let convert_to_md ~read_file content =
-  (* let units, _ = Compile.compile_all ~read_file content in *)
-  (* let sd = Compile.to_cmarkit sd in *)
-  (* Cmarkit_commonmark.of_doc ~include_attributes:false sd *)
-  failwith
-    (ignore (read_file, content);
-     "TODO")
+  let entry_point = Fpath.v "-" in
+  let read_file =
+   fun f -> if Fpath.equal entry_point f then Ok (Some content) else read_file f
+  in
+  let units, _ = Compile.compile_all ~read_file entry_point in
+  match units with
+  | Ok units ->
+      let sd = Compile.to_cmarkit units in
+      Cmarkit_commonmark.of_doc ~include_attributes:false sd
+  | Error (`Msg s) -> "Could not convert to md: " ^ s
 
 let to_grace file whole_content htbl_include er =
   Diagnosis.to_grace
