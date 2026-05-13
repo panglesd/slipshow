@@ -247,6 +247,12 @@ let rec merge_id_maps (unit : Ast.unit') (units : Ast.unit' Fpath.Map.t) id_map
         | Some unit -> merge_id_maps unit units id_map)
       deps id_map
   in
+  id_map
+
+let merge_id_maps (unit : Ast.unit') (units : Ast.unit' Fpath.Map.t) id_map =
+  let id_map =
+    merge_id_maps (unit : Ast.unit') (units : Ast.unit' Fpath.Map.t) id_map
+  in
   let () =
     Id_map.SMap.iter
       (fun id u ->
