@@ -232,6 +232,52 @@ module Stage1 = struct
     in
     match res with [] -> None | res -> Some (Block.Blocks (res, meta))
 
+  let map_attrs = function
+    | `Kv (("up", m), v) -> Some (`Kv (("up-at-unpause", m), v))
+    | `Kv (("center", m), v) -> Some (`Kv (("center-at-unpause", m), v))
+    | `Kv (("down", m), v) -> Some (`Kv (("down-at-unpause", m), v))
+    | `Kv (("exec", m), v) -> Some (`Kv (("exec-at-unpause", m), v))
+    | `Kv (("scroll", m), v) -> Some (`Kv (("scroll-at-unpause", m), v))
+    | `Kv (("enter", m), v) -> Some (`Kv (("enter-at-unpause", m), v))
+    | `Kv (("emph", m), v) -> Some (`Kv (("emph-at-unpause", m), v))
+    | `Kv (("focus", m), v) -> Some (`Kv (("focus-at-unpause", m), v))
+    | `Kv (("reveal", m), v) -> Some (`Kv (("reveal-at-unpause", m), v))
+    | `Kv (("static", m), v) -> Some (`Kv (("static-at-unpause", m), v))
+    | `Kv (("unemph", m), v) -> Some (`Kv (("unemph-at-unpause", m), v))
+    | `Kv (("unfocus", m), v) -> Some (`Kv (("unfocus-at-unpause", m), v))
+    | `Kv (("unreveal", m), v) -> Some (`Kv (("unreveal-at-unpause", m), v))
+    | `Kv (("unstatic", m), v) -> Some (`Kv (("unstatic-at-unpause", m), v))
+    (* TODO: Improve this (eg by moving it to another phase) *)
+    | `Kv (("children:up", m), v) ->
+        Some (`Kv (("children:up-at-unpause", m), v))
+    | `Kv (("children:center", m), v) ->
+        Some (`Kv (("children:center-at-unpause", m), v))
+    | `Kv (("children:down", m), v) ->
+        Some (`Kv (("children:down-at-unpause", m), v))
+    | `Kv (("children:exec", m), v) ->
+        Some (`Kv (("children:exec-at-unpause", m), v))
+    | `Kv (("children:scroll", m), v) ->
+        Some (`Kv (("children:scroll-at-unpause", m), v))
+    | `Kv (("children:enter", m), v) ->
+        Some (`Kv (("children:enter-at-unpause", m), v))
+    | `Kv (("children:emph", m), v) ->
+        Some (`Kv (("children:emph-at-unpause", m), v))
+    | `Kv (("children:focus", m), v) ->
+        Some (`Kv (("children:focus-at-unpause", m), v))
+    | `Kv (("children:reveal", m), v) ->
+        Some (`Kv (("children:reveal-at-unpause", m), v))
+    | `Kv (("children:static", m), v) ->
+        Some (`Kv (("children:static-at-unpause", m), v))
+    | `Kv (("children:unemph", m), v) ->
+        Some (`Kv (("children:unemph-at-unpause", m), v))
+    | `Kv (("children:unfocus", m), v) ->
+        Some (`Kv (("children:unfocus-at-unpause", m), v))
+    | `Kv (("children:unreveal", m), v) ->
+        Some (`Kv (("children:unreveal-at-unpause", m), v))
+    | `Kv (("children:unstatic", m), v) ->
+        Some (`Kv (("children:unstatic-at-unpause", m), v))
+    | x -> Some x
+
   let execute ~htbl_include current_path defs =
     let ret x = `Map x in
     let block m = function
@@ -242,62 +288,29 @@ module Stage1 = struct
           handle_includes m ~htbl_include current_path sa
       | _ -> Mapper.default
     in
+    let attrs = map_attrs in
     let inline i = function
       | Inline.Image img -> handle_image_inlining i defs current_path img
       | _ -> Mapper.default
     in
-    let attrs = function
-      | `Kv (("up", m), v) -> Some (`Kv (("up-at-unpause", m), v))
-      | `Kv (("center", m), v) -> Some (`Kv (("center-at-unpause", m), v))
-      | `Kv (("down", m), v) -> Some (`Kv (("down-at-unpause", m), v))
-      | `Kv (("exec", m), v) -> Some (`Kv (("exec-at-unpause", m), v))
-      | `Kv (("scroll", m), v) -> Some (`Kv (("scroll-at-unpause", m), v))
-      | `Kv (("enter", m), v) -> Some (`Kv (("enter-at-unpause", m), v))
-      | `Kv (("emph", m), v) -> Some (`Kv (("emph-at-unpause", m), v))
-      | `Kv (("focus", m), v) -> Some (`Kv (("focus-at-unpause", m), v))
-      | `Kv (("reveal", m), v) -> Some (`Kv (("reveal-at-unpause", m), v))
-      | `Kv (("static", m), v) -> Some (`Kv (("static-at-unpause", m), v))
-      | `Kv (("unemph", m), v) -> Some (`Kv (("unemph-at-unpause", m), v))
-      | `Kv (("unfocus", m), v) -> Some (`Kv (("unfocus-at-unpause", m), v))
-      | `Kv (("unreveal", m), v) -> Some (`Kv (("unreveal-at-unpause", m), v))
-      | `Kv (("unstatic", m), v) -> Some (`Kv (("unstatic-at-unpause", m), v))
-      (* TODO: Improve this (eg by moving it to another phase) *)
-      | `Kv (("children:up", m), v) ->
-          Some (`Kv (("children:up-at-unpause", m), v))
-      | `Kv (("children:center", m), v) ->
-          Some (`Kv (("children:center-at-unpause", m), v))
-      | `Kv (("children:down", m), v) ->
-          Some (`Kv (("children:down-at-unpause", m), v))
-      | `Kv (("children:exec", m), v) ->
-          Some (`Kv (("children:exec-at-unpause", m), v))
-      | `Kv (("children:scroll", m), v) ->
-          Some (`Kv (("children:scroll-at-unpause", m), v))
-      | `Kv (("children:enter", m), v) ->
-          Some (`Kv (("children:enter-at-unpause", m), v))
-      | `Kv (("children:emph", m), v) ->
-          Some (`Kv (("children:emph-at-unpause", m), v))
-      | `Kv (("children:focus", m), v) ->
-          Some (`Kv (("children:focus-at-unpause", m), v))
-      | `Kv (("children:reveal", m), v) ->
-          Some (`Kv (("children:reveal-at-unpause", m), v))
-      | `Kv (("children:static", m), v) ->
-          Some (`Kv (("children:static-at-unpause", m), v))
-      | `Kv (("children:unemph", m), v) ->
-          Some (`Kv (("children:unemph-at-unpause", m), v))
-      | `Kv (("children:unfocus", m), v) ->
-          Some (`Kv (("children:unfocus-at-unpause", m), v))
-      | `Kv (("children:unreveal", m), v) ->
-          Some (`Kv (("children:unreveal-at-unpause", m), v))
-      | `Kv (("children:unstatic", m), v) ->
-          Some (`Kv (("children:unstatic-at-unpause", m), v))
-      | x -> Some x
-    in
     Ast.Mapper.make ~block ~inline ~attrs ()
 
-  let execute current_path defs md =
+  let execute current_path defs md fm =
     let htbl_include = Hashtbl.create 3 in
     let res = Mapper.map_doc (execute ~htbl_include current_path defs) md in
-    (res, htbl_include)
+    let fm =
+      let toplevel_attributes =
+        match fm.Frontmatter.global.toplevel_attributes with
+        | None -> None
+        | Some (attrs, meta) ->
+            Some (Cmarkit.Attributes.map map_attrs attrs, meta)
+      in
+      {
+        fm with
+        Frontmatter.global = { fm.Frontmatter.global with toplevel_attributes };
+      }
+    in
+    (res, htbl_include, fm)
 end
 
 module Stage2 = struct
@@ -552,22 +565,20 @@ end
 
 let action_plan _ = failwith "TODO: Action plan"
 
-let of_cmarkit ~first ~path ~(fm : Frontmatter.t) ~source md =
-  let toplevel_attributes =
-    fm.local.toplevel_attributes
-    |> Option.value
-         ~default:
-           (if first then Frontmatter.Toplevel_attributes.default
-            else (Attributes.empty, Meta.none))
-  in
+let of_cmarkit ~path ~(fm : Frontmatter.t) ~source md =
   let defs = Doc.defs md in
   let block = Doc.block md in
   let md =
-    Doc.make ~nl:(Doc.nl md) ~defs
-      (Ast.S_block (Div ((block, toplevel_attributes), Meta.none)))
+    let b =
+      match fm.local.attributes with
+      | None -> block
+      | Some attributes ->
+          Ast.S_block (Ast.Div ((block, attributes), Meta.none))
+    in
+    Doc.make ~nl:(Doc.nl md) ~defs b
   in
   let current_path = Fpath.parent path in
-  let md1, htbl_include = Stage1.execute current_path defs md in
+  let md1, htbl_include, fm = Stage1.execute current_path defs md fm in
   let md2 = Stage2.execute md1 in
   let md3 = Stage3.execute md2 in
   let md4, files, id_map = Stage4.execute ~fm md3 in
@@ -596,7 +607,10 @@ let of_cmarkit ~first ~path ~(fm : Frontmatter.t) ~source md =
 (*     id_map = Id_map.SMap.empty; *)
 (*   } *)
 
-let unit ~first ~read_file file =
+let _add_file read_file file content =
+ fun p -> if Fpath.equal p file then Ok (Some content) else read_file p
+
+let unit ~read_file file =
   match read_file file with
   | Error _ as e -> e
   | Ok None -> Error (`Msg "Unable to read the main file")
@@ -605,35 +619,29 @@ let unit ~first ~read_file file =
         (* TODO: check if we still need read_file to return the whole path now
            that we changed the organization a bit *)
         let doc, frontmatter = Cmarkit_proxy.of_string ~read_file ~file s in
-        of_cmarkit ~first ~source:s ~path:file doc ~fm:frontmatter
+        of_cmarkit ~source:s ~path:file doc ~fm:frontmatter
       in
       Ok res
 
-let rec add_to_compile ~first file units ~read_file =
-  match unit ~first ~read_file file with
+let rec add_to_compile file units ~read_file =
+  match unit ~read_file file with
   | Error _ as e -> e
   | Ok u ->
-      let handle_error units = function
-        | Error _ -> (u, units)
-        | Ok res -> res
-      in
+      let handle_error units = function Error _ -> units | Ok res -> res in
       let units = Fpath.Map.add file u units in
       let c =
         Fpath.Map.fold
           (fun dep _ c ->
             if Fpath.Map.mem dep c then c
-            else
-              add_to_compile ~first:false dep c ~read_file
-              |> handle_error c |> snd)
+            else add_to_compile dep c ~read_file |> handle_error c)
           u.deps units
       in
-      Ok (u, c)
+      Ok c
 
 let compile_all ~read_file file =
-  match add_to_compile ~first:true file Fpath.Map.empty ~read_file with
+  match add_to_compile file Fpath.Map.empty ~read_file with
   | Error _ as e -> e
-  | Ok (u, units) ->
-      let _a_p, id_map = Action_plan.execute u units in
+  | Ok units ->
       let files, options =
         Ast.Folder.fold_just_units
           (fun unit (files, option) ->
@@ -643,6 +651,41 @@ let compile_all ~read_file file =
           (Fpath.Map.empty, Frontmatter.Global.empty)
           file units
       in
+      let toplevel_attributes =
+        Option.value ~default:Frontmatter.Toplevel_attributes.default
+          options.toplevel_attributes
+      in
+      let u =
+        let doc =
+          let block =
+            let open Cmarkit.Block in
+            Block_quote
+              ( ( Block_quote.make
+                    (Ext_standalone_attributes
+                       ( Cmarkit.Attributes.make
+                           ~kv_attributes:
+                             [
+                               (("include", Meta.none), None);
+                               ( ("src", Meta.none),
+                                 Some
+                                   ( {
+                                       v = Fpath.filename file;
+                                       delimiter = None;
+                                     },
+                                     Cmarkit.Meta.none ) );
+                             ]
+                           (),
+                         Meta.none )),
+                  toplevel_attributes ),
+                Meta.none )
+          in
+          Cmarkit.Doc.make block
+        in
+        of_cmarkit ~path:file ~fm:Frontmatter.empty ~source:{|Internal|} doc
+      in
+      let internal = Fpath.v "internal" in
+      let units = Fpath.Map.add internal u units in
+      let _a_p, id_map = Action_plan.execute u units in
       let files : Ast.Files.(read map) =
         Fpath.Map.mapi
           (fun path file ->
@@ -659,10 +702,9 @@ let compile_all ~read_file file =
             { file with content })
           files
       in
-      Ok { Ast.units; files; id_map; entry_point = file; options }
+      Ok { Ast.units; files; id_map; entry_point = internal; options }
 
-let unit ~read_file file =
-  Diagnosis.with_ @@ fun () -> unit ~first:true ~read_file file
+let unit ~read_file file = Diagnosis.with_ @@ fun () -> unit ~read_file file
 
 let compile_all ~read_file file =
   Diagnosis.with_ @@ fun () -> compile_all ~read_file file

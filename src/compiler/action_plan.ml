@@ -269,7 +269,20 @@ let merge_id_maps (unit : Ast.unit') (units : Ast.unit' Fpath.Map.t) id_map =
   id_map
 
 let execute entry_point units =
-  let id_map = merge_id_maps entry_point units Id_map.SMap.empty in
+  let id_map =
+    (* match Cmarkit.Attributes.id attrs with *)
+    (* | None -> Id_map.SMap.empty *)
+    (* | Some ((id_s, meta) as id) -> *)
+    (*     Id_map.SMap.singleton id_s *)
+    (*       (Id_map.Unionable_set.singleton *)
+    (*          { *)
+    (*            Id_map.id; *)
+    (*            elem = `Block (Cmarkit.Doc.block entry_point.Ast.ast); *)
+    (*            meta; *)
+    (*          }) *)
+    Id_map.SMap.empty
+  in
+  let id_map = merge_id_maps entry_point units id_map in
   let id_map =
     Id_map.SMap.map (fun definition -> { Id_map.definition; usage = [] }) id_map
   in

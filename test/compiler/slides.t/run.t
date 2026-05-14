@@ -12,7 +12,7 @@ We can compile the file using the slip_of_mark binary
               <div class="slipshow-rescaler" enter-at-unpause=~duration:0 slip>
   <div class="slip">
   <div class="slip-body">
-  <div>
+  <div src=slides.md include>
   <div style="display: flex">
   <div id="slide1" class="slipshow-rescaler" slide enter-at-unpause>
   <div class="slide">

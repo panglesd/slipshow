@@ -64,6 +64,11 @@ Testing with an include
   
 
   $ slipshow compile all.md
+  warning: file 'missing.md' could not be read: missing.md: No such file or directory
+      ┌─ all.md:11:4
+   11 │  ![](missing.md)
+      │     ^^^^^^^^^^^^ 
+  
   warning: Failed to parse
       ┌─ all.md:44:16
    44 │  {up="~margin:2 ~margin:3"}
@@ -131,11 +136,6 @@ Testing with an include
     2 │  toplevel-attributes: exec=yo dqzd
       │                               ^^^^ 
   
-  warning: file 'missing.md' could not be read: missing.md: No such file or directory
-      ┌─ all.md:11:4
-   11 │  ![](missing.md)
-      │     ^^^^^^^^^^^^ 
-  
   warning: ID duplicated-id is assigned multiple times
       ┌─ all.md:25:3
    10 │  {#duplicated-id}
@@ -161,7 +161,7 @@ Testing with an include
       ┌─ all.md:3:1
     3 │  unknown-frontmatter: field
       │  ^^^^^^^^^^^^^^^^^^^ 
-      = Recognized fields are: 'dimension', 'toplevel-attributes', 'math-link', 'theme', 'css', 'js', 'highlightjs-theme', 'math-mode', 'external-ids'
+      = Recognized fields are: 'dimension', 'toplevel-attributes', 'math-link', 'theme', 'css', 'js', 'highlightjs-theme', 'math-mode', 'external-ids', 'attributes'
   
   warning: Invalid frontmatter entry
       ┌─ all.md:7:1

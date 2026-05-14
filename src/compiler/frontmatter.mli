@@ -1,7 +1,7 @@
 type 'a loced := 'a * Cmarkit.Textloc.t
 
 module Local : sig
-  type t = { toplevel_attributes : Cmarkit.Attributes.t Cmarkit.node option }
+  type t = { attributes : Cmarkit.Attributes.t Cmarkit.node option }
   type 'a with_ = { x : 'a; fm : t }
 
   val empty : t
@@ -18,6 +18,7 @@ module Global : sig
     css_links : Asset.t list;
     js_links : Asset.t list;
     external_ids : string list;
+    toplevel_attributes : Cmarkit.Attributes.t Cmarkit.node option;
   }
 
   type 'a with_ = { x : 'a; fm : t }
@@ -55,6 +56,7 @@ end
 module Toplevel_attributes :
   Field_with_default with type t = Cmarkit.Attributes.t Cmarkit.node
 
+module Attributes : Field_with_default with type t = Toplevel_attributes.t
 module Math_link : Field with type t = Asset.t loced
 
 module Theme :

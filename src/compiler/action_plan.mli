@@ -37,4 +37,8 @@ type step = {
 
 type t = step list
 
-val execute : Ast.unit' -> Ast.unit' Fpath.Map.t -> t * Id_map.t
+val execute :
+  Ast.unit' ->
+  Ast.unit' Fpath.Map.t ->
+  (* Frontmatter.Toplevel_attributes.t -> *)
+  t * Id_map.t
