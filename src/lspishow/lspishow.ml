@@ -80,8 +80,6 @@ module State = struct
         | _ -> Lwt.return `No_changes
         (* TODO: Show error *))
 
-  (* TODO: handle creation of new files *)
-
   let units_of_buffer () =
     Hashtbl.fold
       (fun path u -> Fpath.Map.add path u.unit)
