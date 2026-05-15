@@ -17,13 +17,15 @@ let lwt_list_iter f l =
     Lwt.return_unit l
 
 module State = struct
-  [@@@ocaml.warning "-32-26"]
-
-  type buffer = { source : string; compiled : Slipshow.Compile.t }
+  type buffer = { source : string; unit : Slipshow.Ast.unit' }
   type buffers = (Fpath.t, buffer) Hashtbl.t
 
   let buffers : buffers = Hashtbl.create 10
   let mutex = Lwt_mutex.create ()
+
+  type roots = (Fpath.t, Slipshow.Ast.units * Diagnosis.t list) Hashtbl.t
+
+  let roots_state : roots = Hashtbl.create 10
 
   let read_file parent s =
     let ( // ) = Fpath.( // ) in
@@ -33,8 +35,8 @@ module State = struct
     match Hashtbl.find_opt buffers fp with
     | None ->
         let+ res = Io.read (`File fp) in
-        Some (res, fp)
-    | Some buf -> Ok (Some (buf.source, fp))
+        Some res
+    | Some buf -> Ok (Some buf.source)
 
   let hashtbl_update h key f =
     match f (Hashtbl.find_opt h key) with
@@ -58,10 +60,13 @@ module State = struct
       Hashtbl.find_opt current dependant
       |> Option.value ~default:Fpath.Set.empty
 
-    let rec get_root f =
-      match Fpath.Set.choose_opt @@ get f with
-      | None -> f
-      | Some f -> get_root f
+    let rec get_roots u =
+      let parents = get u in
+      if Fpath.Set.is_empty parents then Fpath.Set.singleton u
+      else
+        Fpath.Set.fold
+          (fun u -> Fpath.Set.union @@ get_roots u)
+          parents Fpath.Set.empty
   end
 
   let update_state ~only_deps ~old ~new_ file =
@@ -71,16 +76,23 @@ module State = struct
     let () =
       match old with
       | None -> ()
-      | Some { compiled = { included_files; _ }; _ } ->
+      | Some { unit = { deps; _ }; _ } ->
           Fpath.Map.iter
-            (fun dependant _source -> Rev_deps.remove dependant file)
-            included_files
+            (fun dependant _source ->
+              let dependant =
+                Fpath.normalize @@ Fpath.( // ) (Fpath.parent file) dependant
+              in
+              Rev_deps.remove dependant file)
+            deps
     in
-    let files = new_.compiled.included_files in
+    let files = new_.unit.deps in
     Fpath.Map.iter
       (fun dependant _source ->
         Format.eprintf "Adding that %a depends on %a\n%!" Fpath.pp dependant
           Fpath.pp file;
+        let dependant =
+          Fpath.normalize @@ Fpath.( // ) (Fpath.parent file) dependant
+        in
         Rev_deps.add dependant file)
       files
 
@@ -93,35 +105,56 @@ module State = struct
         let parent, filename = Fpath.split_base file in
         let read_file = read_file parent in
         Format.eprintf "new read_file with parent = %a\n%!" Fpath.pp parent;
-        match read_file filename with
-        | Ok (Some (source, _)) ->
-            let ((compiled, _errors) as return) =
-              Slipshow.Compile.compile ~file ~read_file source
-            in
-            let new_ = { source; compiled } in
+        match Slipshow.Compile.unit ~read_file filename with
+        | Ok unit, errors ->
+            let new_ = { source; unit } in
             update_state ~only_deps ~old ~new_ file;
-            Lwt.return (`Update return)
+            Lwt.return (`Update (unit, errors))
         | _ -> Lwt.return `No_changes
         (* TODO: Show error *))
 
+  (* [update_from_fs] is update done when we read a file from the filesystem
+     (and not given by the lsp client). It is the one called at initialization
+     step, mostly for computing deps. *)
   let update_from_fs (file : Fpath.t) =
     Format.eprintf "update_from_fs with file = %a\n%!" Fpath.pp file;
     let parent, filename = Fpath.split_base file in
     let read_file = read_file parent in
     match read_file filename with
-    | Ok (Some (md, _)) ->
+    | Ok (Some md) ->
         let+ _ = update ~only_deps:true file md in
         ()
     | _ -> Lwt.return_unit
 
-  let update_from_buffer (file : Fpath.t) s =
-    let* res = update ~only_deps:false file s in
-    match res with
-    | `No_change -> (
-        let root = Rev_deps.get_root file in
+  (* TODO: handle creation of new files *)
 
-        match Hashtbl.find_opt buffers root with None -> _ | Some root -> (match update ~only_deps:false root root.source _))
-    | _ -> _
+  let units_of_buffer () =
+    Hashtbl.fold
+      (fun path u -> Fpath.Map.add path u.unit)
+      buffers Fpath.Map.empty
+
+  let update_root root =
+    let parent, filename = Fpath.split_base root in
+    let read_file = read_file parent in
+    let units = units_of_buffer () in
+    let u, errors = Slipshow.Compile.compile_all ~read_file units filename in
+    match u with
+    | Error _ -> () (* TODO: handle error case *)
+    | Ok u -> Hashtbl.replace roots_state root (u, errors)
+
+  let update_from_buffer (file : Fpath.t) s =
+    let+ res = update ~only_deps:false file s in
+    match res with
+    | `No_changes -> (
+        let roots = Rev_deps.get_roots file in
+        roots
+        |> Fpath.Set.iter @@ fun root ->
+           match Hashtbl.find_opt roots_state root with
+           | None -> update_root root
+           | Some _ -> ())
+    | `Update _ ->
+        let roots = Rev_deps.get_roots file in
+        roots |> Fpath.Set.iter update_root
 end
 
 (* let split_by_inclusion (ast : Slipshow.Ast.t) = *)
@@ -143,35 +176,41 @@ end
 (*   in *)
 (*   map *)
 
-let diagnostics (uri : Linol.Lsp.Types.DocumentUri.t) (s : string) :
-    Linol.Lsp.Types.Diagnostic.t list option Lwt.t =
-  let file = Linol.Lsp.Types.DocumentUri.to_path uri in
-  let file = Fpath.v file in
+let diagnostics file : Linol.Lsp.Types.Diagnostic.t list option =
   Format.eprintf "Looking for diagnostics of %a\n%!" Fpath.pp file;
-  let+ res = State.update_from_buffer file s in
-  match res with
-  | `No_changes -> None
-  | `Update _ -> (
-      let root = State.Rev_deps.get_root file in
-      Format.eprintf "Root of %a is %a\n%!" Fpath.pp file Fpath.pp root;
-      let open Slipshow in
-      let parent, filename = Fpath.split_base root in
-      let read_file = State.read_file parent in
-      match read_file filename with
-      | Error _ | Ok None -> None
-      | Ok (Some (s, _)) ->
-          let ({ Compile.ast = _; _ } as _v), errors =
-            Compile.compile ~file:root ~read_file s
-          in
+  let roots = State.Rev_deps.get_roots file in
+  let root = Fpath.Set.choose_opt roots in
+  match root with
+  | None ->
+      Format.eprintf "FOUND NO ROOT %a\n%!" Fpath.pp file;
+      None
+  | Some root -> (
+      Format.eprintf "FOUND ROOT: %a\n%!" Fpath.pp root;
+      match Hashtbl.find_opt State.roots_state root with
+      | None ->
+          Format.eprintf "FOUND NO STATE FOR ROOT: %a\n%!" Fpath.pp root;
+          None
+      | Some (_, errors) ->
+          Format.eprintf "FOUND A STATE FOR ROOT: %a, with %d errors\n%!"
+            Fpath.pp root (List.length errors);
+
+          (* let root = State.Rev_deps.get_root file in *)
+          (* Format.eprintf "Root of %a is %a\n%!" Fpath.pp file Fpath.pp root; *)
+          (* let open Slipshow in *)
+          (* let parent, filename = Fpath.split_base root in *)
+          (* let read_file = State.read_file parent in *)
+          (* match read_file filename with *)
+          (* | Error _ | Ok None -> None *)
+          (* | Ok (Some (s, _)) -> *)
+          (*     let ({ Compile.ast = _; _ } as _v), errors = *)
+          (*       Compile.compile ~file:root ~read_file s *)
+          (*     in *)
 
           (* let _map = split_by_inclusion ast in *)
           (* Format.eprintf "Diagnostic of file: %a\n\n%!" Fpath.pp file; *)
           (* Format.eprintf "%a\n\n\n%!" Ast.Ast_printer.pp_bol *)
           (*   (`Block (Cmarkit.Doc.block ast.doc)); *)
-          Some
-            (List.concat_map
-               (Diagnostic.of_error ~file:(Fpath.to_string file))
-               errors))
+          Some (List.concat_map (Diagnostic.of_error ~root ~file) errors))
 
 (* Find all markdown files in the given directory (recursing over subdirectories) *)
 let find_markdown_files path =
@@ -342,13 +381,13 @@ class lsp_server =
 
     method private _on_doc ~(notify_back : Linol_lwt.Jsonrpc2.notify_back)
         (uri : Linol.Lsp.Types.DocumentUri.t) (contents : string) =
-      (* let file = Linol.Lsp.Types.DocumentUri.to_path uri in *)
-      (* State.update_from_buffer  *)
+      let file = uri |> Linol.Lsp.Types.DocumentUri.to_path |> Fpath.v in
+      let* () = State.update_from_buffer file contents in
       (* match Hashtbl.find_opt opened_buffers file with *)
       (* | Some c when String.equal c contents -> Lwt.return_unit *)
       (* | _ -> *)
       (*     Hashtbl.replace opened_buffers file contents; *)
-      let* diags = diagnostics uri contents in
+      let diags = diagnostics file in
       match diags with
       | None -> Lwt.return ()
       | Some diags -> notify_back#send_diagnostic diags
