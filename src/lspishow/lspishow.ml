@@ -303,7 +303,6 @@ class lsp_server =
       let ( let* ) = Option.bind in
       let ( let+ ) x f = Option.map f x in
       let path = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
-      let _ = pos in
       let res =
         let* root = State.Rev_deps.get_roots path |> Fpath.Set.choose_opt in
         let* ast, _diags = Hashtbl.find_opt State.roots_state root in
@@ -327,20 +326,28 @@ class lsp_server =
 
     method! on_req_definition ~notify_back:_ ~id:_ ~uri ~pos ~workDoneToken:_
         ~partialResultToken:_ _doc_state =
-      (* let ( let* ) = Option.bind in *)
-      (* let ( let+ ) x f = Option.map f x in *)
-      (* let res = *)
-      (*   let* ast = !current_ast in *)
-      (*   let* id = Current_ast.get_target pos ast.action_plan in *)
-      (*   let+ x = Slipshow.Id_map.SMap.find_opt id ast.id_map in *)
-      (*   let meta = snd x.id in *)
-      (*   let range = Diagnostic.linoloc_of_textloc (Cmarkit.Meta.textloc meta) in *)
-      (*   let loc = Linol_lwt.Location.create ~range ~uri in *)
-      (*   `Location [ loc ] *)
-      (* in *)
-      (* Lwt.return res *)
-      let _ = (uri, pos) in
-      Lwt.return None
+      let ( let* ) = Option.bind in
+      let ( let+ ) x f = Option.map f x in
+      let path = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
+      let res =
+        let* root = State.Rev_deps.get_roots path |> Fpath.Set.choose_opt in
+        let* ast, _diags = Hashtbl.find_opt State.roots_state root in
+        let* id = Current_ast.get_target pos ast.action_plan in
+        let+ x = Slipshow.Id_map.SMap.find_opt id ast.id_map in
+        let meta = snd (Slipshow.Id_map.Unionable_set.get x.definition).id in
+        let loc = Cmarkit.Meta.textloc meta in
+        let file =
+          Fpath.normalize
+          @@ Fpath.( // ) (Fpath.parent root)
+               (Fpath.v (Cmarkit.Textloc.file loc))
+        in
+        Format.eprintf "Going to location %a%!\n" Fpath.pp file;
+        let uri = file |> Fpath.to_string |> Linol_lsp.Uri0.of_string in
+        let range = Diagnostic.linoloc_of_textloc loc in
+        let loc = Linol_lwt.Location.create ~range ~uri in
+        `Location [ loc ]
+      in
+      Lwt.return res
 
     method! on_req_hover ~notify_back:_ ~id:_ ~uri:_ ~pos ~workDoneToken:_ _ :
         Linol_lwt.Hover.t option Lwt.t =
