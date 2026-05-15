@@ -38,37 +38,6 @@ module State = struct
         Some res
     | Some buf -> Ok (Some buf.source)
 
-  let hashtbl_update h key f =
-    match f (Hashtbl.find_opt h key) with
-    | None -> ()
-    | Some v -> Hashtbl.replace h key v
-
-  module Rev_deps = struct
-    type t = (Fpath.t, Fpath.Set.t) Hashtbl.t
-
-    let current : t = Hashtbl.create 10
-
-    let remove dependant depends =
-      hashtbl_update current dependant @@ Option.map (Fpath.Set.remove depends)
-
-    let add dependant depends =
-      hashtbl_update current dependant @@ function
-      | None -> Some (Fpath.Set.singleton depends)
-      | Some set -> Some (Fpath.Set.add depends set)
-
-    let get dependant =
-      Hashtbl.find_opt current dependant
-      |> Option.value ~default:Fpath.Set.empty
-
-    let rec get_roots u =
-      let parents = get u in
-      if Fpath.Set.is_empty parents then Fpath.Set.singleton u
-      else
-        Fpath.Set.fold
-          (fun u -> Fpath.Set.union @@ get_roots u)
-          parents Fpath.Set.empty
-  end
-
   let update_state ~only_deps ~old ~new_ file =
     if not only_deps then (
       Format.eprintf "Opening/updating buffer: %a\n%!" Fpath.pp file;
@@ -178,7 +147,7 @@ end
 
 let diagnostics file : Linol.Lsp.Types.Diagnostic.t list option =
   Format.eprintf "Looking for diagnostics of %a\n%!" Fpath.pp file;
-  let roots = State.Rev_deps.get_roots file in
+  let roots = Rev_deps.get_roots file in
   let root = Fpath.Set.choose_opt roots in
   match root with
   | None ->
@@ -291,7 +260,7 @@ class lsp_server =
             Format.eprintf "%a -> [%s]\n%!" Fpath.pp path
               (String.concat " "
               @@ (Fpath.Set.to_list paths |> List.map Fpath.to_string)))
-          State.Rev_deps.current
+          Rev_deps.current
       in
       super#on_req_initialize ~notify_back params
 
@@ -304,7 +273,7 @@ class lsp_server =
       let ( let+ ) x f = Option.map f x in
       let path = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
       let res =
-        let* root = State.Rev_deps.get_roots path |> Fpath.Set.choose_opt in
+        let* root = Rev_deps.get_roots path |> Fpath.Set.choose_opt in
         let* ast, _diags = Hashtbl.find_opt State.roots_state root in
         let+ () =
           Current_ast.get_target pos ast.action_plan |> Option.map ignore
@@ -330,7 +299,7 @@ class lsp_server =
       let ( let+ ) x f = Option.map f x in
       let path = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
       let res =
-        let* root = State.Rev_deps.get_roots path |> Fpath.Set.choose_opt in
+        let* root = Rev_deps.get_roots path |> Fpath.Set.choose_opt in
         let* ast, _diags = Hashtbl.find_opt State.roots_state root in
         let* id = Current_ast.get_target pos ast.action_plan in
         let+ x = Slipshow.Id_map.SMap.find_opt id ast.id_map in
@@ -408,7 +377,7 @@ class lsp_server =
         let ( let* ) = Option.bind in
         let ( let+ ) x f = Option.map f x in
         let path = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
-        let* root = State.Rev_deps.get_roots path |> Fpath.Set.choose_opt in
+        let* root = Rev_deps.get_roots path |> Fpath.Set.choose_opt in
         let* ast, _diags = Hashtbl.find_opt State.roots_state root in
         let* buffer = Hashtbl.find_opt State.buffers path in
         let* id =
