@@ -401,43 +401,63 @@ class lsp_server =
       | None -> Lwt.return ()
       | Some diags -> notify_back#send_diagnostic diags
 
-    method private on_req_document_highlight ~notify_back:_ ~id:_
+    method private on_req_document_highlight ~notify_back:_ ~uri ~id:_
         (params : Linol_lwt.DocumentHighlightParams.t) :
         Linol_lwt.DocumentHighlight.t list option Lwt.t =
-      (* let res = *)
-      (*   let ( let* ) = Option.bind in *)
-      (*   let ( let+ ) x f = Option.map f x in *)
-      (*   let* ast = !current_ast in *)
-      (*   let* id = *)
-      (*     let res1 = Current_ast.get_target params.position ast.action_plan in *)
-      (*     match res1 with *)
-      (*     | Some _ -> res1 *)
-      (*     | None -> ( *)
-      (*         let* tail_attrs = *)
-      (*           let trail = Current_ast.get_leave params.position ast.ast.doc in *)
-      (*           trail.attribute *)
-      (*         in *)
-      (*         match tail_attrs with Id (id, _) -> Some id | _ -> None) *)
-      (*   in *)
-      (*   let+ x = Slipshow.Id_map.SMap.find_opt id ast.id_map in *)
-      (*   let loc_def = Cmarkit.Meta.textloc @@ snd x.id in *)
-      (*   let loc_occ = x.rev in *)
-      (*   let locs = loc_def :: loc_occ in *)
-      (*   List.map *)
-      (*     (fun loc -> *)
-      (*       let range = Diagnostic.linoloc_of_textloc loc in *)
-      (*       Linol_lwt.DocumentHighlight.create ~range ()) *)
-      (*     locs *)
-      (* in *)
-      (* Lwt.return res *)
-      let _ = params in
-      Lwt.return None
+      let res =
+        let ( let* ) = Option.bind in
+        let ( let+ ) x f = Option.map f x in
+        let path = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
+        let* root = State.Rev_deps.get_roots path |> Fpath.Set.choose_opt in
+        let* ast, _diags = Hashtbl.find_opt State.roots_state root in
+        let* buffer = Hashtbl.find_opt State.buffers path in
+        let* id =
+          let res1 = Current_ast.get_target params.position ast.action_plan in
+          match res1 with
+          | Some _ -> res1
+          | None -> (
+              let* tail_attrs =
+                let trail =
+                  Current_ast.get_leave params.position buffer.unit.ast
+                in
+                trail.attribute
+              in
+              match tail_attrs with Id (id, _) -> Some id | _ -> None)
+        in
+        let+ x = Slipshow.Id_map.SMap.find_opt id ast.id_map in
+        let id = (Slipshow.Id_map.Unionable_set.get x.definition).id in
+        let loc_def = Cmarkit.Meta.textloc @@ snd id in
+        let loc_occ = x.usage in
+        let locs = loc_def :: loc_occ in
+        List.filter_map
+          (fun loc ->
+            let loc_in_file loc =
+              let path1 =
+                Fpath.normalize
+                @@ Fpath.( // ) (Fpath.parent root)
+                     (Fpath.v (Cmarkit.Textloc.file loc))
+              in
+              let path2 = Fpath.normalize path in
+              let res = Fpath.equal path1 path2 in
+              if not res then
+                Format.eprintf "Found an error for another file: %a vs %a \n%!"
+                  Fpath.pp path1 Fpath.pp path2;
+              res
+            in
+            if loc_in_file loc then
+              let range = Diagnostic.linoloc_of_textloc loc in
+              Some (Linol_lwt.DocumentHighlight.create ~range ())
+            else None)
+          locs
+      in
+      Lwt.return res
 
     method! on_request_unhandled (type r) ~notify_back ~id
         (r : r Linol_lsp.Client_request.t) : r Lwt.t =
       match r with
       | Linol.Lsp.Client_request.TextDocumentHighlight params ->
-          self#on_req_document_highlight ~notify_back ~id params
+          self#on_req_document_highlight ~notify_back ~id
+            ~uri:params.textDocument.uri params
       | r -> super#on_request_unhandled ~notify_back ~id r
 
     method on_notif_doc_did_open ~notify_back d ~content : unit Linol_lwt.t =
