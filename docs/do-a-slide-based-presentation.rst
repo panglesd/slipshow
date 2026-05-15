@@ -5,7 +5,7 @@ Do a slide-based presentation
 
 Suppose you want to do a presentation that consists uniquely of slides. In this
 case, you can add ``children:slide children:enter=~duration:0`` as
-toplevel-attributes in the frontmatter.
+attributes in the frontmatter, and disable the toplevel attributes.
 
 Once you have added this in the frontmatter, separate your slides with ``---``,
 just like you would in a revealJS presentation. The rest of the syntax
@@ -14,7 +14,8 @@ just like you would in a revealJS presentation. The rest of the syntax
 .. slipshow-example::
 
    ---
-   toplevel-attributes: children:slide children:enter=~duration:0
+   attributes: { children:slide children:enter=~duration:0 }
+   toplevel-attributes: {}
    ---
 
    # Slide 1

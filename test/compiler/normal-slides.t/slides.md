@@ -1,5 +1,6 @@
 ---
-toplevel-attributes: {children:slide children:enter='~duration:0'}
+attributes: {children:slide children:enter='~duration:0'}
+toplevel-attributes: {}
 ---
 
 # Agenda
