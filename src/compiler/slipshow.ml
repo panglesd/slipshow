@@ -249,7 +249,7 @@ let convert_to_md ~read_file content =
   let read_file =
    fun f -> if Fpath.equal entry_point f then Ok (Some content) else read_file f
   in
-  let units, _ = Compile.compile_all ~read_file entry_point in
+  let units, _ = Compile.compile_all ~read_file Fpath.Map.empty entry_point in
   match units with
   | Ok units ->
       let sd = Compile.to_cmarkit units in
@@ -279,7 +279,7 @@ let delayed ?(options = Frontmatter.Global.empty) ?slipshow_js ?file
   let read_file fp =
     if Fpath.equal fp file then Ok (Some s) else read_file fp
   in
-  let units, errors = Compile.compile_all file ~read_file in
+  let units, errors = Compile.compile_all Fpath.Map.empty file ~read_file in
   let units =
     Result.get_ok units
     (* TODO: handle *)

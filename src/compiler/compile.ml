@@ -624,22 +624,22 @@ let unit ~read_file file =
       Ok res
 
 let rec add_to_compile file units ~read_file =
-  match unit ~read_file file with
-  | Error _ as e -> e
-  | Ok u ->
-      let handle_error units = function Error _ -> units | Ok res -> res in
-      let units = Fpath.Map.add file u units in
-      let c =
-        Fpath.Map.fold
-          (fun dep _ c ->
-            if Fpath.Map.mem dep c then c
-            else add_to_compile dep c ~read_file |> handle_error c)
-          u.deps units
-      in
-      Ok c
+  if Fpath.Map.mem file units then Ok units
+  else
+    match unit ~read_file file with
+    | Error _ as e -> e
+    | Ok u ->
+        let handle_error units = function Error _ -> units | Ok res -> res in
+        let units = Fpath.Map.add file u units in
+        let c =
+          Fpath.Map.fold
+            (fun dep _ c -> add_to_compile dep c ~read_file |> handle_error c)
+            u.deps units
+        in
+        Ok c
 
-let compile_all ~read_file file =
-  match add_to_compile file Fpath.Map.empty ~read_file with
+let compile_all ~read_file units file =
+  match add_to_compile file units ~read_file with
   | Error _ as e -> e
   | Ok units ->
       let files, options =
@@ -706,8 +706,8 @@ let compile_all ~read_file file =
 
 let unit ~read_file file = Diagnosis.with_ @@ fun () -> unit ~read_file file
 
-let compile_all ~read_file file =
-  Diagnosis.with_ @@ fun () -> compile_all ~read_file file
+let compile_all ~read_file units file =
+  Diagnosis.with_ @@ fun () -> compile_all ~read_file units file
 
 (* let add_to_compile file c ~read_file = *)
 (*   Diagnosis.with_ @@ fun () -> add_to_compile file c ~read_file *)

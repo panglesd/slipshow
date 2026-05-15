@@ -18,6 +18,7 @@ val unit :
 
 val compile_all :
   read_file:file_reader ->
+  Ast.unit' Fpath.Map.t ->
   Fpath.t ->
   (Ast.units, [ `Msg of string ]) result * Diagnosis.t list
 
