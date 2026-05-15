@@ -578,12 +578,16 @@ let of_cmarkit ~path ~(fm : Frontmatter.t) ~source md =
     Doc.make ~nl:(Doc.nl md) ~defs b
   in
   let current_path = Fpath.parent path in
-  let md1, htbl_include, fm = Stage1.execute current_path defs md fm in
-  let md2 = Stage2.execute md1 in
-  let md3 = Stage3.execute md2 in
-  let md4, files, id_map = Stage4.execute ~fm md3 in
-  let deps = htbl_include |> Hashtbl.to_seq |> Fpath.Map.of_seq in
-  { Ast.ast = md4; deps; id_map; source; files; option = fm.global }
+  let (ast, deps, id_map, files, option), warnings =
+    Diagnosis.with_ @@ fun () ->
+    let md1, htbl_include, fm = Stage1.execute current_path defs md fm in
+    let md2 = Stage2.execute md1 in
+    let md3 = Stage3.execute md2 in
+    let md4, files, id_map = Stage4.execute ~fm md3 in
+    let deps = htbl_include |> Hashtbl.to_seq |> Fpath.Map.of_seq in
+    (md4, deps, id_map, files, fm.global)
+  in
+  { Ast.ast; deps; id_map; source; files; option; warnings }
 
 (* TODO: Have that somewhere *)
 (* let () = *)
@@ -647,6 +651,12 @@ let compile_all ~read_file units file =
           (fun unit (files, option) ->
             let files = Ast.Files.combine files unit.files in
             let option = Frontmatter.Global.combine option unit.Ast.option in
+            let () =
+              (* Rethrow the few warnings raised during the unit phase (currently,
+               only "children:#id is not supported") warnings not to miss
+               them *)
+              List.iter Diagnosis.add unit.warnings
+            in
             (files, option))
           (Fpath.Map.empty, Frontmatter.Global.empty)
           file units
@@ -711,8 +721,6 @@ let compile_all ~read_file units file =
           options;
           action_plan;
         }
-
-let unit ~read_file file = Diagnosis.with_ @@ fun () -> unit ~read_file file
 
 let compile_all ~read_file units file =
   Diagnosis.with_ @@ fun () -> compile_all ~read_file units file

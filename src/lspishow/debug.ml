@@ -114,8 +114,8 @@ module Ast_printer = struct
     | Block.Ext_attribute_definition ((_def, attrs), _) ->
         fprintf ppf "Ext_attribute_definition%a" pp_attrs attrs
     (* Slipshow Blocks *)
-    | S_block (Included ((b, attrs), _)) ->
-        fprintf ppf "Included%a@ %a" pp_attrs attrs pp_block b
+    | S_block (Included ((fpath, attrs), _)) ->
+        fprintf ppf "Included%a@ %a" pp_attrs attrs Fpath.pp fpath
     | S_block (Div ((b, attrs), _)) ->
         fprintf ppf "Div%a@ %a" pp_attrs attrs pp_block b
     | S_block (Slide (({ content; title }, attrs), _)) ->

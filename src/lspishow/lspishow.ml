@@ -27,73 +27,58 @@ module State = struct
 
   let roots_state : roots = Hashtbl.create 10
 
-  let read_file parent s =
-    let ( // ) = Fpath.( // ) in
-    let ( let+ ) a b = Result.map b a in
-    let fp = Fpath.normalize @@ (parent // s) in
-    Format.eprintf "fp is %a\n%!" Fpath.pp fp;
-    match Hashtbl.find_opt buffers fp with
-    | None ->
-        let+ res = Io.read (`File fp) in
-        Some res
-    | Some buf -> Ok (Some buf.source)
+  module Read_file = struct
+    let v parent s =
+      let ( // ) = Fpath.( // ) in
+      let ( let+ ) a b = Result.map b a in
+      let fp = Fpath.normalize @@ (parent // s) in
+      Format.eprintf "fp is %a\n%!" Fpath.pp fp;
+      match Hashtbl.find_opt buffers fp with
+      | None ->
+          let+ res = Io.read (`File fp) in
+          Some res
+      | Some buf -> Ok (Some buf.source)
 
-  let update_state ~only_deps ~old ~new_ file =
-    if not only_deps then (
-      Format.eprintf "Opening/updating buffer: %a\n%!" Fpath.pp file;
-      Hashtbl.replace buffers file new_);
-    let () =
-      match old with
-      | None -> ()
-      | Some { unit = { deps; _ }; _ } ->
-          Fpath.Map.iter
-            (fun dependant _source ->
-              let dependant =
-                Fpath.normalize @@ Fpath.( // ) (Fpath.parent file) dependant
-              in
-              Rev_deps.remove dependant file)
-            deps
-    in
-    let files = new_.unit.deps in
-    Fpath.Map.iter
-      (fun dependant _source ->
-        Format.eprintf "Adding that %a depends on %a\n%!" Fpath.pp dependant
-          Fpath.pp file;
-        let dependant =
-          Fpath.normalize @@ Fpath.( // ) (Fpath.parent file) dependant
-        in
-        Rev_deps.add dependant file)
-      files
+    let with_ file source read_file s =
+      if Fpath.equal file s then Ok (Some source) else read_file s
+  end
 
-  let update ~only_deps file source =
+  (* [update_from_fs] is update done when we read a file from the filesystem
+     (and not given by the lsp client). It is the one called at initialization
+     step, mostly for computing deps. *)
+  let rev_deps_from_fs (file : Fpath.t) =
     Lwt_mutex.with_lock mutex @@ fun () ->
+    Format.eprintf "update_from_fs with file = %a\n%!" Fpath.pp file;
+    let parent, filename = Fpath.split_base file in
+    let read_file = Read_file.v parent in
+    let () =
+      match Slipshow.Compile.unit ~read_file filename with
+      | Ok new_unit -> Rev_deps.update_state ~old_unit:None ~new_unit file
+      | _ -> ()
+      (* TODO: Show error *)
+    in
+    Lwt.return_unit
+
+  let update_state ~old ~new_ file =
+    Format.eprintf "Opening/updating buffer: %a\n%!" Fpath.pp file;
+    Hashtbl.replace buffers file new_;
+    let old_unit = Option.map (fun old -> old.unit) old in
+    Rev_deps.update_state ~old_unit ~new_unit:new_.unit file
+
+  let update file source =
     match Hashtbl.find_opt buffers file with
     | Some { source = old_source; _ } when String.equal source old_source ->
         Lwt.return `No_changes
     | old -> (
         let parent, filename = Fpath.split_base file in
-        let read_file = read_file parent in
-        Format.eprintf "new read_file with parent = %a\n%!" Fpath.pp parent;
+        let read_file = Read_file.v parent |> Read_file.with_ filename source in
         match Slipshow.Compile.unit ~read_file filename with
-        | Ok unit, errors ->
+        | Ok unit ->
             let new_ = { source; unit } in
-            update_state ~only_deps ~old ~new_ file;
-            Lwt.return (`Update (unit, errors))
+            update_state ~old ~new_ file;
+            Lwt.return `Update
         | _ -> Lwt.return `No_changes
         (* TODO: Show error *))
-
-  (* [update_from_fs] is update done when we read a file from the filesystem
-     (and not given by the lsp client). It is the one called at initialization
-     step, mostly for computing deps. *)
-  let update_from_fs (file : Fpath.t) =
-    Format.eprintf "update_from_fs with file = %a\n%!" Fpath.pp file;
-    let parent, filename = Fpath.split_base file in
-    let read_file = read_file parent in
-    match read_file filename with
-    | Ok (Some md) ->
-        let+ _ = update ~only_deps:true file md in
-        ()
-    | _ -> Lwt.return_unit
 
   (* TODO: handle creation of new files *)
 
@@ -104,7 +89,7 @@ module State = struct
 
   let update_root root =
     let parent, filename = Fpath.split_base root in
-    let read_file = read_file parent in
+    let read_file = Read_file.v parent in
     let units = units_of_buffer () in
     let u, errors = Slipshow.Compile.compile_all ~read_file units filename in
     match u with
@@ -112,16 +97,18 @@ module State = struct
     | Ok u -> Hashtbl.replace roots_state root (u, errors)
 
   let update_from_buffer (file : Fpath.t) s =
-    let+ res = update ~only_deps:false file s in
+    Lwt_mutex.with_lock mutex @@ fun () ->
+    let+ res = update file s in
     match res with
-    | `No_changes -> (
+    | `No_changes ->
         let roots = Rev_deps.get_roots file in
-        roots
-        |> Fpath.Set.iter @@ fun root ->
-           match Hashtbl.find_opt roots_state root with
-           | None -> update_root root
-           | Some _ -> ())
-    | `Update _ ->
+        let compile_missing_roots root =
+          match Hashtbl.find_opt roots_state root with
+          | None -> update_root root
+          | Some _ -> ()
+        in
+        Fpath.Set.iter compile_missing_roots roots
+    | `Update ->
         let roots = Rev_deps.get_roots file in
         roots |> Fpath.Set.iter update_root
 end
@@ -182,7 +169,7 @@ class lsp_server =
                 Lwt.return_unit
             | Ok files ->
                 List.iter (Format.eprintf "  md: %a\n%!" Fpath.pp) files;
-                lwt_list_iter State.update_from_fs files)
+                lwt_list_iter State.rev_deps_from_fs files)
           roots
       in
       let () =

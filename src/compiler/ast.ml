@@ -131,6 +131,7 @@ type unit' = {
   source : string;
   files : Files.(unread map);
   option : Frontmatter.Global.t;
+  warnings : Diagnosis.t list;
 }
 
 type units = {

@@ -6,9 +6,7 @@ type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
 val to_cmarkit : Ast.units -> Cmarkit.Doc.t
 
 val unit :
-  read_file:file_reader ->
-  Fpath.t ->
-  (Ast.unit', [ `Msg of string ]) result * Diagnosis.t list
+  read_file:file_reader -> Fpath.t -> (Ast.unit', [ `Msg of string ]) result
 
 (* val add_to_compile : *)
 (*   Fpath.t -> *)

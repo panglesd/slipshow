@@ -54,11 +54,7 @@ let of_error ~root ~file (e : Diagnosis.t) =
       @@ Fpath.( // ) (Fpath.parent root) (Fpath.v (Cmarkit.Textloc.file loc))
     in
     let path2 = Fpath.normalize file in
-    let res = Fpath.equal path1 path2 in
-    if not res then
-      Format.eprintf "Found an error for another file: %a vs %a \n%!" Fpath.pp
-        path1 Fpath.pp path2;
-    res
+    Fpath.equal path1 path2
   in
   let if_in loc f = if loc_in_file loc then [ f () ] else [] in
   match e with
