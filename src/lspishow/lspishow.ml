@@ -126,59 +126,15 @@ module State = struct
         roots |> Fpath.Set.iter update_root
 end
 
-(* let split_by_inclusion (ast : Slipshow.Ast.t) = *)
-(*   let folder = *)
-(*     Slipshow.Ast.Folder.make *)
-(*       ~block:(fun f acc -> function *)
-(*         | Slipshow.Ast.S_block (Included (((fpath, b), _attrs), _meta)) -> *)
-(*             let acc = Fpath.Map.add fpath b acc in *)
-(*             Cmarkit.Folder.ret @@ Slipshow.Ast.Folder.continue_block f b acc *)
-(*         | _ -> Cmarkit.Folder.default) *)
-(*       ~inline:(fun _ acc _ -> Cmarkit.Folder.ret acc) *)
-(*       () *)
-(*   in *)
-(*   let map = Cmarkit.Folder.fold_doc folder Fpath.Map.empty ast.doc in *)
-(*   let () = *)
-(*     Fpath.Map.iter *)
-(*       (fun fpath _ -> Format.eprintf "Fpath = %a\n%!" Fpath.pp fpath) *)
-(*       map *)
-(*   in *)
-(*   map *)
-
 let diagnostics file : Linol.Lsp.Types.Diagnostic.t list option =
-  Format.eprintf "Looking for diagnostics of %a\n%!" Fpath.pp file;
   let roots = Rev_deps.get_roots file in
   let root = Fpath.Set.choose_opt roots in
   match root with
-  | None ->
-      Format.eprintf "FOUND NO ROOT %a\n%!" Fpath.pp file;
-      None
+  | None -> None
   | Some root -> (
-      Format.eprintf "FOUND ROOT: %a\n%!" Fpath.pp root;
       match Hashtbl.find_opt State.roots_state root with
-      | None ->
-          Format.eprintf "FOUND NO STATE FOR ROOT: %a\n%!" Fpath.pp root;
-          None
+      | None -> None
       | Some (_, errors) ->
-          Format.eprintf "FOUND A STATE FOR ROOT: %a, with %d errors\n%!"
-            Fpath.pp root (List.length errors);
-
-          (* let root = State.Rev_deps.get_root file in *)
-          (* Format.eprintf "Root of %a is %a\n%!" Fpath.pp file Fpath.pp root; *)
-          (* let open Slipshow in *)
-          (* let parent, filename = Fpath.split_base root in *)
-          (* let read_file = State.read_file parent in *)
-          (* match read_file filename with *)
-          (* | Error _ | Ok None -> None *)
-          (* | Ok (Some (s, _)) -> *)
-          (*     let ({ Compile.ast = _; _ } as _v), errors = *)
-          (*       Compile.compile ~file:root ~read_file s *)
-          (*     in *)
-
-          (* let _map = split_by_inclusion ast in *)
-          (* Format.eprintf "Diagnostic of file: %a\n\n%!" Fpath.pp file; *)
-          (* Format.eprintf "%a\n\n\n%!" Ast.Ast_printer.pp_bol *)
-          (*   (`Block (Cmarkit.Doc.block ast.doc)); *)
           Some (List.concat_map (Diagnostic.of_error ~root ~file) errors))
 
 (* Find all markdown files in the given directory (recursing over subdirectories) *)
@@ -200,30 +156,6 @@ class lsp_server =
       let _wsf = params.workspaceFolders in
       let _uri = params.rootUri in
       let _pth = params.rootPath in
-      (* let () = *)
-      (*   match wsf with *)
-      (*   | Some (Some l) -> *)
-      (*       List.iter *)
-      (*         (fun ws -> *)
-      (*           let open Linol_lwt.WorkspaceFolder in *)
-      (*           Format.eprintf "name: %s uri: %s\n%!" ws.name *)
-      (*             (Linol_lwt.DocumentUri.to_string ws.uri)) *)
-      (*         l *)
-      (*   | Some None -> Format.eprintf "Some but No workspace\n%!" *)
-      (*   | None -> Format.eprintf "No workspace\n%!" *)
-      (* in *)
-      (* let () = *)
-      (*   match uri with *)
-      (*   | Some uri -> *)
-      (*       Format.eprintf "Uri: %s\n%!" (Linol_lsp.Uri0.to_string uri) *)
-      (*   | None -> Format.eprintf "No uri\n%!" *)
-      (* in *)
-      (* let () = *)
-      (*   match pth with *)
-      (*   | Some (Some path) -> Format.eprintf "Path: %s\n%!" path *)
-      (*   | Some None -> Format.eprintf "Some but No path\n%!" *)
-      (*   | None -> Format.eprintf "No path\n%!" *)
-      (* in *)
       let root =
         match params.workspaceFolders with
         | Some ws ->
@@ -361,10 +293,6 @@ class lsp_server =
         (uri : Linol.Lsp.Types.DocumentUri.t) (contents : string) =
       let file = uri |> Linol.Lsp.Types.DocumentUri.to_path |> Fpath.v in
       let* () = State.update_from_buffer file contents in
-      (* match Hashtbl.find_opt opened_buffers file with *)
-      (* | Some c when String.equal c contents -> Lwt.return_unit *)
-      (* | _ -> *)
-      (*     Hashtbl.replace opened_buffers file contents; *)
       let diags = diagnostics file in
       match diags with
       | None -> Lwt.return ()
@@ -407,11 +335,7 @@ class lsp_server =
                      (Fpath.v (Cmarkit.Textloc.file loc))
               in
               let path2 = Fpath.normalize path in
-              let res = Fpath.equal path1 path2 in
-              if not res then
-                Format.eprintf "Found an error for another file: %a vs %a \n%!"
-                  Fpath.pp path1 Fpath.pp path2;
-              res
+              Fpath.equal path1 path2
             in
             if loc_in_file loc then
               let range = Diagnostic.linoloc_of_textloc loc in
