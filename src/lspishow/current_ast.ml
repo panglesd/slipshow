@@ -192,9 +192,9 @@ let get_leave pos doc =
   let block = Cmarkit.Doc.block doc in
   if pos_in_block block ~pos then enter_block acc pos block else acc
 
-let get_target pos (action_plan : Slipshow.Action_plan.t) =
+let get_target pos (action_plan : Slipshow.Ast.Action_plan.t) =
   List.find_map
-    (fun { Slipshow.Action_plan.actions; attrs = _, meta; _ } ->
+    (fun { Slipshow.Ast.Action_plan.actions; attrs = _, meta; _ } ->
       if not @@ pos_in ~pos ~meta () then None
       else
         List.find_map

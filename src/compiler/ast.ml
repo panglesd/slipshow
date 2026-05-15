@@ -48,6 +48,47 @@ let hand_drawn i = S_inline (Hand_drawn i)
 
 type t = Cmarkit.Doc.t
 
+module Action_plan = struct
+  open Actions_arguments
+
+  type arg =
+    | Enter of Enter.args
+    | Clear_draw of Clear_draw.args
+    | Draw of Draw.args
+    | Pause of Pause.args
+    | Step of Step.args
+    | Up of Up.args
+    | Down of Down.args
+    | Center of Center.args
+    | Scroll of Scroll.args
+    | Change_page of Change_page.args
+    | Focus of Focus.args
+    | Unfocus of Unfocus.args
+    | Execute of Execute.args
+    | Unstatic of Unstatic.args
+    | Static of Static.args
+    | Reveal of Reveal.args
+    | Unreveal of Unreveal.args
+    | Emph of Emph.args
+    | Unemph of Unemph.args
+    | Speaker_note of Speaker_note.args
+    | Play_media of Play_media.args
+
+  type action = arg * Cmarkit.Attributes.kv
+
+  type step = {
+    actions : action list;
+    elem : [ `Block of Block.t | `Inline of Inline.t ];
+    attrs : Cmarkit.(Attributes.t node);
+  }
+  (** A step is the list of actions that are going to be executed at the same
+      time. Ordered by presence in the file *)
+
+  type t = step list
+  (** A plan is a list of steps. Steps are ordered by order of execution, which
+      corresponds to reading order. *)
+end
+
 module Files = struct
   type mode = [ `Base64 ]
   type unread = unit
@@ -98,6 +139,7 @@ type units = {
   options : Frontmatter.Global.t;
   files : Files.(read map);
   id_map : Id_map.t;
+  action_plan : Action_plan.t;
 }
 
 module Folder = struct

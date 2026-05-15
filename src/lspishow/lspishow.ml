@@ -298,27 +298,30 @@ class lsp_server =
     method! config_completion =
       Some (Linol_lwt.CompletionOptions.create ~triggerCharacters:[ "#" ] ())
 
-    method! on_req_completion ~notify_back:_ ~id:_ ~uri:_ ~pos ~ctx:_
+    method! on_req_completion ~notify_back:_ ~id:_ ~uri ~pos ~ctx:_
         ~workDoneToken:_ ~partialResultToken:_ _doc_state =
-      (* let ( let* ) = Option.bind in *)
-      (* let ( let+ ) x f = Option.map f x in *)
+      let ( let* ) = Option.bind in
+      let ( let+ ) x f = Option.map f x in
+      let path = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
       let _ = pos in
       let res =
-        (* let* ast = !current_ast in *)
-        (* let+ () = *)
-        (*   Current_ast.get_target pos ast.action_plan |> Option.map ignore *)
-        (*   (\* Just as a way to test we are in the context of a target *\) *)
-        (* in *)
-        (* let all_ids = *)
-        (*   Slipshow.Id_map.SMap.bindings ast.id_map |> List.map fst *)
-        (* in *)
-        (* let completions = *)
-        (*   List.map *)
-        (*     (fun id -> Linol_lwt.CompletionItem.create ~label:id ()) *)
-        (*     all_ids *)
-        (* in *)
-        (* `List completions *)
-        Some (`List [])
+        let* root = State.Rev_deps.get_roots path |> Fpath.Set.choose_opt in
+        let* ast, _diags = Hashtbl.find_opt State.roots_state root in
+        let+ () =
+          Current_ast.get_target pos ast.action_plan |> Option.map ignore
+          (* Just as a way to test we are in the context of a target. Later, it
+             would be even better to filter the IDs using what the action
+             expects (eg, only show ids for slip-script in an exec action) *)
+        in
+        let all_ids =
+          Slipshow.Id_map.SMap.bindings ast.id_map |> List.map fst
+        in
+        let completions =
+          List.map
+            (fun id -> Linol_lwt.CompletionItem.create ~label:id ())
+            all_ids
+        in
+        `List completions
       in
       Lwt.return res
 

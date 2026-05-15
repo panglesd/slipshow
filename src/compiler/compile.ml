@@ -685,7 +685,7 @@ let compile_all ~read_file units file =
       in
       let internal = Fpath.v "internal" in
       let units = Fpath.Map.add internal u units in
-      let _a_p, id_map = Action_plan.execute u units in
+      let action_plan, id_map = Action_plan.execute u units in
       let files : Ast.Files.(read map) =
         Fpath.Map.mapi
           (fun path file ->
@@ -702,7 +702,15 @@ let compile_all ~read_file units file =
             { file with content })
           files
       in
-      Ok { Ast.units; files; id_map; entry_point = internal; options }
+      Ok
+        {
+          Ast.units;
+          files;
+          id_map;
+          entry_point = internal;
+          options;
+          action_plan;
+        }
 
 let unit ~read_file file = Diagnosis.with_ @@ fun () -> unit ~read_file file
 
@@ -781,7 +789,15 @@ let to_cmarkit units =
   in
   Ast.Mapper.make ~block ~inline ~attrs ()
 
-let to_cmarkit { Ast.units; entry_point; options = _; files = _; id_map = _ } =
+let to_cmarkit
+    {
+      Ast.units;
+      entry_point;
+      options = _;
+      files = _;
+      id_map = _;
+      action_plan = _;
+    } =
   match Fpath.Map.find_opt entry_point units with
   | None -> failwith "Fail during markdown output"
   | Some sd -> Cmarkit.Mapper.map_doc (to_cmarkit units) sd.ast

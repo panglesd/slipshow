@@ -1,27 +1,5 @@
 open Actions_arguments
-
-type arg =
-  | Enter of Enter.args
-  | Clear_draw of Clear_draw.args
-  | Draw of Draw.args
-  | Pause of Pause.args
-  | Step of Step.args
-  | Up of Up.args
-  | Down of Down.args
-  | Center of Center.args
-  | Scroll of Scroll.args
-  | Change_page of Change_page.args
-  | Focus of Focus.args
-  | Unfocus of Unfocus.args
-  | Execute of Execute.args
-  | Unstatic of Unstatic.args
-  | Static of Static.args
-  | Reveal of Reveal.args
-  | Unreveal of Unreveal.args
-  | Emph of Emph.args
-  | Unemph of Unemph.args
-  | Speaker_note of Speaker_note.args
-  | Play_media of Play_media.args
+open Ast.Action_plan
 
 let targets arg =
   let id_or_self = function `Self -> [] | `Id id -> [ id ] in
@@ -53,20 +31,6 @@ let targets arg =
         (function
           | { Actions_arguments.Change_page.target; _ } -> id_or_self target)
         argl
-
-type action = arg * Cmarkit.Attributes.kv
-
-type step = {
-  actions : action list;
-  elem : Ast.Bol.t;
-  attrs : Cmarkit.(Attributes.t node);
-}
-(** A step is the list of actions that are going to be executed at the same
-    time. Ordered by presence in the file *)
-
-type t = step list
-(** A plan is a list of steps. Steps are ordered by order of execution, which
-    corresponds to reading order. *)
 
 let kv_attribute_to_step id_map bol
     (((key, _), value) as kv : Cmarkit.Attributes.kv) =

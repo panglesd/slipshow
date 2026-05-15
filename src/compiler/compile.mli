@@ -22,4 +22,4 @@ val compile_all :
   Fpath.t ->
   (Ast.units, [ `Msg of string ]) result * Diagnosis.t list
 
-val action_plan : Ast.units -> Action_plan.t
+val action_plan : Ast.units -> Ast.Action_plan.t
