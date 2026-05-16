@@ -39,10 +39,18 @@ let update_state ~old_unit ~new_unit file =
       add dependant file)
     new_unit.Slipshow.Ast.deps
 
-let rec get_roots u =
-  let parents = get u in
-  if Fpath.Set.is_empty parents then Fpath.Set.singleton u
-  else
-    Fpath.Set.fold
-      (fun u -> Fpath.Set.union @@ get_roots u)
-      parents Fpath.Set.empty
+let get_roots u =
+  let rec get_roots visited u =
+    if Fpath.Set.mem u visited then
+      (* TODO: Show as error that the thing is cyclic *)
+      Fpath.Set.singleton u
+    else
+      let visited = Fpath.Set.add u visited in
+      let parents = get u in
+      if Fpath.Set.is_empty parents then Fpath.Set.singleton u
+      else
+        Fpath.Set.fold
+          (fun u -> Fpath.Set.union @@ get_roots visited u)
+          parents Fpath.Set.empty
+  in
+  get_roots Fpath.Set.empty u
