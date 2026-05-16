@@ -199,7 +199,7 @@ module Folder = struct
           | None -> `Fold acc
           | Some unit ->
               let b = Doc.block unit.ast in
-              block f acc b)
+              Cmarkit.Folder.fold_block f acc b)
       | b -> block f acc b
     in
     let folder = make ~block ~inline () in
