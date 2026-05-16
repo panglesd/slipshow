@@ -169,7 +169,8 @@ class lsp_server =
           (fun path paths ->
             Format.eprintf "%a -> [%s]\n%!" Fpath.pp path
               (String.concat " "
-              @@ (Fpath.Set.to_list paths |> List.map Fpath.to_string)))
+              @@ (paths |> Fpath.Set.to_seq |> List.of_seq
+                |> List.map Fpath.to_string)))
           Rev_deps.current
       in
       super#on_req_initialize ~notify_back params
