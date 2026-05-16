@@ -4,7 +4,10 @@ let do_watch entry_point compile =
     let () = Result.iter (fun _ -> Logs.app (fun m -> m "Recompiled!")) res in
     res
   in
-  let initial = Fpath.Set.singleton entry_point in
+  let initial =
+    Fpath.Set.singleton @@ Fpath.normalize
+    @@ Fpath.( // ) (Fpath.v (Sys.getcwd ())) entry_point
+  in
   Lwt_main.run @@ Watcher.watch_and_compile initial ~callback
 
 let html_source =
@@ -79,7 +82,10 @@ let do_serve ~port entry_point compile =
          Lwt_condition.broadcast cond `Update;
          Ok deps
    in
-   let initial = Fpath.Set.singleton entry_point in
+   let initial =
+     Fpath.Set.singleton @@ Fpath.normalize
+     @@ Fpath.( // ) (Fpath.v (Sys.getcwd ())) entry_point
+   in
    let wac = Watcher.watch_and_compile initial ~callback in
    let dream =
      (* We serve on [127.0.0.1] since in musl libc library, localhost would
