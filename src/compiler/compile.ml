@@ -587,7 +587,7 @@ let of_cmarkit ~path ~(fm : Frontmatter.t) ~source md =
     let deps = htbl_include |> Hashtbl.to_seq |> Fpath.Map.of_seq in
     (md4, deps, id_map, files, fm.global)
   in
-  { Ast.ast; deps; id_map; source; files; option; warnings }
+  { Ast.ast; deps; id_map; source; files; option; warnings; path }
 
 (* TODO: Have that somewhere *)
 (* let () = *)

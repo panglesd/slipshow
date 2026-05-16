@@ -124,6 +124,7 @@ end
 
 (* TODO: turn deps into an associative list to retain the order *)
 type unit' = {
+  path : Fpath.t;
   ast : t;
   deps : Cmarkit.Textloc.t list Fpath.Map.t;
       (** Map of dependency -> List of places it is included *)
