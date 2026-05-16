@@ -1,6 +1,6 @@
 open Actions_arguments
 
-module Unknow_attributes : sig
+module Unknown_attributes : sig
   val no_unknown_attributes : Cmarkit.Attributes.t * 'a -> unit
 end
 

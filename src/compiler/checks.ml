@@ -1,6 +1,6 @@
 open Actions_arguments
 
-module Unknow_attributes = struct
+module Unknown_attributes = struct
   module SSet = Set.Make (String)
 
   let all_actions =

@@ -165,7 +165,7 @@ let folder =
       match Ast.Utils.Block.get_attribute c with
       | None -> acc
       | Some (_, attrs) -> (
-          let () = Checks.Unknow_attributes.no_unknown_attributes attrs in
+          let () = Checks.Unknown_attributes.no_unknown_attributes attrs in
           match attributes_to_step id_map attrs (`Block c) with
           | None -> acc
           | Some (step, id_map) -> (step :: steps, id_map))
@@ -177,7 +177,7 @@ let folder =
       match Ast.Utils.Inline.get_attribute i with
       | None -> acc
       | Some (_, attrs) -> (
-          let () = Checks.Unknow_attributes.no_unknown_attributes attrs in
+          let () = Checks.Unknown_attributes.no_unknown_attributes attrs in
           match attributes_to_step id_map attrs (`Inline i) with
           | None -> acc
           | Some (step, id_map) -> (step :: steps, id_map))
