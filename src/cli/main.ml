@@ -182,11 +182,26 @@ module Theme = struct
     Cmd.group ~default:term_all info [ all ]
 end
 
+module Lsp = struct
+  let term =
+    let open Term.Syntax in
+    let+ () = Term.const () in
+    Lspishow.run ()
+
+  let cmd =
+    let doc =
+      "Run the LSP server. This command should probably be called by your \
+       editor."
+    in
+    let info : Cmd.info = Cmd.info ~doc "lsp" in
+    Cmd.v info term
+end
+
 let group =
   let doc = "A tool to compile and preview slipshow presentation" in
   let man = [] in
   let info = Cmd.info "slipshow" ~version:slipshow_version ~doc ~man in
-  Cmd.group info [ Compile.cmd; Serve.cmd; Markdownify.cmd; Theme.cmd ]
+  Cmd.group info [ Compile.cmd; Serve.cmd; Markdownify.cmd; Theme.cmd; Lsp.cmd ]
 
 let main () = exit (Cmd.eval_result group)
 let () = main ()

@@ -357,10 +357,7 @@ let run () =
     Linol_lwt.Jsonrpc2.run ~shutdown server
   in
   match Linol_lwt.run task with
-  | () -> ()
+  | () -> Ok ()
   | exception e ->
       let e = Printexc.to_string e in
-      Printf.eprintf "error: %s\n%!" e;
-      exit 1
-
-let () = run ()
+      Error ("error: " ^ e)

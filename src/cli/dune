@@ -13,4 +13,5 @@
   fmt.tty
   logs.fmt
   themes
-  diagnosis))
+  diagnosis
+  lspishow))
