@@ -48,6 +48,7 @@
    ppx_deriving_yojson
   (ansi (>= 0.7.0))
    linol
+   linol-lwt
   (odoc :with-doc)
   (ocamlformat
    (and :with-dev-setup (= 0.28.1))))
