@@ -614,113 +614,109 @@ let of_cmarkit ~path ~(fm : Frontmatter.t) ~source md =
 let _add_file read_file file content =
  fun p -> if Fpath.equal p file then Ok (Some content) else read_file p
 
-let unit ~read_file file =
-  match read_file file with
-  | Error _ as e -> e
-  | Ok None -> Error (`Msg "Unable to read the main file")
-  | Ok (Some s) ->
-      let res =
-        (* TODO: check if we still need read_file to return the whole path now
-           that we changed the organization a bit *)
-        let doc, frontmatter = Cmarkit_proxy.of_string ~read_file ~file s in
-        of_cmarkit ~source:s ~path:file doc ~fm:frontmatter
-      in
-      Ok res
+let unit ?locs ~read_file file =
+  let locs =
+    match locs with
+    | Some locs -> locs
+    | None ->
+        [
+          Textloc.v ~file:(Fpath.to_string file) ~first_byte:0 ~last_byte:1
+            ~first_line:(0, 0) ~last_line:(0, 0);
+        ]
+  in
+  let s =
+    match read_file file with
+    | Error (`Msg s) ->
+        Diagnosis.add
+          (MissingFile { file = Fpath.to_string file; error_msg = s; locs });
+        s
+    | Ok None ->
+        let error_msg = "Unable to read the main file" in
+        Diagnosis.add
+          (MissingFile { file = Fpath.to_string file; error_msg; locs });
+        error_msg
+    | Ok (Some s) -> s
+  in
+  let doc, frontmatter = Cmarkit_proxy.of_string ~read_file ~file s in
+  of_cmarkit ~source:s ~path:file doc ~fm:frontmatter
 
-let rec add_to_compile file units ~read_file =
-  if Fpath.Map.mem file units then Ok units
+let rec add_to_compile ?locs file units ~read_file =
+  if Fpath.Map.mem file units then units
   else
-    match unit ~read_file file with
-    | Error _ as e -> e
-    | Ok u ->
-        let handle_error units = function Error _ -> units | Ok res -> res in
-        let units = Fpath.Map.add file u units in
-        let c =
-          Fpath.Map.fold
-            (fun dep _ c -> add_to_compile dep c ~read_file |> handle_error c)
-            u.deps units
-        in
-        Ok c
+    let u = unit ~read_file ?locs file in
+    let units = Fpath.Map.add file u units in
+    let c =
+      Fpath.Map.fold
+        (fun dep locs c -> add_to_compile ~locs dep c ~read_file)
+        u.deps units
+    in
+    c
 
 let compile_all ~read_file units file =
-  match add_to_compile file units ~read_file with
-  | Error _ as e -> e
-  | Ok units ->
-      let files, options =
-        Ast.Folder.fold_just_units
-          (fun unit (files, option) ->
-            let files = Ast.Files.combine files unit.files in
-            let option = Frontmatter.Global.combine option unit.Ast.option in
-            let () =
-              (* Rethrow the few warnings raised during the unit phase (currently,
+  let units = add_to_compile file units ~read_file in
+  let files, options =
+    Ast.Folder.fold_just_units
+      (fun unit (files, option) ->
+        let files = Ast.Files.combine files unit.files in
+        let option = Frontmatter.Global.combine option unit.Ast.option in
+        let () =
+          (* Rethrow the few warnings raised during the unit phase (currently,
                only "children:#id is not supported") warnings not to miss
                them *)
-              List.iter Diagnosis.add unit.warnings
-            in
-            (files, option))
-          (Fpath.Map.empty, Frontmatter.Global.empty)
-          file units
-      in
-      let toplevel_attributes =
-        Option.value ~default:Frontmatter.Toplevel_attributes.default
-          options.toplevel_attributes
-      in
-      let u =
-        let doc =
-          let block =
-            let open Cmarkit.Block in
-            Block_quote
-              ( ( Block_quote.make
-                    (Ext_standalone_attributes
-                       ( Cmarkit.Attributes.make
-                           ~kv_attributes:
-                             [
-                               (("include", Meta.none), None);
-                               ( ("src", Meta.none),
-                                 Some
-                                   ( {
-                                       v = Fpath.filename file;
-                                       delimiter = None;
-                                     },
-                                     Cmarkit.Meta.none ) );
-                             ]
-                           (),
-                         Meta.none )),
-                  toplevel_attributes ),
-                Meta.none )
-          in
-          Cmarkit.Doc.make block
+          List.iter Diagnosis.add unit.warnings
         in
-        of_cmarkit ~path:file ~fm:Frontmatter.empty ~source:{|Internal|} doc
+        (files, option))
+      (Fpath.Map.empty, Frontmatter.Global.empty)
+      file units
+  in
+  let toplevel_attributes =
+    Option.value ~default:Frontmatter.Toplevel_attributes.default
+      options.toplevel_attributes
+  in
+  let internal = Fpath.v "internal" in
+  let u =
+    let doc =
+      let block =
+        let open Cmarkit.Block in
+        Block_quote
+          ( ( Block_quote.make
+                (Ext_standalone_attributes
+                   ( Cmarkit.Attributes.make
+                       ~kv_attributes:
+                         [
+                           (("include", Meta.none), None);
+                           ( ("src", Meta.none),
+                             Some
+                               ( { v = Fpath.filename file; delimiter = None },
+                                 Cmarkit.Meta.none ) );
+                         ]
+                       (),
+                     Meta.none )),
+              toplevel_attributes ),
+            Meta.none )
       in
-      let internal = Fpath.v "internal" in
-      let units = Fpath.Map.add internal u units in
-      let action_plan, id_map = Action_plan.execute u units in
-      let files : Ast.Files.(read map) =
-        Fpath.Map.mapi
-          (fun path file ->
-            let content = read_file path in
-            let () =
-              Result.iter_error
-                (fun (`Msg error_msg) ->
-                  let locs = List.map snd file.Ast.Files.used_by in
-                  Diagnosis.add
-                    (MissingFile
-                       { file = Fpath.to_string path; error_msg; locs }))
-                content
-            in
-            { file with content })
-          files
-      in
-      Ok
-        {
-          Ast.units;
-          files;
-          id_map;
-          entry_point = internal;
-          options;
-          action_plan;
-        }
+      Cmarkit.Doc.make block
+    in
+    of_cmarkit ~path:internal ~fm:Frontmatter.empty ~source:{|Internal|} doc
+  in
+  let units = Fpath.Map.add internal u units in
+  let action_plan, id_map = Action_plan.execute u units in
+  let files : Ast.Files.(read map) =
+    Fpath.Map.mapi
+      (fun path file ->
+        let content = read_file path in
+        let () =
+          Result.iter_error
+            (fun (`Msg error_msg) ->
+              let locs = List.map snd file.Ast.Files.used_by in
+              Diagnosis.add
+                (MissingFile { file = Fpath.to_string path; error_msg; locs }))
+            content
+        in
+        { file with content })
+      files
+  in
+  { Ast.units; files; id_map; entry_point = internal; options; action_plan }
 
 let compile_all ~read_file units file =
   Diagnosis.with_ @@ fun () -> compile_all ~read_file units file

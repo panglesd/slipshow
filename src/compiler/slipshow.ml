@@ -250,11 +250,8 @@ let convert_to_md ~read_file content =
    fun f -> if Fpath.equal entry_point f then Ok (Some content) else read_file f
   in
   let units, _ = Compile.compile_all ~read_file Fpath.Map.empty entry_point in
-  match units with
-  | Ok units ->
-      let sd = Compile.to_cmarkit units in
-      Cmarkit_commonmark.of_doc ~include_attributes:false sd
-  | Error (`Msg s) -> "Could not convert to md: " ^ s
+  let sd = Compile.to_cmarkit units in
+  Cmarkit_commonmark.of_doc ~include_attributes:false sd
 
 let to_grace file whole_content htbl_include er =
   Diagnosis.to_grace
@@ -280,10 +277,6 @@ let delayed ?(options = Frontmatter.Global.empty) ?slipshow_js ?file
     if Fpath.equal fp file then Ok (Some s) else read_file fp
   in
   let units, errors = Compile.compile_all Fpath.Map.empty file ~read_file in
-  let units =
-    Result.get_ok units
-    (* TODO: handle *)
-  in
   let options = Frontmatter.Global.combine options units.Ast.options in
   let ast = { units with options } in
   let dimension =

@@ -52,10 +52,8 @@ module State = struct
     let parent, filename = Fpath.split_base file in
     let read_file = Read_file.v parent in
     let () =
-      match Slipshow.Compile.unit ~read_file filename with
-      | Ok new_unit -> Rev_deps.update_state ~old_unit:None ~new_unit file
-      | _ -> ()
-      (* TODO: Show error *)
+      let new_unit = Slipshow.Compile.unit ~read_file filename in
+      Rev_deps.update_state ~old_unit:None ~new_unit file
     in
     Lwt.return_unit
 
@@ -69,16 +67,13 @@ module State = struct
     match Hashtbl.find_opt buffers file with
     | Some { source = old_source; _ } when String.equal source old_source ->
         Lwt.return `No_changes
-    | old -> (
+    | old ->
         let parent, filename = Fpath.split_base file in
         let read_file = Read_file.v parent |> Read_file.with_ filename source in
-        match Slipshow.Compile.unit ~read_file filename with
-        | Ok unit ->
-            let new_ = { source; unit } in
-            update_state ~old ~new_ file;
-            Lwt.return `Update
-        | _ -> Lwt.return `No_changes
-        (* TODO: Show error *))
+        let unit = Slipshow.Compile.unit ~read_file filename in
+        let new_ = { source; unit } in
+        update_state ~old ~new_ file;
+        Lwt.return `Update
 
   let units_of_buffer () =
     Hashtbl.fold
@@ -90,9 +85,7 @@ module State = struct
     let read_file = Read_file.v parent in
     let units = units_of_buffer () in
     let u, errors = Slipshow.Compile.compile_all ~read_file units filename in
-    match u with
-    | Error _ -> () (* TODO: handle error case *)
-    | Ok u -> Hashtbl.replace roots_state root (u, errors)
+    Hashtbl.replace roots_state root (u, errors)
 
   let update_from_buffer (file : Fpath.t) s =
     Lwt_mutex.with_lock mutex @@ fun () ->
