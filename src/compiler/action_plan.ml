@@ -186,36 +186,33 @@ let folder =
   in
   Ast.Folder.fold_units' ~block ~inline
 
-let rec merge_id_maps (unit : Ast.unit') (units : Ast.unit' Fpath.Map.t) id_map
-    =
-  let id_map =
-    Id_map.SMap.union
-      (fun _id p1 p2 ->
-        Some (Id_map.Unionable_set.union p1 p2)
-        (* let occurrences = *)
-        (*   List.map *)
-        (*     (fun { Id_map.id = _id, meta1; elem = _; meta = _; rev = _ } -> *)
-        (*       Meta.textloc meta1) *)
-        (*     [ p1; p2 ] *)
-        (* in *)
-        (* Diagnosis.add (DuplicateID { id; occurrences }); *)
-        (* Some p1 *))
-      unit.Ast.id_map id_map
-  in
-  let deps = unit.deps in
-  let id_map =
-    Fpath.Map.fold
-      (fun fpath _ id_map ->
-        match Fpath.Map.find_opt fpath units with
-        | None -> id_map
-        | Some unit -> merge_id_maps unit units id_map)
-      deps id_map
-  in
-  id_map
+let rec merge_id_maps visited (unit : Ast.unit') (units : Ast.unit' Fpath.Map.t)
+    id_map =
+  if Fpath.Set.mem unit.path visited then id_map
+  else
+    let visited = Fpath.Set.add unit.path visited in
+    let id_map =
+      Id_map.SMap.union
+        (fun _id p1 p2 -> Some (Id_map.Unionable_set.union p1 p2))
+        unit.Ast.id_map id_map
+    in
+    let deps = unit.deps in
+    let id_map =
+      Fpath.Map.fold
+        (fun fpath _ id_map ->
+          match Fpath.Map.find_opt fpath units with
+          | None -> id_map
+          | Some unit -> merge_id_maps visited unit units id_map)
+        deps id_map
+    in
+    id_map
 
 let merge_id_maps (unit : Ast.unit') (units : Ast.unit' Fpath.Map.t) id_map =
   let id_map =
-    merge_id_maps (unit : Ast.unit') (units : Ast.unit' Fpath.Map.t) id_map
+    merge_id_maps Fpath.Set.empty
+      (unit : Ast.unit')
+      (units : Ast.unit' Fpath.Map.t)
+      id_map
   in
   let () =
     Id_map.SMap.iter
