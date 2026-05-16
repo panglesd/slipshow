@@ -701,7 +701,7 @@ let compile_all ~read_file units file =
   in
   let units = Fpath.Map.add internal u units in
   let action_plan, id_map = Action_plan.execute u units in
-  let files : Ast.Files.(read map) =
+  let files : Ast.Files.read Ast.Files.map =
     Fpath.Map.mapi
       (fun path file ->
         let content = read_file path in

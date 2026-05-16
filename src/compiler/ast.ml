@@ -79,7 +79,7 @@ module Action_plan = struct
   type step = {
     actions : action list;
     elem : [ `Block of Block.t | `Inline of Inline.t ];
-    attrs : Cmarkit.(Attributes.t node);
+    attrs : Cmarkit.Attributes.t Cmarkit.node;
   }
   (** A step is the list of actions that are going to be executed at the same
       time. Ordered by presence in the file *)
@@ -130,7 +130,7 @@ type unit' = {
       (** Map of dependency -> List of places it is included *)
   id_map : Id_map.definitions;
   source : string;
-  files : Files.(unread map);
+  files : Files.unread Files.map;
   option : Frontmatter.Global.t;
   warnings : Diagnosis.t list;
 }
@@ -139,7 +139,7 @@ type units = {
   units : unit' Fpath.Map.t;
   entry_point : Fpath.t;
   options : Frontmatter.Global.t;
-  files : Files.(read map);
+  files : Files.read Files.map;
   id_map : Id_map.t;
   action_plan : Action_plan.t;
 }
