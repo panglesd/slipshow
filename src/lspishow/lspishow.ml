@@ -23,7 +23,12 @@ module State = struct
   let buffers : buffers = Hashtbl.create 10
   let mutex = Lwt_mutex.create ()
 
-  type roots = (Fpath.t, Slipshow.Ast.units * Diagnosis.t list) Hashtbl.t
+  type root = {
+    units : Slipshow.Ast.units;
+    diagnostics : Diagnosis.t list; (* condition : unit Lwt_condition.t; *)
+  }
+
+  type roots = (Fpath.t, root) Hashtbl.t
 
   let roots_state : roots = Hashtbl.create 10
 
@@ -84,8 +89,10 @@ module State = struct
     let parent, filename = Fpath.split_base root in
     let read_file = Read_file.v parent in
     let units = units_of_buffer () in
-    let u, errors = Slipshow.Compile.compile_all ~read_file units filename in
-    Hashtbl.replace roots_state root (u, errors)
+    let units, diagnostics =
+      Slipshow.Compile.compile_all ~read_file units filename
+    in
+    Hashtbl.replace roots_state root { units; diagnostics }
 
   let update_from_buffer (file : Fpath.t) s =
     Lwt_mutex.with_lock mutex @@ fun () ->
@@ -112,7 +119,7 @@ let diagnostics file : Linol.Lsp.Types.Diagnostic.t list option =
   | Some root -> (
       match Hashtbl.find_opt State.roots_state root with
       | None -> None
-      | Some (_, errors) ->
+      | Some { diagnostics = errors; _ } ->
           Some (List.concat_map (Diagnostic.of_error ~root ~file) errors))
 
 (* Find all markdown files in the given directory (recursing over subdirectories) *)
@@ -185,7 +192,7 @@ class lsp_server =
       let path = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
       let res =
         let* root = Rev_deps.get_roots path |> Fpath.Set.choose_opt in
-        let* ast, _diags = Hashtbl.find_opt State.roots_state root in
+        let* { units = ast; _ } = Hashtbl.find_opt State.roots_state root in
         let+ () =
           Current_ast.get_target pos ast.action_plan |> Option.map ignore
           (* Just as a way to test we are in the context of a target. Later, it
@@ -211,7 +218,7 @@ class lsp_server =
       let path = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
       let res =
         let* root = Rev_deps.get_roots path |> Fpath.Set.choose_opt in
-        let* ast, _diags = Hashtbl.find_opt State.roots_state root in
+        let* { units = ast; _ } = Hashtbl.find_opt State.roots_state root in
         let* id = Current_ast.get_target pos ast.action_plan in
         let+ x = Slipshow.Id_map.SMap.find_opt id ast.id_map in
         let meta = snd (Slipshow.Id_map.Unionable_set.get x.definition).id in
@@ -285,7 +292,7 @@ class lsp_server =
         let ( let+ ) x f = Option.map f x in
         let path = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
         let* root = Rev_deps.get_roots path |> Fpath.Set.choose_opt in
-        let* ast, _diags = Hashtbl.find_opt State.roots_state root in
+        let* { units = ast; _ } = Hashtbl.find_opt State.roots_state root in
         let* buffer = Hashtbl.find_opt State.buffers path in
         let* id =
           let res1 = Current_ast.get_target params.position ast.action_plan in
