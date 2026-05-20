@@ -70,18 +70,40 @@ let pp ppf = function
   | InconsistentOption { option_name; _ } ->
       Format.fprintf ppf "option '%s' is provided multiple times" option_name
 
+let to_code = function
+  | DuplicateID _ -> "DupID"
+  | MissingFile _ -> "FSError"
+  | WrongType _ -> "WrongType"
+  | ParsingError _ -> "ActionParsing"
+  | ParsingWarnor _ -> "ActionParsing"
+  | MissingID _ -> "IDNotFound"
+  | UnknownAttribute _ -> "UnknownAttribute"
+  | UnknownFrontmatterField _ -> "UnknownFrontmatterField"
+  | InvalidFrontmatterLine _ -> "InvalidFrontmatterLine"
+  | FrontmatterParsing _ -> "FrontmatterParsing"
+  | ChildrenClassWithValue _ -> "ChildrenClassWithValue"
+  | InconsistentOption _ -> "InconsistentOption"
+
+let report_no_src fmt x =
+  let msg = Format.asprintf "%a" pp x in
+  let msg = Grace.Diagnostic.createf ~labels:[] ~code:x Warning "%s" msg in
+  Format.fprintf fmt "%a@.@."
+    (Grace_ansi_renderer.pp_diagnostic ?config:None ~code_to_string:to_code)
+    msg
+
 let with_range source_map loc f =
   let open Grace in
+  let ( let+ ) x f = Option.map f x in
   let range (loc : loc) =
-    let source = source_map (Fpath.v (Cmarkit.Textloc.file loc)) in
+    let+ source = source_map (Fpath.v (Cmarkit.Textloc.file loc)) in
     let start = Cmarkit.Textloc.first_byte loc in
     let stop = Cmarkit.Textloc.last_byte loc + 1 in
     Range.create ~source (Byte_index.of_int start) (Byte_index.of_int stop)
   in
   try
-    let range = range loc in
-    Some (f ~range)
-  with _ -> None
+    let+ range = range loc in
+    f ~range
+  with Invalid_argument _ -> None
 
 let to_grace source_map error =
   let open Grace in
@@ -252,24 +274,3 @@ let with_ f =
   with exn ->
     let _ = clean_up () in
     raise exn
-
-let to_code = function
-  | DuplicateID _ -> "DupID"
-  | MissingFile _ -> "FSError"
-  | WrongType _ -> "WrongType"
-  | ParsingError _ -> "ActionParsing"
-  | ParsingWarnor _ -> "ActionParsing"
-  | MissingID _ -> "IDNotFound"
-  | UnknownAttribute _ -> "UnknownAttribute"
-  | UnknownFrontmatterField _ -> "UnknownFrontmatterField"
-  | InvalidFrontmatterLine _ -> "InvalidFrontmatterLine"
-  | FrontmatterParsing _ -> "FrontmatterParsing"
-  | ChildrenClassWithValue _ -> "ChildrenClassWithValue"
-  | InconsistentOption _ -> "InconsistentOption"
-
-let report_no_src fmt x =
-  let msg = Format.asprintf "%a" pp x in
-  let msg = Grace.Diagnostic.createf ~labels:[] ~code:x Warning "%s" msg in
-  Format.fprintf fmt "%a@.@."
-    (Grace_ansi_renderer.pp_diagnostic ?config:None ~code_to_string:to_code)
-    msg

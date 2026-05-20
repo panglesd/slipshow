@@ -16,21 +16,16 @@ let lwt_list_iter f l =
       f x)
     Lwt.return_unit l
 
+let generate_version () =
+  String.init 10 (fun _ -> Char.chr (97 + Random.int 26))
+
 module State = struct
   type buffer = { source : string; unit : Slipshow.Ast.unit' }
   type buffers = (Fpath.t, buffer) Hashtbl.t
 
   let buffers : buffers = Hashtbl.create 10
   let mutex = Lwt_mutex.create ()
-
-  type root = {
-    units : Slipshow.Ast.units;
-    diagnostics : Diagnosis.t list; (* condition : unit Lwt_condition.t; *)
-  }
-
-  type roots = (Fpath.t, root) Hashtbl.t
-
-  let roots_state : roots = Hashtbl.create 10
+  let roots_state : Rev_deps.roots = Hashtbl.create 10
 
   module Read_file = struct
     let v parent s =
@@ -92,7 +87,15 @@ module State = struct
     let units, diagnostics =
       Slipshow.Compile.compile_all ~read_file units filename
     in
-    Hashtbl.replace roots_state root { units; diagnostics }
+    let condition =
+      match Hashtbl.find_opt roots_state root with
+      | None -> Lwt_condition.create ()
+      | Some { condition; _ } ->
+          Lwt_condition.signal condition ();
+          condition
+    in
+    let version = generate_version () in
+    Hashtbl.replace roots_state root { units; diagnostics; condition; version }
 
   let update_from_buffer (file : Fpath.t) s =
     Lwt_mutex.with_lock mutex @@ fun () ->
@@ -357,7 +360,9 @@ let run () =
     let shutdown () = s#get_status = `ReceivedExit in
     Linol_lwt.Jsonrpc2.run ~shutdown server
   in
-  match Linol_lwt.run task with
+  let server = Lsp_serve.do_serve ~port:8081 State.roots_state in
+  let promise = Lwt.pick [ task; server ] in
+  match Linol_lwt.run promise with
   | () -> Ok ()
   | exception e ->
       let e = Printexc.to_string e in
