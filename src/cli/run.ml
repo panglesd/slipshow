@@ -27,12 +27,16 @@ let with_read_file parent f =
   let l = ref Fpath.Set.empty in
   let read_file =
    fun s ->
-    let ( // ) = Fpath.( // ) in
-    let fp = Fpath.normalize @@ (parent // s) in
-    let normalized = Fpath.normalize @@ (Fpath.v (Sys.getcwd ()) // fp) in
-    l := Fpath.Set.add normalized !l;
-    let+ res = Io.read (`File fp) in
-    Some res
+    if Fpath.equal (Fpath.v "-") s then
+      let+ res = Io.read `Stdin in
+      Some res
+    else
+      let ( // ) = Fpath.( // ) in
+      let fp = Fpath.normalize @@ (parent // s) in
+      let normalized = Fpath.normalize @@ (Fpath.v (Sys.getcwd ()) // fp) in
+      l := Fpath.Set.add normalized !l;
+      let+ res = Io.read (`File fp) in
+      Some res
   in
   let res = f read_file in
   (res, !l)
@@ -43,9 +47,9 @@ let compile ~input ~output =
     let parent =
       match input with `Stdin -> Fpath.v "./" | `File f -> Fpath.parent f
     in
-    let file = match input with `File f -> Some f | _ -> None in
+    let file = match input with `File f -> f | _ -> Fpath.v "-" in
     with_read_file parent @@ fun read_file ->
-    Slipshow.convert ~has_speaker_view:true ?file ~read_file content
+    Slipshow.convert ~has_speaker_view:true ~read_file file
   in
   let () =
     List.iter
@@ -80,26 +84,21 @@ let watch ~input ~output =
 
 let serve ~input ~output ~port =
   let compile () =
-    let* content = Io.read (`File input) in
-    let (result, warnings), used_files =
+    let res, war =
       with_read_file (Fpath.parent input) @@ fun read_file ->
-      Slipshow.delayed ~has_speaker_view:true ~read_file ~file:input content
+      let result, warnings =
+        Slipshow.Compile.compile_all ~read_file Fpath.Map.empty input
+      in
+      let result' =
+        Slipshow.delayed_from_units ~has_speaker_view:true ~read_file result
+      in
+      let html = Slipshow.add_starting_state result' None in
+      let+ () = Io.write output html in
+      (* TODO: display warnings somehow *)
+      (result, warnings)
     in
-    let warnings =
-      List.map
-        (Format.asprintf "%a@.@."
-           (Grace_ansi_renderer.pp_diagnostic ?config:None
-              ~code_to_string:Diagnosis.to_code))
-        warnings
-    in
-    let warnings = List.map (Ansi.process (Ansi.create ())) warnings in
-    let warnings = warnings |> String.concat "" in
-    let html = Slipshow.add_starting_state result None in
-    let+ () = Io.write output html in
-    ( (result, warnings),
-      Fpath.Set.add
-        (Fpath.normalize (Fpath.( // ) (Fpath.v (Sys.getcwd ())) input))
-        used_files )
+    let+ res = res in
+    (res, war)
   in
   let () = Slipshow_server.do_serve ~port input compile in
   (* [do_serve] never ends! *)

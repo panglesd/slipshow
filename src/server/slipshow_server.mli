@@ -1,8 +1,17 @@
+type root = {
+  units : Slipshow.Ast.units;
+  diagnostics : Diagnosis.t list;
+  condition : unit Lwt_condition.t;
+  version : string;
+}
+
+type roots = (Fpath.t, root) Hashtbl.t
+
 val do_serve :
   port:int ->
   Fpath.t ->
   (unit ->
-  ( (Slipshow.delayed * string (* warnings as string *)) * Fpath.Set.t,
+  ( (Slipshow.Ast.units * Diagnosis.t list) * Fpath.set,
     [ `Msg of string ] )
   result) ->
   unit

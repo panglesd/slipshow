@@ -39,10 +39,9 @@ val delayed_from_units :
 val delayed :
   ?options:Frontmatter.Global.t ->
   ?slipshow_js:Asset.t ->
-  ?file:Fpath.t ->
-  ?read_file:file_reader ->
+  read_file:file_reader ->
   has_speaker_view:bool ->
-  string ->
+  Fpath.t ->
   delayed * Diagnosis.t Grace.Diagnostic.t list
 (** This function is used to delay the decision on the starting state. It allows
     to run [convert] server-side (which is useful to get images and so on) but
@@ -56,10 +55,9 @@ val convert :
   has_speaker_view:bool ->
   ?autofocus:bool ->
   ?slipshow_js:Asset.t ->
-  ?file:Fpath.t ->
   ?starting_state:starting_state ->
-  ?read_file:file_reader ->
-  string ->
+  read_file:file_reader ->
+  Fpath.t ->
   string * Diagnosis.t Grace.Diagnostic.t list
 
 val convert_to_md : read_file:file_reader -> string -> string
