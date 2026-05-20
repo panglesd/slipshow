@@ -5,7 +5,7 @@ type root = Server.root = {
   version : string;
 }
 
-type roots = (Fpath.t, root) Hashtbl.t
+type roots = Fpath.t -> root option
 
 let do_watch entry_point compile =
   let callback () =
@@ -21,6 +21,8 @@ let do_watch entry_point compile =
 
 let generate_version () =
   String.init 10 (fun _ -> Char.chr (97 + Random.int 26))
+
+module Server = Server
 
 let do_serve ~port entry_point
     (compile :
