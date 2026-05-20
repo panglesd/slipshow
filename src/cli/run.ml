@@ -42,7 +42,6 @@ let with_read_file parent f =
   (res, !l)
 
 let compile ~input ~output =
-  let* content = Io.read input in
   let (html, warnings), used_files =
     let parent =
       match input with `Stdin -> Fpath.v "./" | `File f -> Fpath.parent f
