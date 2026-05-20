@@ -1,3 +1,12 @@
+type root = {
+  units : Slipshow.Ast.units;
+  diagnostics : Diagnosis.t list;
+  condition : unit Lwt_condition.t;
+  version : string;
+}
+
+type roots = (Fpath.t, root) Hashtbl.t
+
 let hashtbl_update h key f =
   match f (Hashtbl.find_opt h key) with
   | None -> ()

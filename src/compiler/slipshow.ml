@@ -253,30 +253,19 @@ let convert_to_md ~read_file content =
   let sd = Compile.to_cmarkit units in
   Cmarkit_commonmark.of_doc ~include_attributes:false sd
 
-let to_grace file whole_content htbl_include er =
+let to_grace htbl_include er =
   Diagnosis.to_grace
     (fun f ->
       let open Grace.Source in
-      match file with
-      | Some file when Fpath.equal file f ->
-          let name = Fpath.to_string file in
-          `String { name = Some name; content = whole_content }
-      | _ -> (
-          match Fpath.Map.find_opt f htbl_include with
-          | Some { Ast.source = content; _ } ->
-              `String { name = Some (Fpath.to_string f); content }
-          | None ->
-              let name = Option.map Fpath.to_string file in
-              `String { name; content = whole_content }))
+      let ( let+ ) x f = Option.map f x in
+      let+ { Ast.source = content; _ } = Fpath.Map.find_opt f htbl_include in
+      `String { name = Some (Fpath.to_string f); content })
     er
 
-let delayed ?(options = Frontmatter.Global.empty) ?slipshow_js ?file
-    ?(read_file = fun _ -> Ok None) ~has_speaker_view s =
-  let file = Option.value file ~default:(Fpath.v "-") in
-  let read_file fp =
-    if Fpath.equal fp file then Ok (Some s) else read_file fp
-  in
-  let units, errors = Compile.compile_all Fpath.Map.empty file ~read_file in
+let to_grace units errors = List.filter_map (to_grace units.Ast.units) errors
+
+let delayed_from_units ?(options = Frontmatter.Global.empty) ?slipshow_js
+    ?(read_file = fun _ -> Ok None) ~has_speaker_view units =
   let options = Frontmatter.Global.combine options units.Ast.options in
   let ast = { units with options } in
   let dimension =
@@ -306,16 +295,25 @@ let delayed ?(options = Frontmatter.Global.empty) ?slipshow_js ?file
     |> fst
   in
   let math_link = options.math_link |> Option.map fst in
-  let warnings = List.filter_map (to_grace (Some file) s units.units) errors in
   let content = Renderers.to_html_string ast in
   let has =
     Fpath.Map.fold
       (fun _ unit h -> Has.combine (Has.find_out unit.Ast.ast) h)
       units.units Has.empty
   in
+  embed_in_page ~has_speaker_view ~slipshow_js ~dimension ~has ~math_link ~theme
+    ~css_links ~js_links content ~highlightjs_theme ~math_mode
+
+let delayed ?options ?slipshow_js ?file ?(read_file = fun _ -> Ok None)
+    ~has_speaker_view s =
+  let file = Option.value file ~default:(Fpath.v "-") in
+  let read_file fp =
+    if Fpath.equal fp file then Ok (Some s) else read_file fp
+  in
+  let units, errors = Compile.compile_all Fpath.Map.empty file ~read_file in
+  let warnings = to_grace units errors in
   let res =
-    embed_in_page ~has_speaker_view ~slipshow_js ~dimension ~has ~math_link
-      ~theme ~css_links ~js_links content ~highlightjs_theme ~math_mode
+    delayed_from_units ?options ?slipshow_js ~read_file ~has_speaker_view units
   in
   (res, warnings)
 

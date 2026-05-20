@@ -1,9 +1,17 @@
+module B64 = Base64
 open Brr
 
 let uri =
   let uri = Window.location G.window in
   let uri = Uri.with_fragment_params uri (Uri.Params.of_jstr (Jstr.v "")) in
-  let route_segment = [ Jstr.v "long-polling" ] in
+  let route_segment = Jv.get (Brr.Window.to_jv Brr.G.window) "route_segment" in
+  Console.(log [ route_segment ]);
+  let route_segment =
+    B64.decode (route_segment |> Jv.to_string) |> Result.get_ok |> fun x ->
+    Marshal.from_string x 0
+  in
+  Console.(log [Jv.of_list Jv.of_jstr route_segment]);
+  let route_segment = Jstr.v "polling" :: List.map Jstr.v route_segment in
   let uri = Uri.with_path_segments uri route_segment in
   uri |> Result.get_ok |> Uri.to_jstr
 

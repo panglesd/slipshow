@@ -25,6 +25,17 @@ type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
       In this case, the error is reported, and the file is linked (just as
       [Ok None]). *)
 
+val delayed_from_units :
+  ?options:Frontmatter.Global.t ->
+  ?slipshow_js:Asset.t ->
+  ?read_file:file_reader ->
+  has_speaker_view:bool ->
+  Ast.units ->
+  delayed
+(** This function is used to delay the decision on the starting state. It allows
+    to run [convert] server-side (which is useful to get images and so on) but
+    let the previewer decide on the starting state. *)
+
 val delayed :
   ?options:Frontmatter.Global.t ->
   ?slipshow_js:Asset.t ->
@@ -52,3 +63,6 @@ val convert :
   string * Diagnosis.t Grace.Diagnostic.t list
 
 val convert_to_md : read_file:file_reader -> string -> string
+
+val to_grace :
+  Ast.units -> Diagnosis.t list -> Diagnosis.t Grace.Diagnostic.t list
