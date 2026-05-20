@@ -5,7 +5,7 @@ type root = {
   version : string;
 }
 
-type roots = (Fpath.t, root) Hashtbl.t
+type roots = Fpath.t -> root option
 
 val do_serve :
   port:int ->
@@ -18,3 +18,7 @@ val do_serve :
 
 val do_watch :
   Fpath.t -> (unit -> (Fpath.Set.t, [ `Msg of string ]) result) -> unit
+
+module Server : sig
+  val do_serve : port:int -> roots -> unit Lwt.t
+end

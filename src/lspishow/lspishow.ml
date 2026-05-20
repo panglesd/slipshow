@@ -360,7 +360,8 @@ let run () =
     let shutdown () = s#get_status = `ReceivedExit in
     Linol_lwt.Jsonrpc2.run ~shutdown server
   in
-  let server = Lsp_serve.do_serve ~port:8081 State.roots_state in
+  let roots_state = Hashtbl.find_opt State.roots_state in
+  let server = Slipshow_server.Server.do_serve ~port:8081 roots_state in
   let promise = Lwt.pick [ task; server ] in
   match Linol_lwt.run promise with
   | () -> Ok ()
