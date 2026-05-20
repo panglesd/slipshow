@@ -1,4 +1,4 @@
-type root = {
+type root = Slipshow_server.root = {
   units : Slipshow.Ast.units;
   diagnostics : Diagnosis.t list;
   condition : unit Lwt_condition.t;

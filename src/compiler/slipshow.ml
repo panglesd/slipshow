@@ -304,12 +304,7 @@ let delayed_from_units ?(options = Frontmatter.Global.empty) ?slipshow_js
   embed_in_page ~has_speaker_view ~slipshow_js ~dimension ~has ~math_link ~theme
     ~css_links ~js_links content ~highlightjs_theme ~math_mode
 
-let delayed ?options ?slipshow_js ?file ?(read_file = fun _ -> Ok None)
-    ~has_speaker_view s =
-  let file = Option.value file ~default:(Fpath.v "-") in
-  let read_file fp =
-    if Fpath.equal fp file then Ok (Some s) else read_file fp
-  in
+let delayed ?options ?slipshow_js ~read_file ~has_speaker_view file =
   let units, errors = Compile.compile_all Fpath.Map.empty file ~read_file in
   let warnings = to_grace units errors in
   let res =
@@ -377,10 +372,10 @@ let add_starting_state ?(autofocus = true) (start, end_, has_speaker_view)
   in
   if has_speaker_view then html else orig_html
 
-let convert ?options ~has_speaker_view ?autofocus ?slipshow_js ?file
-    ?starting_state ?read_file s =
+let convert ?options ~has_speaker_view ?autofocus ?slipshow_js ?starting_state
+    ~read_file file =
   let delayed, w =
-    delayed ?options ~has_speaker_view ?slipshow_js ?file ?read_file s
+    delayed ?options ~has_speaker_view ?slipshow_js ~read_file file
   in
   let res = add_starting_state ?autofocus delayed starting_state in
   (res, w)
