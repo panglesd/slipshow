@@ -3,4 +3,5 @@
  (libraries linol server_assets ansi linol-lwt slipshow logs dream proto bos)
  (preprocessor_deps
   (file ../server/client/client.bc.js))
- (preprocess (pps ppx_blob)))
+ (preprocess
+  (pps ppx_blob)))

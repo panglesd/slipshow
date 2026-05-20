@@ -10,7 +10,7 @@ let uri =
     B64.decode (route_segment |> Jv.to_string) |> Result.get_ok |> fun x ->
     Marshal.from_string x 0
   in
-  Console.(log [Jv.of_list Jv.of_jstr route_segment]);
+  Console.(log [ Jv.of_list Jv.of_jstr route_segment ]);
   let route_segment = Jstr.v "polling" :: List.map Jstr.v route_segment in
   let uri = Uri.with_path_segments uri route_segment in
   uri |> Result.get_ok |> Uri.to_jstr
