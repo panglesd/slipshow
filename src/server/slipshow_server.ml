@@ -37,13 +37,11 @@ let do_serve ~port entry_point
          "Visit http://127.0.0.1:%d to view your presentation, with \
           auto-reloading on file changes."
          port);
-   let open Lwt.Syntax in
    let content = ref None in
    let callback () =
      let res = compile () in
      match res with
-     | Error (`Msg err) as e ->
-         (* content := { !content with content = (initial_content, _) }; *)
+     | Error (`Msg _err) as e ->
          (* TODO: Show error *)
          Lwt_condition.broadcast condition ();
          e

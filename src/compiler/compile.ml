@@ -687,7 +687,7 @@ let compile_all ~read_file units file =
                            (("include", Meta.none), None);
                            ( ("src", Meta.none),
                              Some
-                               ( { v = Fpath.filename file; delimiter = None },
+                               ( { v = Fpath.to_string file; delimiter = None },
                                  Cmarkit.Meta.none ) );
                          ]
                        (),
