@@ -14,6 +14,7 @@
   - Go to definition (from IDs in action, to the associated element)
   - Occurrences of ID
   - Completion for IDs in actions
+- (#233) Add preview server capabilities to the LSP server
 
 ### Changed
 
