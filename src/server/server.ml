@@ -125,7 +125,10 @@ let wait_for_event root roots file =
   | `Update -> (
       let root = roots file in
       match root with
-      | None -> Dream.respond ~status:`Bad_Request "TODO3"
+      | None ->
+          Dream.respond ~status:`Bad_Request
+            (Format.asprintf "File %a is not part of the possible preview"
+               Fpath.pp file)
       | Some root -> send root)
 
 let polling (roots, _get_roots) req =
@@ -139,12 +142,16 @@ let polling (roots, _get_roots) req =
   let file = Fpath.v file in
   let root = roots file in
   match root with
-  | None -> Dream.respond ~status:`Bad_Request "TODO1"
+  | None ->
+      Dream.respond ~status:`Bad_Request
+        (Format.asprintf "File %a is not part of the possible preview" Fpath.pp
+           file)
   | Some root -> (
       let* body = Dream.body req in
       let msg = Proto.Client_to_server.of_string body in
       match msg with
-      | None -> Dream.respond ~status:`Bad_Request "TODO2"
+      | None ->
+          Dream.respond ~status:`Bad_Request "Error while decoding the payload"
       | Some Ping -> pong ()
       | Some (UpdateFrom version) ->
           if not @@ String.equal version root.version then send root
