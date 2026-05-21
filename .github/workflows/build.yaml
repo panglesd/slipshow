@@ -102,21 +102,21 @@ jobs:
         with:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
 
-      - uses: actions/cache@v5
-        id: cache
-        with:
-          path: |
-            ~/.opam
-            _opam
-          key: ${{ matrix.config.os }}-${{ hashFiles('*.opam') }}-${{ matrix.ocaml-compiler }}
+      # - uses: actions/cache@v5
+      #   id: cache
+      #   with:
+      #     path: |
+      #       ~/.opam
+      #       _opam
+      #     key: ${{ matrix.config.os }}-${{ hashFiles('*.opam') }}-${{ matrix.ocaml-compiler }}
 
       - name: Install dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
+        # if: steps.cache.outputs.cache-hit != 'true'
         run: opam install --deps-only --with-test --with-doc -y .
 
-      - name: Install dependencies
-        if: steps.cache.outputs.cache-hit
-        run: opam install --deps-only --with-test --depext-only --with-doc -y . && opam upgrade
+      # - name: Install dependencies
+      #   if: steps.cache.outputs.cache-hit
+      #   run: opam install --deps-only --with-test --depext-only --with-doc -y . && opam upgrade
 
       - name: Build release tarball
         # if: startsWith(github.ref, 'refs/tags/')
