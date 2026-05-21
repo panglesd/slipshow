@@ -607,12 +607,12 @@ let unit ?locs ~read_file file =
     | Error (`Msg s) ->
         Diagnosis.add
           (MissingFile { file = Fpath.to_string file; error_msg = s; locs });
-        (None, s)
+        (None, "")
     | Ok None ->
         let error_msg = "Unable to read a slipshow file" in
         Diagnosis.add
           (MissingFile { file = Fpath.to_string file; error_msg; locs });
-        (None, error_msg)
+        (None, "")
     | Ok (Some s' as s) -> (s, s')
   in
   let doc, frontmatter = Cmarkit_proxy.of_string ~read_file ~file s in
