@@ -9,9 +9,13 @@ let uri =
   let route_segment = Jv.get (Brr.Window.to_jv Brr.G.window) "route_segment" in
   Console.(log [ route_segment ]);
   let* route_segment = route_segment |> Jv.to_string |> B64.decode in
-  let route_segment = Marshal.from_string route_segment 0 in
-  Console.(log [ Jv.of_list Jv.of_jstr route_segment ]);
+  let* route_segment =
+    try Ok (Marshal.from_string route_segment 0)
+    with Invalid_argument s ->
+      Error (`Msg ("Error during unmarshalling: " ^ s))
+  in
   let route_segment = Jstr.v "polling" :: List.map Jstr.v route_segment in
+  Console.(log [ Jv.of_list Jv.of_jstr route_segment ]);
   let+ uri =
     Uri.with_path_segments uri route_segment |> Result.map_error (fun e -> `J e)
   in
