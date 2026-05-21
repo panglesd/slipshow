@@ -60,7 +60,7 @@ val convert :
   Fpath.t ->
   string * Diagnosis.t Grace.Diagnostic.t list
 
-val convert_to_md : read_file:file_reader -> string -> string
+val convert_to_md : read_file:file_reader -> Fpath.t -> string
 
 val to_grace :
   Ast.units -> Diagnosis.t list -> Diagnosis.t Grace.Diagnostic.t list

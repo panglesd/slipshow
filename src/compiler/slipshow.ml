@@ -244,12 +244,8 @@ let string_to_delayed s =
   let s = s |> Base64.decode |> Result.to_option in
   Option.bind s @@ fun s -> try Some (Marshal.from_string s 0) with _ -> None
 
-let convert_to_md ~read_file content =
-  let entry_point = Fpath.v "-" in
-  let read_file =
-   fun f -> if Fpath.equal entry_point f then Ok (Some content) else read_file f
-  in
-  let units, _ = Compile.compile_all ~read_file Fpath.Map.empty entry_point in
+let convert_to_md ~read_file file =
+  let units, _ = Compile.compile_all ~read_file Fpath.Map.empty file in
   let sd = Compile.to_cmarkit units in
   Cmarkit_commonmark.of_doc ~include_attributes:false sd
 
