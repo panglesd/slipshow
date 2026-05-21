@@ -34,33 +34,28 @@ let do_serve ~port entry_point
   let condition = Lwt_condition.create () in
   snd @@ Lwt_main.run
   @@
-  (Logs.app (fun m ->
-       m
-         "Visit http://127.0.0.1:%d to view your presentation, with \
-          auto-reloading on file changes."
-         port);
-   let content = ref None in
-   let callback () =
-     let res = compile () in
-     match res with
-     | Error (`Msg _err) as e ->
-         (* TODO: Show error *)
-         Lwt_condition.broadcast condition ();
-         e
-     | Ok ((units, diagnostics), deps) ->
-         content :=
-           Some { units; diagnostics; version = generate_version (); condition };
-         Lwt_condition.broadcast condition ();
-         Ok deps
-   in
-   let initial =
-     Fpath.Set.singleton @@ Fpath.normalize
-     @@ Fpath.( // ) (Fpath.v (Sys.getcwd ())) entry_point
-   in
-   let wac = Watcher.watch_and_compile initial ~callback in
-   let dream =
-     (* We serve on [127.0.0.1] since in musl libc library, localhost would
+  let content = ref None in
+  let callback () =
+    let res = compile () in
+    match res with
+    | Error (`Msg _err) as e ->
+        (* TODO: Show error *)
+        Lwt_condition.broadcast condition ();
+        e
+    | Ok ((units, diagnostics), deps) ->
+        content :=
+          Some { units; diagnostics; version = generate_version (); condition };
+        Lwt_condition.broadcast condition ();
+        Ok deps
+  in
+  let initial =
+    Fpath.Set.singleton @@ Fpath.normalize
+    @@ Fpath.( // ) (Fpath.v (Sys.getcwd ())) entry_point
+  in
+  let wac = Watcher.watch_and_compile initial ~callback in
+  let dream =
+    (* We serve on [127.0.0.1] since in musl libc library, localhost would
              trigger a DNS request (which might not resolve) *)
-     Server.do_serve ~port:8080 ((fun _ -> !content), fun () -> [ Fpath.v "./" ])
-   in
-   Lwt.both dream wac)
+    Server.do_serve ~port ((fun _ -> !content), fun () -> [ Fpath.v "./" ])
+  in
+  Lwt.both dream wac
