@@ -257,12 +257,14 @@ let to_grace htbl_include er =
   Diagnosis.to_grace
     (fun f ->
       let open Grace.Source in
+      let ( let* ) x f = Option.bind x f in
       let ( let+ ) x f = Option.map f x in
-      let+ { Ast.source = content; _ } = Fpath.Map.find_opt f htbl_include in
+      let* { Ast.source = content; _ } = Fpath.Map.find_opt f htbl_include in
+      let+ content = content in
       `String { name = Some (Fpath.to_string f); content })
     er
 
-let to_grace units errors = List.filter_map (to_grace units.Ast.units) errors
+let to_grace units errors = List.map (to_grace units.Ast.units) errors
 
 let delayed_from_units ?(options = Frontmatter.Global.empty) ?slipshow_js
     ?(read_file = fun _ -> Ok None) ~has_speaker_view units =

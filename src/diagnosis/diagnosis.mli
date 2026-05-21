@@ -23,7 +23,7 @@ type t =
 val pp : Format.formatter -> t -> unit
 
 val to_grace :
-  (Fpath.t -> Grace.Source.t option) -> t -> t Grace.Diagnostic.t option
+  (Fpath.t -> Grace.Source.t option) -> t -> t Grace.Diagnostic.t
 
 val add : t -> unit
 val with_ : (unit -> 'a) -> 'a * t list

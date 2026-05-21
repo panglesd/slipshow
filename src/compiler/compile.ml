@@ -624,21 +624,21 @@ let unit ?locs ~read_file file =
             ~first_line:(0, 0) ~last_line:(0, 0);
         ]
   in
-  let s =
+  let source, s =
     match read_file file with
     | Error (`Msg s) ->
         Diagnosis.add
           (MissingFile { file = Fpath.to_string file; error_msg = s; locs });
-        s
+        (None, s)
     | Ok None ->
-        let error_msg = "Unable to read the main file" in
+        let error_msg = "Unable to read a slipshow file" in
         Diagnosis.add
           (MissingFile { file = Fpath.to_string file; error_msg; locs });
-        error_msg
-    | Ok (Some s) -> s
+        (None, error_msg)
+    | Ok (Some s' as s) -> (s, s')
   in
   let doc, frontmatter = Cmarkit_proxy.of_string ~read_file ~file s in
-  of_cmarkit ~source:s ~path:file doc ~fm:frontmatter
+  of_cmarkit ~source ~path:file doc ~fm:frontmatter
 
 let rec add_to_compile ?locs file units ~read_file =
   if Fpath.Map.mem file units then units
@@ -697,7 +697,7 @@ let compile_all ~read_file units file =
       in
       Cmarkit.Doc.make block
     in
-    of_cmarkit ~path:internal ~fm:Frontmatter.empty ~source:{|Internal|} doc
+    of_cmarkit ~path:internal ~fm:Frontmatter.empty ~source:None doc
   in
   let units = Fpath.Map.add internal u units in
   let action_plan, id_map = Action_plan.execute u units in

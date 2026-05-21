@@ -129,7 +129,7 @@ type unit' = {
   deps : Cmarkit.Textloc.t list Fpath.Map.t;
       (** Map of dependency -> List of places it is included *)
   id_map : Id_map.definitions;
-  source : string;
+  source : string option;
   files : Files.unread Files.map;
   option : Frontmatter.Global.t;
   warnings : Diagnosis.t list;
