@@ -411,9 +411,9 @@ class lsp_server =
       Format.eprintf "SAVING!\n%!";
       let uri = params.textDocument.uri in
       let file = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
-      let ( let+ ) x f = Option.iter f x in
+      let ( let+ ) x f = Fpath.Set.iter f x in
       let () =
-        let+ file = Rev_deps.get_roots file |> Fpath.Set.choose_opt in
+        let+ file = Rev_deps.get_roots file in
         let html, _warnings =
           let read_file = State.Read_file.v (Fpath.parent file) in
           Slipshow.convert ~has_speaker_view:true ~read_file file
