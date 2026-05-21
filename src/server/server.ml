@@ -55,7 +55,10 @@ let choose_roots rs =
 |html}
     (rs
     |> List.map (fun p ->
-        Format.asprintf "<li><a href='preview/%a'>%a</a></li>" Fpath.pp p
+        Format.asprintf "<li><a href='preview/%s'>%a</a></li>"
+          (p |> Fpath.segs
+          |> List.map Dream.to_percent_encoded
+          |> String.concat "/")
           Fpath.pp p)
     |> String.concat "")
 
