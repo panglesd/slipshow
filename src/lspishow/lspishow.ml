@@ -41,6 +41,13 @@ module State = struct
 
     let with_ file source read_file s =
       if Fpath.equal file s then Ok (Some source) else read_file s
+
+    let without parent s =
+      let ( // ) = Fpath.( // ) in
+      let ( let+ ) a b = Result.map b a in
+      let fp = Fpath.normalize @@ (parent // s) in
+      let+ res = Io.read (`File fp) in
+      Some res
   end
 
   (* [update_from_fs] is update done when we read a file from the filesystem
@@ -348,6 +355,40 @@ class lsp_server =
     method on_notif_doc_did_change ~notify_back d _c ~old_content:_old
         ~new_content =
       self#_on_doc ~notify_back d.uri new_content
+
+    method! on_notif_doc_did_save ~notify_back:_ params =
+      Format.eprintf "SAVING!\n%!";
+      let uri = params.textDocument.uri in
+      let file = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
+      let ( let+ ) x f = Option.iter f x in
+      let () =
+        let+ file = Rev_deps.get_roots file |> Fpath.Set.choose_opt in
+        let html, warnings =
+          let read_file = State.Read_file.without (Fpath.parent file) in
+          Slipshow.convert ~has_speaker_view:true ~read_file file
+        in
+        let output = Fpath.set_ext "html" file in
+        let write filename content =
+          try
+            (* This test is just to give a better error message *)
+            let directory = Fpath.parent filename |> Fpath.to_string in
+            if not (Sys.is_directory directory) then
+              Error (`Msg (directory ^ "is not a directory"))
+            else
+              Out_channel.with_open_text (Fpath.to_string filename) @@ fun oc ->
+              Out_channel.output_string oc content;
+              Ok ()
+          with exn -> Error (`Msg (Printexc.to_string exn))
+        in
+        let () =
+          match write output html with
+          | Error (`Msg err) ->
+              Format.eprintf "Error while writing on output file: %s\n%!" err
+          | Ok () -> ()
+        in
+        ()
+      in
+      Linol_lwt.return ()
 
     method on_notif_doc_did_close ~notify_back:_ _d : unit Linol_lwt.t =
       Linol_lwt.return ()
