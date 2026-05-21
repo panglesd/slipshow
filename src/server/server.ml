@@ -55,7 +55,7 @@ let choose_roots rs =
 |html}
     (rs
     |> List.map (fun p ->
-        Format.asprintf "<li><a href='preview/%s'>%a</a></li>"
+        Format.asprintf "<li><a href='/preview/%s'>%a</a></li>"
           (p |> Fpath.segs
           |> List.map Dream.to_percent_encoded
           |> String.concat "/")
@@ -80,16 +80,20 @@ let home_page (_, get_roots) _req =
   | [ unique_root ] -> Dream.html (html_source unique_root)
   | rs -> Dream.html (choose_roots rs)
 
-let preview _roots req =
+let preview (roots, get_roots) req =
   let file = Dream.target req in
   let file =
     let n = String.length "/preview/" in
     String.sub file n (String.length file - n)
   in
-  Format.eprintf "TARGET is %s\n%!" file;
   let file = Fpath.v file in
-  Dream.log "A browser reloaded";
-  Dream.html (html_source file)
+  let root = roots file in
+  match root with
+  | None -> home_page (roots, get_roots) req
+  | Some root ->
+      Format.eprintf "TARGET is %a\n%!" Fpath.pp file;
+      Dream.log "A browser reloaded";
+      Dream.html (html_source file)
 
 let send root =
   let content =
