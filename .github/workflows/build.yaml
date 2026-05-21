@@ -97,6 +97,11 @@ jobs:
       - name: Fetch tags
         run: git fetch --tags --force origin
 
+      - name: Use OCaml ${{ matrix.ocaml-compiler }}
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: ${{ matrix.ocaml-compiler }}
+
       - uses: actions/cache@v5
         id: cache
         with:
@@ -104,11 +109,6 @@ jobs:
             ~/.opam
             _opam
           key: ${{ matrix.config.os }}-${{ hashFiles('*.opam') }}-${{ matrix.ocaml-compiler }}
-
-      - name: Use OCaml ${{ matrix.ocaml-compiler }}
-        uses: ocaml/setup-ocaml@v3
-        with:
-          ocaml-compiler: ${{ matrix.ocaml-compiler }}
 
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
