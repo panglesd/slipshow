@@ -336,7 +336,7 @@ class lsp_server =
         documentSymbolProvider = Some (`Bool true);
       }
 
-    method private _on_doc ~(notify_back : Linol_lwt.Jsonrpc2.notify_back)
+    method private on_doc ~(notify_back : Linol_lwt.Jsonrpc2.notify_back)
         (uri : Linol.Lsp.Types.DocumentUri.t) (contents : string) =
       let file = uri |> Linol.Lsp.Types.DocumentUri.to_path |> Fpath.v in
       let* () = State.update_from_buffer file contents in
@@ -401,11 +401,11 @@ class lsp_server =
       | r -> super#on_request_unhandled ~notify_back ~id r
 
     method on_notif_doc_did_open ~notify_back d ~content : unit Linol_lwt.t =
-      self#_on_doc ~notify_back d.uri content
+      self#on_doc ~notify_back d.uri content
 
     method on_notif_doc_did_change ~notify_back d _c ~old_content:_old
         ~new_content =
-      self#_on_doc ~notify_back d.uri new_content
+      self#on_doc ~notify_back d.uri new_content
 
     method! on_notif_doc_did_save ~notify_back:_ params =
       Format.eprintf "SAVING!\n%!";
