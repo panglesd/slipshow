@@ -295,9 +295,9 @@ let delayed_from_units ?(options = Frontmatter.Global.empty) ?slipshow_js
   let math_link = options.math_link |> Option.map fst in
   let content = Renderers.to_html_string ast in
   let has =
-    Fpath.Map.fold
-      (fun _ unit h -> Has.combine (Has.find_out unit.Ast.ast) h)
-      units.units Has.empty
+    Ast.Folder.fold_just_units
+      (fun unit h -> Has.combine (Has.find_out unit.Ast.ast) h)
+      Has.empty units.entry_point units.units
   in
   embed_in_page ~has_speaker_view ~slipshow_js ~dimension ~has ~math_link ~theme
     ~css_links ~js_links content ~highlightjs_theme ~math_mode
