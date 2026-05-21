@@ -1,4 +1,4 @@
-FROM ocaml/opam:alpine-ocaml-5.4 AS deps
+FROM ocaml/opam:alpine-ocaml-4.14 AS deps
 RUN sudo apk add libev-dev openssl-dev libffi-dev gmp-dev
 RUN sudo apk add openssl-libs-static
 WORKDIR slipshow/
