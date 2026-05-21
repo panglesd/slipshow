@@ -5,7 +5,7 @@ type root = {
   version : string;
 }
 
-type roots = Fpath.t -> root option
+type roots = (Fpath.t -> root option) * (unit -> Fpath.t list)
 
 let html_source filename =
   let segments =
@@ -36,6 +36,29 @@ let html_source filename =
   |html}
     Server_assets.Style.v Ansi.css segments [%blob "./client/client.bc.js"]
 
+let choose_roots rs =
+  Format.sprintf
+    {html|<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slipshow preview</title>
+</head>
+<body>
+  <h1>Slipshow's preview server</h1>
+  This server is serving multiple presentation previews:
+  <ul>
+    %s
+  </ul>
+</body>
+</html>
+|html}
+    (rs
+    |> List.map (fun p ->
+        Format.asprintf "<li><a href='preview/%a'>%a</a></li>" Fpath.pp p
+          Fpath.pp p)
+    |> String.concat "")
+
 let pong () =
   let c = Proto.Server_to_client.Pong in
   let c = Proto.Server_to_client.to_string c in
@@ -46,7 +69,7 @@ let send_update content =
   let c = Proto.Server_to_client.to_string c in
   Dream.respond ~headers:[ ("Content-Type", "text/plain") ] c
 
-let do_serve ~port (roots : roots) =
+let do_serve ~port ((roots, get_roots) : roots) =
   let () = if Sys.unix then Sys.(set_signal sigpipe Signal_ignore) in
   (* We need this, otherwise the program is killed when sending a long string to
      a closed connection... See https://github.com/aantron/dream/issues/378 *)
@@ -73,7 +96,11 @@ let do_serve ~port (roots : roots) =
          [
            Dream.get "/" (fun _ ->
                Dream.log "A browser reloaded";
-               Dream.html (html_source (Fpath.v "/")));
+               let rs = get_roots () in
+               match rs with
+               | [] -> Dream.html (html_source (Fpath.v "/"))
+               | [ unique_root ] -> Dream.html (html_source unique_root)
+               | rs -> Dream.html (choose_roots rs));
            Dream.get "/preview/**" (fun req ->
                let file = Dream.target req in
                let file =

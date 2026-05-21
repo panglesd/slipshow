@@ -361,7 +361,10 @@ let run () =
     Linol_lwt.Jsonrpc2.run ~shutdown server
   in
   let roots_state = Hashtbl.find_opt State.roots_state in
-  let server = Slipshow_server.Server.do_serve ~port:8081 roots_state in
+  let roots_list () = Hashtbl.to_seq_keys State.roots_state |> List.of_seq in
+  let server =
+    Slipshow_server.Server.do_serve ~port:8081 (roots_state, roots_list)
+  in
   let promise = Lwt.pick [ task; server ] in
   match Linol_lwt.run promise with
   | () -> Ok ()

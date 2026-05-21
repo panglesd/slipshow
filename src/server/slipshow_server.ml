@@ -5,7 +5,7 @@ type root = Server.root = {
   version : string;
 }
 
-type roots = Fpath.t -> root option
+type roots = (Fpath.t -> root option) * (unit -> Fpath.t list)
 
 let do_watch entry_point compile =
   let callback () =
@@ -61,6 +61,6 @@ let do_serve ~port entry_point
    let dream =
      (* We serve on [127.0.0.1] since in musl libc library, localhost would
              trigger a DNS request (which might not resolve) *)
-     Server.do_serve ~port:8080 (fun _ -> !content)
+     Server.do_serve ~port:8080 ((fun _ -> !content), fun () -> [ Fpath.v "./" ])
    in
    Lwt.both dream wac)
