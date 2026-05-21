@@ -122,14 +122,7 @@ let wait_for_event root roots file =
       let root = roots file in
       match root with
       | None -> Dream.respond ~status:`Bad_Request "TODO3"
-      | Some root ->
-          let content =
-            Slipshow.delayed_from_units ~has_speaker_view:false root.units
-          in
-          let content =
-            { Proto.content = (content, ""); version = root.version }
-          in
-          send_update content)
+      | Some root -> send root)
 
 let polling (roots, _get_roots) req =
   let open Lwt.Syntax in
