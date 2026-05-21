@@ -121,6 +121,56 @@ module State = struct
         roots |> Fpath.Set.iter update_root
 end
 
+let send_info ~(notify_back : Linol_lwt.Jsonrpc2.notify_back) msg =
+  let type_ = Linol_lwt.MessageType.Info in
+  let k message =
+    let msg = Linol_lwt.ShowMessageParams.create ~message ~type_ in
+    let notif = Linol_lsp.Server_notification.ShowMessage msg in
+    notify_back#send_notification notif
+  in
+  Format.kasprintf k msg
+
+module Server = struct
+  let server_promise = ref None
+
+  let initialize ~notify_back () =
+    let roots_state = Hashtbl.find_opt State.roots_state in
+    let roots_list () = Hashtbl.to_seq_keys State.roots_state |> List.of_seq in
+    let port0 = 8080 in
+    let rec loop port =
+      let* () =
+        send_info ~notify_back "Starting preview server on port %d" port
+      in
+      let* try_port =
+        Slipshow_server.Server.do_serve ~port (roots_state, roots_list)
+      in
+      match try_port with
+      | Ok () -> Lwt.return_unit
+      | Error `Addr_in_use ->
+          let* () =
+            send_info ~notify_back "Port %d appears already used" port
+          in
+          let port = port + 1 in
+          if port - port0 > 100 then
+            let* () =
+              send_info ~notify_back
+                "Tried 100 ports, starting from %d, none of them appeared \
+                 usable"
+                port0
+            in
+            Lwt.return_unit
+          else loop port
+    in
+    loop port0
+
+  let initialize ~notify_back () =
+    match !server_promise with
+    | None ->
+        let lwt = initialize ~notify_back () in
+        server_promise := Some lwt
+    | Some _ -> ()
+end
+
 let diagnostics file : Linol.Lsp.Types.Diagnostic.t list option =
   let roots = Rev_deps.get_roots file in
   let root = Fpath.Set.choose_opt roots in
@@ -163,6 +213,7 @@ class lsp_server =
             | None -> None)
       in
       let roots = Option.value root ~default:[] in
+      let () = Server.initialize ~notify_back () in
       let* () =
         Format.eprintf
           "We find all markdown files in the root and compute their dependencies\n\
@@ -401,13 +452,7 @@ let run () =
     let shutdown () = s#get_status = `ReceivedExit in
     Linol_lwt.Jsonrpc2.run ~shutdown server
   in
-  let roots_state = Hashtbl.find_opt State.roots_state in
-  let roots_list () = Hashtbl.to_seq_keys State.roots_state |> List.of_seq in
-  let server =
-    Slipshow_server.Server.do_serve ~port:8081 (roots_state, roots_list)
-  in
-  let promise = Lwt.pick [ task; server ] in
-  match Linol_lwt.run promise with
+  match Linol_lwt.run task with
   | () -> Ok ()
   | exception e ->
       let e = Printexc.to_string e in

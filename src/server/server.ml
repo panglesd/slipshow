@@ -162,11 +162,22 @@ let do_serve ~port (roots : roots) =
         port);
   (* We serve on [127.0.0.1] since in musl libc library, localhost would trigger
      a DNS request (which might not resolve) *)
-  Dream.serve ~port ~interface:"127.0.0.1"
-  @@ Dream.logger
-  @@ Dream.router
-       [
-         Dream.get "/" (home_page roots);
-         Dream.get "/preview/**" (preview roots);
-         Dream.post "/polling/**" (fun req -> polling roots req);
-       ]
+  let dream () =
+    let open Lwt.Syntax in
+    let+ () =
+      Dream.serve ~port ~interface:"127.0.0.1"
+      @@ Dream.logger
+      @@ Dream.router
+           [
+             Dream.get "/" (home_page roots);
+             Dream.get "/preview/**" (preview roots);
+             Dream.post "/polling/**" (fun req -> polling roots req);
+           ]
+    in
+    Ok ()
+  in
+  Lwt.catch dream (fun exn ->
+      match exn with
+      | Unix.Unix_error (Unix.EADDRINUSE, _, _) ->
+          Lwt.return (Error `Addr_in_use)
+      | exn -> Lwt.reraise exn)
