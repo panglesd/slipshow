@@ -5,7 +5,7 @@ type root = {
   version : string;
 }
 
-type roots = Fpath.t -> root option
+type roots = (Fpath.t -> root option) * (unit -> Fpath.t list)
 
 val do_serve :
   port:int ->
