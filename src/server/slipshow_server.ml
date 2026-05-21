@@ -32,7 +32,7 @@ let do_serve ~port entry_point
      a closed connection... See https://github.com/aantron/dream/issues/378 *)
 
   let condition = Lwt_condition.create () in
-  snd @@ Lwt_main.run
+  Lwt_main.run
   @@
   let content = ref None in
   let callback () =
@@ -53,9 +53,18 @@ let do_serve ~port entry_point
     @@ Fpath.( // ) (Fpath.v (Sys.getcwd ())) entry_point
   in
   let wac = Watcher.watch_and_compile initial ~callback in
-  let dream =
+  let dream () =
     (* We serve on [127.0.0.1] since in musl libc library, localhost would
              trigger a DNS request (which might not resolve) *)
     Server.do_serve ~port ((fun _ -> !content), fun () -> [ Fpath.v "./" ])
   in
-  Lwt.both dream wac
+  let dream =
+    Lwt.catch dream (fun exn ->
+        (match exn with
+        | Unix.Unix_error (Unix.EADDRINUSE, _, _) ->
+            Logs.err (fun m ->
+                m "Port %d is already used, use --port to specify another." port)
+        | exn -> Lwt.reraise exn);
+        Lwt.return ())
+  in
+  Lwt.pick [ dream; wac ]
