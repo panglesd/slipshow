@@ -115,18 +115,15 @@ let to_grace source_map error =
           (fun occ -> with_range occ @@ Diagnostic.Label.primaryf "")
           occurrences
       in
-      Some
-        (Diagnostic.createf ~labels Warning "ID %s is assigned multiple times"
-           id)
+      Diagnostic.createf ~labels Warning "ID %s is assigned multiple times" id
   | MissingFile { file; error_msg; locs } ->
       let labels =
         List.filter_map
           (fun loc -> with_range loc @@ Diagnostic.Label.primaryf "")
           locs
       in
-      Some
-        (Diagnostic.createf ~labels Warning "file '%s' could not be read: %s"
-           file error_msg)
+      Diagnostic.createf ~labels Warning "file '%s' could not be read: %s" file
+        error_msg
   | WrongType { loc_reason; loc_block; expected_type } ->
       let labels =
         List.filter_map Fun.id
@@ -138,15 +135,14 @@ let to_grace source_map error =
             @@ Diagnostic.Label.primaryf "This is not a %s" expected_type;
           ]
       in
-      Some (Diagnostic.createf ~labels Warning "Wrong type")
+      Diagnostic.createf ~labels Warning "Wrong type"
   | ParsingError { action; msg; loc } ->
       let labels =
         List.filter_map Fun.id
           [ with_range loc @@ Diagnostic.Label.primaryf "%s" msg ]
       in
-      Some
-        (Diagnostic.createf ~labels Warning
-           "Action %s arguments could not be parsed" action)
+      Diagnostic.createf ~labels Warning
+        "Action %s arguments could not be parsed" action
   | ParsingWarnor
       {
         warnor =
@@ -177,14 +173,14 @@ let to_grace source_map error =
                 (String.concat "', '" possible_arguments);
             ]
       in
-      Some (Diagnostic.createf ~labels ~notes Warning "Invalid action argument")
+      Diagnostic.createf ~labels ~notes Warning "Invalid action argument"
   | ParsingWarnor { warnor = Parsing_failure { msg; loc = parse_loc }; loc } ->
       let loc = loc_of_ploc loc parse_loc in
       let labels =
         List.filter_map Fun.id
           [ with_range loc @@ Diagnostic.Label.primaryf "%s" msg ]
       in
-      Some (Diagnostic.createf ~labels Warning "Failed to parse")
+      Diagnostic.createf ~labels Warning "Failed to parse"
   | MissingID { id; loc } ->
       let labels =
         List.filter_map Fun.id
@@ -194,9 +190,7 @@ let to_grace source_map error =
                  "This should be an ID present in the document";
           ]
       in
-      Some
-        (Diagnostic.createf ~labels Warning "No element with id '%s' was found"
-           id)
+      Diagnostic.createf ~labels Warning "No element with id '%s' was found" id
   | UnknownFrontmatterField { key; loc; allowed_keys } ->
       let labels =
         List.filter_map Fun.id
@@ -206,9 +200,8 @@ let to_grace source_map error =
         Diagnostic.Message.createf "Recognized fields are: '%s'"
           (String.concat "', '" allowed_keys)
       in
-      Some
-        (Diagnostic.createf ~labels ~notes:[ note ] Warning
-           "Frontmatter field '%s' is not interpreted by slipshow" key)
+      Diagnostic.createf ~labels ~notes:[ note ] Warning
+        "Frontmatter field '%s' is not interpreted by slipshow" key
   | InvalidFrontmatterLine { loc } ->
       let labels =
         List.filter_map Fun.id
@@ -219,31 +212,26 @@ let to_grace source_map error =
           "Frontmatter have to be of the form \"key:value\" on a single line."
       in
       let notes = [ note ] in
-      Some
-        (Diagnostic.createf ~notes ~labels Warning "Invalid frontmatter entry")
+      Diagnostic.createf ~notes ~labels Warning "Invalid frontmatter entry"
   | UnknownAttribute { attr; loc } ->
       let labels =
         List.filter_map Fun.id
           [ with_range loc @@ Diagnostic.Label.primaryf "" ]
       in
-      Some
-        (Diagnostic.createf ~labels Warning "Non standard attribute: '%s'" attr)
+      Diagnostic.createf ~labels Warning "Non standard attribute: '%s'" attr
   | FrontmatterParsing { key; msg; loc } ->
       let labels =
         List.filter_map Fun.id
           [ with_range loc @@ Diagnostic.Label.primaryf "%s" msg ]
       in
-      Some
-        (Diagnostic.createf ~labels Warning
-           "Error while parsing frontmatter field '%s'" key)
+      Diagnostic.createf ~labels Warning
+        "Error while parsing frontmatter field '%s'" key
   | ChildrenClassWithValue { loc } ->
       let labels =
         List.filter_map Fun.id
           [ with_range loc @@ Diagnostic.Label.primaryf "" ]
       in
-      Some
-        (Diagnostic.createf ~labels Warning
-           "Children classes cannot have a value")
+      Diagnostic.createf ~labels Warning "Children classes cannot have a value"
   | InconsistentOption { option_name; loc1; loc2 } ->
       let labels =
         List.filter_map Fun.id
@@ -252,10 +240,9 @@ let to_grace source_map error =
             with_range loc2 @@ Diagnostic.Label.primaryf "";
           ]
       in
-      Some
-        (Diagnostic.createf ~labels Warning
-           "Option '%s' is assigned multiple times in incompatible ways"
-           option_name)
+      Diagnostic.createf ~labels Warning
+        "Option '%s' is assigned multiple times in incompatible ways"
+        option_name
 
 let errors_acc = ref []
 let add x = errors_acc := x :: !errors_acc

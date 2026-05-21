@@ -24,8 +24,8 @@ $ du -h file.html
 What happens if the file does not exists? There is an error message...
 
   $ slipshow compile -o file.html non-existing-file.md
-  slipshow: non-existing-file.md: No such file or directory
-  [123]
+  warning: file 'non-existing-file.md' could not be read: non-existing-file.md: No such file or directory
+  
 
 If we do not pass an output file, it is infer the output name from the input name
 
