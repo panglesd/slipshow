@@ -424,7 +424,7 @@ class lsp_server =
             (* This test is just to give a better error message *)
             let directory = Fpath.parent filename |> Fpath.to_string in
             if not (Sys.is_directory directory) then
-              Error (`Msg (directory ^ "is not a directory"))
+              Error (`Msg (directory ^ " is not a directory"))
             else
               Out_channel.with_open_text (Fpath.to_string filename) @@ fun oc ->
               Out_channel.output_string oc content;
