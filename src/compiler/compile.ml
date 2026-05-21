@@ -589,28 +589,6 @@ let of_cmarkit ~path ~(fm : Frontmatter.t) ~source md =
   in
   { Ast.ast; deps; id_map; source; files; option; warnings; path }
 
-(* TODO: Have that somewhere *)
-(* let () = *)
-(*   Fpath.Map.iter *)
-(*     (fun path { Ast.Files.content; used_by; _ } -> *)
-(*       match content with *)
-(*       | Ok _ -> () *)
-(*       | Error (`Msg error_msg) -> *)
-(*           let locs = List.map snd used_by in *)
-(*           Diagnosis.add *)
-(*             (MissingFile { file = Fpath.to_string path; error_msg; locs })) *)
-(*     files *)
-(* in *)
-
-(* let empty_c entry_point = *)
-(*   { *)
-(*     Ast.units = Fpath.Map.empty; *)
-(*     files = Fpath.Map.empty; *)
-(*     options = Frontmatter.Global.empty; *)
-(*     entry_point; *)
-(*     id_map = Id_map.SMap.empty; *)
-(*   } *)
-
 let _add_file read_file file content =
  fun p -> if Fpath.equal p file then Ok (Some content) else read_file p
 
