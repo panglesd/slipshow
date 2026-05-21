@@ -20,5 +20,5 @@ val do_watch :
   Fpath.t -> (unit -> (Fpath.Set.t, [ `Msg of string ]) result) -> unit
 
 module Server : sig
-  val do_serve : port:int -> roots -> unit Lwt.t
+  val do_serve : port:int -> roots -> (unit, [> `Addr_in_use ]) result Lwt.t
 end

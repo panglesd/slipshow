@@ -53,18 +53,16 @@ let do_serve ~port entry_point
     @@ Fpath.( // ) (Fpath.v (Sys.getcwd ())) entry_point
   in
   let wac = Watcher.watch_and_compile initial ~callback in
-  let dream () =
-    (* We serve on [127.0.0.1] since in musl libc library, localhost would
-             trigger a DNS request (which might not resolve) *)
-    Server.do_serve ~port ((fun _ -> !content), fun () -> [ Fpath.v "./" ])
-  in
   let dream =
-    Lwt.catch dream (fun exn ->
-        (match exn with
-        | Unix.Unix_error (Unix.EADDRINUSE, _, _) ->
-            Logs.err (fun m ->
-                m "Port %d is already used, use --port to specify another." port)
-        | exn -> Lwt.reraise exn);
-        Lwt.return ())
+    let open Lwt.Syntax in
+    let+ res =
+      Server.do_serve ~port ((fun _ -> !content), fun () -> [ Fpath.v "./" ])
+    in
+    match res with
+    | Ok () -> ()
+    | Error `Addr_in_use ->
+        Logs.err (fun m ->
+            m "Port %d is already used, use --port to specify another." port);
+        ()
   in
   Lwt.pick [ dream; wac ]
