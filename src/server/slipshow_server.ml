@@ -38,10 +38,7 @@ let do_serve ~port entry_point
   let callback () =
     let res = compile () in
     match res with
-    | Error (`Msg _err) as e ->
-        (* TODO: Show error *)
-        Lwt_condition.broadcast condition ();
-        e
+    | Error _ as e -> e
     | Ok ((units, diagnostics), deps) ->
         content :=
           Some { units; diagnostics; version = generate_version (); condition };
