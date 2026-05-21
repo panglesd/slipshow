@@ -9,10 +9,10 @@ let combine_opt option_name x y =
   | None, _ -> y
 
 module Local = struct
-  type t = { toplevel_attributes : Cmarkit.Attributes.t Cmarkit.node option }
+  type t = { attributes : Cmarkit.Attributes.t Cmarkit.node option }
   type 'a with_ = { x : 'a; fm : t }
 
-  let empty = { toplevel_attributes = None }
+  let empty = { attributes = None }
   let with_empty x = { x; fm = empty }
 end
 
@@ -35,6 +35,7 @@ module Global = struct
     css_links : Asset.t list;
     js_links : Asset.t list;
     external_ids : string list;
+    toplevel_attributes : Cmarkit.Attributes.t Cmarkit.node option;
   }
   (** We keep an option even though there are default value to be able to merge
       two frontmatter. None and default value represent different things. *)
@@ -51,6 +52,7 @@ module Global = struct
       css_links = [];
       js_links = [];
       external_ids = [];
+      toplevel_attributes = None;
     }
 
   let with_empty x = { x; fm = empty }
@@ -67,28 +69,24 @@ module Global = struct
       css_links = x.css_links @ y.css_links;
       js_links = x.js_links @ y.js_links;
       external_ids = x.external_ids @ y.external_ids;
+      toplevel_attributes =
+        (match (x.toplevel_attributes, y.toplevel_attributes) with
+        | Some (a1, meta1), Some (a2, _meta2) ->
+            (* Hopefully not merging the locations is fine *)
+            Some (Cmarkit.Attributes.merge ~base:a1 ~new_attrs:a2, meta1)
+        | (Some _ as a), _ | _, (Some _ as a) -> a
+        | None, None -> None);
     }
 end
 
 type t = { local : Local.t; global : Global.t }
 type fm = t
 
-module Toplevel_attributes = struct
+module Attributes = struct
   type t = Cmarkit.Attributes.t Cmarkit.node
 
-  let key = "toplevel-attributes"
-
-  let default =
-    ( Cmarkit.Attributes.make
-        ~kv_attributes:
-          [
-            (("slip", Cmarkit.Meta.none), None);
-            ( ("enter", Cmarkit.Meta.none),
-              Some ({ v = "~duration:0"; delimiter = None }, Cmarkit.Meta.none)
-            );
-          ]
-        (),
-      Cmarkit.Meta.none )
+  let key = "attributes"
+  let default = (Cmarkit.Attributes.empty, Cmarkit.Meta.none)
 
   let of_string ~to_asset:_ (s, loc) =
     let s = String.trim s in
@@ -112,11 +110,46 @@ module Toplevel_attributes = struct
 
   let update_frontmatter (fm : fm) (v, meta1) =
     let v =
-      match fm.local.toplevel_attributes with
+      match fm.local.attributes with
       | None -> v
-      | Some (a, _meta2) -> Cmarkit.Attributes.merge ~base:a ~new_attrs:v
+      | Some (a, _meta2) ->
+          (* Hopefully not merging the locations is fine *)
+          Cmarkit.Attributes.merge ~base:a ~new_attrs:v
     in
-    { fm with local = { toplevel_attributes = Some (v, meta1) } }
+    { fm with local = { attributes = Some (v, meta1) } }
+end
+
+module Toplevel_attributes = struct
+  type t = Attributes.t
+
+  let key = "toplevel-attributes"
+
+  let default =
+    ( Cmarkit.Attributes.make
+        ~kv_attributes:
+          [
+            (("slip", Cmarkit.Meta.none), None);
+            ( ("enter", Cmarkit.Meta.none),
+              Some ({ v = "~duration:0"; delimiter = None }, Cmarkit.Meta.none)
+            );
+          ]
+        (),
+      Cmarkit.Meta.none )
+
+  let of_string = Attributes.of_string
+
+  let update_frontmatter (fm : fm) (v, meta1) =
+    let v =
+      match fm.global.toplevel_attributes with
+      | None -> v
+      | Some (a, _meta2) ->
+          (* Hopefully not merging the locations is fine *)
+          Cmarkit.Attributes.merge ~base:a ~new_attrs:v
+    in
+    {
+      fm with
+      global = { fm.global with toplevel_attributes = Some (v, meta1) };
+    }
 end
 
 module Math_link = struct
@@ -280,6 +313,7 @@ let all_fields =
     (module Hljs_theme : Field);
     (module Math_mode : Field);
     (module External_ids : Field);
+    (module Attributes : Field);
   ]
 
 module SMap = struct
@@ -294,7 +328,7 @@ let fields_map =
   |> List.map (fun ((module X : Field) as m) -> (X.key, m))
   |> SMap.of_list
 
-let fields_names = all_fields |> List.map (fun (module X : Field) -> X.key)
+let allowed_keys = all_fields |> List.map (fun (module X : Field) -> X.key)
 let empty = { local = Local.empty; global = Global.empty }
 let string_sub s idx idx' = (String.sub s idx idx', (idx, idx + idx' - 1))
 
@@ -329,24 +363,11 @@ let cut file offset (i, line, (byte_start, _)) c =
      let v = (String.trim v, update_loc loc) in
      (key, v)
 
-let send_unrecognized_field ~key ~kloc =
-  let msg = "Frontmatter field '" ^ key ^ "' is not interpreted by slipshow" in
-  let n =
-    "Recognized fields are: '" ^ String.concat "', '" fields_names ^ "'"
-  in
-  Diagnosis.add
-    (General
-       { msg; notes = [ n ]; labels = [ ("", kloc) ]; code = "Frontmatter" })
+let send_unrecognized_field ~key ~kloc:loc =
+  Diagnosis.add (UnknownFrontmatterField { key; loc; allowed_keys })
 
 let send_general_error ~key ~msg ~vloc =
-  Diagnosis.add
-    (General
-       {
-         msg = "Error while parsing frontmatter field '" ^ key ^ "'";
-         notes = [];
-         labels = [ (msg, vloc) ];
-         code = "Frontmatter";
-       })
+  Diagnosis.add (FrontmatterParsing { key; msg; loc = vloc })
 
 let of_string ~to_asset file offset s =
   let raise_warning line =
@@ -355,16 +376,10 @@ let of_string ~to_asset file offset s =
       let i = i + 1 in
       let first_byte = byte_start + offset
       and last_byte = byte_end + offset - 1 in
-      Cmarkit.Textloc.v ~file ~first_line:(i, byte_start)
-        ~last_line:(i, byte_start) ~first_byte ~last_byte
+      Cmarkit.Textloc.v ~file ~first_line:(i, first_byte)
+        ~last_line:(i, first_byte) ~first_byte ~last_byte
     in
-    let msg = "Invalid frontmatter entry" in
-    let note =
-      "Frontmatter have to be of the form \"key:value\" on a single line."
-    in
-    let notes = [ note ] in
-    Diagnosis.add
-      (General { msg; notes; labels = [ ("", loc) ]; code = "Frontmatter" })
+    Diagnosis.add (InvalidFrontmatterLine { loc })
   in
   let assoc =
     s |> split_in_lines

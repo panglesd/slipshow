@@ -9,10 +9,10 @@ We can compile the file using the slip_of_mark binary
           <div id="slipshow-main">
             <div id="slipshow-content">
               <svg id="slipshow-drawing-elem" style="overflow:visible; position: absolute; z-index:1000; pointer-events: none"></svg>
-              <div class="slipshow-rescaler" slip enter-at-unpause=~duration:0>
+              <div class="slipshow-rescaler" enter-at-unpause=~duration:0 slip>
   <div class="slip">
   <div class="slip-body">
-  <div>
+  <div src=slides.md include>
   <div style="display: flex">
   <div id="slide1" class="slipshow-rescaler" slide enter-at-unpause>
   <div class="slide">

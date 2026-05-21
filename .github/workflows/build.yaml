@@ -103,7 +103,7 @@ jobs:
           path: |
             ~/.opam
             _opam
-          key: ${{ matrix.config.os }}-${{ hashFiles('*.opam') }}
+          key: ${{ matrix.config.os }}-${{ hashFiles('*.opam') }}-${{ matrix.ocaml-compiler }}
 
       - name: Use OCaml ${{ matrix.ocaml-compiler }}
         uses: ocaml/setup-ocaml@v3

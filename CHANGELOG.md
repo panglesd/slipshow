@@ -7,6 +7,20 @@
 - Add a visual indicator for the state of the previewer (disconnected,
   refreshing, ...) (#220, #222)
 - Allow frontmatter in included files (#228)
+- (#229) Add an LSP server, available though the `slipshow lsp` command, to interact
+  with your editor. The server supports:
+  - Diagnostics
+  - Documentation for actions on hover
+  - Go to definition (from IDs in action, to the associated element)
+  - Occurrences of ID
+  - Completion for IDs in actions
+
+### Changed
+
+- In frontmatter, distinguish between `attributes` (the attributes for the whole
+  *file*) and `toplevel-attributes` (the attributes for the whole
+  *presentation*). Change `toplevel-attributes` to `attributes` in your
+  presentation to fix the breaking change. (#229)
 
 ### Fixed
 

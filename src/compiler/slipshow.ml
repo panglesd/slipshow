@@ -1,5 +1,9 @@
 module Asset = Asset
 module Frontmatter = Frontmatter
+module Compile = Compile
+module Ast = Ast
+module Id_map = Id_map
+module Action_plan = Action_plan
 
 type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
 
@@ -241,28 +245,40 @@ let string_to_delayed s =
   Option.bind s @@ fun s -> try Some (Marshal.from_string s 0) with _ -> None
 
 let convert_to_md ~read_file content =
-  let (sd, _htbl_include), _ = Compile.compile ~read_file content in
-  let sd = Compile.to_cmarkit sd in
+  let entry_point = Fpath.v "-" in
+  let read_file =
+   fun f -> if Fpath.equal entry_point f then Ok (Some content) else read_file f
+  in
+  let units, _ = Compile.compile_all ~read_file Fpath.Map.empty entry_point in
+  let sd = Compile.to_cmarkit units in
   Cmarkit_commonmark.of_doc ~include_attributes:false sd
 
 let to_grace file whole_content htbl_include er =
   Diagnosis.to_grace
     (fun f ->
-      if file = Some f then
-        Grace.Source.(`String { name = file; content = whole_content })
-      else
-        match Hashtbl.find_opt htbl_include f with
-        | Some content -> Grace.Source.(`String { name = Some f; content })
-        | None ->
-            Grace.Source.(`String { name = file; content = whole_content }))
+      let open Grace.Source in
+      match file with
+      | Some file when Fpath.equal file f ->
+          let name = Fpath.to_string file in
+          `String { name = Some name; content = whole_content }
+      | _ -> (
+          match Fpath.Map.find_opt f htbl_include with
+          | Some { Ast.source = content; _ } ->
+              `String { name = Some (Fpath.to_string f); content }
+          | None ->
+              let name = Option.map Fpath.to_string file in
+              `String { name; content = whole_content }))
     er
 
 let delayed ?(options = Frontmatter.Global.empty) ?slipshow_js ?file
     ?(read_file = fun _ -> Ok None) ~has_speaker_view s =
-  let whole_content = s in
-  let (ast, htbl_include), errors = Compile.compile ?file ~read_file s in
-  let options = Frontmatter.Global.combine options ast.Ast.options in
-  let ast = { ast with options } in
+  let file = Option.value file ~default:(Fpath.v "-") in
+  let read_file fp =
+    if Fpath.equal fp file then Ok (Some s) else read_file fp
+  in
+  let units, errors = Compile.compile_all Fpath.Map.empty file ~read_file in
+  let options = Frontmatter.Global.combine options units.Ast.options in
+  let ast = { units with options } in
   let dimension =
     options.dimension
     |> Option.value ~default:Frontmatter.Dimension.default
@@ -290,11 +306,13 @@ let delayed ?(options = Frontmatter.Global.empty) ?slipshow_js ?file
     |> fst
   in
   let math_link = options.math_link |> Option.map fst in
-  let warnings =
-    List.filter_map (to_grace file whole_content htbl_include) errors
-  in
+  let warnings = List.filter_map (to_grace (Some file) s units.units) errors in
   let content = Renderers.to_html_string ast in
-  let has = Has.find_out ast in
+  let has =
+    Fpath.Map.fold
+      (fun _ unit h -> Has.combine (Has.find_out unit.Ast.ast) h)
+      units.units Has.empty
+  in
   let res =
     embed_in_page ~has_speaker_view ~slipshow_js ~dimension ~has ~math_link
       ~theme ~css_links ~js_links content ~highlightjs_theme ~math_mode

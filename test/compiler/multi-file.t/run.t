@@ -28,7 +28,7 @@ $ cp main.html /tmp/
   
   $ show_source main.html | grep -A 11 "class=\"slip-body"
   <div class="slip-body">
-  <div>
+  <div src=main.md include>
   <h1><span>A title</span></h1>
   <h2><span>Chapter 1</span></h2>
   <div src=chapter1.md include>

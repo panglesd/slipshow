@@ -205,7 +205,7 @@ module Textloc = struct
   let pp = pp_gnu
 
   let pp_dump ppf l =
-    pf ppf "file:%s bytes:%d-%d lines:%d-%d lines-bytes:%d-%d]"
+    pf ppf "file:%s bytes:%d-%d lines:%d-%d lines-bytes:%d-%d"
       l.file l.first_byte l.last_byte (fst l.first_line) (fst l.last_line)
       (snd l.first_line) (snd l.last_line)
 end

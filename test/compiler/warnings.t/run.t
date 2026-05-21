@@ -64,6 +64,11 @@ Testing with an include
   
 
   $ slipshow compile all.md
+  warning: file 'missing.md' could not be read: missing.md: No such file or directory
+      ┌─ all.md:11:4
+   11 │  ![](missing.md)
+      │     ^^^^^^^^^^^^ 
+  
   warning: Failed to parse
       ┌─ all.md:44:16
    44 │  {up="~margin:2 ~margin:3"}
@@ -121,20 +126,15 @@ Testing with an include
       │  This expects the id of a slip-script
       │  This is not a slip-script
   
-  warning: Non standard attribute: 'dqzd'
-      ┌─ all.md:2:30
-    2 │  toplevel-attributes: exec=yo dqzd
-      │                               ^^^^ 
-  
   warning: No element with id 'yo' was found
       ┌─ all.md:2:27
     2 │  toplevel-attributes: exec=yo dqzd
       │                            ^^ This should be an ID present in the document
   
-  warning: file 'missing.md' could not be read: missing.md: No such file or directory
-      ┌─ all.md:11:4
-   11 │  ![](missing.md)
-      │     ^^^^^^^^^^^^ 
+  warning: Non standard attribute: 'dqzd'
+      ┌─ all.md:2:30
+    2 │  toplevel-attributes: exec=yo dqzd
+      │                               ^^^^ 
   
   warning: ID duplicated-id is assigned multiple times
       ┌─ all.md:25:3
@@ -161,7 +161,7 @@ Testing with an include
       ┌─ all.md:3:1
     3 │  unknown-frontmatter: field
       │  ^^^^^^^^^^^^^^^^^^^ 
-      = Recognized fields are: 'dimension', 'toplevel-attributes', 'math-link', 'theme', 'css', 'js', 'highlightjs-theme', 'math-mode', 'external-ids'
+      = Recognized fields are: 'dimension', 'toplevel-attributes', 'math-link', 'theme', 'css', 'js', 'highlightjs-theme', 'math-mode', 'external-ids', 'attributes'
   
   warning: Invalid frontmatter entry
       ┌─ all.md:7:1

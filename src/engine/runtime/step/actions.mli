@@ -18,11 +18,7 @@ module Pause :
      and type js_args = Brr.El.t list
 
 module type Move = sig
-  type args = {
-    margin : float option;
-    duration : float option;
-    target : [ `Self | `Id of string Actions_arguments.W.node ];
-  }
+  include Actions_arguments.Move
 
   type js_args = {
     elem : Brr.El.t;

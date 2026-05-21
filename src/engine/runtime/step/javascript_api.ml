@@ -27,7 +27,7 @@ let move (module X : Actions.Move) ~mode window undos_ref =
   and duration = Jv.to_option Jv.to_float duration
   and margin = Jv.to_option Jv.to_float margin in
   register_undo undos_ref @@ fun () ->
-  X.do_ ~mode window elem X.{ duration; margin; target = `Self }
+  X.do_js ~mode window X.{ elem; duration; margin }
 
 let up = move (module Actions.Up)
 let down = move (module Actions.Down)
@@ -73,8 +73,9 @@ let change_page ~mode _window undos_ref =
   let elem = Brr.El.of_jv elem in
   let change = Jv.to_string change in
   register_undo undos_ref @@ fun () ->
-  Actions.Change_page.parse_change (change, (0, 0))
-  |> Undoable.Option.iter @@ fun change ->
+  Actions.Change_page.parse_change (change, (-1, -1))
+  (* TODO: Use official [Warnings.loc_none] instead of [-1, -1] *)
+  |> Undoable.Option.iter @@ fun (change, _) ->
      let js_arg = { Actions.Change_page.change; elem } in
      Actions.Change_page.do_js ~mode _window js_arg
 

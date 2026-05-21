@@ -5,7 +5,7 @@ open Cmarkit
 type slide = { content : Block.t; title : Inline.t attributed option }
 
 type s_block =
-  | Included of Block.t attributed node
+  | Included of Fpath.t attributed node
   | Div of Block.t attributed node
   | Slide of slide attributed node
   | Slip of Block.t attributed node
@@ -46,21 +46,103 @@ let audio i = S_inline (Audio i)
 let pdf i = S_inline (Pdf i)
 let hand_drawn i = S_inline (Hand_drawn i)
 
-module Files = struct
-  type mode = [ `Base64 ]
+type t = Cmarkit.Doc.t
 
-  type t = {
-    path : Fpath.t;
-    content : string;
-    used_by : string list;
-    mode : mode;
+module Action_plan = struct
+  open Actions_arguments
+
+  type arg =
+    | Enter of Enter.args
+    | Clear_draw of Clear_draw.args
+    | Draw of Draw.args
+    | Pause of Pause.args
+    | Step of Step.args
+    | Up of Up.args
+    | Down of Down.args
+    | Center of Center.args
+    | Scroll of Scroll.args
+    | Change_page of Change_page.args
+    | Focus of Focus.args
+    | Unfocus of Unfocus.args
+    | Execute of Execute.args
+    | Unstatic of Unstatic.args
+    | Static of Static.args
+    | Reveal of Reveal.args
+    | Unreveal of Unreveal.args
+    | Emph of Emph.args
+    | Unemph of Unemph.args
+    | Speaker_note of Speaker_note.args
+    | Play_media of Play_media.args
+
+  type action = arg * Cmarkit.Attributes.kv
+
+  type step = {
+    actions : action list;
+    elem : [ `Block of Block.t | `Inline of Inline.t ];
+    attrs : Cmarkit.Attributes.t Cmarkit.node;
   }
+  (** A step is the list of actions that are going to be executed at the same
+      time. Ordered by presence in the file *)
 
-  type map = t Fpath.Map.t
+  type t = step list
+  (** A plan is a list of steps. Steps are ordered by order of execution, which
+      corresponds to reading order. *)
 end
 
-type options = Frontmatter.Global.t
-type t = { doc : Doc.t; files : Files.map; options : options }
+module Files = struct
+  type mode = [ `Base64 ]
+  type unread = unit
+  type read = (string option, [ `Msg of string ]) result
+
+  type 'a t = {
+    path : Fpath.t;
+    used_by : (string * Textloc.t) list;
+    mode : mode;
+    content : 'a;
+  }
+
+  let compare_usage (s1, loc1) (s2, loc2) =
+    match String.compare s1 s2 with 0 -> Textloc.compare loc1 loc2 | n -> n
+
+  type 'a map = 'a t Fpath.Map.t
+
+  let combine : unread map -> unread map -> unread map =
+    Fpath.Map.union
+      (fun
+        path
+        { mode = `Base64; content = (); used_by = u1; path = _ }
+        { mode = `Base64; content = (); used_by = u2; path = _ }
+      ->
+        Some
+          {
+            mode = `Base64;
+            content = ();
+            used_by = List.sort_uniq compare_usage (u1 @ u2);
+            path;
+          })
+end
+
+(* TODO: turn deps into an associative list to retain the order *)
+type unit' = {
+  path : Fpath.t;
+  ast : t;
+  deps : Cmarkit.Textloc.t list Fpath.Map.t;
+      (** Map of dependency -> List of places it is included *)
+  id_map : Id_map.definitions;
+  source : string;
+  files : Files.unread Files.map;
+  option : Frontmatter.Global.t;
+  warnings : Diagnosis.t list;
+}
+
+type units = {
+  units : unit' Fpath.Map.t;
+  entry_point : Fpath.t;
+  options : Frontmatter.Global.t;
+  files : Files.read Files.map;
+  id_map : Id_map.t;
+  action_plan : Action_plan.t;
+}
 
 module Folder = struct
   let block_ext_default f acc = function
@@ -69,10 +151,9 @@ module Folder = struct
         Folder.fold_block f acc b
     | Slide (({ content = b; title = None }, _), _)
     | Div ((b, _), _)
-    | Included ((b, _), _)
     | Slip ((b, _), _) ->
         Folder.fold_block f acc b
-    | MermaidJS _ | SlipScript _ -> acc
+    | Included _ | MermaidJS _ | SlipScript _ -> acc
     | Carousel ((l, _), _) ->
         List.fold_left (fun acc x -> Folder.fold_block f acc x) acc l
 
@@ -95,6 +176,39 @@ module Folder = struct
 
   let make ~block ~inline () =
     Folder.make ~block_ext_default ~inline_ext_default ~block ~inline ()
+
+  let fold_just_units f acc entry_point units =
+    match Fpath.Map.find_opt entry_point units with
+    | None -> acc
+    | Some unit ->
+        let acc = f unit acc in
+        Fpath.Map.fold
+          (fun fpath _ acc ->
+            match Fpath.Map.find_opt fpath units with
+            | None -> acc
+            | Some unit -> f unit acc)
+          unit.deps acc
+
+  let fold_units' ~block ~inline (acc : 'a) entry_point units : 'a =
+    let block (f : 'a Folder.t) (acc : 'a) = function
+      | S_block (Included ((fpath, _), _)) as b -> (
+          let acc =
+            match block f acc b with `Default -> acc | `Fold acc -> acc
+          in
+          match Fpath.Map.find_opt fpath units with
+          | None -> `Fold acc
+          | Some unit ->
+              let b = Doc.block unit.ast in
+              `Fold (Cmarkit.Folder.fold_block f acc b))
+      | b -> block f acc b
+    in
+    let folder = make ~block ~inline () in
+    Folder.fold_doc folder acc entry_point.ast
+
+  let fold_units ~block ~inline (acc : 'a) units : 'a =
+    match Fpath.Map.find_opt units.entry_point units.units with
+    | None -> acc (* TODO: show error somehow *)
+    | Some unit -> fold_units' ~block ~inline acc unit units.units
 
   let continue_block f c acc =
     let open Block in
@@ -133,10 +247,9 @@ module Folder = struct
             Folder.fold_block f acc b
         | Slide (({ content = b; title = None }, _), _)
         | Div ((b, _), _)
-        | Included ((b, _), _)
         | Slip ((b, _), _) ->
             Folder.fold_block f acc b
-        | MermaidJS _ | SlipScript _ -> acc
+        | Included _ | MermaidJS _ | SlipScript _ -> acc
         | Carousel ((l, _), _) ->
             List.fold_left (fun acc x -> Folder.fold_block f acc x) acc l)
     | _ -> assert false
@@ -181,10 +294,9 @@ module Mapper = struct
         let* b = Mapper.map_block m b in
         let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
         Some (Div ((b, attrs), meta))
-    | Included ((b, attrs), meta) ->
-        let* b = Mapper.map_block m b in
+    | Included ((fpath, attrs), meta) ->
         let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
-        Some (Included ((b, attrs), meta))
+        Some (Included ((fpath, attrs), meta))
     | Slide (({ content = b; title }, attrs), meta) ->
         let* b = Mapper.map_block m b in
         let title =
@@ -276,13 +388,10 @@ module Fold_mapper = struct
     | S_block b ->
         let acc, b =
           match b with
-          | Included ((block, attrs), meta) ->
+          | Included ((fpath, attrs), meta) ->
               let acc, attrs = m.attrs acc $ attrs in
-              let acc, block = m.block m acc block in
-              let res =
-                Option.map (fun block -> Included ((block, attrs), meta)) block
-              in
-              (acc, res)
+              let res = Included ((fpath, attrs), meta) in
+              (acc, Some res)
           | Div ((block, attrs), meta) ->
               let acc, attrs = m.attrs acc $ attrs in
               let acc, block = m.block m acc block in
@@ -451,6 +560,8 @@ module Utils = struct
         | _ -> assert false
       in
       Block.meta ~ext b
+
+    let textloc b = b |> meta |> Meta.textloc
   end
 
   module Inline = struct
@@ -551,6 +662,8 @@ module Utils = struct
         | _ -> assert false
       in
       Inline.meta ~ext i
+
+    let textloc i = i |> meta |> Meta.textloc
   end
 end
 
@@ -561,4 +674,147 @@ module Bol = struct
     match bol with
     | `Block b -> b |> Utils.Block.meta |> Meta.textloc
     | `Inline i -> i |> Utils.Inline.meta |> Meta.textloc
+end
+
+module Ast_printer = struct
+  open Cmarkit
+  open Format
+
+  (** Prints the location of a Meta.t node *)
+  let pp_loc ppf meta =
+    let loc = Meta.textloc meta in
+    if Textloc.is_none loc then fprintf ppf "<no location>"
+    else Textloc.pp_dump ppf loc
+
+  (** Prints the location of attributes if they exist *)
+  let pp_attrs ppf (attrs, meta) =
+    if not (Attributes.is_empty attrs) then
+      fprintf ppf "@ (Attrs : %a)" pp_loc meta
+
+  (** Recursively prints Inline.t nodes with their locations and attributes *)
+  let rec pp_inline ppf inline =
+    let meta = Utils.Inline.meta inline in
+    fprintf ppf "@[<hv 2>(";
+    (match inline with
+    (* Standard Cmarkit Inlines *)
+    | Inline.Autolink ((_al, attrs), _) ->
+        fprintf ppf "Autolink%a" pp_attrs attrs
+    | Inline.Break (b, _) ->
+        let t =
+          match Inline.Break.type' b with `Hard -> "Hard" | `Soft -> "Soft"
+        in
+        fprintf ppf "Break(%s)" t
+    | Inline.Code_span ((_cs, attrs), _) ->
+        fprintf ppf "Code_span%a" pp_attrs attrs
+    | Inline.Emphasis ((e, attrs), _) ->
+        fprintf ppf "Emphasis%a@ %a" pp_attrs attrs pp_inline
+          (Inline.Emphasis.inline e)
+    | Inline.Image ((l, attrs), _) ->
+        fprintf ppf "Image%a@ %a" pp_attrs attrs pp_inline (Inline.Link.text l)
+    | Inline.Inlines (is, _) ->
+        fprintf ppf "Inlines@ @[<v>%a@]" (pp_print_list pp_inline) is
+    | Inline.Link ((l, attrs), _) ->
+        fprintf ppf "Link%a@ %a" pp_attrs attrs pp_inline (Inline.Link.text l)
+    | Inline.Raw_html _ -> fprintf ppf "Raw_html"
+    | Inline.Strong_emphasis ((e, attrs), _) ->
+        fprintf ppf "Strong_emphasis%a@ %a" pp_attrs attrs pp_inline
+          (Inline.Emphasis.inline e)
+    | Inline.Text ((txt, attrs), _) ->
+        fprintf ppf "Text%a %S" pp_attrs attrs txt
+    (* Cmarkit Extension Inlines *)
+    | Inline.Ext_strikethrough ((strk, attrs), _) ->
+        fprintf ppf "Ext_strikethrough%a@ %a" pp_attrs attrs pp_inline
+          (Inline.Strikethrough.inline strk)
+    | Inline.Ext_math_span ((ms, attrs), _) ->
+        let t = if Inline.Math_span.display ms then "Display" else "Inline" in
+        fprintf ppf "Ext_math_span(%s)%a" t pp_attrs attrs
+    | Inline.Ext_attrs (attr_span, _) ->
+        fprintf ppf "Ext_attrs%a@ %a" pp_attrs
+          (Inline.Attributes_span.attrs attr_span)
+          pp_inline
+          (Inline.Attributes_span.content attr_span)
+    (* Slipshow Inlines *)
+    | S_inline (Image _) -> fprintf ppf "S_inline(Image)"
+    | S_inline (Svg _) -> fprintf ppf "S_inline(Svg)"
+    | S_inline (Video _) -> fprintf ppf "S_inline(Video)"
+    | S_inline (Audio _) -> fprintf ppf "S_inline(Audio)"
+    | S_inline (Pdf _) -> fprintf ppf "S_inline(Pdf)"
+    | S_inline (Hand_drawn _) -> fprintf ppf "S_inline(Hand_drawn)"
+    (* Catch-all for open variants *)
+    | _ -> fprintf ppf "Unknown_inline");
+
+    fprintf ppf "@ : %a)@]" pp_loc meta
+
+  (** Recursively prints Block.t nodes with their locations and attributes *)
+  let rec pp_block ppf block =
+    let meta = Utils.Block.meta block in
+    fprintf ppf "@[<hv 2>(";
+    (match block with
+    (* Standard Cmarkit Blocks *)
+    | Block.Blank_line _ -> fprintf ppf "Blank_line"
+    | Block.Block_quote ((bq, attrs), _) ->
+        fprintf ppf "Block_quote%a@ %a" pp_attrs attrs pp_block
+          (Block.Block_quote.block bq)
+    | Block.Blocks (bs, _) ->
+        fprintf ppf "Blocks@ @[<v>%a@]" (pp_print_list pp_block) bs
+    | Block.Code_block ((_cb, attrs), _) ->
+        fprintf ppf "Code_block%a" pp_attrs attrs
+    | Block.Heading ((h, attrs), _) ->
+        fprintf ppf "Heading(lvl %d)%a@ %a" (Block.Heading.level h) pp_attrs
+          attrs pp_inline (Block.Heading.inline h)
+    | Block.Html_block ((_hb, attrs), _) ->
+        fprintf ppf "Html_block%a" pp_attrs attrs
+    | Block.Link_reference_definition ((_ld, attrs), _) ->
+        fprintf ppf "Link_reference_definition%a" pp_attrs attrs
+    | Block.List ((l, attrs), _) ->
+        fprintf ppf "List%a@ @[<v>%a@]" pp_attrs attrs
+          (pp_print_list (fun fmt (item, _) ->
+               pp_block fmt (Block.List_item.block item)))
+          (Block.List'.items l)
+    | Block.Paragraph ((p, attrs), _) ->
+        fprintf ppf "Paragraph%a@ %a" pp_attrs attrs pp_inline
+          (Block.Paragraph.inline p)
+    | Block.Thematic_break ((_tb, attrs), _) ->
+        fprintf ppf "Thematic_break%a" pp_attrs attrs
+    (* Cmarkit Extension Blocks *)
+    | Block.Ext_math_block ((_mb, attrs), _) ->
+        fprintf ppf "Ext_math_block%a" pp_attrs attrs
+    | Block.Ext_table ((_t, attrs), _) ->
+        fprintf ppf "Ext_table%a" pp_attrs attrs
+    | Block.Ext_footnote_definition ((_fn, attrs), _) ->
+        fprintf ppf "Ext_footnote_definition%a" pp_attrs attrs
+    | Block.Ext_standalone_attributes attrs ->
+        fprintf ppf "Ext_standalone_attributes%a" pp_attrs attrs
+    | Block.Ext_attribute_definition ((_def, attrs), _) ->
+        fprintf ppf "Ext_attribute_definition%a" pp_attrs attrs
+    (* Slipshow Blocks *)
+    | S_block (Included ((fpath, attrs), _)) ->
+        fprintf ppf "Included%a@ %a" pp_attrs attrs Fpath.pp fpath
+    | S_block (Div ((b, attrs), _)) ->
+        fprintf ppf "Div%a@ %a" pp_attrs attrs pp_block b
+    | S_block (Slide (({ content; title }, attrs), _)) ->
+        fprintf ppf "Slide%a@ Title: %a@ Content: %a" pp_attrs attrs
+          (pp_print_option (fun fmt (t, _) -> pp_inline fmt t))
+          title pp_block content
+    | S_block (Slip ((b, attrs), _)) ->
+        fprintf ppf "Slip%a@ %a" pp_attrs attrs pp_block b
+    | S_block (SlipScript ((_s, attrs), _)) ->
+        fprintf ppf "SlipScript%a" pp_attrs attrs
+    | S_block (MermaidJS ((_s, attrs), _)) ->
+        fprintf ppf "MermaidJS%a" pp_attrs attrs
+    | S_block (Carousel ((l, attrs), _)) ->
+        fprintf ppf "Carousel%a@ @[<v>%a@]" pp_attrs attrs
+          (pp_print_list pp_block) l
+    (* Catch-all for open variants *)
+    | _ -> fprintf ppf "Unknown_block");
+
+    fprintf ppf "@ : %a)@]" pp_loc meta
+
+  (** Main entry point for the Bol type *)
+  let pp_bol ppf = function
+    | `Block b -> pp_block ppf b
+    | `Inline i -> pp_inline ppf i
+
+  (** Convenience function to print a document directly to a string *)
+  let show_block block = Format.asprintf "%a" pp_block block
 end

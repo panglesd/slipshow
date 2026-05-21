@@ -182,7 +182,7 @@ let preview ?options ?slipshow_js ?read_file previewer source =
   let starting_state = !(previewer.stage) in
   let has_speaker_view = previewer.include_speaker_view in
   let slipshow, warnings =
-    Slipshow.convert ~file:"-" ~has_speaker_view ?slipshow_js ?options
+    Slipshow.convert ~file:(Fpath.v "-") ~has_speaker_view ?slipshow_js ?options
       ?read_file ~autofocus:false ~starting_state source
   in
   let warnings =

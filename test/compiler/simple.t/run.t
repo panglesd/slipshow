@@ -9,10 +9,10 @@ We can compile the file using the slip_of_mark binary
           <div id="slipshow-main">
             <div id="slipshow-content">
               <svg id="slipshow-drawing-elem" style="overflow:visible; position: absolute; z-index:1000; pointer-events: none"></svg>
-              <div class="slipshow-rescaler" slip enter-at-unpause=~duration:0>
+              <div class="slipshow-rescaler" enter-at-unpause=~duration:0 slip>
   <div class="slip">
   <div class="slip-body">
-  <div>
+  <div src=file.md include>
   <h1><span>A title</span></h1>
   <div pause></div>
   <p><span>A word </span><span id="id" emph-at-unpause step>and</span><span> some other words.</span></p>
@@ -49,10 +49,10 @@ If we do not pass an input file, it gets its value from stdin
           <div id="slipshow-main">
             <div id="slipshow-content">
               <svg id="slipshow-drawing-elem" style="overflow:visible; position: absolute; z-index:1000; pointer-events: none"></svg>
-              <div class="slipshow-rescaler" slip enter-at-unpause=~duration:0>
+              <div class="slipshow-rescaler" enter-at-unpause=~duration:0 slip>
   <div class="slip">
   <div class="slip-body">
-  <div>
+  <div src=- include>
   <h1><span>Title</span></h1>
   <p><span>Paragraph</span></p>
 

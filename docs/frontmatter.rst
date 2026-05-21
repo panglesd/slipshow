@@ -1,6 +1,6 @@
-===========
-Frontmatter
-===========
+=============
+ Frontmatter
+=============
 
 The frontmatter allows to define metadata for the whole presentation. For every CLI option, there is a corresponding frontmatter option.
 
@@ -22,8 +22,14 @@ the values. I'll switch to yaml at some point...
 
 The current options for the frontmatter are:
 
-- ``toplevel-attributes``, for defining the attributes of the topmost
-  container. Accepts a string with the syntax for attributes.
+- ``attributes``, for defining the attributes of the elements in the current
+  file. Accepts a string with the syntax for attributes. Default value is an
+  empty attribute.
+
+- ``toplevel-attributes``, for defining the attributes of the whole presentation
+  (useful in multi-file setting). Accepts a string with the syntax for
+  attributes. Useful to control the first action executed. Default is ``slip
+  enter="~duration:0"``.
 
 - ``theme``, for selecting a theme. Accepts a string: either ``"default"``,
   ``"vanier"`` or a path to a file.
@@ -50,6 +56,5 @@ Multifile presentations
 =======================
 
 When you split your presentation in multiple files, you can define a frontmatter
-in the included files. All options can be duplicated, and will be combined when
+in the included files. The fields present in multiple files will be combined when
 applicable. When not applicable, a warning will be raised.
-``toplevel-attributes`` refers to the included file.

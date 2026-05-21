@@ -11,15 +11,17 @@ type t =
   | InconsistentOption of { option_name : string; loc1 : loc; loc2 : loc }
   | MissingID of { id : string; loc : loc }
   | UnknownAttribute of { attr : string; loc : loc }
-  | General of {
-      code : string;
-      msg : string;
-      labels : (string * loc) list;
-      notes : string list;
+  | UnknownFrontmatterField of {
+      key : string;
+      loc : loc;
+      allowed_keys : string list;
     }
+  | FrontmatterParsing of { key : string; msg : string; loc : loc }
+  | InvalidFrontmatterLine of { loc : loc }
+  | ChildrenClassWithValue of { loc : loc }
 
 val pp : Format.formatter -> t -> unit
-val to_grace : (string -> Grace.Source.t) -> t -> t Grace.Diagnostic.t option
+val to_grace : (Fpath.t -> Grace.Source.t) -> t -> t Grace.Diagnostic.t option
 val add : t -> unit
 val with_ : (unit -> 'a) -> 'a * t list
 val to_code : t -> string

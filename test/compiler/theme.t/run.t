@@ -4,7 +4,11 @@ No theme provided or "theme:default" is the same
   $ slipshow compile default.md -o default_theme2.html
 
   $ diff -s default_theme1.html default_theme2.html
-  Files default_theme1.html and default_theme2.html are identical
+  1068c1068
+  < &lt;div src=empty.md include&gt;
+  ---
+  > &lt;div src=default.md include&gt;
+  [1]
 
 In those cases, the default theme is included
 

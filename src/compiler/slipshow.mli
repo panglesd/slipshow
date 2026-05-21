@@ -1,5 +1,9 @@
 module Asset = Asset
 module Frontmatter = Frontmatter
+module Compile = Compile
+module Ast = Ast
+module Id_map = Id_map
+module Action_plan = Action_plan
 
 type starting_state = int
 type delayed
@@ -12,8 +16,9 @@ val string_to_delayed : string -> (delayed * string) option
 
 type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
 (** A value of type [file_reader], given a path [p], outputs:
-    - [Ok (Some content)] if it could read the file, [content] is the content.
-      In this case, the content will be included in the output.
+    - [Ok (Some (content, full_path))] if it could read the file, [content] is
+      the content and [full_path] is the full path. In this case, the content
+      will be included in the output.
     - [Ok None] if it decided not to read the file. In this case, the file will
       be linked.
     - [Error (`Msg m)] if it decided to try to read the file, but got an error.
@@ -23,7 +28,7 @@ type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
 val delayed :
   ?options:Frontmatter.Global.t ->
   ?slipshow_js:Asset.t ->
-  ?file:string ->
+  ?file:Fpath.t ->
   ?read_file:file_reader ->
   has_speaker_view:bool ->
   string ->
@@ -40,7 +45,7 @@ val convert :
   has_speaker_view:bool ->
   ?autofocus:bool ->
   ?slipshow_js:Asset.t ->
-  ?file:string ->
+  ?file:Fpath.t ->
   ?starting_state:starting_state ->
   ?read_file:file_reader ->
   string ->
