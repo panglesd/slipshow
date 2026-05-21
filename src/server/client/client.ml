@@ -11,7 +11,7 @@ let uri =
   let* route_segment = route_segment |> Jv.to_string |> B64.decode in
   let* route_segment =
     try Ok (Marshal.from_string route_segment 0)
-    with Invalid_argument s ->
+    with Invalid_argument s | Failure s ->
       Error (`Msg ("Error during unmarshalling: " ^ s))
   in
   let route_segment = Jstr.v "polling" :: List.map Jstr.v route_segment in
