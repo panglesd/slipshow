@@ -1,6 +1,6 @@
 let ( let+ ) a b = Result.map b a
 let ( let* ) a b = Result.bind a b
-let _ = ( let+ )
+let () = ignore ( let* )
 
 module Io = struct
   let write filename content =
@@ -43,10 +43,11 @@ let with_read_file parent f =
 
 let compile ~input ~output =
   let (html, warnings), used_files =
-    let parent =
-      match input with `Stdin -> Fpath.v "./" | `File f -> Fpath.parent f
+    let parent, file =
+      match input with
+      | `Stdin -> (Fpath.v "./", Fpath.v "-")
+      | `File f -> Fpath.split_base f
     in
-    let file = match input with `File f -> f | _ -> Fpath.v "-" in
     with_read_file parent @@ fun read_file ->
     Slipshow.convert ~has_speaker_view:true ~read_file file
   in
@@ -84,7 +85,8 @@ let watch ~input ~output =
 let serve ~input ~output ~port =
   let compile () =
     let res, war =
-      with_read_file (Fpath.parent input) @@ fun read_file ->
+      let parent, input = Fpath.split_base input in
+      with_read_file parent @@ fun read_file ->
       let result, warnings =
         Slipshow.Compile.compile_all ~read_file Fpath.Map.empty input
       in
@@ -104,11 +106,14 @@ let serve ~input ~output ~port =
   Ok ()
 
 let markdown_compile ~input ~output =
-  let* content = Io.read input in
+  let parent, file =
+    match input with
+    | `Stdin -> (Fpath.v "./", Fpath.v "-")
+    | `File f -> Fpath.split_base f
+  in
   let md, _used_files =
-    with_read_file
-      (match input with `Stdin -> Fpath.v "./" | `File f -> Fpath.parent f)
-    @@ fun read_file -> Slipshow.convert_to_md ~read_file content
+    with_read_file parent @@ fun read_file ->
+    Slipshow.convert_to_md ~read_file file
   in
   match output with
   | `Stdout ->
