@@ -55,11 +55,11 @@ let choose_roots rs =
 |html}
     (rs
     |> List.map (fun p ->
-        Format.asprintf "<li><a href='/preview/%s'>%a</a></li>"
+        Format.asprintf "<li><a href='/preview/%s'>%s</a></li>"
           (p |> Fpath.segs
           |> List.map Dream.to_percent_encoded
           |> String.concat "/")
-          Fpath.pp p)
+          (p |> Fpath.to_string |> Dream.html_escape))
     |> String.concat "")
 
 let pong () =
