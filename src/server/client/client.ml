@@ -2,18 +2,20 @@ module B64 = Base64
 open Brr
 
 let uri =
+  let ( let* ) x f = Result.bind x f in
+  let ( let+ ) x f = Result.map f x in
   let uri = Window.location G.window in
   let uri = Uri.with_fragment_params uri (Uri.Params.of_jstr (Jstr.v "")) in
   let route_segment = Jv.get (Brr.Window.to_jv Brr.G.window) "route_segment" in
   Console.(log [ route_segment ]);
-  let route_segment =
-    B64.decode (route_segment |> Jv.to_string) |> Result.get_ok |> fun x ->
-    Marshal.from_string x 0
-  in
+  let* route_segment = route_segment |> Jv.to_string |> B64.decode in
+  let route_segment = Marshal.from_string route_segment 0 in
   Console.(log [ Jv.of_list Jv.of_jstr route_segment ]);
   let route_segment = Jstr.v "polling" :: List.map Jstr.v route_segment in
-  let uri = Uri.with_path_segments uri route_segment in
-  uri |> Result.get_ok |> Uri.to_jstr
+  let+ uri =
+    Uri.with_path_segments uri route_segment |> Result.map_error (fun e -> `J e)
+  in
+  Uri.to_jstr uri
 
 let elem = El.find_first_by_selector (Jstr.v "#iframes") |> Option.get
 
@@ -74,21 +76,21 @@ let handle_answer = function
       Previewer.preview_compiled previewer data.content;
       Fut.return (Ok ())
 
-let proto_request_single ?signal msg =
+let proto_request_single ?signal uri msg =
   let open Brr_io.Fetch in
   let body = Body.of_jstr !!(Client_to_server.to_string msg) in
   let init = Request.init ~method':!!"post" ?signal ~body () in
   let req = Request.v ~init uri in
   Brr_io.Fetch.request req
 
-let rec proto_request msg =
+let rec proto_request uri msg =
   let open Fut.Result_syntax in
   let* raw_data =
     let abort = Abort.controller () in
     let timeout = G.set_timeout ~ms:10000 @@ fun () -> Abort.abort abort in
     let signal = Abort.signal abort in
     let open Fut.Syntax in
-    let* x = proto_request_single ~signal msg in
+    let* x = proto_request_single ~signal uri msg in
     G.stop_timer timeout;
     match x with
     | Error _ as e -> Fut.return e
@@ -102,9 +104,9 @@ let rec proto_request msg =
       Fut.return (Error (Jv.Error.v !!"Could not deserialize data from server"))
   | Some msg -> handle_answer msg
 
-and do_and_retry msg =
+and do_and_retry uri msg =
   let open Fut.Syntax in
-  let* res = proto_request msg in
+  let* res = proto_request uri msg in
   match res with
   | Ok () ->
       set_connected ();
@@ -114,7 +116,7 @@ and do_and_retry msg =
       Console.error [ e ];
       let rec wait_for_reconnect () =
         let* () = Fut.tick ~ms:3000 in
-        let* result = proto_request Ping in
+        let* result = proto_request uri Ping in
         match result with
         | Error e ->
             Console.error [ e ];
@@ -123,14 +125,22 @@ and do_and_retry msg =
       in
       let* () = wait_for_reconnect () in
       set_connected ();
-      do_and_retry msg
+      do_and_retry uri msg
 
-let recv () =
+let recv uri () =
   let rec recv_updates () =
     let open Fut.Syntax in
-    let* () = do_and_retry (UpdateFrom !version) in
+    let* () = do_and_retry uri (UpdateFrom !version) in
     recv_updates ()
   in
   recv_updates ()
 
-let _ : unit Fut.t = recv ()
+let _ : unit Fut.t =
+  match uri with
+  | Error (`Msg s) ->
+      Console.(error [ s ]);
+      Fut.return ()
+  | Error (`J s) ->
+      Console.(error [ s ]);
+      Fut.return ()
+  | Ok uri -> recv uri ()
