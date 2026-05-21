@@ -98,7 +98,7 @@ module State = struct
       match Hashtbl.find_opt roots_state root with
       | None -> Lwt_condition.create ()
       | Some { condition; _ } ->
-          Lwt_condition.signal condition ();
+          Lwt_condition.broadcast condition ();
           condition
     in
     let version = generate_version () in
