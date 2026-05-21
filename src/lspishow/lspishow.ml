@@ -363,7 +363,7 @@ class lsp_server =
       let ( let+ ) x f = Option.iter f x in
       let () =
         let+ file = Rev_deps.get_roots file |> Fpath.Set.choose_opt in
-        let html, warnings =
+        let html, _warnings =
           let read_file = State.Read_file.without (Fpath.parent file) in
           Slipshow.convert ~has_speaker_view:true ~read_file file
         in
