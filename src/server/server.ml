@@ -74,118 +74,105 @@ let do_serve ~port ((roots, get_roots) : roots) =
   (* We need this, otherwise the program is killed when sending a long string to
      a closed connection... See https://github.com/aantron/dream/issues/378 *)
 
-  (* let cond = Lwt_condition.create () in *)
-
   Logs.app (fun m ->
       m
         "Visit http://127.0.0.1:%d to view your presentation, with \
          auto-reloading on file changes."
         port);
   let open Lwt.Syntax in
-  (* let k s = *)
-  (*   let new_content = Slipshow.delayed_to_string s in *)
-  (*   Lwt_condition.broadcast cond new_content *)
-  (* in *)
-  (* let wac = watch_and_compile compile k in *)
-  let dream =
-    (* We serve on [127.0.0.1] since in musl libc library, localhost would
-             trigger a DNS request (which might not resolve) *)
-    Dream.serve ~port ~interface:"127.0.0.1"
-    @@ Dream.logger
-    @@ Dream.router
-         [
-           Dream.get "/" (fun _ ->
-               Dream.log "A browser reloaded";
-               let rs = get_roots () in
-               match rs with
-               | [] -> Dream.html (html_source (Fpath.v "/"))
-               | [ unique_root ] -> Dream.html (html_source unique_root)
-               | rs -> Dream.html (choose_roots rs));
-           Dream.get "/preview/**" (fun req ->
-               let file = Dream.target req in
-               let file =
-                 let n = String.length "/preview/" in
-                 String.sub file n (String.length file - n)
-               in
-               Format.eprintf "TARGET is %s\n%!" file;
-               let file = Fpath.v file in
-               Dream.log "A browser reloaded";
-               Dream.html (html_source file));
-           Dream.post "/polling/**" (fun req ->
-               let file = Dream.target req in
-               let file =
-                 let n = String.length "/polling/" in
-                 String.sub file n (String.length file - n)
-               in
-               Format.eprintf "TARGET is %s\n%!" file;
-               let file = Fpath.v file in
-               let root = roots file in
-               match root with
-               | None -> Dream.respond ~status:`Bad_Request "TODO1"
-               | Some root -> (
-                   let* body = Dream.body req in
-                   let msg = Proto.Client_to_server.of_string body in
-                   match msg with
-                   | None -> Dream.respond ~status:`Bad_Request "TODO2"
-                   | Some Ping -> pong ()
-                   | Some (UpdateFrom version) -> (
-                       if not @@ String.equal version root.version then
-                         let content =
-                           Slipshow.delayed_from_units ~has_speaker_view:false
-                             root.units
-                         in
-                         let warnings =
-                           Slipshow.to_grace root.units root.diagnostics
-                         in
-                         let warnings =
-                           List.map
-                             (Format.asprintf "%a@.@."
-                                (Grace_ansi_renderer.pp_diagnostic ?config:None
-                                   ~code_to_string:Diagnosis.to_code))
-                             warnings
-                         in
-                         let warnings =
-                           List.map (Ansi.process (Ansi.create ())) warnings
-                         in
-                         let warnings = warnings |> String.concat "" in
-                         let content =
-                           {
-                             Proto.content = (content, warnings);
-                             version = root.version;
-                           }
-                         in
-                         send_update content
-                       else
-                         let gate =
-                           let+ () = Lwt_condition.wait root.condition in
-                           `Pong
-                         in
-                         let timeout =
-                           let+ () = Lwt_unix.sleep 7. in
-                           `Pong
-                         in
-                         let* event = Lwt.pick [ gate; timeout ] in
-                         match event with
-                         | `Pong -> pong ()
-                         | `Update -> (
-                             let root = roots file in
-                             match root with
-                             | None ->
-                                 Dream.respond ~status:`Bad_Request "TODO3"
-                             | Some root ->
-                                 let content =
-                                   Slipshow.delayed_from_units
-                                     ~has_speaker_view:false root.units
-                                 in
-                                 let content =
-                                   {
-                                     Proto.content = (content, "");
-                                     version = root.version;
-                                   }
-                                 in
-                                 send_update content))));
-         ]
-  in
-  (* Lwt.both  *) dream
-(* wac *)
-(* |> snd *)
+  (* We serve on [127.0.0.1] since in musl libc library, localhost would trigger
+     a DNS request (which might not resolve) *)
+  Dream.serve ~port ~interface:"127.0.0.1"
+  @@ Dream.logger
+  @@ Dream.router
+       [
+         Dream.get "/" (fun _ ->
+             Dream.log "A browser reloaded";
+             let rs = get_roots () in
+             match rs with
+             | [] -> Dream.html (html_source (Fpath.v "/"))
+             | [ unique_root ] -> Dream.html (html_source unique_root)
+             | rs -> Dream.html (choose_roots rs));
+         Dream.get "/preview/**" (fun req ->
+             let file = Dream.target req in
+             let file =
+               let n = String.length "/preview/" in
+               String.sub file n (String.length file - n)
+             in
+             Format.eprintf "TARGET is %s\n%!" file;
+             let file = Fpath.v file in
+             Dream.log "A browser reloaded";
+             Dream.html (html_source file));
+         Dream.post "/polling/**" (fun req ->
+             let file = Dream.target req in
+             let file =
+               let n = String.length "/polling/" in
+               String.sub file n (String.length file - n)
+             in
+             Format.eprintf "TARGET is %s\n%!" file;
+             let file = Fpath.v file in
+             let root = roots file in
+             match root with
+             | None -> Dream.respond ~status:`Bad_Request "TODO1"
+             | Some root -> (
+                 let* body = Dream.body req in
+                 let msg = Proto.Client_to_server.of_string body in
+                 match msg with
+                 | None -> Dream.respond ~status:`Bad_Request "TODO2"
+                 | Some Ping -> pong ()
+                 | Some (UpdateFrom version) -> (
+                     if not @@ String.equal version root.version then
+                       let content =
+                         Slipshow.delayed_from_units ~has_speaker_view:false
+                           root.units
+                       in
+                       let warnings =
+                         Slipshow.to_grace root.units root.diagnostics
+                       in
+                       let warnings =
+                         List.map
+                           (Format.asprintf "%a@.@."
+                              (Grace_ansi_renderer.pp_diagnostic ?config:None
+                                 ~code_to_string:Diagnosis.to_code))
+                           warnings
+                       in
+                       let warnings =
+                         List.map (Ansi.process (Ansi.create ())) warnings
+                       in
+                       let warnings = warnings |> String.concat "" in
+                       let content =
+                         {
+                           Proto.content = (content, warnings);
+                           version = root.version;
+                         }
+                       in
+                       send_update content
+                     else
+                       let gate =
+                         let+ () = Lwt_condition.wait root.condition in
+                         `Pong
+                       in
+                       let timeout =
+                         let+ () = Lwt_unix.sleep 7. in
+                         `Pong
+                       in
+                       let* event = Lwt.pick [ gate; timeout ] in
+                       match event with
+                       | `Pong -> pong ()
+                       | `Update -> (
+                           let root = roots file in
+                           match root with
+                           | None -> Dream.respond ~status:`Bad_Request "TODO3"
+                           | Some root ->
+                               let content =
+                                 Slipshow.delayed_from_units
+                                   ~has_speaker_view:false root.units
+                               in
+                               let content =
+                                 {
+                                   Proto.content = (content, "");
+                                   version = root.version;
+                                 }
+                               in
+                               send_update content))));
+       ]
