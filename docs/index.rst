@@ -40,6 +40,7 @@ We advise you to start by reading the tutorials, starting with the :doc:`first <
 
    Introduction <self>
    quick-start
+   editor-setup
    examples
 
 .. toctree::
