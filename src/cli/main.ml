@@ -183,9 +183,16 @@ module Theme = struct
 end
 
 module Lsp = struct
+  let stdio =
+    let doc =
+      "Does nothing, but some editors start their LSP with this flag, so it \
+       needs to be accepted."
+    in
+    Arg.(value & flag & info ~doc [ "stdio" ])
+
   let term =
     let open Term.Syntax in
-    let+ () = Term.const () in
+    let+ () = Term.const () and+ _ = stdio in
     Lspishow.run ()
 
   let cmd =
