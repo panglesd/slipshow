@@ -1,3 +1,4 @@
+  $ export SLIPSHOW__SECRET__NO_ENGINE=TRUE
   $ slipshow compile drawings.md
 
   $ show_source drawings.html | grep x-data= -A 2 | cut -c 1-250

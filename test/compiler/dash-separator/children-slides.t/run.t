@@ -1,3 +1,4 @@
+  $ export SLIPSHOW__SECRET__NO_ENGINE=TRUE
   $ slipshow compile slides.md
   warning: Non standard attribute: 'key'
       ┌─ slides.md:24:2

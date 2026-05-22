@@ -1,5 +1,6 @@
 We can compile the file using the slip_of_mark binary
 
+  $ export SLIPSHOW__SECRET__NO_ENGINE=TRUE
   $ slipshow compile slides.md
 
   $ show_source slides.html | grep "<body>" -A 16

@@ -64,3 +64,6 @@ val convert_to_md : read_file:file_reader -> Fpath.t -> string
 
 val to_grace :
   Ast.units -> Diagnosis.t list -> Diagnosis.t Grace.Diagnostic.t list
+
+val set_no_engine : unit -> unit
+(** Internal only *)

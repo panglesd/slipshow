@@ -1,5 +1,6 @@
 We can compile the file using the slip_of_mark binary
 
+  $ export SLIPSHOW__SECRET__NO_ENGINE=TRUE
   $ slipshow compile -o file.html file.md
 
   $ show_source file.html | grep "<body>" -A 13
@@ -23,7 +24,7 @@ $ du -h file.html
 
 What happens if the file does not exists? There is an error message...
 
-  $ slipshow compile -o file.html non-existing-file.md
+  $ SLIPSHOW__SECRET__NO_ENGINE=TRUE slipshow compile -o file.html non-existing-file.md
   warning: file 'non-existing-file.md' could not be read: non-existing-file.md: No such file or directory
   
 
