@@ -60,12 +60,15 @@ module Ast_printer = struct
           pp_inline
           (Inline.Attributes_span.content attr_span)
     (* Slipshow Inlines *)
-    | S_inline (Image _) -> fprintf ppf "S_inline(Image)"
-    | S_inline (Svg _) -> fprintf ppf "S_inline(Svg)"
-    | S_inline (Video _) -> fprintf ppf "S_inline(Video)"
-    | S_inline (Audio _) -> fprintf ppf "S_inline(Audio)"
-    | S_inline (Pdf _) -> fprintf ppf "S_inline(Pdf)"
-    | S_inline (Hand_drawn _) -> fprintf ppf "S_inline(Hand_drawn)"
+    | S_inline i -> (
+        match i with
+        | Image _ -> fprintf ppf "S_inline(Image)"
+        | Svg _ -> fprintf ppf "S_inline(Svg)"
+        | Video _ -> fprintf ppf "S_inline(Video)"
+        | Audio _ -> fprintf ppf "S_inline(Audio)"
+        | Pdf _ -> fprintf ppf "S_inline(Pdf)"
+        | Html _ -> fprintf ppf "S_inline(Html)"
+        | Hand_drawn _ -> fprintf ppf "S_inline(Hand_drawn)")
     (* Catch-all for open variants *)
     | _ -> fprintf ppf "Unknown_inline");
 
@@ -114,23 +117,26 @@ module Ast_printer = struct
     | Block.Ext_attribute_definition ((_def, attrs), _) ->
         fprintf ppf "Ext_attribute_definition%a" pp_attrs attrs
     (* Slipshow Blocks *)
-    | S_block (Included ((fpath, attrs), _)) ->
-        fprintf ppf "Included%a@ %a" pp_attrs attrs Fpath.pp fpath
-    | S_block (Div ((b, attrs), _)) ->
-        fprintf ppf "Div%a@ %a" pp_attrs attrs pp_block b
-    | S_block (Slide (({ content; title }, attrs), _)) ->
-        fprintf ppf "Slide%a@ Title: %a@ Content: %a" pp_attrs attrs
-          (pp_print_option (fun fmt (t, _) -> pp_inline fmt t))
-          title pp_block content
-    | S_block (Slip ((b, attrs), _)) ->
-        fprintf ppf "Slip%a@ %a" pp_attrs attrs pp_block b
-    | S_block (SlipScript ((_s, attrs), _)) ->
-        fprintf ppf "SlipScript%a" pp_attrs attrs
-    | S_block (MermaidJS ((_s, attrs), _)) ->
-        fprintf ppf "MermaidJS%a" pp_attrs attrs
-    | S_block (Carousel ((l, attrs), _)) ->
-        fprintf ppf "Carousel%a@ @[<v>%a@]" pp_attrs attrs
-          (pp_print_list pp_block) l
+    | S_block b -> (
+        match b with
+        | Included ((fpath, attrs), _) ->
+            fprintf ppf "Included%a@ %a" pp_attrs attrs Fpath.pp fpath
+        | IncludedHTML ((fpath, attrs), _) ->
+            fprintf ppf "IncludedHTML%a@ %a" pp_attrs attrs Fpath.pp fpath
+        | Div ((b, attrs), _) ->
+            fprintf ppf "Div%a@ %a" pp_attrs attrs pp_block b
+        | Slide (({ content; title }, attrs), _) ->
+            fprintf ppf "Slide%a@ Title: %a@ Content: %a" pp_attrs attrs
+              (pp_print_option (fun fmt (t, _) -> pp_inline fmt t))
+              title pp_block content
+        | Slip ((b, attrs), _) ->
+            fprintf ppf "Slip%a@ %a" pp_attrs attrs pp_block b
+        | SlipScript ((_s, attrs), _) ->
+            fprintf ppf "SlipScript%a" pp_attrs attrs
+        | MermaidJS ((_s, attrs), _) -> fprintf ppf "MermaidJS%a" pp_attrs attrs
+        | Carousel ((l, attrs), _) ->
+            fprintf ppf "Carousel%a@ @[<v>%a@]" pp_attrs attrs
+              (pp_print_list pp_block) l)
     (* Catch-all for open variants *)
     | _ -> fprintf ppf "Unknown_block");
 
