@@ -84,6 +84,9 @@ module Stage1 = struct
         match Block.Code_block.language_of_info_string info with
         | Some ("slip-script", _) -> Some (Ast.slipscript ((cb, attrs), meta2))
         | Some ("=mermaid", _) -> Some (Ast.mermaid_js ((cb, attrs), meta2))
+        | Some ("=html", _) ->
+            let h = Block.Code_block.code cb in
+            Some (Block.Html_block ((h, attrs), meta2))
         | _ -> Some (Block.Code_block ((cb, attrs), meta2)))
 
   let handle_includes m ~htbl_include current_path (attrs, meta) =
