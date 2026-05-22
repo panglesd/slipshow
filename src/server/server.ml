@@ -90,7 +90,7 @@ let preview (roots, get_roots) req =
   let root = roots file in
   match root with
   | None -> home_page (roots, get_roots) req
-  | Some root ->
+  | Some _root ->
       Format.eprintf "TARGET is %a\n%!" Fpath.pp file;
       Dream.log "A browser reloaded";
       Dream.html (html_source file)
