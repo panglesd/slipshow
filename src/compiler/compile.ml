@@ -100,23 +100,34 @@ module Stage1 = struct
       Inline.Ext_attrs (span, meta2)
     else Inline.Code_span ((cs, (attrs, meta)), meta2)
 
+  let handle_md_includes m ~htbl_include current_path (attrs, meta)
+      filepath_meta src =
+    let relativized_path = Fpath.normalize @@ Fpath.( // ) current_path src in
+    let old_value =
+      Hashtbl.find_opt htbl_include relativized_path |> Option.value ~default:[]
+    in
+    let new_value = Meta.textloc filepath_meta :: old_value in
+    Hashtbl.replace htbl_include relativized_path new_value;
+    let attrs = Mapper.map_attrs m attrs in
+    `Map (Some (Ast.included ((relativized_path, (attrs, meta)), meta)))
+
   let handle_includes m ~htbl_include current_path (attrs, meta) =
     match
       ( Attributes.find Special_attrs.include_ attrs,
         Attributes.find Special_attrs.src attrs )
     with
     | Some (_, None), Some (_, Some ({ v = src; _ }, filepath_meta)) ->
-        let relativized_path =
-          Fpath.normalize @@ Fpath.( // ) current_path (Fpath.v src)
-        in
-        let old_value =
-          Hashtbl.find_opt htbl_include relativized_path
-          |> Option.value ~default:[]
-        in
-        let new_value = Meta.textloc filepath_meta :: old_value in
-        Hashtbl.replace htbl_include relativized_path new_value;
-        let attrs = Mapper.map_attrs m attrs in
-        `Map (Some (Ast.included ((relativized_path, (attrs, meta)), meta)))
+        let src = Fpath.v src in
+        if Fpath.has_ext ".html" src || Fpath.has_ext ".svg" src then
+          let relativized_path =
+            Fpath.normalize @@ Fpath.( // ) current_path src
+          in
+          let attrs = Mapper.map_attrs m attrs in
+          `Map
+            (Some (Ast.included_html ((relativized_path, (attrs, meta)), meta)))
+        else
+          handle_md_includes m ~htbl_include current_path (attrs, meta)
+            filepath_meta src
     | _ -> `Default
 
   let get_link_definition (defs : Cmarkit.Label.defs) l =
@@ -477,14 +488,21 @@ module Stage4 = struct
     Fpath.Map.update path add fpath_map
 
   let execute =
-    let block f (x, id_list) c =
+    let block f (files, id_list) c =
+      let files =
+        match c with
+        | Ast.S_block (IncludedHTML ((p, _), meta)) ->
+            fpath_map_add_to_list p (Id.gen (), Meta.textloc meta) files
+        | _ -> files
+      in
       let acc =
         match Ast.Utils.Block.get_attribute c with
-        | None -> (x, id_list)
+        | None -> (files, id_list)
         | Some (_, (attrs, meta)) -> (
             match Attributes.id attrs with
-            | None -> (x, id_list)
-            | Some id -> (x, { Id_map.id; elem = `Block c; meta } :: id_list))
+            | None -> (files, id_list)
+            | Some id -> (files, { Id_map.id; elem = `Block c; meta } :: id_list)
+            )
       in
       let res = Ast.Folder.continue_block f c acc in
       Folder.ret res
@@ -541,44 +559,8 @@ module Stage4 = struct
             acc)
         Id_map.SMap.empty id_list
     in
-    (* let id_map = *)
-    (*   Id_map.SMap.filter_map *)
-    (*     (fun id list -> *)
-    (*       match list with *)
-    (*       | [] -> assert false *)
-    (*       | [ x ] -> Some x *)
-    (*       | x :: _ :: _ -> *)
-    (*           let occurrences = *)
-    (*             List.map *)
-    (*               (fun { Id_map.id = _id, meta1; elem = _; meta = _; rev = _ } *)
-    (*                  -> Meta.textloc meta1) *)
-    (*               list *)
-    (*           in *)
-    (*           Diagnosis.add @@ DuplicateID { id; occurrences }; *)
-    (*           Some x) *)
-    (*     id_map *)
-    (* in *)
-    let files =
-      (* Fpath.Map.filter_map *)
-      (*   (fun path used_by -> *)
-      (*     let read_file : file_reader = read_file in *)
-      (*     let mode = `Base64 in *)
-      (*     match read_file path with *)
-      (*     | Ok (Some (content, _)) -> *)
-      (*         let used_by = List.map fst used_by in *)
-      (*         Some { Ast.Files.content; mode; used_by; path } *)
-      (*     | Ok None -> None *)
-      (*     | Error (`Msg error_msg) -> *)
-      (*         let locs = *)
-      (*           List.map (fun (_id, (_node, meta)) -> Meta.textloc meta) used_by *)
-      (*         in *)
-      (*         Diagnosis.add *)
-      (*           (MissingFile { file = Fpath.to_string path; error_msg; locs }); *)
-      (*         None) *)
-      asset_map
-    in
+    let files = asset_map in
     (md, files, id_map)
-  (* ({ Ast.doc = md; files; options = fm.global }, id_map) *)
 end
 
 let action_plan _ = failwith "TODO: Action plan"
@@ -754,6 +736,7 @@ let to_cmarkit units =
               Mapper.map_block m b
         in
         `Map b
+    | IncludedHTML ((_, _), _meta) -> `Map None
     | Div ((bq, _), meta) | Slip ((bq, _), meta) ->
         let b =
           match Mapper.map_block m bq with None -> Block.empty | Some b -> b

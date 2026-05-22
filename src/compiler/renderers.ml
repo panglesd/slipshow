@@ -62,6 +62,10 @@ module RenderAttrs = struct
     if Attributes.is_empty attrs then f ()
     else in_block c ~with_newline "span" attrs f
 
+  let with_attrs_div c ?(with_newline = true) attrs f =
+    if Attributes.is_empty attrs then f ()
+    else in_block c ~with_newline "div" attrs f
+
   let () = ignore with_attrs_span
 
   let block_lines c = function
@@ -97,13 +101,14 @@ let to_string = function
   (* Slipshow nodes *)
   | Ast.S_block b -> (
       match b with
-      | Ast.Included _ -> "Included"
-      | Ast.Div _ -> "Div"
-      | Ast.Slide _ -> "Slide"
-      | Ast.Slip _ -> "Slip"
-      | Ast.SlipScript _ -> "Slipscript"
-      | Ast.MermaidJS _ -> "MermaidJS"
-      | Ast.Carousel _ -> "Carousel")
+      | Included _ -> "Included"
+      | IncludedHTML _ -> "Included"
+      | Div _ -> "Div"
+      | Slide _ -> "Slide"
+      | Slip _ -> "Slip"
+      | SlipScript _ -> "Slipscript"
+      | MermaidJS _ -> "MermaidJS"
+      | Carousel _ -> "Carousel")
   | _ -> "other"
 
 let () = ignore to_string
@@ -289,6 +294,16 @@ let custom_html_renderer (units : Ast.units)
             | Some unit ->
                 let b = Doc.block unit.Ast.ast in
                 div c b attrs
+          in
+          true
+      | Ast.IncludedHTML ((p, (attrs, _)), _) ->
+          let () =
+            RenderAttrs.with_attrs_div c attrs @@ fun () ->
+            match
+              Fpath.Map.find_opt p (files : Ast.Files.read Ast.Files.map)
+            with
+            | Some { content = Ok (Some html); _ } -> C.string c html
+            | _ -> ()
           in
           true
       | Ast.Div ((b, (attrs, _)), _) ->

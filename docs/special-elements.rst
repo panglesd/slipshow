@@ -104,10 +104,14 @@ A carousel is created simply by giving it a ``carousel`` attribute. Carousels ar
 
 Carousel will take the height of their current displayed element, unless the ``carousel-fixed-size`` class is added to the carousel. In which case, it takes the height of the tallest element.
 
-Includes
---------
+Includes for Markdown and HTML
+------------------------------
 
-Includes are a way to include external markdown files, just as if they were inlined in the file. An include must be a standalone attribute. It must have the ``include`` boolean attribute and ``src="path/to/file.md"`` key-value attribute. It is possible to add other attributes as well.
+Includes are a way to include external markdown/HTML files, just as if they were
+inlined in the file, similar to the ``![](...)`` syntax but for blocks. An
+include must be a standalone attribute. It must have the ``include`` boolean
+attribute and ``src="path/to/file.md"`` key-value attribute. It is possible to
+add other attributes as well.
 
 .. code-block::
 
@@ -117,8 +121,12 @@ Includes are a way to include external markdown files, just as if they were inli
 
    {include slip src="part2.md"}
 
-It is also possible to include external Images, SVGs, videos, audios, PDFs, HTML
-files and drawings using the markdown image syntax:
+   {include src="conclusion.html"}
+
+   {include src="drawing.svg"}
+
+Recall that for inline elements, it is possible images, SVGs, videos, audios,
+PDFs, HTML files and drawings using the markdown image syntax:
 
 .. code-block::
 

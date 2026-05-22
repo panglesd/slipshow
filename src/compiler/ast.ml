@@ -6,6 +6,7 @@ type slide = { content : Block.t; title : Inline.t attributed option }
 
 type s_block =
   | Included of Fpath.t attributed node
+  | IncludedHTML of Fpath.t attributed node
   | Div of Block.t attributed node
   | Slide of slide attributed node
   | Slip of Block.t attributed node
@@ -16,6 +17,7 @@ type s_block =
 type Block.t += S_block of s_block
 
 let included d = S_block (Included d)
+let included_html d = S_block (IncludedHTML d)
 let div d = S_block (Div d)
 let slide d = S_block (Slide d)
 let slip d = S_block (Slip d)
@@ -155,7 +157,7 @@ module Folder = struct
     | Div ((b, _), _)
     | Slip ((b, _), _) ->
         Folder.fold_block f acc b
-    | Included _ | MermaidJS _ | SlipScript _ -> acc
+    | IncludedHTML _ | Included _ | MermaidJS _ | SlipScript _ -> acc
     | Carousel ((l, _), _) ->
         List.fold_left (fun acc x -> Folder.fold_block f acc x) acc l
 
@@ -252,7 +254,7 @@ module Folder = struct
         | Div ((b, _), _)
         | Slip ((b, _), _) ->
             Folder.fold_block f acc b
-        | Included _ | MermaidJS _ | SlipScript _ -> acc
+        | IncludedHTML _ | Included _ | MermaidJS _ | SlipScript _ -> acc
         | Carousel ((l, _), _) ->
             List.fold_left (fun acc x -> Folder.fold_block f acc x) acc l)
     | _ -> assert false
@@ -300,6 +302,9 @@ module Mapper = struct
     | Included ((fpath, attrs), meta) ->
         let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
         Some (Included ((fpath, attrs), meta))
+    | IncludedHTML ((fpath, attrs), meta) ->
+        let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
+        Some (IncludedHTML ((fpath, attrs), meta))
     | Slide (({ content = b; title }, attrs), meta) ->
         let* b = Mapper.map_block m b in
         let title =
@@ -397,6 +402,10 @@ module Fold_mapper = struct
           | Included ((fpath, attrs), meta) ->
               let acc, attrs = m.attrs acc $ attrs in
               let res = Included ((fpath, attrs), meta) in
+              (acc, Some res)
+          | IncludedHTML ((fpath, attrs), meta) ->
+              let acc, attrs = m.attrs acc $ attrs in
+              let res = IncludedHTML ((fpath, attrs), meta) in
               (acc, Some res)
           | Div ((block, attrs), meta) ->
               let acc, attrs = m.attrs acc $ attrs in
@@ -524,6 +533,8 @@ module Utils = struct
           match b with
           | Included ((inc, attrs), meta) ->
               Some (included ((inc, attr_upd attrs), meta), attrs)
+          | IncludedHTML ((inc, attrs), meta) ->
+              Some (included_html ((inc, attr_upd attrs), meta), attrs)
           | Div ((d, attrs), meta) ->
               Some (div ((d, attr_upd attrs), meta), attrs)
           | Slide ((s, attrs), meta) ->
@@ -560,6 +571,7 @@ module Utils = struct
         | S_block b -> (
             match b with
             | Included (_, meta) -> meta
+            | IncludedHTML (_, meta) -> meta
             | Div (_, meta) -> meta
             | Slide (_, meta) -> meta
             | Slip (_, meta) -> meta
