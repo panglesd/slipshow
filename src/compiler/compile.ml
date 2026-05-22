@@ -73,21 +73,31 @@ module Stage1 = struct
       match Mapper.map_block m b with None -> Block.empty | Some b -> b
     in
     let attrs = Mapper.map_attrs m attrs in
-    Some (Ast.div ((b, (attrs, meta2)), meta))
+    Ast.div ((b, (attrs, meta2)), meta)
 
-  let handle_slip_scripts_creation m ((cb, (attrs, meta)), meta2) =
+  let handle_code_blocks m ((cb, (attrs, meta)), meta2) =
     let attrs = Mapper.map_attrs m attrs in
     let attrs = (attrs, meta) in
     match Block.Code_block.info_string cb with
-    | None -> Some (Block.Code_block ((cb, attrs), meta2))
+    | None -> Block.Code_block ((cb, attrs), meta2)
     | Some (info, _) -> (
         match Block.Code_block.language_of_info_string info with
-        | Some ("slip-script", _) -> Some (Ast.slipscript ((cb, attrs), meta2))
-        | Some ("=mermaid", _) -> Some (Ast.mermaid_js ((cb, attrs), meta2))
+        | Some ("slip-script", _) -> Ast.slipscript ((cb, attrs), meta2)
+        | Some ("=mermaid", _) -> Ast.mermaid_js ((cb, attrs), meta2)
         | Some ("=html", _) ->
             let h = Block.Code_block.code cb in
-            Some (Block.Html_block ((h, attrs), meta2))
-        | _ -> Some (Block.Code_block ((cb, attrs), meta2)))
+            Block.Html_block ((h, attrs), meta2)
+        | _ -> Block.Code_block ((cb, attrs), meta2))
+
+  let handle_code_span m ((cs, (attrs, meta)), meta2) =
+    let attrs = Mapper.map_attrs m attrs in
+    let has_attrs x = Cmarkit.Attributes.find x attrs |> Option.is_some in
+    if has_attrs Special_attrs.as_html then
+      let code = Inline.Code_span.code_layout cs in
+      let html = Inline.Raw_html (code, meta2) in
+      let span = Inline.Attributes_span.make html (attrs, meta) in
+      Inline.Ext_attrs (span, meta2)
+    else Inline.Code_span ((cs, (attrs, meta)), meta2)
 
   let handle_includes m ~htbl_include current_path (attrs, meta) =
     match
@@ -285,15 +295,16 @@ module Stage1 = struct
     let ret x = `Map x in
     let block m = function
       | Block.Blocks bs -> ret @@ handle_dash_separated_blocks m bs
-      | Block.Block_quote bq -> ret @@ turn_block_quotes_into_divs m bq
-      | Block.Code_block cb -> ret @@ handle_slip_scripts_creation m cb
+      | Block.Block_quote bq -> ret @@ Some (turn_block_quotes_into_divs m bq)
+      | Block.Code_block cb -> ret @@ Some (handle_code_blocks m cb)
       | Block.Ext_standalone_attributes sa ->
           handle_includes m ~htbl_include current_path sa
       | _ -> Mapper.default
     in
     let attrs = map_attrs in
-    let inline i = function
-      | Inline.Image img -> handle_image_inlining i defs current_path img
+    let inline m = function
+      | Inline.Image img -> handle_image_inlining m defs current_path img
+      | Inline.Code_span cs -> Mapper.ret (handle_code_span m cs)
       | _ -> Mapper.default
     in
     Ast.Mapper.make ~block ~inline ~attrs ()

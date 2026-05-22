@@ -11,6 +11,7 @@ let image = "image"
 let svg = "svg"
 let pdf_resolution = "pdf-resolution"
 let pause_block = "pause-block"
+let as_html = "as-html"
 
 let all_attrs =
   [
@@ -27,4 +28,5 @@ let all_attrs =
     svg;
     pdf_resolution;
     pause_block;
+    as_html
   ]
