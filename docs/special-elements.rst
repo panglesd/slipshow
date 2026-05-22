@@ -138,12 +138,23 @@ Since ``>`` is used for :ref:`using-less-to-group`, we can create them by assign
    >
    > Even with multiple paragraphs.
 
-HTML blocks
------------
+HTML spans and blocks
+---------------------
 
 While Markdown conveniently allows to inline some HTML, the rules for it are not
 obvious. If you want to be sure that some content is included as html, you can
-use use code block with the ``=html`` language value.
+use use code block and code spans, with the ``as-html`` attribute.
+
+.. code-block::
+
+   {as-html}
+   ```
+   <marquee>This is included as html, not as a code block</marquee>
+   ```
+
+   This text includes `<blink>some html</blink>`{as-html}.
+
+For consistency, it is alternatively possible to give a code block the ``=html`` language:
 
 .. code-block::
 

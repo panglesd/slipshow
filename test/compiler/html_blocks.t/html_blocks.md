@@ -3,5 +3,9 @@ not html
 ```
 
 ```=html
-<b id="grep_here">is html</b>
+<b id="grep_block">is html</b>
 ```
+
+Some `code span`.
+
+And `<blink>grep_span</blink>`{as-html}.
