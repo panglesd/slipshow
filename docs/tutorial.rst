@@ -68,6 +68,12 @@ To start, copy the following lines in a file, named for instance
 Compiling and viewing your presentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. note::
+
+   If you have already :doc:`set up your editor <editor-setup>`, the compilation
+   and preview at http://localhost:8080 will be handled by your editor. You
+   don't need to type the command below.
+
 The file that we just created is the *source* for a minimal prime-numbers. In
 order to get the presentation itself, we need to *compile* it, using the
 ``slipshow`` tool.
