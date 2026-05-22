@@ -174,7 +174,8 @@ let rec enter_block acc pos (block : Cmarkit.Block.t) =
       if pos_in_inline ~pos inline then enter_inline acc pos inline else acc
   | Slipshow.Ast.S_block b -> (
       match b with
-      | Included _ -> acc (* TODO: do *)
+      | Included _ -> acc
+      | IncludedHTML _ -> acc
       | Slip ((block, _), _) | Div ((block, _), _) ->
           if pos_in_block block ~pos then enter_block acc pos block else acc
       | Slide ((slide, _), _) ->
