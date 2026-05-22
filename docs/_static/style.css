@@ -11,7 +11,7 @@
 /* } */
 /* The iframes need to be absolutely positioned so their height and width need
    to be manually set */
-.entry .preview, .entry .preview > * {
+.entry .preview, .entry .preview > iframe {
     height:500px;
 }
 .running-example {
