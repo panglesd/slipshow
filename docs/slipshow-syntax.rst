@@ -60,8 +60,8 @@ Links
 Links are included with the following syntax: ``[text](link target)``.
 
 
-Images, SVGs, videos, audios, PDFs, drawings
---------------------------------------------
+Images, SVGs, videos, audios, PDFs, HTML files, drawings
+--------------------------------------------------------
 
 Images and several other objects are included with the following syntax:
 ``![alternative text](path/to/file.extension)``.
@@ -78,6 +78,8 @@ Videos are recognized either from the ``video`` attribute, or an extension from:
 Audios are recognized either from the ``audio`` attribute, or an extension from: ``.aac``, ``.flac``, ``.mp3``, ``.oga``, ``.wav``.
 
 Pdfs are recognized from the ``.pdf`` extension.
+
+HTML files are recognized from the ``.html`` extension.
 
 Drawings are recognized from the ``.draw`` extension.
 

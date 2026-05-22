@@ -59,6 +59,7 @@ let classify_image p =
       `Image
   | ".svg" -> `Svg
   | ".draw" -> `Draw
+  | ".html" -> `Html
   | _ -> `Image
 
 let resolve_file parent s =
@@ -129,6 +130,7 @@ module Stage1 = struct
     else if has_attrs Special_attrs.audio then `Audio
     else if has_attrs Special_attrs.image then `Image
     else if has_attrs Special_attrs.svg then `Svg
+    else if has_attrs Special_attrs.as_html then `Html
     (* else if has_attrs "pdf" then `Pdf *)
     (* else if has_attrs "draw" then `Draw
        We don't want to pollute too much the namespace.  *)
@@ -174,6 +176,7 @@ module Stage1 = struct
       | `Audio -> Ast.audio { uri; origin; id = Id.gen () }
       | `Draw -> Ast.hand_drawn { uri; origin; id = Id.gen () }
       | `Pdf -> Ast.pdf { uri; origin; id = Id.gen () }
+      | `Html -> Ast.html { uri; origin; id = Id.gen () }
     in
     Mapper.ret res
 
@@ -504,6 +507,7 @@ module Stage4 = struct
             | Audio media
             | Hand_drawn media
             | Svg media
+            | Html media
             | Image media -> (
                 match media with
                 | { uri = Path p, meta; id; origin = _ } ->
@@ -767,6 +771,7 @@ let to_cmarkit units =
     | Pdf { origin; _ }
     | Hand_drawn { origin; _ }
     | Svg { origin; _ }
+    | Html { origin; _ }
     | Image { origin; _ } ->
         `Map (Mapper.map_inline m (Inline.Image origin))
   in

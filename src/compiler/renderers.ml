@@ -159,6 +159,13 @@ let pdf c ~uri ~files i attrs =
       C.string c ">";
       C.string c "</span>"
 
+let html_include c ~uri ~files attrs i =
+  let open Cmarkit in
+  RenderAttrs.with_attrs_span c attrs @@ fun () ->
+  match src uri files with
+  | `Link _ -> C.inline c (Inline.Link.text i)
+  | `Source (content, _mimetype) -> C.string c content
+
 (* Inspired from Cmarkit's image rendering *)
 let media ?(close = " >") ~media_name c ~uri ~files i attrs =
   let open Cmarkit in
@@ -227,6 +234,9 @@ let custom_html_renderer (units : Ast.units)
           true
       | Ast.Audio { uri = uri, _; id = _; origin = (l, (attrs, _)), _ } ->
           media ~media_name:"audio" c ~uri ~files l attrs;
+          true
+      | Ast.Html { uri = uri, _; id = _; origin = (l, (attrs, _)), _ } ->
+          html_include c ~uri ~files attrs l;
           true
       | Ast.Hand_drawn { uri = uri, _; id = _; origin = (_, (attrs, _)), _ } ->
           let attrs =
