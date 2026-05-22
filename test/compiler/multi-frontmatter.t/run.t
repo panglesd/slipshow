@@ -1,6 +1,7 @@
 Compatible multiple options are not reported (dimension, css files).
 Incompatible options are reported (math-mode)
 
+  $ export SLIPSHOW__SECRET__NO_ENGINE=TRUE
   $ slipshow compile main.md
   warning: Option 'math-mode' is assigned multiple times in incompatible ways
       ┌─ chapter1.md:4:11

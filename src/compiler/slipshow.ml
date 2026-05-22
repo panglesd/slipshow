@@ -155,6 +155,9 @@ let head ~width ~height ~theme ~highlightjs_theme ~(has : Has.t) ~math_mode
       mermaid_option;
     ]
 
+let no_engine = ref false
+let set_no_engine () = no_engine := true
+
 let embed_in_page ~has_speaker_view ~slipshow_js content ~has ~math_link
     ~css_links ~js_links ~theme ~dimension ~highlightjs_theme ~math_mode =
   let width, height = dimension in
@@ -206,7 +209,7 @@ let embed_in_page ~has_speaker_view ~slipshow_js content ~has ~math_link
     </div>
     <!-- Include the library -->
       |};
-        slipshow_js_element;
+        (if !no_engine then "" else slipshow_js_element);
         {|
     <!-- Start the presentation () -->
     <script>hljs.highlightAll();</script>|};
@@ -361,7 +364,7 @@ let add_starting_state ?(autofocus = true) (start, end_, has_speaker_view)
 
       <script>
 |};
-        Data_files.(read Scheduler_js);
+        (if not !no_engine then Data_files.(read Scheduler_js) else "");
         {|
       </script>
   </body>

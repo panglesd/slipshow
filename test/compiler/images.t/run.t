@@ -1,5 +1,6 @@
 We can compile the file
 
+  $ export SLIPSHOW__SECRET__NO_ENGINE=TRUE
   $ slipshow compile slip.md
   warning: file 'img.png' could not be read: img.png: No such file or directory
       ┌─ slip.md:6:4

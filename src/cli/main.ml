@@ -88,6 +88,11 @@ module Compile = struct
     | `Stdout -> Error "Standard output cannot be used in serve nor watch mode"
 
   let compile ~watch ~compile_args:{ Compile_args.input; output } =
+    let () =
+      match Sys.getenv_opt "SLIPSHOW__SECRET__NO_ENGINE" with
+      | Some "TRUE" -> Slipshow.set_no_engine ()
+      | _ -> ()
+    in
     let output = Utils.output_of_input ~ext:"html" output input in
     if watch then
       let* input, output = force_file_io input output in

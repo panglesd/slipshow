@@ -1,5 +1,6 @@
 Let's compile the file and check file inclusion
 
+  $ export SLIPSHOW__SECRET__NO_ENGINE=TRUE
   $ slipshow compile main.md
 
 $ cp main.html /tmp/

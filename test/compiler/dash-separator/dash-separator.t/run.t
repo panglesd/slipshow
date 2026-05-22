@@ -1,3 +1,4 @@
+  $ export SLIPSHOW__SECRET__NO_ENGINE=TRUE
   $ slipshow compile dash-sep.md
 
 Asterisks are still interpreted as horizontal lines

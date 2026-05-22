@@ -1,5 +1,6 @@
 No theme provided or "theme:default" is the same
 
+  $ export SLIPSHOW__SECRET__NO_ENGINE=TRUE
   $ slipshow compile empty.md -o default_theme1.html
   $ slipshow compile default.md -o default_theme2.html
 
