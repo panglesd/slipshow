@@ -124,7 +124,7 @@ let rec enter_inline acc pos (inline : Cmarkit.Inline.t) =
   (* Slipshow nodes *)
   | Slipshow.Ast.S_inline i -> (
       match i with
-      | Hand_drawn m | Image m | Svg m | Video m | Audio m | Pdf m ->
+      | Hand_drawn m | Html m | Image m | Svg m | Video m | Audio m | Pdf m ->
           let (link, _), _ = m.origin in
           let i = Link.text link in
           may_enter i)

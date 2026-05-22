@@ -35,6 +35,7 @@ type s_inline =
   | Video of media
   | Audio of media
   | Pdf of media
+  | Html of media
   | Hand_drawn of media
 
 type Inline.t += S_inline of s_inline
@@ -45,6 +46,7 @@ let video i = S_inline (Video i)
 let audio i = S_inline (Audio i)
 let pdf i = S_inline (Pdf i)
 let hand_drawn i = S_inline (Hand_drawn i)
+let html i = S_inline (Html i)
 
 type t = Cmarkit.Doc.t
 
@@ -167,6 +169,7 @@ module Folder = struct
     | Video { origin = (l, _), _; uri = _; id = _ }
     | Hand_drawn { origin = (l, _), _; uri = _; id = _ }
     | Svg { origin = (l, _), _; uri = _; id = _ }
+    | Html { origin = (l, _), _; uri = _; id = _ }
     | Image { origin = (l, _), _; uri = _; id = _ } ->
         Folder.fold_inline f acc (Cmarkit.Inline.Link.text l)
 
@@ -278,7 +281,7 @@ module Folder = struct
         Folder.fold_inline f acc inline
     | S_inline ext -> (
         match ext with
-        | Hand_drawn m | Image m | Svg m | Video m | Audio m | Pdf m ->
+        | Html m | Hand_drawn m | Image m | Svg m | Video m | Audio m | Pdf m ->
             let (link, _), _ = m.origin in
             let inline = Link.text link in
             Folder.fold_inline f acc inline)
@@ -359,6 +362,9 @@ module Mapper = struct
     | Hand_drawn media ->
         let media = map_media m media in
         Some (Hand_drawn media)
+    | Html media ->
+        let media = map_media m media in
+        Some (Html media)
 
   let inline_ext_default m = function
     | S_inline i -> inline_ext_default m i |> Option.map (fun i -> S_inline i)
@@ -465,6 +471,9 @@ module Fold_mapper = struct
           | Hand_drawn media ->
               let acc, media = map_media m acc media in
               (acc, Hand_drawn media)
+          | Html media ->
+              let acc, media = map_media m acc media in
+              (acc, Html media)
         in
         (acc, Some (S_inline i))
     | normal -> Fold_mapper.default.inline m acc normal
@@ -626,6 +635,10 @@ module Utils = struct
               let (link, attrs), meta = m.origin in
               let origin = ((link, attr_upd attrs), meta) in
               Some (S_inline (Audio { m with origin }), attrs)
+          | Html m ->
+              let (link, attrs), meta = m.origin in
+              let origin = ((link, attr_upd attrs), meta) in
+              Some (S_inline (Html { m with origin }), attrs)
           | Pdf m ->
               let (link, attrs), meta = m.origin in
               let origin = ((link, attr_upd attrs), meta) in
@@ -658,6 +671,7 @@ module Utils = struct
             | Video { origin = _, meta; _ } -> meta
             | Audio { origin = _, meta; _ } -> meta
             | Pdf { origin = _, meta; _ } -> meta
+            | Html { origin = _, meta; _ } -> meta
             | Hand_drawn { origin = _, meta; _ } -> meta)
         | _ -> assert false
       in

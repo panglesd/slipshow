@@ -7,7 +7,7 @@ can be used to define more elements, such as boxes, subslips, carousel, ...
 
 This page provides a reference for all such elements.
 
-.. contents:: Outline of the tutorial
+.. contents::
    :local:
 
 Boxes, admonitions and math environments
@@ -116,6 +116,14 @@ Includes are a way to include external markdown files, just as if they were inli
    {include slip src="part1.md"}
 
    {include slip src="part2.md"}
+
+It is also possible to include external Images, SVGs, videos, audios, PDFs, HTML
+files and drawings using the markdown image syntax:
+
+.. code-block::
+
+   This sentence includes ![](file.html) some raw html from an external file.
+
 
 .. _blockquote-in-special-elements:
 

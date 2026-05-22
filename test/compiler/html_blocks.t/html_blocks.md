@@ -9,3 +9,5 @@ not html
 Some `code span`.
 
 And `<blink>grep_span</blink>`{as-html}.
+
+I can include external ![](inline.html).
