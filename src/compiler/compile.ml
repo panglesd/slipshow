@@ -76,24 +76,29 @@ module Stage1 = struct
     let attrs = Mapper.map_attrs m attrs in
     Ast.div ((b, (attrs, meta2)), meta)
 
+  let has_attrs attrs x = Cmarkit.Attributes.find x attrs |> Option.is_some
+
   let handle_code_blocks m ((cb, (attrs, meta)), meta2) =
     let attrs = Mapper.map_attrs m attrs in
     let attrs = (attrs, meta) in
-    match Block.Code_block.info_string cb with
-    | None -> Block.Code_block ((cb, attrs), meta2)
-    | Some (info, _) -> (
-        match Block.Code_block.language_of_info_string info with
-        | Some ("slip-script", _) -> Ast.slipscript ((cb, attrs), meta2)
-        | Some ("=mermaid", _) -> Ast.mermaid_js ((cb, attrs), meta2)
-        | Some ("=html", _) ->
-            let h = Block.Code_block.code cb in
-            Block.Html_block ((h, attrs), meta2)
-        | _ -> Block.Code_block ((cb, attrs), meta2))
+    let html () =
+      let h = Block.Code_block.code cb in
+      Block.Html_block ((h, attrs), meta2)
+    in
+    if has_attrs (fst attrs) Special_attrs.as_html then html ()
+    else
+      match Block.Code_block.info_string cb with
+      | None -> Block.Code_block ((cb, attrs), meta2)
+      | Some (info, _) -> (
+          match Block.Code_block.language_of_info_string info with
+          | Some ("slip-script", _) -> Ast.slipscript ((cb, attrs), meta2)
+          | Some ("=mermaid", _) -> Ast.mermaid_js ((cb, attrs), meta2)
+          | Some ("=html", _) -> html ()
+          | _ -> Block.Code_block ((cb, attrs), meta2))
 
   let handle_code_span m ((cs, (attrs, meta)), meta2) =
     let attrs = Mapper.map_attrs m attrs in
-    let has_attrs x = Cmarkit.Attributes.find x attrs |> Option.is_some in
-    if has_attrs Special_attrs.as_html then
+    if has_attrs attrs Special_attrs.as_html then
       let code = Inline.Code_span.code_layout cs in
       let html = Inline.Raw_html (code, meta2) in
       let span = Inline.Attributes_span.make html (attrs, meta) in
