@@ -7,10 +7,16 @@ preparing your presentation.
 
 This integration helps in several ways:
 
-- It helps you write a valid input file, by displaying errors directly in your
-  editor, offering you autocompletion, showing documentation on hover, etc.
-- It allows you to see a preview of your presentation, updated in real time as
-  you type.
+- It helps you write a valid input file, by:
+
+  - displaying errors directly in your editor,
+  - offering autocompletion when applicable,
+  - showing documentation for actions on hover,
+  - jumping to definition of identifiers
+
+- It also allows you to see a preview of your presentation, updated in real time
+  as you type.
+- It compiles your presentation on save.
 
 This integration is still in its early days. It is going to be improved and
 extended with new releases of slipshow.
