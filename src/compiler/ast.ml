@@ -182,16 +182,13 @@ module Folder = struct
   let make ~block ~inline () =
     Folder.make ~block_ext_default ~inline_ext_default ~block ~inline ()
 
-  let fold_just_units f acc entry_point units =
+  let rec fold_just_units f acc entry_point units =
     match Fpath.Map.find_opt entry_point units with
     | None -> acc
     | Some unit ->
         let acc = f unit acc in
         Fpath.Map.fold
-          (fun fpath _ acc ->
-            match Fpath.Map.find_opt fpath units with
-            | None -> acc
-            | Some unit -> f unit acc)
+          (fun fpath _ acc -> fold_just_units f acc fpath units)
           unit.deps acc
 
   let fold_units' ~block ~inline (acc : 'a) entry_point units : 'a =
