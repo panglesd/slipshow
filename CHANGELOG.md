@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [v0.11.0] Brazlip (Sunday, the 24th of May, 2026)
 
 ### Added
 
