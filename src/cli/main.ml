@@ -1,7 +1,7 @@
 open Cmdliner
 
 (* Update this on every release! *)
-let version_title = "Don't look {up}"
+let version_title = "Brazlip"
 let slipshow_version = "%%VERSION%%: " ^ version_title
 
 let setup_log style_renderer level =
