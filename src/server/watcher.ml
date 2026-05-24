@@ -67,7 +67,7 @@ let watch_and_compile initial_deps ~callback =
         | [] -> ()
         | l ->
             Logs.app (fun m ->
-                m "%s dependency on %a" verb (Fmt.list ~sep:Fmt.sp Fpath.pp) l)
+                m "%s dependency on @[<hv>%a@]" verb (Fmt.list ~sep:Fmt.sp Fpath.pp) l)
       in
       log to_add "Adding";
       log to_remove "Removing"
