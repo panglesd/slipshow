@@ -135,6 +135,109 @@ jobs:
           name: archives-${{ matrix.config.os }}-${{ matrix.config.arch }}
           path: new_release/*
 
+  windows-build:
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { name: "windows", os: "windows-2022", arch: "x86_64", target: "x64" }
+        ocaml-compiler:
+          - 4.14.x
+    runs-on: ${{ matrix.config.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Fetch tags
+        run: git fetch --tags --force origin
+
+      - uses: actions/cache@v5
+        id: wincache
+        with:
+          path: |
+            ~/.opam
+            _opam
+          key: windows-${{ hashFiles('*.opam') }}-ocaml.5.4
+
+      - name: Install OCaml ${{ matrix.ocaml-compiler }}
+        uses: ocaml/setup-ocaml@v3
+        with:
+          cache-prefix: v4
+          ocaml-compiler: 5.4
+          opam-pin: false
+
+      - name: Install dependencies
+        if: steps.wincache.outputs.cache-hit != 'true'
+        run: opam install conf-gmp
+
+      - name: Install dependencies
+        if: steps.wincache.outputs.cache-hit != 'true'
+        run: opam install conf-libssl
+
+      - name: Install dependencies
+        if: steps.wincache.outputs.cache-hit != 'true'
+        run: opam install conf-pkg-config
+
+      - name: Install dependencies
+        if: steps.wincache.outputs.cache-hit != 'true'
+        run: opam install conf-gmp-powm-sec
+
+      - name: Install dependencies
+        if: steps.wincache.outputs.cache-hit != 'true'
+        run: opam install --deps-only --with-test --with-doc -y .
+
+      - name: Install dependencies
+        if: steps.wincache.outputs.cache-hit
+        run: opam install --deps-only --with-test --depext-only --with-doc -y . && opam upgrade
+        # Just to test caching
+      - name: Try building
+        run: opam exec -- dune build --ignore-promoted-rules
+
+      - name: Uninstall 32-bit packages
+        run: >
+          C:\.opam\.cygwin\setup-x86_64.exe 
+          --root "C:\.opam\.cygwin\root" 
+          --quiet-mode 
+          --remove-packages mingw64-i686-gcc-core,mingw64-i686-gmp,mingw64-i686-libffi,mingw64-i686-openssl
+        #mingw64-x86_64-gmp,mingw64-x86_64-libffi,mingw64-x86_64-openssl,pkgconf
+
+      - name: Try depexts
+        run: opam list --required-by slipshow --external --recursive
+
+      - name: Nuke 32-bit cygwin dlls
+        run: |
+          $bad_path = "C:\.opam\.cygwin\root\usr\i686-w64-mingw32\sys-root\mingw\bin"
+          if (Test-Path $bad_path) {
+            Remove-Item -Path "$bad_path\*.dll" -Force
+          }
+
+      - name: Install 64-bit packages
+        run: >
+         C:\.opam\.cygwin\setup-x86_64.exe "--root" "C:\\.opam\\.cygwin\\root" "--quiet-mode" "noinput" "--no-shortcuts" "--no-startmenu" "--no-desktop" "--no-admin" "--no-version-check" "--no-write-registry" "--packages" "mingw64-x86_64-gcc-core" "--symlink-type" "native" "--upgrade-also" "--only-site" "--site" "https://cygwin.mirror.constant.com/" "--local-package-dir" "C:\\.opam\\.cygwin\\cache" 
+        
+      - name: Install WiX 6 (required by OUI for Windows MSI)
+        shell: pwsh
+        run: |
+          dotnet tool install --global wix --version 7.0.0
+          wix eula accept wix7
+          wix extension add WixToolset.UI.wixext
+          wix extension add WixToolset.Util.wixext
+
+      - name: install oui
+        run: opam install oui
+
+      - name: run installer
+        run: mkdir -p bundle/bin/slipshow/ && cp _build/install/default/bin/slipshow* bundle/bin && opam exec -- oui build oui.json bundle && mkdir -p installer-file && cp slipshow*.msi installer-file/ 
+
+      - name: upload archives
+        # if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/upload-artifact@v4
+        with:
+          name: archives-windows
+          path: installer-file/*
+
   release:
     if: startsWith(github.ref, 'refs/tags/')
     needs: [linux-build, mac-build]
