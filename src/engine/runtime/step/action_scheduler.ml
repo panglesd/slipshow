@@ -76,13 +76,19 @@ let setup_actions window () =
   in
   ()
 
-let next ~mode window () =
+let ( !! ) = Jstr.v
+
+let rec next ~mode window () =
   match find_next_pause_or_step () with
   | None -> None
   | Some pause ->
       let res =
         let> () = Actions.exit ~mode window pause in
         let> () = AttributeActions.do_ ~mode window pause in
-        Undoable.return ()
+        match Brr.El.at !!"auto-next" pause with
+        | None -> Undoable.return ()
+        | Some _ ->
+            let n = next ~mode window () in
+            Option.value ~default:(Undoable.return ()) n
       in
       Some res
