@@ -60,11 +60,11 @@ let generate window root =
       []
     |> List.rev |> List.concat
   in
-  let rec loop undo entries step categorized_els =
+  let rec loop ~auto_next undo entries step categorized_els =
     match categorized_els with
     | `Title t :: res ->
         let entries = entry_title t :: entries in
-        loop undo entries step res
+        loop ~auto_next undo entries step res
     | `Action a :: res ->
         if Step.Action_scheduler.is_action a then
           let* res =
@@ -74,13 +74,18 @@ let generate window root =
             let> () = undo in
             Fut.return res
           in
-          let step = step + 1 in
-          let entries = entry_action window step :: entries in
-          loop undo entries step categorized_els
-        else loop undo entries step res
+          let step = if auto_next then step else step + 1 in
+          let entries =
+            if auto_next then entries else entry_action window step :: entries
+          in
+          let auto_next = Brr.El.at !!"auto-next" a |> Option.is_some in
+          loop ~auto_next undo entries step categorized_els
+        else loop ~auto_next undo entries step res
     | [] -> Fut.return (undo, List.rev entries)
   in
-  let* undo, entries = loop (Undoable.return ()) [] 0 categorized_els in
+  let* undo, entries =
+    loop ~auto_next:false (Undoable.return ()) [] 0 categorized_els
+  in
   let* (), undo = undo in
   let+ () = undo () in
   let els = entry_action window 0 :: entries in
