@@ -57,9 +57,6 @@ end
 let all =
   [
     (module Pause : S);
-    (module Actions_.Step : S);
-    (* For some reasons, without [Actions_.], this trips (probably ocamldep or
-       its driver, dune). *)
     (module Unstatic : S);
     (module Static : S);
     (module Unreveal : S);
@@ -79,4 +76,7 @@ let all =
     (module Speaker_note : S);
     (module Clear_draw : S);
     (module Draw : S);
+    (module Actions_.Step : S);
+    (* For some reasons, without [Actions_.], this trips (probably ocamldep or
+       its driver, dune). *)
   ]

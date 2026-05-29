@@ -45,7 +45,7 @@ module Reveal : SetClass
 module Unreveal : SetClass
 module Emph : SetClass
 module Unemph : SetClass
-module Step : S with type args = unit
+module Step : S with type args = Actions_arguments.Step.args
 
 val exit : mode:Fast.mode -> Universe.Window.t -> Brr.El.t -> unit Undoable.t
 

@@ -231,11 +231,30 @@ end)
 module _ : S = Unemph
 
 module Step = struct
-  type args = unit
+  type args = float W.node option
 
   let on = "step"
   let action_name = on
-  let parse_args s = Parse.no_args ~action_name s
+
+  let parse_args s =
+    let ( let+ ) = Fun.flip Result.map in
+    let open W.M in
+    let+ res, warnors =
+      Parse.parse ~named:[ Parse.duration ] ~positional:Fun.id ~action_name s
+    in
+    let$ res = Parse.require_single_action ~action_name res in
+    match res with
+    | { p_named = duration :: []; p_pos }, loc ->
+        let msg =
+          "The syntax for `step` is the empty string or ~duration:FLOAT"
+        in
+        let$ () =
+          match p_pos with
+          | [] -> ((), [])
+          | _ :: _ -> ((), [ W.Parsing_failure { msg; loc } ])
+        in
+        (duration, warnors)
+
   let doc = "Does nothing. Useful to change slips."
   let repr = Step
 end
