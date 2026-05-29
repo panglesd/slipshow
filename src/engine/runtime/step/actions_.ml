@@ -436,10 +436,29 @@ module Step = struct
   let setup = None
   let setup_all = None
 
-  type js_args = unit
+  type js_args = Actions_arguments.Step.args
 
-  let do_js ~mode:_ _ _ = Undoable.return ()
-  let do_ ~mode:_ _ _ _ = Undoable.return ()
+  let do_js ~mode _window (time : js_args) =
+    match (time, mode) with
+    | Some (time, _), _ ->
+        let open Fut.Syntax in
+        let fut, finish = Fut.create () in
+        let _ =
+          let+ () = Fut.tick ~ms:(int_of_float (time *. 1000.)) in
+          finish ()
+        in
+        let _ =
+          match mode with
+          | Fast.Normal h ->
+              let+ () = Fast.wait h in
+              finish ()
+          | _ -> Fut.return ()
+        in
+        let* () = fut in
+        Undoable.return ()
+    | _ -> Undoable.return ()
+
+  let do_ ~mode window _el time = do_js ~mode window time
 end
 
 module _ : S = Step
