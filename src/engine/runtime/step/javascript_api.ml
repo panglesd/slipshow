@@ -5,7 +5,16 @@ open Fut.Syntax
    would depend on [Javascrip_api] which would depend on [Actions]. *)
 module Actions = Actions_
 
-let register_undo undos_ref f =
+let register_undo undos_ref state_ref f =
+  let res =
+    let+ state, undo = f () in
+    undos_ref := undo :: !undos_ref;
+    state_ref := state;
+    Ok (Jv.callback ~arity:1 undo)
+  in
+  Fut.to_promise ~ok:Fun.id res
+
+let register_undo_no_change undos_ref f =
   let res =
     let+ (), undo = f () in
     undos_ref := undo :: !undos_ref;
@@ -13,42 +22,47 @@ let register_undo undos_ref f =
   in
   Fut.to_promise ~ok:Fun.id res
 
-let one_arg conv action undos_ref =
+let one_arg conv action undos_ref state_ref =
   Jv.callback ~arity:1 @@ fun elem ->
   let elem = conv elem in
-  register_undo undos_ref @@ fun () -> action elem
+  register_undo undos_ref state_ref @@ fun () -> action elem
 
 (* let one_elem action = one_arg Brr.El.of_jv action *)
 (* let one_elem_list action = one_arg (Jv.to_list Brr.El.of_jv) action *)
 
-let move (module X : Actions.Move) ~mode window undos_ref =
+let move (module X : Actions.Move) ~mode window undos_ref state_ref =
   Jv.callback ~arity:3 @@ fun elem duration margin ->
   let elem = Brr.El.of_jv elem
   and duration = Jv.to_option Jv.to_float duration
   and margin = Jv.to_option Jv.to_float margin in
-  register_undo undos_ref @@ fun () ->
-  X.do_js ~mode window X.{ elem; duration; margin }
+  register_undo undos_ref state_ref @@ fun () ->
+  X.do_js !state_ref ~mode window X.{ elem; duration; margin }
 
 let up = move (module Actions.Up)
 let down = move (module Actions.Down)
 let center = move (module Actions.Center)
 let scroll = move (module Actions.Scroll)
 
-let focus ~mode window undos_ref =
+let focus ~mode window undos_ref state_ref =
   Jv.callback ~arity:3 @@ fun elems duration margin ->
   let elems = Jv.to_list Brr.El.of_jv elems
   and duration = Jv.to_option Jv.to_float duration
   and margin = Jv.to_option Jv.to_float margin in
-  register_undo undos_ref @@ fun () ->
-  Actions.Focus.do_js ~mode window { duration; margin; elems }
+  register_undo undos_ref state_ref @@ fun () ->
+  Actions.Focus.do_js !state_ref ~mode window { duration; margin; elems }
 
-let unfocus ~mode window =
-  one_arg (fun _ -> ()) (Actions.Unfocus.do_js ~mode window)
+let unfocus ~mode window undo_ref state_ref =
+  one_arg
+    (fun _ -> ())
+    (Actions.Unfocus.do_js !state_ref ~mode window)
+    undo_ref state_ref
 
-let class_setter (module X : Actions.SetClass) ~mode window undos_ref =
+let class_setter (module X : Actions.SetClass) ~mode window undos_ref state_ref
+    =
   Jv.callback ~arity:1 @@ fun elems ->
   let elems = (Jv.to_list Brr.El.of_jv) elems in
-  register_undo undos_ref @@ fun () -> X.do_js ~mode window elems
+  register_undo undos_ref state_ref @@ fun () ->
+  X.do_js !state_ref ~mode window elems
 
 let unstatic = class_setter (module Actions.Unstatic)
 let static = class_setter (module Actions.Static)
@@ -57,32 +71,39 @@ let unreveal = class_setter (module Actions.Unreveal)
 let emph = class_setter (module Actions.Emph)
 let unemph = class_setter (module Actions.Unemph)
 
-let play_media ~mode window undos_ref =
+let play_media ~mode window undos_ref state_ref =
   Jv.callback ~arity:1 @@ fun elems ->
   let elems = Jv.to_list Brr.El.of_jv elems in
-  register_undo undos_ref @@ fun () ->
-  Actions.Play_media.do_js ~mode window elems
+  register_undo undos_ref state_ref @@ fun () ->
+  Actions.Play_media.do_js !state_ref ~mode window elems
 
-let draw ~mode window undos_ref =
+let draw ~mode window undos_ref state_ref =
   Jv.callback ~arity:1 @@ fun elems ->
   let elems = Jv.to_list Brr.El.of_jv elems in
-  register_undo undos_ref @@ fun () -> Actions.Draw.do_js ~mode window elems
+  register_undo undos_ref state_ref @@ fun () ->
+  Actions.Draw.do_js !state_ref ~mode window elems
 
-let change_page ~mode _window undos_ref =
+let change_page ~mode _window undos_ref (state_ref : Actions_.state ref) =
   Jv.callback ~arity:2 @@ fun elem change ->
   let elem = Brr.El.of_jv elem in
   let change = Jv.to_string change in
-  register_undo undos_ref @@ fun () ->
+  register_undo_no_change undos_ref @@ fun () ->
   Actions.Change_page.parse_change (change, (-1, -1))
   (* TODO: Use official [Warnings.loc_none] instead of [-1, -1] *)
   |> Undoable.Option.iter @@ fun (change, _) ->
      let js_arg = { Actions.Change_page.change; elem } in
-     Actions.Change_page.do_js ~mode _window js_arg
+     let open Undoable.Syntax in
+     let> state = Actions.Change_page.do_js !state_ref ~mode _window js_arg in
+     state_ref := state;
+     Undoable.return ()
 
-let on_undo =
-  one_arg Fun.id @@ fun callback ->
-  let undo () = Fut.return @@ ignore @@ Jv.apply callback [||] in
-  Undoable.return ~undo ()
+let on_undo undo_ref state_ref =
+  let x =
+   fun callback ->
+    let undo () = Fut.return @@ ignore @@ Jv.apply callback [||] in
+    Undoable.return ~undo !state_ref
+  in
+  one_arg Fun.id x undo_ref state_ref
 
 let state = Jv.obj [||]
 
@@ -91,47 +112,52 @@ let set_style undos_ref =
   let elem = Brr.El.of_jv elem
   and style = Jv.to_jstr style
   and value = Jv.to_jstr value in
-  register_undo undos_ref @@ fun () ->
+  register_undo_no_change undos_ref @@ fun () ->
   Undoable.Browser.set_style style value elem
 
 let set_class undos_ref =
   Jv.callback ~arity:3 @@ fun elem class_ bool ->
   let bool = Jv.to_bool bool in
-  register_undo undos_ref @@ fun () ->
+  register_undo_no_change undos_ref @@ fun () ->
   Undoable.Browser.set_class class_ bool elem
 
 let set_prop undos_ref =
   Jv.callback ~arity:3 @@ fun obj prop value ->
   let prop = Jv.to_jstr prop in
-  register_undo undos_ref @@ fun () -> Undoable.Browser.set_prop obj prop value
+  register_undo_no_change undos_ref @@ fun () ->
+  Undoable.Browser.set_prop obj prop value
 
 let is_fast mode =
   Jv.callback ~arity:1 (fun _ -> Jv.of_bool @@ Fast.is_fast mode)
 
-let slip ~mode window undos_ref =
+let auto_next state_ref =
+  Jv.callback ~arity:1 @@ fun _ -> state_ref := { Actions_.auto_next = true }
+
+let slip ~mode window undos_ref state_ref =
   Jv.obj
     [|
       (* Actions *)
-      ("up", up ~mode window undos_ref);
-      ("center", center ~mode window undos_ref);
-      ("down", down ~mode window undos_ref);
-      ("scroll", scroll ~mode window undos_ref);
-      ("focus", focus ~mode window undos_ref);
-      ("unfocus", unfocus ~mode window undos_ref);
-      ("static", static ~mode window undos_ref);
-      ("unstatic", unstatic ~mode window undos_ref);
-      ("reveal", reveal ~mode window undos_ref);
-      ("unreveal", unreveal ~mode window undos_ref);
-      ("emph", emph ~mode window undos_ref);
-      ("unemph", unemph ~mode window undos_ref);
-      ("onUndo", on_undo undos_ref);
+      ("up", up ~mode window undos_ref state_ref);
+      ("center", center ~mode window undos_ref state_ref);
+      ("down", down ~mode window undos_ref state_ref);
+      ("scroll", scroll ~mode window undos_ref state_ref);
+      ("focus", focus ~mode window undos_ref state_ref);
+      ("unfocus", unfocus ~mode window undos_ref state_ref);
+      ("static", static ~mode window undos_ref state_ref);
+      ("unstatic", unstatic ~mode window undos_ref state_ref);
+      ("reveal", reveal ~mode window undos_ref state_ref);
+      ("unreveal", unreveal ~mode window undos_ref state_ref);
+      ("emph", emph ~mode window undos_ref state_ref);
+      ("unemph", unemph ~mode window undos_ref state_ref);
+      ("auto_next", auto_next state_ref);
+      ("onUndo", on_undo undos_ref state_ref);
       (* Scripting utilities *)
       ("state", state);
       ("setStyle", set_style undos_ref);
       ("setClass", set_class undos_ref);
       ("setProp", set_prop undos_ref);
-      ("playMedia", play_media ~mode window undos_ref);
-      ("draw", draw ~mode window undos_ref);
+      ("playMedia", play_media ~mode window undos_ref state_ref);
+      ("draw", draw ~mode window undos_ref state_ref);
       ("isFast", is_fast mode);
-      ("changePage", change_page ~mode window undos_ref);
+      ("changePage", change_page ~mode window undos_ref state_ref);
     |]

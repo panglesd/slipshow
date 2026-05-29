@@ -8,14 +8,15 @@ module Execute = struct
   include Actions_arguments.Execute
   open Fut.Syntax
 
-  let only_if_fast mode f =
-    match mode with Fast.Counting_for_toc -> Undoable.return () | _ -> f ()
+  let only_if_fast mode state f =
+    match mode with Fast.Counting_for_toc -> Undoable.return state | _ -> f ()
 
   (* if Fast.is_counting () then Undoable.return () else f () *)
 
-  let do_ ~mode window elem =
-    only_if_fast mode @@ fun () ->
+  let do_ state ~mode window elem =
+    only_if_fast mode state @@ fun () ->
     let undos_ref = ref [] in
+    let state_ref = ref state in
     let undo_fallback () =
       List.fold_left
         (fun acc f ->
@@ -28,26 +29,28 @@ module Execute = struct
       Brr.Console.(log [ body ]);
       let args = Jv.Function.[ ("slip", Fun.id) ] in
       let f = Jv.Function.v ~body ~args in
-      let arg = Javascript_api.slip ~mode window undos_ref in
+      let arg = Javascript_api.slip ~mode window undos_ref state_ref in
       let u = f arg in
       let undo () =
         try Fut.return (ignore @@ Jv.call u "undo" [||])
         with _ -> undo_fallback ()
       in
-      Undoable.return ~undo ()
+      Undoable.return ~undo !state_ref
     with e ->
       Brr.Console.(
         log
           [ "An exception occurred when trying to execute a custom script:"; e ]);
-      Undoable.return ~undo:undo_fallback ()
+      Undoable.return ~undo:undo_fallback !state_ref
 
   type js_args = |
 
-  let do_js ~mode:_ _window _not_inhabited = Undoable.return ()
+  let do_js state ~mode:_ _window _not_inhabited = Undoable.return state
 
-  let do_ ~mode window elem args =
+  let do_ state ~mode window elem args =
     let elems = Actions_.elems_of_ids_or_self args elem in
-    Undoable.List.iter (do_ ~mode window) elems
+    Undoable.List.fold_left
+      (fun state x -> do_ state ~mode window x)
+      state elems
 
   let setup = None
   let setup_all = None
@@ -79,4 +82,5 @@ let all =
     (module Speaker_note : S);
     (module Clear_draw : S);
     (module Draw : S);
+    (module Auto_next : S);
   ]

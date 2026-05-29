@@ -11,6 +11,13 @@ module List = struct
         f x)
       (return ()) l
 
+  let fold_left f acc0 l =
+    List.fold_left
+      (fun acc x ->
+        let> acc = acc in
+        f acc x)
+      (return acc0) l
+
   let rec filter_map f = function
     | [] -> return []
     | x :: l -> (

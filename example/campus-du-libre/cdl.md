@@ -1,8 +1,8 @@
 # Slipshow
 
-- Slipshow est un logiciel libre pour faire des présentations améliorées. {pause}
+- Slipshow est un logiciel{#aa} libre pour faire des présentations améliorées. {pause}
 
-- Avec slipshow, pas besoin de gérer l'alignement du texte ! {pause}
+- Avec slipshow, pas besoin de gérer l'alignement du texte ! {pause unreveal=aa auto-next}
 
 - Une présentation slipshow prend la forme d'un fichier texte.
 

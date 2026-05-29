@@ -15,6 +15,10 @@ let find_first_by_selector ?root x =
    only one [Action] module (and not an [Actions] and an [Actions_]) then
    [Actions] would depend on [Javascrip_api] which would depend on [Actions]. *)
 
+type state = { auto_next : bool }
+
+let start_state = { auto_next = false }
+
 module type S = sig
   include Actions_arguments.S
 
@@ -23,10 +27,16 @@ module type S = sig
 
   type js_args
 
-  val do_js : mode:Fast.mode -> Universe.Window.t -> js_args -> unit Undoable.t
+  val do_js :
+    state -> mode:Fast.mode -> Universe.Window.t -> js_args -> state Undoable.t
 
   val do_ :
-    mode:Fast.mode -> Universe.Window.t -> El.t -> args -> unit Undoable.t
+    state ->
+    mode:Fast.mode ->
+    Universe.Window.t ->
+    El.t ->
+    args ->
+    state Undoable.t
 end
 
 module type Move = sig
@@ -46,9 +56,13 @@ module type SetClass =
     with type args = [ `Self | `Ids of string Actions_arguments.W.node list ]
      and type js_args = Brr.El.t list
 
-let only_if_not_counting mode f =
+let propagate_state state f =
+  let> () = f () in
+  Undoable.return state
+
+let only_if_not_counting state mode f =
   match mode with
-  | Fast.Counting_for_toc -> Undoable.return ()
+  | Fast.Counting_for_toc -> Undoable.return state
   | Normal _ | Fast | Slow -> f ()
 
 let elems_of_ids_or_self ids_or_self elem =
@@ -77,6 +91,10 @@ let elem_of_id_or_self id_or_self elem ~none some =
       | Some elem -> some elem)
 
 let ( let< ) x f = x f
+
+let _ =
+  let< x = fun y -> y 5 in
+  x + 1
 
 module Pause = struct
   include Actions_arguments.Pause
@@ -153,17 +171,18 @@ module Pause = struct
 
   type js_args = El.t list
 
-  let do_js ~mode _window elems =
-    only_if_not_counting mode @@ fun _mode ->
+  let do_js state ~mode _window elems =
+    only_if_not_counting state mode @@ fun _mode ->
+    propagate_state state @@ fun () ->
     elems
     |> Undoable.List.iter @@ fun elem ->
        let> () = set_class "pauseTarget" false elem in
        update elem (fun n -> n - 1)
 
-  let do_ ~mode _window elem args =
-    only_if_not_counting mode @@ fun _mode ->
+  let do_ state ~mode _window elem args =
+    only_if_not_counting state mode @@ fun _mode ->
     let elems = elems_of_ids_or_self args elem in
-    do_js ~mode _window elems
+    do_js state ~mode _window elems
 end
 
 module _ : S = Pause
@@ -190,20 +209,21 @@ struct
   let setup = None
   let setup_all = None
 
-  let do_js ~mode window { elem; margin; duration } =
-    only_if_not_counting mode @@ fun _mode ->
+  let do_js state ~mode window { elem; margin; duration } =
+    only_if_not_counting state mode @@ fun _mode ->
+    propagate_state state @@ fun () ->
     let open Fut.Syntax in
     let* () = Excursion.end_ window () in
     let margin = Option.value ~default:0. margin in
     let duration = Option.value ~default:1. duration in
     X.move ~margin ~duration mode window elem
 
-  let do_ ~mode window elem { margin; duration; target } =
-    only_if_not_counting mode @@ fun _mode ->
-    let< elem = elem_of_id_or_self target elem ~none:(Undoable.return ()) in
+  let do_ (state : state) ~mode window elem { margin; duration; target } =
+    only_if_not_counting state mode @@ fun _mode ->
+    let< elem = elem_of_id_or_self target elem ~none:(Undoable.return state) in
     let margin = Option.map fst margin in
     let duration = Option.map fst duration in
-    do_js ~mode window { elem; margin; duration }
+    do_js state ~mode window { elem; margin; duration }
 end
 
 module SetClass (X : sig
@@ -222,14 +242,15 @@ struct
   let setup = None
   let setup_all = None
 
-  let do_js ~mode _window elems =
-    only_if_not_counting mode @@ fun _mode ->
+  let do_js state ~mode _window elems =
+    only_if_not_counting state mode @@ fun _mode ->
+    propagate_state state @@ fun () ->
     Undoable.List.iter (Undoable.Browser.set_class X.class_ X.state) elems
 
-  let do_ ~mode _window elem args =
-    only_if_not_counting mode @@ fun _mode ->
+  let do_ state ~mode _window elem args =
+    only_if_not_counting state mode @@ fun _mode ->
     let elems = elems_of_ids_or_self args elem in
-    do_js ~mode _window elems
+    do_js state ~mode _window elems
 end
 
 module Up = Move (struct
@@ -356,8 +377,9 @@ module Focus = struct
     elems : El.t list;
   }
 
-  let do_js ~mode window { elems; margin; duration } =
-    only_if_not_counting mode @@ fun _mode ->
+  let do_js state ~mode window { elems; margin; duration } =
+    only_if_not_counting state mode @@ fun _mode ->
+    propagate_state state @@ fun () ->
     let open Fut.Syntax in
     let* () = Excursion.end_ window () in
     let> () = State.push (Universe.State.get_coord ()) in
@@ -365,12 +387,12 @@ module Focus = struct
     let duration = Option.value ~default:1. duration in
     Universe.Move.focus ~margin ~duration mode window elems
 
-  let do_ ~mode window el { target; margin; duration } =
-    only_if_not_counting mode @@ fun _mode ->
+  let do_ state ~mode window el { target; margin; duration } =
+    only_if_not_counting state mode @@ fun _mode ->
     let elems = elems_of_ids_or_self target el in
     let margin = Option.map fst margin in
     let duration = Option.map fst duration in
-    do_js ~mode window { elems; margin; duration }
+    do_js state ~mode window { elems; margin; duration }
 
   let setup = None
   let setup_all = None
@@ -386,8 +408,9 @@ module Unfocus = struct
 
   type js_args = unit
 
-  let do_js ~mode window () =
-    only_if_not_counting mode @@ fun _mode ->
+  let do_js state ~mode window () =
+    only_if_not_counting state mode @@ fun _mode ->
+    propagate_state state @@ fun () ->
     let> coord = Focus.State.pop () in
     match coord with
     | None -> Undoable.return ()
@@ -396,8 +419,8 @@ module Unfocus = struct
         let* () = Excursion.end_ window () in
         Universe.Move.move mode window coord ~duration:1.0
 
-  let do_ ~mode window _elem () =
-    only_if_not_counting mode @@ fun _mode -> do_js ~mode window ()
+  let do_ state ~mode window _elem () =
+    only_if_not_counting state mode @@ fun _mode -> do_js state ~mode window ()
 end
 
 module _ : S = Unfocus
@@ -438,11 +461,23 @@ module Step = struct
 
   type js_args = unit
 
-  let do_js ~mode:_ _ _ = Undoable.return ()
-  let do_ ~mode:_ _ _ _ = Undoable.return ()
+  let do_js state ~mode:_ _ _ = Undoable.return state
+  let do_ state ~mode:_ _ _ _ = Undoable.return state
 end
 
-module _ : S = Step
+module Auto_next = struct
+  include Actions_arguments.Auto_next
+
+  let setup = None
+  let setup_all = None
+
+  type js_args = unit
+
+  let do_js _state ~mode:_ _ _ = Undoable.return { auto_next = true }
+  let do_ _state ~mode:_ _ _ _ = Undoable.return { auto_next = true }
+end
+
+module _ : S = Auto_next
 
 module Speaker_note = struct
   include Actions_arguments.Speaker_note
@@ -458,7 +493,7 @@ module Speaker_note = struct
 
   type js_args = El.t
 
-  let do_js ~mode:_ (_ : Universe.Window.t) elem =
+  let do_js state ~mode:_ (_ : Universe.Window.t) elem =
     let innerHTML = Jv.Jstr.get (El.to_jv elem) "innerHTML" |> Jstr.to_string in
     let old_value = !sn in
     let undo () =
@@ -468,11 +503,11 @@ module Speaker_note = struct
     in
     sn := innerHTML;
     Messaging.send_speaker_notes !sn;
-    Undoable.return ~undo ()
+    Undoable.return ~undo state
 
-  let do_ ~mode _window elem (arg : args) =
-    elem_of_id_or_self arg elem ~none:(Undoable.return ()) @@ fun elem ->
-    do_js ~mode _window elem
+  let do_ state ~mode _window elem (arg : args) =
+    elem_of_id_or_self arg elem ~none:(Undoable.return state) @@ fun elem ->
+    do_js state ~mode _window elem
 end
 
 module _ : S = Speaker_note
@@ -484,8 +519,9 @@ module Play_media = struct
 
   let log_error = function Ok () -> () | Error x -> Console.(error [ x ])
 
-  let do_js ~mode _window elems =
-    only_if_not_counting mode @@ fun _mode ->
+  let do_js state ~mode _window elems =
+    only_if_not_counting state mode @@ fun _mode ->
+    propagate_state state @@ fun () ->
     let is_speaker_note =
       match Window.name G.window |> Jstr.to_string with
       | "slipshow_speaker_view" -> true
@@ -575,10 +611,10 @@ module Play_media = struct
           Undoable.return ~undo ())
       elems
 
-  let do_ ~mode _window elem args =
-    only_if_not_counting mode @@ fun _mode ->
+  let do_ state ~mode _window elem args =
+    only_if_not_counting state mode @@ fun _mode ->
     let elems = elems_of_ids_or_self args elem in
-    do_js ~mode _window elems
+    do_js state ~mode _window elems
 
   let setup = None
   let setup_all = None
@@ -651,9 +687,9 @@ module Change_page = struct
     in
     Undoable.return (Some overflow)
 
-  let do_js ~mode _window js_args =
+  let do_js state ~mode _window js_args =
     let> _ = do_js' ~mode _window js_args in
-    Undoable.return ()
+    Undoable.return state
 
   (* TODO: Make it more elegant, coding-wise! *)
   let do_1 ~mode window elem ({ target; n; _ } as arg) =
@@ -683,13 +719,14 @@ module Change_page = struct
     Undoable.return
     @@ match new_n with [] -> None | new_n -> Some { arg with n = new_n }
 
-  let do_ ~mode _window elem args =
+  let do_ state ~mode _window elem args =
     let> args = Undoable.List.filter_map (do_1 ~mode _window elem) args in
     match args with
-    | [] -> Undoable.return ()
+    | [] -> Undoable.return state
     | args ->
         let new_v = args_as_string args in
-        Undoable.Browser.set_at on (Some (Jstr.v new_v)) elem
+        let> () = Undoable.Browser.set_at on (Some (Jstr.v new_v)) elem in
+        Undoable.return state
 
   let setup = None
   let setup_all = None
@@ -808,8 +845,9 @@ module Draw = struct
 
   type js_args = El.t list
 
-  let do_js ~mode _window elems =
-    only_if_not_counting mode @@ fun _mode ->
+  let do_js action_fold_state ~mode _window elems =
+    only_if_not_counting action_fold_state mode @@ fun _mode ->
+    propagate_state action_fold_state @@ fun () ->
     (* let speedup = update_speedup 1. in *)
     Undoable.List.iter
       (fun elem ->
@@ -826,10 +864,10 @@ module Draw = struct
             Undoable.return ~undo ())
       elems
 
-  let do_ ~mode _window el args =
-    only_if_not_counting mode @@ fun _mode ->
+  let do_ state ~mode _window el args =
+    only_if_not_counting state mode @@ fun _mode ->
     let elems = elems_of_ids_or_self args el in
-    do_js ~mode _window elems
+    do_js state ~mode _window elems
 end
 
 module _ : S = Draw
@@ -842,8 +880,9 @@ module Clear_draw = struct
 
   type js_args = El.t list
 
-  let do_js ~mode _window elems =
-    only_if_not_counting mode @@ fun _mode ->
+  let do_js state ~mode _window elems =
+    only_if_not_counting state mode @@ fun _mode ->
+    propagate_state state @@ fun () ->
     Undoable.List.iter
       (fun elem ->
         match Hashtbl.find_opt Draw.state elem with
@@ -858,10 +897,10 @@ module Clear_draw = struct
             Undoable.return ~undo ())
       elems
 
-  let do_ ~mode _window el args =
-    only_if_not_counting mode @@ fun _mode ->
+  let do_ state ~mode _window el args =
+    only_if_not_counting state mode @@ fun _mode ->
     let elems = elems_of_ids_or_self args el in
-    do_js ~mode _window elems
+    do_js state ~mode _window elems
 end
 
 module _ : S = Clear_draw

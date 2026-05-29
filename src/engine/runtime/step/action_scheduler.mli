@@ -1,7 +1,7 @@
 val is_action : Brr.El.t -> bool
 
 module AttributeActions : sig
-  val do_ : mode:Fast.mode -> Universe.Window.t -> Brr.El.t -> unit Undoable.t
+  val do_ : Actions_.state -> mode:Fast.mode -> Universe.Window.t -> Brr.El.t -> Actions_.state Undoable.t
 end
 
 val all_action_selector : string

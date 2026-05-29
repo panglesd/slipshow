@@ -25,7 +25,7 @@ let targets arg =
   | Unemph targets
   | Clear_draw targets ->
       ids_or_self targets
-  | Unfocus _ | Step _ -> []
+  | Unfocus _ | Step _ | Auto_next _ -> []
   | Change_page argl ->
       List.concat_map
         (function
@@ -57,6 +57,10 @@ let kv_attribute_to_step id_map bol
         Some (f x)
   in
   match X.repr with
+  | Auto_next ->
+      let< args = Auto_next.parse_args value in
+      let id_map = Checks.auto_next id_map ~args ~val_loc bol in
+      (Auto_next args, kv, id_map)
   | Enter ->
       let< args = Enter.parse_args value in
       let id_map = Checks.enter id_map ~args ~val_loc bol in

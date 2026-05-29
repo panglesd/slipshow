@@ -28,3 +28,4 @@ val draw : Draw.args checks
 val clear : Clear_draw.args checks
 val pause : Pause.args checks
 val step : Step.args checks
+val auto_next : Auto_next.args checks

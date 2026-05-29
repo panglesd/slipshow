@@ -8,6 +8,7 @@ type repr =
   | Clear_draw
   | Draw
   | Pause
+  | Auto_next
   | Step
   | Up
   | Down
@@ -48,6 +49,19 @@ module Pause = struct
 end
 
 module _ : S = Pause
+
+module Auto_next = struct
+  let on = "auto-next"
+  let action_name = "auto-next"
+
+  type args = unit
+
+  let parse_args = Parse.no_args ~action_name
+  let doc = "Automatically go to the next action"
+  let repr = Auto_next
+end
+
+module _ : S = Auto_next
 
 module type Move = sig
   type args = {
@@ -483,4 +497,5 @@ let all_actions =
     (module Unemph : S);
     (module Speaker_note : S);
     (module Play_media : S);
+    (module Auto_next : S);
   ]

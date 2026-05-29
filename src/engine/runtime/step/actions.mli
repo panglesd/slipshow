@@ -6,10 +6,10 @@ module type S = sig
 
   type js_args
 
-  val do_js : mode:Fast.mode -> Universe.Window.t -> js_args -> unit Undoable.t
+  val do_js : Actions_.state -> mode:Fast.mode -> Universe.Window.t -> js_args -> Actions_.state Undoable.t
 
   val do_ :
-    mode:Fast.mode -> Universe.Window.t -> Brr.El.t -> args -> unit Undoable.t
+    Actions_.state -> mode:Fast.mode -> Universe.Window.t -> Brr.El.t -> args -> Actions_.state Undoable.t
 end
 
 module Pause :

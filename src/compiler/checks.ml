@@ -172,3 +172,4 @@ let draw = targets Is.draw
 let clear = targets Is.draw
 let pause = targets Is.any
 let step = no_constraint
+let auto_next = no_constraint

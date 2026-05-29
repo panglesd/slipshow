@@ -68,7 +68,11 @@ let generate window root =
     | `Action a :: res ->
         if Step.Action_scheduler.is_action a then
           let* res =
-            Step.Action_scheduler.AttributeActions.do_ ~mode window a
+            let> _state =
+              Step.Action_scheduler.AttributeActions.do_
+                Step.Actions_.start_state ~mode window a
+            in
+            Undoable.return ()
           in
           let undo =
             let> () = undo in

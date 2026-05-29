@@ -13,6 +13,7 @@ module Browser = Browser_
 
 module List : sig
   val iter : ('a -> unit t) -> 'a list -> unit t
+  val fold_left : ('acc -> 'a -> 'acc t) -> 'acc -> 'a list -> 'acc t
   val filter_map : ('a -> 'b option t) -> 'a list -> 'b list t
 end
 

@@ -77,6 +77,7 @@ module Action_plan = struct
     | Unemph of Unemph.args
     | Speaker_note of Speaker_note.args
     | Play_media of Play_media.args
+    | Auto_next of Auto_next.args
 
   type action = arg * Cmarkit.Attributes.kv
 
