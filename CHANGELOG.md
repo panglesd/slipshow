@@ -1,5 +1,11 @@
 # Changelog
 
+## unrelease
+
+### Added
+
+- `auto-next` attribute to automatically continue to the next action (#240)
+
 ## [v0.11.0] Brazlip (Sunday, the 24th of May, 2026)
 
 ### Added
