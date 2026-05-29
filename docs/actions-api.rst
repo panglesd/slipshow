@@ -77,12 +77,12 @@ presenter needs to press the "next" key to trigger the next action.
    {#three .unrevealed}
    Some more content.
 
-When the ``auto-next`` attribute is included in the attribute set, the next
+When the ``auto-continue`` attribute is included in the attribute set, the next
 action is executed without requiring the user pressing the "next" key.
 
 .. code-block::
 
-   {reveal="two" auto-next}
+   {reveal="two" auto-continue}
    The action above is executed first.
 
    {#two .unrevealed center}

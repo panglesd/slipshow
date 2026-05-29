@@ -85,7 +85,7 @@ let rec next ~mode window () =
       let res =
         let> () = Actions.exit ~mode window pause in
         let> () = AttributeActions.do_ ~mode window pause in
-        match Brr.El.at !!"auto-next" pause with
+        match Brr.El.at !!"auto-continue" pause with
         | None -> Undoable.return ()
         | Some _ ->
             let n = next ~mode window () in

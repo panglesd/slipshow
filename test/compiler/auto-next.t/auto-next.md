@@ -4,7 +4,7 @@ a
 
 b
 
-{pause auto-next}
+{pause auto-continue}
 
 c
 
