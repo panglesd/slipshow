@@ -60,6 +60,34 @@ It is possible to have multiple actions in a single attribute. They will be exec
    {#three .unrevealed}
    Some more content.
 
+Actions are executed in "reading order", from top left to bottom right. The
+presenter need to press the "next" key to trigger the next action.
+
+.. code-block::
+
+   {#one}
+   Some content.
+
+   {center="~duration:2 ~margin:10 one" reveal="two three"}
+   The action above is executed first.
+
+   {#two .unrevealed unreveal="three"}
+   The action above is executed second.
+
+   {#three .unrevealed}
+   Some more content.
+
+When the ``auto-next`` attribute is included in the attribute set, the next
+action is executed without requiring the user pressing the "next" key.
+
+.. code-block::
+
+   {reveal="two"}
+   The action above is executed first.
+
+   {#two .unrevealed center}
+   The action above is executed directly after the first one.
+
 .. contents:: Actions table of content
    :local:
 
