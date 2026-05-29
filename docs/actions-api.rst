@@ -61,7 +61,7 @@ It is possible to have multiple actions in a single attribute. They will be exec
    Some more content.
 
 Actions are executed in "reading order", from top left to bottom right. The
-presenter need to press the "next" key to trigger the next action.
+presenter needs to press the "next" key to trigger the next action.
 
 .. code-block::
 
@@ -82,7 +82,7 @@ action is executed without requiring the user pressing the "next" key.
 
 .. code-block::
 
-   {reveal="two"}
+   {reveal="two" auto-next}
    The action above is executed first.
 
    {#two .unrevealed center}
