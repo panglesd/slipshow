@@ -127,7 +127,7 @@ Pause attributes
   will initially display A, B and E, then going a step further will additionally display C, and another step will display D.
 
 ``step``
-  Introduces a no-op step in the slip it's in. Takes an optional ``~duration:FLOAT`` argument, whose default value is ``0``, and which defines the time spend before the action is completed. Useful to exit entered slips, and in conjunction with ``auto-next``.
+  Introduces a no-op step in the slip it's in. Takes an optional ``~duration:FLOAT`` argument, whose default value is ``0``, and which defines the time spent before the action is completed. Useful to exit entered slips, and in conjunction with ``auto-continue``.
 
 Moving the window
 -----------------
