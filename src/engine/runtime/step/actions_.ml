@@ -430,6 +430,25 @@ module Unemph = SetClass (struct
   let state = false
 end)
 
+let first_fut fut1 fut2 =
+  let fut, finish = Fut.create () in
+  let finish =
+    let has_finished = ref false in
+    fun () ->
+      if !has_finished then ()
+      else (
+        has_finished := true;
+        finish ())
+  in
+  let open Fut.Syntax in
+  let wait fut =
+    let+ () = fut in
+    finish ()
+  in
+  let _ = wait fut1 in
+  let _ = wait fut2 in
+  fut
+
 module Step = struct
   include Actions_arguments.Step
 
@@ -439,22 +458,20 @@ module Step = struct
   type js_args = Actions_arguments.Step.args
 
   let do_js ~mode _window (time : js_args) =
+    only_if_not_counting mode @@ fun () ->
     match (time, mode) with
     | Some (time, _), _ ->
         let open Fut.Syntax in
-        let fut, finish = Fut.create () in
-        let _ =
-          let+ () = Fut.tick ~ms:(int_of_float (time *. 1000.)) in
-          finish ()
-        in
-        let _ =
+        let wait () = Fut.tick ~ms:(int_of_float (time *. 1000.)) in
+        let* () =
           match mode with
-          | Fast.Normal h ->
-              let+ () = Fast.wait h in
-              finish ()
-          | _ -> Fut.return ()
+          | Fast.Normal hurry_bomb when not (Fast.has_detonated hurry_bomb) ->
+              let fut1 = wait () in
+              let fut2 = Fast.wait hurry_bomb in
+              first_fut fut1 fut2
+          | Slow -> wait ()
+          | Counting_for_toc | Fast | Normal _ -> Fut.return ()
         in
-        let* () = fut in
         Undoable.return ()
     | _ -> Undoable.return ()
 
