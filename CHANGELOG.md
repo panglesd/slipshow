@@ -6,6 +6,9 @@
 
 - `auto-continue` attribute to automatically continue to the next action (#240)
 - a `~duration:FLOAT` argument to the `step` action. (#241)
+- LSP:
+  - Two commands to make the presentation preview go forward/backward from the
+    editor (#242)
 
 ## [v0.11.0] Brazlip (Sunday, the 24th of May, 2026)
 
