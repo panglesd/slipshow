@@ -1,7 +1,11 @@
+type to_server = Server.to_server =
+  | Update
+  | Control of Proto.Server_to_client.control
+
 type root = Server.root = {
   units : Slipshow.Ast.units;
   diagnostics : Diagnosis.t list;
-  condition : unit Lwt_condition.t;
+  condition : to_server Lwt_condition.t;
   version : string;
 }
 
@@ -42,7 +46,7 @@ let do_serve ~port entry_point
     | Ok ((units, diagnostics), deps) ->
         content :=
           Some { units; diagnostics; version = generate_version (); condition };
-        Lwt_condition.broadcast condition ();
+        Lwt_condition.broadcast condition Update;
         Ok deps
   in
   let initial =

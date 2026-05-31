@@ -79,6 +79,12 @@ let handle_answer = function
       version := data.version;
       Previewer.preview_compiled previewer data.content;
       Fut.return (Ok ())
+  | Control (Movement Forward) ->
+      Previewer.next previewer;
+      Fut.return (Ok ())
+  | Control (Movement Backward) ->
+      Previewer.previous previewer;
+      Fut.return (Ok ())
 
 let proto_request_single ?signal uri msg =
   let open Brr_io.Fetch in

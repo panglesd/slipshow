@@ -1,7 +1,9 @@
+type to_server = Update | Control of Proto.Server_to_client.control
+
 type root = {
   units : Slipshow.Ast.units;
   diagnostics : Diagnosis.t list;
-  condition : unit Lwt_condition.t;
+  condition : to_server Lwt_condition.t;
   version : string;
 }
 
@@ -72,6 +74,11 @@ let send_update content =
   let c = Proto.Server_to_client.to_string c in
   Dream.respond ~headers:[ ("Content-Type", "text/plain") ] c
 
+let send_control c =
+  let c = Proto.Server_to_client.Control c in
+  let c = Proto.Server_to_client.to_string c in
+  Dream.respond ~headers:[ ("Content-Type", "text/plain") ] c
+
 let home_page (_, get_roots) _req =
   Dream.log "A browser reloaded";
   let rs = get_roots () in
@@ -117,12 +124,14 @@ let send root =
 let wait_for_event root roots file =
   let open Lwt.Infix in
   let open Lwt.Syntax in
-  let gate = Lwt_condition.wait root.condition >|= fun () -> `Update in
+  let gate = Lwt_condition.wait root.condition >|= fun x -> `Master x in
   let timeout = Lwt_unix.sleep 7. >|= fun () -> `Pong in
   let* event = Lwt.pick [ gate; timeout ] in
   match event with
   | `Pong -> pong ()
-  | `Update -> (
+  | `Master (Control c) -> send_control c
+  | `Master Update -> (
+      (* We reload root to get the updated value *)
       let root = roots file in
       match root with
       | None ->

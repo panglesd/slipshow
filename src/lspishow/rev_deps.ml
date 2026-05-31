@@ -1,7 +1,9 @@
+type to_server = Slipshow_server.to_server
+
 type root = Slipshow_server.root = {
   units : Slipshow.Ast.units;
   diagnostics : Diagnosis.t list;
-  condition : unit Lwt_condition.t;
+  condition : to_server Lwt_condition.t;
   version : string;
 }
 

@@ -98,7 +98,7 @@ module State = struct
       match Hashtbl.find_opt roots_state root with
       | None -> Lwt_condition.create ()
       | Some { condition; _ } ->
-          Lwt_condition.broadcast condition ();
+          Lwt_condition.broadcast condition Update;
           condition
     in
     let version = generate_version () in
@@ -443,6 +443,43 @@ class lsp_server =
 
     method on_notif_doc_did_close ~notify_back:_ _d : unit Linol_lwt.t =
       Linol_lwt.return ()
+
+    method private parse_file (args : Yojson.Safe.t list option) =
+      match args with
+      | Some (`String uri :: _) ->
+          let uri =
+            uri |> Linol_lwt.DocumentUri.of_string
+            |> Linol_lwt.DocumentUri.to_path |> Fpath.v
+          in
+          Some uri
+      | _ -> None
+
+    method private send_control file c =
+      let roots = Rev_deps.get_roots file in
+      let make_root_go_next root =
+        match Hashtbl.find_opt State.roots_state root with
+        | None -> ()
+        | Some { condition; units; _ } ->
+            Format.eprintf "Going next for root %a\n%!" Fpath.pp
+              units.entry_point;
+            Lwt_condition.broadcast condition (Control c)
+      in
+      Fpath.Set.iter make_root_go_next roots
+
+    method! on_req_execute_command ~notify_back ~id ~workDoneToken (c : string)
+        (args : Yojson.Safe.t list option) : Yojson.Safe.t Linol_lwt.t =
+      let () =
+        let ( let+ ) x f = Option.iter f x in
+        match c with
+        | "slipshow.go_next" ->
+            let+ file = self#parse_file args in
+            self#send_control file (Movement Forward)
+        | "slipshow.go_previous" ->
+            let+ file = self#parse_file args in
+            self#send_control file (Movement Backward)
+        | _ -> ()
+      in
+      super#on_req_execute_command ~notify_back ~id ~workDoneToken c args
   end
 
 let run () =

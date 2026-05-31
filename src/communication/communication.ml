@@ -9,6 +9,8 @@ type payload =
   | Drawing of string
   | Send_all_drawing
   | Receive_all_drawing of string list
+  | Next
+  | Previous
 [@@deriving sexp]
 
 type t = { payload : payload; id : string } [@@deriving sexp]

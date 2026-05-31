@@ -16,12 +16,7 @@ type previewer = {
   include_speaker_view : bool;
 }
 
-let send_speaker_view oc panel =
-  let payload =
-    match oc with
-    | `Open -> Communication.Open_speaker_notes
-    | `Close -> Close_speaker_notes
-  in
+let send_message panel payload =
   let content_window w =
     Jv.get (Brr.El.to_jv w) "contentWindow" |> Window.of_jv
   in
@@ -31,6 +26,18 @@ let send_speaker_view oc panel =
     { payload; id = "TODO" } |> Communication.to_string |> Jv.of_string
   in
   Window.post_message window ~msg
+
+let send_open_speaker_view panel =
+  let payload = Communication.Open_speaker_notes in
+  send_message panel payload
+
+let send_next panel =
+  let payload = Communication.Next in
+  send_message panel payload
+
+let send_previous panel =
+  let payload = Communication.Previous in
+  send_message panel payload
 
 let () = Random.self_init ()
 
@@ -127,7 +134,7 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
             Jv.set (El.to_jv panels.(!index)) "srcdoc" (Jv.of_string "");
             let () = El.set_class preview_status_class true preview_status in
             if !is_speaker_view_open then
-              send_speaker_view `Open panels.(1 - !index);
+              send_open_speaker_view panels.(1 - !index);
             index := 1 - !index;
             El.set_class (Jstr.v "active_panel") true panels.(!index);
             let () =
@@ -207,3 +214,11 @@ let preview_compiled previewer (delayed, warnings) =
   set_srcdoc previewer (slipshow, warnings)
 
 let ids { ids; _ } = ids
+
+let next (previewer : previewer) =
+  let current_window = previewer.panels.(!(previewer.index)) in
+  send_next current_window
+
+let previous (previewer : previewer) =
+  let current_window = previewer.panels.(!(previewer.index)) in
+  send_previous current_window

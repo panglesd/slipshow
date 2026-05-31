@@ -14,7 +14,13 @@ module Client_to_server : sig
 end
 
 module Server_to_client : sig
-  type t = Pong | Update of (Slipshow.delayed * string) versionned
+  type movement = Forward | Backward
+  type control = Movement of movement
+
+  type t =
+    | Pong
+    | Update of (Slipshow.delayed * string) versionned
+    | Control of control
 
   include Serializing with type t := t
 end

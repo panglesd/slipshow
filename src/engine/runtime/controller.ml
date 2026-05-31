@@ -230,6 +230,18 @@ let message_setup window =
             Step.Next.go_to ~send_message:false ~mode i window
           in
           ()
+      | Some { payload = Next; id = _ } ->
+          let _ : unit Fut.t =
+            let mode = Fast.normal () in
+            Step.Next.go_next ~send_message:true window mode
+          in
+          ()
+      | Some { payload = Previous; id = _ } ->
+          let _ : unit Fut.t =
+            let mode = Fast.normal () in
+            Step.Next.go_prev ~send_message:true window mode
+          in
+          ()
       | Some { payload = Drawing d; id = _window_id } -> handle_drawing d
       | Some { payload = Send_all_drawing; id = _ } ->
           Drawing_controller.Messages.send_all_strokes ()
