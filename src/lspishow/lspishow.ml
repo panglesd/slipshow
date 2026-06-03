@@ -56,10 +56,10 @@ module State = struct
   let rev_deps_from_fs (file : Fpath.t) =
     Lwt_mutex.with_lock mutex @@ fun () ->
     Format.eprintf "update_from_fs with file = %a\n%!" Fpath.pp file;
-    let parent, filename = Fpath.split_base file in
+    let parent = Fpath.parent file in
     let read_file = Read_file.v parent in
     let () =
-      let new_unit = Slipshow.Compile.unit ~read_file filename in
+      let new_unit = Slipshow.Compile.unit ~read_file file in
       Rev_deps.update_state ~old_unit:None ~new_unit file
     in
     Lwt.return_unit
@@ -75,9 +75,9 @@ module State = struct
     | Some { source = old_source; _ } when String.equal source old_source ->
         Lwt.return `No_changes
     | old ->
-        let parent, filename = Fpath.split_base file in
-        let read_file = Read_file.v parent |> Read_file.with_ filename source in
-        let unit = Slipshow.Compile.unit ~read_file filename in
+        let parent = Fpath.parent file in
+        let read_file = Read_file.v parent |> Read_file.with_ file source in
+        let unit = Slipshow.Compile.unit ~read_file file in
         let new_ = { source; unit } in
         update_state ~old ~new_ file;
         Lwt.return `Update
@@ -88,11 +88,11 @@ module State = struct
       buffers Fpath.Map.empty
 
   let update_root root =
-    let parent, filename = Fpath.split_base root in
+    let parent = Fpath.parent root in
     let read_file = Read_file.v parent in
     let units = units_of_buffer () in
     let units, diagnostics =
-      Slipshow.Compile.compile_all ~read_file units filename
+      Slipshow.Compile.compile_all ~read_file units root
     in
     let condition =
       match Hashtbl.find_opt roots_state root with
