@@ -284,7 +284,7 @@ class lsp_server =
         let+ x = Slipshow.Id_map.SMap.find_opt id ast.id_map in
         let meta = snd (Slipshow.Id_map.Unionable_set.get x.definition).id in
         let loc = Cmarkit.Meta.textloc meta in
-        let file = Fpath.v (Cmarkit.Textloc.file loc) in
+        let file = Cmarkit.Textloc.file loc |> Fpath.v |> Fpath.normalize in
         Format.eprintf "Going to location %a%!\n" Fpath.pp file;
         let uri = file |> Fpath.to_string |> Linol_lsp.Uri0.of_string in
         let range = Diagnostic.linoloc_of_textloc loc in
@@ -374,7 +374,9 @@ class lsp_server =
         List.filter_map
           (fun loc ->
             let loc_in_file loc =
-              let path1 = Fpath.v (Cmarkit.Textloc.file loc) in
+              let path1 =
+                Cmarkit.Textloc.file loc |> Fpath.v |> Fpath.normalize
+              in
               let path2 = Fpath.normalize path in
               Fpath.equal path1 path2
             in
