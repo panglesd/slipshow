@@ -1314,7 +1314,7 @@ Modify ``gnome.slp`` to be:
 
    {step}
 
-Now, create ``style.css` containing exactly what used to be inside the ``<style>`` element:
+Now, create ``style.css`` containing exactly what used to be inside the ``<style>`` element:
 
 .. code-block::
 
