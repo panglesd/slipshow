@@ -207,7 +207,7 @@ button. Save the downloaded file next to your ``sum.slp`` file, as ``sum.draw``.
 Including the drawing in your presentation
 ------------------------------------------
 
-Now, include the drawing in your presentation with by modifying ``sum.slp`` to:
+Now, include the drawing in your presentation by modifying ``sum.slp`` to:
 
 .. code-block::
 

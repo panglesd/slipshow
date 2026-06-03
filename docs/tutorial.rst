@@ -83,11 +83,11 @@ In a terminal, issue the following command:
 
 .. code-block:: shell
 
-   $ slipshow serve prime-numbers.md
+   $ slipshow serve prime-numbers.slp
    Visit http://localhost:8080 to view your presentation, with auto-reloading on file changes.
 
 This ``serve`` command creates a file with the same name as the input
-name, but a different extension: ``prime-numbers.html``. The ``.md`` file
+name, but a different extension: ``prime-numbers.html``. The ``.slp`` file
 is the one you'll use to modify the presentation, and the one you'll share
 with another author of the presentation. The ``.html`` file is the one
 you'll use to view or do your presentation, or to share with someone
@@ -105,7 +105,7 @@ sure you have the window focused, and hit the :kbd:`Right arrow` key (or equival
 the :kbd:`Down arrow` key) to step through the presentation! Right now, it has only two
 steps: the initial one, and the last one.
 
-Try to make a modification in ``prime-numbers.md`` and save the file. The
+Try to make a modification in ``prime-numbers.slp`` and save the file. The
 preview should refresh automatically with the new content!
 
 Also, type :kbd:`s`: this opens the speaker view, with a timer, notes you might
