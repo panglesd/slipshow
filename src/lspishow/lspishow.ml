@@ -255,7 +255,7 @@ class lsp_server =
         let* root = Rev_deps.get_roots path |> Fpath.Set.choose_opt in
         let* { units = ast; _ } = Hashtbl.find_opt State.roots_state root in
         let+ () =
-          Current_ast.get_target pos ast.action_plan |> Option.map ignore
+          Current_ast.get_target ~path pos ast.action_plan |> Option.map ignore
           (* Just as a way to test we are in the context of a target. Later, it
              would be even better to filter the IDs using what the action
              expects (eg, only show ids for slip-script in an exec action) *)
@@ -280,7 +280,7 @@ class lsp_server =
       let res =
         let* root = Rev_deps.get_roots path |> Fpath.Set.choose_opt in
         let* { units = ast; _ } = Hashtbl.find_opt State.roots_state root in
-        let* id = Current_ast.get_target pos ast.action_plan in
+        let* id = Current_ast.get_target ~path pos ast.action_plan in
         let+ x = Slipshow.Id_map.SMap.find_opt id ast.id_map in
         let meta = snd (Slipshow.Id_map.Unionable_set.get x.definition).id in
         let loc = Cmarkit.Meta.textloc meta in
@@ -305,7 +305,7 @@ class lsp_server =
         let path = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
         let* buffer = Hashtbl.find_opt State.buffers path in
         let* tail_attrs =
-          let trail = Current_ast.get_leave pos buffer.unit.ast in
+          let trail = Current_ast.get_leave ~path pos buffer.unit.ast in
           trail.attribute
         in
         match tail_attrs with
@@ -356,13 +356,15 @@ class lsp_server =
         let* { units = ast; _ } = Hashtbl.find_opt State.roots_state root in
         let* buffer = Hashtbl.find_opt State.buffers path in
         let* id =
-          let res1 = Current_ast.get_target params.position ast.action_plan in
+          let res1 =
+            Current_ast.get_target ~path params.position ast.action_plan
+          in
           match res1 with
           | Some _ -> res1
           | None -> (
               let* tail_attrs =
                 let trail =
-                  Current_ast.get_leave params.position buffer.unit.ast
+                  Current_ast.get_leave ~path params.position buffer.unit.ast
                 in
                 trail.attribute
               in
