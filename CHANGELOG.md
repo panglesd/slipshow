@@ -10,6 +10,10 @@
   - Two commands to make the presentation preview go forward/backward from the
     editor (#242)
 
+### Fixed
+
+- Fix action detection in LSP in multifile settings (#243)
+
 ## [v0.11.0] Brazlip (Sunday, the 24th of May, 2026)
 
 ### Added
