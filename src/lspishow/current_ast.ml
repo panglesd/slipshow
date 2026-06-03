@@ -1,44 +1,47 @@
 let ast : Slipshow.Ast.t option ref = ref None
 let set_ast x = ast := Some x
 
-let pos_in_textloc ?(permissive = false) ~(pos : Linol_lwt.Position.t) ~loc () =
+let pos_in_textloc ~path ?(permissive = false) ~(pos : Linol_lwt.Position.t)
+    ~loc () =
   let ( <? ) = if permissive then ( <= ) else ( < ) in
   let range = loc in
   let range = Diagnostic.linoloc_of_textloc range in
   (* Format.eprintf "is %d:%d in %d:%d -> %d:%d?\n" pos.line pos.character *)
   (*   range.start.line range.start.character range.end_.line range.end_.character; *)
   let res =
-    ((range.start.line = pos.line && range.start.character <= pos.character)
-    || range.start.line < pos.line)
+    Fpath.equal (Fpath.normalize path)
+      (Fpath.normalize @@ Fpath.v @@ Cmarkit.Textloc.file loc)
+    && ((range.start.line = pos.line && range.start.character <= pos.character)
+       || range.start.line < pos.line)
     && ((range.end_.line = pos.line && pos.character <? range.end_.character)
        || pos.line < range.end_.line)
   in
   (* Format.eprintf "%s\n%!" (if res then "yes" else "no"); *)
   res
 
-let pos_in ~(pos : Linol_lwt.Position.t) ~meta =
+let pos_in ~path ~(pos : Linol_lwt.Position.t) ~meta =
   let loc = Cmarkit.Meta.textloc meta in
-  pos_in_textloc ~pos ~loc
+  pos_in_textloc ~path ~pos ~loc
 
-let pos_in_inline inline ~pos =
+let pos_in_inline ~path inline ~pos =
   let meta = Slipshow.Ast.Utils.Inline.meta inline in
   let attrs = Slipshow.Ast.Utils.Inline.get_attribute inline in
   let is_in_attrs =
     match attrs with
     | None -> false
-    | Some (_, (_, meta)) -> pos_in ~pos ~meta ()
+    | Some (_, (_, meta)) -> pos_in ~path ~pos ~meta ()
   in
-  is_in_attrs || pos_in ~pos ~meta ()
+  is_in_attrs || pos_in ~path ~pos ~meta ()
 
-let pos_in_block block ~pos =
+let pos_in_block ~path block ~pos =
   let meta = Slipshow.Ast.Utils.Block.meta block in
   let attrs = Slipshow.Ast.Utils.Block.get_attribute block in
   let is_in_attrs =
     match attrs with
     | None -> false
-    | Some (_, (_, meta)) -> pos_in ~pos ~meta ()
+    | Some (_, (_, meta)) -> pos_in ~path ~pos ~meta ()
   in
-  is_in_attrs || pos_in ~pos ~meta ()
+  is_in_attrs || pos_in ~path ~pos ~meta ()
 
 open Cmarkit
 
@@ -57,8 +60,8 @@ type trace = {
   block : block_trace;
 }
 
-let enter_attrs acc pos attrs =
-  let pos_in ~meta = pos_in ~permissive:true ~pos ~meta () in
+let enter_attrs ~path acc pos attrs =
+  let pos_in ~meta = pos_in ~path ~permissive:true ~pos ~meta () in
   let kv =
     let kv = Cmarkit.Attributes.kv_attributes attrs in
     List.find_map
@@ -86,16 +89,16 @@ let enter_attrs acc pos attrs =
   in
   { acc with attribute }
 
-let rec enter_inline acc pos (inline : Cmarkit.Inline.t) =
+let rec enter_inline ~path acc pos (inline : Cmarkit.Inline.t) =
   let acc = { acc with inline = inline :: acc.inline } in
   let may_enter i =
-    if pos_in_inline ~pos i then enter_inline acc pos i else acc
+    if pos_in_inline ~path ~pos i then enter_inline ~path acc pos i else acc
   in
   let attrs = Slipshow.Ast.Utils.Inline.get_attribute inline in
   let attrs =
     match attrs with
-    | Some (_, (attrs, meta)) when pos_in ~pos ~meta () ->
-        Some (enter_attrs acc pos attrs)
+    | Some (_, (attrs, meta)) when pos_in ~path ~pos ~meta () ->
+        Some (enter_attrs ~path acc pos attrs)
     | _ -> None
   in
   (fun f -> match attrs with Some x -> x | None -> f ()) @@ fun () ->
@@ -107,10 +110,10 @@ let rec enter_inline acc pos (inline : Cmarkit.Inline.t) =
       acc
   | Strong_emphasis ((em, _), _) | Emphasis ((em, _), _) ->
       let i = Emphasis.inline em in
-      enter_inline acc pos i
+      enter_inline ~path acc pos i
   | Inlines (is, _) -> (
-      let next = List.find_opt (pos_in_inline ~pos) is in
-      match next with None -> acc | Some i -> enter_inline acc pos i)
+      let next = List.find_opt (pos_in_inline ~path ~pos) is in
+      match next with None -> acc | Some i -> enter_inline ~path acc pos i)
   | Image ((link, _), _) | Link ((link, _), _) ->
       let i = Link.text link in
       may_enter i
@@ -134,13 +137,13 @@ let rec enter_inline acc pos (inline : Cmarkit.Inline.t) =
 (*   let meta = Slipshow.Ast.Utils.Inline.meta inline in *)
 (*   if pos_in ~pos ~meta then enter_inline pos inline else None *)
 
-let rec enter_block acc pos (block : Cmarkit.Block.t) =
+let rec enter_block ~path acc pos (block : Cmarkit.Block.t) =
   let open Cmarkit.Block in
   let attrs = Slipshow.Ast.Utils.Block.get_attribute block in
   let attrs =
     match attrs with
-    | Some (_, (attrs, meta)) when pos_in ~pos ~meta () ->
-        Some (enter_attrs acc pos attrs)
+    | Some (_, (attrs, meta)) when pos_in ~path ~pos ~meta () ->
+        Some (enter_attrs ~path acc pos attrs)
     | _ -> None
   in
   (fun f -> match attrs with Some x -> x | None -> f ()) @@ fun () ->
@@ -153,62 +156,71 @@ let rec enter_block acc pos (block : Cmarkit.Block.t) =
   | Ext_attribute_definition _ ->
       (* TODO *)
       acc
-  | Ext_standalone_attributes (attrs, _) -> enter_attrs acc pos attrs
+  | Ext_standalone_attributes (attrs, _) -> enter_attrs ~path acc pos attrs
   | Heading ((h, _attrs), _) ->
       let inline = Heading.inline h in
-      if pos_in_inline ~pos inline then enter_inline acc pos inline else acc
+      if pos_in_inline ~path ~pos inline then enter_inline ~path acc pos inline
+      else acc
   | Block_quote ((bq, _attrs), _) ->
       let b = Block_quote.block bq in
-      if pos_in_block ~pos b then enter_block acc pos b else acc
+      if pos_in_block ~path ~pos b then enter_block ~path acc pos b else acc
   | Blocks (bs, _) -> (
-      let next = List.find_opt (pos_in_block ~pos) bs in
-      match next with None -> acc | Some b -> enter_block acc pos b)
+      let next = List.find_opt (pos_in_block ~path ~pos) bs in
+      match next with None -> acc | Some b -> enter_block ~path acc pos b)
   | List ((l, _attrs), _) ->
       let lis = List'.items l in
       let ( let+ ) x f = match x with None -> acc | Some x -> f x in
-      let+ li, _ = List.find_opt (fun (_, meta) -> pos_in ~pos ~meta ()) lis in
+      let+ li, _ =
+        List.find_opt (fun (_, meta) -> pos_in ~path ~pos ~meta ()) lis
+      in
       let block = List_item.block li in
-      if pos_in_block block ~pos then enter_block acc pos block else acc
+      if pos_in_block ~path block ~pos then enter_block ~path acc pos block
+      else acc
   | Paragraph ((p, _attrs), _) ->
       let inline = Paragraph.inline p in
-      if pos_in_inline ~pos inline then enter_inline acc pos inline else acc
+      if pos_in_inline ~path ~pos inline then enter_inline ~path acc pos inline
+      else acc
   | Slipshow.Ast.S_block b -> (
       match b with
       | Included _ -> acc
       | IncludedHTML _ -> acc
       | Slip ((block, _), _) | Div ((block, _), _) ->
-          if pos_in_block block ~pos then enter_block acc pos block else acc
+          if pos_in_block ~path block ~pos then enter_block ~path acc pos block
+          else acc
       | Slide ((slide, _), _) ->
           (* TODO: title *)
           let block = slide.content in
-          if pos_in_block block ~pos then enter_block acc pos block else acc
+          if pos_in_block ~path block ~pos then enter_block ~path acc pos block
+          else acc
       | MermaidJS _ | SlipScript _ -> acc
       | Carousel ((bs, _), _) -> (
-          let next = List.find_opt (pos_in_block ~pos) bs in
-          match next with None -> acc | Some b -> enter_block acc pos b))
+          let next = List.find_opt (pos_in_block ~path ~pos) bs in
+          match next with None -> acc | Some b -> enter_block ~path acc pos b))
   | _ -> assert false
 
-let get_leave pos doc =
+let get_leave ~path pos doc =
   let acc = { attribute = None; inline = []; block = [] } in
   let block = Cmarkit.Doc.block doc in
-  if pos_in_block block ~pos then enter_block acc pos block else acc
+  if pos_in_block ~path block ~pos then enter_block ~path acc pos block else acc
 
-let get_target pos (action_plan : Slipshow.Ast.Action_plan.t) =
+let get_target ~path pos (action_plan : Slipshow.Ast.Action_plan.t) =
   List.find_map
     (fun { Slipshow.Ast.Action_plan.actions; attrs = _, meta; _ } ->
-      if not @@ pos_in ~pos ~meta () then None
+      if not @@ pos_in ~path ~pos ~meta () then None
       else
         List.find_map
           (fun (arg, (_, value)) ->
             Option.bind value @@ fun (_, meta) ->
             let loc = Cmarkit.Meta.textloc meta in
-            if not @@ pos_in_textloc ~permissive:true ~pos ~loc () then None
+            if not @@ pos_in_textloc ~path ~permissive:true ~pos ~loc () then
+              None
             else
               let targets = Slipshow.Action_plan.targets arg in
               List.find_map
                 (fun (t, ploc) ->
                   let loc = Diagnosis.loc_of_ploc loc ploc in
-                  if pos_in_textloc ~permissive:true ~pos ~loc () then Some t
+                  if pos_in_textloc ~path ~permissive:true ~pos ~loc () then
+                    Some t
                   else None)
                 targets)
           actions)
