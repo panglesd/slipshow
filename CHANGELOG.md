@@ -9,6 +9,7 @@
 - LSP:
   - Two commands to make the presentation preview go forward/backward from the
     editor (#242)
+  - Consider `.slp` as input files. (#244)
 
 ### Fixed
 
