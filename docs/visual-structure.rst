@@ -63,7 +63,7 @@ and learn a lot along the way.
    4:3 default. Even though it is the default, we specify it.
 
 So, let's start with the small clock at the top. We could use an image... But
-let's simply add an emoji: ``🕰️``! Create a ``gnome.md`` file with the following
+let's simply add an emoji: ``🕰️``! Create a ``gnome.slp`` file with the following
 content:
 
 .. slipshow-example::
@@ -83,7 +83,7 @@ content:
 
    .. code-block::
 
-      $ slipshow serve gnome.md
+      $ slipshow serve gnome.slp
 
    You'll be all-set to go in the vegetable of the subject!
 
@@ -1261,15 +1261,15 @@ edit, due to its length, the grouping of elements... It is a good idea to split
 your source in multiple files to improve readability. In our case, we'll have
 several files:
 
-- One "entry" file, with the structure of the talk (``gnome.md``),
+- One "entry" file, with the structure of the talk (``gnome.slp``),
 - One file for ``Phase 1``, and one file for ``Phase 2``,
 - One file for the CSS styling.
 
 Let's start with the entry point file. In this file, we are going to include
-``phase-1.md`` and ``phase-3.md`` with the ``include`` attribute, and we'll
+``phase-1.slp`` and ``phase-3.slp`` with the ``include`` attribute, and we'll
 include the style by adding the ``css`` field to the frontmatter.
 
-Modify ``gnome.md`` to be:
+Modify ``gnome.slp`` to be:
 
 .. code-block:: diff
 
@@ -1296,7 +1296,7 @@ Modify ``gnome.md`` to be:
 
     {slip pause=overview up=phase-1}
    -> [...]
-   +{include src=phase-1.md}
+   +{include src=phase-1.slp}
 
     {step style=width:0}
 
@@ -1308,7 +1308,7 @@ Modify ``gnome.md`` to be:
 
     {slip pause=wat-profit up=phase-3}
    -> [...]
-   +{include src=phase-3.md}
+   +{include src=phase-3.slp}
 
    ---
 
@@ -1333,7 +1333,7 @@ Now, create ``style.css` containing exactly what used to be inside the ``<style>
    }
 
 
-Now, ``phase-1.md`` with an unchanged LLoreM ipsum:
+Now, ``phase-1.slp`` with an unchanged LLoreM ipsum:
 
 .. code-block::
 
@@ -1369,7 +1369,7 @@ Now, ``phase-1.md`` with an unchanged LLoreM ipsum:
    - Tickling the human *(never do this)*
    - Arguing about lace vs. cotton
 
-And, finally ``phase-3.md`` also with an unchanged LLoreM ipsum:
+And, finally ``phase-3.slp`` also with an unchanged LLoreM ipsum:
 
 .. code-block::
 

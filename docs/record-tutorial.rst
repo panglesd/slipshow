@@ -88,7 +88,7 @@ over time. Currently, it looks like this:
 
 In our case, the "typed" part of the presentation is minimal: We'll just type the title, the rest will be drawn. We also chose a ratio that gives us more horizontal space, and that is common for video-projectors and screens.
 
-So, let's create the following ``sum.md`` file:
+So, let's create the following ``sum.slp`` file:
 
 .. code-block::
 
@@ -102,7 +102,7 @@ and compile it with
 
 .. code-block::
 
-   $ slipshow compile sum.md
+   $ slipshow compile sum.slp
 
 Great! We have finished item 1 of the list above.
 
@@ -199,7 +199,7 @@ Saving the drawing file
 -----------------------
 
 Once you have finished editing the timeline and the preview, click on the "Save"
-button. Save the downloaded file next to your ``sum.md`` file, as ``sum.draw``.
+button. Save the downloaded file next to your ``sum.slp`` file, as ``sum.draw``.
 
 .. video:: save.mp4
    :width: 100%
@@ -207,7 +207,7 @@ button. Save the downloaded file next to your ``sum.md`` file, as ``sum.draw``.
 Including the drawing in your presentation
 ------------------------------------------
 
-Now, include the drawing in your presentation with by modifying ``sum.md`` to:
+Now, include the drawing in your presentation with by modifying ``sum.slp`` to:
 
 .. code-block::
 
@@ -223,7 +223,7 @@ We'll start a server to hot-reload a preview version of the presentation.
 
 .. code-block::
 
-   $ slipshow serve sum.md
+   $ slipshow serve sum.slp
 
 Open the browser on ``localhost:8080`` to see the preview. The drawing does not
 appear yet!  This is because drawing is an *action*, that needs to be

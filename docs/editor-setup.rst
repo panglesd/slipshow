@@ -31,9 +31,9 @@ You need two modes to develop slipshow presentations comfortably in emacs:
 - ``eglot``, a generic LSP client (part of emacs, so nothing to install) for the
   rest of the integration.
 
-After opening your input ``.md`` file, type ``M-x eglot`` to start ``eglot``,
-which will prompt you the command to start the lsp server. At this point, type
-``slipshow lsp`` (you need ``slipshow`` to be installed of course).
+After opening your input ``.slp`` (or ``.md``) file, type ``M-x eglot`` to start
+``eglot``, which will prompt you the command to start the lsp server. At this
+point, type ``slipshow lsp`` (you need ``slipshow`` to be installed of course).
 
 The command above sets you for editor features such as errors, documentation on
 hover, etc, but it also starts a preview server, usually accessible by opening a
