@@ -46,7 +46,7 @@ module Compile_args = struct
       "$(docv) is the CommonMark file to process. Reads from $(b,stdin) if \
        $(b,-) is specified."
     in
-    Arg.(value & pos 0 Custom_conv.input `Stdin & info [] ~doc ~docv:"FILE.md")
+    Arg.(value & pos 0 Custom_conv.input `Stdin & info [] ~doc ~docv:"FILE.slp")
 
   type compile_args = {
     input : [ `File of Fpath.t | `Stdin ];

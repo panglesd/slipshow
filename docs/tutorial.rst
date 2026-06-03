@@ -43,7 +43,7 @@ slipshow. The next parts of the tutorial will build on this example to explain
 the more advanced workflows!
 
 To start, copy the following lines in a file, named for instance
-``prime-numbers.md``:
+``prime-numbers.slp``:
 
 .. slipshow-example::
    :visible: both
@@ -61,9 +61,10 @@ To start, copy the following lines in a file, named for instance
 
 .. note::
 
-   The extension of the file (``.md``) is for ``markdown``. Many editors will
-   open files with such extension in a special mode that will help you read and
-   write it. Slipshow's syntax is an extension of markdown.
+   The extension of the file (``.slp``) is for slipshow source. If you did not
+   setup your editor to support slipshow, you might want to use the ``.md``
+   extension (for ``markdown``): Many editors support markdown out of the box,
+   and slipshow's syntax is an extension of it.
 
 Compiling and viewing your presentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

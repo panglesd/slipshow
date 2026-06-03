@@ -110,16 +110,16 @@ Includes for Markdown and HTML
 Includes are a way to include external markdown/HTML files, just as if they were
 inlined in the file, similar to the ``![](...)`` syntax but for blocks. An
 include must be a standalone attribute. It must have the ``include`` boolean
-attribute and ``src="path/to/file.md"`` key-value attribute. It is possible to
+attribute and ``src="path/to/file.slp"`` key-value attribute. It is possible to
 add other attributes as well.
 
 .. code-block::
 
    This presentation has two part:
 
-   {include slip src="part1.md"}
+   {include slip src="part1.slp"}
 
-   {include slip src="part2.md"}
+   {include slip src="part2.slp"}
 
    {include src="conclusion.html"}
 

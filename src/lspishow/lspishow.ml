@@ -185,7 +185,8 @@ let diagnostics file : Linol.Lsp.Types.Diagnostic.t list option =
 (* Find all markdown files in the given directory (recursing over subdirectories) *)
 let find_markdown_files path =
   Bos.OS.Dir.fold_contents ~traverse:`Any
-    ~elements:(`Sat (fun p -> Ok (Fpath.has_ext "md" p)))
+    ~elements:
+      (`Sat (fun p -> Ok (Fpath.has_ext "md" p || Fpath.has_ext "slp" p)))
     (fun p acc -> p :: acc)
     [] path
 
