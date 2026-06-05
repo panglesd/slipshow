@@ -6,14 +6,14 @@ Using a theme
 
 Theme support is pretty recent in Slipshow. As a consequence, there aren't many themes to choose from... yet!
 
-To choose a theme, specify it in the frontmatter. It can take the name of a builtin theme, a path to a css file, or a URL pointing to a CSS file.
+To choose a theme, specify it in the :doc:`frontmatter <frontmatter>`. It can take the name of a builtin theme, a path to a css file, or a URL pointing to a CSS file.
 
 Here is an example of a frontmatter to using the "vanier" predefined theme:
 
-.. code-block:: console
+.. code-block:: txt
 
    ---
-   theme: default
+   theme: vanier
    ---
 
 To get the list of supported theme files, use ``slipshow themes list``:
@@ -30,7 +30,7 @@ To get the list of supported theme files, use ``slipshow themes list``:
 
 Here is an example of a frontmatter specifying its theme by giving a path to a css file:
 
-.. code-block:: console
+.. code-block:: txt
 
    ---
    theme: themes/my-theme.css
@@ -38,7 +38,7 @@ Here is an example of a frontmatter specifying its theme by giving a path to a c
 
 And finally, here is an example of a frontmatter specifying its theme by giving an url to the css file (Note that the compiled file will need internet connection in order to display the presentation):
 
-.. code-block:: console
+.. code-block:: txt
 
    ---
    theme: https://example.org/my-theme.css
