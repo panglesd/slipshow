@@ -1,11 +1,19 @@
-module Io = struct
-  let read input =
-    try
-      match input with
-      | `Stdin -> Ok In_channel.(input_all stdin)
-      | `File f -> Bos.OS.File.read f
-    with exn -> Error (`Msg (Printexc.to_string exn))
-end
+(** For the state, we need quite a few things:
+
+    - A table for the current buffer state: the source (used to check if it has
+      actually changed: some LSP clients do not hesitate to send DocDidChange
+      events). This is [State.buffers]
+
+    - A table for the reverse dependencies: Given a file, in which file it is
+      included. This allows to get to the root of files. This is
+      [Rev_deps.current] and mostly used with [Rev_deps.get_roots] or
+      [Rev_deps.update_state].
+
+    - A table for roots. This is used by the LSP server for diagnostics, jump to
+      etc. It is kept up to date at each key-stroke.
+
+    - (TODO) A table for roots, but kept up to date at each save. This is for
+      the preview server, if the user prefers a "refresh on save". *)
 
 open Lwt.Syntax
 
@@ -16,39 +24,8 @@ let lwt_list_iter f l =
       f x)
     Lwt.return_unit l
 
-let generate_version () =
-  String.init 10 (fun _ -> Char.chr (97 + Random.int 26))
-
 module State = struct
-  type buffer = { source : string; unit : Slipshow.Ast.unit' }
-  type buffers = (Fpath.t, buffer) Hashtbl.t
-
-  let buffers : buffers = Hashtbl.create 10
   let mutex = Lwt_mutex.create ()
-  let roots_state : Rev_deps.roots = Hashtbl.create 10
-
-  module Read_file = struct
-    let v parent s =
-      let ( // ) = Fpath.( // ) in
-      let ( let+ ) a b = Result.map b a in
-      let fp = Fpath.normalize @@ (parent // s) in
-      Format.eprintf "fp is %a\n%!" Fpath.pp fp;
-      match Hashtbl.find_opt buffers fp with
-      | None ->
-          let+ res = Io.read (`File fp) in
-          Some res
-      | Some buf -> Ok (Some buf.source)
-
-    let with_ file source read_file s =
-      if Fpath.equal file s then Ok (Some source) else read_file s
-
-    let without parent s =
-      let ( // ) = Fpath.( // ) in
-      let ( let+ ) a b = Result.map b a in
-      let fp = Fpath.normalize @@ (parent // s) in
-      let+ res = Io.read (`File fp) in
-      Some res
-  end
 
   (* [update_from_fs] is update done when we read a file from the filesystem
      (and not given by the lsp client). It is the one called at initialization
@@ -57,68 +34,15 @@ module State = struct
     Lwt_mutex.with_lock mutex @@ fun () ->
     Format.eprintf "update_from_fs with file = %a\n%!" Fpath.pp file;
     let parent = Fpath.parent file in
-    let read_file = Read_file.v parent in
+    let read_file = Read_file.fs parent in
     let () =
       let new_unit = Slipshow.Compile.unit ~read_file file in
       Rev_deps.update_state ~old_unit:None ~new_unit file
     in
     Lwt.return_unit
 
-  let update_state ~old ~new_ file =
-    Format.eprintf "Opening/updating buffer: %a\n%!" Fpath.pp file;
-    Hashtbl.replace buffers file new_;
-    let old_unit = Option.map (fun old -> old.unit) old in
-    Rev_deps.update_state ~old_unit ~new_unit:new_.unit file
-
-  let update file source =
-    match Hashtbl.find_opt buffers file with
-    | Some { source = old_source; _ } when String.equal source old_source ->
-        Lwt.return `No_changes
-    | old ->
-        let parent = Fpath.parent file in
-        let read_file = Read_file.v parent |> Read_file.with_ file source in
-        let unit = Slipshow.Compile.unit ~read_file file in
-        let new_ = { source; unit } in
-        update_state ~old ~new_ file;
-        Lwt.return `Update
-
-  let units_of_buffer () =
-    Hashtbl.fold
-      (fun path u -> Fpath.Map.add path u.unit)
-      buffers Fpath.Map.empty
-
-  let update_root root =
-    let parent = Fpath.parent root in
-    let read_file = Read_file.v parent in
-    let units = units_of_buffer () in
-    let units, diagnostics =
-      Slipshow.Compile.compile_all ~read_file units root
-    in
-    let condition =
-      match Hashtbl.find_opt roots_state root with
-      | None -> Lwt_condition.create ()
-      | Some { condition; _ } ->
-          Lwt_condition.broadcast condition Update;
-          condition
-    in
-    let version = generate_version () in
-    Hashtbl.replace roots_state root { units; diagnostics; condition; version }
-
   let update_from_buffer (file : Fpath.t) s =
-    Lwt_mutex.with_lock mutex @@ fun () ->
-    let+ res = update file s in
-    match res with
-    | `No_changes ->
-        let roots = Rev_deps.get_roots file in
-        let compile_missing_roots root =
-          match Hashtbl.find_opt roots_state root with
-          | None -> update_root root
-          | Some _ -> ()
-        in
-        Fpath.Set.iter compile_missing_roots roots
-    | `Update ->
-        let roots = Rev_deps.get_roots file in
-        roots |> Fpath.Set.iter update_root
+    Lwt_mutex.with_lock mutex @@ fun () -> Lwt.return @@ Buffers.update file s
 end
 
 let send_info ~(notify_back : Linol_lwt.Jsonrpc2.notify_back) msg =
@@ -134,8 +58,8 @@ module Server = struct
   let server_promise = ref None
 
   let initialize ~notify_back () =
-    let roots_state = Hashtbl.find_opt State.roots_state in
-    let roots_list () = Hashtbl.to_seq_keys State.roots_state |> List.of_seq in
+    let roots_state = Hashtbl.find_opt Roots.buffers in
+    let roots_list () = Hashtbl.to_seq_keys Roots.buffers |> List.of_seq in
     let port0 = 8080 in
     let rec loop port =
       let* () =
@@ -177,7 +101,7 @@ let diagnostics file : Linol.Lsp.Types.Diagnostic.t list option =
   match root with
   | None -> None
   | Some root -> (
-      match Hashtbl.find_opt State.roots_state root with
+      match Hashtbl.find_opt Roots.buffers root with
       | None -> None
       | Some { diagnostics = errors; _ } ->
           Some (List.concat_map (Diagnostic.of_error ~root ~file) errors))
@@ -254,7 +178,7 @@ class lsp_server =
       let path = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
       let res =
         let* root = Rev_deps.get_roots path |> Fpath.Set.choose_opt in
-        let* { units = ast; _ } = Hashtbl.find_opt State.roots_state root in
+        let* { units = ast; _ } = Hashtbl.find_opt Roots.buffers root in
         let+ () =
           Current_ast.get_target ~path pos ast.action_plan |> Option.map ignore
           (* Just as a way to test we are in the context of a target. Later, it
@@ -280,7 +204,7 @@ class lsp_server =
       let path = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
       let res =
         let* root = Rev_deps.get_roots path |> Fpath.Set.choose_opt in
-        let* { units = ast; _ } = Hashtbl.find_opt State.roots_state root in
+        let* { units = ast; _ } = Hashtbl.find_opt Roots.buffers root in
         let* id = Current_ast.get_target ~path pos ast.action_plan in
         let+ x = Slipshow.Id_map.SMap.find_opt id ast.id_map in
         let meta = snd (Slipshow.Id_map.Unionable_set.get x.definition).id in
@@ -300,7 +224,7 @@ class lsp_server =
       let ( let+ ) x f = Option.map f x in
       let r =
         let path = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
-        let* buffer = Hashtbl.find_opt State.buffers path in
+        let* buffer = Hashtbl.find_opt Buffers.buffers path in
         let* tail_attrs =
           let trail = Current_ast.get_leave ~path pos buffer.unit.ast in
           trail.attribute
@@ -336,7 +260,11 @@ class lsp_server =
     method private on_doc ~(notify_back : Linol_lwt.Jsonrpc2.notify_back)
         (uri : Linol.Lsp.Types.DocumentUri.t) (contents : string) =
       let file = uri |> Linol.Lsp.Types.DocumentUri.to_path |> Fpath.v in
-      let* () = State.update_from_buffer file contents in
+      let* () =
+        match Config.Refresh.when_ () with
+        | Config.Edit -> State.update_from_buffer file contents
+        | Config.Save | Config.Never -> Lwt.return ()
+      in
       let diags = diagnostics file in
       match diags with
       | None -> Lwt.return ()
@@ -350,8 +278,8 @@ class lsp_server =
         let ( let+ ) x f = Option.map f x in
         let path = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
         let* root = Rev_deps.get_roots path |> Fpath.Set.choose_opt in
-        let* { units = ast; _ } = Hashtbl.find_opt State.roots_state root in
-        let* buffer = Hashtbl.find_opt State.buffers path in
+        let* { units = ast; _ } = Hashtbl.find_opt Roots.buffers root in
+        let* buffer = Hashtbl.find_opt Buffers.buffers path in
         let* id =
           let res1 =
             Current_ast.get_target ~path params.position ast.action_plan
@@ -412,7 +340,7 @@ class lsp_server =
       let () =
         let+ file = Rev_deps.get_roots file in
         let html, _warnings =
-          let read_file = State.Read_file.v (Fpath.parent file) in
+          let read_file = Read_file.fs (Fpath.parent file) in
           Slipshow.convert ~has_speaker_view:true ~read_file file
         in
         let output = Fpath.set_ext "html" file in
@@ -454,7 +382,7 @@ class lsp_server =
     method private send_control file c =
       let roots = Rev_deps.get_roots file in
       let make_root_go_next root =
-        match Hashtbl.find_opt State.roots_state root with
+        match Hashtbl.find_opt Roots.buffers root with
         | None -> ()
         | Some { condition; units; _ } ->
             Format.eprintf "Going next for root %a\n%!" Fpath.pp
