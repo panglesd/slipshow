@@ -98,7 +98,6 @@ let preview (roots, get_roots) req =
   match root with
   | None -> home_page (roots, get_roots) req
   | Some _root ->
-      Format.eprintf "TARGET is %a\n%!" Fpath.pp file;
       Dream.log "A browser reloaded";
       Dream.html (html_source file)
 
@@ -147,7 +146,6 @@ let polling (roots, _get_roots) req =
     let n = String.length "/polling/" in
     String.sub file n (String.length file - n)
   in
-  Format.eprintf "TARGET is %s\n%!" file;
   let file = Fpath.v file in
   let root = roots file in
   match root with
