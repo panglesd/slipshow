@@ -21,7 +21,8 @@ let to_units () =
 let update_root root =
   let parent = Fpath.parent root in
   let units = to_units () in
-  Roots.update_root (read_file parent) Roots.buffers units root
+  let _root = Roots.update_root (read_file parent) Roots.buffers units root in
+  ()
 
 (** Update the root of an updated buffer *)
 let update_state ~old ~new_ file =

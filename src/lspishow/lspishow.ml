@@ -45,55 +45,7 @@ module State = struct
     Lwt_mutex.with_lock mutex @@ fun () -> Lwt.return @@ Buffers.update file s
 end
 
-let send_info ~(notify_back : Linol_lwt.Jsonrpc2.notify_back) msg =
-  let type_ = Linol_lwt.MessageType.Info in
-  let k message =
-    let msg = Linol_lwt.ShowMessageParams.create ~message ~type_ in
-    let notif = Linol_lsp.Server_notification.ShowMessage msg in
-    notify_back#send_notification notif
-  in
-  Format.kasprintf k msg
-
-module Server = struct
-  let server_promise = ref None
-
-  let initialize ~notify_back () =
-    let roots_state = Hashtbl.find_opt Roots.buffers in
-    let roots_list () = Hashtbl.to_seq_keys Roots.buffers |> List.of_seq in
-    let port0 = 8080 in
-    let rec loop port =
-      let* () =
-        send_info ~notify_back "Starting preview server on port %d" port
-      in
-      let* try_port =
-        Slipshow_server.Server.do_serve ~port (roots_state, roots_list)
-      in
-      match try_port with
-      | Ok () -> Lwt.return_unit
-      | Error `Addr_in_use ->
-          let* () =
-            send_info ~notify_back "Port %d appears already used" port
-          in
-          let port = port + 1 in
-          if port - port0 > 100 then
-            let* () =
-              send_info ~notify_back
-                "Tried 100 ports, starting from %d, none of them appeared \
-                 usable"
-                port0
-            in
-            Lwt.return_unit
-          else loop port
-    in
-    loop port0
-
-  let initialize ~notify_back () =
-    match !server_promise with
-    | None ->
-        let lwt = initialize ~notify_back () in
-        server_promise := Some lwt
-    | Some _ -> ()
-end
+module Server = struct end
 
 let diagnostics file : Linol.Lsp.Types.Diagnostic.t list option =
   let roots = Rev_deps.get_roots file in
@@ -138,7 +90,7 @@ class lsp_server =
             | None -> None)
       in
       let roots = Option.value root ~default:[] in
-      let () = Server.initialize ~notify_back () in
+      let () = Lsp_preview.initialize ~notify_back () in
       let* () =
         Format.eprintf
           "We find all markdown files in the root and compute their dependencies\n\
@@ -260,7 +212,11 @@ class lsp_server =
     method private on_doc ~(notify_back : Linol_lwt.Jsonrpc2.notify_back)
         (uri : Linol.Lsp.Types.DocumentUri.t) (contents : string) =
       let file = uri |> Linol.Lsp.Types.DocumentUri.to_path |> Fpath.v in
-      let* () = State.update_from_buffer file contents in
+      let* () =
+        match Config.Refresh.when_ () with
+        | Config.Edit -> State.update_from_buffer file contents
+        | Config.Save | Config.Never -> Lwt.return ()
+      in
       let diags = diagnostics file in
       match diags with
       | None -> Lwt.return ()
@@ -321,6 +277,89 @@ class lsp_server =
             ~uri:params.textDocument.uri params
       | r -> super#on_request_unhandled ~notify_back ~id r
 
+    method private receive_config =
+      function
+      | [ `Assoc x ] -> (
+          match List.assoc_opt "refreshOn" x with
+          | Some (`String "Key stroke") -> Config.Refresh.set Edit
+          | Some (`String "Save") -> Config.Refresh.set Save
+          | _ -> ())
+      | _ -> ()
+
+    method private on_initialized
+        ~(notify_back : Linol_lwt.Jsonrpc2.notify_back) () =
+      let ( let> ) cont f = cont f in
+      let _ =
+        (* {:https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspace_configuration}
+
+            This pull model replaces the old push model were the client
+            signaled configuration change via an event. If the server still
+            needs to react to configuration changes (since the server caches
+            the result of workspace/configuration requests) the server should
+            register for an empty configuration change using the following
+            registration pattern:
+
+            {@javascript[
+              connection.client.register(DidChangeConfigurationNotification.type, undefined);
+            ]} *)
+        let server_request =
+          let registrations =
+            [
+              Linol_lwt.Registration.create ~id
+                ~method_:"workspace/didChangeConfiguration" ();
+            ]
+          in
+          let params = Linol_lwt.RegistrationParams.create ~registrations in
+          Linol_lsp.Server_request.ClientRegisterCapability params
+        in
+        let> res = notify_back#send_request server_request in
+        match res with Ok () -> Lwt.return () | Error _ -> _
+      in
+      let _ =
+        let server_request =
+          let item =
+            Linol_lwt.ConfigurationItem.create ~section:"slipshow" ()
+          in
+          let params = Linol_lwt.ConfigurationParams.create ~items:[ item ] in
+          Linol_lsp.Server_request.WorkspaceConfiguration params
+        in
+        let> res = notify_back#send_request server_request in
+        match res with
+        | Ok conf ->
+            let () = self#receive_config conf in
+            Lwt.return_unit
+        | Error err ->
+            let err = err |> Linol_jsonrpc.Jsonrpc.Response.Error.yojson_of_t in
+            Format.eprintf "Response error for WorkspaceConfiguration: %a"
+              Yojson.Safe.pp err;
+            Lwt.return_unit
+      in
+      Lwt.return ()
+
+    method private on_change_configuration ~notify_back:_ change_conf_params =
+      let conf =
+        change_conf_params.Linol_lwt.DidChangeConfigurationParams.settings
+      in
+      let () =
+        match conf with
+        | `List conf -> self#receive_config conf
+        | _ -> self#receive_config [ conf ]
+      in
+      let () =
+        Format.eprintf "Configuration: %a\n%!" Yojson.Safe.pp
+          change_conf_params.Linol_lwt.DidChangeConfigurationParams.settings
+      in
+      Lwt.return ()
+
+    method! on_notification_unhandled ~notify_back
+        (r : Linol_lsp.Client_notification.t) : unit Lwt.t =
+      match r with
+      | Linol.Lsp.Client_notification.Initialized ->
+          self#on_initialized ~notify_back ()
+      | Linol.Lsp.Client_notification.ChangeConfiguration change_conf_params ->
+          self#on_change_configuration ~notify_back change_conf_params
+      | r -> super#on_notification_unhandled ~notify_back r
+
     method on_notif_doc_did_open ~notify_back d ~content : unit Linol_lwt.t =
       self#on_doc ~notify_back d.uri content
 
@@ -329,15 +368,22 @@ class lsp_server =
       self#on_doc ~notify_back d.uri new_content
 
     method! on_notif_doc_did_save ~notify_back:_ params =
-      Format.eprintf "SAVING!\n%!";
       let uri = params.textDocument.uri in
       let file = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
       let ( let+ ) x f = Fpath.Set.iter f x in
       let () =
         let+ file = Rev_deps.get_roots file in
-        let html, _warnings =
-          let read_file = Read_file.fs (Fpath.parent file) in
-          Slipshow.convert ~has_speaker_view:true ~read_file file
+        let parent = Fpath.parent file in
+        let root =
+          Roots.update_root (Read_file.fs parent) Roots.saved Fpath.Map.empty
+            file
+        in
+        Lwt_condition.broadcast root.condition Update;
+        let html =
+          let delayed =
+            Slipshow.delayed_from_units ~has_speaker_view:true root.units
+          in
+          Slipshow.add_starting_state delayed None
         in
         let output = Fpath.set_ext "html" file in
         let write filename content =
