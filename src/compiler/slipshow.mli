@@ -28,7 +28,6 @@ type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
 val delayed_from_units :
   ?options:Frontmatter.Global.t ->
   ?slipshow_js:Asset.t ->
-  ?read_file:file_reader ->
   has_speaker_view:bool ->
   Ast.units ->
   delayed

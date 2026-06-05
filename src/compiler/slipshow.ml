@@ -266,7 +266,7 @@ let to_grace htbl_include er =
 let to_grace units errors = List.map (to_grace units.Ast.units) errors
 
 let delayed_from_units ?(options = Frontmatter.Global.empty) ?slipshow_js
-    ?(read_file = fun _ -> Ok None) ~has_speaker_view units =
+    ~has_speaker_view units =
   let options = Frontmatter.Global.combine options units.Ast.options in
   let ast = { units with options } in
   let dimension =
@@ -279,21 +279,12 @@ let delayed_from_units ?(options = Frontmatter.Global.empty) ?slipshow_js
   let math_mode =
     Option.value ~default:Frontmatter.Math_mode.default options.math_mode |> fst
   in
-  let resolve_theme = function
-    | `Builtin _ as x -> x
-    | `External x ->
-        let asset = Asset.of_string ~read_file x in
-        `External asset
+  let theme, _loc =
+    Option.value ~default:Frontmatter.Theme.default options.theme
   in
-  let theme =
-    match options.theme with
-    | None -> resolve_theme (fst Frontmatter.Theme.default)
-    | Some t -> resolve_theme (fst t)
-  in
-  let highlightjs_theme =
+  let highlightjs_theme, _loc =
     Option.value ~default:Frontmatter.Hljs_theme.default
       options.highlightjs_theme
-    |> fst
   in
   let math_link = options.math_link |> Option.map fst in
   let content = Renderers.to_html_string ast in
@@ -308,9 +299,7 @@ let delayed_from_units ?(options = Frontmatter.Global.empty) ?slipshow_js
 let delayed ?options ?slipshow_js ~read_file ~has_speaker_view file =
   let units, errors = Compile.compile_all Fpath.Map.empty file ~read_file in
   let warnings = to_grace units errors in
-  let res =
-    delayed_from_units ?options ?slipshow_js ~read_file ~has_speaker_view units
-  in
+  let res = delayed_from_units ?options ?slipshow_js ~has_speaker_view units in
   (res, warnings)
 
 let add_starting_state ?(autofocus = true) (start, end_, has_speaker_view)

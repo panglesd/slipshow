@@ -91,7 +91,7 @@ let serve ~input ~output ~port =
         Slipshow.Compile.compile_all ~read_file Fpath.Map.empty input
       in
       let result' =
-        Slipshow.delayed_from_units ~has_speaker_view:true ~read_file result
+        Slipshow.delayed_from_units ~has_speaker_view:true result
       in
       let html = Slipshow.add_starting_state result' None in
       let+ () = Io.write output html in
