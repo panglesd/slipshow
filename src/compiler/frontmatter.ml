@@ -28,7 +28,7 @@ let external_ids_key = "external-ids"
 module Global = struct
   type t = {
     math_link : Asset.t loced option;
-    theme : [ `Builtin of Themes.t | `External of string ] loced option;
+    theme : [ `Builtin of Themes.t | `External of Asset.t ] loced option;
     dimension : (int * int) loced option;
     highlightjs_theme : string loced option;
     math_mode : [ `Mathjax | `Katex ] loced option;
@@ -164,15 +164,17 @@ module Math_link = struct
 end
 
 module Theme = struct
-  type t = [ `Builtin of Themes.t | `External of string ] loced
+  type t = [ `Builtin of Themes.t | `External of Asset.t ] loced
 
   let key = theme_key
   let default = (`Builtin Themes.Default, Cmarkit.Textloc.none)
 
-  let of_string ~to_asset:_ (s, loc) =
+  let of_string ~to_asset (s, loc) =
     match Themes.of_string s with
     | Some theme -> Ok (`Builtin theme, loc)
-    | None -> Ok (`External s, loc)
+    | None ->
+        let theme = to_asset s in
+        Ok (`External theme, loc)
 
   let update_frontmatter (fm : fm) v =
     let theme = combine_opt key (Some v) fm.global.theme in

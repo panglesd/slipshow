@@ -11,7 +11,7 @@ end
 module Global : sig
   type t = {
     math_link : Asset.t loced option;
-    theme : [ `Builtin of Themes.t | `External of string ] loced option;
+    theme : [ `Builtin of Themes.t | `External of Asset.t ] loced option;
     dimension : (int * int) loced option;
     highlightjs_theme : string loced option;
     math_mode : [ `Mathjax | `Katex ] loced option;
@@ -61,7 +61,7 @@ module Math_link : Field with type t = Asset.t loced
 
 module Theme :
   Field_with_default
-    with type t = [ `Builtin of Themes.t | `External of string ] loced
+    with type t = [ `Builtin of Themes.t | `External of Asset.t ] loced
 
 module Css_links : Field with type t = Asset.t list
 module Js_links : Field with type t = Asset.t list
