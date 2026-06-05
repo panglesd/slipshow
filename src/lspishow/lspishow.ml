@@ -325,6 +325,45 @@ class lsp_server =
             ~uri:params.textDocument.uri params
       | r -> super#on_request_unhandled ~notify_back ~id r
 
+    method private on_initialized
+        ~(notify_back : Linol_lwt.Jsonrpc2.notify_back) () =
+      let _ =
+        let server_request =
+          let item =
+            Linol_lwt.ConfigurationItem.create ~section:"slipshow" ()
+          in
+          let params = Linol_lwt.ConfigurationParams.create ~items:[ item ] in
+          Linol_lsp.Server_request.WorkspaceConfiguration params
+        in
+        notify_back#send_request server_request (function
+          | Ok [ `Assoc x ] ->
+              let () =
+                match List.assoc_opt "refreshOn" x with
+                | Some (`String "Key stroke") -> Config.Refresh.set Edit
+                | Some (`String "Save") -> Config.Refresh.set Save
+                | _ -> ()
+              in
+              Lwt.return_unit
+          | _ -> Lwt.return_unit)
+      in
+      Lwt.return ()
+
+    method private on_change_configuration ~notify_back:_ change_conf_params =
+      let () =
+        Format.eprintf "Configuration: %a\n%!" Yojson.Safe.pp
+          change_conf_params.Linol_lwt.DidChangeConfigurationParams.settings
+      in
+      Lwt.return ()
+
+    method! on_notification_unhandled ~notify_back
+        (r : Linol_lsp.Client_notification.t) : unit Lwt.t =
+      match r with
+      | Linol.Lsp.Client_notification.Initialized ->
+          self#on_initialized ~notify_back ()
+      | Linol.Lsp.Client_notification.ChangeConfiguration change_conf_params ->
+          self#on_change_configuration ~notify_back change_conf_params
+      | r -> super#on_notification_unhandled ~notify_back r
+
     method on_notif_doc_did_open ~notify_back d ~content : unit Linol_lwt.t =
       self#on_doc ~notify_back d.uri content
 

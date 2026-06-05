@@ -180,7 +180,7 @@ let do_serve ~port (roots : roots) =
     let open Lwt.Syntax in
     let+ () =
       Dream.serve ~port ~interface:"127.0.0.1"
-      @@ Dream.logger
+      (* @@ Dream.logger *)
       @@ Dream.router
            [
              Dream.get "/" (home_page roots);
