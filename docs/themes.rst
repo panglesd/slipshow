@@ -6,31 +6,45 @@ Using a theme
 
 Theme support is pretty recent in Slipshow. As a consequence, there aren't many themes to choose from... yet!
 
-To choose a theme, use the ``--theme`` argument, or specify it in the frontmatter. It can take the name of a builtin theme, a path to a css file, or a URL pointing to a CSS file.
+To choose a theme, specify it in the frontmatter. It can take the name of a builtin theme, a path to a css file, or a URL pointing to a CSS file.
 
-Example:
+Here is an example of a frontmatter to using the "vanier" predefined theme:
 
 .. code-block:: console
 
-                $ slipshow themes list                      # List all themes
-                default
-                  The default theme, inspired from Beamer's Warsaw theme.
-                vanier
-                  Another Warsaw inspired theme.
-                none
-                  Include no theme.
-                $ slipshow compile pres.slp                  # Use the default theme
-                $ slipshow compile --theme default pres.slp  # Use the default theme, explicitely
-                $ slipshow compile --theme vanier pres.slp   # Use the vanier theme
-                $ slipshow compile --theme none pres.slp     # Do not include any theme
-                $ slipshow compile --theme file.css pres.slp # Use file.css as the theme
-                $ # Use the linked file as the theme:
-                $ slipshow compile --theme https://example.org/my-theme.css pres.slp
-                $ # /!\ Last example needs internet connection to view the presentation!
+   ---
+   theme: default
+   ---
 
-If you do not want to change the theme, but to extend it, use the ``--css`` argument instead.
+To get the list of supported theme files, use ``slipshow themes list``:
 
-Currently, only the default theme is builtin. However, you can write your own theme!
+.. code-block:: console
+
+   $ slipshow themes list                      # List all themes
+   default
+     The default theme, inspired from Beamer's Warsaw theme.
+   vanier
+     Another Warsaw inspired theme.
+   none
+     Include no theme.
+
+Here is an example of a frontmatter specifying its theme by giving a path to a css file:
+
+.. code-block:: console
+
+   ---
+   theme: themes/my-theme.css
+   ---
+
+And finally, here is an example of a frontmatter specifying its theme by giving an url to the css file (Note that the compiled file will need internet connection in order to display the presentation):
+
+.. code-block:: console
+
+   ---
+   theme: https://example.org/my-theme.css
+   ---
+
+Currently, very few themes are included. However, you can write your own theme!
 
 Creating a theme
 ----------------
