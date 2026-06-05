@@ -10,6 +10,7 @@ type root = Slipshow_server.root = {
 type t = (Fpath.t, root) Hashtbl.t
 
 let buffers : t = Hashtbl.create 10
+let saved : t = Hashtbl.create 10
 
 let generate_version () =
   String.init 10 (fun _ -> Char.chr (97 + Random.int 26))
@@ -24,4 +25,6 @@ let update_root read_file roots_state units root =
         condition
   in
   let version = generate_version () in
-  Hashtbl.replace roots_state root { units; diagnostics; condition; version }
+  let updated = { units; diagnostics; condition; version } in
+  Hashtbl.replace roots_state root updated;
+  updated
