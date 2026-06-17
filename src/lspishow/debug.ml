@@ -136,6 +136,9 @@ module Ast_printer = struct
         | MermaidJS ((_s, attrs), _) -> fprintf ppf "MermaidJS%a" pp_attrs attrs
         | Carousel ((l, attrs), _) ->
             fprintf ppf "Carousel%a@ @[<v>%a@]" pp_attrs attrs
+              (pp_print_list pp_block) l
+        | Poll_element ((l, attrs), _) ->
+            fprintf ppf "Poll_element%a@ @[<v>%a@]" pp_attrs attrs
               (pp_print_list pp_block) l)
     (* Catch-all for open variants *)
     | _ -> fprintf ppf "Unknown_block");

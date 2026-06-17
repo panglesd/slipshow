@@ -257,6 +257,8 @@ module Folder = struct
             Folder.fold_block f acc b
         | IncludedHTML _ | Included _ | MermaidJS _ | SlipScript _ -> acc
         | Carousel ((l, _), _) ->
+            List.fold_left (fun acc x -> Folder.fold_block f acc x) acc l
+        | Poll_element ((l, _), _) ->
             List.fold_left (fun acc x -> Folder.fold_block f acc x) acc l)
     | _ -> assert false
 
@@ -459,6 +461,12 @@ module Fold_mapper = struct
               match List.filter_map Fun.id bs with
               | [] -> (acc, None)
               | bs -> (acc, Some (Carousel ((bs, attrs), meta))))
+          | Poll_element ((bs, attrs), meta) -> (
+              let acc, attrs = m.attrs acc $ attrs in
+              let acc, bs = List.fold_left_map (m.block m) acc bs in
+              match List.filter_map Fun.id bs with
+              | [] -> (acc, None)
+              | bs -> (acc, Some (Carousel ((bs, attrs), meta))))
         in
         let res = Option.map (fun b -> S_block b) b in
         (acc, res)
@@ -553,8 +561,8 @@ module Utils = struct
               Some (mermaid_js ((slscr, attr_upd attrs), meta), attrs)
           | Carousel ((c, attrs), meta) ->
               Some (carousel ((c, attr_upd attrs), meta), attrs)
-          | Poll_elemnt  ((c, attrs), meta) ->
-              Some (Ast.poll_element ((c, no_attrs), meta), attrs))
+          | Poll_element ((c, attrs), meta) ->
+              Some (poll_element ((c, attr_upd attrs), meta), attrs))
       | _ -> None
 
     (** Get the attributes of a cmarkit node, returns them and the element
@@ -585,6 +593,7 @@ module Utils = struct
             | Slip (_, meta) -> meta
             | SlipScript (_, meta) -> meta
             | Carousel (_, meta) -> meta
+            | Poll_element (_, meta) -> meta
             | MermaidJS (_, meta) -> meta)
         | _ -> assert false
       in
@@ -844,6 +853,9 @@ module Ast_printer = struct
         | MermaidJS ((_s, attrs), _) -> fprintf ppf "MermaidJS%a" pp_attrs attrs
         | Carousel ((l, attrs), _) ->
             fprintf ppf "Carousel%a@ @[<v>%a@]" pp_attrs attrs
+              (pp_print_list pp_block) l
+        | Poll_element ((l, attrs), _) ->
+            fprintf ppf "Poll_element%a@ @[<v>%a@]" pp_attrs attrs
               (pp_print_list pp_block) l)
     (* Catch-all for open variants *)
     | _ -> fprintf ppf "Unknown_block");
