@@ -57,15 +57,25 @@ let start ~width ~height ~step =
       (fun election_el () ->
         let id = Jstr.to_string (Brr.El.prop Brr.El.Prop.id election_el) in
         let children = Brr.El.children ~only_els:true election_el in
+        let already_answered = ref false in
         List.iteri
           (fun i choice ->
-            let event = Communication.Poll_vote { id; vote = i } in
-            let _unlisten =
-              Brr.Ev.listen Brr.Ev.click
-                (fun _ev -> Messaging.send_vote event)
-                (Brr.El.as_target choice)
-            in
-            ())
+            if Brr.El.class' (Jstr.v "poll_element_children") choice then
+              let event = Communication.Poll_vote { id; vote = i } in
+              let _unlisten =
+                Brr.Ev.listen Brr.Ev.click
+                  (fun _ev ->
+                    if !already_answered then ()
+                    else
+                      let () =
+                        Brr.El.set_class (Jstr.v "poll-answered") true choice;
+                        already_answered := true
+                      in
+                      Messaging.send_vote event)
+                  (Brr.El.as_target choice)
+              in
+              ()
+            else ())
           children)
       (Jstr.v "[poll-element]") ()
   in

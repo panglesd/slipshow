@@ -59,10 +59,19 @@ let receive_callback event =
             let poll = El.find_first_by_selector ~root !!("#" ^ poll_id) in
             poll
             |> Option.iter @@ fun poll ->
+               let total =
+                 Present_comm.IntMap.fold (fun _ -> ( + )) results 0
+               in
                let children = El.children ~only_els:true poll in
                List.iteri
                  (fun i child ->
                    let result = Present_comm.IntMap.find_opt i results in
+                   if Brr.El.class' (Jstr.v "poll-global-result") child then
+                     let r =
+                       El.p [ El.txt' ("Answers: " ^ string_of_int total) ]
+                     in
+                     El.set_children child [ r ]
+                   else
                    result
                    |> Option.iter @@ fun result ->
                       let poll =

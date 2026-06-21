@@ -382,7 +382,9 @@ let custom_html_renderer (units : Ast.units)
                   let attrs = children_attrs in
                   RenderAttrs.in_block c "div" attrs @@ fun () ->
                   Context.block c b)
-                l);
+                l;
+              Context.string c
+                "<div class=\"poll-global-result\"><p>Answers: 0</p></div>");
           true
       | Ast.Slide (({ content; title }, (attrs, _)), _) ->
           let () =

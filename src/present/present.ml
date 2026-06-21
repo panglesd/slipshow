@@ -131,9 +131,10 @@ let dream content =
                    let* event = Lwt_condition.wait cond_step in
                    Dream.log "received the broadcast";
                    send_event event)
-                 else if their_step = !State.current_step then
-                   send_current_votes ()
-                 else send_current_step ());
+                 else if
+                   their_votes = Present_comm.total_votes !State.poll_results
+                 then send_current_step ()
+                 else send_current_votes ());
        ]
 
 let dream_speaker content =

@@ -74,20 +74,38 @@ let receive_callback event =
             let poll = El.find_first_by_selector ~root !!("#" ^ poll_id) in
             poll
             |> Option.iter @@ fun poll ->
+               let total =
+                 Present_comm.IntMap.fold (fun _ -> ( + )) results 0
+               in
                let children = El.children ~only_els:true poll in
                List.iteri
                  (fun i child ->
                    let result = Present_comm.IntMap.find_opt i results in
-                   result
-                   |> Option.iter @@ fun result ->
-                      let poll =
-                        El.find_first_by_selector ~root:child !!".poll-result"
-                      in
-                      match poll with
-                      | None -> ()
-                      | Some poll ->
-                          let r = El.span [ El.txt' (string_of_int result) ] in
-                          El.set_children poll [ r ])
+                   if Brr.El.class' (Jstr.v "poll-global-result") child then
+                     let r =
+                       El.p [ El.txt' ("Answers: " ^ string_of_int total) ]
+                     in
+                     El.set_children child [ r ]
+                   else
+                     match result with
+                     | None -> ()
+                     | Some result -> (
+                         let poll =
+                           El.find_first_by_selector ~root:child
+                             !!".poll-result"
+                         in
+                         match poll with
+                         | None ->
+                             let r =
+                               El.span
+                                 [ El.txt' ("Answers: " ^ string_of_int total) ]
+                             in
+                             El.set_children child [ r ]
+                         | Some poll ->
+                             let r =
+                               El.span [ El.txt' (string_of_int result) ]
+                             in
+                             El.set_children poll [ r ]))
                  children)
           poll ()
       in
@@ -170,4 +188,7 @@ let _unlisten =
       | _ -> ())
     (Brr.Window.as_target Brr.G.window)
 
-let () = recv ()
+let _ =
+  let open Fut.Syntax in
+  let+ () = Fut.tick ~ms:3000 in
+  recv ()
