@@ -45,8 +45,6 @@ module State = struct
     Lwt_mutex.with_lock mutex @@ fun () -> Lwt.return @@ Buffers.update file s
 end
 
-module Server = struct end
-
 let diagnostics file : Linol.Lsp.Types.Diagnostic.t list option =
   let roots = Rev_deps.get_roots file in
   let root = Fpath.Set.choose_opt roots in
@@ -212,11 +210,7 @@ class lsp_server =
     method private on_doc ~(notify_back : Linol_lwt.Jsonrpc2.notify_back)
         (uri : Linol.Lsp.Types.DocumentUri.t) (contents : string) =
       let file = uri |> Linol.Lsp.Types.DocumentUri.to_path |> Fpath.v in
-      let* () =
-        match Config.Refresh.when_ () with
-        | Config.Edit -> State.update_from_buffer file contents
-        | Config.Save | Config.Never -> Lwt.return ()
-      in
+      let* () = State.update_from_buffer file contents in
       let diags = diagnostics file in
       match diags with
       | None -> Lwt.return ()
@@ -277,12 +271,33 @@ class lsp_server =
             ~uri:params.textDocument.uri params
       | r -> super#on_request_unhandled ~notify_back ~id r
 
-    method private receive_config =
-      function
-      | [ `Assoc x ] -> (
+    method private receive_config conf =
+      let () = Format.eprintf "Configuration: %a\n%!" Yojson.Safe.pp conf in
+      (* Depending on whether it answers a request for settings or a it notifies
+         a setting changes by itself, the server won't send the same json. In
+         one case it is sent as "slipshow.refreshOn" and in another as
+         "refreshOn". In one case it is inside a list. So we try to have a
+         resilient parsing *)
+      match conf with
+      | `List l -> List.iter self#receive_config l
+      | `Assoc x -> (
           match List.assoc_opt "refreshOn" x with
-          | Some (`String "Key stroke") -> Config.Refresh.set Edit
-          | Some (`String "Save") -> Config.Refresh.set Save
+          | Some (`String "Key stroke") ->
+              Config.Refresh.set Edit;
+              Hashtbl.iter
+                (fun _ (root : Slipshow_server.root) ->
+                  Lwt_condition.broadcast root.condition Update)
+                Roots.saved
+          | Some (`String "Save") ->
+              Config.Refresh.set Save;
+              Hashtbl.iter
+                (fun _ (root : Slipshow_server.root) ->
+                  Lwt_condition.broadcast root.condition Update)
+                Roots.buffers
+          | None -> (
+              match List.assoc_opt "slipshow" x with
+              | Some x -> self#receive_config x
+              | None -> ())
           | _ -> ())
       | _ -> ()
 
@@ -302,10 +317,11 @@ class lsp_server =
             {@javascript[
               connection.client.register(DidChangeConfigurationNotification.type, undefined);
             ]} *)
+        let id = "didchangeconfid" in
         let server_request =
           let registrations =
             [
-              Linol_lwt.Registration.create ~id
+              Linol_lwt.Registration.create ~id ~registerOptions:`Null
                 ~method_:"workspace/didChangeConfiguration" ();
             ]
           in
@@ -313,7 +329,11 @@ class lsp_server =
           Linol_lsp.Server_request.ClientRegisterCapability params
         in
         let> res = notify_back#send_request server_request in
-        match res with Ok () -> Lwt.return () | Error _ -> _
+        match res with
+        | Ok () -> Lwt.return ()
+        | Error _ ->
+            (* TODO: display error somewhere *)
+            Lwt.return ()
       in
       let _ =
         let server_request =
@@ -326,7 +346,13 @@ class lsp_server =
         let> res = notify_back#send_request server_request in
         match res with
         | Ok conf ->
-            let () = self#receive_config conf in
+            let () =
+              Format.eprintf
+                "Receiving config through the answer to a workspace \
+                 configuration request\n\
+                 %!"
+            in
+            let () = self#receive_config (`List conf) in
             Lwt.return_unit
         | Error err ->
             let err = err |> Linol_jsonrpc.Jsonrpc.Response.Error.yojson_of_t in
@@ -340,15 +366,7 @@ class lsp_server =
       let conf =
         change_conf_params.Linol_lwt.DidChangeConfigurationParams.settings
       in
-      let () =
-        match conf with
-        | `List conf -> self#receive_config conf
-        | _ -> self#receive_config [ conf ]
-      in
-      let () =
-        Format.eprintf "Configuration: %a\n%!" Yojson.Safe.pp
-          change_conf_params.Linol_lwt.DidChangeConfigurationParams.settings
-      in
+      let () = self#receive_config conf in
       Lwt.return ()
 
     method! on_notification_unhandled ~notify_back
@@ -360,8 +378,20 @@ class lsp_server =
           self#on_change_configuration ~notify_back change_conf_params
       | r -> super#on_notification_unhandled ~notify_back r
 
-    method on_notif_doc_did_open ~notify_back d ~content : unit Linol_lwt.t =
-      self#on_doc ~notify_back d.uri content
+    method on_notif_doc_did_open ~notify_back doc ~content : unit Linol_lwt.t =
+      let uri = doc.uri in
+      let file = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
+      let ( let+ ) x f = Fpath.Set.iter f x in
+      let () =
+        let+ file = Rev_deps.get_roots file in
+        let parent = Fpath.parent file in
+        let _root =
+          Roots.update_root (Read_file.fs parent) Roots.saved Fpath.Map.empty
+            file
+        in
+        ()
+      in
+      self#on_doc ~notify_back uri content
 
     method on_notif_doc_did_change ~notify_back d _c ~old_content:_old
         ~new_content =
