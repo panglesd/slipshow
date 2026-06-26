@@ -64,6 +64,8 @@ let find_markdown_files path =
     (fun p acc -> p :: acc)
     [] path
 
+let client_capabilities = ref None
+
 class lsp_server =
   object (self)
     inherit Linol_lwt.Jsonrpc2.server as super
@@ -73,6 +75,7 @@ class lsp_server =
 
     method! on_req_initialize ~notify_back
         (params : Linol_lwt.InitializeParams.t) =
+      client_capabilities := Some params.capabilities;
       let _wsf = params.workspaceFolders in
       let _uri = params.rootUri in
       let _pth = params.rootPath in
@@ -271,78 +274,112 @@ class lsp_server =
             ~uri:params.textDocument.uri params
       | r -> super#on_request_unhandled ~notify_back ~id r
 
-    method private receive_config conf =
+    method private receive_config ~notify_back conf =
       let () = Format.eprintf "Configuration: %a\n%!" Yojson.Safe.pp conf in
       (* Depending on whether it answers a request for settings or a it notifies
          a setting changes by itself, the server won't send the same json. In
          one case it is sent as "slipshow.refreshOn" and in another as
          "refreshOn". In one case it is inside a list. So we try to have a
          resilient parsing *)
-      match conf with
-      | `List l -> List.iter self#receive_config l
-      | `Assoc x -> (
-          match List.assoc_opt "refreshOn" x with
-          | Some (`String "Key stroke") ->
-              Config.Refresh.set Edit;
-              Hashtbl.iter
-                (fun _ (root : Slipshow_server.root) ->
-                  Lwt_condition.broadcast root.condition Update)
-                Roots.saved
-          | Some (`String "Save") ->
-              Config.Refresh.set Save;
-              Hashtbl.iter
-                (fun _ (root : Slipshow_server.root) ->
-                  Lwt_condition.broadcast root.condition Update)
-                Roots.buffers
-          | None -> (
-              match List.assoc_opt "slipshow" x with
-              | Some x -> self#receive_config x
-              | None -> ())
-          | _ -> ())
-      | _ -> ()
-
-    method private on_initialized
-        ~(notify_back : Linol_lwt.Jsonrpc2.notify_back) () =
-      let ( let> ) cont f = cont f in
-      let _ =
-        (* {:https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspace_configuration}
-
-            This pull model replaces the old push model were the client
-            signaled configuration change via an event. If the server still
-            needs to react to configuration changes (since the server caches
-            the result of workspace/configuration requests) the server should
-            register for an empty configuration change using the following
-            registration pattern:
-
-            {@javascript[
-              connection.client.register(DidChangeConfigurationNotification.type, undefined);
-            ]} *)
-        let id = "didchangeconfid" in
-        let server_request =
-          let registrations =
-            [
-              Linol_lwt.Registration.create ~id ~registerOptions:`Null
-                ~method_:"workspace/didChangeConfiguration" ();
-            ]
-          in
-          let params = Linol_lwt.RegistrationParams.create ~registrations in
-          Linol_lsp.Server_request.ClientRegisterCapability params
-        in
-        let> res = notify_back#send_request server_request in
-        match res with
-        | Ok () -> Lwt.return ()
-        | Error _ ->
-            (* TODO: display error somewhere *)
-            Lwt.return ()
+      let rec decode_payload = function
+        | `List l -> List.iter decode_payload l
+        | `Assoc x -> (
+            match List.assoc_opt "refreshOn" x with
+            | Some (`String "Key stroke") ->
+                Config.Refresh.set Edit;
+                Hashtbl.iter
+                  (fun _ (root : Slipshow_server.root) ->
+                    Lwt_condition.broadcast root.condition Update)
+                  Roots.saved
+            | Some (`String "Save") ->
+                Config.Refresh.set Save;
+                Hashtbl.iter
+                  (fun _ (root : Slipshow_server.root) ->
+                    Lwt_condition.broadcast root.condition Update)
+                  Roots.buffers
+            | None -> (
+                match List.assoc_opt "slipshow" x with
+                | Some x -> decode_payload x
+                | None -> ())
+            | _ -> ())
+        | _ -> ()
       in
-      let _ =
-        let server_request =
-          let item =
-            Linol_lwt.ConfigurationItem.create ~section:"slipshow" ()
+      match conf with
+      | `Null ->
+          (* With the "pull model", when you still want to have the client
+             "push" changes,the way it works is that the client will push
+             "invalidating" notifications (when conf is null), and then the
+             server has to "invalidate its cache" and pull the new settings
+             values when needed (right now for us).
+
+            (This was inferred from the lsp-sample/ example at
+            https://github.com/microsoft/vscode-extension-samples/tree/main/lsp-sample) *)
+          let _ : unit Lwt.t = self#update_configuration ~notify_back in
+          ()
+      | _ -> decode_payload conf
+
+    method private register_conf_changes
+        ~(notify_back : Linol_lwt.Jsonrpc2.notify_back) =
+      let ( let> ) cont f = cont f in
+      (* {:https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspace_configuration}
+
+          This pull model replaces the old push model were the client
+          signaled configuration change via an event. If the server still
+          needs to react to configuration changes (since the server caches
+          the result of workspace/configuration requests) the server should
+          register for an empty configuration change using the following
+          registration pattern:
+
+          {@javascript[
+            connection.client.register(DidChangeConfigurationNotification.type, undefined);
+          ]} *)
+      match !client_capabilities with
+      | Some
+          {
+            workspace =
+              Some
+                {
+                  didChangeConfiguration =
+                    Some { dynamicRegistration = Some true };
+                  _;
+                };
+            _;
+          } ->
+          let id = "didchangeconfid" in
+          let server_request =
+            let registrations =
+              [
+                Linol_lwt.Registration.create ~id ~registerOptions:(`Assoc [])
+                  ~method_:"workspace/didChangeConfiguration" ();
+              ]
+            in
+            let params = Linol_lwt.RegistrationParams.create ~registrations in
+            Linol_lsp.Server_request.ClientRegisterCapability params
           in
-          let params = Linol_lwt.ConfigurationParams.create ~items:[ item ] in
-          Linol_lsp.Server_request.WorkspaceConfiguration params
-        in
+          let+ _ : Linol_jsonrpc.Jsonrpc.Id.t =
+            let> res = notify_back#send_request server_request in
+            match res with
+            | Ok () -> Lwt.return ()
+            | Error _ ->
+                (* TODO: display error somewhere *)
+                Lwt.return ()
+          in
+          ()
+      | _ -> Lwt.return ()
+
+    method private on_initialized ~notify_back () =
+      let _ : unit Lwt.t = self#register_conf_changes ~notify_back in
+      let* _ = self#update_configuration ~notify_back in
+      Lwt.return ()
+
+    method private update_configuration ~notify_back =
+      let ( let> ) cont f = cont f in
+      let server_request =
+        let item = Linol_lwt.ConfigurationItem.create ~section:"slipshow" () in
+        let params = Linol_lwt.ConfigurationParams.create ~items:[ item ] in
+        Linol_lsp.Server_request.WorkspaceConfiguration params
+      in
+      let+ _id =
         let> res = notify_back#send_request server_request in
         match res with
         | Ok conf ->
@@ -352,7 +389,7 @@ class lsp_server =
                  configuration request\n\
                  %!"
             in
-            let () = self#receive_config (`List conf) in
+            let () = self#receive_config ~notify_back (`List conf) in
             Lwt.return_unit
         | Error err ->
             let err = err |> Linol_jsonrpc.Jsonrpc.Response.Error.yojson_of_t in
@@ -360,13 +397,13 @@ class lsp_server =
               Yojson.Safe.pp err;
             Lwt.return_unit
       in
-      Lwt.return ()
+      ()
 
-    method private on_change_configuration ~notify_back:_ change_conf_params =
+    method private on_change_configuration ~notify_back change_conf_params =
       let conf =
         change_conf_params.Linol_lwt.DidChangeConfigurationParams.settings
       in
-      let () = self#receive_config conf in
+      let () = self#receive_config ~notify_back conf in
       Lwt.return ()
 
     method! on_notification_unhandled ~notify_back
