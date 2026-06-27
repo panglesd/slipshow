@@ -209,9 +209,9 @@ let pure_embed c uri files attrs =
   | Asset.Uri.Link _ -> Logs.err (fun m -> m "Could not embed a pure embed")
   | Path p -> (
       match Fpath.Map.find_opt p (files : Ast.Files.read Ast.Files.map) with
-      | Some { content = Some content; mode = `Base64; _ } ->
+      | Some { content; mode = `Base64; _ } ->
           Context.string c "<span x-data=\"";
-          html_escaped_string c content;
+          html_escaped_string c (Option.value ~default:"" content);
           Context.string c "\" ";
           RenderAttrs.add_attrs c attrs;
           Context.string c "></span>"

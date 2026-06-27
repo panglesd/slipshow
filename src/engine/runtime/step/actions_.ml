@@ -747,9 +747,20 @@ module Draw = struct
         | None -> ()
         | Some data -> (
             let open Drawing_state in
-            match
-              Drawing_state.Json.string_to_recording (Jstr.to_string data)
-            with
+            let recording : (recording, _) result =
+              match Jstr.to_string data with
+              | "" ->
+                  Ok
+                    {
+                      strokes = Lwd_table.make ();
+                      pauses = Lwd_table.make ();
+                      total_time = Lwd.var 0.;
+                      name = Lwd.var "A new recording TODO";
+                      record_id = Random.bits ();
+                    }
+              | data -> Drawing_state.Json.string_to_recording data
+            in
+            match recording with
             | Error e -> Console.(log [ e ])
             | Ok recording ->
                 let replaying_state =
