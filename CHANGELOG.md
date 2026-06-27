@@ -10,6 +10,8 @@
   - Two commands to make the presentation preview go forward/backward from the
     editor (#242)
   - Consider `.slp` as input files. (#244)
+  - A configuration for refreshing the preview on each key stroke, or on
+    save. (#248)
 
 ### Fixed
 
