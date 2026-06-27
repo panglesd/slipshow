@@ -550,7 +550,7 @@ module Stage4 = struct
       |> List.map (fun x ->
           { Id_map.id = (x, Meta.none); elem = `External; meta = Meta.none })
     in
-    let asset_map, id_list =
+    let files, id_list =
       Cmarkit.Folder.fold_doc execute (files, external_ids) md
     in
     let id_list = List.rev id_list in
@@ -564,7 +564,6 @@ module Stage4 = struct
             acc)
         Id_map.SMap.empty id_list
     in
-    let files = asset_map in
     (md, files, id_map)
 end
 
