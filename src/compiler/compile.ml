@@ -690,14 +690,14 @@ let compile_all ~read_file units_cache file =
   let files : Ast.Files.read Ast.Files.map =
     Fpath.Map.mapi
       (fun path file ->
-        let content = read_file path in
-        let () =
-          Result.iter_error
-            (fun (`Msg error_msg) ->
+        let content =
+          match read_file path with
+          | Ok content -> content
+          | Error (`Msg error_msg) ->
               let locs = List.map snd file.Ast.Files.used_by in
               Diagnosis.add
-                (MissingFile { file = Fpath.to_string path; error_msg; locs }))
-            content
+                (MissingFile { file = Fpath.to_string path; error_msg; locs });
+              None
         in
         { file with content })
       files

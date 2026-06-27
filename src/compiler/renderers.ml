@@ -120,7 +120,7 @@ let src uri files =
   | Asset.Uri.Link l -> `Link l
   | Path p -> (
       match Fpath.Map.find_opt p (files : Ast.Files.read Ast.Files.map) with
-      | Some { content = Ok (Some content); mode = `Base64; _ } ->
+      | Some { content = Some content; mode = `Base64; _ } ->
           let mime_type = Magic_mime.lookup (Fpath.filename p) in
           `Source (content, mime_type)
       | _ -> `Link (Fpath.to_string p))
@@ -143,7 +143,7 @@ let pdf c ~uri ~files i attrs =
       in
       let src =
         match Fpath.Map.find_opt p (files : Ast.Files.read Ast.Files.map) with
-        | Some { content = Ok (Some content); mode = `Base64; _ } ->
+        | Some { content = Some content; mode = `Base64; _ } ->
             let base64 = Base64.encode_string content in
             Format.sprintf "%s" base64
         | _ ->
@@ -209,7 +209,7 @@ let pure_embed c uri files attrs =
   | Asset.Uri.Link _ -> Logs.err (fun m -> m "Could not embed a pure embed")
   | Path p -> (
       match Fpath.Map.find_opt p (files : Ast.Files.read Ast.Files.map) with
-      | Some { content = Ok (Some content); mode = `Base64; _ } ->
+      | Some { content = Some content; mode = `Base64; _ } ->
           Context.string c "<span x-data=\"";
           html_escaped_string c content;
           Context.string c "\" ";
@@ -302,7 +302,7 @@ let custom_html_renderer (units : Ast.units)
             match
               Fpath.Map.find_opt p (files : Ast.Files.read Ast.Files.map)
             with
-            | Some { content = Ok (Some html); _ } -> C.string c html
+            | Some { content = Some html; _ } -> C.string c html
             | _ -> ()
           in
           true
