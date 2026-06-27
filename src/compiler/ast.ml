@@ -96,7 +96,7 @@ end
 module Files = struct
   type mode = [ `Base64 ]
   type unread = unit
-  type read = (string option, [ `Msg of string ]) result
+  type read = string option
 
   type 'a t = {
     path : Fpath.t;
