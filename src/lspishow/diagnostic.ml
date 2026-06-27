@@ -65,18 +65,15 @@ let of_error ~root ~file (e : Diagnosis.t) =
         occurrences
   | MissingFile { file; error_msg; locs } ->
       let locs = List.filter loc_in_file locs in
+      let draw_precision =
+        if String.ends_with ~suffix:".draw" file then
+          "\nOpen the record panel in the preview to record and save a draw file."
+        else ""
+      in
       List.map
         (fun loc ->
-          create ~loc "Error when reading file '%s': %s" file error_msg)
-        locs
-  | MissingDrawFile { file; error_msg; locs } ->
-      let locs = List.filter loc_in_file locs in
-      List.map
-        (fun loc ->
-          create ~loc
-            "Missing draw file '%s': %s\n\
-             Use the preview to record and save a draw file"
-            file error_msg)
+          create ~loc "Error when reading file '%s': %s%s" file error_msg
+            draw_precision)
         locs
   | WrongType { loc_reason; loc_block = _; expected_type } ->
       if_in loc_reason @@ fun () ->
