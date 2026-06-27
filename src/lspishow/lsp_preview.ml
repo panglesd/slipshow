@@ -59,3 +59,6 @@ let initialize ~notify_back () =
       let lwt = initialize ~notify_back () in
       server_promise := Some lwt
   | Some _ -> ()
+
+let server_promise () = !server_promise
+let server_port () = !server_port
