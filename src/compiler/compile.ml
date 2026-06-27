@@ -694,8 +694,13 @@ let compile_all ~read_file units_cache file =
           | Ok content -> content
           | Error (`Msg error_msg) ->
               let locs = List.map snd file.Ast.Files.used_by in
-              Diagnosis.add
-                (MissingFile { file = Fpath.to_string path; error_msg; locs });
+              let diag : Diagnosis.t =
+                let file = Fpath.to_string path in
+                match Fpath.get_ext path with
+                | "draw" -> MissingDrawFile { file; error_msg; locs }
+                | _ -> MissingFile { file; error_msg; locs }
+              in
+              Diagnosis.add diag;
               None
         in
         { file with content })

@@ -12,6 +12,7 @@ let loc_of_ploc loc (idx, idx') =
 type t =
   | DuplicateID of { id : string; occurrences : loc list }
   | MissingFile of { file : string; error_msg : string; locs : loc list }
+  | MissingDrawFile of { file : string; error_msg : string; locs : loc list }
   | WrongType of { loc_reason : loc; loc_block : loc; expected_type : string }
   | ParsingError of { action : string; msg : string; loc : loc }
   | ParsingWarnor of { warnor : Actions_arguments.W.warnor; loc : loc }
@@ -37,6 +38,9 @@ let pp ppf = function
         (Fmt.list Cmarkit.Textloc.pp_ocaml)
         id.occurrences
   | MissingFile s ->
+      Format.fprintf ppf "Missing file: %s, considering it as an URL. (%s)"
+        s.file s.error_msg
+  | MissingDrawFile s ->
       Format.fprintf ppf "Missing file: %s, considering it as an URL. (%s)"
         s.file s.error_msg
   | WrongType { loc_reason = _; loc_block = _; expected_type } ->
@@ -73,6 +77,7 @@ let pp ppf = function
 let to_code = function
   | DuplicateID _ -> "DupID"
   | MissingFile _ -> "FSError"
+  | MissingDrawFile _ -> "MissingDraw"
   | WrongType _ -> "WrongType"
   | ParsingError _ -> "ActionParsing"
   | ParsingWarnor _ -> "ActionParsing"
@@ -124,6 +129,20 @@ let to_grace source_map error =
       in
       Diagnostic.createf ~labels Warning "file '%s' could not be read: %s" file
         error_msg
+  | MissingDrawFile { file; error_msg; locs } ->
+      let labels =
+        List.filter_map
+          (fun loc -> with_range loc @@ Diagnostic.Label.primaryf "")
+          locs
+      in
+      let notes =
+        [
+          Diagnostic.Message.create
+            "Use the preview editor panel to record and save a drawing.";
+        ]
+      in
+      Diagnostic.createf ~notes ~labels Warning "Missing draw file '%s': %s"
+        file error_msg
   | WrongType { loc_reason; loc_block; expected_type } ->
       let labels =
         List.filter_map Fun.id
