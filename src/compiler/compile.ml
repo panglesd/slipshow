@@ -636,7 +636,7 @@ let rec add_to_compile ?locs ~units file units_cache ~read_file =
         add_to_compile ~locs ~units dep units_cache ~read_file)
       u.deps units
 
-let compile_all ~read_file units_cache file =
+let compile_all ~directory ~read_file units_cache file =
   let units = Fpath.Map.empty in
   let units = add_to_compile file ~units units_cache ~read_file in
   let files, options =
@@ -701,10 +701,18 @@ let compile_all ~read_file units_cache file =
         { file with content })
       files
   in
-  { Ast.units; files; id_map; entry_point = internal; options; action_plan }
+  {
+    Ast.units;
+    files;
+    id_map;
+    entry_point = internal;
+    options;
+    action_plan;
+    directory;
+  }
 
-let compile_all ~read_file units file =
-  Diagnosis.with_ @@ fun () -> compile_all ~read_file units file
+let compile_all ~read_file ~directory units file =
+  Diagnosis.with_ @@ fun () -> compile_all ~directory ~read_file units file
 
 (* let add_to_compile file c ~read_file = *)
 (*   Diagnosis.with_ @@ fun () -> add_to_compile file c ~read_file *)
@@ -788,6 +796,7 @@ let to_cmarkit
       files = _;
       id_map = _;
       action_plan = _;
+      directory = _;
     } =
   match Fpath.Map.find_opt entry_point units with
   | None -> failwith "Fail during markdown output"

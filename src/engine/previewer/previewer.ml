@@ -189,12 +189,13 @@ let preview ?options ?slipshow_js previewer source =
   let starting_state = !(previewer.stage) in
   let has_speaker_view = previewer.include_speaker_view in
   let this_file = Fpath.v "-" in
+  let directory = Fpath.v "./" in
   let read_file f =
     if Fpath.equal this_file f then Ok (Some source) else Ok None
   in
   let slipshow, warnings =
-    Slipshow.convert ~has_speaker_view ?slipshow_js ?options ~read_file
-      ~autofocus:false ~starting_state this_file
+    Slipshow.convert ~directory ~has_speaker_view ?slipshow_js ?options
+      ~read_file ~autofocus:false ~starting_state this_file
   in
   let warnings =
     List.map

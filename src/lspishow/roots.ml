@@ -16,7 +16,10 @@ let generate_version () =
   String.init 10 (fun _ -> Char.chr (97 + Random.int 26))
 
 let update_root read_file roots_state units root =
-  let units, diagnostics = Slipshow.Compile.compile_all ~read_file units root in
+  let directory = Fpath.parent root in
+  let units, diagnostics =
+    Slipshow.Compile.compile_all ~directory ~read_file units root
+  in
   let condition =
     match Hashtbl.find_opt roots_state root with
     | None -> Lwt_condition.create ()

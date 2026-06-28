@@ -141,6 +141,7 @@ type unit' = {
 
 type units = {
   units : unit' Fpath.Map.t;
+  directory : Fpath.t;
   entry_point : Fpath.t;
   options : Frontmatter.Global.t;
   files : Files.read Files.map;
