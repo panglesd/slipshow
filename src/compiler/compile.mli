@@ -16,6 +16,7 @@ val unit :
 
 val compile_all :
   read_file:file_reader ->
+  directory: Fpath.t ->
   Ast.unit' Fpath.Map.t ->
   Fpath.t ->
   Ast.units * Diagnosis.t list

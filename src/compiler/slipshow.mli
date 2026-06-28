@@ -36,6 +36,7 @@ val delayed_from_units :
     let the previewer decide on the starting state. *)
 
 val delayed :
+  directory:Fpath.t ->
   ?options:Frontmatter.Global.t ->
   ?slipshow_js:Asset.t ->
   read_file:file_reader ->
@@ -50,6 +51,7 @@ val add_starting_state :
   ?autofocus:bool -> delayed -> starting_state option -> string
 
 val convert :
+  directory:Fpath.t ->
   ?options:Frontmatter.Global.t ->
   has_speaker_view:bool ->
   ?autofocus:bool ->
@@ -59,7 +61,8 @@ val convert :
   Fpath.t ->
   string * Diagnosis.t Grace.Diagnostic.t list
 
-val convert_to_md : read_file:file_reader -> Fpath.t -> string
+val convert_to_md :
+  read_file:file_reader -> directory:Fpath.t -> Fpath.t -> string
 
 val to_grace :
   Ast.units -> Diagnosis.t list -> Diagnosis.t Grace.Diagnostic.t list
