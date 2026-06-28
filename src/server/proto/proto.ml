@@ -1,6 +1,6 @@
 type 'a versionned = { content : 'a; version : string }
 
-module Marhsarializing = struct
+module Marsharializing = struct
   let to_string x = Marshal.to_string x [] |> Base64.encode_string
 
   let of_string s =
@@ -10,9 +10,12 @@ module Marhsarializing = struct
 end
 
 module Client_to_server = struct
-  type t = Ping | UpdateFrom of string
+  type t =
+    | Ping
+    | UpdateFrom of string
+    | Save_drawing of string * string (* path * content *)
 
-  include Marhsarializing
+  include Marsharializing
 end
 
 module Server_to_client = struct
@@ -23,6 +26,7 @@ module Server_to_client = struct
     | Pong
     | Update of (Slipshow.delayed * string) versionned
     | Control of control
+    | Saved of string
 
-  include Marhsarializing
+  include Marsharializing
 end

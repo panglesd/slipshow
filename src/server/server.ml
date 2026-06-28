@@ -69,6 +69,11 @@ let pong () =
   let c = Proto.Server_to_client.to_string c in
   Dream.respond ~headers:[ ("Content-Type", "text/plain") ] c
 
+let saved s =
+  let c = Proto.Server_to_client.Saved (Fpath.to_string s) in
+  let c = Proto.Server_to_client.to_string c in
+  Dream.respond ~headers:[ ("Content-Type", "text/plain") ] c
+
 let send_update content =
   let c = Proto.Server_to_client.Update content in
   let c = Proto.Server_to_client.to_string c in
@@ -162,7 +167,19 @@ let polling (roots, _get_roots) req =
       | Some Ping -> pong ()
       | Some (UpdateFrom version) ->
           if not @@ String.equal version root.version then send root
-          else wait_for_event root roots file)
+          else wait_for_event root roots file
+      | Some (Save_drawing (path, drawing)) -> (
+          let from = root.units.directory in
+          let path = Fpath.v path in
+          let path = Fpath.( // ) from path in
+          Dream.log "Saving drawing in %a with from %a" Fpath.pp path Fpath.pp
+            from;
+          let res = Bos.OS.File.write path drawing in
+          match res with
+          | Ok () -> saved path
+          | Error (`Msg err) ->
+              Dream.log "Could not write %a: %s" Fpath.pp path err;
+              saved path))
 
 let do_serve ~port (roots : roots) =
   let () = if Sys.unix then Sys.(set_signal sigpipe Signal_ignore) in

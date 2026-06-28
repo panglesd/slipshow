@@ -9,6 +9,7 @@ val send_step : int -> [ `Fast | `Normal ] -> unit
 (* end *)
 
 val draw : (* Draw_event.t *) string -> unit
+val save_drawing : path:string -> content:string -> unit
 val send_all_strokes : string list -> unit
 val open_speaker_notes : unit -> unit
 val send_speaker_notes : string -> unit

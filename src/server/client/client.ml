@@ -21,6 +21,16 @@ let uri =
   in
   Uri.to_jstr uri
 
+let uri =
+  match uri with
+  | Error (`Msg s) ->
+      Console.(error [ s ]);
+      failwith s
+  | Error (`J s) ->
+      Console.(error [ s ]);
+      Jv.throw (Jv.Error.message s)
+  | Ok uri -> uri
+
 let elem = El.find_first_by_selector (Jstr.v "#iframes") |> Option.get
 
 let warnings =
@@ -39,7 +49,66 @@ let _unlistener =
       El.set_class show_class (not @@ El.class' show_class warnings) warnings)
     (El.as_target warnings_show)
 
-let previewer =
+open Proto
+
+let ( !! ) = Jstr.v
+let version = ref ""
+
+(* I'm not proud of that. This is set to [previewer'] defined below. I need (?)
+   that to cancel a circular dependency: defining [previewer'] requires defining
+   the [handle_answer] function which requires [previewer'] *)
+let previewer = ref None
+
+let handle_answer msg =
+  match !previewer with
+  | None -> Fut.return (Ok ())
+  | Some previewer -> (
+      match msg with
+      | Server_to_client.Pong -> Fut.return (Ok ())
+      | Update data ->
+          version := data.version;
+          Previewer.preview_compiled previewer data.content;
+          Fut.return (Ok ())
+      | Control (Movement Forward) ->
+          Previewer.next previewer;
+          Fut.return (Ok ())
+      | Control (Movement Backward) ->
+          Previewer.previous previewer;
+          Fut.return (Ok ())
+      | Saved _ ->
+          (* TODO: Show a notification that the file has been saved *)
+          Fut.return (Ok ()))
+
+let proto_request_single ?signal uri msg =
+  let open Brr_io.Fetch in
+  let body = Body.of_jstr !!(Client_to_server.to_string msg) in
+  let init = Request.init ~method':!!"post" ?signal ~body () in
+  let req = Request.v ~init uri in
+  Brr_io.Fetch.request req
+
+let proto_request uri msg =
+  let open Fut.Result_syntax in
+  let* raw_data =
+    let abort = Abort.controller () in
+    let timeout = G.set_timeout ~ms:10000 @@ fun () -> Abort.abort abort in
+    let signal = Abort.signal abort in
+    let open Fut.Syntax in
+    let* x = proto_request_single ~signal uri msg in
+    G.stop_timer timeout;
+    match x with
+    | Error _ as e -> Fut.return e
+    | Ok x ->
+        let x = Brr_io.Fetch.Response.as_body x in
+        Brr_io.Fetch.Body.text x
+  in
+  match Server_to_client.of_string (Jstr.to_string raw_data) with
+  | Some msg -> handle_answer msg
+  | None ->
+      Fut.return
+        (Error
+           (Jv.Error.v !!"Could not deserialize message from server to client"))
+
+let previewer' =
   let initial_stage =
     G.window |> Window.location |> Uri.fragment |> Jstr.to_string
     |> int_of_string_opt
@@ -56,10 +125,14 @@ let previewer =
         in
         Window.History.replace_state ~uri history
   in
-  Previewer.create_previewer ?initial_stage ~callback ~include_speaker_view:true
-    ~errors_el:warnings ~steal_focus:true elem
+  let save_drawing ~path ~content =
+    let _ = proto_request uri (Save_drawing (path, content)) in
+    ()
+  in
+  Previewer.create_previewer ?initial_stage ~callback ~save_drawing
+    ~include_speaker_view:true ~errors_el:warnings ~steal_focus:true elem
 
-let ( !! ) = Jstr.v
+let () = previewer := Some previewer'
 
 let set_connected () =
   El.set_class !!"connected" true connection_show;
@@ -69,52 +142,7 @@ let set_disconnected () =
   El.set_class !!"connected" false connection_show;
   El.set_class !!"disconnected" true connection_show
 
-open Proto
-
-let version = ref ""
-
-let handle_answer = function
-  | Server_to_client.Pong -> Fut.return (Ok ())
-  | Update data ->
-      version := data.version;
-      Previewer.preview_compiled previewer data.content;
-      Fut.return (Ok ())
-  | Control (Movement Forward) ->
-      Previewer.next previewer;
-      Fut.return (Ok ())
-  | Control (Movement Backward) ->
-      Previewer.previous previewer;
-      Fut.return (Ok ())
-
-let proto_request_single ?signal uri msg =
-  let open Brr_io.Fetch in
-  let body = Body.of_jstr !!(Client_to_server.to_string msg) in
-  let init = Request.init ~method':!!"post" ?signal ~body () in
-  let req = Request.v ~init uri in
-  Brr_io.Fetch.request req
-
-let rec proto_request uri msg =
-  let open Fut.Result_syntax in
-  let* raw_data =
-    let abort = Abort.controller () in
-    let timeout = G.set_timeout ~ms:10000 @@ fun () -> Abort.abort abort in
-    let signal = Abort.signal abort in
-    let open Fut.Syntax in
-    let* x = proto_request_single ~signal uri msg in
-    G.stop_timer timeout;
-    match x with
-    | Error _ as e -> Fut.return e
-    | Ok x ->
-        let x = Brr_io.Fetch.Response.as_body x in
-        Brr_io.Fetch.Body.text x
-  in
-  let data = Server_to_client.of_string (Jstr.to_string raw_data) in
-  match data with
-  | None ->
-      Fut.return (Error (Jv.Error.v !!"Could not deserialize data from server"))
-  | Some msg -> handle_answer msg
-
-and do_and_retry uri msg =
+let rec do_and_retry uri msg =
   let open Fut.Syntax in
   let* res = proto_request uri msg in
   match res with
@@ -145,12 +173,4 @@ let recv uri () =
   in
   recv_updates ()
 
-let _ : unit Fut.t =
-  match uri with
-  | Error (`Msg s) ->
-      Console.(error [ s ]);
-      Fut.return ()
-  | Error (`J s) ->
-      Console.(error [ s ]);
-      Fut.return ()
-  | Ok uri -> recv uri ()
+let _ : unit Fut.t = recv uri ()
