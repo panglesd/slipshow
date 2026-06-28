@@ -17,6 +17,7 @@ let workspaces : workspaces =
             record_id = Random.bits ();
             name = Lwd.var "Unnamed recording";
             pauses = Lwd_table.make ();
+            file_path = "TODO";
           };
         time = Lwd.var 0.;
         is_playing = Lwd.var false;
