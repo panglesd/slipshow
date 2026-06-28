@@ -204,15 +204,23 @@ let svg c ~uri ~files i attrs =
 
 let pure_embed c uri files attrs =
   let open Cmarkit_renderer in
-  let open Cmarkit_html in
   match uri with
   | Asset.Uri.Link _ -> Logs.err (fun m -> m "Could not embed a pure embed")
   | Path p -> (
       match Fpath.Map.find_opt p (files : Ast.Files.read Ast.Files.map) with
       | Some { content; mode = `Base64; _ } ->
-          Context.string c "<span x-data=\"";
-          html_escaped_string c (Option.value ~default:"" content);
-          Context.string c "\" ";
+          let node c = (c, Cmarkit.Meta.none) in
+          let add_attrs k v attrs =
+            attrs
+            |> Cmarkit.Attributes.add (node k)
+                 (Some (node { Cmarkit.Attributes.v; delimiter = Some '\'' }))
+          in
+          let attrs =
+            attrs
+            |> add_attrs "x-path" (Fpath.to_string p)
+            |> add_attrs "x-data" (Option.value ~default:"" content)
+          in
+          Context.string c "<span";
           RenderAttrs.add_attrs c attrs;
           Context.string c "></span>"
       | _ -> Logs.err (fun m -> m "Could not embed a pure embed v2"))

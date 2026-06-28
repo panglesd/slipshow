@@ -2,6 +2,7 @@ open Undoable.Syntax
 open Brr
 
 let ( !! ) = Jstr.v
+let ( !? ) = Jstr.to_string
 
 (** On an invalid selector, this function will raise. Since in this module ids
     are user input, we valide them *)
@@ -301,7 +302,7 @@ let exit ~mode window to_elem =
               match El.at (Jstr.v "enter-at-unpause") to_elem with
               | None -> duration
               | Some s -> (
-                  match Enter.parse_args (Jstr.to_string s) with
+                  match Enter.parse_args !?s with
                   | Error _ -> duration
                   | Ok (v, _warnings) ->
                       v.duration |> Option.map fst
@@ -742,13 +743,15 @@ module Draw = struct
     match Hashtbl.find_opt state elem with
     | Some _ -> Fut.return ()
     | None ->
-        let data = El.at (Jstr.v "x-data") elem in
-        (match data with
-        | None -> ()
-        | Some data -> (
+        let data = El.at (Jstr.v "x-data") elem
+        and path = El.at (Jstr.v "x-path") elem in
+        (match (data, path) with
+        | None, _ | _, None -> ()
+        | Some data, Some path -> (
+            let path = !?path in
             let open Drawing_state in
             let recording : (recording, _) result =
-              match Jstr.to_string data with
+              match !?data with
               | "" ->
                   Ok
                     {
@@ -757,8 +760,9 @@ module Draw = struct
                       total_time = Lwd.var 0.;
                       name = Lwd.var "A new recording TODO";
                       record_id = Random.bits ();
+                      file_path = path;
                     }
-              | data -> Drawing_state.Json.string_to_recording data
+              | data -> Drawing_state.Json.string_to_recording path data
             in
             match recording with
             | Error e -> Console.(log [ e ])

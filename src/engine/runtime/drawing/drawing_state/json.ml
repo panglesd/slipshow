@@ -169,7 +169,9 @@ module V1 = struct
         Ok tbl
     | _ -> Error ()
 
-  let of_recording { strokes; total_time; record_id; name; pauses } =
+  let of_recording
+      { strokes; total_time; record_id; name; pauses; file_path = _ } =
+    (* We don't include the file path! *)
     `List
       [
         of_strokes strokes;
@@ -179,7 +181,7 @@ module V1 = struct
         of_pauses pauses;
       ]
 
-  let to_recording : Yojson.Safe.t -> _ = function
+  let to_recording file_path : Yojson.Safe.t -> _ = function
     | `List [ strokes; `Float total_time; `Int record_id; `String name; pauses ]
       ->
         let ( let* ) x y = Result.bind x y in
@@ -192,6 +194,7 @@ module V1 = struct
             record_id;
             name = Lwd.var name;
             pauses;
+            file_path;
           }
     | _ -> Error ()
 
@@ -199,14 +202,14 @@ module V1 = struct
     let json = of_recording x in
     Yojson.Safe.to_string json
 
-  let string_to_recording x =
+  let string_to_recording file_path x =
     try
       let json = Yojson.Safe.from_string x in
-      to_recording json
+      to_recording file_path json
     with Yojson.Json_error _ -> Error ()
 end
 
-let string_to_recording s =
+let string_to_recording file_path s =
   let ( let* ) = Result.bind in
 
   let sep s =
@@ -222,7 +225,8 @@ let string_to_recording s =
   match version with
   | "v1" ->
       let* _comment, content = sep content in
-      V1.string_to_recording content |> Result.map_error (fun () -> "Problem!")
+      V1.string_to_recording file_path content
+      |> Result.map_error (fun () -> "Problem!")
   | v ->
       Error
         ("Draw files must start with their version. But I found an unknown \

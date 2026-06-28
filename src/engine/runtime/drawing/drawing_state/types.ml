@@ -50,6 +50,7 @@ type recording = {
   total_time : float Lwd.var;
   name : string Lwd.var;
   record_id : int;
+  file_path : string;
 }
 
 type replaying_state = {
