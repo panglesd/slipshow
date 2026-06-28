@@ -8,7 +8,10 @@ module type Serializing := sig
 end
 
 module Client_to_server : sig
-  type t = Ping | UpdateFrom of string
+  type t =
+    | Ping
+    | UpdateFrom of string
+    | Save_drawing of string * string (* path * content *)
 
   include Serializing with type t := t
 end
@@ -21,6 +24,7 @@ module Server_to_client : sig
     | Pong
     | Update of (Slipshow.delayed * string) versionned
     | Control of control
+    | Saved of string
 
   include Serializing with type t := t
 end

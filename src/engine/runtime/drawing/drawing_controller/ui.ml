@@ -247,6 +247,8 @@ let save_button recording =
   let click =
     Elwd.handler Brr.Ev.click (fun ev ->
         let s = Drawing_state.Json.string_of_recording recording in
+        let path = recording.file_path in
+        Messaging.save_drawing ~path ~content:s;
         let blob =
           let init = Brr.Blob.init ~type':(Jstr.v "application/json") () in
           Brr.Blob.of_jstr ~init (Jstr.v s)

@@ -12,6 +12,7 @@ type previewer
 val create_previewer :
   ?initial_stage:int ->
   ?callback:(int -> unit) ->
+  ?save_drawing:(path:string -> content:string -> unit) ->
   include_speaker_view:bool ->
   errors_el:Brr.El.t ->
   steal_focus:bool ->

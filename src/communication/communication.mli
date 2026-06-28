@@ -7,6 +7,7 @@ type payload =
   | Drawing of string
   | Send_all_drawing
   | Receive_all_drawing of string list
+  | Save_drawing of string * string (* path * content *)
   | Next
   | Previous
 

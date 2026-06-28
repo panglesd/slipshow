@@ -86,7 +86,8 @@ let css =
 let preview_status_class = Jstr.v "preview-status"
 
 let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
-    ~include_speaker_view ~errors_el ~steal_focus root =
+    ?(save_drawing = fun ~path:_ ~content:_ -> ()) ~include_speaker_view
+    ~errors_el ~steal_focus root =
   let ( !! ) = Jstr.v in
   let name1 = Random.int 1000000 |> string_of_int |> fun s -> "id" ^ s in
   let name2 = Random.int 1000000 |> string_of_int |> fun s -> "id" ^ s in
@@ -156,6 +157,8 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
                 El.set_has_focus true focus_target
             in
             El.set_class (Jstr.v "active_panel") false panels.(1 - !index)
+        | Some { payload = Save_drawing (path, content); id = _ } ->
+            save_drawing ~path ~content
         | _ -> ())
       (Window.as_target G.window)
   in
