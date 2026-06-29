@@ -75,8 +75,8 @@ let handle_answer msg =
       | Control (Movement Backward) ->
           Previewer.previous previewer;
           Fut.return (Ok ())
-      | Saved _ ->
-          (* TODO: Show a notification that the file has been saved *)
+      | Saved path ->
+          Previewer.notify previewer ("Saved drawing as: " ^ path);
           Fut.return (Ok ()))
 
 let proto_request_single ?signal uri msg =

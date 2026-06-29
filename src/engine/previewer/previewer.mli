@@ -30,3 +30,4 @@ val preview_compiled : previewer -> Slipshow.delayed * string -> unit
 val ids : previewer -> string * string
 val next : previewer -> unit
 val previous : previewer -> unit
+val notify : previewer -> string -> unit
