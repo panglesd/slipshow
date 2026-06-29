@@ -7,14 +7,15 @@ module Msg = struct
 end
 
 type previewer = {
-  stage : int ref;
-  index : int ref;
+  mutable stage : int;
+  mutable index : int;
   panels : Brr.El.t array;
   errors_el : Brr.El.t;
   preview_status : Brr.El.t;
   notifications_el : Brr.El.t;
   ids : string * string;
   include_speaker_view : bool;
+  mutable should_refresh : bool;
 }
 
 let send_message panel payload =
@@ -125,10 +126,20 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
       [ panel1; panel2; css; preview_status; notifications_el ]
   in
   let panels = [| panel1; panel2 |] in
-  let index = ref 0 in
-  let stage = ref initial_stage in
   let is_speaker_view_open = ref false in
-
+  let p =
+    {
+      stage = initial_stage;
+      index = 0;
+      panels;
+      ids = (name1, name2);
+      include_speaker_view;
+      errors_el;
+      preview_status;
+      notifications_el;
+      should_refresh = true;
+    }
+  in
   let _ =
     Ev.listen Brr_io.Message.Ev.message
       (fun event ->
@@ -137,28 +148,29 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
         let source_name = Jv.get source "name" |> Jv.to_string in
         let raw_data : Jv.t = Brr_io.Message.Ev.data (Ev.as_type event) in
         let msg = Msg.of_jv raw_data in
+        let from_current = String.equal source_name ids.(p.index)
+        and from_other = String.equal source_name ids.(1 - p.index) in
         match msg with
-        | Some { payload = State (new_stage, _mode); id = _ }
-          when String.equal source_name ids.(!index) ->
+        | Some { payload = State (new_stage, _mode); id = _ } when from_current
+          ->
             callback new_stage;
-            stage := new_stage
-        | Some { payload = Open_speaker_notes; id = _ }
-          when String.equal source_name ids.(!index) ->
+            p.stage <- new_stage
+        | Some { payload = Open_recording_panel; id = _ } when from_current ->
+            p.should_refresh <- false
+        | Some { payload = Close_recording_panel; id = _ } when from_current ->
+            p.should_refresh <- true
+        | Some { payload = Open_speaker_notes; id = _ } when from_current ->
             is_speaker_view_open := true
-        | Some { payload = Close_speaker_notes; id = _ }
-          when String.equal source_name ids.(!index) ->
+        | Some { payload = Close_speaker_notes; id = _ } when from_current ->
             is_speaker_view_open := false
-        | Some { payload = Ready; id = _ }
-          when String.equal source_name ids.(!index) ->
-            ()
-        | Some { payload = Ready; id = _ }
-          when String.equal source_name ids.(1 - !index) ->
-            Jv.set (El.to_jv panels.(!index)) "srcdoc" (Jv.of_string "");
+        | Some { payload = Ready; id = _ } when from_current -> ()
+        | Some { payload = Ready; id = _ } when from_other ->
+            Jv.set (El.to_jv panels.(p.index)) "srcdoc" (Jv.of_string "");
             let () = El.set_class preview_status_class true preview_status in
             if !is_speaker_view_open then
-              send_open_speaker_view panels.(1 - !index);
-            index := 1 - !index;
-            El.set_class (Jstr.v "active_panel") true panels.(!index);
+              send_open_speaker_view panels.(1 - p.index);
+            p.index <- 1 - p.index;
+            El.set_class (Jstr.v "active_panel") true panels.(p.index);
             let () =
               if steal_focus then
                 let contentDocument el =
@@ -167,32 +179,23 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
                 (* Depending on whether a speaker view is possible, the focus
                    target is not accessible the same way *)
                 let focus_target =
-                  let d = contentDocument panels.(!index) in
+                  let d = contentDocument panels.(p.index) in
                   match
                     Document.find_el_by_id d
                       (Jstr.v "slipshow__internal_iframe")
                   with
                   | Some iframe -> iframe
-                  | None -> panels.(!index)
+                  | None -> panels.(p.index)
                 in
                 El.set_has_focus true focus_target
             in
-            El.set_class (Jstr.v "active_panel") false panels.(1 - !index)
+            El.set_class (Jstr.v "active_panel") false panels.(1 - p.index)
         | Some { payload = Save_drawing (path, content); id = _ } ->
             save_drawing ~path ~content
         | _ -> ())
       (Window.as_target G.window)
   in
-  {
-    stage;
-    index;
-    panels;
-    ids = (name1, name2);
-    include_speaker_view;
-    errors_el;
-    preview_status;
-    notifications_el;
-  }
+  p
 
 let set_errors errors_el warnings =
   let innerhtml el v =
@@ -204,14 +207,29 @@ let set_errors errors_el warnings =
 let set_srcdoc { index; panels; errors_el; preview_status; _ }
     (slipshow, warnings) =
   set_errors errors_el warnings;
-  try Jv.set (El.to_jv panels.(1 - !index)) "srcdoc" (Jv.of_string slipshow)
+  try Jv.set (El.to_jv panels.(1 - index)) "srcdoc" (Jv.of_string slipshow)
   with exn ->
     El.set_class preview_status_class true preview_status;
     Console.(log [ "exception"; Printexc.to_string exn ])
 
+let notify (previewer : previewer) notif =
+  let el = previewer.notifications_el in
+  let open Brr in
+  let n = El.div [ El.txt' notif ] in
+  El.append_children el [ n ];
+  let _cancel = G.set_timeout ~ms:8000 @@ fun () -> El.remove n in
+  ()
+
+let guard_open_recording_panel previewer f =
+  if previewer.should_refresh then f ()
+  else
+    notify previewer
+      "Refresh of the preview is disabled when the drawing record panel is open"
+
 let preview ?options ?slipshow_js previewer source =
+  guard_open_recording_panel previewer @@ fun () ->
   let () = El.set_class preview_status_class false previewer.preview_status in
-  let starting_state = !(previewer.stage) in
+  let starting_state = previewer.stage in
   let has_speaker_view = previewer.include_speaker_view in
   let this_file = Fpath.v "-" in
   let directory = Fpath.v "./" in
@@ -234,25 +252,18 @@ let preview ?options ?slipshow_js previewer source =
   set_srcdoc previewer (slipshow, warnings)
 
 let preview_compiled previewer (delayed, warnings) =
+  guard_open_recording_panel previewer @@ fun () ->
   let () = El.set_class preview_status_class false previewer.preview_status in
-  let starting_state = Some !(previewer.stage) in
+  let starting_state = Some previewer.stage in
   let slipshow = Slipshow.add_starting_state delayed starting_state in
   set_srcdoc previewer (slipshow, warnings)
 
 let ids { ids; _ } = ids
 
 let next (previewer : previewer) =
-  let current_window = previewer.panels.(!(previewer.index)) in
+  let current_window = previewer.panels.(previewer.index) in
   send_next current_window
 
 let previous (previewer : previewer) =
-  let current_window = previewer.panels.(!(previewer.index)) in
+  let current_window = previewer.panels.(previewer.index) in
   send_previous current_window
-
-let notify (previewer : previewer) notif =
-  let el = previewer.notifications_el in
-  let open Brr in
-  let n = El.div [ El.txt' notif ] in
-  El.append_children el [ n ];
-  let _cancel = G.set_timeout ~ms:8000 @@ fun () -> El.remove n in
-  ()

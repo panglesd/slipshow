@@ -13,3 +13,5 @@ val save_drawing : path:string -> content:string -> unit
 val send_all_strokes : string list -> unit
 val open_speaker_notes : unit -> unit
 val send_speaker_notes : string -> unit
+val opened_recording_panel : unit -> unit
+val closed_recording_panel : unit -> unit

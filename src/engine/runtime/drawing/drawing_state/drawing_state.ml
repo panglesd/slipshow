@@ -40,7 +40,15 @@ module Status : sig
   val get : status Lwd.t
 end = struct
   let status = Lwd.var (Drawing Presenting)
-  let set s = Lwd.set status s
+
+  let set s =
+    (match (Lwd.peek status, s) with
+    | Drawing Presenting, Drawing Presenting -> ()
+    | _, Drawing Presenting -> Messaging.closed_recording_panel ()
+    | Drawing Presenting, _ -> Messaging.opened_recording_panel ()
+    | _ -> ());
+    Lwd.set status s
+
   let peek () = Lwd.peek status
   let get = Lwd.get status
 end

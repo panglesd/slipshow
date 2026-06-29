@@ -5,6 +5,8 @@ type payload =
   | Ready
   | Open_speaker_notes
   | Close_speaker_notes
+  | Open_recording_panel
+  | Close_recording_panel
   | Speaker_notes of string
   | Drawing of string
   | Send_all_drawing
