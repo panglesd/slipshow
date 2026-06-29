@@ -210,10 +210,14 @@ let pure_embed c uri files attrs =
       match Fpath.Map.find_opt p (files : Ast.Files.read Ast.Files.map) with
       | Some { content; mode = `Base64; _ } ->
           let node c = (c, Cmarkit.Meta.none) in
+          let quote = '"' in
           let add_attrs k v attrs =
+            (* escaping quotes
+               (https://stackoverflow.com/questions/9187946/escaping-inside-html-tag-attribute-value) *)
+            let v = v |> String.split_on_char quote |> String.concat "&quot;" in
             attrs
             |> Cmarkit.Attributes.add (node k)
-                 (Some (node { Cmarkit.Attributes.v; delimiter = Some '\'' }))
+                 (Some (node { Cmarkit.Attributes.v; delimiter = Some quote }))
           in
           let attrs =
             attrs
