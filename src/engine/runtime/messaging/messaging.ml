@@ -54,3 +54,19 @@ let send_speaker_notes s =
     { id; payload = Speaker_notes s } |> Communication.to_string |> Jv.of_string
   in
   Brr.Window.post_message parent ~msg
+
+let opened_recording_panel () =
+  if_parent @@ fun parent ->
+  let msg =
+    { id; payload = Open_recording_panel }
+    |> Communication.to_string |> Jv.of_string
+  in
+  Brr.Window.post_message parent ~msg
+
+let closed_recording_panel () =
+  if_parent @@ fun parent ->
+  let msg =
+    { id; payload = Close_recording_panel }
+    |> Communication.to_string |> Jv.of_string
+  in
+  Brr.Window.post_message parent ~msg
