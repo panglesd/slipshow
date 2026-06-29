@@ -190,7 +190,8 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
                 El.set_has_focus true focus_target
             in
             El.set_class (Jstr.v "active_panel") false panels.(1 - p.index)
-        | Some { payload = Save_drawing (path, content); id = _ } ->
+        | Some { payload = Save_drawing (path, content); id = _ }
+          when from_current ->
             save_drawing ~path ~content
         | _ -> ())
       (Window.as_target G.window)
