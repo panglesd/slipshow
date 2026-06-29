@@ -243,38 +243,39 @@ let play_button editing_state =
     let click = Elwd.handler Brr.Ev.click (fun _ -> play editing_state) in
     Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "▶ Play") ]
 
+let make_download name s =
+  let blob =
+    let init = Brr.Blob.init ~type':(Jstr.v "application/json") () in
+    Brr.Blob.of_jstr ~init (Jstr.v s)
+  in
+  let a = Brr.El.a [] in
+  let revoke_url =
+    let url = Jv.get Jv.global "URL" in
+    let object_url = Jv.call url "createObjectURL" [| Brr.Blob.to_jv blob |] in
+    Jv.set (Brr.El.to_jv a) "href" object_url;
+    fun () -> Jv.call url "revokeObjectURL" [| object_url |] |> ignore
+  in
+  let filename =
+    let f =
+      name |> String.lowercase_ascii
+      |> String.map (function ' ' -> '-' | s -> s)
+    in
+    f ^ ".draw"
+  in
+  Jv.set (Brr.El.to_jv a) "download" (Jv.of_string filename);
+  Jv.call (Brr.El.to_jv a) "click" [||] |> ignore;
+  revoke_url ()
+
 let save_button recording =
   let click =
     Elwd.handler Brr.Ev.click (fun ev ->
         let s = Drawing_state.Json.string_of_recording recording in
         let path = recording.file_path in
         Messaging.save_drawing ~path ~content:s;
-        let blob =
-          let init = Brr.Blob.init ~type':(Jstr.v "application/json") () in
-          Brr.Blob.of_jstr ~init (Jstr.v s)
-        in
-        let a = Brr.El.a [] in
-        let revoke_url =
-          let url = Jv.get Jv.global "URL" in
-          let object_url =
-            Jv.call url "createObjectURL" [| Brr.Blob.to_jv blob |]
-          in
-          Jv.set (Brr.El.to_jv a) "href" object_url;
-          fun () -> Jv.call url "revokeObjectURL" [| object_url |] |> ignore
-        in
-        let name = Lwd.peek recording.name in
-        let filename =
-          let f =
-            name |> String.lowercase_ascii
-            |> String.map (function ' ' -> '-' | s -> s)
-          in
-          f ^ ".draw"
-        in
-        Jv.set (Brr.El.to_jv a) "download" (Jv.of_string filename);
-        Jv.call (Brr.El.to_jv a) "click" [||] |> ignore;
+        (* TODO: If not in preview mode, offer to save to disk, using the line below *)
+        if false then make_download (Lwd.peek recording.name) s;
         let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv |> Brr.El.of_jv in
-        Brr.El.set_has_focus false el;
-        revoke_url ())
+        Brr.El.set_has_focus false el)
   in
   Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "💾 Save") ]
 
