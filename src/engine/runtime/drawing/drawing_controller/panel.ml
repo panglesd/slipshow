@@ -216,9 +216,7 @@ let drawing_panel mode =
   let record_button =
     match mode with
     | Presenting ->
-        let handler =
-          Elwd.handler Brr.Ev.click (fun _ -> Lwd.set status Editing)
-        in
+        let handler = Elwd.handler Brr.Ev.click (fun _ -> Status.set Editing) in
         let icon = panel_icon [ `P (Brr.El.txt !!"") ] in
         panel_block ~class_:"slipshow-manage-recording-block"
           ~buttons:
@@ -310,7 +308,7 @@ let editing_panel =
 
 let panel =
   let content =
-    let$* status = Lwd.get Drawing_state.status in
+    let$* status = Status.get in
     match status with Drawing d -> drawing_panel d | Editing -> editing_panel
   in
   Elwd.div ~at:[ `P (Brr.At.id !!"slipshow-drawing-toolbar") ] [ `R content ]

@@ -317,7 +317,7 @@ let close_button =
     Elwd.handler Brr.Ev.click (fun ev ->
         let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv |> Brr.El.of_jv in
         Brr.El.set_has_focus false el;
-        Lwd.set status (Drawing Presenting))
+        Status.set (Drawing Presenting))
   in
   Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Close editing panel") ]
 
@@ -389,13 +389,13 @@ let el =
 
 let el =
   let display =
-    let$ status = Lwd.get status in
+    let$ status = Status.get in
     match status with
     | Editing -> Lwd_seq.empty
     | _ -> Lwd_seq.element @@ Brr.At.class' !!"slipshow-dont-display"
   in
   let el =
-    let$* status = Lwd.get status in
+    let$* status = Status.get in
     match status with Editing -> el | _ -> Lwd.pure (Brr.El.div [])
   in
   let st = [ `P (Brr.El.Style.height, !!"300px") ] in

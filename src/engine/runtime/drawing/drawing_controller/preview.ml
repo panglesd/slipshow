@@ -220,7 +220,7 @@ let drawing_area =
     Elwd.v ~ns:`SVG (Jstr.v "g") [ `S content ]
   in
   let all_drawings =
-    let$* status = Lwd.get status in
+    let$* status = Status.get in
     let$* all_replayed =
       Lwd_table.map_reduce
         (fun _row { recording; time; is_playing = _ } ->
@@ -303,7 +303,7 @@ let for_events =
   let open Lwd_infix in
   let panel =
     let handler =
-      let$* status = Lwd.get status in
+      let$* status = Status.get in
       let draw_mode d =
         let { tool; color; width } = live_drawing_state in
         let$ tool = Lwd.get tool
@@ -344,7 +344,7 @@ let for_events =
       | Editing -> Lwd.pure Lwd_seq.empty
     in
     let display =
-      let$* status = Lwd.get Drawing_state.status in
+      let$* status = Status.get in
       let$ tool = Lwd.get live_drawing_state.tool in
       match (status, tool) with
       | Drawing _, (Stroker _ | Eraser) -> (!!"display", !!"block")

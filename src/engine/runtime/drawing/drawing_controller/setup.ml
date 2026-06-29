@@ -36,7 +36,7 @@ let init_ui () =
 module Rec_in_progress = struct
   let init () =
     let visib =
-      let$ status = Lwd.get Drawing_state.status in
+      let$ status = Status.get in
       match status with
       | Drawing (Recording _) -> (Brr.El.Style.display, !!"block")
       | _ -> (Brr.El.Style.display, !!"none")
@@ -96,7 +96,7 @@ module Garbage = struct
   let g () =
     let open Lwd_infix in
     let panel =
-      let$* status = Lwd.get Drawing_state.status in
+      let$* status = Status.get in
       match status with
       | Drawing Presenting -> (
           let$ tool = Lwd.get Drawing_state.live_drawing_state.tool in
@@ -162,7 +162,7 @@ let connect () =
   let open Lwd_infix in
   let panel =
     let handler =
-      let$* status = Lwd.get Drawing_state.status
+      let$* status = Status.get
       and$ current_tool = Lwd.get Drawing_state.editing_tool in
       match status with
       | Editing -> (
@@ -187,7 +187,7 @@ let connect () =
       | Rescale -> (!!"cursor", !!"ne-resize")
     in
     let display =
-      let$ status = Lwd.get Drawing_state.status in
+      let$ status = Status.get in
       match status with
       | Editing -> (!!"display", !!"block")
       | _ -> (!!"display", !!"none")

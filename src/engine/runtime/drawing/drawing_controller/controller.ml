@@ -104,13 +104,13 @@ let shortcut_drawing mode key =
       true
   | "R" ->
       (match mode with
-      | Presenting -> Lwd.set status Editing
+      | Presenting -> Status.set Editing
       | Recording state -> finish_recording state);
       true
   | _ -> false
 
 let shortcuts key =
-  match Lwd.peek status with
+  match Status.peek () with
   | Drawing mode -> shortcut_drawing mode key
   | Editing -> shortcut_editing (Lwd.peek current_replaying_state) key
 
