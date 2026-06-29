@@ -34,7 +34,16 @@ let live_drawing_state =
     width = Lwd.var Width.medium;
   }
 
-let status = Lwd.var (Drawing Presenting)
+module Status : sig
+  val set : status -> unit
+  val peek : unit -> status
+  val get : status Lwd.t
+end = struct
+  let status = Lwd.var (Drawing Presenting)
+  let set s = Lwd.set status s
+  let peek () = Lwd.peek status
+  let get = Lwd.get status
+end
 
 let start_recording replaying_state =
   Lwd.set live_drawing_state.tool (Stroker Pen);
@@ -58,7 +67,7 @@ let start_recording replaying_state =
     in
     (tbl, unplayed_erasure)
   in
-  Lwd.set status
+  Status.set
     (Drawing
        (Recording
           {
@@ -129,7 +138,7 @@ let finish_recording
       Lwd.set stro.track max_track;
       Lwd_table.append' replaying_state.recording.strokes stro)
     recording_temp;
-  Lwd.set status Editing
+  Status.set Editing
 
 type selection = {
   s_strokes : (stro Lwd_table.row * stro) list;
