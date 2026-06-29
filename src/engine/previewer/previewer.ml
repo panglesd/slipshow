@@ -12,6 +12,7 @@ type previewer = {
   panels : Brr.El.t array;
   errors_el : Brr.El.t;
   preview_status : Brr.El.t;
+  notifications_el : Brr.El.t;
   ids : string * string;
   include_speaker_view : bool;
 }
@@ -81,7 +82,21 @@ let css =
 /* Hide when active */
 .preview-status-elem.preview-status {
     display: none;
-}|}
+}
+.slipshow-notification-elem {
+    position:absolute;
+    top:0;
+    right:0;
+    z-index: 1000;
+}
+.slipshow-notification-elem > div {
+    border: 2px solid black;
+    border-radius: 10px;
+    padding: 30px;
+    margin: 10px;
+    background-color: white;
+}
+|}
 
 let preview_status_class = Jstr.v "preview-status"
 
@@ -101,8 +116,14 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
   let preview_status =
     El.div ~at:[ At.class' !!"preview-status-elem preview-status" ] []
   in
+  let notifications_el =
+    El.div ~at:[ At.class' !!"slipshow-notification-elem" ] []
+  in
   let css = El.style [ El.txt' css ] in
-  let () = El.append_children root [ panel1; panel2; css; preview_status ] in
+  let () =
+    El.append_children root
+      [ panel1; panel2; css; preview_status; notifications_el ]
+  in
   let panels = [| panel1; panel2 |] in
   let index = ref 0 in
   let stage = ref initial_stage in
@@ -170,6 +191,7 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
     include_speaker_view;
     errors_el;
     preview_status;
+    notifications_el;
   }
 
 let set_errors errors_el warnings =
@@ -226,3 +248,11 @@ let next (previewer : previewer) =
 let previous (previewer : previewer) =
   let current_window = previewer.panels.(!(previewer.index)) in
   send_previous current_window
+
+let notify (previewer : previewer) notif =
+  let el = previewer.notifications_el in
+  let open Brr in
+  let n = El.div [ El.txt' notif ] in
+  El.append_children el [ n ];
+  let _cancel = G.set_timeout ~ms:8000 @@ fun () -> El.remove n in
+  ()
