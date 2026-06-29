@@ -279,6 +279,16 @@ let save_button recording =
   in
   Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "💾 Save") ]
 
+let download_button recording =
+  let click =
+    Elwd.handler Brr.Ev.click (fun ev ->
+        let s = Drawing_state.Json.string_of_recording recording in
+        make_download (Lwd.peek recording.name) s;
+        let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv |> Brr.El.of_jv in
+        Brr.El.set_has_focus false el)
+  in
+  Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "💾 Download") ]
+
 let add_pause_button (replaying_state : replaying_state) =
   let click =
     Elwd.handler Brr.Ev.click (fun ev ->
@@ -357,6 +367,7 @@ let el =
           `R ti;
           `R (play_button replaying_state);
           `R (save_button recording);
+          `R (download_button recording);
           (* `R select_button; *)
           (* `R move_button; *)
           (* `R scale_button; *)
