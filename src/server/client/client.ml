@@ -61,23 +61,16 @@ let previewer = ref None
 
 let handle_answer msg =
   match !previewer with
-  | None -> Fut.return (Ok ())
+  | None -> ()
   | Some previewer -> (
       match msg with
-      | Server_to_client.Pong -> Fut.return (Ok ())
+      | Server_to_client.Pong -> ()
       | Update data ->
           version := data.version;
-          Previewer.preview_compiled previewer data.content;
-          Fut.return (Ok ())
-      | Control (Movement Forward) ->
-          Previewer.next previewer;
-          Fut.return (Ok ())
-      | Control (Movement Backward) ->
-          Previewer.previous previewer;
-          Fut.return (Ok ())
-      | Saved path ->
-          Previewer.notify previewer ("Saved drawing as: " ^ path);
-          Fut.return (Ok ()))
+          Previewer.preview_compiled previewer data.content
+      | Control (Movement Forward) -> Previewer.next previewer
+      | Control (Movement Backward) -> Previewer.previous previewer
+      | Saved path -> Previewer.notify previewer ("Saved drawing as: " ^ path))
 
 let proto_request_single ?signal uri msg =
   let open Brr_io.Fetch in
@@ -102,7 +95,9 @@ let proto_request uri msg =
         Brr_io.Fetch.Body.text x
   in
   match Server_to_client.of_string (Jstr.to_string raw_data) with
-  | Some msg -> handle_answer msg
+  | Some msg ->
+      handle_answer msg;
+      Fut.return (Ok ())
   | None ->
       Fut.return
         (Error
