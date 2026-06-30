@@ -5,27 +5,10 @@ module Json = Json
 module Path_editing = Path_editing
 
 let workspaces : workspaces =
-  {
-    recordings = Lwd_table.make ();
-    live_drawing = Lwd_table.make ();
-    current_recording =
-      {
-        recording =
-          {
-            strokes = Lwd_table.make ();
-            total_time = Lwd.var 0.;
-            record_id = Random.bits ();
-            name = Lwd.var "Unnamed recording";
-            pauses = Lwd_table.make ();
-            file_path = "TODO";
-          };
-        time = Lwd.var 0.;
-        is_playing = Lwd.var false;
-      };
-  }
+  { recordings = Lwd_table.make (); live_drawing = Lwd_table.make () }
 
 let editing_tool = Lwd.var Select
-let current_replaying_state = Lwd.var workspaces.current_recording
+let current_replaying_state : replaying_state option Lwd.var = Lwd.var None
 
 let live_drawing_state =
   {

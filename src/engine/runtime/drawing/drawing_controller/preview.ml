@@ -221,54 +221,16 @@ let drawing_area =
   in
   let all_drawings =
     let$* status = Status.get in
-    let$* all_replayed =
-      Lwd_table.map_reduce
-        (fun _row { recording; time; is_playing = _ } ->
-          match status with
-          | Drawing (Recording { replaying_state; _ })
-            when replaying_state.recording.record_id = recording.record_id ->
-              Lwd_seq.empty
-          | _ ->
-              Lwd_seq.element
-              @@ act ~time:(Some (Lwd.get time)) recording.strokes)
-        Lwd_seq.monoid workspaces.recordings
-      |> Lwd_seq.lift
-    in
-    let recorded_drawing =
-      let new_rec time =
-        let strokes = workspaces.current_recording.recording.strokes in
-        act ~time strokes
-      in
-      match status with
-      | Drawing Presenting -> Lwd_seq.element @@ new_rec None
-      | Editing ->
-          let time = Lwd.get workspaces.current_recording.time in
-          Lwd_seq.element @@ new_rec (Some time)
-      | Drawing
-          (Recording
-             {
-               recording_temp;
-               replaying_state;
-               started_at = _;
-               replayed_part;
-               unplayed_erasure = _;
-             }) ->
-          let new_rec =
-            if
-              replaying_state.recording.record_id
-              = workspaces.current_recording.recording.record_id
-            then Lwd_seq.empty
-            else
-              let time = Lwd.get workspaces.current_recording.time in
-              Lwd_seq.element @@ new_rec (Some time)
-          in
-          let tmp_rec = act ~time:None recording_temp in
-          let replayed_part = act ~time:None replayed_part in
-          let first = Lwd_seq.concat new_rec @@ Lwd_seq.element replayed_part in
-          Lwd_seq.concat first @@ Lwd_seq.element tmp_rec
-    in
-    let$ recorded_drawing = Lwd_seq.lift (Lwd.pure recorded_drawing) in
-    Lwd_seq.concat all_replayed recorded_drawing
+    Lwd_table.map_reduce
+      (fun _row { recording; time; is_playing = _ } ->
+        match status with
+        | Drawing (Recording { replaying_state; _ })
+          when replaying_state.recording.record_id = recording.record_id ->
+            Lwd_seq.empty
+        | _ ->
+            Lwd_seq.element @@ act ~time:(Some (Lwd.get time)) recording.strokes)
+      Lwd_seq.monoid workspaces.recordings
+    |> Lwd_seq.lift
   in
   let drawn_live_drawing =
     act ~time:None Drawing_state.workspaces.live_drawing
