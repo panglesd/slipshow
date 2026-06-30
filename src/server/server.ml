@@ -176,7 +176,8 @@ let polling (roots, _get_roots) req =
       | Some (Save_drawing (path, drawing)) ->
           let from = root.units.directory in
           let path = Fpath.v path in
-          if Fpath.Map.mem path root.units.files then (
+          if Fpath.has_ext ".draw" path && Fpath.Map.mem path root.units.files
+          then (
             let path = Fpath.( // ) from path in
             Dream.log "Saving drawing in %a with from %a" Fpath.pp path Fpath.pp
               from;
