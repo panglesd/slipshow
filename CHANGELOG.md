@@ -13,6 +13,10 @@
   - A configuration for refreshing the preview on each key stroke, or on
     save. (#248)
 
+### Changed
+
+- Drawings are now saved through the preview server (#249)
+
 ### Fixed
 
 - Fix action detection in LSP in multifile settings (#243)
