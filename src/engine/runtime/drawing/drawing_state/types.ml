@@ -62,7 +62,6 @@ type replaying_state = {
 type workspaces = {
   recordings : replaying_state Lwd_table.t;
   live_drawing : strokes;
-  current_recording : replaying_state;
 }
 
 type live_drawing_tool = Stroker of stroker | Eraser | Pointer

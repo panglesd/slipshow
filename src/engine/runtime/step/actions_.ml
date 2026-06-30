@@ -771,7 +771,8 @@ module Draw = struct
                   { recording; time = Lwd.var 0.; is_playing = Lwd.var false }
                 in
                 Hashtbl.add state elem replaying_state;
-                Lwd_table.append' workspaces.recordings replaying_state));
+                Lwd_table.append' workspaces.recordings replaying_state;
+                Lwd.set current_replaying_state (Some replaying_state)));
         Fut.return ()
 
   let setup_all () =

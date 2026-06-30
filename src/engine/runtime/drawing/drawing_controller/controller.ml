@@ -112,7 +112,10 @@ let shortcut_drawing mode key =
 let shortcuts key =
   match Status.peek () with
   | Drawing mode -> shortcut_drawing mode key
-  | Editing -> shortcut_editing (Lwd.peek current_replaying_state) key
+  | Editing -> (
+      match Lwd.peek current_replaying_state with
+      | Some s -> shortcut_editing s key
+      | None -> false)
 
 let handle ev =
   let key = ev |> Brr.Ev.as_type |> Brr.Ev.Keyboard.key |> Jstr.to_string in

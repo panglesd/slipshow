@@ -167,16 +167,19 @@ let connect () =
       match status with
       | Editing -> (
           let$ replaying_state = Lwd.get current_replaying_state in
-          match current_tool with
-          | Move ->
-              Lwd_seq.element
-              @@ Editing_tools.Move.Preview.event replaying_state
-          | Select ->
-              Lwd_seq.element
-              @@ Editing_tools.Selection.Preview.event replaying_state
-          | Rescale ->
-              Lwd_seq.element
-              @@ Editing_tools.Scale.Preview.event replaying_state)
+          match replaying_state with
+          | None -> Lwd_seq.empty
+          | Some replaying_state -> (
+              match current_tool with
+              | Move ->
+                  Lwd_seq.element
+                  @@ Editing_tools.Move.Preview.event replaying_state
+              | Select ->
+                  Lwd_seq.element
+                  @@ Editing_tools.Selection.Preview.event replaying_state
+              | Rescale ->
+                  Lwd_seq.element
+                  @@ Editing_tools.Scale.Preview.event replaying_state))
       | _ -> Lwd.pure Lwd_seq.empty
     in
     let cursor =

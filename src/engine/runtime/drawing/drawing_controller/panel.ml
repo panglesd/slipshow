@@ -275,7 +275,9 @@ let editing_panel =
     let record =
       let handler =
         Elwd.handler Brr.Ev.click (fun _ ->
-            Drawing_state.start_recording (Lwd.peek current_replaying_state))
+            match Lwd.peek current_replaying_state with
+            | None -> ()
+            | Some s -> Drawing_state.start_recording s)
       in
       let icon =
         Brr.El.div
@@ -290,7 +292,9 @@ let editing_panel =
       let txt =
         let$* strokes =
           let$ c = Lwd.get current_replaying_state in
-          c.recording.strokes
+          match c with
+          | None -> Lwd_table.make ()
+          | Some c -> c.recording.strokes
         in
         let$ is_empty =
           Lwd_table.map_reduce
