@@ -25,6 +25,7 @@ module Server_to_client : sig
     | Update of (Slipshow.delayed * string) versionned
     | Control of control
     | Saved of string
+    | Notify of string
 
   include Serializing with type t := t
 end

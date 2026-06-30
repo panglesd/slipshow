@@ -74,6 +74,11 @@ let saved s =
   let c = Proto.Server_to_client.to_string c in
   Dream.respond ~headers:[ ("Content-Type", "text/plain") ] c
 
+let notify s =
+  let c = Proto.Server_to_client.Notify s in
+  let c = Proto.Server_to_client.to_string c in
+  Dream.respond ~headers:[ ("Content-Type", "text/plain") ] c
+
 let send_update content =
   let c = Proto.Server_to_client.Update content in
   let c = Proto.Server_to_client.to_string c in
@@ -178,8 +183,10 @@ let polling (roots, _get_roots) req =
           match res with
           | Ok () -> saved path
           | Error (`Msg err) ->
-              Dream.log "Could not write %a: %s" Fpath.pp path err;
-              saved path))
+              let msg =
+                Format.asprintf "Could not write %a: %s" Fpath.pp path err
+              in
+              notify msg))
 
 let do_serve ~port (roots : roots) =
   let () = if Sys.unix then Sys.(set_signal sigpipe Signal_ignore) in

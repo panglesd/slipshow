@@ -27,6 +27,7 @@ module Server_to_client = struct
     | Update of (Slipshow.delayed * string) versionned
     | Control of control
     | Saved of string
+    | Notify of string
 
   include Marsharializing
 end
