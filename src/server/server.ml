@@ -173,20 +173,27 @@ let polling (roots, _get_roots) req =
       | Some (UpdateFrom version) ->
           if not @@ String.equal version root.version then send root
           else wait_for_event root roots file
-      | Some (Save_drawing (path, drawing)) -> (
+      | Some (Save_drawing (path, drawing)) ->
           let from = root.units.directory in
           let path = Fpath.v path in
-          let path = Fpath.( // ) from path in
-          Dream.log "Saving drawing in %a with from %a" Fpath.pp path Fpath.pp
-            from;
-          let res = Bos.OS.File.write path drawing in
-          match res with
-          | Ok () -> saved path
-          | Error (`Msg err) ->
-              let msg =
-                Format.asprintf "Could not write %a: %s" Fpath.pp path err
-              in
-              notify msg))
+          if Fpath.Map.mem path root.units.files then (
+            let path = Fpath.( // ) from path in
+            Dream.log "Saving drawing in %a with from %a" Fpath.pp path Fpath.pp
+              from;
+            let res = Bos.OS.File.write path drawing in
+            match res with
+            | Ok () -> saved path
+            | Error (`Msg err) ->
+                let msg =
+                  Format.asprintf "Could not write %a: %s" Fpath.pp path err
+                in
+                notify msg)
+          else
+            let msg =
+              Format.asprintf "Path %a is not part of the current unit" Fpath.pp
+                path
+            in
+            notify msg)
 
 let do_serve ~port (roots : roots) =
   let () = if Sys.unix then Sys.(set_signal sigpipe Signal_ignore) in
