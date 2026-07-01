@@ -33,7 +33,7 @@ You'll find recent changes in Slipshow in the [changelog](CHANGELOG.md).
 
 ## Support
 
-The NLNet Foundation is [sponsoring Slipshow](https://nlnet.nl/project/Slipshow/) the development in 2025 through the [NGI Commons Fund](https://nlnet.nl/commonsfund/) with funds from the European Commission. Thanks a lot!
+The NLNet Foundation is [sponsoring Slipshow development](https://nlnet.nl/project/Slipshow/) in 2025 and 2026 through the [NGI Commons Fund](https://nlnet.nl/commonsfund/) with funds from the European Commission. Thanks a lot!
 
 ## License
 
