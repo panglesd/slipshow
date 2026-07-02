@@ -632,12 +632,10 @@ let rec add_to_compile ?locs ~units file units_cache ~read_file =
       | None -> unit ~read_file ?locs file
     in
     let units = Fpath.Map.add file u units in
-    let c =
-      Fpath.Map.fold
-        (fun dep locs c -> add_to_compile ~locs ~units dep c ~read_file)
-        u.deps units
-    in
-    c
+    Fpath.Map.fold
+      (fun dep locs units ->
+        add_to_compile ~locs ~units dep units_cache ~read_file)
+      u.deps units
 
 let compile_all ~read_file units_cache file =
   let units = Fpath.Map.empty in
