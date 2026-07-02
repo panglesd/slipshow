@@ -18,7 +18,7 @@
   license](#lwd-copyrights).
 - The [`src/static_data`
   directory](https://github.com/panglesd/slipshow/tree/main/src/static_data/)
-  contains various (compiled) javascript libraries:
+  contains various (compiled) JavaScript libraries:
   - Files that start with `highlight-js.` are part of the [highlight-js
     project](https://highlightjs.org/) and under the [BSD 3-Clause
     license](#highlightjs-copyrights).
@@ -47,7 +47,7 @@
   in `src/static_data/mermaid/` , under the [MIT
   licence](#mermaid-js-copyright).
 
-The rest of the code, and the slipshow project in general, is licensed under the
+The rest of the code, and the Slipshow project in general, is licensed under the
 GPL v3 license:
 
 ```
