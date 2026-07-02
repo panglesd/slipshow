@@ -318,9 +318,26 @@ class lsp_server =
           ()
       | _ -> decode_payload conf
 
+    method private register_capability
+        ~(notify_back : Linol_lwt.Jsonrpc2.notify_back) id ~registerOptions
+        ~method_ =
+      let ( let> ) cont f = cont f in
+      let server_request =
+        let registrations =
+          [ Linol_lwt.Registration.create ~id ~registerOptions ~method_ () ]
+        in
+        let params = Linol_lwt.RegistrationParams.create ~registrations in
+        Linol_lsp.Server_request.ClientRegisterCapability params
+      in
+      let> res = notify_back#send_request server_request in
+      match res with
+      | Ok () -> Lwt.return ()
+      | Error _ ->
+          (* TODO: display error somewhere *)
+          Lwt.return ()
+
     method private register_conf_changes
         ~(notify_back : Linol_lwt.Jsonrpc2.notify_back) =
-      let ( let> ) cont f = cont f in
       (* {:https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspace_configuration}
 
           This pull model replaces the old push model were the client
@@ -345,31 +362,50 @@ class lsp_server =
                 };
             _;
           } ->
-          let id = "didchangeconfid" in
-          let server_request =
-            let registrations =
-              [
-                Linol_lwt.Registration.create ~id ~registerOptions:(`Assoc [])
-                  ~method_:"workspace/didChangeConfiguration" ();
-              ]
-            in
-            let params = Linol_lwt.RegistrationParams.create ~registrations in
-            Linol_lsp.Server_request.ClientRegisterCapability params
-          in
           let+ _ : Linol_jsonrpc.Jsonrpc.Id.t =
-            let> res = notify_back#send_request server_request in
-            match res with
-            | Ok () -> Lwt.return ()
-            | Error _ ->
-                (* TODO: display error somewhere *)
-                Lwt.return ()
+            let id = "did-change-conf-id" in
+            let registerOptions = `Assoc [] in
+            let method_ = "workspace/didChangeConfiguration" in
+            self#register_capability ~notify_back id ~registerOptions ~method_
+          in
+          ()
+      | _ -> Lwt.return ()
+
+    method private register_file_watching
+        ~(notify_back : Linol_lwt.Jsonrpc2.notify_back) =
+      match !client_capabilities with
+      | Some
+          {
+            workspace =
+              Some
+                {
+                  didChangeWatchedFiles =
+                    Some { dynamicRegistration = Some true; _ };
+                  _;
+                };
+            _;
+          } ->
+          let+ _ : Linol_jsonrpc.Jsonrpc.Id.t =
+            let id = "watching-all-files" in
+            let registerOptions =
+              let globPattern = `Pattern "**" in
+              let watchers =
+                [ Linol_lwt.FileSystemWatcher.create ~globPattern () ]
+              in
+              let open Linol_lwt.DidChangeWatchedFilesRegistrationOptions in
+              let options = create ~watchers in
+              yojson_of_t options
+            in
+            let method_ = "workspace/didChangeWatchedFiles" in
+            self#register_capability ~notify_back id ~registerOptions ~method_
           in
           ()
       | _ -> Lwt.return ()
 
     method private on_initialized ~notify_back () =
-      let _ : unit Lwt.t = self#register_conf_changes ~notify_back in
-      let* _ = self#update_configuration ~notify_back in
+      let* _ : unit = self#register_conf_changes ~notify_back in
+      let _ : unit Lwt.t = self#register_file_watching ~notify_back in
+      let _ : unit Lwt.t = self#update_configuration ~notify_back in
       Lwt.return ()
 
     method private update_configuration ~notify_back =
@@ -406,13 +442,39 @@ class lsp_server =
       let () = self#receive_config ~notify_back conf in
       Lwt.return ()
 
+    method private on_change_watched_files ~notify_back:_ change_watched_files =
+      let changes =
+        change_watched_files.Linol_lwt.DidChangeWatchedFilesParams.changes
+      in
+      Format.eprintf "Change watched file\n%!";
+      List.iter
+        (fun { Linol_lwt.FileEvent.type_ = _; uri } ->
+          let path = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
+          Format.eprintf "Change path is %a\n%!" Fpath.pp path;
+          Hashtbl.iter
+            (fun _root_path (root : Slipshow_server.root) ->
+              let found =
+                Fpath.Map.fold
+                  (fun p _ found ->
+                    (* TODO: Check if file in opened in buffers and slp or md extension *)
+                    Format.eprintf "Comparing path %a with deps path %a\n%!"
+                      Fpath.pp path Fpath.pp p;
+                    found || Fpath.equal p path)
+                  root.units.files false
+              in
+              if found then () (* TODO: trigger recompilation and refresh *))
+            Roots.buffers)
+        changes;
+      Lwt.return ()
+
     method! on_notification_unhandled ~notify_back
         (r : Linol_lsp.Client_notification.t) : unit Lwt.t =
       match r with
-      | Linol.Lsp.Client_notification.Initialized ->
-          self#on_initialized ~notify_back ()
-      | Linol.Lsp.Client_notification.ChangeConfiguration change_conf_params ->
+      | Initialized -> self#on_initialized ~notify_back ()
+      | ChangeConfiguration change_conf_params ->
           self#on_change_configuration ~notify_back change_conf_params
+      | DidChangeWatchedFiles change_watched_files ->
+          self#on_change_watched_files ~notify_back change_watched_files
       | r -> super#on_notification_unhandled ~notify_back r
 
     method on_notif_doc_did_open ~notify_back doc ~content : unit Linol_lwt.t =
