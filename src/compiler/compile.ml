@@ -623,20 +623,27 @@ let unit ?locs ~read_file file =
   let doc, frontmatter = Cmarkit_proxy.of_string ~read_file ~file s in
   of_cmarkit ~source ~path:file doc ~fm:frontmatter
 
-let rec add_to_compile ?locs file units ~read_file =
-  if Fpath.Map.mem file units then units
+let rec add_to_compile ?locs ~visited file units ~read_file =
+  if Fpath.Set.mem file visited then (units, visited)
   else
-    let u = unit ~read_file ?locs file in
+    let visited = Fpath.Set.add file visited in
+    let u =
+      match Fpath.Map.find_opt file units with
+      | Some u -> u
+      | None -> unit ~read_file ?locs file
+    in
     let units = Fpath.Map.add file u units in
     let c =
       Fpath.Map.fold
-        (fun dep locs c -> add_to_compile ~locs dep c ~read_file)
-        u.deps units
+        (fun dep locs (c, visited) ->
+          add_to_compile ~locs ~visited dep c ~read_file)
+        u.deps (units, visited)
     in
     c
 
 let compile_all ~read_file units file =
-  let units = add_to_compile file units ~read_file in
+  let visited = Fpath.Set.empty in
+  let units, _visited = add_to_compile file units ~visited ~read_file in
   let files, options =
     Ast.Folder.fold_just_units
       (fun unit (files, option) ->
