@@ -17,6 +17,7 @@
 
 - Fix action detection in LSP in multifile settings (#243)
 - Fix external themes in serve mode (#245)
+- Fix LSP preview with multiple files when some of them are not opened (#250)
 
 ## [v0.11.0] Brazlip (Sunday, the 24th of May, 2026)
 
