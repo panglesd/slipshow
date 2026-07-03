@@ -2,18 +2,18 @@
 Special elements
 ================
 
-In addition to the :doc:`elements with a dedicated markup <slipshow-syntax>`, attributes
-can be used to define more elements, such as boxes, subslips, carousel, ...
+In addition to :doc:`elements with dedicated markup <slipshow-syntax>`, placing attributes before content blocks
+can turn them into elements, such as boxes, subslips, carousels, and more.
 
 This page provides a reference for all such elements.
 
 .. contents::
    :local:
 
-Boxes, admonitions and math environments
-----------------------------------------
+Boxes, admonitions, and math environments
+-----------------------------------------
 
-The following boxes are available:
+The following box types are available:
 
 - ``block`` to display a regular presentation block,
 - ``theorem`` to display a theorem,
@@ -24,8 +24,7 @@ The following boxes are available:
 - ``remark`` to display a remark.
 - ``proof`` to display a proof.
 
-
-To create an element listed above, add its name as a class to the block element. Any box may additionally have a ``title=...`` attribute. This attribute cannot yet contain any markup.
+To create one of these elements, add its name as a class to the block element. Any box may additionally have a ``title=...`` attribute. The attribute's value cannot contain any markup.
 
 .. slipshow-example::
 
@@ -46,15 +45,15 @@ To create an element listed above, add its name as a class to the block element.
 Slips and slides
 ----------------
 
-A slip element is an element with a fixed width (equal to the presentation width) but no fixed height. By default, the whole presentation is in a slip.
+A slip element has a fixed width (equal to the presentation width) but no fixed height. By default, the whole presentation is in a slip.
 
-So a slip has a number of pixel defining its width (1440 by default, as presentations are 1440x1080 pixels). If the available width for the slip element is different, it will be rescaled to fit it: the pixels change in size, but you still have the same number.
+A slip's width is defined in pixels, 1440 by default, as presentations are 1440x1080 pixels. If the available width for the slip element is different (for example if it is nested within another slip), it will be scaled to fit: the pixels change in size, but you still have the same number of them.
 
-You can ``enter`` a slip with the eponymous action. This zooms on the top part of it.
+You can ``enter`` a slip with the eponymous action. This zooms to display the top part of it, i.e. full-width, scrolled to the top.
 
-Slide are just like slips, but they also have a fixed height.
+Slides are just like slips, but they also have a fixed height.
 
-To create a slip or a slide, just give the element the ``slip`` or ``slide`` attribute. This will automatically add a ``enter`` action, unless there is already one or the ``no-enter`` is used.
+To create a slip or a slide, add a ``slip`` or ``slide`` element. This will automatically add an ``enter`` action, unless one is already assigned, or the ``no-enter`` attribute is used.
 
 .. slipshow-example::
 
@@ -65,29 +64,28 @@ To create a slip or a slide, just give the element the ``slip`` or ``slide`` att
    > ---
    > # Part 1
    >
-   > This is the part 1
+   > This is part 1.
    >
    > {slip no-enter}
    > ---
    > # Part 2
    >
-   > This is the part 2. It is skipped due to `no-enter`
+   > This is part 2. It is skipped due to the `no-enter` attribute on it.
    >
    > {slip}
    > ---
    > # Part 3
    >
-   > This is the part 3.
+   > This is part 3.
 
    {step}
-
 
 Carousels
 ---------
 
-Carousels are elements that only display one child at a time. They allow to conveniently change the displayed content of an element, for instance the pages of a PDF. In particular, they are very adapted when you have multiple images, each adding some content to the previous one.
+Carousels are elements that only display one child element at a time. This provides a convenient way to change the displayed content of an element, for instance to step through the pages of a PDF. They are particularly useful when you have a sequence of images, each adding some content to the previous one.
 
-A carousel is created simply by giving it a ``carousel`` attribute. Carousels are then controlled with the ``change-page`` action.
+Create a carousel by adding a ``carousel`` element. It will then be controlled with a ``change-page`` action.
 
 .. slipshow-example::
 
@@ -102,20 +100,20 @@ A carousel is created simply by giving it a ``carousel`` attribute. Carousels ar
    C
    ----
 
-Carousel will take the height of their current displayed element, unless the ``carousel-fixed-size`` class is added to the carousel. In which case, it takes the height of the tallest element.
+The carousel will take the height of its currently displayed element, unless the ``carousel-fixed-size`` class is added to the carousel, in which case it takes the height of the tallest element.
 
 Includes for Markdown and HTML
 ------------------------------
 
 Includes are a way to include external markdown/HTML files, just as if they were
-inlined in the file, similar to the ``![](...)`` syntax but for blocks. An
-include must be a standalone attribute. It must have the ``include`` boolean
-attribute and ``src="path/to/file.slp"`` key-value attribute. It is possible to
+inlined in the file, just like the ``![](...)`` syntax that Markdown uses for images, but for blocks of external content.
+An include must be a standalone element. It must have the ``include`` boolean
+attribute and a ``src`` attribute pointing to the path of the included resource, for example ``src="path/to/file.slp"``. It is possible to
 add other attributes as well.
 
 .. code-block::
 
-   This presentation has two part:
+   This presentation has two parts:
 
    {include slip src="part1.slp"}
 
@@ -125,8 +123,7 @@ add other attributes as well.
 
    {include src="drawing.svg"}
 
-Recall that for inline elements, it is possible images, SVGs, videos, audios,
-PDFs, HTML files and drawings using the markdown image syntax:
+Recall that for inline elements, it is possible to embed images, SVGs, videos, audio clips, PDFs, HTML files, and drawings directly using the Markdown image syntax:
 
 .. code-block::
 
@@ -157,9 +154,8 @@ Since ``>`` is used for :ref:`using-less-to-group`, we can create them by assign
 HTML spans and blocks
 ---------------------
 
-While Markdown conveniently allows to inline some HTML, the rules for it are not
-obvious. If you want to be sure that some content is included as html, you can
-use use code block and code spans, with the ``as-html`` attribute.
+While Markdown conveniently allows inline HTML, particularly useful when its limited formatting abilities fall short, the rules for it are not
+obvious. If you want to be sure that some content is included as HTML, use code blocks and code spans, with the ``as-html`` attribute.
 
 .. code-block::
 
@@ -170,7 +166,7 @@ use use code block and code spans, with the ``as-html`` attribute.
 
    This text includes `<blink>some html</blink>`{as-html}.
 
-For consistency, it is alternatively possible to give a code block the ``=html`` language:
+For consistency, it is also possible to import HTML as a code block by setting the language to ``=html``:
 
 .. code-block::
 
