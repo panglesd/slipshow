@@ -11,7 +11,7 @@ Use a slipscript code block to add a script, and ``exec`` to execute it.
    // JS script here
    ```
 
-If a script has a "permanent" side-effect, it has to provide a way for slipshow
+If a script has a "permanent" side-effect, it has to provide a way for Slipshow
 to revert it. There are two ways for that. One is to use a specific API for side
 effects, which is the easiest and will accomodate most of the scripts. The other
 one is more general but slightly more work.

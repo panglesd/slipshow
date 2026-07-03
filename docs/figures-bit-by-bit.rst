@@ -12,10 +12,10 @@ To reveal a figure bit by bit, you have mostly two options:
 Using an SVG figure
 ===================
 
-Similarly to slipshow document, an SVG image allow to add classes and ids.
+Similarly to Slipshow document, an SVG image allow to add classes and ids.
 
 This allows to display the image bit by bit just like we would do that for text
-in a slipshow:
+in a Slipshow:
 
 .. code-block:: md
 

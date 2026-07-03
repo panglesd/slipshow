@@ -14,7 +14,7 @@ Slipshow allows to execute a custom script at any step of a presentation.
    document.querySelector("#id").style.background = "red"
    ```
 
-This is great! It allows to include in a slipshow any Javascript you want, for instance for your animations, simulation, etc, in a breeze.
+This is great! It allows to include in a Slipshow any JavaScript you want, for instance for your animations, simulation, etc, in a breeze.
 
 However, there is a catch. What happens when you "go back" to a step before the
 execution of the script? How to undo all the side effects that happened, to go

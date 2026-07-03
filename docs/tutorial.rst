@@ -1,7 +1,7 @@
 Typing your presentation
 ========================
 
-Thanks to the editors and preview embedded in this page, this tutorial does not *require* you to have access to the slipshow compiler on your machine. However, we encourage you to have it, to not just read, but actually create the presentation this tutorial is describing. It is even better if you modify it to make it your own!
+Thanks to the editors and preview embedded in this page, this tutorial does not *require* you to have access to the Slipshow compiler on your machine. However, we encourage you to have it, to not just read, but actually create the presentation this tutorial is describing. It is even better if you modify it to make it your own!
 
 .. contents:: Outline of the tutorial
    :local:
@@ -9,7 +9,7 @@ Thanks to the editors and preview embedded in this page, this tutorial does not 
 Introduction
 -----------------
 
-Slipshow is a compiler from a source file to a source language to a slipshow
+Slipshow is a compiler from a source file to a source language to a Slipshow
 presentation, so you simply write a text file to describe your
 presentation. This makes it portable, lightweight and lets you use your favorite
 text editor instead of forcing you into one. It has also drawbacks: it can be
@@ -18,15 +18,15 @@ less visual than other solutions such as "power-point" style presentations.
 When you turn your source file into a presentation (you *compile* the
 presentation), the file created is actually an html file: the format used to
 describe websites. So, even if it is a local file, you need to open it with a
-web browser with javascript enabled: most web browsers will work. An important
+web browser with JavaScript enabled: most web browsers will work. An important
 thing to know is that (unless special setup) the file is fully self-contained:
 it can be viewed offline, and if you want to send your presentation to someone,
 you just need to send them the file. It is also highly portable: it will work on
 any OS with a web browser (virtually all of them!).
 
-In this tutorial, you will create your first slipshow presentation. It is
+In this tutorial, you will create your first Slipshow presentation. It is
 entirely self-contained, and introduces both the usage, the syntax and the
-different features of slipshow. The :ref:`anatomy:Anatomy of a Slipshow presentation` is
+different features of Slipshow. The :ref:`anatomy:Anatomy of a Slipshow presentation` is
 a good complementary read, both can be read in any order.
 
 ..
@@ -39,7 +39,7 @@ A minimal example
 
 We start by considering a simple but complete example. This allows us to cover
 the basic usage of the tools, the basic syntax, and the basic features of
-slipshow. The next parts of the tutorial will build on this example to explain
+Slipshow. The next parts of the tutorial will build on this example to explain
 the more advanced workflows!
 
 To start, copy the following lines in a file, named for instance
@@ -61,10 +61,10 @@ To start, copy the following lines in a file, named for instance
 
 .. note::
 
-   The extension of the file (``.slp``) is for slipshow source. If you did not
-   setup your editor to support slipshow, you might want to use the ``.md``
+   The extension of the file (``.slp``) is for Slipshow source. If you did not
+   setup your editor to support Slipshow, you might want to use the ``.md``
    extension (for ``markdown``): Many editors support markdown out of the box,
-   and slipshow's syntax is an extension of it.
+   and Slipshow's syntax is an extension of it.
 
 Compiling and viewing your presentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -99,7 +99,7 @@ input file, and "live-reload" the presentation served at the address
 presentation. When you only want to generate the html file once, use
 ``compile`` instead.
 
-On the slipshow preview, you should see the familiar format for
+On the Slipshow preview, you should see the familiar format for
 slide-based presentations (4:3 rectangle with black borders). Click on it to be
 sure you have the window focused, and hit the :kbd:`Right arrow` key (or equivalently,
 the :kbd:`Down arrow` key) to step through the presentation! Right now, it has only two
@@ -113,18 +113,18 @@ want to add, and a synced view of the presentation.
 
 .. note::
 
-   The speaker view is disabled in the slipshow previews embedded in this
+   The speaker view is disabled in the Slipshow previews embedded in this
    tutorial.
 
 The syntax used
 ~~~~~~~~~~~~~~~~
 
-Slipshow uses an extension of Markdown for its main syntax. So, having already seen Markdown is a good start when using slipshow.
+Slipshow uses an extension of Markdown for its main syntax. So, having already seen Markdown is a good start when using Slipshow.
 Fortunately, Markdown is very simple! And is already widely used. I'll link to some great resources to learn Markdown, but you can also follow along this tutorial first and come back to them later.
 
 The `Learn Markdown in 60 seconds <https://commonmark.org/help/>`_ is from CommonMark, the organization that proposed a well-defined specification for Markdown. They also have a 10-minute tutorial to learn but also train!
 
-The slipshow markup is defined in :doc:`slipshow-syntax`. In this tutorial, let's only focus on the syntax used in the example.
+The Slipshow markup is defined in :doc:`slipshow-syntax`. In this tutorial, let's only focus on the syntax used in the example.
 
 Pauses
 """"""

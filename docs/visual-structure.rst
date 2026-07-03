@@ -78,8 +78,8 @@ content:
 
 .. note::
 
-   If you compile the slipshow presentation we are building on your own
-   computer, which I advise to do, use hot-reload with slipshow serve:
+   If you compile the Slipshow presentation we are building on your own
+   computer, which I advise to do, use hot-reload with ``slipshow serve``:
 
    .. code-block::
 

@@ -19,12 +19,12 @@ This integration helps in several ways:
 - It compiles your presentation on save.
 
 This integration is still in its early days. It is going to be improved and
-extended with new releases of slipshow.
+extended with new releases of Slipshow.
 
 Emacs
 =====
 
-You need two modes to develop slipshow presentations comfortably in emacs:
+You need two modes to develop Slipshow presentations comfortably in emacs:
 
 - `markdown-mode <https://github.com/jrblevin/markdown-mode>`_, a major mode for
   editing markdown document with syntax highlighting, and other facilities.
@@ -38,7 +38,7 @@ point, type ``slipshow lsp`` (you need ``slipshow`` to be installed of course).
 The command above sets you for editor features such as errors, documentation on
 hover, etc, but it also starts a preview server, usually accessible by opening a
 browser and going to ``localhost:8080``. However, if the port ``8080`` is taken,
-slipshow might use another port. In any case, it sends a notification with the
+Slipshow might use another port. In any case, it sends a notification with the
 address to use, so check your minibuffer or the ``*Messages*`` buffer.
 
 .. note::
@@ -78,8 +78,8 @@ Proxy: Restart LSP server``.
 
 .. note::
 
-   If you want a simpler setup, and don't need the latest version of slipshow,
-   you can still use the official slipshow extension, installable from the
+   If you want a simpler setup, and don't need the latest version of Slipshow,
+   you can still use the official Slipshow extension, installable from the
    marketplaces.
 
 Other editors

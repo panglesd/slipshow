@@ -96,14 +96,14 @@ Pause attributes
 
 ``pause``
 
-  The pause attribute tells the slipshow engine to pause the text rendering
+  The pause attribute tells the Slipshow engine to pause the text rendering
   here. This element and every element after (but inside the "pause block") that
   in the document will be hidden.
 
   When a ``pause`` action is executed, the initially hidden text is displayed.
 
 ``pause-block``
-  The ``pause-block`` attribute tells the slipshow engine that pauses inside it should not hide content outside of it.
+  The ``pause-block`` attribute tells the Slipshow engine that pauses inside it should not hide content outside of it.
 
   Example:
 
