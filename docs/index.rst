@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to slipshow's documentation!
+Welcome to Slipshow's documentation!
 ====================================
 
 **Slipshow is a presentation tool that unlocks new ways of presenting.**

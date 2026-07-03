@@ -4,7 +4,7 @@
 Installation
 ============
 
-There are different ways to have access to the slipshow compiler:
+There are different ways to have access to the Slipshow compiler:
 
 **The best option** for people comfortable with it is to use the command line interface. It is distributed through various mediums:
 
@@ -14,7 +14,7 @@ There are different ways to have access to the slipshow compiler:
 
 For **online-only use**, consider the :ref:`online sliphub editor<quick-start:the sliphub online editor>`. It is great for trying the tool but is currently limited, for instance for anything that requires multiple files.
 
-There are other options that currently are lagging behind in terms of version, but that I might revisit some day: the :ref:`VSCode extension<quick-start:The VS Code plugin>` and the slipshow editor.
+There are other options that currently are lagging behind in terms of version, but that I might revisit some day: the :ref:`VSCode extension<quick-start:The VS Code plugin>` and the Slipshow editor.
 
 Precompiled binaries
 ====================
@@ -32,7 +32,7 @@ You can test that the ``slipshow`` binary is available by running:
 
    $ slipshow --help
 
-If the help shows up, you successfully installed slipshow!
+If the help shows up, you successfully installed Slipshow!
 
 Using ``opam``
 ==============

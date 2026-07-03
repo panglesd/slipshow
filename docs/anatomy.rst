@@ -3,7 +3,7 @@
 Anatomy of a Slipshow presentation
 ==================================
 
-The goal of this page is to give you a clear idea of how a Slipshow presentation is constructed, without going into unnecessary details. It's just an explanation, so you won't need to get your hands dirty yet, but it should help you to understand the big picture. The tutorial is a more hands-on introduction, if that is what you are looking for.
+The goal of this page is to give you a clear idea of how a Slipshow presentation is constructed, without going into unnecessary details. It's just an explanation, so you won't need to get your hands dirty yet, but it should help you to understand the big picture. `The tutorial <tutorial>`_ is a more hands-on introduction, if that is what you are looking for.
 
 Let's start by using this simple presentation as an example, and build on it:
 

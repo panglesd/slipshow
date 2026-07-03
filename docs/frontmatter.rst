@@ -47,7 +47,7 @@ The current options for the frontmatter are:
   <https://github.com/highlightjs/highlight.js/tree/5697ae5187746c24732e62cd625f3f83004a44ce/src/styles>`_,
   stripped from its extension.
 
-- ``external-ids``, for telling the slipshow compiler which ``ids`` will be
+- ``external-ids``, for telling the Slipshow compiler which ``ids`` will be
   present even if they do not seem to be present in the document. Accepts a list
   of space-separated ids. This is just in order to silence some warnings. This
   is useful when including svgs or math where some IDs are given.

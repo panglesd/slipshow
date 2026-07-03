@@ -35,7 +35,7 @@ Attaching metadata
 Standalone attributes
 ---------------------
 
-A set of attributes that is separated from the rest of the content by blank lines is *standalone*. The attributes are attached to en "empty" element. It is useful in the context of slipshow, to give an instruction (such as a pause) in the flow of the presentation, without being tied to a specific element!
+A set of attributes that is separated from the rest of the content by blank lines is *standalone*. The attributes are attached to en "empty" element. It is useful in the context of Slipshow, to give an instruction (such as a pause) in the flow of the presentation, without being tied to a specific element!
 
 .. code-block:: markdown
 

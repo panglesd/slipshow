@@ -10,10 +10,10 @@ Frequently Asked Questions
    :local:
 
 
-How can I send my slipshow to someone
+How can I send my Slipshow to someone
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ..
-     I have no perfect answer to this question. If you use a CDN to get the engine, you can send them the ``.html`` file, but once the download it, they will still need internet to see the slipshow, and won't be able to look at it later offline. If you use a local install, you can just pack or zip your folder and send them the whole packed folder. However, they will need to unpack or unzip the file they receive to see the slipshow, not just click on the file as with a pdf. If you have an idea on how to pack a project so that it can be easily sent and opened in every paltform, please tell me!
+     I have no perfect answer to this question. If you use a CDN to get the engine, you can send them the ``.html`` file, but once the download it, they will still need internet to see the Slipshow, and won't be able to look at it later offline. If you use a local install, you can just pack or zip your folder and send them the whole packed folder. However, they will need to unpack or unzip the file they receive to see the Slipshow, not just click on the file as with a pdf. If you have an idea on how to pack a project so that it can be easily sent and opened in every paltform, please tell me!
 
 The compiled file is a standalone html file! Just send that, no dependencies.
 

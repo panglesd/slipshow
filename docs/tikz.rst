@@ -23,7 +23,7 @@ elements, then the easiest is to compile the file in ``.pdf`` format.
 
    $ pdflatex file.tex
 
-Integrating it in your slipshow presentation is then just a matter of including the pdf, which syntax is:
+Integrating it in your Slipshow presentation is then just a matter of including the pdf, which syntax is:
 
 .. code-block::
 
@@ -98,7 +98,7 @@ Then, we need to compile the file with svg output. Here we use ``latex`` and
    $ latex triangle.tex
    $ divsvgm --no-fonts --exact-bbox triangle.dvi
 
-We now just need to include the svg file in a slipshow input, and write the
+We now just need to include the svg file in a Slipshow input, and write the
 dynamics with actions:
 
 .. code-block::
