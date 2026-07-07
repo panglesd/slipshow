@@ -2,9 +2,15 @@
 dimension: 16:9
 ---
 
-# The Undo Monad
+# The Undo Monad!? Yes!!
+
+![](file.jpg)
+
+{fefdddddssss}
 
 ![](wakeup.draw){#wakeup}
+
+{include src=dir/test.md}
 
 {pause=main-container draw=wakeup}
 
@@ -31,3 +37,6 @@ dimension: 16:9
   font-size: 4em;
 }
 </style>
+
+
+
