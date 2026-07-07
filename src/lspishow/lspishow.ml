@@ -446,44 +446,38 @@ class lsp_server =
       let changes =
         change_watched_files.Linol_lwt.DidChangeWatchedFilesParams.changes
       in
-      Format.eprintf "Change watched file\n%!";
       let root_has_path_as_deps (root : Slipshow_server.root) path =
-        let test_is_relevant p _entry =
-          (* TODO: Check if file is opened in buffers and slp or md extension *)
-          Format.eprintf "Comparing path %a with deps path %a\n%!" Fpath.pp path
-            Fpath.pp p;
-          Fpath.equal p path
-        in
+        let test_is_relevant p _entry = Fpath.equal p path in
         let asset_deps () =
           Fpath.Map.exists test_is_relevant root.units.files
         in
         let unit_deps () = Fpath.Map.exists test_is_relevant root.units.units in
         asset_deps () || unit_deps ()
       in
-      List.iter
-        (fun { Linol_lwt.FileEvent.type_ = _; uri } ->
-          let path = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
-          Format.eprintf "Change path is %a\n%!" Fpath.pp path;
-          Hashtbl.iter
-            (fun root_path (root : Slipshow_server.root) ->
-              (* Update root for saved files *)
-              let needs_updating = root_has_path_as_deps root path in
-              if needs_updating then begin
-                let parent = Fpath.parent root_path in
-                let _updated_root =
-                  Roots.update_root (Read_file.fs parent) Roots.saved
-                    Fpath.Map.empty root_path
-                in
-                (* Update root for buffers *)
-                let _updated_root =
-                  Roots.update_root (Buffers.read_file parent) Roots.buffers
-                    (Buffers.to_units ()) root_path
-                in
-                ()
-              end
-              (* TODO: trigger recompilation and refresh *))
-            Roots.buffers)
-        changes;
+      let handle_file_event { Linol_lwt.FileEvent.type_ = _; uri } =
+        let path = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
+        let check_is_not_a_buffer f =
+          if Fpath.Map.mem path (Buffers.to_units ()) then () else f ()
+        in
+        check_is_not_a_buffer @@ fun () ->
+        let handle_root root_path (root : Slipshow_server.root) =
+          (* Update root for saved files *)
+          let needs_updating = root_has_path_as_deps root path in
+          if needs_updating then begin
+            let parent = Fpath.parent root_path in
+            let _updated_root =
+              Roots.update_root (Read_file.fs parent) Roots.saved
+                Fpath.Map.empty root_path
+            and _updated_root_buffers =
+              Roots.update_root (Buffers.read_file parent) Roots.buffers
+                (Buffers.to_units ()) root_path
+            in
+            ()
+          end
+        in
+        Hashtbl.iter handle_root Roots.buffers
+      in
+      List.iter handle_file_event changes;
       Lwt.return ()
 
     method! on_notification_unhandled ~notify_back
