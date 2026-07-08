@@ -464,7 +464,7 @@ class lsp_server =
         in
         asset_deps () || unit_deps ()
       in
-      let handle_file_event { Linol_lwt.FileEvent.type_ = _; uri } =
+      let handle_file_event { Linol_lwt.FileEvent.type_; uri } =
         let path = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
         let check_is_not_a_buffer f =
           if Fpath.Map.mem path (Buffers.to_units ()) then Lwt.return_unit
@@ -472,10 +472,14 @@ class lsp_server =
         in
         check_is_not_a_buffer @@ fun () ->
         let+ () =
-          if is_slipshow_file path then State.rev_deps_from_fs path
+          ignore type_;
+          if is_slipshow_file path then
+            match type_ with
+            | Deleted -> Lwt.return @@ Rev_deps.remove path
+            | Created | Changed -> State.rev_deps_from_fs path
           else Lwt.return_unit
         in
-        let update_root_of_needed root_path (root : Slipshow_server.root) =
+        let update_root_if_needed root_path (root : Slipshow_server.root) =
           (* Update root for saved files *)
           let needs_updating = root_has_path_as_deps root path in
           if needs_updating then begin
@@ -490,7 +494,7 @@ class lsp_server =
             ()
           end
         in
-        Hashtbl.iter update_root_of_needed Roots.buffers
+        Hashtbl.iter update_root_if_needed Roots.buffers
       in
       Lwt_list.iter_s handle_file_event changes
 
