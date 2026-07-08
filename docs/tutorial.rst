@@ -1,5 +1,5 @@
-Typing your presentation
-========================
+Creating your first presentation
+================================
 
 Thanks to the editors and preview embedded in this page, this tutorial does not *require* you to have access to the Slipshow compiler on your machine. However, we encourage you to have it, to not just read, but actually create the presentation this tutorial is describing. It is even better if you modify it to make it your own!
 
@@ -7,43 +7,38 @@ Thanks to the editors and preview embedded in this page, this tutorial does not 
    :local:
 
 Introduction
------------------
+------------
 
-Slipshow is a compiler from a source file to a source language to a Slipshow
+Slipshow is a compiler that converts a source file to a Slipshow
 presentation, so you simply write a text file to describe your
-presentation. This makes it portable, lightweight and lets you use your favorite
-text editor instead of forcing you into one. It has also drawbacks: it can be
-less visual than other solutions such as "power-point" style presentations.
+presentation. This makes it portable, lightweight, and lets you use your favorite
+text editor instead of forcing you into an unfamiliar one. It also has drawbacks: it can be
+less visual than other solutions such as PowerPoint-style presentation tools.
 
-When you turn your source file into a presentation (you *compile* the
-presentation), the file created is actually an html file: the format used to
-describe websites. So, even if it is a local file, you need to open it with a
+When you compile your source file into a presentation, the file it creates is actually an HTML file, the format used for websites. So, even if it is a local file, you need to open it with a
 web browser with JavaScript enabled: most web browsers will work. An important
-thing to know is that (unless special setup) the file is fully self-contained:
-it can be viewed offline, and if you want to send your presentation to someone,
+thing to know is that (unless specially set up) the file is fully self-contained.
+It can be viewed offline, and if you want to send your presentation to someone,
 you just need to send them the file. It is also highly portable: it will work on
-any OS with a web browser (virtually all of them!).
+any system with a web browser (virtually all of them!).
 
 In this tutorial, you will create your first Slipshow presentation. It is
 entirely self-contained, and introduces both the usage, the syntax and the
-different features of Slipshow. The :ref:`anatomy:Anatomy of a Slipshow presentation` is
-a good complementary read, both can be read in any order.
+different features of Slipshow. :ref:`anatomy:Anatomy of a Slipshow presentation` is a good complementary read.
 
 ..
-   Writing slips should not differ too much from writing beamer presentation, when not using any of the advanced functionalities: there an delimiters for . The syntax is different, and there are 
+   Writing slips should not differ too much from writing `beamer presentations <https://latex-beamer.com>`_ when not using any of its advanced functionalities.
 ..
-   The easiest way is to include the library using a CDN, this is the option we choose to use in this tutorial for its simplicity. However, in this case you will not be able to display your slips without internet access. To use a local version, see :ref:`getting-started`.
+   The easiest way is to include the Slipshow library from a CDN; this is the option we chose for this tutorial for its simplicity. However, in this case you will not be able to display your slips without internet access. To use a local version, see :ref:`getting-started`.
 
 A minimal example
 -----------------
 
 We start by considering a simple but complete example. This allows us to cover
-the basic usage of the tools, the basic syntax, and the basic features of
-Slipshow. The next parts of the tutorial will build on this example to explain
-the more advanced workflows!
+using the tools, the basic syntax, and Slipshow's fundamental features.
+Later parts of the tutorial will build on this example to explain more advanced features and workflows.
 
-To start, copy the following lines in a file, named for instance
-``prime-numbers.slp``:
+To start, copy the following lines into a file, named (for this example) ``prime-numbers.slp``:
 
 .. slipshow-example::
    :visible: both
@@ -61,10 +56,7 @@ To start, copy the following lines in a file, named for instance
 
 .. note::
 
-   The extension of the file (``.slp``) is for Slipshow source. If you did not
-   setup your editor to support Slipshow, you might want to use the ``.md``
-   extension (for ``markdown``): Many editors support markdown out of the box,
-   and Slipshow's syntax is an extension of it.
+   The extension of the file (``.slp``) indicates it's a Slipshow source file. If you did not set up your editor to support Slipshow, you might want to use the ``.md`` extension (for ``markdown``): Many editors support markdown out of the box, and Slipshow's syntax is an extension of it.
 
 Compiling and viewing your presentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -72,12 +64,10 @@ Compiling and viewing your presentation
 .. note::
 
    If you have already :doc:`set up your editor <editor-setup>`, the compilation
-   and preview at http://localhost:8080 will be handled by your editor. You
+   and preview at ``http://localhost:8080`` will be handled by your editor; you
    don't need to type the command below.
 
-The file that we just created is the *source* for a minimal prime-numbers. In
-order to get the presentation itself, we need to *compile* it, using the
-``slipshow`` tool.
+The file we just created is the *source* for a minimal prime-numbers presentation. In order to turn it into the presentation itself, we need to *compile* it, using the ``slipshow`` tool.
 
 In a terminal, issue the following command:
 
@@ -91,17 +81,17 @@ name, but a different extension: ``prime-numbers.html``. The ``.slp`` file
 is the one you'll use to modify the presentation, and the one you'll share
 with another author of the presentation. The ``.html`` file is the one
 you'll use to view or do your presentation, or to share with someone
-interested in viewing the presentation.
+interested in *viewing* the presentation.
 
 Moreover, the ``serve`` command will propagate any saved changes in the
 input file, and "live-reload" the presentation served at the address
-``http://localhost:8080``. It is very useful when writing your
-presentation. When you only want to generate the html file once, use
+``http://localhost:8080``, which you can open in your web browser. This is very useful when writing your
+presentation. When you only want to generate the HTML file once, use
 ``compile`` instead.
 
 On the Slipshow preview, you should see the familiar format for
-slide-based presentations (4:3 rectangle with black borders). Click on it to be
-sure you have the window focused, and hit the :kbd:`Right arrow` key (or equivalently,
+slide-based presentations (a 4:3 rectangle with black borders). Click on it to be
+sure you have the window focused, and press the :kbd:`Right arrow` key (or equivalently,
 the :kbd:`Down arrow` key) to step through the presentation! Right now, it has only two
 steps: the initial one, and the last one.
 
@@ -111,18 +101,18 @@ preview should refresh automatically with the new content!
 Also, type :kbd:`s`: this opens the speaker view, with a timer, notes you might
 want to add, and a synced view of the presentation.
 
-.. note::
+.. warning::
 
    The speaker view is disabled in the Slipshow previews embedded in this
    tutorial.
 
-The syntax used
-~~~~~~~~~~~~~~~~
+Slipshow syntax
+~~~~~~~~~~~~~~~
 
-Slipshow uses an extension of Markdown for its main syntax. So, having already seen Markdown is a good start when using Slipshow.
-Fortunately, Markdown is very simple! And is already widely used. I'll link to some great resources to learn Markdown, but you can also follow along this tutorial first and come back to them later.
+Slipshow uses an extension of Markdown for its main syntax, so having already seen Markdown will give you a head-start with Slipshow.
+Fortunately, Markdown is very simple, and is very widely used. I'll link to some great resources to learn Markdown, but you can continue with this tutorial first and come back to them later.
 
-The `Learn Markdown in 60 seconds <https://commonmark.org/help/>`_ is from CommonMark, the organization that proposed a well-defined specification for Markdown. They also have a 10-minute tutorial to learn but also train!
+The `Learn Markdown in 60 seconds <https://commonmark.org/help/>`_ is from CommonMark, the organization that proposed a well-defined (and widely followed) specification for Markdown. They also have a 10-minute tutorial to learn and also further training materials. The `Markdown Guide <https://www.markdownguide.org/>`_ is a more complete reference, with a lot of examples.
 
 The Slipshow markup is defined in :doc:`slipshow-syntax`. In this tutorial, let's only focus on the syntax used in the example.
 
@@ -135,14 +125,12 @@ The fifth line is the first one that is not regular markdown:
 
    {pause}
 
-This line won't appear as is in the rendered presentation. In fact, any
+This line won't appear as-is in the rendered presentation. In fact, any
 content inside curly braces ``{...}`` is considered "metadata" and will be
 interpreted in specific ways, but not displayed in the presentation.
 
-The purpose of this line is to inform the slipshow engine that the presentation
-should "pause" here. Indeed, when opening the presentation, only the title and
-the first paragraph were shown. The rest of the presentation was shown only
-after the "right" key was pressed.
+The purpose of this line is to inform the Slipshow engine that the presentation
+should stop and wait here. Indeed, when opening the presentation, you may have noticed that only the title and the first paragraph were shown; the presentation only continued after the :kbd:`Right arrow` key was pressed.
 
 Blocks
 """"""
@@ -155,40 +143,37 @@ Following the ``{pause}`` keyword, we have the following content:
    A **prime number** is a number divisible by exactly two integers: 1, and itself.
 
 The meaning should be clear from the rendered presentation: this is a
-"definition" block. As you can see, we use the "metadata" syntax once again: the
-``{.definition}`` part is not rendered, but is used to describe the content. In
-this case, there is a ``.`` followed by a word: such syntax is used for add a
-"class" to an element, an information which is used only to alter the rendering
-of an element.
+"definition" block. As you can see, we use the "metadata" curly-bracket syntax once again: the ``{.definition}`` part is not rendered, but is used to modify the appearance of the content that immediately follows it.
+In this case, there is a ``.`` followed by a word: such syntax is used to add a
+"class" to an element, which is used to alter the rendered appearance of an element, for example its size, font, colour, or other display attributes.
 
-There are several classes available. To describe blocks, in addition to the
-"definition" block, you can chose from ``.theorem``, ``.proof``, ``.alert``, and
-``.block``.
+There are several predefined block classes available. In addition to the
+``.definition`` block, you can chose from ``.theorem``, ``.proof``, ``.alert``, and ``.block``.
 
 .. note::
 
    Blocks support the display of a title. You can provide the title in the
-   metadata: ``{.definition title="Prime numbers"}``. Try it in the example!
-
+   metadata, for example ``{.definition title="Prime numbers"}``. Try it in the example!
 
 If your block includes multiple paragraphs or elements, just indent all those
 elements using ``>``. For instance, try the following in the examples:
 
 .. code-block:: markdown
 
-		 {.definition}
-		 > A **prime number** is a number divisible by exactly two integers: 1, and itself.
-		 >
-		 > We consider 1 not to be a prime number, as it is divisible only by one integer.
+    {.definition}
+    > A **prime number** is a number divisible by exactly two integers: 1, and itself.
+    >
+    > We consider 1 not to be a prime number, as it is divisible only by one integer.
 
 Your presentation as a papyrus
 ------------------------------
 
-In this minimal example, we haven't yet touched the *core* of slipshow's typed
+In this minimal example, we haven't yet touched the *core* of Slipshow's typed
 presentations. But we are close to that!
 
 Let's expand our basic example with the fact and proof that there are infinitely
-many prime numbers. This is one of the first important fact to know!
+many prime numbers! Slipshow supports mathematical formulae using `LaTeX syntax <https://www.latex-project.org/help/documentation/>`_,
+so we can write a proof that is rigorous, readable, and technically correct.
 
 Append the following lines to the example file. (If you are dissatisfied with the
 proof, feel free to improve it 🙂.)
@@ -201,7 +186,7 @@ proof, feel free to improve it 🙂.)
    There are infinitely many prime numbers.
 
    {pause .proof}
-   > Suppose there are finitely many prime numbers.
+   > Suppose there are a finite number of prime numbers.
    >
    > Let's write $p_0, p_1, \dots, p_{n-1}$ a list of all prime numbers. We define:
    >
@@ -225,7 +210,7 @@ proof, feel free to improve it 🙂.)
    > ```
    >
    > So $p$ is a prime that is not part of the $p_i$, a contradiction. {pause}
-   > **Therefore, there must exists infinitely many prime numbers.**
+   > **Therefore, there must be infinitely many prime numbers.**
 
 .. slipshow-example::
    :visible: presentation
@@ -246,7 +231,7 @@ proof, feel free to improve it 🙂.)
    There are infinitely many prime numbers.
 
    {pause .proof}
-   > Suppose there are finitely many prime numbers.
+   > Suppose there are a finite number of prime numbers.
    >
    > Let's write $p_0, p_1, \dots, p_{n-1}$ a list of all prime numbers. We define:
    >
@@ -270,12 +255,12 @@ proof, feel free to improve it 🙂.)
    > ```
    >
    > So $p$ is a prime that is not part of the $p_i$, a contradiction. {pause}
-   > **Therefore, there must exists infinitely many prime numbers.**
+   > **Therefore, there must be infinitely many prime numbers.**
 
-Let's look at the updated rendering of the presentation: What you see is quite
-disappointing. There is too many content for the space available, and the last
-part of the proof overflows and is invisible. Most presentations would solve
-this problem by creating a new slide, but slipshow does it very differently,
+When we look at the updated rendering of the presentation, it is quite
+disappointing. There is too much content for the space available, so the last
+part of the proof overflows the screen and is invisible. Most presentations would solve
+this problem by creating a new slide, but Slipshow does it very differently,
 which is what makes it unique!
 
 .. note::
@@ -298,13 +283,13 @@ The problem of uncovering new content
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Recall the problem here. There is too much content for the space we have: the
-proof of the infinity of prime numbers overflow through the bottom end!
+proof of the infinity of prime numbers falls off the bottom of the slide!
 
-The usual answer from traditional slideshow programs are to create a new slide
-to hold the new content. But that does not come without problems. For instance,
+The usual solution in traditional slideshow programs is to create a new slide
+to hold the overflowing content, but that does not come without problems. For instance,
 what to put in this new slide? Obviously, we don't want to put *only* the
-overflown content in the new slide: this content should be seen in some context,
-that you want to have on screen.
+overflowing content in the new slide as it doesn't make much sense by itself; it needs to have some context
+that remains on screen.
 
 So, one way would be to duplicate some content from the previous slide on the
 second slide. This works reasonably well, but is often difficult to follow for
@@ -317,10 +302,10 @@ duplicated work when, for instance, rewording the duplicated content.
 ..
    - **Create a new slide**
 
-     When there is no space available, traditional presentations just create a new
+     When there is no more space available, traditional presentation tools just create a new
      slide, with all free space. But what to put in this new slide? Obviously, we
-     don't want to put *only* the overflown content in the new slide: this content
-     should be seen in some context, that you want to have on screen.
+     don't want to put *only* the overflowing content in the new slide: this content
+     should be seen in some context that remains on screen.
 
      So, one way would be to duplicate some content from the previous slide on the
      second slide. This works reasonably well, but is often difficult to follow for
@@ -333,73 +318,69 @@ duplicated work when, for instance, rewording the duplicated content.
 ..
    - **Put less content in the slide**.
 
-     This is usually a good thing, not to try to put too much content in a
-     slide. However, there are situations (specifically targetted by slipshow)
-     where you don't want to compromise the content for brevity. For instance, you
-     are making a complex presentation on some topics, and want all proofs to be
+     This is usually a good thing: try to say more with less.
+     However, there are situations (specifically targeted by Slipshow)
+     where you don't want to compromise the content for brevity. For instance, if you
+     are making a complex presentation on a topic, and want all proofs to be
      self-contained.
 
-
 ..
-   Create a file named ``myPresentation.html`` and copy-paste the minimal example.
+   Create a file named ``myPresentation.html`` and copy-paste the minimal example into it.
 
-Slipshow's way
-~~~~~~~~~~~~~~
+The Slipshow way
+~~~~~~~~~~~~~~~~
 
-Slipshow's solution is to, instead of clearing the whole screen and duplicating
-some content, just "scroll" the window down to get more space for the new
-content, hiding only what you do not need anymore!
+Slipshow's solution is, instead of clearing the whole screen and duplicating
+some content, to just "scroll" the window to make more space for the new
+content, hiding only what you no longer need!
 
 Let's focus on our specific case here. We don't have enough space for the whole
-proof, but we do not need to see the presentation title, nor the (kind of
+proof, but we do not need to see the presentation title, nor the (somewhat
 useless) rhetorical question. However, we do want to keep the "prime number"
 definition, as long as possible, and the theorem statement as well, of course.
 
 So what we want to do is to "scroll" (I also like the idea of a papyrus being
-unrolled), until the definition is at the top of the screen. We need two things for that:
+unrolled), until the definition is at the top of the screen. We need three things for that:
 
-1. Be able to refer to a part of your presentation (in our case, the
-   definition),
-2. Tell the slipshow engine *when* to move the screen (in our case: when we
+1. To refer to a specific part of a presentation (in our case, the definition),
+2. To tell the Slipshow engine *when* to move the screen (in our case: when we
    start displaying the proof),
-3. Tell the slipshow engine *where* to move the screen (in our case: such that
+3. To tell the Slipshow engine *where* to move the screen (in our case: so that
    the definition is on top).
 
-Unsurprisingly, all these information are put in the metadatas parts of slipshow
-syntax: everything enclosed in ``{}``.
+Unsurprisingly, all of this information can be put into the curly-bracketed metadata parts of Slipshow's
+syntax.
 
-Be able to refer to a part of your presentation
-"""""""""""""""""""""""""""""""""""""""""""""""
+Refer to a part of a presentation
+"""""""""""""""""""""""""""""""""
 
-For the first point, slipshow uses a system of ids. An id is just a string
-without space, that must be unique amongst all ids. In order to assign an id to
-a block, one must add the id prepended with a ``#`` inside the metadata of the
-block. For instance, let's add the ``prime-def`` id to the definition. The
+For this first feature, Slipshow uses IDs. An ID is just a string
+(without any spaces), that must be unique amongst all IDs. In order to assign an ID to a block,
+add the ID prepended with a ``#`` inside the metadata of the block.
+For instance, let's add the ``prime-def`` id to the definition. The
 source should look like this now:
 
 .. code-block:: markdown
 
-   		 {.definition #prime-def}
-		 A **prime number** is a number divisible by exactly two integers: 1, and itself.
+        {.definition #prime-def}
+        A **prime number** is a number divisible by exactly two integers: 1, and itself.
 
 Tell the engine *when* to move the screen
 """""""""""""""""""""""""""""""""""""""""
 
-For the second point, we use an action metadata kind. Such metadata
-should only be grouped with a ``pause`` metadata. It says that a specific action
-must be taken when stepping through this pause.
+For the second point, we add an "action" to the metadata; actions like this
+should only be grouped with a ``pause`` metadata. They effectively describe
+what's going to happen _after_ the pause. Here we are going to use ``up`` as our action.
 
 Tell the engine *where* to move the screen
 """"""""""""""""""""""""""""""""""""""""""
 
-For the third point, slipshow has several commands to move the screen. In our
-case, we want to put something on top of the screen, so we use ``up`` keyword.
+The third point really joins the previous two together. Saying "up" isn't very precise, so we need to provide the ``up`` action with a specific target to move to, in this case ``prime-def``, the ID that we defined earlier.
 
 Putting everything together
 """""""""""""""""""""""""""
 
-So, we want to add ``up=prime-def`` to the
-pause associated to the proof. The modified source should look like this:
+We need to add ``up=prime-def`` to the pause associated with the proof. The modified source should look like this:
 
 .. code-block:: markdown
 
@@ -409,7 +390,7 @@ pause associated to the proof. The modified source should look like this:
    [...]
 
    {pause .proof up=prime-def}
-   > Suppose there are finitely many prime numbers.
+   > Suppose there are a finite number of prime numbers.
    > [...]
 
 .. slipshow-example::
@@ -431,7 +412,7 @@ pause associated to the proof. The modified source should look like this:
    There are infinitely many prime numbers.
 
    {pause .proof up=prime-def}
-   > Suppose there are finitely many prime numbers.
+   > Suppose there are a finite number of prime numbers.
    >
    > Let's write $p_0, p_1, \dots, p_{n-1}$ a list of all prime numbers. We define:
    >
@@ -455,28 +436,28 @@ pause associated to the proof. The modified source should look like this:
    > ```
    >
    > So $p$ is a prime that is not part of the $p_i$, a contradiction. {pause}
-   > **Therefore, there must exists infinitely many prime numbers.**
+   > **Therefore, there must be infinitely many prime numbers.**
 
-Try the rendered version of this new source: by getting rid of anything not
-useful, there is enough space in the screen to display the definition, theorem
-statement and whole proof!
+Try the rendered version of this new source: by getting rid of anything that's not
+useful, we have made enough screen space to display the definition, theorem
+statement, and its whole proof!
 
 The source is still readable, the flow is not broken, and the presentation is
 easy to follow for the viewer.
 
 .. note::
 
-   The main instructions to move the window are ``up`` to put some element on
+   The main actions for moving the window view are ``up`` to put some element on
    top of the screen, ``down`` to put it at the bottom, and ``center`` to center
-   it.
+   it vertically.
 
-   If no id is given, the instruction is considered to apply on the element
-   itself. For instance, ``down`` without id is a useful command,
+   If no ID is given, the instruction is considered to apply to the element
+   itself. For instance, ``down`` without an ID is a useful command,
    that we could have used on the ``proof`` element.
 
 .. note::
 
-   It is not always best to remove everything that you don't need. For instance,
+   It is not always best to remove _everything_ that you don't need. For instance,
    in the example above, suppose that you continue by giving an example of a
    very big prime number. Technically, you could start fresh, the example does
    not *need* the proof to be on screen. However, for any viewer that is a
@@ -486,7 +467,7 @@ easy to follow for the viewer.
 
 .. note::
 
-   Don't go too fast! The more textual content you have, the slowest you should
+   Don't go too fast! The more textual content you have, the slower you should
    go. Think about how long it would have taken you to write all this on a
    whiteboard.
 
@@ -507,12 +488,12 @@ a mirror of your main presentation. It's disabled in the previews in this tutori
 Writing on the screen
 ~~~~~~~~~~~~~~~~~~~~~
 
-One of the goal of slipshow is to make digital presentations "less bad" compared
-to the blackboard ones.
+One of the Slipshow's goals is to make digital presentations "less bad" when compared
+to those done on a blackboard.
 
 One of the great features of blackboards is that you can write on them while
 explaining, doodle, make arrows all over the place. To try to do something
-similar, the slipshow rendering engine allows you to write on your presentation,
+similar, the Slipshow rendering engine allows you to write on your presentation,
 using the tools present on the top left of your presentation.
 
 The best is still to use the shortcuts:
@@ -530,25 +511,26 @@ them during the presentation!
 Using the table of content
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Press :kbd:`t` during a presentation to open the table of content, with fast jump
+Press :kbd:`t` during a presentation to open the table of contents, with fast jump
 to any part of your presentation!
 
 Moving freely
 ~~~~~~~~~~~~~
 
 During a presentation, it is important to not be too tied to the original
-program. You can move the window freely, using the :kbd:`i`, :kbd:`j`, :kbd:`k` and :kbd:`l`
+sequence, for example if someone asks you a question arising from an earlier slide, it's useful to be able to jump to it quickly without having to backtrack through everything.
+You can move the window freely, using the :kbd:`i`, :kbd:`j`, :kbd:`k` and :kbd:`l`
 keys. Change the "zoom" factor using the :kbd:`z` and :kbd:`Z` keys.
 
 What next?
 ----------
 
-Congratulation, you've finished the tutorial for typed presentations! There are however many more things to learn:
+Congratulations, you've finished the tutorial for typed presentations! There are however many more things to learn:
 
-- Typed presentations are great but some part of your presentation might benefit
-  from being handwritten. The :doc:`record-tutorial` is explaining how to do that.
-- We only briefly touched on the syntax. When you face new situations, you'll
-  quickly need a more thorough presentation of Slipshow's syntax.
-- While predefined actions such as ``pause`` or ``up`` can bring you quite far,
+- Typed presentations are great but parts of your presentation might benefit
+  from being handwritten. The :doc:`record-tutorial` explains how to do that.
+- We only touched briefly on Slipshow's syntax. When you face new situations, you'll
+  need more thorough documentation of Slipshow's features and syntax.
+- While basic, predefined actions such as ``pause`` or ``up`` can get you quite a long way,
   if you want more custom animations it is nice to know how to write your own
   scripts.
