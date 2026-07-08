@@ -66,6 +66,7 @@ let find_markdown_files path =
     [] path
 
 let client_capabilities = ref None
+let rebounce = Hashtbl.create 10
 
 class lsp_server =
   object (self)
@@ -471,8 +472,20 @@ class lsp_server =
           else f ()
         in
         check_is_not_a_buffer @@ fun () ->
+        let debounce_id =
+          match Hashtbl.find_opt rebounce path with
+          | Some id -> id + 1
+          | None -> 0
+        in
+        let () = Hashtbl.replace rebounce path debounce_id in
+        let* () = Lwt_unix.sleep 1. in
+        let check_rebounce f =
+          match Hashtbl.find_opt rebounce path with
+          | Some id when Int.equal id debounce_id -> f ()
+          | _ -> Lwt.return_unit
+        in
+        check_rebounce @@ fun () ->
         let+ () =
-          ignore type_;
           if is_slipshow_file path then
             match type_ with
             | Deleted -> Lwt.return @@ Rev_deps.remove path
