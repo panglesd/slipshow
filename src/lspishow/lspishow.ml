@@ -494,7 +494,11 @@ class lsp_server =
             ()
           end
         in
-        Hashtbl.iter update_root_if_needed Roots.buffers
+        (* In [update_root_if_needed] we are going to modify [Roots.buffers], so
+           we "snapshot" it before traversing it. Even though in principle it is
+           probably ok, since we only replace values, not add new ones. *)
+        let buffers = Roots.buffers |> Hashtbl.to_seq |> Fpath.Map.of_seq in
+        Fpath.Map.iter update_root_if_needed buffers
       in
       Lwt_list.iter_s handle_file_event changes
 
