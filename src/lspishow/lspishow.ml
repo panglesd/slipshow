@@ -451,7 +451,16 @@ class lsp_server =
         let asset_deps () =
           Fpath.Map.exists test_is_relevant root.units.files
         in
-        let unit_deps () = Fpath.Map.exists test_is_relevant root.units.units in
+        let unit_deps () =
+          Fpath.Map.exists
+            (fun p unit_ ->
+              test_is_relevant p unit_
+              (* We also test in the deps of the units, as an [{include}] of a
+                  missing unit will be in deps and not in units. Creating it
+                  should trigger a refresh *)
+              || Fpath.Map.exists test_is_relevant unit_.Slipshow.Ast.deps)
+            root.units.units
+        in
         asset_deps () || unit_deps ()
       in
       let handle_file_event { Linol_lwt.FileEvent.type_ = _; uri } =
