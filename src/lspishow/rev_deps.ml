@@ -3,36 +3,50 @@ let hashtbl_update h key f =
   | None -> ()
   | Some v -> Hashtbl.replace h key v
 
-type t = (Fpath.t, Fpath.Set.t) Hashtbl.t
+type t = {
+  rev_deps : (Fpath.t, Fpath.Set.t) Hashtbl.t;
+  deps : (Fpath.t, Fpath.Set.t) Hashtbl.t;
+      (** We are only interested in the rev deps but we store the deps to know
+          how to update when the deps change *)
+}
 
 let as_map (v : t) : Fpath.set Fpath.Map.t =
-  v |> Hashtbl.to_seq |> Fpath.Map.of_seq
+  v.rev_deps |> Hashtbl.to_seq |> Fpath.Map.of_seq
 
-let current : t = Hashtbl.create 10
+let current : t = { rev_deps = Hashtbl.create 10; deps = Hashtbl.create 10 }
 
 let remove dependant depends =
-  hashtbl_update current dependant @@ Option.map (Fpath.Set.remove depends)
+  hashtbl_update current.rev_deps dependant
+  @@ Option.map (Fpath.Set.remove depends)
 
 let add dependant depends =
-  hashtbl_update current dependant @@ function
+  hashtbl_update current.rev_deps dependant @@ function
   | None -> Some (Fpath.Set.singleton depends)
   | Some set -> Some (Fpath.Set.add depends set)
 
 let get dependant =
-  Hashtbl.find_opt current dependant |> Option.value ~default:Fpath.Set.empty
+  Hashtbl.find_opt current.rev_deps dependant
+  |> Option.value ~default:Fpath.Set.empty
 
-let update_state ~old_unit ~new_unit file =
+let update_state ~new_unit file =
   let () =
-    match old_unit with
+    match Hashtbl.find_opt current.deps file with
     | None -> ()
-    | Some { Slipshow.Ast.deps; _ } ->
-        Fpath.Map.iter
-          (fun dependant _locs ->
+    | Some deps ->
+        Fpath.Set.iter
+          (fun dependant ->
             let dependant =
               Fpath.normalize @@ Fpath.( // ) (Fpath.parent file) dependant
             in
             remove dependant file)
           deps
+  in
+  let () =
+    let new_deps =
+      new_unit.Slipshow.Ast.deps |> Fpath.Map.to_seq |> Seq.map fst
+      |> Fpath.Set.of_seq
+    in
+    Hashtbl.replace current.deps file new_deps
   in
   Fpath.Map.iter
     (fun dependant _locs ->
