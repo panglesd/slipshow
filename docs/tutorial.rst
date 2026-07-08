@@ -1,5 +1,5 @@
-Creating your first presentation
-================================
+Creating your first typewritten presentation
+============================================
 
 Thanks to the editors and preview embedded in this page, this tutorial does not *require* you to have access to the Slipshow compiler on your machine. However, we encourage you to have it, to not just read, but actually create the presentation this tutorial is describing. It is even better if you modify it to make it your own!
 
