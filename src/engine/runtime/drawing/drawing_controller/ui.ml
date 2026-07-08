@@ -226,7 +226,12 @@ let make_download name s =
     let url = Jv.get Jv.global "URL" in
     let object_url = Jv.call url "createObjectURL" [| Brr.Blob.to_jv blob |] in
     Jv.set (Brr.El.to_jv a) "href" object_url;
-    fun () -> Jv.call url "revokeObjectURL" [| object_url |] |> ignore
+    fun () ->
+      (* RevokeURL should not happen before the download has started, which
+         might happen asynchronously in some browsers, so we wait 1s just to be
+         sure. *)
+      Brr.G.set_timeout ~ms:1000 (fun () ->
+          Jv.call url "revokeObjectURL" [| object_url |] |> ignore)
   in
   let filename =
     let f =
