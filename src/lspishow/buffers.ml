@@ -25,10 +25,9 @@ let update_root root =
   ()
 
 (** Update the root of an updated buffer *)
-let update_state ~old ~new_ file =
+let update_state ~new_ file =
   Hashtbl.replace buffers file new_;
-  let old_unit = Option.map (fun old -> old.unit) old in
-  Rev_deps.update_state ~old_unit ~new_unit:new_.unit file
+  Rev_deps.update_state ~new_unit:new_.unit file
 
 let update file source =
   match Hashtbl.find_opt buffers file with
@@ -40,12 +39,12 @@ let update file source =
         | Some _ -> ()
       in
       Fpath.Set.iter compile_missing_roots rs
-  | old ->
+  | _ ->
       let parent = Fpath.parent file in
       let open Read_file.Syntax in
       let read_file = Read_file.with_ file source ||| read_file parent in
       let unit = Slipshow.Compile.unit ~read_file file in
       let new_ = { source; unit } in
-      update_state ~old ~new_ file;
+      update_state ~new_ file;
       let roots = Rev_deps.get_roots file in
       roots |> Fpath.Set.iter update_root

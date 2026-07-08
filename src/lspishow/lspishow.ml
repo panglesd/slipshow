@@ -37,7 +37,7 @@ module State = struct
     let read_file = Read_file.fs parent in
     let () =
       let new_unit = Slipshow.Compile.unit ~read_file file in
-      Rev_deps.update_state ~old_unit:None ~new_unit file
+      Rev_deps.update_state ~new_unit file
     in
     Lwt.return_unit
 
