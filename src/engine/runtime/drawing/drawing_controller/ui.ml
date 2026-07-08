@@ -230,8 +230,11 @@ let make_download name s =
       (* RevokeURL should not happen before the download has started, which
          might happen asynchronously in some browsers, so we wait 1s just to be
          sure. *)
-      Brr.G.set_timeout ~ms:1000 (fun () ->
-          Jv.call url "revokeObjectURL" [| object_url |] |> ignore)
+      let _cancel =
+        Brr.G.set_timeout ~ms:1000 (fun () ->
+            Jv.call url "revokeObjectURL" [| object_url |] |> ignore)
+      in
+      ()
   in
   let filename =
     let f =
