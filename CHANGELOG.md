@@ -12,6 +12,7 @@
   - Consider `.slp` as input files. (#244)
   - A configuration for refreshing the preview on each key stroke, or on
     save. (#248)
+  - Watch dependencies for change and refresh preview (#252)
 
 ### Changed
 
