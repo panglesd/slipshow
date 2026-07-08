@@ -56,11 +56,12 @@ let diagnostics file : Linol.Lsp.Types.Diagnostic.t list option =
       | Some { diagnostics = errors; _ } ->
           Some (List.concat_map (Diagnostic.of_error ~root ~file) errors))
 
+let is_slipshow_file p = Fpath.has_ext "md" p || Fpath.has_ext "slp" p
+
 (* Find all markdown files in the given directory (recursing over subdirectories) *)
 let find_markdown_files path =
   Bos.OS.Dir.fold_contents ~traverse:`Any
-    ~elements:
-      (`Sat (fun p -> Ok (Fpath.has_ext "md" p || Fpath.has_ext "slp" p)))
+    ~elements:(`Sat (fun p -> Ok (is_slipshow_file p)))
     (fun p acc -> p :: acc)
     [] path
 
@@ -466,10 +467,15 @@ class lsp_server =
       let handle_file_event { Linol_lwt.FileEvent.type_ = _; uri } =
         let path = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
         let check_is_not_a_buffer f =
-          if Fpath.Map.mem path (Buffers.to_units ()) then () else f ()
+          if Fpath.Map.mem path (Buffers.to_units ()) then Lwt.return_unit
+          else f ()
         in
         check_is_not_a_buffer @@ fun () ->
-        let handle_root root_path (root : Slipshow_server.root) =
+        let+ () =
+          if is_slipshow_file path then State.rev_deps_from_fs path
+          else Lwt.return_unit
+        in
+        let update_root_of_needed root_path (root : Slipshow_server.root) =
           (* Update root for saved files *)
           let needs_updating = root_has_path_as_deps root path in
           if needs_updating then begin
@@ -484,10 +490,9 @@ class lsp_server =
             ()
           end
         in
-        Hashtbl.iter handle_root Roots.buffers
+        Hashtbl.iter update_root_of_needed Roots.buffers
       in
-      List.iter handle_file_event changes;
-      Lwt.return ()
+      Lwt_list.iter_s handle_file_event changes
 
     method! on_notification_unhandled ~notify_back
         (r : Linol_lsp.Client_notification.t) : unit Lwt.t =
