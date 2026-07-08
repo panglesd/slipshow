@@ -272,43 +272,41 @@ let editing_panel =
   let resize = editing_tool Rescale "⇲" (Lwd.pure "Resize") "r" in
   let block = panel_block ~buttons:[ `R select; `R move; `R resize ] () in
   let recording_block =
-    let record =
-      let handler =
-        Elwd.handler Brr.Ev.click (fun _ ->
-            match Lwd.peek current_replaying_state with
-            | None -> ()
-            | Some s -> Drawing_state.start_recording s)
-      in
-      let icon =
-        Brr.El.div
-          ~at:
-            [
-              Brr.At.style
-                !!"width:10px;height:10px;background:red;border-radius:5px";
-            ]
-          []
-      in
-      let icon = panel_icon [ `P icon ] in
-      let txt =
-        let$* strokes =
-          let$ c = Lwd.get current_replaying_state in
-          match c with
-          | None -> Lwd_table.make ()
-          | Some c -> c.recording.strokes
+    let$* current_replaying_state = Lwd.get current_replaying_state in
+    match current_replaying_state with
+    | None -> Lwd.pure @@ Lwd_seq.empty
+    | Some current_replaying_state ->
+        let record =
+          let handler =
+            Elwd.handler Brr.Ev.click (fun _ ->
+                Drawing_state.start_recording current_replaying_state)
+          in
+          let icon =
+            Brr.El.div
+              ~at:
+                [
+                  Brr.At.style
+                    !!"width:10px;height:10px;background:red;border-radius:5px";
+                ]
+              []
+          in
+          let icon = panel_icon [ `P icon ] in
+          let txt =
+            let strokes = current_replaying_state.recording.strokes in
+            let$ is_empty =
+              Lwd_table.map_reduce
+                (fun _ _ -> false)
+                (true, fun _ _ -> false)
+                strokes
+            in
+            if is_empty then "Start recording" else "Continue recording"
+          in
+          panel_button ~handler ~icon txt ~shortcut:"Shift + R"
         in
-        let$ is_empty =
-          Lwd_table.map_reduce
-            (fun _ _ -> false)
-            (true, fun _ _ -> false)
-            strokes
-        in
-        if is_empty then "Start recording" else "Continue recording"
-      in
-      panel_button ~handler ~icon txt ~shortcut:"Shift + R"
-    in
-    panel_block ~buttons:[ `R record ] ()
+        let$ panel = panel_block ~buttons:[ `R record ] () in
+        Lwd_seq.element panel
   in
-  toplevel_panel_el [ `R block; `R recording_block ]
+  toplevel_panel_el [ `R block; `S recording_block ]
 
 let panel =
   let content =
