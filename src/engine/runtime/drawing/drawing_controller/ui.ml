@@ -103,7 +103,7 @@ let selection =
     Lwd_table.map_reduce
       (fun _row workspace ->
         let name =
-          let$ name = Lwd.get workspace.recording.name in
+          let name = workspace.recording.name in
           Brr.El.txt' name
         in
         let recording_id = string_of_int workspace.recording.record_id in
@@ -117,7 +117,7 @@ let selection =
               Lwd_seq.element Brr.At.selected
           | _ -> Lwd_seq.empty
         in
-        Lwd_seq.element @@ Elwd.option ~at:[ `P value; `S selected ] [ `R name ])
+        Lwd_seq.element @@ Elwd.option ~at:[ `P value; `S selected ] [ `P name ])
       Lwd_seq.monoid workspaces.recordings
     |> Lwd_seq.lift
   in
@@ -150,29 +150,20 @@ let global_panel recording =
   (*   let total_time = Ui_widgets.float ~type':"number" recording.total_time [] in *)
   (*   Elwd.div [ `P (Brr.El.txt' "Total duration: "); `R total_time ] *)
   (* in *)
-  let name_title =
-    let$ name = Lwd.get recording.name in
-    Brr.El.h3 ~at:[ Brr.At.style !!"margin-top:0" ] [ Brr.El.txt' name ]
-  in
-  let change_title =
-    Elwd.div
+  let name_title = Brr.El.h3 [ Brr.El.txt' recording.name ] in
+  let get_help =
+    Brr.El.div
       [
-        `P (Brr.El.txt' "Rename recording: ");
-        `R (Ui_widgets.string ~type':"text" ~kind:`Input recording.name []);
-        `P
-          (Brr.El.div
-             [
-               Brr.El.a
-                 ~at:
-                   [
-                     Brr.At.href
-                       !!"https://slipshow.readthedocs.io/en/stable/record-and-replay.html";
-                   ]
-                 [ Brr.El.txt' "Get help in the documentation" ];
-             ]);
+        Brr.El.a
+          ~at:
+            [
+              Brr.At.href
+                !!"https://slipshow.readthedocs.io/en/stable/record-and-replay.html";
+            ]
+          [ Brr.El.txt' "Get help in the documentation" ];
       ]
   in
-  Elwd.div [ `R name_title; `R selection; `R change_title ]
+  Elwd.div [ `R selection; `P name_title; `P get_help ]
 
 let play (replaying_state : replaying_state) =
   Lwd.set replaying_state.is_playing true;
@@ -255,7 +246,7 @@ let save_button recording =
         let path = recording.file_path in
         Messaging.save_drawing ~path ~content:s;
         (* TODO: If not in preview mode, offer to save to disk, using the line below *)
-        if false then make_download (Lwd.peek recording.name) s;
+        if false then make_download recording.name s;
         let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv |> Brr.El.of_jv in
         Brr.El.set_has_focus false el)
   in
@@ -265,7 +256,7 @@ let download_button recording =
   let click =
     Elwd.handler Brr.Ev.click (fun ev ->
         let s = Drawing_state.Json.string_of_recording recording in
-        make_download (Lwd.peek recording.name) s;
+        make_download recording.name s;
         let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv |> Brr.El.of_jv in
         Brr.El.set_has_focus false el)
   in

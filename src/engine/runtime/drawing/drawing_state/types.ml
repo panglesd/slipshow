@@ -48,7 +48,7 @@ type recording = {
   strokes : strokes;
   pauses : pauses;
   total_time : float Lwd.var;
-  name : string Lwd.var;
+  name : string;
   record_id : int;
   file_path : string;
 }

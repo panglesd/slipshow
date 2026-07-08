@@ -202,7 +202,7 @@ let svg c ~uri ~files i attrs =
       in
       RenderAttrs.with_attrs_span c attrs @@ fun () -> C.string c content
 
-let pure_embed c uri files attrs =
+let pure_embed c ~name uri files attrs =
   let open Cmarkit_renderer in
   match uri with
   | Asset.Uri.Link _ -> Logs.err (fun m -> m "Could not embed a pure embed")
@@ -223,6 +223,7 @@ let pure_embed c uri files attrs =
             attrs
             |> add_attrs "x-path" (Fpath.to_string p)
             |> add_attrs "x-data" (Option.value ~default:"" content)
+            |> add_attrs "x-name" name
           in
           Context.string c "<span";
           RenderAttrs.add_attrs c attrs;
@@ -255,11 +256,17 @@ let custom_html_renderer (units : Ast.units)
       | Ast.Html { uri = uri, _; id = _; origin = (l, (attrs, _)), _ } ->
           html_include c ~uri ~files attrs l;
           true
-      | Ast.Hand_drawn { uri = uri, _; id = _; origin = (_, (attrs, _)), _ } ->
+      | Ast.Hand_drawn { uri = uri, _; id = _; origin = (_, (attrs, _)), _ } as
+        el ->
           let attrs =
             Attributes.add_class attrs ("slipshow-hand-drawn", Meta.none)
           in
-          pure_embed c uri files attrs;
+          let name =
+            Ast.Utils.Inline.to_plain_text ~break_on_soft:false
+              (Ast.S_inline el)
+          in
+          let name = String.concat "\n" (List.map (String.concat "") name) in
+          pure_embed c ~name uri files attrs;
           true
     in
 

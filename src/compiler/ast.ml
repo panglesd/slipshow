@@ -688,6 +688,24 @@ module Utils = struct
       Inline.meta ~ext i
 
     let textloc i = i |> meta |> Meta.textloc
+
+    let to_plain_text =
+      let ext_i = function
+        | Image media
+        | Svg media
+        | Video media
+        | Audio media
+        | Pdf media
+        | Html media
+        | Hand_drawn media ->
+            let (origin, _), _ = media.origin in
+            Cmarkit.Inline.Link.text origin
+      in
+      let ext ~break_on_soft:_ = function
+        | S_inline i -> ext_i i
+        | _ -> assert false
+      in
+      Cmarkit.Inline.to_plain_text ~ext
   end
 end
 

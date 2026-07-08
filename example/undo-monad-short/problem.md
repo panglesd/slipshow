@@ -1,6 +1,6 @@
 # Bidirectional computing
 
-![](compile.draw){#compiledraw}
+![Compiling](compile.draw){#compiledraw}
 
 {#cmf-addons .block}
 > ```txt
@@ -34,7 +34,7 @@
 
 {down="~margin:652 cmf-addons"}
 
-![](bas_solution.draw){#bad_solution draw}
+![Bad solution (stack)](bas_solution.draw){#bad_solution draw}
 
 {draw=bad_solution}
 
@@ -55,7 +55,7 @@
 >
 > - I want fine control over transitions
 
-![](good_sol.draw){#good_sol draw}
+![Good solution](good_sol.draw){#good_sol draw}
 
 {draw=good_sol}
 
