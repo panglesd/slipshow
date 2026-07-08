@@ -28,7 +28,7 @@ let get dependant =
   Hashtbl.find_opt current.rev_deps dependant
   |> Option.value ~default:Fpath.Set.empty
 
-let update_state ~new_unit file =
+let update_state ~new_deps file =
   let () =
     match Hashtbl.find_opt current.deps file with
     | None -> ()
@@ -41,20 +41,26 @@ let update_state ~new_unit file =
             remove dependant file)
           deps
   in
-  let () =
-    let new_deps =
-      new_unit.Slipshow.Ast.deps |> Fpath.Map.to_seq |> Seq.map fst
-      |> Fpath.Set.of_seq
-    in
-    Hashtbl.replace current.deps file new_deps
+  match new_deps with
+  | Some new_deps ->
+      Hashtbl.replace current.deps file new_deps;
+      Fpath.Set.iter
+        (fun dependant ->
+          let dependant =
+            Fpath.normalize @@ Fpath.( // ) (Fpath.parent file) dependant
+          in
+          add dependant file)
+        new_deps
+  | None -> Hashtbl.remove current.deps file
+
+let remove file = update_state ~new_deps:None file
+
+let update_state ~new_unit file =
+  let new_deps =
+    new_unit.Slipshow.Ast.deps |> Fpath.Map.to_seq |> Seq.map fst
+    |> Fpath.Set.of_seq |> Option.some
   in
-  Fpath.Map.iter
-    (fun dependant _locs ->
-      let dependant =
-        Fpath.normalize @@ Fpath.( // ) (Fpath.parent file) dependant
-      in
-      add dependant file)
-    new_unit.Slipshow.Ast.deps
+  update_state ~new_deps file
 
 let get_roots u =
   let rec get_roots visited u =

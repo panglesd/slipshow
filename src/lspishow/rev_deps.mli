@@ -8,5 +8,7 @@ val current : t
 val update_state : new_unit:Slipshow.Ast.unit' -> Fpath.t -> unit
 (** Updates the rev deps of a changed units. *)
 
+val remove : Fpath.t -> unit
+
 val get_roots : Fpath.t -> Fpath.set
 (** Get the root(s) of a path. *)
