@@ -1,6 +1,6 @@
 # The Undo Monad
 
-![](undomonad.draw){#undomonaddraw draw}
+![Undo Monad](undomonad.draw){#undomonaddraw draw}
 
 {draw=undomonaddraw}
 

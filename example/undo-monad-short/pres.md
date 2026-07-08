@@ -4,7 +4,7 @@ dimension: 16:9
 
 # The Undo Monad
 
-![](wakeup.draw){#wakeup}
+![Wake up](wakeup.draw){#wakeup}
 
 {pause=main-container draw=wakeup}
 

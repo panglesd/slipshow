@@ -35,7 +35,7 @@
 > <expr> ? <expr> : <expr>
 > ```
 
-![](ooe.draw){draw #ooe}
+![Order of execution](ooe.draw){draw #ooe}
 
 {up=batman}
 

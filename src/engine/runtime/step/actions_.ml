@@ -744,12 +744,18 @@ module Draw = struct
     | Some _ -> Fut.return ()
     | None ->
         let data = El.at (Jstr.v "x-data") elem
-        and path = El.at (Jstr.v "x-path") elem in
-        (match (data, path) with
-        | None, _ | _, None -> ()
-        | Some data, Some path -> (
+        and path = El.at (Jstr.v "x-path") elem
+        and name = El.at (Jstr.v "x-name") elem in
+        (match (data, path, name) with
+        | None, _, _ | _, None, _ | _, _, None -> ()
+        | Some data, Some path, Some name -> (
             let path = !?path in
             let open Drawing_state in
+            let name =
+              match Jstr.to_string name with
+              | "" -> "Unnamed recording"
+              | s -> s
+            in
             let recording : (recording, _) result =
               match !?data with
               | "" ->
@@ -758,11 +764,11 @@ module Draw = struct
                       strokes = Lwd_table.make ();
                       pauses = Lwd_table.make ();
                       total_time = Lwd.var 0.;
-                      name = Lwd.var "A new recording TODO";
+                      name;
                       record_id = Random.bits ();
                       file_path = path;
                     }
-              | data -> Drawing_state.Json.string_to_recording path data
+              | data -> Drawing_state.Json.string_to_recording path name data
             in
             match recording with
             | Error e -> Console.(log [ e ])

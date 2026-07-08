@@ -19,7 +19,7 @@ dimension:16:9
 {pause #dia}
 # The Diátaxis framework
 
-![](drawing1.draw){#d draw up=dia}
+![Diataxis framework](drawing1.draw){#d draw up=dia}
 
 {draw=d}
 
@@ -27,7 +27,7 @@ dimension:16:9
 
 {draw=d}
 
-![](drawingdetails.draw){#dd}
+![Diataxis details](drawingdetails.draw){#dd}
 
 {focus=explanations}
 
@@ -106,7 +106,7 @@ dimension:16:9
 
 4. Publish.
 
-![](the_workflow.draw){#wd}
+![The workflow](the_workflow.draw){#wd}
 
 {draw=wd}
 
