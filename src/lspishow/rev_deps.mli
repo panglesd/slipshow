@@ -1,4 +1,6 @@
-type t = (Fpath.t, Fpath.set) Hashtbl.t
+type t
+
+val as_map : t -> Fpath.set Fpath.Map.t
 
 val current : t
 (** Rev deps for opened buffers. **)

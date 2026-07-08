@@ -5,6 +5,9 @@ let hashtbl_update h key f =
 
 type t = (Fpath.t, Fpath.Set.t) Hashtbl.t
 
+let as_map (v : t) : Fpath.set Fpath.Map.t =
+  v |> Hashtbl.to_seq |> Fpath.Map.of_seq
+
 let current : t = Hashtbl.create 10
 
 let remove dependant depends =

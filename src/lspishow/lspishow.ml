@@ -112,13 +112,13 @@ class lsp_server =
       in
       let () =
         Format.eprintf "Here are the root of each markdown file\n%!";
-        Hashtbl.iter
+        Fpath.Map.iter
           (fun path paths ->
             Format.eprintf "%a -> [%s]\n%!" Fpath.pp path
               (String.concat " "
               @@ (paths |> Fpath.Set.to_seq |> List.of_seq
                 |> List.map Fpath.to_string)))
-          Rev_deps.current
+          Rev_deps.(as_map current)
       in
       super#on_req_initialize ~notify_back params
 
