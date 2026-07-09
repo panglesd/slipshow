@@ -1,0 +1,9 @@
+{
+  "name": "slipshow",
+  "fullname": "slipshow.org",
+  "version": "0.0.1",
+  "wix_description": "TODO slipshow.",
+  "wix_manufacturer": "peada@free.fr",
+  "exec_files": ["bin/slipshow"],
+  "unique_id": "slipshow"
+}
