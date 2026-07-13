@@ -1438,4 +1438,4 @@ Note that ``slipshow serve``, which hot reloads on change, will hot-reload whene
 Profit
 ======
 
-If you'd like to contribute, I accept donations through `GitHub Sponsors <https://github.com/sponsors/panglesd>`_!
+If you'd like to contribute to Slipshow's continued development and support, I accept donations through `GitHub Sponsors <https://github.com/sponsors/panglesd>`_!
