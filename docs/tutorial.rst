@@ -56,7 +56,7 @@ To start, copy the following lines into a file, named (for this example) ``prime
 
 .. note::
 
-   The extension of the file (``.slp``) indicates it's a Slipshow source file. If you did not set up your editor to support Slipshow, you might want to use the ``.md`` extension (for ``markdown``): Many editors support markdown out of the box, and Slipshow's syntax is an extension of it.
+   The extension of the file (``.slp``) indicates it's a Slipshow source file. If you did not set up your editor to support Slipshow, you might want to use the ``.md`` extension (for ``markdown``): Many editors support Markdown out of the box, and Slipshow's syntax is an extension of it.
 
 Compiling and viewing your presentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -119,7 +119,7 @@ The Slipshow markup is defined in :doc:`slipshow-syntax`. In this tutorial, let'
 Pauses
 """"""
 
-The fifth line is the first one that is not regular markdown:
+The fifth line is the first one that is not regular Markdown:
 
 .. code-block:: markdown
 

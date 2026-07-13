@@ -2,7 +2,7 @@ open Cmarkit
 
 type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
 
-(** The compilation from "pure" markdown cmarkit values to compiled slipshow
+(** The compilation from "pure" Markdown cmarkit values to compiled slipshow
     values (as extended cmarkit values) is done in several stages. The reason is
     that otherwise, the order in which we do thing on a specific node is quite
     tricky to get right... Also, I remember CMarkit mappers were limiting in

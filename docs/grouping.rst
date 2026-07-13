@@ -25,7 +25,7 @@ You can use ``>`` to group blocks together, just like it is used in Commonmark t
 Using ``---``
 -------------
 
-Like other markdown-to-slides generator, Slipshow allows to use "horizontal lines" (such as ``---``) to group blocks together:
+Like other Markdown-to-slides generator, Slipshow allows to use "horizontal lines" (such as ``---``) to group blocks together:
 
 .. code-block:: markdown
 

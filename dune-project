@@ -19,7 +19,7 @@
 
 (package
  (name slipshow)
- (synopsis "A compiler from markdown to slipshow")
+ (synopsis "A compiler from Markdown to slipshow")
  (description "Slipshow is an engine to write slips, a concept evolved from slides.")
  (depends
   (ocaml (>= 4.14))

@@ -105,7 +105,7 @@ The carousel will take the height of its currently displayed element, unless the
 Includes for Markdown and HTML
 ------------------------------
 
-Includes are a way to include external markdown/HTML files, just as if they were
+Includes are a way to include external Markdown/HTML files, just as if they were
 inlined in the file, just like the ``![](...)`` syntax that Markdown uses for images, but for blocks of external content.
 An include must be a standalone element. It must have the ``include`` boolean
 attribute and a ``src`` attribute pointing to the path of the included resource, for example ``src="path/to/file.slp"``. It is possible to
