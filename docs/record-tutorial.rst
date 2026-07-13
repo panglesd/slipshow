@@ -2,10 +2,10 @@
 Drawing your presentation
 =========================
 
-In this tutorial, we'll create a presentation in a tottally different way, that
-is much more similar to what you would do in a whiteboard-based presentation.
+In this tutorial, we'll create a presentation in a totally different way, one
+that's much more like what you would do in a whiteboard-based presentation.
 
-Note that it is best to have access to a Wacom-like drawing tablet. Second-hand
+Note that it is best to have access to a Wacom-like drawing tablet; second-hand
 ones can be very cheap. If you don't have one, it's still possible to follow the
 tutorial with the mouse!
 
@@ -40,16 +40,15 @@ Now, take a moment to think how you would present that, in two situations:
 
 Which one is the easiest to prepare? And which one is the clearest and most
 enjoyable to watch? These questions obviously depend on the person, but for me
-and this particular visual explanation, the "pen and paper" approach works much
-better!
+and this particular visual explanation, the "pen and paper" approach works best!
 
 So why do we still do slide-based presentations? Probably because it has other
 advantages: It's easily readable if your handwriting is not perfect, you can
 share your slides, it's less stressful as you have less to do during the
-presentation, you can reuse your slides.
+presentation, and you can reuse your slides.
 
-The record-and-replay drawing feature of Slipshow try to reclaim the niceness of
-whiteboard presentations, will retaining some of the nice things about prepared
+The record-and-replay drawing feature of Slipshow tries to reclaim the "niceness" and immediacy of
+whiteboard presentations, while retaining some of the advantages of prepared
 presentations.
 
 .. note::
@@ -65,28 +64,25 @@ presentations.
               2S & = & 101 & + & 101 & + & \dots & + & 101
       \end{array}
 
-   The spacing gave me trouble. Probably we can do better. But drawing is
-   definitely easier, more human, and convey a richer message (eg in the order
-   in which you draw the things).
-
-
+   The spacing gave me trouble; we can probably do better. Drawing is
+   definitely easier, more human, and conveys a richer message (e.g. in the order
+   in which you draw things).
 
 Setup
 -----
 
 The drawing feature is still new, and the workflow to integrate drawings to your
-presentation, whil perfectly functional, is not yet perfect and will improve
+presentation, while perfectly functional, is not yet perfect and will improve
 over time. Currently, it looks like this:
 
-1. You type the "typed" part of your presentation. You get a presentation with
+1. Create the "typed" part of your presentation. You get a presentation with
    "holes".
-2. You open the compiled presentation, and record the drawings for the
-   presentation.
-3. You save those drawings in a ``.draw`` file.
-4. You include the ``.draw`` file in your presentation, and decide when to
-   replay the drawing.
+2. Open the compiled presentation and record the drawings for it.
+3. Save those drawings in a ``.draw`` file.
+4. Include the ``.draw`` file in your presentation, and decide when to
+   replay the drawings.
 
-In our case, the "typed" part of the presentation is minimal: We'll just type the title, the rest will be drawn. We also chose a ratio that gives us more horizontal space, and that is common for video-projectors and screens.
+In our case, the "typed" part of the presentation is minimal: We'll just type the title, the rest will be drawn. We also chose a ratio that gives us more horizontal space, and that is common for video projectors and laptop screens.
 
 So, let's create the following ``sum.slp`` file:
 
@@ -104,20 +100,20 @@ and compile it with
 
    $ slipshow compile sum.slp
 
-Great! We have finished item 1 of the list above.
+Great! We have finished item 1 of the todo list.
 
 Drawing
 -------
 
 Now, let's open the freshly created ``sum.html`` with your favorite browser.
-You should see a presentation with no step, and just a title.
+You should see a presentation with no steps, just a title.
 
-On the top left, you have the tools that you can use to start drawing. Try it!
+In the top left, you'll find the tools to use for drawings. Try it!
 Press :kbd:`p` to select the pen, and draw on the screen with your mouse. Change
 the width of the stroke, the color, use the highlighter with :kbd:`h`. Erase
-some of the strokes with the erase tool selectable with :kbd:`e`.
+some of the strokes with the erase tool, selectable with :kbd:`e`.
 
-But you are in "presentation" mode: it is meant to be used to annotate live
+But you are in "presentation" mode, which is meant to be used to do live annotations
 during a presentation, so the drawing is not recorded.
 
 We'll now record a sketch drawing that we'll use for our explanation. For
@@ -140,11 +136,11 @@ timeline is a slider you can move around, and see the preview update
 accordingly. You can also press the :kbd:`Play` button to see how the replay
 looks!
 
-If you replay from the beginning, you will probably remark a few things:
+If you replay your drawing from the beginning, you will probably notice a few problems:
 
-- The recording has recorded some inactive time before (respectively after) the
-  first (respectively last) stroke.
-- The replay is probably feeling very slow (unless you are very good!).
+- The recording includes some inactive time before the
+  first stroke and after the last.
+- The replay probably feels very slow (unless you are very good!).
 
 Fortunately, the drawing and timeline are editable! First take the "Select tool"
 by pressing :kbd:`s`, and select all strokes with a click-and-drag either on the
@@ -158,10 +154,10 @@ click-and-drag left from anywhere on the timeline to rescale the selected
 strokes, making them replay faster. Test the new speed by replaying the preview
 until you are satisfied.
 
-The remaining fix is to remove the trailing recording time, so that the
-replaying stops after the last stroke. To do this, use the Select tool and click
-anywhere to unselect everything. Then, take the Rescale tool back. In the
-absence of a selection, the rescale tool changes the recording time. Click
+The remaining fix is to remove the trailing recording time, so that replay
+stops after the last stroke. To do this, use the Select tool and click
+anywhere to unselect everything. Then, go back to the Rescale tool. In the
+absence of a selection, the rescale tool changes the overall recording time. Click
 anywhere on the timeline and drag left until the end of the recording is at the
 end of the last stroke.
 
@@ -169,28 +165,27 @@ end of the last stroke.
 
    - The "Select" tool will allow you to select strokes, either on the preview
      or on the timeline.
-   - The "Move" tool will allow you to move strokes, either spacially on the
+   - The "Move" tool will allow you to move strokes, either spatially on the
      preview, or in time on the timeline. The move tool moves all *selected*
      strokes, no matter where you click! If you don't have any selected strokes,
      it moves all strokes that are after where you clicked.
-   - The "Rescale" tool will allow you to rescale strokes, either spacially on
+   - The "Rescale" tool will allow you to rescale strokes, either spatially on
      the preview, or in time on the timeline. The rescale tool rescales all
      *selected* strokes, no matter where you click! If you don't have any
      selected strokes, it rescales the duration of the whole timeline.
 
-
 .. video:: editing3.mp4
    :width: 100%
 
-We are almost there! Now, we want to add a pause in various places, to leave us
-some take to speak, take questions, etc.
+We are almost there! Now, we want to add pauses in various places, to leave us
+some time to speak, take questions, etc:
 
 - Before writing the second ("reversed") sum.
 - Before making the "sum of the two sums".
 
 We can do that! Use the slider on top of the timeline to position the time where
 you want, and click the ``Add pause`` button. Now, replay from the beginning:
-the replay stops at the pause! And if you reclick replay, it goes through.
+the replay stops at the pause! If you click replay again, playback continues.
 
 .. video:: edit-plus.mp4
    :width: 100%
@@ -225,18 +220,17 @@ We'll start a server to hot-reload a preview version of the presentation.
 
    $ slipshow serve sum.slp
 
-Open the browser on ``localhost:8080`` to see the preview. The drawing does not
+Open ``localhost:8080`` in your browser to see the preview. The drawing does not
 appear yet!  This is because drawing is an *action*, that needs to be
-explicitely triggered. The action name is ``draw``, add it to the included file.
+triggered explicitly. The action name is ``draw``; add it to the included file:
 
 .. code-block::
 
    ![](sum.draw){draw}
 
-This time, going to the next step replays the drawing until the first pause! If
+This time, going to the next step plays the drawing until it reaches the first pause! If
 we want to draw the other steps, use another draw action. We use the identifier
 here to say which drawing we need to draw:
-
 
 .. code-block::
 
