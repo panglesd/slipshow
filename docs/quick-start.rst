@@ -4,17 +4,17 @@
 Installation
 ============
 
-There are different ways to have access to the Slipshow compiler:
+There are different ways to use the Slipshow compiler:
 
-**The best option** for people comfortable with it is to use the command line interface. It is distributed through various mediums:
+**The best option** for people comfortable with Slipshow is to use the command line interface. It is distributed through various media:
 
-- You can download :ref:`precompiled binaries <quick-start:Precompiled binaries>` for Mac and Linux, and Windows through WSL
-- Slipshow is packaged in the ``opam`` package manager, if you have it all it takes is ``opam install slipshow``.
+- Download :ref:`precompiled binaries <quick-start:Precompiled binaries>` for Mac and Linux, and Windows through WSL
+- Slipshow is packaged in the ``opam`` package manager; if you have it all it takes is ``opam install slipshow``.
 - You can always :ref:`compile from source <quick-start:compiling from source>`!
 
-For **online-only use**, consider the :ref:`online sliphub editor<quick-start:the sliphub online editor>`. It is great for trying the tool but is currently limited, for instance for anything that requires multiple files.
+For **online-only use**, consider the :ref:`online sliphub editor<quick-start:the sliphub online editor>`. This is great for trying out Slipshow but it is currently limited, for example it doesn't support presentations split across multiple files.
 
-There are other options that currently are lagging behind in terms of version, but that I might revisit some day: the :ref:`VSCode extension<quick-start:The VS Code plugin>` and the Slipshow editor.
+There are other options that may lag the latest version, but that I might revisit some day: the :ref:`VSCode extension<quick-start:The VS Code plugin>` and the Slipshow editor – pull requests welcome!
 
 Precompiled binaries
 ====================
@@ -22,9 +22,9 @@ Precompiled binaries
 Precompiled binaries are available to download in the `release
 <https://github.com/panglesd/slipshow/releases/latest>`_ page of the
 project. Save the file corresponding to your architecture, and make it available
-by moving to a directory included in your ``$PATH``, e.g. ``/usr/local/bin``.
+by moving it to a directory included in your ``$PATH``, e.g. ``/usr/local/bin``.
 
-Note that Mac user needs to have a homebrew installation until `this bug <https://github.com/panglesd/slipshow/issues/145>`_ is fixed. They also need some libraries, eg ``libffi``.
+Note that macOS users need `Homebrew <https://brew.sh/>`_ installed until `this bug <https://github.com/panglesd/slipshow/issues/145>`_ is fixed, plus some additional libraries, for example ``libffi``.
 
 You can test that the ``slipshow`` binary is available by running:
 
@@ -32,12 +32,12 @@ You can test that the ``slipshow`` binary is available by running:
 
    $ slipshow --help
 
-If the help shows up, you successfully installed Slipshow!
+If the help shows up, you have installed Slipshow successfully!
 
 Using ``opam``
 ==============
 
-Slipshow is packaged in the default ``opam`` repository so you can install it simply with
+Slipshow's package is available in the default ``opam`` repository, so you can install it simply with:
 
 .. code-block:: shell
 
@@ -50,7 +50,7 @@ You can test that the ``slipshow`` binary is available by running:
    $ slipshow --help
 
 If the help shows up, you successfully installed slipshow!
-If, even after ``opam`` claims to have successfully installed it, ``slipshow`` is not available, it might be that you need to do:
+If, even after ``opam`` claims to have successfully installed it, ``slipshow`` is not available, it might be that you need to run:
 
 .. code-block:: shell
 
@@ -62,29 +62,28 @@ The sliphub online editor
 =========================
 
 The `sliphub online editor <https://sliphub.choum.net/new>`_ is a quick way to
-try out slipshow, as it does not require any setup. This link will open a page with
+try out Slipshow, as it does not require any setup. This link will open a page with
 an editor on the left, and a preview on the right.
 
 Currently, the interface is quite minimal. Your progress is saved "live" and you
 can even do collaborative editing: two people editing the same document.
 
 Remember the link to be able to come back to your document later! And save your
-work locally: This is still experimental.
+work locally; this is still experimental.
 
 The VS Code plugin
 ==================
 
-The VS Code plugin can be downloaded from the `official marketplace
+The VS Code plugin can be downloaded from the `official VS Code marketplace
 <https://marketplace.visualstudio.com/items?itemName=Slipshow.slipshow>`_ as
 well as from `open VSX
 <https://open-vsx.org/extension/Slipshow/slipshow>`_. This means that searching
 the ``slipshow`` extension directly from within VS Code should yield a result in
-most cases!
+most cases.
 
 The VS Code plugin provides two commands:
-- Compile presentation. Open the command palette, and type "Compile slipshow". This should compile the presentation in a ``.html`` of the same name.
-- Preview presentation.  Open the command palette, and type "Preview
-slipshow". This should open a new window with a live preview of your
+- Compile presentation. Open the command palette, and type "Compile slipshow". This should compile the presentation into a ``.html`` file of the same name.
+- Preview presentation. Open the command palette, and type "Preview slipshow". This should open a new window with a live preview of your
 presentation!
 
 Compiling from source
@@ -95,6 +94,6 @@ Follow the instructions available in the ``CONTRIBUTING.md`` file on the `github
 Upgrading
 =========
 
-Upgrading is made just by repeating the installation process when a new version is available.
+To upgrade, repeat the installation process when a new version is available.
 
-If you are using a new version to compile an old presentation, make sure to read the release notes and fully verify the output before presenting! Slipshow has not yet reached a stable state and releases often contains small breaking changes (most of the time, easy to fix).
+If you are using a new version to compile an old presentation, be sure to read the release notes and fully verify the output before presenting! Slipshow has not yet reached a stable state and releases often contains small breaking changes, though most of the time they are easy to fix.
