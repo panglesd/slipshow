@@ -1,5 +1,5 @@
-Creating your first typewritten presentation
-============================================
+Creating your first typed presentation
+======================================
 
 Thanks to the editors and preview embedded in this page, this tutorial does not *require* you to have access to the Slipshow compiler on your machine. However, we encourage you to have it, to not just read, but actually create the presentation this tutorial is describing. It is even better if you modify it to make it your own!
 
@@ -22,12 +22,12 @@ It can be viewed offline, and if you want to send your presentation to someone,
 you just need to send them the file. It is also highly portable: it will work on
 any system with a web browser (virtually all of them!).
 
-In this tutorial, you will create your first Slipshow presentation. It is
-entirely self-contained, and introduces both the usage, the syntax and the
-different features of Slipshow. :ref:`anatomy:Anatomy of a Slipshow presentation` is a good complementary read.
+In this tutorial, you will create your first typed (as opposed to drawn) Slipshow presentation. It is
+entirely self-contained, and introduces you to the usage and syntax of several of Slipshow's key features.
+:ref:`anatomy:Anatomy of a Slipshow presentation` is a good complementary read.
 
 ..
-   Writing slips should not differ too much from writing `beamer presentations <https://latex-beamer.com>`_ when not using any of its advanced functionalities.
+   Writing slips should not differ too much from writing `LaTeX beamer presentations <https://latex-beamer.com>`_ when not using its advanced features.
 ..
    The easiest way is to include the Slipshow library from a CDN; this is the option we chose for this tutorial for its simplicity. However, in this case you will not be able to display your slips without internet access. To use a local version, see :ref:`getting-started`.
 
