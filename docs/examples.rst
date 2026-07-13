@@ -2,25 +2,25 @@
 Examples
 ========
 
-In this page, you'll find a number of examples of "real life" Slipshow
-presentation. This can help in two ways:
+On this page, you'll find a number of examples of "real life" Slipshow
+presentations. They can help in two ways:
 
-- It can give you an idea of what you can do with Slipshow, especially if you
-  are only used to slides.
+- They can give you an idea of what you can do with Slipshow, especially if you
+  are only used to conventional slides.
 - You can peek at the source to learn how to achieve certain effects, if you
-  don't find them in the doc or want bigger examples.
+  don't find them in the docs, or want bigger examples.
 
-I'm the author of some presentations, other are authored by other person who
+I'm the author of some of these presentations, others have been created by other people who
 kindly allowed me to list them here. Some of them have have the source
-available, other keep it private.
+available; others keep it private.
 
 I will make sure that my own presentations always work with the latest version
 of Slipshow. However, "external" presentations might require an older version of
 Slipshow.
 
-Note also that being "real-life" presentation, they were made under time
-constraints, sometimes using older versions with less features in the
-language. So the code is probably not the cleanest, and that is fine.
+Also note that being "real-life" presentations, they were made under time
+constraints, sometimes using older Slipshow versions with fewer features,
+so the code might not be the cleanest, but that is fine for demonstration purposes.
 
 .. contents::
    :local:
@@ -172,7 +172,7 @@ The computable strength of Milliken's Tree Theorem and applications
    :Author: Me!
    :Slipshow version: Very old
    :Date: 2021
-   :Source: Directly look at the HTML source
+   :Source: Look at the HTML source directly
    :Rendered version: `<https://choum.net/panglesd/slides/WDCM-2021-slips/wdcm-ada.html>`_
    :About: Mathematics
 
