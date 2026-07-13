@@ -12,14 +12,14 @@ This integration helps in several ways:
   - displaying errors directly in your editor,
   - offering autocompletion when applicable,
   - showing documentation for actions on hover,
-  - jumping to definition of identifiers
+  - jumping to identifier definitions
 
 - It also allows you to see a preview of your presentation, updated in real time
   as you type.
 - It compiles your presentation on save.
 
-This integration is still in its early days. It is going to be improved and
-extended with new releases of Slipshow.
+This integration is still in its early days, but it will be improved and
+extended alongside new releases of Slipshow.
 
 Emacs
 =====
@@ -32,10 +32,10 @@ You need two modes to develop Slipshow presentations comfortably in emacs:
   rest of the integration.
 
 After opening your input ``.slp`` (or ``.md``) file, type ``M-x eglot`` to start
-``eglot``, which will prompt you the command to start the lsp server. At this
+``eglot``, which will prompt you the command to start the LSP server. At this
 point, type ``slipshow lsp`` (you need ``slipshow`` to be installed of course).
 
-The command above sets you for editor features such as errors, documentation on
+The above command sets up editor features such as errors, documentation on
 hover, etc, but it also starts a preview server, usually accessible by opening a
 browser and going to ``localhost:8080``. However, if the port ``8080`` is taken,
 Slipshow might use another port. In any case, it sends a notification with the
@@ -43,9 +43,9 @@ address to use, so check your minibuffer or the ``*Messages*`` buffer.
 
 .. note::
 
-   If your presentation is split in multiple files, you don't need to start
-   eglot for each of the files, as long as they are in the same folder. If they
-   are in different folder, emacs has to be able to recognize "the root of the
+   If your presentation is split into multiple files, you don't need to start
+   eglot for each file, so long as they are in the same folder. If they
+   are in different folders, emacs has to be able to recognize "the root of the
    project" for it to work. It can do so by looking for a specific file or
    folder that defines a project root. A predefined one is ``.git``, so adding a
    git repository to your root folder is enough. Another option is to customize
@@ -57,7 +57,7 @@ VSCode
 
 Slipshow currently has an official VSCode extension. *However*, unfortunately,
 it has not yet been updated to support the new LSP server. This is ongoing work
-that is going to be included hopefully soon.
+that is hopefully going to be completed soon.
 
 In the meantime, you can use a generic LSP server. Since VSCode does not provide
 an official one, I can say that `"Generic LSP Proxy"
@@ -85,8 +85,8 @@ Proxy: Restart LSP server``.
 Other editors
 =============
 
-As long as your editor supports editing of markdown files, and the LSP protocol,
-you are good. Just start your LSP server with the command ``slipshow lsp``!
+As long as your editor supports editing Markdown files, and the LSP protocol,
+you are good to go. Just start your LSP server with the command ``slipshow lsp``!
 
 And please `contribute to the docs
-<https://github.com/panglesd/slipshow/issues>`_ if you can improve it!
+<https://github.com/panglesd/slipshow/issues>`_ if you can improve them!
