@@ -175,7 +175,7 @@
 ---
 
 {#cmfiles}
-Compile markdown files
+Compile Markdown files
 
 {#gen-stand}
 Generate *Standalone* HTML files

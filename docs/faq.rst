@@ -23,14 +23,14 @@ this case, put all dependencies in an archive.
 How can I insert an image in my presentation?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Use the markdown syntax! ``![alternative text](path_to_file)``. The supported image types are those `supported on the web <https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#supported_image_formats>`_.
+Use the Markdown syntax! ``![alternative text](path_to_file)``. The supported image types are those `supported on the web <https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#supported_image_formats>`_.
 
 If using a local image does not work (as in the online sliphub editor), a workaround when available is to use a link to the image on the web.
 
 How can I add math to my presentation?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Use the markdown syntax!
+Use the Markdown syntax!
 To add inline formulas, use ``$`` as in Latex. To add "display" mathematics, use a block block with math language. Here is an example:
 
 .. code-block:: markdown
@@ -53,17 +53,17 @@ For reference and fun, here is the old answer to this question:
 
 ::
 
-     No, because markdown is not well-suited for that. Indeed, it does not allow
+     No, because Markdown is not well-suited for that. Indeed, it does not allow
      to add enought meta-information, such that all the slip attributes. This
      lack of meta-information is what makes it beautiful, but you cannot make
      presentations without extra information.
 
-     There are many enrichment to the markdown syntax, each trying to fill a
+     There are many enrichment to the Markdown syntax, each trying to fill a
      hole in the amount of "meta-information" you can give. I think that it is
      bad for a language to have too many slightly different variation of it. It
      shows its limitations: there is no better way to increase its expressivity.
 
-     You can define a slip-enhancement to markdown, call it MarkSlip, and a
+     You can define a slip-enhancement to Markdown, call it MarkSlip, and a
      compiler from MarkSlip to html. But MarkSlip will lose all the benefits of
      Markdown. I think you should stick to HTML or maybe Pug.
 
@@ -94,7 +94,7 @@ Can I export to PDF?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   Yes! Slipshow offers a ``--markdown-output`` which allows to strip any
-  slipshow-specific syntax. Then, there are multiple ways to turn markdown into
+  slipshow-specific syntax. Then, there are multiple ways to turn Markdown into
   PDF: for instance, using pandoc. It is useful to send as notes, rather than
   sending the slipshow presentation!
 

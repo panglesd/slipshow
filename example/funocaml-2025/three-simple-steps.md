@@ -89,7 +89,7 @@ p code {
 
 - `js_of_ocaml` writes Javascript for me,
 
-- `cmarkit` parses markdown for me,
+- `cmarkit` parses Markdown for me,
 
 - `perfect-freehand` generates strokes for me,
 
