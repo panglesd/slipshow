@@ -2,7 +2,7 @@
 Mermaid.js diagrams
 ===================
 
-`Mermaid.js <https://mermaid.js.org/>`_ is a diagramming and charting tool. It allows you to write descriptions of diagrams, and let them be rendered.
+`Mermaid.js <https://mermaid.js.org/>`_ is a diagramming and charting tool. It allows you to write text descriptions of diagrams, which are then rendered into images.
 
 Including Mermaid diagrams
 ==========================
@@ -34,4 +34,4 @@ Mermaid can be configured by setting the ``window.Mermaid`` configuration value,
      securityLevel: "loose"
    }
 
-Not that ``startOnLoad`` has to be set to false, in order for Slipshow to be able to start when all diagrams have been rendered.
+Note that ``startOnLoad`` must be set to false, in order for Slipshow to be able to start after all diagrams have been rendered.
