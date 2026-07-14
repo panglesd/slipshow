@@ -1,20 +1,20 @@
-=========================
-Reveal figures bit by bit
-=========================
+============================
+Revealing figures bit by bit
+============================
 
-To reveal a figure bit by bit, you have mostly two options:
+To reveal a figure bit by bit, you have two main options:
 
-- The first one is to have your figure in SVG. This way, you can add identifiers
-  and classes to the relevant parts of the figure.
-- The other one is to have multiple version of the figure as images, and use a
-  carousel.
+- The first is to create your figure in SVG. This way, you can add identifiers
+  and classes to the relevant parts of the figure which you can then target from Slipshow.
+- The other is to have multiple versions of the figure as images, and use a
+  carousel to switch between them.
 
 Using an SVG figure
 ===================
 
-Similarly to Slipshow document, an SVG image allow to add classes and ids.
+Similar to Slipshow documents, an SVG image can contain classes and ids.
 
-This allows to display the image bit by bit just like we would do that for text
+This allows displaying the image bit by bit, just as we would do that for text
 in a Slipshow:
 
 .. code-block:: md
@@ -25,7 +25,7 @@ in a Slipshow:
 
    {reveal=my-square}
 
-It only remains to know how to add identifiers and classes.
+All that remains is to know how to add identifiers and classes to the SVG elements.
 
 In Inkscape
 -----------
@@ -33,15 +33,14 @@ In Inkscape
 To add an id, select the element you want to add an identifier (it can be a
 group).
 
-Then, go to the ``Object Properties`` view, accessible among other options under
-the ``Object`` menu.
+Then, go to the ``Object Properties`` view in the ``Object`` menu.
 
 Under ``Properties``, you have the opportunity to change the ``ID`` for the
 selected object.
 
 In order to add a class, select the ``CSS and selectors`` under the ``Object``
 menu. Then, click on the bottom ``+`` named "Add a new CSS selector". Choose
-``.class-name`` where you replace the name with your own, keeping the ``.``.
+``.class-name``, then replace the name with your own, retaining the leading ``.``.
 
 The selected object is added the class. You can see the list of elements with
 the class, and add some with the ``+`` button next to the class name.
@@ -59,7 +58,7 @@ If you open an SVG image with a text editor, it looks like this:
       <rect style="fill: blue" width="2" height="2" x="8" y="8" />
     </svg>
 
-This allows you to add classes and IDs:
+You can add classes and IDs by editing the XML directly. For instance, to add an identifier nd a class to the red square:
 
 .. code-block:: xml
 
@@ -72,8 +71,8 @@ This allows you to add classes and IDs:
 Using a carousel
 ================
 
-The other options is to have one image file per version of the figure, and use a
-carousel. The images need to be of the same dimension.
+The other option is to create a separate image for each version of the figure you want to show, and use a
+carousel to switch between them. The images need to have the same dimensions.
 
 .. code-block::
 
