@@ -14,6 +14,7 @@ type payload =
   | Save_drawing of string * string (* path * content *)
   | Next
   | Previous
+  | Can_save
 [@@deriving sexp]
 
 type t = { payload : payload; id : string } [@@deriving sexp]

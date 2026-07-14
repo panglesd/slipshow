@@ -126,7 +126,8 @@ let previewer' =
     ()
   in
   Previewer.create_previewer ?initial_stage ~callback ~save_drawing
-    ~include_speaker_view:true ~errors_el:warnings ~steal_focus:true elem
+    ~include_speaker_view:true ~errors_el:warnings ~steal_focus:true
+    ~can_save:true elem
 
 let () = previewer := Some previewer'
 

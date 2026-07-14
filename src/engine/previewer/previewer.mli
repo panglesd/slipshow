@@ -16,6 +16,7 @@ val create_previewer :
   include_speaker_view:bool ->
   errors_el:Brr.El.t ->
   steal_focus:bool ->
+  can_save:bool ->
   Brr.El.t ->
   previewer
 
