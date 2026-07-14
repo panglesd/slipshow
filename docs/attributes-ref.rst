@@ -21,11 +21,11 @@ Attributes can be one of the following:
 
 - **A class**. This is represented with a ``.`` followed by the name of the class. For instance: ``.definition`` represents the class ``definition``.
 
-- **A key-value attribute**. This is represented by ``key=value``. For instance ``title=Hello`` is such an attribute. Simple and double quotes can be used to have spaces in the value.
+- **A key-value attribute**. This is represented by ``key=value``. For instance ``title=Hello`` is such an attribute. Single and double quotes can be used, allowing you to include spaces in the value.
 
 - **A flag attribute**. It is an attribute that does not have a value, only a name. For instance, ``focus`` is such an attribute.
 
-A single identifier must be given to an element, and it must be unique amongst other elements. Multiple classes can be given to an element, and classes can be shared between elements.
+Only a single identifier can be given to an element, and it must be unique amongst other elements. Multiple classes can be given to an element, and classes can be shared between elements, for example there might multiple ``.paragraph`` elements, but only one ``#introduction``.
 
 Key-value and flag attributes can be any of those defined in :doc:`actions-api` or :doc:`special-elements`, or any valid HTML attribute.
 
@@ -35,7 +35,7 @@ Attaching metadata
 Standalone attributes
 ---------------------
 
-A set of attributes that is separated from the rest of the content by blank lines is *standalone*. The attributes are attached to en "empty" element. It is useful in the context of Slipshow, to give an instruction (such as a pause) in the flow of the presentation, without being tied to a specific element!
+A set of attributes that is separated from the rest of the content by blank lines is termed *standalone*. The attributes are attached to en "empty" element. It is useful in the context of Slipshow, to give an instruction (such as a pause) in the flow of the presentation, without being tied to a specific element.
 
 .. code-block:: markdown
 
@@ -48,20 +48,20 @@ A set of attributes that is separated from the rest of the content by blank line
 Blocks and inlines
 ------------------
 
-An important distinction needs to be made between inline, and block, elements.
+An important distinction needs to be made between *inline* and *block* elements.
 
-Inlines are the elements that are inside the flow of the text. For instance, bold text, links, italic, mathematic formulas.
+Inlines are the elements that are within the flow of the text. For instance, bold text, links, italic, mathematic formulas.
 
-Blocks, on the contrary, make the structure of the text. For instance paragraphs, titles, bullet lists, are blocks, as well as columns in a multi-column layout. Most of the time, they take the full horizontal space.
+Blocks, on the contrary, make the structure of the text. For instance paragraphs, titles, and bullet lists are blocks, as well as columns in a multi-column layout. Most of the time, they occupy the full horizontal width available.
 
-This distinction is relevant here, as the way to add attributes will be specific for each of the two cases. And sometimes, it will be important to distinguish the two cases:
+This distinction is relevant here, as the way to add attributes is specific to each of the two cases, and sometimes it will be important to distinguish them.
 
-Here is an example where you set the background of an element to red, through an attribute. In the first case, you attach it to the paragraph. In the second case, you attach it to the text of the paragraph.
+Here is an example that sets the background of an element to red, through an attribute. In the first case, it's attached to the whole paragraph. In the second case, it's attached to the text of the paragraph.
 
 .. slipshow-example::
 
    {style="background:red"}
-   The attribute is attached to the paragraph.
+   The attribute is attached to the whole paragraph.
 
    [The attribute is attached to the text.]{style="background:red"}
 
@@ -72,7 +72,7 @@ This confusion happens often with :ref:`metadata for images <image-metadata>`.
 Block metadata
 --------------
 
-To attach attributes to a block, put the curly braces on an (otherwise empty) line just above. That is, for a heading:
+To attach attributes to a block, put the curly braces on an (otherwise empty) line just above it. For example, for a heading:
 
 .. code-block:: markdown
 
@@ -90,14 +90,14 @@ If you want to attach an attribute to a group of several blocks, use :doc:`group
    > A code block
    > ```
 
-An attribute cannot have line breaks. However, if two lines of attributes are in a row, they are merged.
+An attribute cannot have line breaks. However, if two or more lines of attributes are consecutive, they will be merged.
 
 Inline metadata
 ---------------
 
-If you want to give attributes to inline elements, the syntax is quite similar: attributes are enclosed in curly braces. What changes is how they are attached to a specific element.
+For setting attributes on inline elements, the syntax is quite similar: attributes are enclosed in curly braces. What changes is how they are attached to a specific element.
 
-Attributes are attached to the inline element they touch. For instance:
+Attributes are attached to the inline element they touch (before or after). For instance:
 
 .. code-block:: markdown
 
@@ -107,13 +107,13 @@ Attributes are attached to the inline element they touch. For instance:
 
 In this example, ``A`` is attached to ``and``, ``B`` to ``other``,  ``C`` is a standalone inline attribute, ``D`` is attached to ``**bold**`` and ``E`` to ```inline elements```.
 
-If you want to attach an attribute to a group of inlines, you can use the ``[…]{attributes}`` syntax. For instance:
+To attach an attribute to a group of inlines, use the square-bracket ``[…]{attributes}`` grouping syntax. For instance:
 
 .. code-block:: markdown
 
    Works with [groups of **bold** and other `inline elements`]{F}
 
-However, sometimes putting long attributes in the middle of the text can hurt readability. Often, the attributes are the same and are repeated, which makes it even worse. Slipshow eases this by using referenced attributes. Similarly to footnotes and referenced links, they text only contains a reference, and the attribute itself is defined elsewhere:
+However, sometimes putting long attributes in the middle of the text can hurt readability. Often, the attributes are the same and are repeated, which makes it even worse. Slipshow eases this by using referenced attributes. Much like footnotes and referenced links, their text only contains a reference, and the attribute itself is defined elsewhere:
 
 .. code-block:: markdown
 
@@ -121,14 +121,14 @@ However, sometimes putting long attributes in the middle of the text can hurt re
 
 		[A]: {many long attributes}
 
-Not perfect, but much better than the version where all words are given the attributes separately.
+Not perfect, but much better than setting the same attributes on every element separately.
 
 .. _image-metadata:
 
 Metadata for images
 -------------------
 
-Attaching metadata for images is a good example of where the distinction between blocks and inline is relevant, but also confusing.
+Attaching metadata to images is a good example of where the distinction between blocks and inline is relevant, but is also confusing.
 
 Consider the following small piece of markup:
 
@@ -155,12 +155,11 @@ We illustrate these two possibilities by adding borders to the element on which 
 
    ![](https://picsum.photos/id/29/500/225){.with-border}
 
-Both versions can be useful. For instance, centering the image is a property of the containing block, while the width of the image is a property of itself. So pay attention when assigning attributes to images!
+Both approaches can be useful. For instance, centering the image is a property of the containing block, while the width of the image is a property of itself. So pay attention when assigning attributes to images!
 
 .. slipshow-example::
 
-   The following image is centered and occupy half the available width:
+   The following image is centered and occupies half the available width:
 
    {style="text-align:center"}
    ![](https://picsum.photos/id/29/500/500){width=50%}
-
