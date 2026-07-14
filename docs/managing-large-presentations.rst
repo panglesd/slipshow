@@ -31,7 +31,7 @@ Note that you can add additional attributes to the ``include``, for instance if 
 Using external CSS files
 ========================
 
-To include an external CSS file, use the ``css`` field in the :ref:`frontmatter`:
+To include an external CSS file, use the ``css`` field in the :doc:`frontmatter <frontmatter>`:
 
 .. code-block:: markdown
 
