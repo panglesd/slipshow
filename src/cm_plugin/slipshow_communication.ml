@@ -7,8 +7,7 @@ let preview ?slipshow_js ?options () =
     incr id;
     let my_id = !id in
     let+ () = Fut.tick ~ms in
-    if my_id = !id then
-      Previewer.preview ?slipshow_js ?options state content
+    if my_id = !id then Previewer.preview ?slipshow_js ?options state content
 
 let update_slipshow ?slipshow_js ?options () =
   let preview = preview ?slipshow_js ?options () in
@@ -24,14 +23,13 @@ let update_slipshow ?slipshow_js ?options () =
     in
     preview state content
 
-let slipshow_plugin ?slipshow_js ?options ~errors_el preview_element
-    =
+let slipshow_plugin ?slipshow_js ?options ~errors_el preview_element =
   let open Editor in
   let update_slipshow = update_slipshow ?slipshow_js ?options () in
   View.ViewPlugin.define (fun view ->
       let state =
         Previewer.create_previewer ~include_speaker_view:false ~errors_el
-          ~steal_focus:false preview_element
+          ~steal_focus:false ~can_save:false preview_element
       in
       let _ : unit Fut.t = update_slipshow ~ms:0 state view in
       let update upd =
