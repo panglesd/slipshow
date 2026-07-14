@@ -4,9 +4,9 @@
 Installation
 ============
 
-There are different ways to use the Slipshow compiler:
+There are different ways to use Slipshow:
 
-**The best option** for people comfortable with Slipshow is to use the command line interface. It is distributed through various media:
+**The best option** is to use the command line interface, for people comfortable with it. It is distributed through various media:
 
 - Download :ref:`precompiled binaries <quick-start:Precompiled binaries>` for Mac and Linux, and Windows through WSL
 - Slipshow is packaged in the ``opam`` package manager; if you have it all it takes is ``opam install slipshow``.

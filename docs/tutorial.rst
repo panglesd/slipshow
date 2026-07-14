@@ -26,11 +26,6 @@ In this tutorial, you will create your first typed (as opposed to drawn) Slipsho
 entirely self-contained, and introduces you to the usage and syntax of several of Slipshow's key features.
 :ref:`anatomy:Anatomy of a Slipshow presentation` is a good complementary read.
 
-..
-   Writing slips should not differ too much from writing `LaTeX beamer presentations <https://latex-beamer.com>`_ when not using its advanced features.
-..
-   The easiest way is to include the Slipshow library from a CDN; this is the option we chose for this tutorial for its simplicity. However, in this case you will not be able to display your slips without internet access. To use a local version, see :ref:`getting-started`.
-
 A minimal example
 -----------------
 

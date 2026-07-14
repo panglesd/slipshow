@@ -2,7 +2,7 @@
 Special elements
 ================
 
-In addition to :doc:`elements with dedicated markup <slipshow-syntax>`, placing attributes before content blocks
+In addition to :doc:`elements with dedicated markup <slipshow-syntax>`, adding attributes to content blocks
 can turn them into elements, such as boxes, subslips, carousels, and more.
 
 This page provides a reference for all such elements.
@@ -85,7 +85,7 @@ Carousels
 
 Carousels are elements that only display one child element at a time. This provides a convenient way to change the displayed content of an element, for instance to step through the pages of a PDF. They are particularly useful when you have a sequence of images, each adding some content to the previous one.
 
-Create a carousel by adding a ``carousel`` element. It will then be controlled with a ``change-page`` action.
+Create a carousel by adding a ``carousel`` attribute. It will then be controlled with a ``change-page`` action.
 
 .. slipshow-example::
 

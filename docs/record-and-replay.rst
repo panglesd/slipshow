@@ -11,7 +11,7 @@ An example of presentation using such feature can be found `here <https://choum.
 This feature is still experimental, and time will tell how useful it is, what its limitations are, and how to improve it.
 
 .. NOTE::
-    If you're using recorded drawings, do not hesitate to let us know how it went — we want to make it better!
+    If you're using recorded drawings, do not hesitate to let me know how it went — I want to make it better!
 
 The process described below is unnecessarily complex and will be improved.
 
@@ -139,4 +139,4 @@ However, I can give a few tips on making presentations with it:
 - Use the keyboard shortcuts, or you'll find it gets very cumbersome.
 - Editing after recording is very easy, so do not hesitate to stop and resume recording; you don't have to get it perfectly right first time.
 - Strip leading time with the "Move" tool and trailing time with the "Rescale" tool, both with an empty selection.
-- Unfortunately, while it's planned, there is no timeline zoom feature yet. If your recording becomes too long, consider breaking it into several sections that are played one after the other.
+- Unfortunately, while it's planned, there is no timeline zoom feature yet. If your recording becomes too long, consider breaking it into several recordings that are played one after the other.
