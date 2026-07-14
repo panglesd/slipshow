@@ -2,7 +2,8 @@
 Include Tikz figures
 ====================
 
-The best way to include TikZ figures is to compile them with LaTeX, and import the resulting file in a presentation.
+`TikZ <https://tikz.dev>`_ is a powerful tool for creating vector graphics in LaTeX.
+The best way to include TikZ figures in Slipshow is to compile them with LaTeX, and import the resulting file into a presentation.
 
 We need to use the ``standalone`` class as we are only interested in the TikZ figure, not a full page. See `this resource <https://tex.stackexchange.com/questions/51757/how-can-i-use-tikz-to-make-standalone-svg-graphics>`_ for details. A minimal ``.tex`` file containing a standalone TikZ figure looks like:
 
@@ -17,13 +18,13 @@ We need to use the ``standalone`` class as we are only interested in the TikZ fi
    \end{document}
 
 If the image is static and we don't need to execute actions on some of its
-elements, then the easiest is to compile the file in ``.pdf`` format.
+elements, then the easiest approach is to compile the file into ``.pdf`` format.
 
 .. code-block:: bash
 
    $ pdflatex file.tex
 
-Integrating it in your Slipshow presentation is then just a matter of including the pdf, which syntax is:
+Integrating it into your Slipshow presentation is then a matter of including the PDF, which is done with the following syntax:
 
 .. code-block::
 
@@ -32,13 +33,13 @@ Integrating it in your Slipshow presentation is then just a matter of including 
 Reveal a TikZ figure bit by bit
 ===============================
 
-If you want to have specific part of your figure to be the target of actions
-(for instance, to reveal part of it, bit by bits), you'll need two things:
+:doc:`Just as for SVGs <figures-bit-by-bit.rst>`, if you want to use specific parts of your figure as targets for actions
+(for instance, to reveal parts of it, bit by bits), you'll need two things:
 
 - First, you'll need to be able to assign ids to parts of your image
-- Then, you'll need to compile in a format under which Slipshow is able to access the identifiers. We will use the svg format.
+- Then, you'll need to compile it into a format in which Slipshow is able to access the identifiers; we will use the SVG format.
 
-In order to assign ids, one can define the following environment at the beginning of the file:
+In order to assign ids, define an environment at the beginning of the file:
 
 .. code-block::
 
@@ -88,8 +89,8 @@ And suppose you want the node ``C`` to appear at a later step. Enclose the node 
    \end{tikzpicture}
    \end{document}
 
-Then, we need to compile the file with svg output. Here we use ``latex`` and
-``dvisvgm``. The ``--no-fonts`` improve the precision of text layouts, and
+Then we need to compile the file to SVG. Here we use ``latex`` and
+``dvisvgm``. The ``--no-fonts`` option improves the precision of text layouts, and
 ``--exact-bbox`` improves the precision of the bounding box.
 
 .. code-block:: latex
@@ -97,8 +98,7 @@ Then, we need to compile the file with svg output. Here we use ``latex`` and
    $ latex triangle.tex
    $ divsvgm --no-fonts --exact-bbox triangle.dvi
 
-We now just need to include the svg file in a Slipshow input, and write the
-dynamics with actions:
+Now we need to include the SVG file as a Slipshow image, and add dynamic behaviour with actions:
 
 .. code-block::
 
@@ -114,7 +114,7 @@ dynamics with actions:
    {reveal=c-edges}
 
 The ``external-ids`` field of the frontmatter tells the compiler not to warn you
-that it cannot find the given ids.  Here is the final result!
+that it cannot find the given ids.  Here is the final result:
 
 .. slipshow-example::
    :visible: presentation
@@ -162,9 +162,9 @@ that it cannot find the given ids.  Here is the final result!
 TikZ and auto-refresh
 =====================
 
-On ``serve`` mode, slipshow will automatically refresh when the svg file (eg ``triangle.svg``) has changed. However, it will not handle the recompilation of the ``.tex`` file.
+In ``serve`` mode, Slipshow will automatically refresh when the SVG file (eg ``triangle.svg``) changes. However, it will not handle the recompilation of the ``.tex`` file if you change the upstream TikZ file.
 
-One way to fix this is to use a file watcher general tool, to recompile the ``.tex`` file on change. For instance, with the |entr|_:
+One way to solve this is to use a general-purpose file watcher tool, to recompile the ``.tex`` file when it changes. For instance, with |entr|_:
 
 .. code-block:: bash
 
