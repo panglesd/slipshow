@@ -2,7 +2,7 @@
 Custom scripts for ultimate extensibility
 =========================================
 
-Slipshow allows to execute a custom script at any step of a presentation.
+Slipshow can execute a custom script (written in JavaScript) at any step of a presentation.
 
 .. slipshow-example::
 
@@ -14,17 +14,16 @@ Slipshow allows to execute a custom script at any step of a presentation.
    document.querySelector("#id").style.background = "red"
    ```
 
-This is great! It allows to include in a Slipshow any JavaScript you want, for instance for your animations, simulation, etc, in a breeze.
+This is great! Include any JavaScript you want in a Slipshow, for instance for your animations, simulation, etc.
 
 However, there is a catch. What happens when you "go back" to a step before the
-execution of the script? How to undo all the side effects that happened, to go
+execution of the script? How can you undo all the side effects that happened, to go
 back to the previous step? Try to go back in the example above: it does not undo
-the side effect!
+the scripted effect!
 
-Slipshow needs a bit more information. It needs to be provided the "reverse" of
+Slipshow needs a bit more information. It needs to be provided with the "reverse" of
 the execution of the script. And indeed, that is one way: just return the
 function to undo the script, wrapped in an object.
-
 
 .. slipshow-example::
 
@@ -39,7 +38,7 @@ function to undo the script, wrapped in an object.
    }}
    ```
 
-That is great! However, it is not always easy to compute a script to undo the side effects. Consider for example if we change the background of multiple elements, and they all have different initial background.
+That's a start, but it is not always easy to write a script to undo the changes. Consider for example if we change the background of multiple elements, and they all have different initial backgrounds.
 
 .. slipshow-example::
 
@@ -60,12 +59,12 @@ That is great! However, it is not always easy to compute a script to undo the si
    }}
    ```
 
-This is wrong: when we go back, we lost the original background of the elements.
+This is wrong: when we go back, we have lost the original element backgrounds.
 
-For such cases Slipshow provides an API. For instance, ``slip.setStyle`` allows
-to set the style of an element, while recording that the change need to be
-inverted when the moment comes. When using it, not need to return an "undo"
-function, it will be inferred by Slipshow through the API calls.
+Slipshow provides an API for such cases. For instance, ``slip.setStyle`` allows
+setting the style of an element, while recording the changes needed to
+invert them when the moment comes. When using this approach, it's not necessary to return an "undo"
+function; it will be inferred by Slipshow through the API calls.
 
 .. slipshow-example::
 
@@ -85,11 +84,11 @@ function, it will be inferred by Slipshow through the API calls.
    );
    ```
 
-And here we have it: An easy to write script that allows Slipshow to cancel its
-side-effects! The API available via ``slip`` allows more than just setting
-style, you can find the full API in :doc:`the reference <actions-api>`. And in
-case you want to do something that is not in the API, you have an escape hatch!
-The function ``slip.onUndo`` allows you to register your own undo function. For
+That's all there is to it! An easy to write script that allows Slipshow to undo its changes!
+The API available via ``slip`` allows more than just setting
+styles. You can find the full API in :doc:`the reference <actions-api>`.
+If you want to do something that is not in the API, you have an escape hatch!
+The function ``slip.onUndo`` allows you to register your own ``undo`` function, for
 instance:
 
 .. slipshow-example::
@@ -110,5 +109,3 @@ instance:
    setTextContent(e1, "Intermediate value");
    setTextContent(e1, "Changed my mind");
    ```
-
-
