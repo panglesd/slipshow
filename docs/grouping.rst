@@ -21,7 +21,6 @@ You can use ``>`` to group blocks together, just like it is used in Commonmark t
    >
    > Grouped in a block
 
-
 Using ``---``
 -------------
 

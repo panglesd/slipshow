@@ -423,7 +423,6 @@ text to fill the empty subslips.
    > - Tickling the human *(never do this)*
    > - Arguing about lace vs. cotton
 
-
    {slip}
    > {.super-title}
    > # ?{style=font-size:400px}
@@ -553,7 +552,6 @@ and
    +> {pause}
     > # What Is Profit?
 
-
 .. slipshow-example::
    :dimension: 4:3
    :visible: presentation
@@ -608,7 +606,6 @@ and
    > - Confusing socks with underpants
    > - Tickling the human *(never do this)*
    > - Arguing about lace vs. cotton
-
 
    {slip}
    > {.super-title}
@@ -1322,7 +1319,6 @@ Now, create ``style.css`` containing exactly what used to be inside the ``<style
      color: red;
      font-size: 200px;
    }
-
 
 Now, ``phase-1.slp`` with unchanged content:
 

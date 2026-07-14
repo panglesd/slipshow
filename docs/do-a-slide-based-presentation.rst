@@ -2,7 +2,6 @@
 Do a slide-based presentation
 =============================
 
-
 Suppose you want to do a presentation that consists uniquely of slides. In this
 case, you can add ``children:slide children:enter=~duration:0`` as
 attributes in the frontmatter, and disable the toplevel attributes.

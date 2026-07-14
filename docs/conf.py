@@ -20,13 +20,11 @@ from pathlib import Path
 # I need to add my own extension and it needs to be found (from sphinx tuto)
 sys.path.append(str(Path('_ext').resolve()))
 
-
 # -- Project information -----------------------------------------------------
 
 project = 'slipshow'
 copyright = '2020 - 2026, Paul-Elliot'
 author = 'Paul-Elliot'
-
 
 # -- General configuration ---------------------------------------------------
 
@@ -53,7 +51,6 @@ templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '.venv',
     '**/.venv/**']
 
-
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -69,8 +66,6 @@ html_static_path = ['_static']
 
 html_js_files = ["main.js"]
 html_css_files = ["style.css"]
-
-
 
 # -- Added By PE -------------------------------------------------------------
 

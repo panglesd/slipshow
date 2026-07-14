@@ -65,7 +65,6 @@ Here are some classes that may be of interest for a theme writer:
 
 If you want to change the font, make sure to have a self-contained css file, by using data URLs to embed the font in the CSS file. Example:
 
-
 .. code-block:: css
 
                 @font-face {

@@ -4,7 +4,6 @@ from docutils.parsers.rst import Directive, directives
 class slipshow_example_node(nodes.Element):
     pass
 
-
 class SlipshowExampleDirective(Directive):
     has_content = True
     option_spec = {
