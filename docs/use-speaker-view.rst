@@ -1,9 +1,9 @@
-====================
-Use the speaker view
-====================
+======================
+Using the speaker view
+======================
 
-Anatomy of a speaker view
-=========================
+Anatomy of the speaker view
+===========================
 
 The speaker view contains several elements:
 
@@ -28,7 +28,7 @@ You can add notes with the ``speaker-notes`` action.
    >
    > With multiple paragraphs
 
-A speaker note is not displayed in the presentation. When the ``speaker-note``
+Speaker notes are not displayed in the presentation. When the ``speaker-note``
 action is executed, the note replaces the current note in the speaker view.
 
 You can also have the :ref:`speaker note and its execution be split <anatomy>` by using an identifier:
@@ -55,7 +55,7 @@ Finally, it is possible to have the notes appear at the same time as any other a
 The speaker view and complex workflow
 =====================================
 
-Slipshow tries to synchronize the two presentation view. For instance, if you
+Slipshow aims to synchronize the two presentation views. For instance, if you
 press :kbd:`Right arrow` in one, it changes step in both. Similarly for drawing.
 
 However, there are things that cannot really be synchronized. For instance, if

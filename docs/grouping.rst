@@ -159,4 +159,3 @@ Let's see an example. Which one do you find more readable?
    ----
 
    They are all beautiful!
-
