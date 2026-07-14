@@ -3,7 +3,7 @@ Include Manim videos
 ====================
 
 In this section, we assume familiarity with `Manim
-<https://www.manim.community/>`_, the library to create mathematical
+<https://www.manim.community/>`_, a library for creating mathematical
 animations. Visit the `docs <https://docs.manim.community/en/stable/>`_
 otherwise!
 
@@ -13,7 +13,7 @@ Include a full video
 Including Manim videos is relatively straightforward in Slipshow, since Manim
 outputs videos, and videos can be included in a Slipshow presentation.
 
-Suppose for instance that you have manim file like this:
+Suppose for instance that you have Manim file like this:
 
 .. code-block:: python
 
@@ -40,7 +40,7 @@ In order to turn that into a video, you can do
 A video file will be generated in
 ``media/videos/main/720p30/AnimatedSquareToCircle.mp4`` (the path may depend on
 the resolution). You can include this file in a Slipshow presentation simply
-with ``![](path/to/file.mp4)``, and play it with the ``play-media`` action. For
+with Markdown image syntax ``![](path/to/file.mp4)``, and play it with the ``play-media`` action. For
 instance:
 
 .. code-block::
@@ -51,8 +51,8 @@ instance:
 
    {play-media=square-to-circle}
 
-Having pauses in the middle of a video
-======================================
+Pauses within a video
+=====================
 
 You might want to program pauses in the video, to account for your speech, or
 questions from the audience. You can do so using the `"section" mechanism
@@ -100,8 +100,8 @@ gave to the sections:
    AnimatedSquareToCircle_0002_circle.mp4
    AnimatedSquareToCircle.json
 
-So, in only remains to add separate files, and make them look like they are a
-single video. We'll simply put them in a carousel.
+All we have to do in Slipshow is add the separate files, and make them look like they are a
+single video with pauses. We'll put them in a carousel to make that work well:
 
 .. code-block::
 
