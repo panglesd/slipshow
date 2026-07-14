@@ -9,7 +9,7 @@ We need to use the ``standalone`` class as we are only interested in the TikZ fi
 .. code-block:: latex
 
    \documentclass[tikz]{standalone}
-   % \usetikzlibrary{...} % tikz package already loaded by 'tikz' option
+   % \usetikzlibrary{…} % tikz package already loaded by 'tikz' option
    \begin{document}
    \begin{tikzpicture}
      % Your TikZ code here

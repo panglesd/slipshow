@@ -77,7 +77,7 @@ For reference and fun, here is the old answer to this question:
      taste is emacs, but I am sure there are tons of great editors to write
      html. Do not write everything by hand, but in a more "high-level" way: use
      shortcuts to add elements, attributes, move your cursor according to the
-     tree an html file defines...
+     tree an html file defines…
 
      You can have a look at `pug <https://pugjs.org>`_. It is a language that
      can be compiled to html, using `pug-cli

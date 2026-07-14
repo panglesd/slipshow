@@ -61,7 +61,7 @@ and learn a lot along the way.
    presentation. 16:9 is often the best fit for projector and laptop screens,
    but here we are going to specify 4:3 even though it is the default. If you are targeting phones, you might choose 9:16.
 
-So, let's start with the small clock at the top. We could use an image... But
+So, let's start with the small clock at the top. We could use an image… But
 let's simply add an emoji: ``🕰️``! Create a ``gnome.slp`` file with the following
 content:
 
@@ -347,10 +347,10 @@ text to fill the empty subslips.
    +> - The heist
    +> - Common mistakes
    +>
-   +> [...]
+   +> […]
    +> - Arguing about lace vs. cotton
 
-    [...]
+    […]
 
     {slip}
     > {.super-title}
@@ -358,10 +358,10 @@ text to fill the empty subslips.
    +>
    +> # What Is Profit?
    +>
-   +> [...]
+   +> […]
    +> - Proceed as planned
 
-    [...]
+    […]
 
     .super-title {
       color: red;
@@ -520,7 +520,7 @@ We are going to do the following:
 
 - Remove the text that appears below the titles before we enter the slide,
 - "Unzoom" to show the big picture in between phases,
-- Show "Phase ..." when entering the slide,
+- Show "Phase …" when entering the slide,
 - Make the presentation look more like the original image,
 - Split the source into multiple files.
 
@@ -1079,12 +1079,12 @@ position of the sliding window:
    -{slip pause=overview}
    +{slip pause=overview up=phase-1}
 
-    [...]
+    […]
 
    -{slip}
    +{slip up=phase-2}
 
-    [...]
+    […]
 
    -{slip pause=wat-profit}
    +{slip pause=wat-profit up=phase-3}
@@ -1246,7 +1246,7 @@ Splitting the source into multiple files
 ----------------------------------------
 
 As you may have noticed, the current file is starting to be difficult to
-edit, due to its length, the grouping of elements... A good way to resolve this is to split
+edit, due to its length, the grouping of elements… A good way to resolve this is to split
 the source into multiple files to improve readability. In our case, we'll make several files:
 
 - One "entry" file, with the structure of the talk (``gnome.slp``),
@@ -1283,7 +1283,7 @@ Modify ``gnome.slp`` to be:
     ---
 
     {slip pause=overview up=phase-1}
-   -> [...]
+   -> […]
    +{include src=phase-1.slp}
 
     {step style=width:0}
@@ -1295,7 +1295,7 @@ Modify ``gnome.slp`` to be:
     {step style=width:0}
 
     {slip pause=wat-profit up=phase-3}
-   -> [...]
+   -> […]
    +{include src=phase-3.slp}
 
    ---

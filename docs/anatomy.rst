@@ -22,7 +22,7 @@ Let's start by using this simple presentation as an example, and build on it:
    - Interactivity
    - Continuity
    - Pacing
-   - ...
+   - …
 
 What do we have here? On the left, we have some regular plain-text content. On the right is the Slipshow presentation that was generated from the text on the left.
 
@@ -54,7 +54,7 @@ Here is the static content:
    - Interactivity
    - Continuity
    - Pacing
-   - ...
+   - …
 
 And the dynamic content:
 
@@ -84,13 +84,13 @@ Let's first recall the static content of our example:
    - Interactivity
    - Continuity
    - Pacing
-   - ...
+   - …
 
 Those familiar with Markdown syntax may have recognized it: it is very commonly used syntax for applying basic formatting to documents while still leaving them human-readable. For instance, the ``#`` character  introduces a title, which is why ``What is Slipshow`` is rendered as a title.
 
 Markdown's syntax tries to be natural to write, and easy to read. For instance, a list is made simply by prefixing each line item with a dash and a space, more or less like one would do naturally. This idealistic goal introduces some corner-cases and `footguns <https://en.wiktionary.org/wiki/footgun>`_ into the syntax that have mostly been built into a consistent, standardised flavour of Markdown called *CommonMark*. You can find an overview of `Markdown syntax <https://commonmark.org/help/>`_ on the CommonMark site.
 
-However, the example above contains more than Markdown syntax, specifically, the parts that are inside curly braces, ``{...}``. This is how you introduce *metadata*: information that won't be displayed directly, but that will influence or structure the presentation in some way.
+However, the example above contains more than Markdown syntax, specifically, the parts that are inside curly braces, ``{…}``. This is how you introduce *metadata*: information that won't be displayed directly, but that will influence or structure the presentation in some way.
 
 Metadata can attached to a block. This is the case here: ``{#many}`` assigns the ID ``many`` to the paragraph that follows (so that you can refer to it from elsewhere), and the ``block`` class is assigned to the bullet list that follows using ``{.block}`` (note that leading ``.``). The ``block`` class is the reason that the list appears as a block in the rendered version.
 
@@ -109,7 +109,7 @@ Let's now focus on the dynamic content.
 
 This is the list of actions to be executed. The first one is the ``pause`` action, and the second one is ``up`` action, and it is given some arguments: ``many``.
 
-The actions will be executed one by one, when the speaker presses the next button (the right arrow, down arrow, space bar, ...). So this presentation starts at step 0, executes the ``pause`` action as the first step, and then the ``up`` action as the second.
+The actions will be executed one by one, when the speaker presses the next button (the right arrow, down arrow, space bar, …). So this presentation starts at step 0, executes the ``pause`` action as the first step, and then the ``up`` action as the second.
 
 If you have tried running through the presentation, you probably have an idea of what these actions do. ``pause`` initially hides what follows, and displays it when executed. ``up`` moves the sliding window so that the target element is at the top of the view. You can include multiple actions in a single step!
 
@@ -133,7 +133,7 @@ One could imagine writing the static and dynamic contents separately, possibly e
    - Interactivity
    - Continuity
    - Pacing
-   - ...
+   - …
 
 and
 

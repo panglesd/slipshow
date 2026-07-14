@@ -24,7 +24,7 @@ The following box types are available:
 - ``remark`` to display a remark.
 - ``proof`` to display a proof.
 
-To create one of these elements, add its name as a class to the block element. Any box may additionally have a ``title=...`` attribute. The attribute's value cannot contain any markup.
+To create one of these elements, add its name as a class to the block element. Any box may additionally have a ``title=…`` attribute. The attribute's value cannot contain any markup.
 
 .. slipshow-example::
 
@@ -106,7 +106,7 @@ Includes for Markdown and HTML
 ------------------------------
 
 Includes are a way to include external Markdown/HTML files, just as if they were
-inlined in the file, just like the ``![](...)`` syntax that Markdown uses for images, but for blocks of external content.
+inlined in the file, just like the ``![](…)`` syntax that Markdown uses for images, but for blocks of external content.
 An include must be a standalone element. It must have the ``include`` boolean
 attribute and a ``src`` attribute pointing to the path of the included resource, for example ``src="path/to/file.slp"``. It is possible to
 add other attributes as well.

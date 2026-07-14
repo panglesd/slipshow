@@ -59,7 +59,7 @@ We advise you to start by reading the tutorials, starting with the :doc:`first <
 
 .. toctree::
    :maxdepth: 1
-   :caption: How to ...
+   :caption: How to…
 
    record-and-replay
    split-in-multiple-files

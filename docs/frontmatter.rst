@@ -7,7 +7,7 @@ The frontmatter allows to define metadata for the whole presentation. For every 
 It must start the input file with a ``---``, and the frontmatter ends with the
 next ``---``. Inside, the metadata is given using a key-value syntax, with ``:``
 used for the separation. Not quotes are needed, but no newline are accepted in
-the values. I'll switch to yaml at some point...
+the values. I'll switch to yaml at some point…
 
 .. code-block:: markdown
 
