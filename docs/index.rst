@@ -62,7 +62,7 @@ We advise you to start by reading the tutorials, starting with the :doc:`first <
    :caption: How to…
 
    record-and-replay
-   split-in-multiple-files
+   managing-large-presentations
    use-speaker-view
    figures-bit-by-bit
    do-a-slide-based-presentation
