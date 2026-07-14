@@ -247,7 +247,16 @@ let message_setup window =
           Drawing_controller.Messages.send_all_strokes ()
       | Some { payload = Receive_all_drawing all_strokes; id = _ } ->
           Drawing_controller.Messages.receive_all_strokes all_strokes
-      | _ -> ())
+      | None
+      | Some
+          {
+            payload =
+              ( Save_drawing (_, _)
+              | Speaker_notes _ | Close_recording_panel | Open_recording_panel
+              | Close_speaker_notes | Open_speaker_notes | Ready );
+            id = _;
+          } ->
+          ())
     (Brr.Window.as_target Brr.G.window)
   |> ignore
 
