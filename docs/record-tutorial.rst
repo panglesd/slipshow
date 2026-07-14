@@ -242,7 +242,6 @@ here to say which drawing we need to draw:
 
    {draw=sum-drawing}
 
-
 Modifying a recording
 ---------------------
 

@@ -88,7 +88,6 @@ And suppose you want the node ``C`` to appear at a later step. Enclose the node 
    \end{tikzpicture}
    \end{document}
 
-
 Then, we need to compile the file with svg output. Here we use ``latex`` and
 ``dvisvgm``. The ``--no-fonts`` improve the precision of text layouts, and
 ``--exact-bbox`` improves the precision of the bounding box.
@@ -170,7 +169,6 @@ One way to fix this is to use a file watcher general tool, to recompile the ``.t
 .. code-block:: bash
 
    $ echo "triangle.tex"| entr sh -c "latex triangle.tex && dvisvgm -n -e triangle.dvi"
-
 
 .. |entr| replace:: ``entr`` command line tool
 .. _entr: https://eradman.com/entrproject/

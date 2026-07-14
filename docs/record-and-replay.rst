@@ -60,7 +60,6 @@ To change the time when strokes are being drawn, one has to click and drag *anyw
 
 In the timeline, one can also change the "track" of the moved strokes. It allows to have an easier view of what happens, and to also control which strokes will be drawn "above" the other.
 
-
 The Rescale Tool
 ----------------
 
@@ -104,7 +103,6 @@ To do so, use the image following syntax:
 .. code-block:: markdown
 
    ![](your-recording.draw)
-
 
 Where the name of your own file is used instead of ``your-recording.draw``.
 

@@ -45,7 +45,6 @@ A set of attributes that is separated from the rest of the content by blank line
 
    Some other text
 
-
 Blocks and inlines
 ------------------
 
@@ -63,7 +62,6 @@ Here is an example where you set the background of an element to red, through an
 
    {style="background:red"}
    The attribute is attached to the paragraph.
-
 
    [The attribute is attached to the text.]{style="background:red"}
 
@@ -123,12 +121,9 @@ However, sometimes putting long attributes in the middle of the text can hurt re
 
 		[A]: {many long attributes}
 
-
 Not perfect, but much better than the version where all words are given the attributes separately.
 
-
 .. _image-metadata:
-
 
 Metadata for images
 -------------------

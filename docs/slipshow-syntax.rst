@@ -65,7 +65,6 @@ Create links with this syntax: ``[text](link target)``. Targets can be internal 
 
    [Internal link](#start), [external link](https://slipshow.org).
 
-
 Images, SVGs, video, audio, PDFs, HTML, drawings
 ------------------------------------------------
 
@@ -246,7 +245,6 @@ Since in Slipshow, the ``>`` character is used for :doc:`grouping <grouping>`, b
 
    {blockquote}
    > Cogito Ergo Sum
-
 
 Setext Headings
 ===============

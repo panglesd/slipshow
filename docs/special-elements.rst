@@ -129,7 +129,6 @@ Recall that for inline elements, it is possible to embed images, SVGs, videos, a
 
    This sentence includes ![](file.html) some raw html from an external file.
 
-
 .. _blockquote-in-special-elements:
 
 Blockquotes

@@ -53,7 +53,6 @@ To start, copy the following lines into a file, named (for this example) ``prime
    {.definition}
    A **prime number** is an integer divisible by exactly two integers: 1, and itself.
 
-
 .. note::
 
    The extension of the file (``.slp``) indicates it's a Slipshow source file. If you did not set up your editor to support Slipshow, you might want to use the ``.md`` extension (for ``markdown``): Many editors support Markdown out of the box, and Slipshow's syntax is an extension of it.
