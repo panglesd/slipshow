@@ -39,3 +39,9 @@ To include an external CSS file, use the ``css`` field in the :ref:`frontmatter`
    css: path/to/file.css
    ---
 
+Combining frontmatter
+=====================
+
+When you split your presentation in multiple files, you can define a frontmatter
+in each included file. The fields present in multiple files will be combined when
+applicable. When the attributes are not applicable, a warning will be shown.

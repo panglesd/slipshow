@@ -2,12 +2,12 @@
  Frontmatter
 =============
 
-The frontmatter allows to define metadata for the whole presentation. For every CLI option, there is a corresponding frontmatter option.
+The *frontmatter* allows you to define metadata for the whole presentation. For every CLI option, there is a corresponding frontmatter option.
 
-It must start the input file with a ``---``, and the frontmatter ends with the
-next ``---``. Inside, the metadata is given using a key-value syntax, with ``:``
-used for the separation. Not quotes are needed, but no newline are accepted in
-the values. I'll switch to yaml at some point…
+Within the input file, the frontmatter starts with a ``---``, and ends with the
+next ``---``. Within this region, metadata is set using a key-value syntax, with ``:``
+used as a separator. No quotes are needed, but no newlines are accepted within
+the values. It's likely that Slipshow will switch to using yaml for the frontmatter at some point…
 
 .. code-block:: markdown
 
@@ -26,26 +26,26 @@ The current options for the frontmatter are:
   file. Accepts a string with the syntax for attributes. Default value is an
   empty attribute.
 
-- ``toplevel-attributes``, for defining the attributes of the whole presentation
-  (useful in multi-file setting). Accepts a string with the syntax for
+- ``toplevel-attributes``, for defining attributes for the whole presentation
+  (useful in multi-file setting). Accepts a string with the same syntax as is used for
   attributes. Useful to control the first action executed. Default is ``slip
   enter="~duration:0"``.
 
 - ``theme``, for selecting a theme. Accepts a string: either ``"default"``,
-  ``"vanier"`` or a path to a file.
+  ``"vanier"`` or a path to a theme file.
 
-- ``css`` for adding css files to the presentation. Accepts a space-separated list of paths. Spaces in path are not possible yet.
+- ``css`` for adding css files to the presentation. Accepts a space-separated list of paths. Spaces within paths are not yet possible.
 
-- ``js`` for adding ``.js`` files to the presentation. Accepts a space-separated list of paths. Spaces in path are not possible yet.
+- ``js`` for adding ``.js`` files to the presentation. Accepts a space-separated list of paths. Spaces within paths are not yet possible.
 
-- ``dimension`` for defining the dimension of the presentation. Accepts a
-  string, either ``"4:3"`` (``1440x1080``, the default), ``"16:9"``
-  (``1920x1080``), or ``"WIDTHxHEIGHT"``.
+- ``dimension`` for defining the size or aspect ratio of the presentation. Accepts a
+  string, either a ratio like ``"4:3"`` (the default) or ``"16:9"``,
+  or pixel dimensions in ``"WIDTHxHEIGHT"`` format, like ``1440x1080`` (the default) or ``1920x1080``.
 
 - ``highlightjs-theme``, for selecting a highlightjs theme. Accepts the name of
   a theme, corresponding to the name of a file in `this list
   <https://github.com/highlightjs/highlight.js/tree/5697ae5187746c24732e62cd625f3f83004a44ce/src/styles>`_,
-  stripped from its extension.
+  without its extension.
 
 - ``external-ids``, for telling the Slipshow compiler which ``ids`` will be
   present even if they do not seem to be present in the document. Accepts a list
@@ -56,5 +56,5 @@ Multifile presentations
 =======================
 
 When you split your presentation in multiple files, you can define a frontmatter
-in the included files. The fields present in multiple files will be combined when
-applicable. When not applicable, a warning will be raised.
+in each included file. The fields present in multiple files will be combined when
+applicable. When the attributes are not applicable, a warning will be shown.
