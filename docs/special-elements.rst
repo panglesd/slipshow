@@ -134,7 +134,7 @@ Recall that for inline elements, it is possible to embed images, SVGs, videos, a
 Blockquotes
 -----------
 
-Since ``>`` is used for :ref:`using-less-to-group`, we can create them by assigning the ``blockquote`` attribute.
+Since ``>`` is used for :ref:`using-gt-to-group`, we can create them by assigning the ``blockquote`` attribute.
 
 .. code-block::
 
