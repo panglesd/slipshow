@@ -268,7 +268,7 @@ let download_button recording =
         let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv |> Brr.El.of_jv in
         Brr.El.set_has_focus false el)
   in
-  Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "💾 Download") ]
+  Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "💾 Save As...") ]
 
 let add_pause_button (replaying_state : replaying_state) =
   let click =
