@@ -247,6 +247,8 @@ let message_setup window =
           Drawing_controller.Messages.send_all_strokes ()
       | Some { payload = Receive_all_drawing all_strokes; id = _ } ->
           Drawing_controller.Messages.receive_all_strokes all_strokes
+      | Some { payload = Can_save; id = _ } ->
+          Lwd.set Drawing_state.can_save true
       | None
       | Some
           {

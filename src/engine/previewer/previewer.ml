@@ -33,6 +33,10 @@ let send_open_speaker_view panel =
   let payload = Communication.Open_speaker_notes in
   send_message panel payload
 
+let send_can_save panel =
+  let payload = Communication.Can_save in
+  send_message panel payload
+
 let send_next panel =
   let payload = Communication.Next in
   send_message panel payload
@@ -103,7 +107,7 @@ let preview_status_class = Jstr.v "preview-status"
 
 let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
     ?(save_drawing = fun ~path:_ ~content:_ -> ()) ~include_speaker_view
-    ~errors_el ~steal_focus root =
+    ~errors_el ~steal_focus ~can_save root =
   let ( !! ) = Jstr.v in
   let name1 = Random.int 1000000 |> string_of_int |> fun s -> "id" ^ s in
   let name2 = Random.int 1000000 |> string_of_int |> fun s -> "id" ^ s in
@@ -163,10 +167,12 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
             is_speaker_view_open := true
         | Some { payload = Close_speaker_notes; id = _ } when from_current ->
             is_speaker_view_open := false
-        | Some { payload = Ready; id = _ } when from_current -> ()
+        | Some { payload = Ready; id = _ } when from_current ->
+            if can_save then send_can_save panels.(p.index)
         | Some { payload = Ready; id = _ } when from_other ->
             Jv.set (El.to_jv panels.(p.index)) "srcdoc" (Jv.of_string "");
             let () = El.set_class preview_status_class true preview_status in
+            if can_save then send_can_save panels.(1 - p.index);
             if !is_speaker_view_open then
               send_open_speaker_view panels.(1 - p.index);
             p.index <- 1 - p.index;

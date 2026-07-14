@@ -253,12 +253,22 @@ let save_button recording =
         let s = Drawing_state.Json.string_of_recording recording in
         let path = recording.file_path in
         Messaging.save_drawing ~path ~content:s;
-        (* TODO: If not in preview mode, offer to save to disk, using the line below *)
-        if false then make_download recording.name s;
         let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv |> Brr.El.of_jv in
         Brr.El.set_has_focus false el)
   in
-  Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "💾 Save") ]
+  let can_save =
+    let$ can_save = Lwd.get Drawing_state.can_save in
+    if can_save then Lwd_seq.empty
+    else
+      Lwd_seq.of_list
+        [
+          Brr.At.disabled;
+          Brr.At.title
+            !!"Can only save through a preview server, such as \"slipshow \
+               serve\" or the LSP server";
+        ]
+  in
+  Elwd.button ~at:[ `S can_save ] ~ev:[ `P click ] [ `P (Brr.El.txt' "💾 Save") ]
 
 let download_button recording =
   let click =
