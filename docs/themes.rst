@@ -4,11 +4,11 @@ Themes
 Using a theme
 -------------
 
-Theme support is pretty recent in Slipshow. As a consequence, there aren't many themes to choose from… yet!
+Themes are a recent addition to Slipshow, and as a consequence, there aren't many themes to choose from… yet!
 
 To choose a theme, specify it in the :doc:`frontmatter <frontmatter>`. It can take the name of a builtin theme, a path to a css file, or a URL pointing to a CSS file.
 
-Here is an example of a frontmatter to using the "vanier" predefined theme:
+Here is an example of a frontmatter using the "vanier" predefined theme:
 
 .. code-block:: txt
 
@@ -16,7 +16,7 @@ Here is an example of a frontmatter to using the "vanier" predefined theme:
    theme: vanier
    ---
 
-To get the list of supported theme files, use ``slipshow themes list``:
+To get the list of supported theme files, use the ``slipshow themes list`` command:
 
 .. code-block:: console
 
@@ -28,7 +28,7 @@ To get the list of supported theme files, use ``slipshow themes list``:
    none
      Include no theme.
 
-Here is an example of a frontmatter specifying its theme by giving a path to a css file:
+Here is an example of a frontmatter specifying its theme by giving a path to a CSS file:
 
 .. code-block:: txt
 
@@ -36,7 +36,7 @@ Here is an example of a frontmatter specifying its theme by giving a path to a c
    theme: themes/my-theme.css
    ---
 
-And finally, here is an example of a frontmatter specifying its theme by giving an url to the css file (Note that the compiled file will need internet connection in order to display the presentation):
+And finally, here is an example of a frontmatter specifying its theme by giving a URL to a CSS file (Note that the compiled file will need an internet connection in order to display the presentation):
 
 .. code-block:: txt
 
@@ -44,16 +44,16 @@ And finally, here is an example of a frontmatter specifying its theme by giving 
    theme: https://example.org/my-theme.css
    ---
 
-Currently, very few themes are included. However, you can write your own theme!
+Currently, very few themes are included, but you can write your own!
 
 Creating a theme
 ----------------
 
-Creating a theme consists in writing a CSS file.
+Creating a theme consists of writing a CSS file.
 
-Each theme can define any CSS rule. Once Slipshow is more stable, it will provide a list of classes with their meaning, that is guaranteed not to change (even if the engine change).
+Each theme can define any CSS rule. Once Slipshow is more stable, it will provide a reliable list of classes with their meanings, that is guaranteed not to change (even if the engine changes).
 
-Currently, the layouts may still slightly change, necessitating updates in the themes. However, these changes won't happen frequently, and will likely be easy to update!
+Currently, the layouts may still change slightly, necessitating theme updates. However, these changes won't happen frequently, and will likely be easy to update.
 
 Here are some classes that may be of interest for a theme writer:
 
@@ -61,9 +61,9 @@ Here are some classes that may be of interest for a theme writer:
 - ``.block`` for the blocks, which can take a ``title="…"`` parameter. Similarly for ``.theorem``, ``.lemma``, ``.definition``, ``.example``, ``.corollary``, ``.remark``.
 - ``#slipshow-universe`` for styling the "universe", the element containing all of the presentation's elements.
 - ``#slipshow-open-window`` for styling the background color outside of the universe.
-- Titles. Make sure not to change the system UI.
+- Titles. Make sure you don't change the system UI.
 
-If you want to change the font, make sure to have a self-contained css file, by using data URLs to embed the font in the CSS file. Example:
+If you want to use a custom font, embed the font as a self-contained CSS file that encodes the font in a ``data`` URL. Example:
 
 .. code-block:: css
 
@@ -73,7 +73,7 @@ If you want to change the font, make sure to have a self-contained css file, by 
                   font-weight: 500;
                 }
 
-where the ``AAEAA[…]WggBEAAA=`` string can be found with the base64 utility, for instance:
+where the ``AAEAA[…]WggBEAAA=`` string can be created with the base64 utility, for instance:
 
 .. code-block:: console
 
@@ -82,9 +82,9 @@ where the ``AAEAA[…]WggBEAAA=`` string can be found with the base64 utility, f
 Submitting a theme
 ------------------
 
-If you have written a theme, thank you! I'm happy to:
+If you have written a theme, thank you, and please let us know about it! I'd be happy to:
 
 - Include a link to it in this documentation,
 - Maybe, even include it as a builtin theme!
 
-This way, I can also ping you on breaking changes.
+This way, I can also ping you on breaking changes to the theme API.
