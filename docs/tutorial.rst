@@ -125,7 +125,7 @@ The fifth line is the first one that is not regular Markdown:
    {pause}
 
 This line won't appear as-is in the rendered presentation. In fact, any
-content inside curly braces ``{...}`` is considered "metadata" and will be
+content inside curly braces ``{…}`` is considered "metadata" and will be
 interpreted in specific ways, but not displayed in the presentation.
 
 The purpose of this line is to inform the Slipshow engine that the presentation
@@ -274,7 +274,7 @@ which is what makes it unique!
       {pause .proof}
       ---
       Suppose there are finitely many prime numbers.
-      [...]
+      […]
       **Therefore, there must exists infinitely many prime numbers.**
       ---
 
@@ -386,11 +386,11 @@ We need to add ``up=prime-def`` to the pause associated with the proof. The modi
    {.definition #prime-def}
    A **prime number** is a number divisible by exactly two integers: 1, and itself.
 
-   [...]
+   […]
 
    {pause .proof up=prime-def}
    > Suppose there are a finite number of prime numbers.
-   > [...]
+   > […]
 
 .. slipshow-example::
    :visible: presentation

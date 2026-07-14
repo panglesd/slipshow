@@ -5,7 +5,7 @@ Markup
 Slipshow's presentation are written in a "What You See Is What You Mean", compared to presentation tools such as PowerPoint, which are "What You See Is What You Get".
 
 In more usual words, PowerPoint lets you lay out your presentation visually; what you edit and what you'll present are the same.
-Slipshow takes a different approach: you describe your intent ("this text is a title", "this paragraph is a definition", ...) and Slipshow does the formatting for you.
+Slipshow takes a different approach: you describe your intent ("this text is a title", "this paragraph is a definition", …) and Slipshow does the formatting for you.
 
 In this page, we describe the syntax used to describe this intent. You'll write your presentation as a plain text document, with no formatting, but using this specific syntax. From that syntax, Slipshow will be able to format the presentation.
 

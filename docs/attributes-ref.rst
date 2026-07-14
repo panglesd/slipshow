@@ -107,7 +107,7 @@ Attributes are attached to the inline element they touch. For instance:
 
 In this example, ``A`` is attached to ``and``, ``B`` to ``other``,  ``C`` is a standalone inline attribute, ``D`` is attached to ``**bold**`` and ``E`` to ```inline elements```.
 
-If you want to attach an attribute to a group of inlines, you can use the ``[...]{attributes}`` syntax. For instance:
+If you want to attach an attribute to a group of inlines, you can use the ``[…]{attributes}`` syntax. For instance:
 
 .. code-block:: markdown
 

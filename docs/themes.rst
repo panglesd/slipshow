@@ -4,7 +4,7 @@ Themes
 Using a theme
 -------------
 
-Theme support is pretty recent in Slipshow. As a consequence, there aren't many themes to choose from... yet!
+Theme support is pretty recent in Slipshow. As a consequence, there aren't many themes to choose from… yet!
 
 To choose a theme, specify it in the :doc:`frontmatter <frontmatter>`. It can take the name of a builtin theme, a path to a css file, or a URL pointing to a CSS file.
 
@@ -58,7 +58,7 @@ Currently, the layouts may still slightly change, necessitating updates in the t
 Here are some classes that may be of interest for a theme writer:
 
 - ``.slip-body`` to define the look of the content of a slip.
-- ``.block`` for the blocks, which can take a ``title="..."`` parameter. Similarly for ``.theorem``, ``.lemma``, ``.definition``, ``.example``, ``.corollary``, ``.remark``.
+- ``.block`` for the blocks, which can take a ``title="…"`` parameter. Similarly for ``.theorem``, ``.lemma``, ``.definition``, ``.example``, ``.corollary``, ``.remark``.
 - ``#slipshow-universe`` for styling the "universe", the element containing all of the presentation's elements.
 - ``#slipshow-open-window`` for styling the background color outside of the universe.
 - Titles. Make sure not to change the system UI.
@@ -69,11 +69,11 @@ If you want to change the font, make sure to have a self-contained css file, by 
 
                 @font-face {
                   font-family: 'Dosis';
-                  src: url(data:font/truetype;charset=utf-8;base64,AAEAAA[...]WggBEAAA=) format('truetype-variations');
+                  src: url(data:font/truetype;charset=utf-8;base64,AAEAAA[…]WggBEAAA=) format('truetype-variations');
                   font-weight: 500;
                 }
 
-where the ``AAEAA[...]WggBEAAA=`` string can be found with the base64 utility, for instance:
+where the ``AAEAA[…]WggBEAAA=`` string can be found with the base64 utility, for instance:
 
 .. code-block:: console
 
