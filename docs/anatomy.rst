@@ -28,7 +28,7 @@ What do we have here? On the left, we have some regular plain-text content. On t
 
 This brings us to the first important lesson: **Slipshow is a tool that transforms (or *renders*) textual content into a presentation**. This process is called *compilation*, and the textual content is often called the *source file*.
 
-Before continuing, you can tinker with the presentation above. First, click on the rendered presentation on the right, and go forward and backward through the sequence by pressing the arrow keys. While you're showing a presentation you can also annotate the screen; try it! While the presentation is focused, press ``p`` and then use your mouse to draw on it.
+Before continuing, you can tinker with the presentation above. First, click on the rendered presentation on the right, and go forward and backward through the sequence by pressing the arrow keys. While you're showing a presentation you can also annotate the screen; try it! While the presentation is focused, press :kbd:`p` and then use your mouse to draw on it.
 
 You can also modify the rendered presentation by clicking on the textual content, and editing it! You can try to figure out the syntax from the example and your modifications, but we are going to clarify that very shortly.
 
@@ -148,4 +148,4 @@ First, for readability, it is good to have some sort of locality: putting the ac
 
 Moreover, actions often need an argument or two. If they don't have one, but are attached to a specific block, they can be given a default argument; this is why ``pause`` does not need an argument.
 
-So, what to take away from this? At least to begin with, most of your presentations will keep the actions and the content close together, but it's worth knowing that you *can* break them up if you like, and order the actions in any way you want. You'll need to use identifiers to give an action a target to apply to, but that's a topic for a more advanced tutorial.
+So, what to take away from this? At least to begin with, most of your presentations will keep the actions and the content close together, but it's worth knowing that you *can* break them up if you like, and order the actions in any way you want. You'll need to use identifiers to give an action a target to apply to, but that's a topic for a more applied tutorial.

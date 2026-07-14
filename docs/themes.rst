@@ -82,7 +82,7 @@ where the ``AAEAA[…]WggBEAAA=`` string can be created with the base64 utility,
 Submitting a theme
 ------------------
 
-If you have written a theme, thank you, and please let us know about it! I'd be happy to:
+If you have written a theme, thank you, and please let me know about it! I'd be happy to:
 
 - Include a link to it in this documentation,
 - Maybe, even include it as a builtin theme!

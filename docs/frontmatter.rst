@@ -32,15 +32,13 @@ The current options for the frontmatter are:
   enter="~duration:0"``.
 
 - ``theme``, for selecting a theme. Accepts a string: either ``"default"``,
-  ``"vanier"`` or a path to a theme file.
+  ``"vanier"`` or a path to a CSS file defining a theme.
 
 - ``css`` for adding css files to the presentation. Accepts a space-separated list of paths. Spaces within paths are not yet possible.
 
 - ``js`` for adding ``.js`` files to the presentation. Accepts a space-separated list of paths. Spaces within paths are not yet possible.
 
-- ``dimension`` for defining the size or aspect ratio of the presentation. Accepts a
-  string, either a ratio like ``"4:3"`` (the default) or ``"16:9"``,
-  or pixel dimensions in ``"WIDTHxHEIGHT"`` format, like ``1440x1080`` (the default) or ``1920x1080``.
+- ``dimension`` for defining the size or aspect ratio of the presentation. Accepts a pixel dimensions in ``"WIDTHxHEIGHT"`` format, like ``1440x1080``. Some dimensions can alternatively be given as a ratio: ``"4:3"`` for ``1440x1080``, and ``"16:9"`` for ``1920x1080``. The default dimension is ``1440x1080``.
 
 - ``highlightjs-theme``, for selecting a highlightjs theme. Accepts the name of
   a theme, corresponding to the name of a file in `this list

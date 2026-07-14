@@ -20,7 +20,7 @@ Slipshow.
 
 Also note that being "real-life" presentations, they were made under time
 constraints, sometimes using older Slipshow versions with fewer features,
-so the code might not be the cleanest, but that is fine for demonstration purposes.
+so the code might not be the cleanest, but this is fine for a presentation.
 
 .. contents::
    :local:

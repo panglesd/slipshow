@@ -13,19 +13,19 @@ In a Slipshow presentation, the equivalent of a slide is called a _slip_. Each s
 ![](slip_scroll.gif)
 
 Slipshow improves on traditional slide-based presentations in the following ways:
-- Scroll on a slip instead of changing slides, making content flow smoothly rather than in steps
+- Scroll on a slip instead of changing slides, making content flow continuously
 - Record hand-drawings when preparing your talk, edit them, and have them replayed during the presentation
-- Include custom scripts to make your presentation clearer through e.g. animation or interaction.
+- Include and execute custom scripts by steps, to make your presentation clearer through e.g. animation or interaction.
 
 Slipshow compiles files written in an extension of [Markdown](https://en.wikipedia.org/wiki/Markdown), to a standalone HTML file viewable offline in any web browser.
 
 ##  Tutorial, API and Documentation
 
-Slipshow has [extensive documentation](https://docs.slipshow.org), including a tutorial.
+Slipshow has [extensive documentation](https://docs.slipshow.org).
 
 ## Contributing
 
-Slipshow's development happens on [GitHub](https://github.com/panglesd/slipshow). On here you can report bugs, ask for new features, suggest enhancements, improve documentation,  [create a theme](https://slipshow.readthedocs.io/en/latest/themes.html#writing-a-theme), and of course help out by creating pull requests — but be sure to read the [contributing guide](CONTRIBUTING.md) first.
+Slipshow's development happens on [GitHub](https://github.com/panglesd/slipshow). On here you can report bugs, ask for new features, suggest enhancements, improve documentation, [create a theme](https://slipshow.readthedocs.io/en/latest/themes.html#writing-a-theme), and of course help out by creating pull requests — but be sure to read the [contributing guide](CONTRIBUTING.md) first.
 
 ## Recent changes
 
