@@ -15,7 +15,7 @@
 
 ### Changed
 
-- Drawings are now saved through the preview server (#249)
+- Drawings are now saved through the preview server (#249, #254)
 
 ### Fixed
 
