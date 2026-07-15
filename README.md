@@ -10,7 +10,7 @@
 
 In a Slipshow presentation, the equivalent of a slide is called a _slip_. Each slip is like a slide, but with no bottom limit. That is, the content can be arbitrarily long! During the presentation, the camera will "scroll" down to reveal the hidden content, following a script given by the presenter!
 
-![](slip_scroll.gif)
+![Demo of a slip smoothly scrolling](slip_scroll.gif)
 
 Slipshow improves on traditional slide-based presentations in the following ways:
 - Scroll on a slip instead of changing slides, making content flow continuously
@@ -19,7 +19,7 @@ Slipshow improves on traditional slide-based presentations in the following ways
 
 Slipshow compiles files written in an extension of [Markdown](https://en.wikipedia.org/wiki/Markdown), to a standalone HTML file viewable offline in any web browser.
 
-##  Tutorial, API and Documentation
+## Tutorial, API and Documentation
 
 Slipshow has [extensive documentation](https://docs.slipshow.org).
 

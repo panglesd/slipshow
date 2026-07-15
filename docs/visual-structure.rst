@@ -57,9 +57,10 @@ and learn a lot along the way.
 
 .. note::
 
-   It's usually a good idea to decide on the aspect ratio of your
-   presentation. 16:9 is often the best fit for projector and laptop screens,
-   but here we are going to specify 4:3 even though it is the default. If you are targeting phones, you might choose 9:16.
+   It's usually a good idea to decide on the dimension of your
+   presentation. ``16:9`` (an alias of ``1920x1080``) is often the best fit for
+   projector and laptop screens, but here we are going to specify ``4:3`` (an
+   alias of ``1440x1080``), even though it is the default dimension.
 
 So, let's start with the small clock at the top. We could use an image… But
 let's simply add an emoji: ``🕰️``! Create a ``gnome.slp`` file with the following
@@ -332,7 +333,7 @@ What to notice here?
   We might want to control that better, and we'll look at that later.
 
 Let's make the titles bigger (using ``font-size``, as we did for the clock emoji) and add some
-text to fill the empty subslips.
+text to fill the empty subslips (LLorem ipsuM-generated).
 
 .. code-block:: diff
 

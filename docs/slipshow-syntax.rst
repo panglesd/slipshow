@@ -59,11 +59,7 @@ Text can be made italic by putting a ``*`` character either side of it, bold by 
 Links
 -----
 
-Create links with this syntax: ``[text](link target)``. Targets can be internal or external. Internal targets are slip IDs (see :ref:`slip-ids`); external targets are full URLs.
-
-.. slipshow-example::
-
-   [Internal link](#start), [external link](https://slipshow.org).
+Create links with this syntax: ``[alternative text](link target)``.
 
 Images, SVGs, video, audio, PDFs, HTML, drawings
 ------------------------------------------------
