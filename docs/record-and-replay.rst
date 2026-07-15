@@ -66,7 +66,7 @@ In the timeline, one can also change the "track" of the moved strokes. It allows
 The Rescale Tool
 ----------------
 
-The *rescale* tool can be taken by clicking on it in the top left panel, or by using its shortcut, :kbd:`s`. It allows, unsurprisingly, rescaling strokes and erasures, in space and time.
+The *rescale* tool can be taken by clicking on it in the top left panel, or by using its shortcut, :kbd:`r`. It allows, unsurprisingly, rescaling strokes and erasures, in space and time.
 
 To rescale strokes spatially, click and drag *anywhere* on the presentation view. When something is selected, only those strokes will be rescaled. When nothing is selected, the same action will rescale *all* the strokes.
 
