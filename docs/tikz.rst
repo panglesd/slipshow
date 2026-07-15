@@ -93,10 +93,10 @@ Then we need to compile the file to SVG. Here we use ``latex`` and
 ``dvisvgm``. The ``--no-fonts`` option improves the precision of text layouts, and
 ``--exact-bbox`` improves the precision of the bounding box.
 
-.. code-block:: latex
+.. code-block:: bash
 
    $ latex triangle.tex
-   $ divsvgm --no-fonts --exact-bbox triangle.dvi
+   $ dvisvgm --no-fonts --exact-bbox triangle.dvi
 
 Now we need to include the SVG file as a Slipshow image, and add dynamic behaviour with actions:
 
