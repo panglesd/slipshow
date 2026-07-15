@@ -44,7 +44,7 @@ extensions are loaded.
 
 .. code-block::
 
-   <style>
+   <script>
    window.MathJax = {
      tex: {
        macros: { RR: '{\\mathbb R}' }
@@ -121,11 +121,11 @@ In order to configure KaTeX, you also just define an object:
 
 .. code-block::
 
-   <style>
+   <script>
    window.Katex = {
      macros: {"\\RR": "\\mathbb{R}"}
    };
-   </style>
+   </script>
 
 whose default value is:
 
