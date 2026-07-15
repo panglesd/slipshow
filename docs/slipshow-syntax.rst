@@ -144,7 +144,8 @@ To add some inline mathematics, enclose with a single ``$``.
 
 .. slipshow-example::
 
-   This is an inline math element $$ \left( \sum_{k=1}^n a_k b_k \right)^2  < \Phi$$ which will render in its own line.
+   This is a block math element $$\left( \sum_{k=1}^n a_k b_k \right)^2  < \Phi$$ which will render in its own line.
+
    A math block may be more convenient:
 
    ```math
