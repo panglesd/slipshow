@@ -15,8 +15,6 @@ For instance, here is a ``main.slp`` that includes the files ``part1.slp`` and `
    dimension: 16:9
    ---
 
-   Only the main file should contain the frontmatter.
-
    {include src=part1.slp}
 
    {include src=part2.slp}

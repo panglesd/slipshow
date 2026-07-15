@@ -58,7 +58,7 @@ If you open an SVG image with a text editor, it looks like this:
       <rect style="fill: blue" width="2" height="2" x="8" y="8" />
     </svg>
 
-You can add classes and IDs by editing the XML directly. For instance, to add an identifier nd a class to the red square:
+You can add classes and IDs by editing the XML directly. For instance, to add an identifier and a class to the red square:
 
 .. code-block:: xml
 
