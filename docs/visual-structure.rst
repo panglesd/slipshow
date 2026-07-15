@@ -328,7 +328,7 @@ What to notice here?
 - The titles are now much smaller, but they are exactly the right size to make them
   full-size when you enter the slip.
 - The ``enter`` actions (derived from the fact that there are ``slips``) are
-  executed one after the other. So we visit the three slips in the order they are defined in.
+  executed one after the other. So we visit the three slips in the order they are defined.
   We might want to control that better, and we'll look at that later.
 
 Let's make the titles bigger (using ``font-size``, as we did for the clock emoji) and add some
