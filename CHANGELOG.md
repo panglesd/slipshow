@@ -23,6 +23,10 @@
 - Fix external themes in serve mode (#245)
 - Fix LSP preview with multiple files when some of them are not opened (#250)
 
+### Docs
+
+- Greatly improve the quality of the English in documentation (#255, @Synchro)
+
 ## [v0.11.0] Brazlip (Sunday, the 24th of May, 2026)
 
 ### Added
