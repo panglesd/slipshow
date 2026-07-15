@@ -16,7 +16,7 @@ You can open it by pressing :kbd:`s` after opening the presentation.
 Adding notes
 ============
 
-You can add notes with the ``speaker-notes`` action.
+You can add notes with the ``speaker-note`` action.
 
 .. code-block::
 
