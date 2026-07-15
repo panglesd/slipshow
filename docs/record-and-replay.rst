@@ -134,8 +134,8 @@ Advice on this kind of presentation
 We have mentioned already that this feature is new and experimental, so I don't have much experience *using* it myself.
 However, I can give a few tips on making presentations with it:
 
-- Be careful, in ``serve`` mode, modifying any file the presentation depends on will make the page refresh, potentially losing any unsaved changes, so *save often!
-- To avoid that issue, either save teh recording in a file the presentation does not depend upon, or accept the refresh and reopen the recording you are working on with :kbd:`R`.
+- Be careful, in ``serve`` mode, modifying any file the presentation depends on will make the page refresh, potentially losing any unsaved changes, so *save often!*
+- To avoid that issue, either save the recording in a file the presentation does not depend upon, or accept the refresh and reopen the recording you are working on with :kbd:`R`.
 - Use the keyboard shortcuts, or you'll find it gets very cumbersome.
 - Editing after recording is very easy, so do not hesitate to stop and resume recording; you don't have to get it perfectly right first time.
 - Strip leading time with the "Move" tool and trailing time with the "Rescale" tool, both with an empty selection.
