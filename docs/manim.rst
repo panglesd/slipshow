@@ -13,7 +13,7 @@ Include a full video
 Including Manim videos is relatively straightforward in Slipshow, since Manim
 outputs videos, and videos can be included in a Slipshow presentation.
 
-Suppose for instance that you have Manim file like this:
+Suppose for instance that you have a Manim file like this:
 
 .. code-block:: python
 
