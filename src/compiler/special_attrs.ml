@@ -30,5 +30,5 @@ let all_attrs =
     pdf_resolution;
     pause_block;
     as_html;
-    auto_continue
+    auto_continue;
   ]
