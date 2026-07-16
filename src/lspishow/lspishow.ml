@@ -79,7 +79,7 @@ class lsp_server =
         Linol_lwt.InitializeResult.serverInfo option =
       Some
         (Linol_lwt.InitializeResult.create_serverInfo ~name:"slipshow"
-           ~version:"0.0.1" ())
+           ~version:Slipshow_version.full ())
 
     (* Remove when/if {:https://github.com/c-cube/linol/pull/67} is merged *)
     method private on_req_initialize'

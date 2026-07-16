@@ -1,9 +1,5 @@
 open Cmdliner
 
-(* Update this on every release! *)
-let version_title = "Brazlip"
-let slipshow_version = "%%VERSION%%: " ^ version_title
-
 let setup_log style_renderer level =
   Fmt_tty.setup_std_outputs ?style_renderer ();
   Logs.set_level level;
@@ -111,7 +107,7 @@ module Compile = struct
       "Compile a slipshow source file into a slipshow html presentation"
     in
     let man = [] in
-    let info = Cmd.info "compile" ~version:slipshow_version ~doc ~man in
+    let info = Cmd.info "compile" ~version:Slipshow_version.full ~doc ~man in
     Cmd.v info term
 end
 
@@ -139,7 +135,7 @@ module Serve = struct
       "Serve a live preview of a slipshow presentation, with hot-reloading"
     in
     let man = [] in
-    let info = Cmd.info "serve" ~version:slipshow_version ~doc ~man in
+    let info = Cmd.info "serve" ~version:Slipshow_version.full ~doc ~man in
     Cmd.v info term
 end
 
@@ -161,7 +157,7 @@ module Markdownify = struct
        removing presentation attributes"
     in
     let man = [] in
-    let info = Cmd.info "markdown" ~version:slipshow_version ~doc ~man in
+    let info = Cmd.info "markdown" ~version:Slipshow_version.full ~doc ~man in
     Cmd.v info term
 end
 
@@ -177,13 +173,13 @@ module Theme = struct
   let all =
     let doc = "List all builtin themes. Default command." in
     let man = [] in
-    let info = Cmd.info "list" ~version:slipshow_version ~doc ~man in
+    let info = Cmd.info "list" ~version:Slipshow_version.full ~doc ~man in
     Cmd.v info term_all
 
   let cmd =
     let doc = "Manages themes for slipshow presentations" in
     let man = [] in
-    let info = Cmd.info "themes" ~version:slipshow_version ~doc ~man in
+    let info = Cmd.info "themes" ~version:Slipshow_version.full ~doc ~man in
     Cmd.group ~default:term_all info [ all ]
 end
 
@@ -212,7 +208,7 @@ end
 let group =
   let doc = "A tool to compile and preview slipshow presentation" in
   let man = [] in
-  let info = Cmd.info "slipshow" ~version:slipshow_version ~doc ~man in
+  let info = Cmd.info "slipshow" ~version:Slipshow_version.full ~doc ~man in
   Cmd.group info [ Compile.cmd; Serve.cmd; Markdownify.cmd; Theme.cmd; Lsp.cmd ]
 
 let main () = exit (Cmd.eval_result group)
