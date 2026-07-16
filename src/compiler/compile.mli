@@ -16,12 +16,12 @@ val unit :
 
 val compile_all :
   read_file:file_reader ->
-  directory: Fpath.t ->
+  directory:Fpath.t ->
   Ast.unit' Fpath.Map.t ->
   Fpath.t ->
   Ast.units * Diagnosis.t list
-(** [compile_all ~read_file units_cache file] will compile [file] and all
-    the units it depends on, using [units_cache] if some units already have been
+(** [compile_all ~read_file units_cache file] will compile [file] and all the
+    units it depends on, using [units_cache] if some units already have been
     compiled. *)
 
 val action_plan : Ast.units -> Ast.Action_plan.t

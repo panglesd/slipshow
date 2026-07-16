@@ -21,10 +21,7 @@ type t =
   | ChildrenClassWithValue of { loc : loc }
 
 val pp : Format.formatter -> t -> unit
-
-val to_grace :
-  (Fpath.t -> Grace.Source.t option) -> t -> t Grace.Diagnostic.t
-
+val to_grace : (Fpath.t -> Grace.Source.t option) -> t -> t Grace.Diagnostic.t
 val add : t -> unit
 val with_ : (unit -> 'a) -> 'a * t list
 val to_code : t -> string

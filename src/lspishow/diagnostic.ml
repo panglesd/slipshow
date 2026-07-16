@@ -67,7 +67,8 @@ let of_error ~root ~file (e : Diagnosis.t) =
       let locs = List.filter loc_in_file locs in
       let draw_precision =
         if String.ends_with ~suffix:".draw" file then
-          "\nOpen the record panel in the preview to record and save a draw file."
+          "\n\
+           Open the record panel in the preview to record and save a draw file."
         else ""
       in
       List.map
