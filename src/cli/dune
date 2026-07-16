@@ -5,6 +5,7 @@
   (:standard
    (:include static-linking-flags/flags)))
  (libraries
+  slipshow_version
   slipshow_server
   cmdliner
   fpath
