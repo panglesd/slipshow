@@ -1,3 +1,14 @@
+let add_escaped_attrs =
+  let node c = (c, Cmarkit.Meta.none) in
+  let quote = '"' in
+  fun k v attrs ->
+    (* escaping quotes
+               (https://stackoverflow.com/questions/9187946/escaping-inside-html-tag-attribute-value) *)
+    let v = v |> String.split_on_char quote |> String.concat "&quot;" in
+    attrs
+    |> Cmarkit.Attributes.add (node k)
+         (Some (node { Cmarkit.Attributes.v; delimiter = Some quote }))
+
 module RenderAttrs = struct
   module C = Cmarkit_renderer.Context
   open Cmarkit
@@ -172,7 +183,7 @@ let html_include c ~uri ~files attrs i =
   | `Source (content, _mimetype) -> C.string c content
 
 (* Inspired from Cmarkit's image rendering *)
-let media ?(close = " >") ~media_name c ~uri ~files i attrs =
+let media ~self_closing ~media_name c ~uri ~files i attrs =
   let open Cmarkit in
   let src = src uri files |> src_to_link in
   let plain_text i =
@@ -188,14 +199,23 @@ let media ?(close = " >") ~media_name c ~uri ~files i attrs =
   C.byte c '\"';
   if false then C.string c " controls";
   RenderAttrs.add_attrs c attrs;
-  C.string c close
+  C.string c " >";
+  if not self_closing then (
+    C.string c "</";
+    C.string c media_name;
+    C.string c ">")
 
 (* Inspired from Cmarkit's image rendering *)
 let svg c ~uri ~files i attrs =
   let open Cmarkit in
   let src = src uri files in
   match src with
-  | `Link _ -> media ~media_name:"svg" c ~uri ~files i attrs
+  | `Link l ->
+      let attrs =
+        attrs |> add_escaped_attrs "data" l
+        |> add_escaped_attrs "type" "image/svg+xml"
+      in
+      media ~self_closing:false ~media_name:"object" c ~uri ~files i attrs
   | `Source (content, _mime_type) ->
       let attrs =
         Attributes.add_class attrs ("slipshow-svg-container", Meta.none)
@@ -209,21 +229,11 @@ let pure_embed c ~name uri files attrs =
   | Path p -> (
       match Fpath.Map.find_opt p (files : Ast.Files.read Ast.Files.map) with
       | Some { content; mode = `Base64; _ } ->
-          let node c = (c, Cmarkit.Meta.none) in
-          let quote = '"' in
-          let add_attrs k v attrs =
-            (* escaping quotes
-               (https://stackoverflow.com/questions/9187946/escaping-inside-html-tag-attribute-value) *)
-            let v = v |> String.split_on_char quote |> String.concat "&quot;" in
-            attrs
-            |> Cmarkit.Attributes.add (node k)
-                 (Some (node { Cmarkit.Attributes.v; delimiter = Some quote }))
-          in
           let attrs =
             attrs
-            |> add_attrs "x-path" (Fpath.to_string p)
-            |> add_attrs "x-data" (Option.value ~default:"" content)
-            |> add_attrs "x-name" name
+            |> add_escaped_attrs "x-path" (Fpath.to_string p)
+            |> add_escaped_attrs "x-data" (Option.value ~default:"" content)
+            |> add_escaped_attrs "x-name" name
           in
           Context.string c "<span";
           RenderAttrs.add_attrs c attrs;
@@ -242,16 +252,16 @@ let custom_html_renderer (units : Ast.units)
           pdf c ~uri ~files l attrs;
           true
       | Ast.Video { uri = uri, _; id = _; origin = (l, (attrs, _)), _ } ->
-          media ~media_name:"video" c ~uri ~files l attrs;
+          media ~self_closing:false ~media_name:"video" c ~uri ~files l attrs;
           true
       | Ast.Image { uri = uri, _; id = _; origin = (l, (attrs, _)), _ } ->
-          media ~media_name:"img" c ~uri ~files l attrs;
+          media ~self_closing:true ~media_name:"img" c ~uri ~files l attrs;
           true
       | Ast.Svg { uri = uri, _; id = _; origin = (l, (attrs, _)), _ } ->
           svg c ~uri ~files l attrs;
           true
       | Ast.Audio { uri = uri, _; id = _; origin = (l, (attrs, _)), _ } ->
-          media ~media_name:"audio" c ~uri ~files l attrs;
+          media ~self_closing:false ~media_name:"audio" c ~uri ~files l attrs;
           true
       | Ast.Html { uri = uri, _; id = _; origin = (l, (attrs, _)), _ } ->
           html_include c ~uri ~files attrs l;

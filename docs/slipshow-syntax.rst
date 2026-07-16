@@ -102,7 +102,7 @@ Here are the possibilities:
 
    Here is the Slipshow logo:
 
-   ![Slipshow logo](https://raw.githubusercontent.com/panglesd/slipshow/refs/heads/main/logo/logo-slipshow.svg)
+   ![Slipshow logo](https://cdn.jsdelivr.net/gh/panglesd/slipshow@main/logo/logo-slipshow.svg)
 
 Lists
 -----
