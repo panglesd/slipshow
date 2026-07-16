@@ -249,6 +249,8 @@ class lsp_server =
         referencesProvider = Some (`Bool true);
         definitionProvider = Some (`Bool true);
         documentSymbolProvider = Some (`Bool true);
+        experimental =
+          Some (`Assoc [ ("move_from_editor", `Assoc [ ("version", `Int 1) ]) ]);
       }
 
     method private on_doc ~(notify_back : Linol_lwt.Jsonrpc2.notify_back)
