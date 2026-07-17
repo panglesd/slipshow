@@ -158,7 +158,7 @@ let global_panel recording =
           ~at:
             [
               Brr.At.href
-                !!"https://slipshow.readthedocs.io/en/stable/record-and-replay.html";
+                !!"https://docs.slipshow.org/en/stable/record-and-replay.html";
             ]
           [ Brr.El.txt' "Get help in the documentation" ];
       ]
