@@ -224,9 +224,11 @@ let drawing_area =
     Lwd_table.map_reduce
       (fun _row { recording; time; is_playing = _ } ->
         match status with
-        | Drawing (Recording { replaying_state; _ })
+        | Drawing
+            (Recording { replaying_state; recording_temp; replayed_part; _ })
           when replaying_state.recording.record_id = recording.record_id ->
-            Lwd_seq.empty
+            Lwd_seq.of_list
+            @@ [ act ~time:None recording_temp; act ~time:None replayed_part ]
         | _ ->
             Lwd_seq.element @@ act ~time:(Some (Lwd.get time)) recording.strokes)
       Lwd_seq.monoid workspaces.recordings
