@@ -13,10 +13,17 @@ This feature is still experimental, and time will tell how useful it is, what it
 .. NOTE::
     If you're using recorded drawings, do not hesitate to let me know how it went — I want to make it better!
 
-The process described below is unnecessarily complex and will be improved.
+The big picture
+===============
 
-Starting a recording
-====================
+Here is the big picture of how drawings work.
+
+Drawings will be made and recorded in the preview of the slipshow presentation. Once made, they are saved in a ``.draw`` file, which is included in the presentation. From the presentation, this drawing can be replayed using an action.
+    
+Recording a drawing
+===================
+
+To record a drawing
 
 To start recording a drawing, open the presentation in which you want to include the drawing in a web browser.
 
