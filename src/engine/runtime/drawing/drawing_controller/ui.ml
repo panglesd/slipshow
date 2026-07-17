@@ -251,15 +251,25 @@ let save_button recording =
   let click =
     Elwd.handler Brr.Ev.click (fun ev ->
         let s = Drawing_state.Json.string_of_recording recording in
-        let path = recording.file_path in
-        Messaging.save_drawing ~path ~content:s;
+        let () =
+          recording.file_path
+          |> Option.iter @@ fun path -> Messaging.save_drawing ~path ~content:s
+        in
         let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv |> Brr.El.of_jv in
         Brr.El.set_has_focus false el)
   in
   let can_save =
     let$ can_save = Lwd.get Drawing_state.can_save in
-    if can_save then Lwd_seq.empty
-    else
+    if Option.is_none recording.file_path then
+      Lwd_seq.of_list
+        [
+          Brr.At.disabled;
+          Brr.At.title
+            !!"Recording has no corresponding file, use \"Save As\" and \
+               include the created file in the presentation with \
+               ![description](path/to/file.draw)";
+        ]
+    else if not can_save then
       Lwd_seq.of_list
         [
           Brr.At.disabled;
@@ -267,6 +277,7 @@ let save_button recording =
             !!"Can only save through a preview server, such as \"slipshow \
                serve\" or the LSP server";
         ]
+    else Lwd_seq.empty
   in
   Elwd.button ~at:[ `S can_save ] ~ev:[ `P click ] [ `P (Brr.El.txt' "💾 Save") ]
 
@@ -322,6 +333,29 @@ let close_button =
   in
   Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Close editing panel") ]
 
+let new_recording_button =
+  let click =
+    Elwd.handler Brr.Ev.click (fun ev ->
+        let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv |> Brr.El.of_jv in
+        Brr.El.set_has_focus false el;
+        let recording =
+          {
+            strokes = Lwd_table.make ();
+            pauses = Lwd_table.make ();
+            total_time = Lwd.var 0.;
+            name = "Anonymous recording";
+            record_id = Random.bits ();
+            file_path = None;
+          }
+        in
+        let replaying_state =
+          { recording; time = Lwd.var 0.; is_playing = Lwd.var false }
+        in
+        Lwd_table.append' workspaces.recordings replaying_state;
+        Lwd.set current_replaying_state (Some replaying_state))
+  in
+  Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Create a new recording") ]
+
 let el =
   let$* replaying_state = Lwd.get current_replaying_state in
   match replaying_state with
@@ -332,7 +366,8 @@ let el =
           [
             `P (Brr.El.txt' "Add recordings using the ");
             `P (Brr.El.code [ Brr.El.txt' "![](filename.draw)" ]);
-            `P (Brr.El.txt' " syntax.");
+            `P (Brr.El.txt' " syntax. Or");
+            `R new_recording_button;
             `R close_button;
           ]
       in

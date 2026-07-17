@@ -766,9 +766,10 @@ module Draw = struct
                       total_time = Lwd.var 0.;
                       name;
                       record_id = Random.bits ();
-                      file_path = path;
+                      file_path = Some path;
                     }
-              | data -> Drawing_state.Json.string_to_recording path name data
+              | data ->
+                  Drawing_state.Json.string_to_recording (Some path) name data
             in
             match recording with
             | Error e -> Console.(log [ e ])
