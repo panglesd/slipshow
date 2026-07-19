@@ -461,3 +461,61 @@ let ul = cons Name.ul
 let var = cons Name.var
 let video = cons Name.video
 let wbr = void_cons Name.wbr
+
+type root = t Lwd.root
+
+let insert first_insert anchor reactive =
+  let root = Lwd.observe reactive in
+  let last_element = ref (Lwd.quick_sample root) in
+  first_insert anchor [!last_element];
+  let on_invalidate _ =
+    let _ : int =
+      G.request_animation_frame @@ fun _ ->
+      let new_element = Lwd.quick_sample root in
+      if !last_element = new_element then ()
+      else (
+        El.insert_siblings `Replace !last_element [ new_element ];
+        last_element := new_element
+      )
+    in
+    ()
+  in
+  Lwd.set_on_invalidate root on_invalidate;
+  root
+
+let insert_sibling where anchor reactive =
+  let first_insert = El.insert_siblings where in
+  insert first_insert anchor reactive
+
+let append_child anchor reactive =
+  insert El.append_children anchor reactive
+
+let prepend_child anchor reactive =
+  insert El.prepend_children anchor reactive
+
+let set_children el children =
+  let reactive =
+    let children, impure_children = consume_children children in
+    match impure_children with
+    | None -> El.set_children el children; Lwd.pure el
+    | Some children ->
+      let root = Lwd.observe children in
+      let c = Lwd.quick_sample root in
+      El.set_children el (Lwd_seq.to_list c);
+      Lwd.quick_release root;
+      update_children el children
+  in
+  let root = Lwd.observe reactive in
+  let _el = Lwd.quick_sample root in
+  let on_invalidate _ =
+    let _ : int =
+      G.request_animation_frame @@ fun _ ->
+      let _el = Lwd.quick_sample root in
+      ()
+    in
+    ()
+  in
+  Lwd.set_on_invalidate root on_invalidate;
+  root
+
+let release root = Lwd.quick_release root
