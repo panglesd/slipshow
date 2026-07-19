@@ -8,22 +8,10 @@ let ( !! ) = Jstr.v
 open Brr
 
 let init_ui () =
-  let ui = Lwd.observe Panel.panel in
-  let on_invalidate _ =
-    let _ : int =
-      G.request_animation_frame @@ fun _ ->
-      let _ui = Lwd.quick_sample ui in
-      (* Beware that due to this being ignored, a changed "root" element will
-         not be updated by Lwd, only its reactive attributes/children *)
-      ()
-    in
-    ()
-  in
   let body =
     Brr.El.find_first_by_selector (Jstr.v "#slipshow-main") |> Option.get
   in
-  El.append_children body [ Lwd.quick_sample ui ];
-  Lwd.set_on_invalidate ui on_invalidate;
+  let _root = Elwd.append_child body Panel.panel in
   ()
 
 (* let _ = *)
@@ -70,22 +58,10 @@ module Rec_in_progress = struct
           `P (Brr.El.txt' "REC");
         ]
     in
-    let svg = Lwd.observe svg in
-    let on_invalidate _ =
-      let _ : int =
-        G.request_animation_frame @@ fun _ ->
-        let _ui = Lwd.quick_sample svg in
-        (* Beware that due to this being ignored, a changed "root" element will
-         not be updated by Lwd, only its reactive attributes/children *)
-        ()
-      in
-      ()
-    in
     let content =
       Brr.El.find_first_by_selector (Jstr.v "#slipshow-main") |> Option.get
     in
-    El.append_children content [ Lwd.quick_sample svg ];
-    Lwd.set_on_invalidate svg on_invalidate;
+    let _root = Elwd.append_child content svg in
     ()
 end
 
@@ -137,24 +113,11 @@ end
 
 module Ui = struct
   let init () =
-    let svg = Ui.el in
-    let svg = Lwd.observe svg in
-    let on_invalidate _ =
-      let _ : int =
-        G.request_animation_frame @@ fun _ ->
-        let _ui = Lwd.quick_sample svg in
-        (* Beware that due to this being ignored, a changed "root" element will
-         not be updated by Lwd, only its reactive attributes/children *)
-        ()
-      in
-      ()
-    in
     let content =
       Brr.El.find_first_by_selector (Jstr.v "#slipshow-vertical-flex")
       |> Option.get
     in
-    El.append_children content [ Lwd.quick_sample svg ];
-    Lwd.set_on_invalidate svg on_invalidate;
+    let _root = Elwd.append_child content Ui.el in
     ()
 end
 
@@ -211,22 +174,10 @@ let connect () =
         ]
       [ `S preview_box ]
   in
-  let ui = Lwd.observe panel in
-  let on_invalidate _ =
-    let _ : int =
-      G.request_animation_frame @@ fun _ ->
-      let _ui = Lwd.quick_sample ui in
-      (* Beware that due to this being ignored, a changed "root" element will
-         not be updated by Lwd, only its reactive attributes/children *)
-      ()
-    in
-    ()
-  in
   let main =
     Brr.El.find_first_by_selector (Jstr.v "#slipshow-main") |> Option.get
   in
-  El.append_children main [ Lwd.quick_sample ui ];
-  Lwd.set_on_invalidate ui on_invalidate;
+  let _root = Elwd.append_child main panel in
   ()
 
 let init_ui () =
