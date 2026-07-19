@@ -31,6 +31,32 @@ val v :
     the final value. [d] is the document on which the element is
     defined it defaults {!Brr.G.document}. *)
 
+(** {1 Inserting reactive elements in the DOM}  *)
+
+type root
+
+val insert_sibling : [ `Before | `After | `Replace ] -> t -> t Lwd.t -> root
+(** Inserts a reactive element in the DOM, right before/after/instead of the
+    given element. The element is updated until the return value is passed to
+    {!release}. *)
+
+val set_children : t -> t col -> root
+(** Sets a set of reactive elements as the children of the given element. The
+    set is updated until the return value is passed to {!release}. *)
+
+val append_child : t -> t Lwd.t -> root
+(** Inserts a reactive element in the DOM, as last child of the given
+    element. The element is updated until the return value is passed to
+    {!release}. *)
+
+val prepend_child : t -> t Lwd.t -> root
+(** Inserts a reactive element in the DOM, as first child of the given
+    element. The element is updated until the return value is passed to
+    {!release}. *)
+
+val release : root -> unit
+(** Stop updating the reactive elements, leaving what is currently there. *)
+
 (** {1:els Element constructors} *)
 
 type cons =
