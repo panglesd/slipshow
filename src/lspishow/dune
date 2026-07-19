@@ -1,6 +1,7 @@
 (library
  (name lspishow)
  (libraries
+  slipshow_version
   linol
   server_assets
   slipshow_server

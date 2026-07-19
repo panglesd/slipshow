@@ -75,8 +75,47 @@ class lsp_server =
     method! config_hover = Some (`Bool true)
     method! config_definition = Some (`Bool true)
 
+    method private config_server_info :
+        Linol_lwt.InitializeResult.serverInfo option =
+      Some
+        (Linol_lwt.InitializeResult.create_serverInfo ~name:"slipshow"
+           ~version:Slipshow_version.full ())
+
+    (* Remove when/if {:https://github.com/c-cube/linol/pull/67} is merged *)
+    method private on_req_initialize'
+        ~notify_back:(_ : Linol_lwt.Jsonrpc2.notify_back)
+        (i : Linol_lwt.InitializeParams.t) : Linol_lwt.InitializeResult.t Lwt.t
+        =
+      let open Linol_lwt in
+      let sync_opts = self#config_sync_opts in
+      self#set_positionEncoding i;
+      let positionEncoding =
+        match positionEncoding with
+        | `UTF8 -> PositionEncodingKind.UTF8
+        | `UTF16 -> UTF16
+      in
+      let capabilities =
+        ServerCapabilities.create
+          ?codeLensProvider:self#config_code_lens_options
+          ~codeActionProvider:self#config_code_action_provider
+          ~executeCommandProvider:
+            (ExecuteCommandOptions.create ~commands:self#config_list_commands ())
+          ?completionProvider:self#config_completion
+          ?definitionProvider:self#config_definition
+          ?hoverProvider:self#config_hover
+          ?inlayHintProvider:self#config_inlay_hints
+          ?documentSymbolProvider:self#config_symbol
+          ~textDocumentSync:(`TextDocumentSyncOptions sync_opts)
+          ~positionEncoding ()
+        |> self#config_modify_capabilities
+      in
+      Lwt.return
+      @@ InitializeResult.create ~capabilities
+           ?serverInfo:self#config_server_info ()
+
     method! on_req_initialize ~notify_back
-        (params : Linol_lwt.InitializeParams.t) =
+        (params : Linol_lwt.InitializeParams.t) :
+        Linol_lwt.InitializeResult.t Lwt.t =
       client_capabilities := Some params.capabilities;
       let _wsf = params.workspaceFolders in
       let _uri = params.rootUri in
@@ -121,7 +160,7 @@ class lsp_server =
                 |> List.map Fpath.to_string)))
           Rev_deps.(as_map current)
       in
-      super#on_req_initialize ~notify_back params
+      self#on_req_initialize' ~notify_back params
 
     method! config_completion =
       Some (Linol_lwt.CompletionOptions.create ~triggerCharacters:[ "#" ] ())
@@ -210,6 +249,14 @@ class lsp_server =
         referencesProvider = Some (`Bool true);
         definitionProvider = Some (`Bool true);
         documentSymbolProvider = Some (`Bool true);
+        experimental =
+          Some
+            (`Assoc
+               [
+                 ( "slipshow",
+                   `Assoc
+                     [ ("move_from_editor", `Assoc [ ("version", `Int 1) ]) ] );
+               ]);
       }
 
     method private on_doc ~(notify_back : Linol_lwt.Jsonrpc2.notify_back)
