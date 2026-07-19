@@ -241,23 +241,11 @@ let drawing_area =
 
 let init_drawing_area () =
   let svg = drawing_area in
-  let svg = Lwd.observe svg in
-  let on_invalidate _ =
-    let _ : int =
-      Brr.G.request_animation_frame @@ fun _ ->
-      let _ui = Lwd.quick_sample svg in
-      (* Beware that due to this being ignored, a changed "root" element will
-         not be updated by Lwd, only its reactive attributes/children *)
-      ()
-    in
-    ()
-  in
   let content =
     Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing-elem")
     |> Option.get
   in
-  Brr.El.prepend_children content [ Lwd.quick_sample svg ];
-  Lwd.set_on_invalidate svg on_invalidate;
+  let _root = Elwd.prepend_child content svg in
   ()
 
 let for_events =
@@ -329,20 +317,8 @@ let for_events =
         ]
       [ (* `S preview_box *) ]
   in
-  let ui = Lwd.observe panel in
-  let on_invalidate _ =
-    let _ : int =
-      Brr.G.request_animation_frame @@ fun _ ->
-      let _ui = Lwd.quick_sample ui in
-      (* Beware that due to this being ignored, a changed "root" element will
-         not be updated by Lwd, only its reactive attributes/children *)
-      ()
-    in
-    ()
-  in
   let main =
     Brr.El.find_first_by_selector (Jstr.v "#slipshow-main") |> Option.get
   in
-  Brr.El.append_children main [ Lwd.quick_sample ui ];
-  Lwd.set_on_invalidate ui on_invalidate;
+  let _root = Elwd.append_child main panel in
   ()
