@@ -2220,3 +2220,36 @@ module ResizeObserver = struct
 
   include (Jv.Id : Jv.CONV with type t := observer)
 end
+
+module DOMMatrix = struct
+  type t = Jv.t
+
+  let of_jstr s = Jv.new' (Jv.get Jv.global "DOMMatrix") [| Jv.of_jstr s |]
+
+  let a v = Jv.get v "a" |> Jv.to_float
+  let b v = Jv.get v "b" |> Jv.to_float
+  let c v = Jv.get v "c" |> Jv.to_float
+  let d v = Jv.get v "d" |> Jv.to_float
+  let e v = Jv.get v "e" |> Jv.to_float
+  let f v = Jv.get v "f" |> Jv.to_float
+  let is_2d v = Jv.get v "is2D" |> Jv.to_bool
+  let is_identity v = Jv.get v "isIdentity" |> Jv.to_bool
+  let m11 v = Jv.get v "m11" |> Jv.to_float
+  let m12 v = Jv.get v "m12" |> Jv.to_float
+  let m13 v = Jv.get v "m13" |> Jv.to_float
+  let m14 v = Jv.get v "m14" |> Jv.to_float
+  let m21 v = Jv.get v "m21" |> Jv.to_float
+  let m22 v = Jv.get v "m22" |> Jv.to_float
+  let m23 v = Jv.get v "m23" |> Jv.to_float
+  let m24 v = Jv.get v "m24" |> Jv.to_float
+  let m31 v = Jv.get v "m31" |> Jv.to_float
+  let m32 v = Jv.get v "m32" |> Jv.to_float
+  let m33 v = Jv.get v "m33" |> Jv.to_float
+  let m34 v = Jv.get v "m34" |> Jv.to_float
+  let m41 v = Jv.get v "m41" |> Jv.to_float
+  let m42 v = Jv.get v "m42" |> Jv.to_float
+  let m43 v = Jv.get v "m43" |> Jv.to_float
+  let m44 v = Jv.get v "m44" |> Jv.to_float
+
+  include (Jv.Id : Jv.CONV with type t := t)
+end

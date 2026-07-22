@@ -180,10 +180,10 @@ let connect () =
   let _root = Elwd.append_child main panel in
   ()
 
-let init_ui () =
+let init_ui window =
   Preview.init_drawing_area ();
   connect ();
-  Preview.for_events ();
+  Preview.for_events window;
   Rec_in_progress.init ();
   init_ui ();
   Garbage.g ();

@@ -9,7 +9,8 @@ let pfo_options width =
   Perfect_freehand.Options.v ~thinning:0.5 ~smoothing:0.5 ~size ~streamline:0.5
     ~last:true ()
 
-let make_d ~elapsed_time path path_to_svg =
+let make_d ~elapsed_time (* ~(offset : Universe.Coordinates.element) *) path
+    path_to_svg =
   (* TODO: DO NOT DELETE THIS COMMENT! *)
   (* let$* end_at = end_at in *)
   (* let$* should_continue = *)
@@ -19,7 +20,14 @@ let make_d ~elapsed_time path path_to_svg =
   (*   elapsed_time <= end_at *)
   (* in *)
   let with_path path =
-    let path = List.map fst path in
+    (* Brr.Console.(log [ "offset_x"; offset.x ]); *)
+    let path =
+      List.map fst
+        (* (fun ((x, y), _) -> *)
+        (*   ( x -. (offset.x -. 2000. -. (offset.width /. 2.)), *)
+        (*     y -. (offset.y -. 2000. -. (offset.height /. 2.)) )) *)
+        path
+    in
     let v = path_to_svg path in
     Brr.At.v (Jstr.v "d") v
   in
@@ -240,18 +248,17 @@ let drawing_area =
   Elwd.v ~ns:`SVG (Jstr.v "g") [ `S all_drawings; `R drawn_live_drawing ]
 
 let init_drawing_area () =
-  let svg = drawing_area in
   let content =
     Brr.El.find_first_by_selector (Jstr.v "#slipshow-drawing-elem")
     |> Option.get
   in
-  let _root = Elwd.prepend_child content svg in
+  let _root = Elwd.prepend_child content drawing_area in
   ()
 
 let for_events =
   let drawing_started_time = Tools.now () in
   (* Just to avoid one level of indentation... *)
-  Fun.id @@ fun () ->
+  Fun.id @@ fun window ->
   let open Lwd_infix in
   let panel =
     let handler =
@@ -263,15 +270,18 @@ let for_events =
         and$ width = Lwd.get width in
         match tool with
         | Stroker stroker ->
-            let strokes, started_time =
+            let strokes, started_time, element_anchor =
               match d with
-              | Presenting -> (workspaces.live_drawing, drawing_started_time)
-              | Recording { started_at; replaying_state = _; recording_temp; _ }
-                ->
-                  (recording_temp, started_at)
+              | Presenting ->
+                  (workspaces.live_drawing, drawing_started_time, None)
+              | Recording { started_at; replaying_state; recording_temp; _ } ->
+                  ( recording_temp,
+                    started_at,
+                    Some replaying_state.recording.element_anchor )
             in
             Lwd_seq.element
-            @@ Tools.Draw_stroke.event ~started_time strokes stroker color width
+            @@ Tools.Draw_stroke.event window ~started_time ?element_anchor
+                 strokes stroker color width
         | Pointer -> Lwd_seq.empty
         | Eraser ->
             let strokes, started_time, replayed_part =

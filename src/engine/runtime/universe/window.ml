@@ -81,18 +81,23 @@ let setup el =
   in
   { rotate_container; scale_container; universe }
 
-let live_scale { scale_container; _ } =
-  let compute_scale elem =
-    let comp = El.computed_style (Jstr.v "transform") elem |> Jstr.to_string in
-    let b = String.index_opt comp '(' in
-    let e = String.index_opt comp ',' in
-    match (b, e) with
-    | Some b, Some e ->
-        String.sub comp (b + 1) (e - b - 1)
-        |> float_of_string_opt |> Option.value ~default:1.
-    | _ -> 1.
-  in
-  compute_scale scale_container
+let compute_scale elem =
+  let comp = El.computed_style (Jstr.v "transform") elem |> Jstr.to_string in
+  let b = String.index_opt comp '(' in
+  let e = String.index_opt comp ',' in
+  match (b, e) with
+  | Some b, Some e ->
+      String.sub comp (b + 1) (e - b - 1)
+      |> float_of_string_opt |> Option.value ~default:1.
+  | _ -> 1.
+
+let live_scale { scale_container; _ } = compute_scale scale_container
+
+let rec scale_in_universe ({ universe; _ } as u) elem =
+  match Brr.El.offset_parent elem with
+  | Some parent when not (parent = universe) ->
+      scale_in_universe u parent *. compute_scale elem
+  | _ -> compute_scale elem
 
 let move_pure mode window ({ x; y; scale } as target : Coordinates.window)
     ~duration =
