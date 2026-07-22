@@ -48,7 +48,7 @@ let setup_actions window () =
     @@ List.filter_map
          (fun (module X : Actions.S) ->
            let _ =
-             match X.setup_all with None -> Fut.return () | Some f -> f ()
+             match X.setup_all with None -> Fut.return () | Some f -> f window
            in
            match X.setup with
            | None -> None
@@ -64,7 +64,7 @@ let setup_actions window () =
                          include X
 
                          let do_ ~mode:_ _window el x =
-                           setup2 el x |> ignore;
+                           setup2 window el x |> ignore;
                            Undoable.return ()
                        end)
                        window elem)

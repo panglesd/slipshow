@@ -192,9 +192,9 @@ let handle_drag (dragger : (_, 'b) dragger) =
             dragger.end_ acc';
             acc := None)
 
-let draw_stroke_dragger =
+let draw_stroke_dragger window =
   let open Drawing_controller.Tools.Draw_stroke in
-  let start = start ~replaying_state:None in
+  let start = start window None in
   { start; drag; end_ }
 
 let erase_dragger =
@@ -203,12 +203,12 @@ let erase_dragger =
   { start; drag; end_ }
 
 let handle_erase = handle_drag erase_dragger
-let handle_draw_stroke = handle_drag draw_stroke_dragger
+let handle_draw_stroke window = handle_drag (draw_stroke_dragger window)
 
-let handle_drawing d =
+let handle_drawing window d =
   let modu = Drawing_controller.Messages.event_of_string d in
   match modu with
-  | Some (Draw s) -> handle_draw_stroke s
+  | Some (Draw s) -> handle_draw_stroke window s
   | Some (Erase s) -> handle_erase s
   | Some (Clear started_time) ->
       Drawing_controller.Tools.Clear.clear ~replayed_strokes:None started_time
@@ -242,7 +242,7 @@ let message_setup window =
             Step.Next.go_prev ~send_message:true window mode
           in
           ()
-      | Some { payload = Drawing d; id = _window_id } -> handle_drawing d
+      | Some { payload = Drawing d; id = _window_id } -> handle_drawing window d
       | Some { payload = Send_all_drawing; id = _ } ->
           Drawing_controller.Messages.send_all_strokes ()
       | Some { payload = Receive_all_drawing all_strokes; id = _ } ->

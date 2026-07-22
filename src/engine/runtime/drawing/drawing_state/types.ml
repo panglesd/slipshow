@@ -51,6 +51,7 @@ type recording = {
   name : string;
   record_id : int;
   file_path : string;
+  element_anchor : Brr.El.t;
 }
 
 type replaying_state = {

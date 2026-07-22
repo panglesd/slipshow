@@ -1,8 +1,8 @@
 module type S = sig
   include Actions_arguments.S
 
-  val setup : (Brr.El.t -> args -> unit Fut.t) option
-  val setup_all : (unit -> unit Fut.t) option
+  val setup : (Universe.Window.t -> Brr.El.t -> args -> unit Fut.t) option
+  val setup_all : (Universe.Window.t -> unit Fut.t) option
 
   type js_args
 

@@ -19,8 +19,8 @@ let find_first_by_selector ?root x =
 module type S = sig
   include Actions_arguments.S
 
-  val setup : (El.t -> args -> unit Fut.t) option
-  val setup_all : (unit -> unit Fut.t) option
+  val setup : (Universe.Window.t -> El.t -> args -> unit Fut.t) option
+  val setup_all : (Universe.Window.t -> unit Fut.t) option
 
   type js_args
 
@@ -131,7 +131,7 @@ module Pause = struct
     let* (), _ = set_class "pauseTarget" true elem in
     update elem (( + ) 1) |> Undoable.discard
 
-  let setup_all () =
+  let setup_all _window =
     (* TODO: check if this is really needed *)
     let open Fut.Syntax in
     El.fold_find_by_selector
@@ -140,7 +140,7 @@ module Pause = struct
         setup elem)
       (Jstr.v "pause-target") (Fut.return ())
 
-  let setup elem args =
+  let setup _window elem args =
     let elems = elems_of_ids_or_self args elem in
     let open Fut.Syntax in
     List.fold_left
@@ -486,7 +486,7 @@ module Speaker_note = struct
 
   let sn = ref ""
 
-  let setup elem arg =
+  let setup _window elem arg =
     let< elem = elem_of_id_or_self arg elem ~none:(Fut.return ()) in
     Fut.return @@ El.set_class (Jstr.v "__slipshow__speaker_note") true elem
 
@@ -739,7 +739,7 @@ module Draw = struct
 
   let state = Hashtbl.create 10
 
-  let setup elem =
+  let setup _window elem =
     match Hashtbl.find_opt state elem with
     | Some _ -> Fut.return ()
     | None ->
@@ -767,8 +767,10 @@ module Draw = struct
                       name;
                       record_id = Random.bits ();
                       file_path = path;
+                      element_anchor = elem;
                     }
-              | data -> Drawing_state.Json.string_to_recording path name data
+              | data ->
+                  Drawing_state.Json.string_to_recording path elem name data
             in
             match recording with
             | Error e -> Console.(log [ e ])
@@ -776,23 +778,67 @@ module Draw = struct
                 let replaying_state =
                   { recording; time = Lwd.var 0.; is_playing = Lwd.var false }
                 in
+                let act ~time strokes =
+                  let content =
+                    Drawing_controller.Preview.draw ~elapsed_time:time strokes
+                  in
+                  Brr_lwd.Elwd.v ~ns:`SVG (Jstr.v "g") [ `S content ]
+                in
+                let reactive =
+                  let open Lwd_infix in
+                  let$* status = Status.get in
+                  let one_or_two =
+                    match status with
+                    | Drawing
+                        (Recording
+                           { replaying_state; recording_temp; replayed_part; _ })
+                      when replaying_state.recording.record_id
+                           = recording.record_id ->
+                        Lwd_seq.of_list
+                        @@ [
+                             act ~time:None recording_temp;
+                             act ~time:None replayed_part;
+                           ]
+                    | _ ->
+                        Lwd_seq.element
+                        @@ act
+                             ~time:(Some (Lwd.get replaying_state.time))
+                             recording.strokes
+                  in
+                  Lwd_seq.lift (Lwd.pure one_or_two)
+                in
+                let el = Brr_lwd.Elwd.v ~ns:`SVG (Jstr.v "g") [ `S reactive ] in
+                let svg =
+                  Brr_lwd.Elwd.v ~ns:`SVG (Jstr.v "svg")
+                    ~st:
+                      [
+                        `P (!!"overflow", !!"visible");
+                        `P (!!"display", !!"inline-block");
+                        `P (!!"width", !!"0");
+                        `P (!!"height", !!"0");
+                      ]
+                    [ `R el ]
+                in
+                let _stop_live_update_id =
+                  Brr_lwd.Elwd.insert_sibling `After elem svg
+                in
                 Hashtbl.add state elem replaying_state;
                 Lwd_table.append' workspaces.recordings replaying_state;
                 Lwd.set current_replaying_state (Some replaying_state)));
         Fut.return ()
 
-  let setup_all () =
+  let setup_all window =
     El.fold_find_by_selector
-      (fun elem acc -> Fut.bind acc (fun () -> setup elem))
+      (fun elem acc -> Fut.bind acc (fun () -> setup window elem))
       (Jstr.v ".slipshow-hand-drawn")
       (Fut.return ())
 
   let setup_all = Some setup_all
 
-  let setup el args =
+  let setup window el args =
     let elems = elems_of_ids_or_self args el in
     List.fold_left
-      (fun acc elem -> Fut.bind acc (fun () -> setup elem))
+      (fun acc elem -> Fut.bind acc (fun () -> setup window elem))
       (Fut.return ()) elems
 
   let setup = Some setup

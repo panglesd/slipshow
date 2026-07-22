@@ -41,9 +41,30 @@ module Draw_stroke = struct
   let starts_at l = List.hd (List.rev l) |> snd
   let end_at l = List.hd l |> snd
 
-  let start ~replaying_state:_ strokes
+  let start window element_anchor strokes
       { started_time; stroker; color; width; id } x y =
-    let path = [ ((x, y), now () -. started_time) ] in
+    let anchor_coord =
+      element_anchor |> Option.map (Universe.Coord_computation.elem window)
+    in
+    let anchor_scale =
+      element_anchor
+      |> Option.map (Universe.Window.scale_in_universe window)
+      |> Option.value ~default:1.
+    in
+    Brr.Console.(log [ "Anchor scale is "; anchor_scale ]);
+    let anchor_x, anchor_y =
+      match anchor_coord with
+      | None -> (0., 0.)
+      | Some anchor_coord ->
+          ( anchor_coord.x -. (anchor_coord.width /. 2.) -. 2000.,
+            anchor_coord.y -. (anchor_coord.height /. 2.) -. 2000. )
+    in
+    let path =
+      [
+        ( ((x -. anchor_x) /. anchor_scale, (y -. anchor_y) /. anchor_scale),
+          now () -. started_time );
+      ]
+    in
     let el =
       let path = Lwd.var path in
       let { Universe.Coordinates.scale; _ } = Universe.State.get_coord () in
@@ -65,17 +86,21 @@ module Draw_stroke = struct
       }
     in
     Lwd_table.append' strokes el;
-    (started_time, el)
+    (started_time, el, (anchor_x, anchor_y, anchor_scale))
 
-  let drag ~x ~y ~dx ~dy ((started_time, el) as acc) =
+  let drag ~x ~y ~dx ~dy ((started_time, el, (a_x, a_y, a_s)) as acc) =
     let path = Lwd.peek el.path in
-    let path = ((x +. dx, y +. dy), now () -. started_time) :: path in
+    let path =
+      ( ((x +. dx -. a_x) /. a_s, (y +. dy -. a_y) /. a_s),
+        now () -. started_time )
+      :: path
+    in
     Lwd.set el.path path;
     acc
 
   let end_ _ = ()
 
-  let event ~started_time strokes stroker color width =
+  let event window ~started_time ?element_anchor strokes stroker color width =
     let start x y _ev =
       let id =
         "id" ^ (Random.int 429496729 |> string_of_int)
@@ -83,7 +108,7 @@ module Draw_stroke = struct
       in
       let arg = { started_time; stroker; color; width; id } in
       Messages.send @@ Draw (Start (arg, x, y));
-      start ~replaying_state:None strokes arg x y
+      start window element_anchor strokes arg x y
     in
     let drag ~x ~y ~dx ~dy acc _ev =
       Messages.send @@ Draw (Drag { x; y; dx; dy });

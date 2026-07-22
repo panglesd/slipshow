@@ -11,10 +11,13 @@
 }
 
 .slipshow-rescaler {
-  overflow-x: hidden;
-  overflow-y: hidden;
-  /* Whether or not to hide what's outside of rescalers is not clear. I decided to
-   hide to avoid having the shadow of the title leak outside. */
+  /* overflow-x: hidden; */
+  /* overflow-y: hidden; */
+  /* /\* Whether or not to hide what's outside of rescalers is not clear. I decided to */
+  /*  hide to avoid having the shadow of the title leak outside. *\/ */
+  /* Hiding it to fix a shadow is very bad! I decided to not hide it to be able to
+     include drawings where they are included. */
+  overflow: visible;
   width: unset;
   height: unset;
   min-width: 0;

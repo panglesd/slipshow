@@ -170,7 +170,15 @@ module V1 = struct
     | _ -> Error ()
 
   let of_recording
-      { strokes; total_time; record_id; name; pauses; file_path = _ } =
+      {
+        strokes;
+        total_time;
+        record_id;
+        name;
+        pauses;
+        file_path = _;
+        element_anchor = _;
+      } =
     (* We don't include the file path! *)
     `List
       [
@@ -181,7 +189,7 @@ module V1 = struct
         of_pauses pauses;
       ]
 
-  let to_recording file_path name : Yojson.Safe.t -> _ = function
+  let to_recording file_path element_anchor name : Yojson.Safe.t -> _ = function
     | `List
         [ strokes; `Float total_time; `Int record_id; `String _name; pauses ] ->
         let ( let* ) x y = Result.bind x y in
@@ -195,6 +203,7 @@ module V1 = struct
             name;
             pauses;
             file_path;
+            element_anchor;
           }
     | _ -> Error ()
 
@@ -202,14 +211,14 @@ module V1 = struct
     let json = of_recording x in
     Yojson.Safe.to_string json
 
-  let string_to_recording file_path name x =
+  let string_to_recording file_path element_anchor name x =
     try
       let json = Yojson.Safe.from_string x in
-      to_recording file_path name json
+      to_recording file_path element_anchor name json
     with Yojson.Json_error _ -> Error ()
 end
 
-let string_to_recording file_path name s =
+let string_to_recording file_path element_anchor name s =
   let ( let* ) = Result.bind in
 
   let sep s =
@@ -225,7 +234,7 @@ let string_to_recording file_path name s =
   match version with
   | "v1" ->
       let* _comment, content = sep content in
-      V1.string_to_recording file_path name content
+      V1.string_to_recording file_path element_anchor name content
       |> Result.map_error (fun () -> "Problem!")
   | v ->
       Error
