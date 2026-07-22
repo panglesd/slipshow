@@ -814,13 +814,13 @@ module Draw = struct
                       [
                         `P (!!"overflow", !!"visible");
                         `P (!!"display", !!"inline-block");
-                        `P (!!"width", !!"0");
-                        `P (!!"height", !!"0");
+                        `P (!!"width", !!"10px");
+                        `P (!!"height", !!"10px");
                       ]
                     [ `R el ]
                 in
                 let _stop_live_update_id =
-                  Brr_lwd.Elwd.insert_sibling `After elem svg
+                  Brr_lwd.Elwd.set_children elem [ `R svg ]
                 in
                 Hashtbl.add state elem replaying_state;
                 Lwd_table.append' workspaces.recordings replaying_state;
