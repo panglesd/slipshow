@@ -13,7 +13,7 @@ Here is the list of shortcuts you can use during a presentation:
 
 In addition, the drawing shortcuts are more discoverable:
 
-- :kbd:`p` to select the "Pen" tool,
+- :kbd:`p`, :kbd:`w` to select the "Pen" tool,
 - :kbd:`h` to select the "Highlighter" tool,
 - :kbd:`e` to select the "Eraser" tool,
 - :kbd:`x` to select the "Cursor" tool,
