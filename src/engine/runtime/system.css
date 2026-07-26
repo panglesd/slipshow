@@ -100,3 +100,7 @@ body.slipshow-editing-mode{
   width: 100%;
   height: auto;
 }
+
+.slipshow-hand-drawn {
+  position: absolute;
+}
