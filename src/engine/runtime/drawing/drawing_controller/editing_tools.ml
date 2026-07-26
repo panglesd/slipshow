@@ -166,9 +166,11 @@ module Selection = struct
   module Preview = struct
     let preview_selection_var = Lwd.var None
 
-    let select (x, y, dx, dy) recording time =
+    let select translation (x, y, dx, dy) recording time =
       let x', y' = Tools.window_coord_in_universe (x +. dx) (y +. dy) in
       let x, y = Tools.window_coord_in_universe x y in
+      let x', y' = Tools.Translation.forward translation x' y' in
+      let x, y = Tools.Translation.forward translation x y in
       Lwd_table.iter
         (fun { preselected; path; erased; _ } ->
           let is_selected =
@@ -191,21 +193,24 @@ module Selection = struct
           Lwd.set preselected is_selected)
         recording.strokes
 
-    let event replaying_state =
+    let event window replaying_state =
       let recording = replaying_state.recording in
-      let start x y _ev =
+      let element_anchor = Some replaying_state.recording.element_anchor in
+      let start window x y _ev =
+        let translation = Tools.Translation.get window element_anchor in
         let position_var = (Lwd.var x, Lwd.var y, Lwd.var 0., Lwd.var 0.) in
         Lwd.set preview_selection_var (Some position_var);
-        position_var
+        (position_var, translation)
       in
-      let drag ~x ~y ~dx ~dy ((vx, vy, vdx, vdy) as acc) _ev =
+      let drag ~x ~y ~dx ~dy (((vx, vy, vdx, vdy), translation) as acc) _ev =
         let x, dx = if dx < 0. then (x +. dx, -.dx) else (x, dx) in
         let y, dy = if dy < 0. then (y +. dy, -.dy) else (y, dy) in
         Lwd.set vx x;
         Lwd.set vy y;
         Lwd.set vdx dx;
         Lwd.set vdy dy;
-        select (x, y, dx, dy) recording (Lwd.peek replaying_state.time);
+        select translation (x, y, dx, dy) recording
+          (Lwd.peek replaying_state.time);
         acc
       in
       let end_ _ ev =
@@ -218,7 +223,7 @@ module Selection = struct
         promote mode recording;
         Lwd.set preview_selection_var None
       in
-      Ui_widgets.mouse_drag start drag end_
+      Ui_widgets.mouse_drag (start window) drag end_
 
     let box =
       let$ box_selection = Lwd.get preview_selection_var in

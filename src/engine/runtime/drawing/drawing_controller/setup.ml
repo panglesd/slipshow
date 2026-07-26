@@ -121,7 +121,7 @@ module Ui = struct
     ()
 end
 
-let connect () =
+let connect window =
   let open Lwd_infix in
   let panel =
     let handler =
@@ -139,7 +139,8 @@ let connect () =
                   @@ Editing_tools.Move.Preview.event replaying_state
               | Select ->
                   Lwd_seq.element
-                  @@ Editing_tools.Selection.Preview.event replaying_state
+                  @@ Editing_tools.Selection.Preview.event window
+                       replaying_state
               | Rescale ->
                   Lwd_seq.element
                   @@ Editing_tools.Scale.Preview.event replaying_state))
@@ -182,7 +183,7 @@ let connect () =
 
 let init_ui window =
   Preview.init_drawing_area ();
-  connect ();
+  connect window;
   Preview.for_events window;
   Rec_in_progress.init ();
   init_ui ();
