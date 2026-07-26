@@ -37,33 +37,46 @@ let mouse_drag_in_universe start drag end_ =
   in
   Ui_widgets.mouse_drag start drag end_
 
-module Draw_stroke = struct
-  let starts_at l = List.hd (List.rev l) |> snd
-  let end_at l = List.hd l |> snd
+module Translation = struct
+  type t = { x : float; y : float; scale : float }
 
-  let start window element_anchor strokes
-      { started_time; stroker; color; width; id } x y =
+  let get : _ -> Brr.El.t option -> t =
+   fun window anchor ->
     let anchor_coord =
-      element_anchor |> Option.map (Universe.Coord_computation.elem window)
+      anchor |> Option.map (Universe.Coord_computation.elem window)
     in
-    let anchor_scale =
-      element_anchor
+    let scale =
+      anchor
       |> Option.map (Universe.Window.scale_in_universe window)
       |> Option.value ~default:1.
     in
-    Brr.Console.(log [ "Anchor scale is "; anchor_scale ]);
-    let anchor_x, anchor_y =
+    let x, y =
       match anchor_coord with
       | None -> (0., 0.)
       | Some anchor_coord ->
           ( anchor_coord.x -. (anchor_coord.width /. 2.) -. 2000.,
             anchor_coord.y -. (anchor_coord.height /. 2.) -. 2000. )
     in
+    { x; y; scale }
+
+  let forward translation x y =
+    ( (x -. translation.x) /. translation.scale,
+      (y -. translation.y) /. translation.scale )
+
+  let backward x y translation =
+    ( (x *. translation.scale) +. translation.x,
+      (y *. translation.scale) +. translation.y )
+end
+
+module Draw_stroke = struct
+  let starts_at l = List.hd (List.rev l) |> snd
+  let end_at l = List.hd l |> snd
+
+  let start window element_anchor strokes
+      { started_time; stroker; color; width; id } x y =
+    let translation = Translation.get window element_anchor in
     let path =
-      [
-        ( ((x -. anchor_x) /. anchor_scale, (y -. anchor_y) /. anchor_scale),
-          now () -. started_time );
-      ]
+      [ (Translation.forward translation x y, now () -. started_time) ]
     in
     let el =
       let path = Lwd.var path in
@@ -86,12 +99,12 @@ module Draw_stroke = struct
       }
     in
     Lwd_table.append' strokes el;
-    (started_time, el, (anchor_x, anchor_y, anchor_scale))
+    (started_time, el, translation)
 
-  let drag ~x ~y ~dx ~dy ((started_time, el, (a_x, a_y, a_s)) as acc) =
+  let drag ~x ~y ~dx ~dy ((started_time, el, translation) as acc) =
     let path = Lwd.peek el.path in
     let path =
-      ( ((x +. dx -. a_x) /. a_s, (y +. dy -. a_y) /. a_s),
+      ( Translation.forward translation (x +. dx) (y +. dy),
         now () -. started_time )
       :: path
     in

@@ -9,8 +9,7 @@ let pfo_options width =
   Perfect_freehand.Options.v ~thinning:0.5 ~smoothing:0.5 ~size ~streamline:0.5
     ~last:true ()
 
-let make_d ~elapsed_time (* ~(offset : Universe.Coordinates.element) *) path
-    path_to_svg =
+let make_d ~elapsed_time path path_to_svg =
   (* TODO: DO NOT DELETE THIS COMMENT! *)
   (* let$* end_at = end_at in *)
   (* let$* should_continue = *)

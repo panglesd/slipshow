@@ -816,6 +816,9 @@ module Draw = struct
                         `P (!!"display", !!"inline-block");
                         `P (!!"width", !!"10px");
                         `P (!!"height", !!"10px");
+                        `P (!!"position", !!"relative");
+                        (* TODO: find out why 18px *)
+                        `P (!!"top", !!"-18px");
                       ]
                     [ `R el ]
                 in
