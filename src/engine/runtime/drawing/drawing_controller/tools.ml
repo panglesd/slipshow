@@ -136,11 +136,18 @@ module Draw_stroke = struct
 end
 
 module Erase = struct
-  let start ~replayed_strokes strokes { started_time } x y =
-    (started_time, strokes, replayed_strokes, (x, y))
+  let start window element_anchor ~replayed_strokes strokes { started_time } x y
+      =
+    let translation = Translation.get window element_anchor in
+    ( started_time,
+      strokes,
+      replayed_strokes,
+      Translation.forward translation x y,
+      translation )
 
-  let drag ~x ~y ~dx ~dy (started_time, strokes, replayed_strokes, c0) =
-    let c1 = (x +. dx, y +. dy) in
+  let drag ~x ~y ~dx ~dy
+      (started_time, strokes, replayed_strokes, c0, translation) =
+    let c1 = Translation.forward translation (x +. dx) (y +. dy) in
     let try_erase stro time =
       let time = Option.value ~default:Float.infinity time in
       match Lwd.peek stro.erased with
@@ -179,14 +186,14 @@ module Erase = struct
       |> Option.iter
          @@ Lwd_table.iter (fun (stro : stro) -> try_erase stro None)
     in
-    (started_time, strokes, replayed_strokes, c1)
+    (started_time, strokes, replayed_strokes, c1, translation)
 
   let end_ _ = ()
 
-  let event ~started_time ~replayed_strokes strokes =
+  let event window ?element_anchor ~started_time ~replayed_strokes strokes =
     let start x y _ev =
       Messages.send @@ Erase (Start ({ started_time }, x, y));
-      start ~replayed_strokes strokes { started_time } x y
+      start window element_anchor ~replayed_strokes strokes { started_time } x y
     in
     let drag ~x ~y ~dx ~dy acc _ev =
       Messages.send @@ Erase (Drag { x; y; dx; dy });

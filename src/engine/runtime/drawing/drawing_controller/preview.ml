@@ -283,22 +283,25 @@ let for_events =
                  strokes stroker color width
         | Pointer -> Lwd_seq.empty
         | Eraser ->
-            let strokes, started_time, replayed_part =
+            let strokes, started_time, replayed_part, element_anchor =
               match d with
               | Recording
                   {
-                    replaying_state = _;
+                    replaying_state;
                     recording_temp;
                     started_at;
                     unplayed_erasure = _;
                     replayed_part;
                   } ->
-                  (recording_temp, started_at, Some replayed_part)
-              | Presenting -> (workspaces.live_drawing, Tools.now (), None)
+                  ( recording_temp,
+                    started_at,
+                    Some replayed_part,
+                    Some replaying_state.recording.element_anchor )
+              | Presenting -> (workspaces.live_drawing, Tools.now (), None, None)
             in
             Lwd_seq.element
-            @@ Tools.Erase.event ~started_time ~replayed_strokes:replayed_part
-                 strokes
+            @@ Tools.Erase.event window ?element_anchor ~started_time
+                 ~replayed_strokes:replayed_part strokes
       in
       match status with
       | Drawing d -> draw_mode d
