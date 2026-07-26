@@ -136,7 +136,7 @@ let connect window =
               match current_tool with
               | Move ->
                   Lwd_seq.element
-                  @@ Editing_tools.Move.Preview.event replaying_state
+                  @@ Editing_tools.Move.Preview.event window replaying_state
               | Select ->
                   Lwd_seq.element
                   @@ Editing_tools.Selection.Preview.event window
