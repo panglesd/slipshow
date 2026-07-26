@@ -20,7 +20,7 @@ type erased = {
 
 type stro = {
   id : string;
-  scale : float;
+  scale : float Lwd.var;
   path :
     ((float * float) * float) list Lwd.var (* TODO: (position * time) list *);
   end_at : float Lwd.t;

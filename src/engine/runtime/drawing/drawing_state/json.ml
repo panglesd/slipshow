@@ -68,7 +68,7 @@ module V1 = struct
     `List
       [
         `String id;
-        `Float scale;
+        `Float (Lwd.peek scale);
         of_path (Lwd.peek path);
         `String (Lwd.peek color);
         of_stroker stroker;
@@ -101,7 +101,7 @@ module V1 = struct
         Ok
           {
             id;
-            scale;
+            scale = Lwd.var scale;
             path;
             end_at;
             starts_at;
