@@ -81,6 +81,7 @@ module Draw_stroke = struct
     let el =
       let path = Lwd.var path in
       let { Universe.Coordinates.scale; _ } = Universe.State.get_coord () in
+      let scale = scale *. translation.scale in
       let end_at = Lwd.map (Lwd.get path) ~f:end_at in
       let starts_at = Lwd.map (Lwd.get path) ~f:starts_at in
       {
