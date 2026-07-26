@@ -182,6 +182,7 @@ module V1 = struct
     (* We don't include the file path! *)
     `List
       [
+        `String "anchored";
         of_strokes strokes;
         `Float (Lwd.peek total_time);
         `Int record_id;
@@ -203,7 +204,29 @@ module V1 = struct
             name;
             pauses;
             file_path;
-            element_anchor;
+            element_anchor = (element_anchor, Lwd.var `Unanchored);
+          }
+    | `List
+        [
+          `String "anchored";
+          strokes;
+          `Float total_time;
+          `Int record_id;
+          `String _name;
+          pauses;
+        ] ->
+        let ( let* ) x y = Result.bind x y in
+        let* strokes = to_strokes strokes in
+        let* pauses = to_pauses pauses in
+        Ok
+          {
+            strokes;
+            total_time = Lwd.var total_time;
+            record_id;
+            name;
+            pauses;
+            file_path;
+            element_anchor = (element_anchor, Lwd.var `Anchored);
           }
     | _ -> Error ()
 

@@ -322,7 +322,7 @@ let close_button =
   in
   Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Close editing panel") ]
 
-let el =
+let el window =
   let$* replaying_state = Lwd.get current_replaying_state in
   match replaying_state with
   | None ->
@@ -371,7 +371,10 @@ let el =
             (false, fun _ _ -> true)
             recording.strokes
         in
-        if is_non_empty then
+        let$* is_anchored =
+          Lwd.get (snd replaying_state.recording.element_anchor)
+        in
+        if is_non_empty && is_anchored = `Anchored then
           Elwd.div
             ~st:[ `P (!!"flex-grow", !!"1") ]
             [
@@ -389,7 +392,7 @@ let el =
               (* `R (left_selection recording); *)
               (* `R (right_selection recording); *)
             ]
-        else
+        else if not is_non_empty then
           Elwd.div
             ~st:[ `P (Brr.El.Style.height, !!"300px") ]
             [
@@ -401,6 +404,32 @@ let el =
               `P (Brr.El.txt' " (or select another recording to edit). Or ");
               `R close_button;
             ]
+        else
+          let handler =
+            Elwd.handler Brr.Ev.click @@ fun _ ->
+            Brr.Console.(log [ "upgrading something" ]);
+            Tools.Translation.anchorify_recording window
+              (Some (fst recording.element_anchor))
+              recording
+          in
+          Elwd.div
+            ~st:[ `P (Brr.El.Style.height, !!"300px") ]
+            [
+              `P
+                (Brr.El.txt'
+                   "This recording was made with an old version of slipshow.");
+              `R
+                (Elwd.input
+                   ~ev:[ `P handler ]
+                   ~at:
+                     [
+                       `P (Brr.At.class' !!"slipshow-key-panel");
+                       `P (Brr.At.type' (Jstr.v "button"));
+                       `P (Brr.At.value (Jstr.v "Upgrade"));
+                     ]
+                   ());
+              `R close_button;
+            ]
       in
       Elwd.div
         ~st:
@@ -410,7 +439,7 @@ let el =
           ]
         [ `R description; `R time_panel ]
 
-let el =
+let el window =
   let display =
     let$ status = Status.get in
     match status with
@@ -419,7 +448,7 @@ let el =
   in
   let el =
     let$* status = Status.get in
-    match status with Editing -> el | _ -> Lwd.pure (Brr.El.div [])
+    match status with Editing -> el window | _ -> Lwd.pure (Brr.El.div [])
   in
   let st = [ `P (Brr.El.Style.height, !!"300px") ] in
   Elwd.div

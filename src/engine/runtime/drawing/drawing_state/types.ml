@@ -51,7 +51,7 @@ type recording = {
   name : string;
   record_id : int;
   file_path : string;
-  element_anchor : Brr.El.t;
+  element_anchor : Brr.El.t * [ `Anchored | `Unanchored ] Lwd.var;
 }
 
 type replaying_state = {

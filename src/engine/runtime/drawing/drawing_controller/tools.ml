@@ -66,6 +66,22 @@ module Translation = struct
   let backward x y translation =
     ( (x *. translation.scale) +. translation.x,
       (y *. translation.scale) +. translation.y )
+
+  let anchorify_stroke window anchor (stroke : stro) =
+    let translation = get window anchor in
+    let old_path = Lwd.peek stroke.path in
+    let new_path =
+      List.map (fun ((x, y), t) -> (forward translation x y, t)) old_path
+    in
+    Lwd.set stroke.path new_path
+
+  let anchorify_recording window anchor (recording : recording) =
+    let _, anchored = recording.element_anchor in
+    match Lwd.peek anchored with
+    | `Anchored -> Brr.Console.(log [ "Already anchored" ])
+    | `Unanchored ->
+        Lwd_table.iter (anchorify_stroke window anchor) recording.strokes;
+        Lwd.set anchored `Anchored
 end
 
 module Draw_stroke = struct
