@@ -410,24 +410,31 @@ module Move = struct
   end
 
   module Preview = struct
-    let event replaying_state =
+    let event window replaying_state =
       let recording = replaying_state.recording in
+      let element_anchor = Some recording.element_anchor in
       let start _x _y _ev =
-        Lwd_table.fold
-          (fun acc s ->
-            if Lwd.peek s.selected then
-              (Lwd.peek s.path, s.path, s.scale) :: acc
-            else acc)
-          [] recording.strokes
+        let translation = Tools.Translation.get window element_anchor in
+        let paths =
+          Lwd_table.fold
+            (fun acc s ->
+              if Lwd.peek s.selected then (Lwd.peek s.path, s.path) :: acc
+              else acc)
+            [] recording.strokes
+        in
+        (translation, paths)
       in
-      let drag ~x:_ ~y:_ ~dx ~dy paths _ev =
+      let drag ~x ~y ~dx ~dy ((translation, paths) as acc) _ev =
+        let x', y' = Tools.window_coord_in_universe (x +. dx) (y +. dy) in
+        let x, y = Tools.window_coord_in_universe x y in
+        let x', y' = Tools.Translation.forward translation x' y' in
+        let x, y = Tools.Translation.forward translation x y in
+        let dx, dy = (x' -. x, y' -. y) in
         List.iter
-          (fun (p, v, scale) ->
-            Lwd.set v
-              (Drawing_state.Path_editing.translate_space p (dx /. scale)
-                 (dy /. scale)))
+          (fun (p, v) ->
+            Lwd.set v (Drawing_state.Path_editing.translate_space p dx dy))
           paths;
-        paths
+        acc
       in
       let end_ _ _ev = () in
       Ui_widgets.mouse_drag start drag end_
