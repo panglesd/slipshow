@@ -192,6 +192,7 @@ let create_elem_of_stroke ~elapsed_time
       track = _;
       erased;
     } =
+  let$* scale = Lwd.get scale in
   match stroker with
   | Highlighter ->
       highlight_attributes ~scale ~color ~id ~width ~path ~selected ~preselected

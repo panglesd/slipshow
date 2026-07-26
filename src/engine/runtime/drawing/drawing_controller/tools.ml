@@ -73,7 +73,8 @@ module Translation = struct
     let new_path =
       List.map (fun ((x, y), t) -> (forward translation x y, t)) old_path
     in
-    Lwd.set stroke.path new_path
+    Lwd.set stroke.path new_path;
+    Lwd.set stroke.scale (Lwd.peek stroke.scale *. translation.scale)
 
   let anchorify_recording window anchor (recording : recording) =
     let _, anchored = recording.element_anchor in
@@ -102,7 +103,7 @@ module Draw_stroke = struct
       let starts_at = Lwd.map (Lwd.get path) ~f:starts_at in
       {
         id;
-        scale;
+        scale = Lwd.var scale;
         path;
         end_at;
         starts_at;
