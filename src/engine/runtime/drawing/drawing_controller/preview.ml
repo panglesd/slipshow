@@ -221,30 +221,66 @@ let draw ~elapsed_time strokes =
           | _ -> String.compare id1 id2))
   |> Lwd_seq.map (fun (_, _, e, _) -> e)
 
+let live_svg replaying_state =
+  let recording = replaying_state.recording in
+  let act ~time strokes =
+    let content = draw ~elapsed_time:time strokes in
+    Brr_lwd.Elwd.v ~ns:`SVG (Jstr.v "g") [ `S content ]
+  in
+  let reactive =
+    let open Lwd_infix in
+    let$* status = Status.get in
+    let one_or_two =
+      match status with
+      | Drawing
+          (Recording { replaying_state; recording_temp; replayed_part; _ })
+        when replaying_state.recording.record_id = recording.record_id ->
+          Lwd_seq.of_list
+          @@ [ act ~time:None recording_temp; act ~time:None replayed_part ]
+      | _ ->
+          Lwd_seq.element
+          @@ act ~time:(Some (Lwd.get replaying_state.time)) recording.strokes
+    in
+    Lwd_seq.lift (Lwd.pure one_or_two)
+  in
+  let el = Brr_lwd.Elwd.v ~ns:`SVG (Jstr.v "g") [ `S reactive ] in
+  Brr_lwd.Elwd.v ~ns:`SVG (Jstr.v "svg")
+    ~st:
+      [
+        `P (!!"overflow", !!"visible");
+        `P (!!"display", !!"inline-block");
+        `P (!!"width", !!"10px");
+        `P (!!"height", !!"10px");
+        `P (!!"position", !!"relative");
+        (* TODO: find out why 18px *)
+        `P (!!"top", !!"-18px");
+      ]
+    [ `R el ]
+
 let drawing_area =
   let act ~time strokes =
     let content = draw ~elapsed_time:time strokes in
     Elwd.v ~ns:`SVG (Jstr.v "g") [ `S content ]
   in
-  let all_drawings =
-    let$* status = Status.get in
-    Lwd_table.map_reduce
-      (fun _row { recording; time; is_playing = _ } ->
-        match status with
-        | Drawing
-            (Recording { replaying_state; recording_temp; replayed_part; _ })
-          when replaying_state.recording.record_id = recording.record_id ->
-            Lwd_seq.of_list
-            @@ [ act ~time:None recording_temp; act ~time:None replayed_part ]
-        | _ ->
-            Lwd_seq.element @@ act ~time:(Some (Lwd.get time)) recording.strokes)
-      Lwd_seq.monoid workspaces.recordings
-    |> Lwd_seq.lift
-  in
+  (* let all_drawings = *)
+  (*   let$* status = Status.get in *)
+  (*   Lwd_table.map_reduce *)
+  (*     (fun _row { recording; time; is_playing = _ } -> *)
+  (*       match status with *)
+  (*       | Drawing *)
+  (*           (Recording { replaying_state; recording_temp; replayed_part; _ }) *)
+  (*         when replaying_state.recording.record_id = recording.record_id -> *)
+  (*           Lwd_seq.of_list *)
+  (*           @@ [ act ~time:None recording_temp; act ~time:None replayed_part ] *)
+  (*       | _ -> *)
+  (*           Lwd_seq.element @@ act ~time:(Some (Lwd.get time)) recording.strokes) *)
+  (*     Lwd_seq.monoid workspaces.recordings *)
+  (*   |> Lwd_seq.lift *)
+  (* in *)
   let drawn_live_drawing =
     act ~time:None Drawing_state.workspaces.live_drawing
   in
-  Elwd.v ~ns:`SVG (Jstr.v "g") [ `S all_drawings; `R drawn_live_drawing ]
+  Elwd.v ~ns:`SVG (Jstr.v "g") [ (* `S all_drawings;  *) `R drawn_live_drawing ]
 
 let init_drawing_area () =
   let content =
@@ -276,7 +312,7 @@ let for_events =
               | Recording { started_at; replaying_state; recording_temp; _ } ->
                   ( recording_temp,
                     started_at,
-                    Some replaying_state.recording.element_anchor )
+                    Some (fst replaying_state.recording.element_anchor) )
             in
             Lwd_seq.element
             @@ Tools.Draw_stroke.event window ~started_time ?element_anchor
@@ -296,7 +332,7 @@ let for_events =
                   ( recording_temp,
                     started_at,
                     Some replayed_part,
-                    Some replaying_state.recording.element_anchor )
+                    Some (fst replaying_state.recording.element_anchor) )
               | Presenting -> (workspaces.live_drawing, Tools.now (), None, None)
             in
             Lwd_seq.element

@@ -767,7 +767,7 @@ module Draw = struct
                       name;
                       record_id = Random.bits ();
                       file_path = path;
-                      element_anchor = elem;
+                      element_anchor = (elem, Lwd.var `Anchored);
                     }
               | data ->
                   Drawing_state.Json.string_to_recording path elem name data
@@ -778,50 +778,7 @@ module Draw = struct
                 let replaying_state =
                   { recording; time = Lwd.var 0.; is_playing = Lwd.var false }
                 in
-                let act ~time strokes =
-                  let content =
-                    Drawing_controller.Preview.draw ~elapsed_time:time strokes
-                  in
-                  Brr_lwd.Elwd.v ~ns:`SVG (Jstr.v "g") [ `S content ]
-                in
-                let reactive =
-                  let open Lwd_infix in
-                  let$* status = Status.get in
-                  let one_or_two =
-                    match status with
-                    | Drawing
-                        (Recording
-                           { replaying_state; recording_temp; replayed_part; _ })
-                      when replaying_state.recording.record_id
-                           = recording.record_id ->
-                        Lwd_seq.of_list
-                        @@ [
-                             act ~time:None recording_temp;
-                             act ~time:None replayed_part;
-                           ]
-                    | _ ->
-                        Lwd_seq.element
-                        @@ act
-                             ~time:(Some (Lwd.get replaying_state.time))
-                             recording.strokes
-                  in
-                  Lwd_seq.lift (Lwd.pure one_or_two)
-                in
-                let el = Brr_lwd.Elwd.v ~ns:`SVG (Jstr.v "g") [ `S reactive ] in
-                let svg =
-                  Brr_lwd.Elwd.v ~ns:`SVG (Jstr.v "svg")
-                    ~st:
-                      [
-                        `P (!!"overflow", !!"visible");
-                        `P (!!"display", !!"inline-block");
-                        `P (!!"width", !!"10px");
-                        `P (!!"height", !!"10px");
-                        `P (!!"position", !!"relative");
-                        (* TODO: find out why 18px *)
-                        `P (!!"top", !!"-18px");
-                      ]
-                    [ `R el ]
-                in
+                let svg = Drawing_controller.Preview.live_svg replaying_state in
                 let _stop_live_update_id =
                   Brr_lwd.Elwd.set_children elem [ `R svg ]
                 in

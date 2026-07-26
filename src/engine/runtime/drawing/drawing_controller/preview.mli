@@ -14,3 +14,5 @@ val draw :
   elapsed_time:float Lwd.t option ->
   stro Lwd_table.t ->
   Elwd.t Lwd_seq.t Lwd.t
+
+val live_svg : replaying_state -> Elwd.t Lwd.t

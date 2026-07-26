@@ -112,12 +112,12 @@ module Garbage = struct
 end
 
 module Ui = struct
-  let init () =
+  let init window =
     let content =
       Brr.El.find_first_by_selector (Jstr.v "#slipshow-vertical-flex")
       |> Option.get
     in
-    let _root = Elwd.append_child content Ui.el in
+    let _root = Elwd.append_child content (Ui.el window) in
     ()
 end
 
@@ -188,6 +188,6 @@ let init_ui window =
   Rec_in_progress.init ();
   init_ui ();
   Garbage.g ();
-  Ui.init ()
+  Ui.init window
 (* ; *)
 (* Time.el *)

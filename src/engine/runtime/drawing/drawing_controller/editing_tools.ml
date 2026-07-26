@@ -195,7 +195,9 @@ module Selection = struct
 
     let event window replaying_state =
       let recording = replaying_state.recording in
-      let element_anchor = Some replaying_state.recording.element_anchor in
+      let element_anchor =
+        Some (fst replaying_state.recording.element_anchor)
+      in
       let start window x y _ev =
         let translation = Tools.Translation.get window element_anchor in
         let position_var = (Lwd.var x, Lwd.var y, Lwd.var 0., Lwd.var 0.) in
@@ -412,7 +414,7 @@ module Move = struct
   module Preview = struct
     let event window replaying_state =
       let recording = replaying_state.recording in
-      let element_anchor = Some recording.element_anchor in
+      let element_anchor = Some (fst recording.element_anchor) in
       let start _x _y _ev =
         let translation = Tools.Translation.get window element_anchor in
         let paths =
