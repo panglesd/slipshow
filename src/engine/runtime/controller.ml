@@ -197,19 +197,19 @@ let draw_stroke_dragger window =
   let start = start window None in
   { start; drag; end_ }
 
-let erase_dragger =
+let erase_dragger window =
   let open Drawing_controller.Tools.Erase in
-  let start = start ~replayed_strokes:None in
+  let start = start window None ~replayed_strokes:None in
   { start; drag; end_ }
 
-let handle_erase = handle_drag erase_dragger
+let handle_erase window = handle_drag (erase_dragger window)
 let handle_draw_stroke window = handle_drag (draw_stroke_dragger window)
 
 let handle_drawing window d =
   let modu = Drawing_controller.Messages.event_of_string d in
   match modu with
   | Some (Draw s) -> handle_draw_stroke window s
-  | Some (Erase s) -> handle_erase s
+  | Some (Erase s) -> handle_erase window s
   | Some (Clear started_time) ->
       Drawing_controller.Tools.Clear.clear ~replayed_strokes:None started_time
         Drawing_state.workspaces.live_drawing
