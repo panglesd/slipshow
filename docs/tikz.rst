@@ -33,7 +33,7 @@ Integrating it into your Slipshow presentation is then a matter of including the
 Reveal a TikZ figure bit by bit
 ===============================
 
-:doc:`Just as for SVGs <figures-bit-by-bit.rst>`, if you want to use specific parts of your figure as targets for actions
+:doc:`Just as for SVGs <figures-bit-by-bit>`, if you want to use specific parts of your figure as targets for actions
 (for instance, to reveal parts of it, bit by bits), you'll need two things:
 
 - First, you'll need to be able to assign ids to parts of your image

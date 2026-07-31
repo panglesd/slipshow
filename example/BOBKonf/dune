@@ -1,0 +1,22 @@
+(rule
+ (deps
+  (glob_files *.md)
+  (glob_files *.draw)
+  (glob_files *.mp4)
+  (glob_files *.css)
+  (glob_files *.png)
+  (glob_files *.svg)
+  (glob_files *.pdf)
+  %{bin:slipshow})
+ (target pres.html)
+ (aliases examples)
+ (mode promote)
+ (action
+  (run %{bin:slipshow} compile pres.md)))
+
+(rule
+ (deps (universe))
+ (aliases examples)
+ (action
+  (progn
+   (bash "printf \"See Bobkonf at:\n   file://$PWD/bobkonf.html\""))))

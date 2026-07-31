@@ -9,6 +9,9 @@ cp ../example/campus-du-libre/cdl.html extra_html/campus-du-libre/cdl.html
 mkdir -p extra_html/edge-documentation
 cp ../example/edge-documentation/doc.html extra_html/edge-documentation/doc.html
 
+mkdir -p extra_html/BOBKonf
+cp ../example/BOBKonf/pres.html extra_html/BOBKonf/pres.html
+
 mkdir -p extra_html/undo-monad-short
 cp ../example/undo-monad-short/pres.html extra_html/undo-monad-short/pres.html
 
