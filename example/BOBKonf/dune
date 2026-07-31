@@ -19,4 +19,4 @@
  (aliases examples)
  (action
   (progn
-   (bash "printf \"See Bobkonf at:\n   file://$PWD/bobkonf.html\""))))
+   (bash "printf \"See Bobkonf at:\n   file://$PWD/pres.html\""))))
