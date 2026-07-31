@@ -10,7 +10,7 @@ To choose a theme, specify it in the :doc:`frontmatter <frontmatter>`. It can ta
 
 Here is an example of a frontmatter using the "vanier" predefined theme:
 
-.. code-block:: txt
+.. code-block:: text
 
    ---
    theme: vanier
@@ -30,7 +30,7 @@ To get the list of supported theme files, use the ``slipshow themes list`` comma
 
 Here is an example of a frontmatter specifying its theme by giving a path to a CSS file:
 
-.. code-block:: txt
+.. code-block:: text
 
    ---
    theme: themes/my-theme.css
@@ -38,7 +38,7 @@ Here is an example of a frontmatter specifying its theme by giving a path to a C
 
 And finally, here is an example of a frontmatter specifying its theme by giving a URL to a CSS file (Note that the compiled file will need an internet connection in order to display the presentation):
 
-.. code-block:: txt
+.. code-block:: text
 
    ---
    theme: https://example.org/my-theme.css
@@ -69,7 +69,7 @@ If you want to use a custom font, embed the font as a self-contained CSS file th
 
                 @font-face {
                   font-family: 'Dosis';
-                  src: url(data:font/truetype;charset=utf-8;base64,AAEAAA[…]WggBEAAA=) format('truetype-variations');
+                  src: url("data:font/truetype;charset=utf-8;base64,AAEAAA[…]WggBEAAA=") format('truetype-variations');
                   font-weight: 500;
                 }
 
