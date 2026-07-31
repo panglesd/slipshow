@@ -82,7 +82,7 @@ the editor (open the command palette and start typing ``Slipshow`` to see them
 listed).
 
 A setting is available to configure if you want to set up the preview to be
-updated on save, or on each file change.
+updated on save, or on each file change, available through the settings.
 
 Other editors
 =============
