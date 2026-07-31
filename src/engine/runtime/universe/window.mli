@@ -13,5 +13,4 @@ val move_pure :
 val bound_x : t -> float
 val bound_y : t -> float
 val live_scale : t -> float
-
 val scale_in_universe : t -> Brr.El.t -> float
