@@ -412,6 +412,7 @@ let el window =
                        `P (Brr.At.value (Jstr.v "Upgrade"));
                      ]
                    ());
+              `P (Brr.El.txt' " before you can do anything! ");
               `R close_button;
             ]
       in
