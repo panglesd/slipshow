@@ -297,22 +297,6 @@ let add_pause_button (replaying_state : replaying_state) =
   in
   Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Add pause") ]
 
-(* let select_button = *)
-(*   let click = *)
-(*     Elwd.handler Brr.Ev.click (fun _ -> Lwd.set editing_tool Select) *)
-(*   in *)
-(*   Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Select") ] *)
-
-(* let move_button = *)
-(*   let click = Elwd.handler Brr.Ev.click (fun _ -> Lwd.set editing_tool Move) in *)
-(*   Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Move") ] *)
-
-(* let scale_button = *)
-(*   let click = *)
-(*     Elwd.handler Brr.Ev.click (fun _ -> Lwd.set editing_tool Rescale) *)
-(*   in *)
-(*   Elwd.button ~ev:[ `P click ] [ `P (Brr.El.txt' "Resize") ] *)
-
 let close_button =
   let click =
     Elwd.handler Brr.Ev.click (fun ev ->
