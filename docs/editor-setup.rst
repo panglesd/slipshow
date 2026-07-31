@@ -70,7 +70,7 @@ VSCode
 ======
 
 Slipshow currently has an official VSCode plugin, available in several plugin
-stores: the "Visual Studio Code Marketplace", and "Open VSX Registry".
+stores: in the `"Visual Studio Code Marketplace" <https://marketplace.visualstudio.com/items?itemName=Slipshow.slipshow>`_, and in `"Open VSX Registry" <https://open-vsx.org/extension/Slipshow/slipshow>`_.
 
 The plugin will be activated on ``.slp`` files. It will start a preview server,
 whose address is communicated through a notification, but which is often
