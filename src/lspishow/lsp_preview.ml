@@ -30,8 +30,11 @@ let initialize ~notify_back () =
   let port0 = 8080 in
   let rec loop port =
     server_port := Some port;
-    let* () =
-      send_info ~notify_back "Starting preview server on port %d" port
+    let to_cancel =
+      let* () = Lwt_unix.sleep 1.0 in
+      if !server_port = Some port then
+        send_info ~notify_back "Starting preview server on port %d" port
+      else send_info ~notify_back "Port %d appears already used" port
     in
     let* try_port =
       Slipshow_server.Server.do_serve ~port (roots_state, roots_list)
@@ -39,8 +42,8 @@ let initialize ~notify_back () =
     match try_port with
     | Ok () -> Lwt.return_unit
     | Error `Addr_in_use ->
-        let* () = send_info ~notify_back "Port %d appears already used" port in
         let port = port + 1 in
+        Lwt.cancel to_cancel;
         if port - port0 > 100 then (
           server_port := None;
           let* () =
