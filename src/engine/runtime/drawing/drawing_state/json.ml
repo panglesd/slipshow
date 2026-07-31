@@ -177,18 +177,25 @@ module V1 = struct
         name;
         pauses;
         file_path = _;
-        element_anchor = _;
+        element_anchor;
       } =
     (* We don't include the file path! *)
+    let anchored_parth =
+      (* It is impossible from the UI to save an unanchored drawing, but let's
+         just be safe *)
+      match Lwd.peek (snd element_anchor) with
+      | `Anchored -> [ `String "anchored" ]
+      | `Unanchored -> []
+    in
     `List
-      [
-        `String "anchored";
-        of_strokes strokes;
-        `Float (Lwd.peek total_time);
-        `Int record_id;
-        `String name;
-        of_pauses pauses;
-      ]
+      (anchored_parth
+      @ [
+          of_strokes strokes;
+          `Float (Lwd.peek total_time);
+          `Int record_id;
+          `String name;
+          of_pauses pauses;
+        ])
 
   let to_recording file_path element_anchor name : Yojson.Safe.t -> _ = function
     | `List
