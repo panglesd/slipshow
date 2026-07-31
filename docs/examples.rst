@@ -51,21 +51,21 @@ The Undo Monad
 
 .. container:: example-card
 
-   .. figure:: undo-monad.png
+   .. figure:: bobkonf.png
       :scale: 30 %
       :align: center
       :alt: A screenshot presenting the undo monad presentation end state
-      :target: undo-monad-short/pres.html
+      :target: BOBKonf/pres.html
 
       The "Undo Monad" presentation
 
    :Type: Typed and drawn presentation
    :Author: Me!
    :Slipshow version: 0.11.0: Brazlip
-   :Date: 2025
+   :Date: 2026
    :About: Computer Science
-   :Source: :github_src:`example/undo-monad-short/`
-   :Rendered version: `<undo-monad-short/pres.html>`_
+   :Source: :github_src:`example/BOBKonf/`
+   :Rendered version: `<BOBkonf/pres.html>`_
 
 Campus du libre
 ===============
@@ -218,16 +218,37 @@ Defunctionalization for fun
    :Rendered version: `<https://poisson.chat/aquarium/defunctionalization-lmf.html>`_
    :About: Computer Science
 
-Structures et équations de graphes sourcés : petite largeur arborescente et chemins disjoints
-=============================================================================================
+Testing H-freeness on sparse graphs, the case of bounded expansion
+==================================================================
 
 .. container:: example-card
 
-   .. figure:: humeau.png
+   .. figure:: testing-h-freeness.png
       :scale: 30 %
       :align: center
       :alt: A screenshot of the presentation
-      :target: https://perso.ens-lyon.fr/samuel.humeau/pages/slides.html
+      :target: https://perso.ens-lyon.fr/samuel.humeau/pages/slides_STACS_2026_HUMEAU.html
+
+      The end state of presentation
+
+   :Type: Typed presentation
+   :Author: Samuel Humeau
+   :Slipshow version: 0.6.0: The King's Slipshow
+   :Date: 2026
+   :Source: `<https://perso.ens-lyon.fr/samuel.humeau/slipshow/slides_STACS_2026>`_
+   :Rendered version: `<https://perso.ens-lyon.fr/samuel.humeau/pages/slides_STACS_2026_HUMEAU.html>`_
+   :About: Computer Science
+
+On the two paths problem and theorem
+====================================
+
+.. container:: example-card
+
+   .. figure:: two-path-problem.png
+      :scale: 30 %
+      :align: center
+      :alt: A screenshot of the presentation
+      :target: https://perso.ens-lyon.fr/samuel.humeau/pages/slides_JGA_2025_HUMEAU.html
 
       The end state of presentation
 
@@ -235,6 +256,7 @@ Structures et équations de graphes sourcés : petite largeur arborescente et ch
    :Author: Samuel Humeau
    :Slipshow version: 0.6.0: The King's Slipshow
    :Date: 2025
-   :Source: No source
-   :Rendered version: `<https://perso.ens-lyon.fr/samuel.humeau/pages/slides.html>`_
+   :Source: `<https://perso.ens-lyon.fr/samuel.humeau/slipshow/slides_JGA_2025>`_
+   :Rendered version: `<https://perso.ens-lyon.fr/samuel.humeau/pages/slides_JGA_2025_HUMEAU.html>`_
    :About: Computer Science
+           

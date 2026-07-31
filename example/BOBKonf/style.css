@@ -1,0 +1,72 @@
+#limitations {
+  margin-top:1500px;
+}
+#cmf-addons {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+.emphasized {
+  font-weight: bold;
+}
+#main-container {
+  display:flex;
+  margin-top:400px
+}
+#main-container h1 {
+  font-size: 3.5em;
+}
+
+#grid-2 {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  column-gap: 30px;
+}
+.text-align {
+  text-align: center;
+}
+.flex {
+  display: flex;
+}
+.just {
+  justify-content: space-between;
+}
+.anchor-center {
+    align-items: center;
+}
+
+    
+
+.arrow-left {
+  width: 0; 
+  height: 0; 
+  border-top: 30px solid transparent;
+  border-bottom: 30px solid transparent; 
+  
+  border-right: 30px solid black; 
+}
+.arrow-middle {
+    width: 0;
+    flex-grow: 1;
+  height: 0; 
+  border-bottom: 5px solid black; 
+}
+.arrow-right {
+  width: 0; 
+  height: 0; 
+  border-top: 30px solid transparent;
+  border-bottom: 30px solid transparent;
+  
+  border-left: 30px solid black;
+}
+.red {
+    color: red;
+}
+.green {
+    color: green;
+}
+
+.pseudo-code code {
+  background-color: beige;
+}
