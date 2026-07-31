@@ -68,23 +68,26 @@ presentations.
    definitely easier, more human, and conveys a richer message (e.g. in the order
    in which you draw things).
 
-Setup
------
+Starting with drawings
+----------------------
 
-The drawing feature is still new, and the workflow to integrate drawings to your
-presentation, while perfectly functional, is not yet perfect and will improve
-over time. Currently, it looks like this:
+The best way to create drawings in slipshow, is to use a preview server: either with ``slipshow serve``, or simply by opening the file in your editor if you `configured it <editor-setup>`_.
 
-1. Create the "typed" part of your presentation. You get a presentation with
-   "holes".
-2. Open the compiled presentation and record the drawings for it.
-3. Save those drawings in a ``.draw`` file.
-4. Include the ``.draw`` file in your presentation, and decide when to
-   replay the drawings.
+The workflow to integrate drawings to your presentation is the following:
 
-In our case, the "typed" part of the presentation is minimal: We'll just type the title, the rest will be drawn. We also chose a ratio that gives us more horizontal space, and that is common for video projectors and laptop screens.
+1. First, you'll decide where in the text flow you want to anchor your
+   drawing. This allows to add some text before, and have the drawing moved down
+   accordingly. Simply add ``![Description of the drawing](filename.draw)``
+   there.
+2. The preview server will allow to record a drawing, and then edit it as much as needed.
+3. One you are happy, you can save the drawing to ``filename.draw`` through the
+   preview server
+4. During the presentation, specific slipshow actions allow you to replay saved
+   drawings.
 
-So, let's create the following ``sum.slp`` file:
+In this tutorial, the "typed" part of the presentation is minimal: We'll just type the title, the rest will be drawn. We also chose a ratio that gives us more horizontal space, and that is common for video projectors and laptop screens.
+
+Let's create the following ``sum.slp`` file:
 
 .. code-block::
 
@@ -94,19 +97,21 @@ So, let's create the following ``sum.slp`` file:
 
    # Sum of consecutive numbers
 
-and compile it with
+   ![Sum of consecutive numbers](sum.draw)
+
+If you did not use a setup editor,
 
 .. code-block::
 
-   $ slipshow compile sum.slp
+   $ slipshow serve sum.slp
 
-Great! We have finished item 1 of the todo list.
+Great! We can now start our recorded drawing.
 
 Drawing
 -------
 
-Now, let's open the freshly created ``sum.html`` with your favorite browser.
-You should see a presentation with no steps, just a title.
+Now, let's open the preview with your favorite browser.  You should see a
+presentation with no steps, just a title.
 
 In the top left, you'll find the tools to use for drawings. Try it!
 Press :kbd:`p` to select the pen, and draw on the screen with your mouse. Change
@@ -194,35 +199,17 @@ Saving the drawing file
 -----------------------
 
 Once you have finished editing the timeline and the preview, click on the "Save"
-button. Save the downloaded file next to your ``sum.slp`` file, as ``sum.draw``.
+button. It will save the edited recording as ``sum.draw``. The preview server should show a notification that the file was saved.
 
 .. video:: save.mp4
    :width: 100%
 
-Including the drawing in your presentation
-------------------------------------------
+Triggering the replay of the drawing
+------------------------------------
 
-Now, include the drawing in your presentation by modifying ``sum.slp`` to:
-
-.. code-block::
-
-   ---
-   dimension:16:9
-   ---
-
-   # Sum of consecutive numbers
-
-   ![](sum.draw)
-
-We'll start a server to hot-reload a preview version of the presentation.
-
-.. code-block::
-
-   $ slipshow serve sum.slp
-
-Open ``localhost:8080`` in your browser to see the preview. The drawing does not
-appear yet!  This is because drawing is an *action*, that needs to be
-triggered explicitly. The action name is ``draw``; add it to the included file:
+If you refresh the preview server, you'll notice that the drawing does not
+appear yet!  This is because drawing is an *action*, that needs to be triggered
+explicitly. The action name is ``draw``; add it to the included file:
 
 .. code-block::
 
@@ -241,6 +228,10 @@ here to say which drawing we need to draw:
    {draw=sum-drawing}
 
    {draw=sum-drawing}
+
+
+.. video:: replay.mp4
+   :width: 100%
 
 Modifying a recording
 ---------------------

@@ -13,7 +13,7 @@ and how they are organized) visually obvious. Hopefully, that will help your aud
 the big picture, and provide vital context to get them back on track if some parts go too deep.
 
 This is a more advanced tutorial for which you'll need to know the basics of
-Slipshow that we covered in :ref:`tutorial`. Familiarity with CSS will help, so don't
+Slipshow that we covered in :doc:`tutorial`. Familiarity with CSS will help, so don't
 hesitate to refer to more specialised CSS documentation and tutorials if you feel you need it.
 
 The topic of today
@@ -1069,7 +1069,7 @@ And for the last step back to the main slip:
    </style>
 
 Showing the phase element when entering
------------------------------------
+---------------------------------------
 
 Just like when we use the ``pause`` action at the same time as the
 ``enter`` action, we can also use the ``up`` action to modify the target
