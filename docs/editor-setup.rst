@@ -2,7 +2,7 @@
 Editor Setup
 ============
 
-Slipshow can be integrated into your editor for a better experience when
+Slipshow should be integrated into your editor for a better experience when
 preparing your presentation.
 
 This integration helps in several ways:
@@ -24,63 +24,63 @@ extended alongside new releases of Slipshow.
 Emacs
 =====
 
-You need two modes to develop Slipshow presentations comfortably in emacs:
+Slipshow's emacs has few dependencies:
 
 - `markdown-mode <https://github.com/jrblevin/markdown-mode>`_, a major mode for
-  editing markdown document with syntax highlighting, and other facilities.
+  editing markdown document with syntax highlighting, and other facilities. You
+  should have it already if you edit markdown files, otherwise install it, for
+  instance with ``M-x package-install <ret> markdown-mode <ret>``.
 - ``eglot``, a generic LSP client (part of emacs, so nothing to install) for the
   rest of the integration.
 
-After opening your input ``.slp`` (or ``.md``) file, type ``M-x eglot`` to start
-``eglot``, which will prompt you the command to start the LSP server. At this
-point, type ``slipshow lsp`` (you need ``slipshow`` to be installed of course).
+You can install it by adding these lines to your ``.emacs`` file:
 
-The above command sets up editor features such as errors, documentation on
-hover, etc, but it also starts a preview server, usually accessible by opening a
-browser and going to ``localhost:8080``. However, if the port ``8080`` is taken,
-Slipshow might use another port. In any case, it sends a notification with the
-address to use, so check your minibuffer or the ``*Messages*`` buffer.
+.. code-block::
+
+   (use-package slipshow-mode
+     :vc (:url "https://github.com/panglesd/slipshow-emacs-mode" :rev :newest))
+
+Slipshow's mode is a major mode automatically activated on ``.slp``
+files. Whenever it is activated, it will start a preview server for the project
+the file is in (you need ``slipshow`` to be installed of course). The server's
+address is communicated through the minibuffer, but it usually is
+``http://localhost:8080``.
+
+The slipshow major mode also sets up editor features such as errors,
+documentation on hover, etc. It currently features two commands:
+``slipshow-preview-go-next`` and ``slipshow-preview-go-previous``, to control
+the presentation's step from the editor.
+
+Moreover, you can configure whether you want the preview to be updated on save,
+or on each key stroke.
 
 .. note::
 
-   If your presentation is split into multiple files, you don't need to start
-   eglot for each file, so long as they are in the same folder. If they
-   are in different folders, emacs has to be able to recognize "the root of the
-   project" for it to work. It can do so by looking for a specific file or
-   folder that defines a project root. A predefined one is ``.git``, so adding a
-   git repository to your root folder is enough. Another option is to customize
-   "Project Vc Extra Root Markers" to add for instance ``.slipshow`` and create
-   a ``.slipshow`` file at the root.
+   If your presentation is split into multiple folders that are not recognized
+   by emacs as the same project, two preview servers might be started, and
+   things will break. Emacs finds a project by looking upward for a "root" file
+   or folder. A predefined root is a ``.git`` folder, so adding a git repository
+   to your root presentation folder is enough (and probably good
+   practice!). Another option is to customize "Project Vc Extra Root Markers" to
+   add for instance ``.slipshow`` and create a ``.slipshow`` file at the root.
 
 VSCode
 ======
 
-Slipshow currently has an official VSCode extension. *However*, unfortunately,
-it has not yet been updated to support the new LSP server. This is ongoing work
-that is hopefully going to be completed soon.
+Slipshow currently has an official VSCode plugin, available in several
+plugin stores: the official VSCode one, and open-vsx.
 
-In the meantime, you can use a generic LSP server. Since VSCode does not provide
-an official one, I can say that `"Generic LSP Proxy"
-<https://open-vsx.org/extension/mjmorales/generic-lsp-proxy>`_ works at least
-for displaying errors. Start it with the command palette, the first time using
-``LSP Proxy: Initialize LSP Configuration`` and answer its follow up questions
-as:
+The plugin will be activated on ``.slp`` files. It will start a preview server,
+whose address is communicated through a notification, but which is often
+``http://localhost:8080`` if the port is available.
 
-- Use a custom configuration
-- ``slipshow`` for the language ID
-- ``slipshow`` for the name of the command
-- ``.md`` for the extension of the files
-- ``stdio`` for the transport type
-- ``lsp`` for the argument to the command
+It additionally provides editor features such as errors, documentation on hover,
+etc. Two commands are provided to go forward and backward in the preview, from
+the eidtor (hit :key`Ctrl+Maj+P` and start typing ``Slipshow`` to see them
+listed).
 
-Now that the LSP is configured, next time you can launch it simply with ``LSP
-Proxy: Restart LSP server``.
-
-.. note::
-
-   If you want a simpler setup, and don't need the latest version of Slipshow,
-   you can still use the official Slipshow extension, installable from the
-   marketplaces.
+A setting is available to configure if you want to set up the preview to be
+updated on save, or on each file change.
 
 Other editors
 =============
