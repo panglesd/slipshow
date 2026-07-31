@@ -39,37 +39,41 @@ end = struct
 end
 
 let start_recording replaying_state =
-  Lwd.set live_drawing_state.tool (Stroker Pen);
-  let replayed_part, unplayed_erasure =
-    let tbl = Lwd_table.make () in
-    let unplayed_erasure =
-      Lwd_table.fold
-        (fun acc stro ->
-          let first_time = Lwd.peek stro.path |> List.rev |> List.hd |> snd in
-          if Lwd.peek replaying_state.time >= first_time then (
-            Lwd_table.append' tbl stro;
-            match Lwd.peek stro.erased with
-            | None -> acc
-            | Some ({ at; _ } as erased) ->
-                if Lwd.peek at >= Lwd.peek replaying_state.time then (
-                  Lwd.set stro.erased None;
-                  StringMap.add stro.id erased acc)
-                else acc)
-          else acc)
-        StringMap.empty replaying_state.recording.strokes
+  if Lwd.peek (snd replaying_state.recording.element_anchor) = `Unanchored then
+    ()
+  else begin
+    Lwd.set live_drawing_state.tool (Stroker Pen);
+    let replayed_part, unplayed_erasure =
+      let tbl = Lwd_table.make () in
+      let unplayed_erasure =
+        Lwd_table.fold
+          (fun acc stro ->
+            let first_time = Lwd.peek stro.path |> List.rev |> List.hd |> snd in
+            if Lwd.peek replaying_state.time >= first_time then (
+              Lwd_table.append' tbl stro;
+              match Lwd.peek stro.erased with
+              | None -> acc
+              | Some ({ at; _ } as erased) ->
+                  if Lwd.peek at >= Lwd.peek replaying_state.time then (
+                    Lwd.set stro.erased None;
+                    StringMap.add stro.id erased acc)
+                  else acc)
+            else acc)
+          StringMap.empty replaying_state.recording.strokes
+      in
+      (tbl, unplayed_erasure)
     in
-    (tbl, unplayed_erasure)
-  in
-  Status.set
-    (Drawing
-       (Recording
-          {
-            replaying_state;
-            replayed_part;
-            unplayed_erasure;
-            started_at = now () -. Lwd.peek replaying_state.time;
-            recording_temp = Lwd_table.make ();
-          }))
+    Status.set
+      (Drawing
+         (Recording
+            {
+              replaying_state;
+              replayed_part;
+              unplayed_erasure;
+              started_at = now () -. Lwd.peek replaying_state.time;
+              recording_temp = Lwd_table.make ();
+            }))
+  end
 
 let finish_recording
     {

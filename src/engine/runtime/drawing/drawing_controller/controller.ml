@@ -109,12 +109,18 @@ let shortcut_drawing mode key =
       true
   | _ -> false
 
+let is_up_to_date (recording : recording) =
+  match recording with
+  | { element_anchor = _, anchoring; _ } -> (
+      match Lwd.peek anchoring with `Unanchored -> false | `Anchored -> true)
+
 let shortcuts key =
   match Status.peek () with
   | Drawing mode -> shortcut_drawing mode key
   | Editing -> (
       match Lwd.peek current_replaying_state with
-      | Some s -> shortcut_editing s key
+      | Some s ->
+          if is_up_to_date s.recording then shortcut_editing s key else false
       | None -> false)
 
 let handle ev =
