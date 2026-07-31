@@ -17,6 +17,7 @@
 ### Changed
 
 - Drawings are now saved through the preview server (#249, #254)
+- Drawings are anchored to the point where the drawing has been added. (#262)
 
 ### Fixed
 
