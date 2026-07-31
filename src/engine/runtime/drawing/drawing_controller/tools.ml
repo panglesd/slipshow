@@ -178,6 +178,7 @@ module Erase = struct
             let { Universe.Coordinates.scale; _ } =
               Universe.State.get_coord ()
             in
+            let scale = scale *. translation.scale in
             Drawing_state.Path_editing.close_enough_poly2 scale path c1
           in
           if intersect || close_enough then
