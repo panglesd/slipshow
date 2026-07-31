@@ -26,6 +26,7 @@ Emacs
 
 Slipshow's emacs has few dependencies:
 
+- Emacs needs to be at least of version 29.1.
 - `markdown-mode <https://github.com/jrblevin/markdown-mode>`_, a major mode for
   editing markdown document with syntax highlighting, and other facilities. You
   should have it already if you edit markdown files, otherwise install it, for
@@ -52,7 +53,8 @@ documentation on hover, etc. It currently features two commands:
 the presentation's step from the editor.
 
 Moreover, you can configure whether you want the preview to be updated on save,
-or on each key stroke.
+or on each key stroke, using the ``slipshow-refresh-on`` variable (that you can
+customize through the ``customize`` interface).
 
 .. note::
 
@@ -67,8 +69,8 @@ or on each key stroke.
 VSCode
 ======
 
-Slipshow currently has an official VSCode plugin, available in several
-plugin stores: the official VSCode one, and open-vsx.
+Slipshow currently has an official VSCode plugin, available in several plugin
+stores: the "Visual Studio Code Marketplace", and "Open VSX Registry".
 
 The plugin will be activated on ``.slp`` files. It will start a preview server,
 whose address is communicated through a notification, but which is often
@@ -76,7 +78,7 @@ whose address is communicated through a notification, but which is often
 
 It additionally provides editor features such as errors, documentation on hover,
 etc. Two commands are provided to go forward and backward in the preview, from
-the eidtor (hit :key`Ctrl+Maj+P` and start typing ``Slipshow`` to see them
+the editor (open the command palette and start typing ``Slipshow`` to see them
 listed).
 
 A setting is available to configure if you want to set up the preview to be
