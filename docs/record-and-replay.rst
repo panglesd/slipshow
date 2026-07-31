@@ -14,7 +14,7 @@ An example of presentation using such feature can be found `here <https://choum.
 Creating a new drawing
 ======================
 
-Slipshow's drawing are "anchored" in the text flow of your presentation. This
+Slipshow's drawings are "anchored" in the text flow of your presentation. This
 allows them to be moved as you add text before, or if you move some parts, the
 drawing included, in a subslip.
 
@@ -40,13 +40,13 @@ Recording a drawing
 Now that you have the anchor point, to start recording a drawing, open the
 presentation through a preview server.
 
-In the upper left, amongst the drawing tools, you'll find a "Manage my recording" button. Click it, or use the shortcut :kbd:`R`.
+In the upper left, amongst the drawing tools, you'll find a "Manage my recording" button. Click it, or use the shortcut :kbd:`Shift` + :kbd:`R`.
 
-This will open a bottom panel, where you can chose which recording to edit. Once
+This will open a bottom panel, where you can choose which recording to edit. Once
 the right one is selected, either click on "Start recording" on the top left
-panel, or use the shortcut, :kbd:`R`.
+panel, or use the shortcut, :kbd:`Shift` + :kbd:`R`.
 
-You can now start drawing, every stroke and erasure will be recorded. To end the drawing, click on "Stop recording", or use the shortcut, :kbd:`R`.
+You can now start drawing, every stroke and erasure will be recorded. To end the drawing, click on "Stop recording", or use the shortcut, :kbd:`Shift` + :kbd:`R`.
 
 Editing a recording
 ===================

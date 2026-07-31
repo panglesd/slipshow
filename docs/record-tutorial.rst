@@ -80,7 +80,7 @@ The workflow to integrate drawings to your presentation is the following:
    accordingly. Simply add ``![Description of the drawing](filename.draw)``
    there.
 2. The preview server will allow to record a drawing, and then edit it as much as needed.
-3. One you are happy, you can save the drawing to ``filename.draw`` through the
+3. Once you are happy, you can save the drawing to ``filename.draw`` through the
    preview server
 4. During the presentation, specific slipshow actions allow you to replay saved
    drawings.
@@ -199,7 +199,8 @@ Saving the drawing file
 -----------------------
 
 Once you have finished editing the timeline and the preview, click on the "Save"
-button. It will save the edited recording as ``sum.draw``. The preview server should show a notification that the file was saved.
+button. It will save the edited recording as ``sum.draw``. The preview server
+should show a notification that the file was saved.
 
 .. video:: save.mp4
    :width: 100%
@@ -207,8 +208,8 @@ button. It will save the edited recording as ``sum.draw``. The preview server sh
 Triggering the replay of the drawing
 ------------------------------------
 
-If you refresh the preview server, you'll notice that the drawing does not
-appear yet!  This is because drawing is an *action*, that needs to be triggered
+If you refresh the preview, you'll notice that the drawing does not appear yet!
+This is because drawing is an *action*, that needs to be triggered
 explicitly. The action name is ``draw``; add it to the included file:
 
 .. code-block::
@@ -239,4 +240,4 @@ Modifying a recording
 If you need to modify the recording, open the recording manager with
 :kbd:`Shift` + :kbd:`R`, and select the recording in the list. You can add
 strokes by extending the recording with :kbd:`Shift` + :kbd:`R`. Once you are
-satisfied, click save, and replace the old file with the new one.
+satisfied, click save.
