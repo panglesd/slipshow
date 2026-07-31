@@ -751,11 +751,7 @@ module Draw = struct
         | Some data, Some path, Some name -> (
             let path = !?path in
             let open Drawing_state in
-            let name =
-              match Jstr.to_string name with
-              | "" -> "Unnamed recording"
-              | s -> s
-            in
+            let name = match Jstr.to_string name with "" -> path | s -> s in
             let recording : (recording, _) result =
               match !?data with
               | "" ->

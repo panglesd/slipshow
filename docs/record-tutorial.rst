@@ -126,8 +126,8 @@ instance, the sum rendered in the first section.
 
 First, clear all your test drawings with :kbd:`Shift` + :kbd:`X`.  Then, open
 the "Recording manager" with :kbd:`Shift` + :kbd:`R`. Here, you'll see an empty
-recording named "Unnamed recording", and a list of recordings that contains only
-this one. We'll start by renaming it ``Sum``, by typing that in the text input.
+recording named "Sum of consecutive number", and a menu to choose the active
+recording (out of only one recording in this case).
 
 Now, the fun part! Start recording with :kbd:`Shift` + :kbd:`R`, and draw the
 sum! When you have finished drawing, press :kbd:`Shift` + :kbd:`R` again to
