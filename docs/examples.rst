@@ -65,7 +65,7 @@ The Undo Monad
    :Date: 2026
    :About: Computer Science
    :Source: :github_src:`example/BOBKonf/`
-   :Rendered version: `<BOBkonf/pres.html>`_
+   :Rendered version: `<BOBKonf/pres.html>`_
 
 Campus du libre
 ===============
