@@ -1,6 +1,3 @@
-let ast : Slipshow.Ast.t option ref = ref None
-let set_ast x = ast := Some x
-
 let pos_in_textloc ~path ?(permissive = false) ~(pos : Linol_lwt.Position.t)
     ~loc () =
   let ( <? ) = if permissive then ( <= ) else ( < ) in
