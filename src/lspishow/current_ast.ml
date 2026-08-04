@@ -136,6 +136,7 @@ let rec enter_inline ~path acc pos (inline : Cmarkit.Inline.t) =
 
 let rec enter_block ~path acc pos (block : Cmarkit.Block.t) =
   let open Cmarkit.Block in
+  let acc = { acc with block = block :: acc.block } in
   let attrs = Slipshow.Ast.Utils.Block.get_attribute block in
   let attrs =
     match attrs with
@@ -144,7 +145,6 @@ let rec enter_block ~path acc pos (block : Cmarkit.Block.t) =
     | _ -> None
   in
   (fun f -> match attrs with Some x -> x | None -> f ()) @@ fun () ->
-  let acc = { acc with block = block :: acc.block } in
   match block with
   | Blank_line _ | Code_block _ | Thematic_break _ | Html_block _
   | Ext_math_block _ ->
