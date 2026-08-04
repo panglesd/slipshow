@@ -243,6 +243,7 @@ let message_setup window =
           in
           ()
       | Some { payload = Drawing d; id = _window_id } -> handle_drawing window d
+      | Some { payload = ActivateGUI id; id = _window_id } -> Gui.activate id
       | Some { payload = Send_all_drawing; id = _ } ->
           Drawing_controller.Messages.send_all_strokes ()
       | Some { payload = Receive_all_drawing all_strokes; id = _ } ->

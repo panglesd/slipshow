@@ -13,6 +13,7 @@ let pdf_resolution = "pdf-resolution"
 let pause_block = "pause-block"
 let as_html = "as-html"
 let auto_continue = "auto-continue"
+let gui = "gui"
 
 let all_attrs =
   [
@@ -31,4 +32,5 @@ let all_attrs =
     pause_block;
     as_html;
     auto_continue;
+    gui;
   ]

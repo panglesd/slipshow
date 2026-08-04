@@ -14,6 +14,7 @@
   drawing_controller
   messaging
   fast
+  gui
   mouse_disappearing))
 
 (rule

@@ -71,7 +71,8 @@ let handle_answer msg =
       | Control (Movement Forward) -> Previewer.next previewer
       | Control (Movement Backward) -> Previewer.previous previewer
       | Saved path -> Previewer.notify previewer ("Saved drawing as: " ^ path)
-      | Notify msg -> Previewer.notify previewer msg)
+      | Notify msg -> Previewer.notify previewer msg
+      | Replace { id; x = _; y = _ } -> Previewer.activate_gui previewer id)
 
 let proto_request_single ?signal uri msg =
   let open Brr_io.Fetch in

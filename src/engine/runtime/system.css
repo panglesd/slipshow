@@ -104,3 +104,7 @@ body.slipshow-editing-mode{
 .slipshow-hand-drawn {
   position: absolute;
 }
+
+[id][gui] {
+  position: absolute;
+}

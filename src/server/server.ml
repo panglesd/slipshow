@@ -1,4 +1,7 @@
-type to_server = Update | Control of Proto.Server_to_client.control
+type to_server =
+  | Update
+  | Control of Proto.Server_to_client.control
+  | ActivateGUI of string
 
 type root = {
   units : Slipshow.Ast.units;
@@ -64,30 +67,16 @@ let choose_roots rs =
           (p |> Fpath.to_string |> Dream.html_escape))
     |> String.concat "")
 
-let pong () =
-  let c = Proto.Server_to_client.Pong in
+let send_event c =
   let c = Proto.Server_to_client.to_string c in
   Dream.respond ~headers:[ ("Content-Type", "text/plain") ] c
 
-let saved s =
-  let c = Proto.Server_to_client.Saved (Fpath.to_string s) in
-  let c = Proto.Server_to_client.to_string c in
-  Dream.respond ~headers:[ ("Content-Type", "text/plain") ] c
-
-let notify s =
-  let c = Proto.Server_to_client.Notify s in
-  let c = Proto.Server_to_client.to_string c in
-  Dream.respond ~headers:[ ("Content-Type", "text/plain") ] c
-
-let send_update content =
-  let c = Proto.Server_to_client.Update content in
-  let c = Proto.Server_to_client.to_string c in
-  Dream.respond ~headers:[ ("Content-Type", "text/plain") ] c
-
-let send_control c =
-  let c = Proto.Server_to_client.Control c in
-  let c = Proto.Server_to_client.to_string c in
-  Dream.respond ~headers:[ ("Content-Type", "text/plain") ] c
+let pong () = send_event Pong
+let saved s = send_event (Saved (Fpath.to_string s))
+let notify s = send_event (Notify s)
+let send_update content = send_event (Update content)
+let send_control c = send_event (Control c)
+let send_activate_gui id = send_event (Replace { id; x = None; y = None })
 
 let home_page (_, get_roots) _req =
   Dream.log "A browser reloaded";
@@ -148,6 +137,7 @@ let wait_for_event root roots file =
             (Format.asprintf "File %a is not part of the possible preview"
                Fpath.pp file)
       | Some root -> send root)
+  | `Master (ActivateGUI id) -> send_activate_gui id
 
 let polling (roots, _get_roots) req =
   let open Lwt.Syntax in
@@ -194,7 +184,8 @@ let polling (roots, _get_roots) req =
               Format.asprintf "Path %a is not part of the current unit" Fpath.pp
                 path
             in
-            notify msg)
+            notify msg
+      | Some (Save_gui_position _) -> notify "savegui received")
 
 let do_serve ~port (roots : roots) =
   let () = if Sys.unix then Sys.(set_signal sigpipe Signal_ignore) in
