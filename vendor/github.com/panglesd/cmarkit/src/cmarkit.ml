@@ -2050,6 +2050,12 @@ module Inline_struct = struct
        convert them to [inline] values and [Break]s. [Text] inlines
        are created for data between them. *)
     let add_attr ((_, attrs_meta) as attrs) position acc =
+      let merge_loc meta =
+        let old_textloc = Meta.textloc meta in
+        let attr_textloc = Meta.textloc attrs_meta in
+        let new_textloc = Textloc.span old_textloc attr_textloc in
+        Meta.with_textloc ~keep_id:true meta new_textloc
+      in
       match position with
       | `Standalone ->
          let t =
@@ -2060,25 +2066,25 @@ module Inline_struct = struct
       | `Attached ->
         match acc with
         | Inline.Autolink ((a, _old_attrs), meta) :: q ->
-           Inline.Autolink ((a, attrs), meta) :: q
+           Inline.Autolink ((a, attrs), merge_loc meta) :: q
         | Inline.Code_span ((a, _old_attrs), meta) :: q ->
-           Inline.Code_span ((a, attrs), meta) :: q
+           Inline.Code_span ((a, attrs), merge_loc meta) :: q
         | Inline.Emphasis ((a, _old_attrs), meta) :: q ->
-           Inline.Emphasis ((a, attrs), meta) :: q
+           Inline.Emphasis ((a, attrs), merge_loc meta) :: q
         | Inline.Image ((a, _old_attrs), meta) :: q ->
-           Inline.Image ((a, attrs), meta) :: q
+           Inline.Image ((a, attrs), merge_loc meta) :: q
         | Inline.Link ((a, _old_attrs), meta) :: q ->
-           Inline.Link ((a, attrs), meta) :: q
+           Inline.Link ((a, attrs), merge_loc meta) :: q
         | Inline.Strong_emphasis ((a, _old_attrs), meta) :: q ->
-           Inline.Strong_emphasis ((a, attrs), meta) :: q
+           Inline.Strong_emphasis ((a, attrs), merge_loc meta) :: q
         | Inline.Text ((a, _old_attrs), meta) :: q ->
-           Inline.Text ((a, attrs), meta) :: q
+           Inline.Text ((a, attrs), merge_loc meta) :: q
            (* let t = Inline.Attributes_span.make i attrs in *)
            (* Inline.Ext_attrs (t, Meta.none) :: q *)
         | Inline.Ext_strikethrough ((a, _old_attrs), meta) :: q ->
-           Inline.Ext_strikethrough ((a, attrs), meta) :: q
+           Inline.Ext_strikethrough ((a, attrs), merge_loc meta) :: q
         | Inline.Ext_math_span ((a, _old_attrs), meta) :: q ->
-           Inline.Ext_math_span ((a, attrs), meta) :: q
+           Inline.Ext_math_span ((a, attrs), merge_loc meta) :: q
         | _ ->
           let t =
             Inline.Attributes_span.make (Inline.Inlines ([], attrs_meta))
