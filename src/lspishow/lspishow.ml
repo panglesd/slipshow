@@ -649,6 +649,8 @@ class lsp_server =
 
     method private send_control file c =
       let roots = Rev_deps.get_roots file in
+      (* TODO: IMPORTANT DO THAT BEFORE ANY RELEASE: It seems send_control would
+         not work in "save" mode (compared to keystroke mode). Fix that. *)
       let make_root_go_next root =
         match Hashtbl.find_opt Roots.buffers root with
         | None -> ()
