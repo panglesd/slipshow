@@ -30,3 +30,6 @@ function call in one direction, and callback calling in the other.
 
 Note that the communication between the server and server's client is done
 through `src/server/proto/proto.ml`.
+
+Note that the communication from LSP to preview server is done with
+`src/server/server.ml`'s `to_server` type.
