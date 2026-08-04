@@ -220,10 +220,11 @@ class lsp_server =
       let r =
         let path = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
         let* buffer = Hashtbl.find_opt Buffers.buffers path in
-        let* tail_attrs =
+        let* _, tail_attrs =
           let trail = Current_ast.get_leave ~path pos buffer.unit.ast in
           trail.attribute
         in
+        let* tail_attrs = tail_attrs in
         match tail_attrs with
         | Key ((key, meta), _) | Value ((key, meta), _) ->
             let+ (module X) =
@@ -286,12 +287,13 @@ class lsp_server =
           match res1 with
           | Some _ -> res1
           | None -> (
-              let* tail_attrs =
+              let* _, tail_attrs =
                 let trail =
                   Current_ast.get_leave ~path params.position buffer.unit.ast
                 in
                 trail.attribute
               in
+              let* tail_attrs = tail_attrs in
               match tail_attrs with Id (id, _) -> Some id | _ -> None)
         in
         let+ x = Slipshow.Id_map.SMap.find_opt id ast.id_map in
