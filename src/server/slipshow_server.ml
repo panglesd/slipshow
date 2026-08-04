@@ -1,6 +1,7 @@
 type to_server = Server.to_server =
   | Update
   | Control of Proto.Server_to_client.control
+  | ActivateGUI of string
 
 type root = Server.root = {
   units : Slipshow.Ast.units;

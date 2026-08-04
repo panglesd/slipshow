@@ -15,6 +15,7 @@ type payload =
   | Next
   | Previous
   | Can_save
+  | ActivateGUI of string
 [@@deriving sexp]
 
 type t = { payload : payload; id : string } [@@deriving sexp]

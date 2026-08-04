@@ -12,6 +12,7 @@ module Client_to_server : sig
     | Ping
     | UpdateFrom of string
     | Save_drawing of string * string (* path * content *)
+    | Save_gui_position of { id : string; x : int option; y : int option }
 
   include Serializing with type t := t
 end
@@ -26,6 +27,7 @@ module Server_to_client : sig
     | Control of control
     | Saved of string
     | Notify of string
+    | Replace of { id : string; x : int option; y : int option }
 
   include Serializing with type t := t
 end

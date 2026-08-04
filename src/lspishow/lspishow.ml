@@ -269,6 +269,16 @@ class lsp_server =
       | None -> Lwt.return ()
       | Some diags -> notify_back#send_diagnostic diags
 
+    method private activate_gui position path (root : Roots.root)
+        (buffer : Buffers.buffer) =
+      let ( let> ) x f = Option.iter f x in
+      let trail = Current_ast.get_leave ~path position buffer.unit.ast in
+      match trail.attribute with
+      | Some (attrs, Some (Key (("gui", _), _))) ->
+          let> id, _ = Cmarkit.Attributes.id attrs in
+          Lwt_condition.broadcast root.condition (ActivateGUI id)
+      | _ -> ()
+
     method private on_req_document_highlight ~notify_back:_ ~uri ~id:_
         (params : Linol_lwt.DocumentHighlightParams.t) :
         Linol_lwt.DocumentHighlight.t list option Lwt.t =
@@ -277,8 +287,11 @@ class lsp_server =
         let ( let+ ) x f = Option.map f x in
         let path = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
         let* root = Rev_deps.get_roots path |> Fpath.Set.choose_opt in
-        let* { units = ast; _ } = Hashtbl.find_opt Roots.buffers root in
+        let* ({ units = ast; _ } as root) =
+          Hashtbl.find_opt Roots.buffers root
+        in
         let* buffer = Hashtbl.find_opt Buffers.buffers path in
+        let _ = self#activate_gui params.position path root buffer in
         let* id =
           let res1 =
             Current_ast.get_target ~path params.position ast.action_plan

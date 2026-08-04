@@ -13,6 +13,7 @@ type payload =
   | Next
   | Previous
   | Can_save
+  | ActivateGUI of string
 
 type t = { payload : payload; id : string }
 

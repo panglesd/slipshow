@@ -45,6 +45,10 @@ let send_previous panel =
   let payload = Communication.Previous in
   send_message panel payload
 
+let send_activate_gui panel id =
+  let payload = Communication.ActivateGUI id in
+  send_message panel payload
+
 let () = Random.self_init ()
 
 let css =
@@ -274,3 +278,7 @@ let next (previewer : previewer) =
 let previous (previewer : previewer) =
   let current_window = previewer.panels.(previewer.index) in
   send_previous current_window
+
+let activate_gui (previewer : previewer) id =
+  let current_window = previewer.panels.(previewer.index) in
+  send_activate_gui current_window id

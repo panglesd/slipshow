@@ -14,6 +14,7 @@ module Client_to_server = struct
     | Ping
     | UpdateFrom of string
     | Save_drawing of string * string (* path * content *)
+    | Save_gui_position of { id : string; x : int option; y : int option }
 
   include Marsharializing
 end
@@ -28,6 +29,7 @@ module Server_to_client = struct
     | Control of control
     | Saved of string
     | Notify of string
+    | Replace of { id : string; x : int option; y : int option }
 
   include Marsharializing
 end
