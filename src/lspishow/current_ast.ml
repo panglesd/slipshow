@@ -42,12 +42,13 @@ let pos_in_block ~path block ~pos =
 
 open Cmarkit
 
-type attribute_trace =
+type key_trace =
   | Key of string node * Attributes.value node option
   | Value of string node * Attributes.value node
   | Class of string node
   | Id of string node
 
+type attribute_trace = Attributes.t * key_trace option
 type inline_trace = Inline.t list
 type block_trace = Block.t list
 
@@ -80,10 +81,11 @@ let enter_attrs ~path acc pos attrs =
     | Some ((_, meta) as id) when pos_in ~meta -> Some (Id id)
     | _ -> None
   in
-  let attribute =
+  let kv_trace =
     match (kv, class_, id) with
     | (Some _ as s), _, _ | _, (Some _ as s), _ | _, _, s -> s
   in
+  let attribute = Some (attrs, kv_trace) in
   { acc with attribute }
 
 let rec enter_inline ~path acc pos (inline : Cmarkit.Inline.t) =
