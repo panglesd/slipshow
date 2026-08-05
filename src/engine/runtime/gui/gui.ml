@@ -8,7 +8,7 @@ let activate_class = !!"slipshow-activated"
 let sof x = Printf.sprintf "%.25f" x
 let transform_s x y = "translate(" ^ sof x ^ "px, " ^ sof y ^ "px)"
 
-let init () =
+let init window =
   let x_coord = El.Prop.int !!"slipshow-x-coord" in
   let y_coord = El.Prop.int !!"slipshow-y-coord" in
   let () =
@@ -41,17 +41,23 @@ let init () =
     let ( let> ) x f = Option.iter f x in
     let start _x _y _ev =
       let el = Lwd.peek current in
-      let x0, y0 =
+      let x0, y0, scale =
         match el with
-        | None -> (0, 0)
+        | None -> (0, 0, 1.)
         | Some el ->
+            let scale0 = Universe.Window.scale_in_universe window el in
+            let { Universe.Coordinates.scale; _ } =
+              Universe.State.get_coord ()
+            in
             let x = El.prop x_coord el in
             let y = El.prop y_coord el in
-            (x, y)
+            (x, y, Normalization.scale @@ (scale0 /. scale))
       in
-      (el, 0., 0., x0, y0)
+      (el, 0., 0., x0, y0, scale)
     in
-    let drag ~x:_ ~y:_ ~dx ~dy (el, _, _, x0, y0) _ev =
+    let drag ~x:_ ~y:_ ~dx ~dy (el, _, _, x0, y0, scale) _ev =
+      let dx = dx *. scale in
+      let dy = dy *. scale in
       let () =
         let> el = el in
         let new_position =
@@ -59,9 +65,9 @@ let init () =
         in
         El.set_inline_style !!"transform" !!new_position el
       in
-      (el, dx, dy, x0, y0)
+      (el, dx, dy, x0, y0, scale)
     in
-    let end_ (el, dx, dy, x0, y0) _ev =
+    let end_ (el, dx, dy, x0, y0, _scale) _ev =
       let> el = el in
       let> id =
         El.prop El.Prop.id el |> Jstr.to_string |> function
