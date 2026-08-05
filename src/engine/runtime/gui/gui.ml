@@ -16,25 +16,25 @@ let init () =
     | None -> (!!"display", !!"none")
   in
   let handler =
-    let start _x _y _ev = Lwd.peek current in
-    let drag ~x:_ ~y:_ ~dx ~dy el _ev =
+    let ( let> ) x f = Option.iter f x in
+    let start _x _y _ev = (Lwd.peek current, 0., 0.) in
+    let drag ~x:_ ~y:_ ~dx ~dy (el, _, _) _ev =
       let () =
-        let ( let> ) x f = Option.iter f x in
         let> el = el in
-        let> id =
-          El.prop El.Prop.id el |> Jstr.to_string |> function
-          | "" -> None
-          | s -> Some s
-        in
         let new_position = transform_s dx dy in
-        let () =
-          Messaging.send_gui_coordinate id (int_of_float dx) (int_of_float dy)
-        in
         El.set_inline_style !!"transform" !!new_position el
       in
-      el
+      (el, dx, dy)
     in
-    let end_ _ _ev = () in
+    let end_ (el, dx, dy) _ev =
+      let> el = el in
+      let> id =
+        El.prop El.Prop.id el |> Jstr.to_string |> function
+        | "" -> None
+        | s -> Some s
+      in
+      Messaging.send_gui_coordinate id (int_of_float dx) (int_of_float dy)
+    in
     Drawing_controller.Ui_widgets.mouse_drag start drag end_
   in
   let for_events =
