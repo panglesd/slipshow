@@ -24,7 +24,7 @@ let style_of_prop = function
   | Width _ -> Jstr.v "width"
   | Height _ -> Jstr.v "height"
 
-let sof x = Printf.sprintf "%.15f" x
+let sof x = Printf.sprintf "%.25f" x
 
 let value_of_prop = function
   | Scale x -> "scale3d(" ^ sof x ^ ", " ^ sof x ^ ", 1)"

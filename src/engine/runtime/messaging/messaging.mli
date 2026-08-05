@@ -15,3 +15,4 @@ val open_speaker_notes : unit -> unit
 val send_speaker_notes : string -> unit
 val opened_recording_panel : unit -> unit
 val closed_recording_panel : unit -> unit
+val send_gui_coordinate : string -> int -> int -> unit

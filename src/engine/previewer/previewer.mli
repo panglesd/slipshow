@@ -13,6 +13,7 @@ val create_previewer :
   ?initial_stage:int ->
   ?callback:(int -> unit) ->
   ?save_drawing:(path:string -> content:string -> unit) ->
+  save_coordinate:(id:string -> x:int -> y:int -> unit) ->
   include_speaker_view:bool ->
   errors_el:Brr.El.t ->
   steal_focus:bool ->
@@ -32,4 +33,5 @@ val ids : previewer -> string * string
 val next : previewer -> unit
 val previous : previewer -> unit
 val activate_gui : previewer -> string -> unit
+val deactivate_gui : previewer -> unit
 val notify : previewer -> string -> unit

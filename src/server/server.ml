@@ -2,6 +2,7 @@ type to_server =
   | Update
   | Control of Proto.Server_to_client.control
   | ActivateGUI of string
+  | DeActivateGUI
 
 type root = {
   units : Slipshow.Ast.units;
@@ -76,7 +77,12 @@ let saved s = send_event (Saved (Fpath.to_string s))
 let notify s = send_event (Notify s)
 let send_update content = send_event (Update content)
 let send_control c = send_event (Control c)
-let send_activate_gui id = send_event (Replace { id; x = None; y = None })
+
+let send_activate_gui id =
+  send_event (Replace { id = Some id; x = None; y = None })
+
+let send_deactivate_gui () =
+  send_event (Replace { id = None; x = None; y = None })
 
 let home_page (_, get_roots) _req =
   Dream.log "A browser reloaded";
@@ -138,8 +144,10 @@ let wait_for_event root roots file =
                Fpath.pp file)
       | Some root -> send root)
   | `Master (ActivateGUI id) -> send_activate_gui id
+  | `Master DeActivateGUI -> send_deactivate_gui ()
 
-let polling (roots, _get_roots) req =
+let polling (roots, _get_roots)
+    ~(notify_back : (Linol_lwt.Jsonrpc2.notify_back * _) option) req =
   let open Lwt.Syntax in
   let file = Dream.target req in
   let file =
@@ -185,9 +193,44 @@ let polling (roots, _get_roots) req =
                 path
             in
             notify msg
-      | Some (Save_gui_position _) -> notify "savegui received")
+      | Some (Save_gui_position { id = _; x; y }) -> (
+          match notify_back with
+          | None -> pong ()
+          | Some (notify_back, gui) -> (
+              match !gui with
+              | None -> notify "savegui but NOOOOOOOOOOOONE"
+              | Some (uri, range) ->
+                  (* ignore uri; *)
+                  (* ignore range; *)
+                  Format.eprintf "INTS ARE %d %d\n%!" x y;
+                  let _ =
+                    notify_back#send_request
+                      (WorkspaceApplyEdit
+                         {
+                           edit =
+                             {
+                               changeAnnotations = None;
+                               changes =
+                                 Some
+                                   [
+                                     ( uri,
+                                       [
+                                         {
+                                           newText = Format.sprintf "%d,%d" x y;
+                                           range;
+                                         };
+                                       ] );
+                                   ];
+                               documentChanges = None;
+                             };
+                           label = None;
+                         })
+                      (fun _ -> Lwt.return ())
+                  in
+                  notify "savegui but SOME")))
 
-let do_serve ~port (roots : roots) =
+let do_serve ~port ~(notify_back : (Linol_lwt.Jsonrpc2.notify_back * _) option)
+    (roots : roots) =
   let () = if Sys.unix then Sys.(set_signal sigpipe Signal_ignore) in
   (* We need this, otherwise the program is killed when sending a long string to
      a closed connection... See https://github.com/aantron/dream/issues/378 *)
@@ -208,7 +251,7 @@ let do_serve ~port (roots : roots) =
            [
              Dream.get "/" (home_page roots);
              Dream.get "/preview/**" (preview roots);
-             Dream.post "/polling/**" (polling roots);
+             Dream.post "/polling/**" (polling roots ~notify_back);
            ]
     in
     Ok ()

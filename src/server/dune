@@ -13,4 +13,5 @@
   dream
   ansi
   server_assets
-  proto))
+  proto
+  linol-lwt))

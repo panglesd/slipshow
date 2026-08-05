@@ -18,4 +18,5 @@ val update_root :
   t ->
   Slipshow.Ast.unit' Fpath.map ->
   Fpath.t ->
+  'b option ->
   root

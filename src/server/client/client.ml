@@ -72,7 +72,10 @@ let handle_answer msg =
       | Control (Movement Backward) -> Previewer.previous previewer
       | Saved path -> Previewer.notify previewer ("Saved drawing as: " ^ path)
       | Notify msg -> Previewer.notify previewer msg
-      | Replace { id; x = _; y = _ } -> Previewer.activate_gui previewer id)
+      | Replace { id = Some id; x = _; y = _ } ->
+          Previewer.activate_gui previewer id
+      | Replace { id = None; x = _; y = _ } ->
+          Previewer.deactivate_gui previewer)
 
 let proto_request_single ?signal uri msg =
   let open Brr_io.Fetch in
@@ -126,9 +129,13 @@ let previewer' =
     let _ = proto_request uri (Save_drawing (path, content)) in
     ()
   in
+  let save_coordinate ~id ~x ~y =
+    let _ = proto_request uri (Save_gui_position { id; x; y }) in
+    ()
+  in
   Previewer.create_previewer ?initial_stage ~callback ~save_drawing
     ~include_speaker_view:true ~errors_el:warnings ~steal_focus:true
-    ~can_save:true elem
+    ~can_save:true ~save_coordinate elem
 
 let () = previewer := Some previewer'
 
