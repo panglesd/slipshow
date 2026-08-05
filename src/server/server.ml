@@ -198,11 +198,17 @@ let polling (roots, _get_roots)
           | None -> pong ()
           | Some (notify_back, gui) -> (
               match !gui with
-              | None -> notify "savegui but NOOOOOOOOOOOONE"
+              | None -> pong ()
               | Some (uri, range) ->
-                  (* ignore uri; *)
-                  (* ignore range; *)
-                  Format.eprintf "INTS ARE %d %d\n%!" x y;
+                  let newText = Format.sprintf "%d,%d" x y in
+                  let end_ =
+                    {
+                      range.Linol_lwt.Range.start with
+                      character = range.start.character + String.length newText;
+                    }
+                  in
+                  gui :=
+                    Some (uri, { Linol_lwt.Range.start = range.start; end_ });
                   let _ =
                     notify_back#send_request
                       (WorkspaceApplyEdit
@@ -210,24 +216,14 @@ let polling (roots, _get_roots)
                            edit =
                              {
                                changeAnnotations = None;
-                               changes =
-                                 Some
-                                   [
-                                     ( uri,
-                                       [
-                                         {
-                                           newText = Format.sprintf "%d,%d" x y;
-                                           range;
-                                         };
-                                       ] );
-                                   ];
+                               changes = Some [ (uri, [ { newText; range } ]) ];
                                documentChanges = None;
                              };
                            label = None;
                          })
                       (fun _ -> Lwt.return ())
                   in
-                  notify "savegui but SOME")))
+                  pong ())))
 
 let do_serve ~port ~(notify_back : (Linol_lwt.Jsonrpc2.notify_back * _) option)
     (roots : roots) =

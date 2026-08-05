@@ -301,7 +301,9 @@ class lsp_server =
           (*     (fun _ -> Lwt.return ()) *)
           (* in *)
           Lwt_condition.broadcast root.condition (ActivateGUI id)
-      | _ -> Lwt_condition.broadcast root.condition DeActivateGUI
+      | _ ->
+          let () = currently_modified := None in
+          Lwt_condition.broadcast root.condition DeActivateGUI
 
     method private on_req_document_highlight ~notify_back:_ ~uri ~id:_
         (params : Linol_lwt.DocumentHighlightParams.t) :

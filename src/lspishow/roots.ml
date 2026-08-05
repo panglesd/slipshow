@@ -20,15 +20,19 @@ let update_root read_file roots_state units root currently_modified =
   let units, diagnostics =
     Slipshow.Compile.compile_all ~directory ~read_file units root
   in
-  let condition =
+  let condition, old_version =
     match Hashtbl.find_opt roots_state root with
-    | None -> Lwt_condition.create ()
-    | Some { condition; _ } ->
+    | None -> (Lwt_condition.create (), generate_version ())
+    | Some { condition; version; _ } ->
         if Option.is_none currently_modified then
           Lwt_condition.broadcast condition Update;
-        condition
+        (condition, version)
   in
-  let version = generate_version () in
+  let version =
+    match currently_modified with
+    | Some _ -> old_version
+    | None -> generate_version ()
+  in
   let updated = { units; diagnostics; condition; version } in
   Hashtbl.replace roots_state root updated;
   updated
