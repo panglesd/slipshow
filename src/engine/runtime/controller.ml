@@ -244,6 +244,7 @@ let message_setup window =
           ()
       | Some { payload = Drawing d; id = _window_id } -> handle_drawing window d
       | Some { payload = ActivateGUI id; id = _window_id } -> Gui.activate id
+      | Some { payload = DeActivateGUI; id = _window_id } -> Gui.deactivate ()
       | Some { payload = Send_all_drawing; id = _ } ->
           Drawing_controller.Messages.send_all_strokes ()
       | Some { payload = Receive_all_drawing all_strokes; id = _ } ->
@@ -256,7 +257,8 @@ let message_setup window =
             payload =
               ( Save_drawing (_, _)
               | Speaker_notes _ | Close_recording_panel | Open_recording_panel
-              | Close_speaker_notes | Open_speaker_notes | Ready );
+              | Close_speaker_notes | Open_speaker_notes | Ready
+              | SaveCoordinates _ );
             id = _;
           } ->
           ())

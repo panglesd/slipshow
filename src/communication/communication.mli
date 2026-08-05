@@ -14,6 +14,8 @@ type payload =
   | Previous
   | Can_save
   | ActivateGUI of string
+  | DeActivateGUI
+  | SaveCoordinates of { id : string; x : int; y : int }
 
 type t = { payload : payload; id : string }
 

@@ -2,6 +2,7 @@ type to_server =
   | Update
   | Control of Proto.Server_to_client.control
   | ActivateGUI of string
+  | DeActivateGUI
 
 type root = {
   units : Slipshow.Ast.units;
@@ -25,5 +26,12 @@ val do_watch :
   Fpath.t -> (unit -> (Fpath.Set.t, [ `Msg of string ]) result) -> unit
 
 module Server : sig
-  val do_serve : port:int -> roots -> (unit, [> `Addr_in_use ]) result Lwt.t
+  val do_serve :
+    port:int ->
+    notify_back:
+      (Linol_lwt.Jsonrpc2.notify_back
+      * (Linol_lwt.DocumentUri.t * Linol_lwt.Range.t) option ref)
+      option ->
+    roots ->
+    (unit, [> `Addr_in_use ]) result Lwt.t
 end

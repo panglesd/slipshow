@@ -15,7 +15,7 @@ let saved : t = Hashtbl.create 10
 let generate_version () =
   String.init 10 (fun _ -> Char.chr (97 + Random.int 26))
 
-let update_root read_file roots_state units root =
+let update_root read_file roots_state units root currently_modified =
   let directory = Fpath.parent root in
   let units, diagnostics =
     Slipshow.Compile.compile_all ~directory ~read_file units root
@@ -24,7 +24,8 @@ let update_root read_file roots_state units root =
     match Hashtbl.find_opt roots_state root with
     | None -> Lwt_condition.create ()
     | Some { condition; _ } ->
-        Lwt_condition.broadcast condition Update;
+        if Option.is_none currently_modified then
+          Lwt_condition.broadcast condition Update;
         condition
   in
   let version = generate_version () in

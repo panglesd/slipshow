@@ -22,51 +22,16 @@ let send_step step mode =
   in
   Brr.Window.post_message parent ~msg
 
-let draw string =
+let send payload =
   if_parent @@ fun parent ->
-  let payload = Communication.Drawing string in
   let msg = { id; payload } |> Communication.to_string |> Jv.of_string in
   Brr.Window.post_message parent ~msg
 
-let send_all_strokes strokes =
-  if_parent @@ fun parent ->
-  let payload = Communication.Receive_all_drawing strokes in
-  let msg = { id; payload } |> Communication.to_string |> Jv.of_string in
-  Brr.Window.post_message parent ~msg
-
-let save_drawing ~path ~content =
-  if_parent @@ fun parent ->
-  let payload = Communication.Save_drawing (path, content) in
-  let msg = { id; payload } |> Communication.to_string |> Jv.of_string in
-  Brr.Window.post_message parent ~msg
-
-let open_speaker_notes () =
-  if_parent @@ fun parent ->
-  let msg =
-    { id; payload = Open_speaker_notes }
-    |> Communication.to_string |> Jv.of_string
-  in
-  Brr.Window.post_message parent ~msg
-
-let send_speaker_notes s =
-  if_parent @@ fun parent ->
-  let msg =
-    { id; payload = Speaker_notes s } |> Communication.to_string |> Jv.of_string
-  in
-  Brr.Window.post_message parent ~msg
-
-let opened_recording_panel () =
-  if_parent @@ fun parent ->
-  let msg =
-    { id; payload = Open_recording_panel }
-    |> Communication.to_string |> Jv.of_string
-  in
-  Brr.Window.post_message parent ~msg
-
-let closed_recording_panel () =
-  if_parent @@ fun parent ->
-  let msg =
-    { id; payload = Close_recording_panel }
-    |> Communication.to_string |> Jv.of_string
-  in
-  Brr.Window.post_message parent ~msg
+let draw string = send (Drawing string)
+let send_all_strokes strokes = send (Receive_all_drawing strokes)
+let save_drawing ~path ~content = send (Save_drawing (path, content))
+let open_speaker_notes () = send Open_speaker_notes
+let send_speaker_notes s = send (Speaker_notes s)
+let opened_recording_panel () = send Open_recording_panel
+let closed_recording_panel () = send Close_recording_panel
+let send_gui_coordinate id x y = send (SaveCoordinates { x; y; id })

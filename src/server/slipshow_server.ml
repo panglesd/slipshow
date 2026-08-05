@@ -2,6 +2,7 @@ type to_server = Server.to_server =
   | Update
   | Control of Proto.Server_to_client.control
   | ActivateGUI of string
+  | DeActivateGUI
 
 type root = Server.root = {
   units : Slipshow.Ast.units;
@@ -58,7 +59,8 @@ let do_serve ~port entry_point
   let dream =
     let open Lwt.Syntax in
     let+ res =
-      Server.do_serve ~port ((fun _ -> !content), fun () -> [ Fpath.v "-" ])
+      Server.do_serve ~notify_back:None ~port
+        ((fun _ -> !content), fun () -> [ Fpath.v "-" ])
     in
     match res with
     | Ok () -> ()

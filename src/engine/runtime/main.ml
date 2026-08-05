@@ -18,6 +18,7 @@ let start ~width ~height ~step =
   (* TODO: move out of here (Later: Why?) *)
   let () = Rescale.setup_rescalers () in
   let () = Drawing_controller.Setup.init_ui window in
+  let () = Gui.init () in
   let () = Mouse_disappearing.setup () in
   let initial_step =
     match step with
