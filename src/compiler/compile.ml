@@ -318,13 +318,35 @@ module Stage1 = struct
 
   let execute ~htbl_include current_path defs =
     let ret x = `Map x in
-    let block m = function
-      | Block.Blocks bs -> ret @@ handle_dash_separated_blocks m bs
-      | Block.Block_quote bq -> ret @@ Some (turn_block_quotes_into_divs m bq)
-      | Block.Code_block cb -> ret @@ Some (handle_code_blocks m cb)
-      | Block.Ext_standalone_attributes sa ->
-          handle_includes m ~htbl_include current_path sa
-      | _ -> Mapper.default
+    let block m b =
+      let b =
+        let loc = b |> Ast.Utils.Block.meta |> Cmarkit.Meta.textloc in
+        let v = Marshal.to_string loc [] |> Base64.encode_string in
+        let attr = { Cmarkit.Attributes.v; delimiter = Some '"' } in
+        let res =
+          Ast.Utils.Block.update_attribute
+            (fun (attrs, meta) ->
+              ( Cmarkit.Attributes.add
+                  (Special_attrs.loc_attr, Meta.none)
+                  (Some (attr, Meta.none))
+                  attrs,
+                meta ))
+            b
+        in
+        match res with None -> b | Some (b, _) -> b
+      in
+      let res =
+        match b with
+        | Block.Blocks bs -> ret @@ handle_dash_separated_blocks m bs
+        | Block.Block_quote bq -> ret @@ Some (turn_block_quotes_into_divs m bq)
+        | Block.Code_block cb -> ret @@ Some (handle_code_blocks m cb)
+        | Block.Ext_standalone_attributes sa ->
+            handle_includes m ~htbl_include current_path sa
+        | _ -> Mapper.default
+      in
+      match res with
+      | `Default -> Ast.Mapper.continue_block m b
+      | `Map _ as map -> map
     in
     let attrs = map_attrs in
     let inline m = function

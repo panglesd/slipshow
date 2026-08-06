@@ -14,6 +14,7 @@ let pause_block = "pause-block"
 let as_html = "as-html"
 let auto_continue = "auto-continue"
 let gui = "gui"
+let loc_attr = "slipshow-original-loc"
 
 let all_attrs =
   [
@@ -33,4 +34,5 @@ let all_attrs =
     as_html;
     auto_continue;
     gui;
+    loc_attr;
   ]

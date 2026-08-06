@@ -65,6 +65,7 @@ module Garbage = struct
           match tool with Pointer -> `Presenting | _ -> `Drawing)
       | Drawing (Recording _) -> Lwd.pure `Drawing
       | Editing -> Lwd.pure `Editing
+      | Gui_mode -> Lwd.pure `Presenting
     in
     let ui = Lwd.observe panel in
     let on_invalidate _ =

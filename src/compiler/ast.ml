@@ -373,6 +373,115 @@ module Mapper = struct
     | S_inline i -> inline_ext_default m i |> Option.map (fun i -> S_inline i)
     | _ -> assert false
 
+  (** [continue_block m b] maps the children of [b] with [m], as the default
+      mapper would do. Contrarily to returning [`Default], this works on a block
+      that was modified by the mapper. *)
+  let continue_block m c =
+    let open Block in
+    let map_attrs (attrs, meta) = (Mapper.map_attrs m attrs, meta) in
+    match c with
+    | Blank_line _ -> `Map (Some c)
+    | Link_reference_definition ((lrd, attrs), meta) ->
+        `Map (Some (Link_reference_definition ((lrd, map_attrs attrs), meta)))
+    | Ext_standalone_attributes attrs ->
+        `Map (Some (Ext_standalone_attributes (map_attrs attrs)))
+    | Ext_math_block ((mb, attrs), meta) ->
+        `Map (Some (Ext_math_block ((mb, map_attrs attrs), meta)))
+    | Thematic_break ((tb, attrs), meta) ->
+        `Map (Some (Thematic_break ((tb, map_attrs attrs), meta)))
+    | Html_block ((hb, attrs), meta) ->
+        `Map (Some (Html_block ((hb, map_attrs attrs), meta)))
+    | Code_block ((cb, attrs), meta) ->
+        `Map (Some (Code_block ((cb, map_attrs attrs), meta)))
+    | Heading ((h, attrs), meta) ->
+        let attrs = map_attrs attrs in
+        let inline =
+          (* A heading can be empty *)
+          Option.value ~default:Inline.empty
+            (Mapper.map_inline m (Heading.inline h))
+        in
+        let h =
+          Heading.make ?id:(Heading.id h) ~layout:(Heading.layout h)
+            ~level:(Heading.level h) inline
+        in
+        `Map (Some (Heading ((h, attrs), meta)))
+    | Block_quote ((bq, attrs), meta) ->
+        let attrs = map_attrs attrs in
+        let block =
+          (* A block quote can be empty *)
+          Option.value ~default:(Blocks ([], Meta.none))
+            (Mapper.map_block m (Block_quote.block bq))
+        in
+        let bq = Block_quote.make ~indent:(Block_quote.indent bq) block in
+        `Map (Some (Block_quote ((bq, attrs), meta)))
+    | Blocks (bs, meta) -> (
+        match List.filter_map (Mapper.map_block m) bs with
+        | [] -> `Map None
+        | bs -> `Map (Some (Blocks (bs, meta))))
+    | List ((l, attrs), meta) -> (
+        let attrs = map_attrs attrs in
+        let map_list_item (i, meta) =
+          let+ block = Mapper.map_block m (List_item.block i) in
+          ( List_item.make ~before_marker:(List_item.before_marker i)
+              ~marker:(List_item.marker i)
+              ~after_marker:(List_item.after_marker i)
+              ?ext_task_marker:(List_item.ext_task_marker i) block,
+            meta )
+        in
+        match List.filter_map map_list_item (List'.items l) with
+        | [] -> `Map None
+        | items ->
+            let l = List'.make ~tight:(List'.tight l) (List'.type' l) items in
+            `Map (Some (List ((l, attrs), meta))))
+    | Paragraph ((p, attrs), meta) ->
+        let attrs = map_attrs attrs in
+        `Map
+          (let+ inline = Mapper.map_inline m (Paragraph.inline p) in
+           let p =
+             Paragraph.make ~leading_indent:(Paragraph.leading_indent p)
+               ~trailing_blanks:(Paragraph.trailing_blanks p) inline
+           in
+           Paragraph ((p, attrs), meta))
+    | Ext_table ((t, attrs), meta) ->
+        let attrs = map_attrs attrs in
+        let map_col (i, layout) =
+          match Mapper.map_inline m i with
+          | None -> (Inline.empty, layout)
+          | Some i -> (i, layout)
+        in
+        let map_row (((r, meta), blanks) as row) =
+          match r with
+          | `Header is -> ((`Header (List.map map_col is), meta), blanks)
+          | `Data is -> ((`Data (List.map map_col is), meta), blanks)
+          | `Sep _ -> row
+        in
+        let rows = List.map map_row (Table.rows t) in
+        let t = Table.make ~indent:(Table.indent t) rows in
+        `Map (Some (Ext_table ((t, attrs), meta)))
+    | Ext_footnote_definition ((fn, attrs), meta) ->
+        let attrs = map_attrs attrs in
+        let block =
+          (* A footnote can be empty *)
+          Option.value ~default:(Blocks ([], Meta.none))
+            (Mapper.map_block m (Footnote.block fn))
+        in
+        let fn =
+          Footnote.make ~indent:(Footnote.indent fn)
+            ~defined_label:(Footnote.defined_label fn) (Footnote.label fn) block
+        in
+        `Map (Some (Ext_footnote_definition ((fn, attrs), meta)))
+    | Ext_attribute_definition ((atd, attrs), meta) ->
+        let attrs = map_attrs attrs in
+        let atd =
+          Attribute_definition.make
+            ~indent:(Attribute_definition.indent atd)
+            (Attribute_definition.label atd)
+            (map_attrs (Attribute_definition.attrs atd))
+        in
+        `Map (Some (Ext_attribute_definition ((atd, attrs), meta)))
+    | S_block _ -> `Map (block_ext_default m c)
+    | _ -> assert false
+
   let make = Mapper.make ~block_ext_default ~inline_ext_default
 end
 
@@ -493,8 +602,8 @@ end
 
 module Utils = struct
   module Block = struct
-    (** Get the attributes of a cmarkit node, returns them and the element
-        stripped of its attributes *)
+    (** Get the attributes of a cmarkit node, updates it and returns the block
+        with the new attribute as well as the old one. *)
     let update_attribute :
         (Attributes.t node -> Attributes.t node) ->
         Block.t ->
