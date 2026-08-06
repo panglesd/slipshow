@@ -1,5 +1,5 @@
 (library
  (name drawing_controller)
- (libraries messaging lwd brr-lwd drawing_state universe toolbar)
+ (libraries messaging lwd brr-lwd drawing_state universe)
  (preprocess
   (pps ppx_deriving_yojson)))

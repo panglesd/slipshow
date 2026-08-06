@@ -144,38 +144,6 @@ let width_button var width c name =
 let toplevel_panel_el =
   Elwd.div ~at:[ `P (Brr.At.class' !!"slip-writing-toolbar") ]
 
-let now () = Brr.Performance.now_ms Brr.G.performance
-
-module Clear = struct
-  let clear ~replayed_strokes started_time strokes =
-    let clear strokes =
-      Lwd_table.iter
-        (fun stro ->
-          if Lwd.peek stro.erased |> Option.is_some then ()
-          else
-            let path = Lwd.peek stro.path in
-            Lwd.set stro.erased
-              (Some
-                 {
-                   at =
-                     Lwd.var
-                       (Float.max
-                          (List.hd path |> snd)
-                          (now () -. started_time));
-                   track = Lwd.var (Lwd.peek stro.track);
-                   selected = Lwd.var false;
-                   preselected = Lwd.var false;
-                 }))
-        strokes
-    in
-    clear strokes;
-    Option.iter clear replayed_strokes
-
-  let event ~replayed_strokes started_time strokes =
-    Messages.send (Clear started_time);
-    clear ~replayed_strokes started_time strokes
-end
-
 let drawing_panel mode =
   let lds = Drawing_state.live_drawing_state in
   let pen_button = pen_button lds.tool (Lwd.pure "Pen") "p" in
@@ -237,7 +205,8 @@ let drawing_panel mode =
             | Recording { started_at; replayed_part; recording_temp; _ } ->
                 (recording_temp, started_at, Some replayed_part)
           in
-          Clear.event ~replayed_strokes started_at strokes)
+          Drawing_controller.Tools.Clear.event ~replayed_strokes started_at
+            strokes)
     in
     let icon = panel_icon [ `P (Brr.El.txt !!"✗") ] in
     panel_block
@@ -346,3 +315,10 @@ let panel =
     match status with Drawing d -> drawing_panel d | Editing -> editing_panel
   in
   Elwd.div ~at:[ `P (Brr.At.id !!"slipshow-drawing-toolbar") ] [ `R content ]
+
+let init_ui () =
+  let body =
+    Brr.El.find_first_by_selector (Jstr.v "#slipshow-main") |> Option.get
+  in
+  let _root = Elwd.append_child body panel in
+  ()
