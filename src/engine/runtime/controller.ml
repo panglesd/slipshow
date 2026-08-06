@@ -174,7 +174,7 @@ type ('a, 'b) dragger = {
 let handle_drag (dragger : (_, 'b) dragger) =
   let acc : 'b option ref = ref None in
   let strokes = Drawing_state.workspaces.live_drawing in
-  fun (s : 'a Drawing_state.Messages.drag_event) ->
+  fun (s : 'a Drawing_controller.Messages.drag_event) ->
     match s with
     | Start (arg, x, y) ->
         let res = dragger.start strokes arg x y in
@@ -206,7 +206,7 @@ let handle_erase window = handle_drag (erase_dragger window)
 let handle_draw_stroke window = handle_drag (draw_stroke_dragger window)
 
 let handle_drawing window d =
-  let modu = Drawing_state.Messages.event_of_string d in
+  let modu = Drawing_controller.Messages.event_of_string d in
   match modu with
   | Some (Draw s) -> handle_draw_stroke window s
   | Some (Erase s) -> handle_erase window s
@@ -246,9 +246,9 @@ let message_setup window =
       | Some { payload = ActivateGUI id; id = _window_id } -> Gui.activate id
       | Some { payload = DeActivateGUI; id = _window_id } -> Gui.deactivate ()
       | Some { payload = Send_all_drawing; id = _ } ->
-          Drawing_state.Messages.send_all_strokes ()
+          Drawing_controller.Messages.send_all_strokes ()
       | Some { payload = Receive_all_drawing all_strokes; id = _ } ->
-          Drawing_state.Messages.receive_all_strokes all_strokes
+          Drawing_controller.Messages.receive_all_strokes all_strokes
       | Some { payload = Can_save; id = _ } ->
           Lwd.set Drawing_state.can_save true
       | None

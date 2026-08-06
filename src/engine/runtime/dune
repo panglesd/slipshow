@@ -15,6 +15,7 @@
   messaging
   fast
   gui
+  toolbar
   mouse_disappearing))
 
 (rule

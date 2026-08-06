@@ -7,20 +7,6 @@ let ( !! ) = Jstr.v
 
 open Brr
 
-let init_ui () =
-  let body =
-    Brr.El.find_first_by_selector (Jstr.v "#slipshow-main") |> Option.get
-  in
-  let _root = Elwd.append_child body Toolbar.panel in
-  ()
-
-(* let _ = *)
-(*   let el = *)
-(*     Brr.El.find_first_by_selector (Jstr.v "#slipshow-main") |> Option.get *)
-(*   in *)
-(*   let content = "" in *)
-(*   (ignore content, ignore el) *)
-
 module Rec_in_progress = struct
   let init () =
     let visib =
@@ -191,7 +177,6 @@ let init_ui window =
   connect window;
   Preview.for_events window;
   Rec_in_progress.init ();
-  init_ui ();
   Garbage.g ();
   Ui.init window
 (* ; *)
