@@ -90,7 +90,7 @@ module Draw_stroke = struct
   let end_at l = List.hd l |> snd
 
   let start window element_anchor strokes
-      { started_time; stroker; color; width; id } x y =
+      { Messages.started_time; stroker; color; width; id } x y =
     let translation = Translation.get window element_anchor in
     let path =
       [ (Translation.forward translation x y, now () -. started_time) ]

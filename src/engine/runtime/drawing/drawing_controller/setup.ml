@@ -11,7 +11,7 @@ let init_ui () =
   let body =
     Brr.El.find_first_by_selector (Jstr.v "#slipshow-main") |> Option.get
   in
-  let _root = Elwd.append_child body Panel.panel in
+  let _root = Elwd.append_child body Toolbar.panel in
   ()
 
 (* let _ = *)
