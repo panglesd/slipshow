@@ -133,9 +133,13 @@ let previewer' =
     let _ = proto_request uri (Save_gui_position { id; x; y }) in
     ()
   in
+  let goto_loc s =
+    let _ = proto_request uri (GotoLoc s) in
+    ()
+  in
   Previewer.create_previewer ?initial_stage ~callback ~save_drawing
     ~include_speaker_view:true ~errors_el:warnings ~steal_focus:true
-    ~can_save:true ~save_coordinate elem
+    ~can_save:true ~save_coordinate ~goto_loc elem
 
 let () = previewer := Some previewer'
 

@@ -35,3 +35,4 @@ let send_speaker_notes s = send (Speaker_notes s)
 let opened_recording_panel () = send Open_recording_panel
 let closed_recording_panel () = send Close_recording_panel
 let send_gui_coordinate id x y = send (SaveCoordinates { x; y; id })
+let send_loc loc = send (GotoLoc loc)
