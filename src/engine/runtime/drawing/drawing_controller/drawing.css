@@ -14,7 +14,10 @@
   max-width: 50%;
   max-height: 100vh;
 }
-.slipshow-drawing-mode #slipshow-drawing-toolbar {
+
+.slipshow-drawing-mode #slipshow-drawing-toolbar,
+.slipshow-guiing-mode #slipshow-drawing-toolbar
+{
   max-height: 100vh;
 }
 #slipshow-drawing-toolbar:hover {

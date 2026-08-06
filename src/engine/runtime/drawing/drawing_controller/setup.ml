@@ -65,30 +65,33 @@ module Garbage = struct
           match tool with Pointer -> `Presenting | _ -> `Drawing)
       | Drawing (Recording _) -> Lwd.pure `Drawing
       | Editing -> Lwd.pure `Editing
-      | Gui_mode -> Lwd.pure `Presenting
+      | Gui_mode -> Lwd.pure `Guiing
     in
     let ui = Lwd.observe panel in
     let on_invalidate _ =
       let _ : int =
         G.request_animation_frame @@ fun _ ->
         let is_drawing = Lwd.quick_sample ui in
+        List.iter
+          (fun c ->
+            Brr.El.set_class !!c false (Brr.Document.body Brr.G.document))
+          [
+            "slipshow-drawing-mode";
+            "slipshow-editing-mode";
+            "slipshow-guiing-mode";
+          ];
         ignore
         @@
         match is_drawing with
-        | `Presenting ->
-            Brr.El.set_class !!"slipshow-drawing-mode" false
-              (Brr.Document.body Brr.G.document);
-            Brr.El.set_class !!"slipshow-editing-mode" false
-              (Brr.Document.body Brr.G.document)
+        | `Presenting -> ()
         | `Drawing ->
             Brr.El.set_class !!"slipshow-drawing-mode" true
-              (Brr.Document.body Brr.G.document);
-            Brr.El.set_class !!"slipshow-editing-mode" false
               (Brr.Document.body Brr.G.document)
         | `Editing ->
-            Brr.El.set_class !!"slipshow-drawing-mode" false
-              (Brr.Document.body Brr.G.document);
             Brr.El.set_class !!"slipshow-editing-mode" true
+              (Brr.Document.body Brr.G.document)
+        | `Guiing ->
+            Brr.El.set_class !!"slipshow-guiing-mode" true
               (Brr.Document.body Brr.G.document)
       in
       ()
