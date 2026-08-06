@@ -31,6 +31,7 @@ let slipshow_plugin ?slipshow_js ?options ~errors_el preview_element =
         Previewer.create_previewer ~include_speaker_view:false ~errors_el
           ~steal_focus:false ~can_save:false
           ~save_coordinate:(fun ~id:_ ~x:_ ~y:_ -> ())
+          ~goto_loc:(fun _ -> ())
           preview_element
       in
       let _ : unit Fut.t = update_slipshow ~ms:0 state view in

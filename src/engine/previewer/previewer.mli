@@ -14,6 +14,7 @@ val create_previewer :
   ?callback:(int -> unit) ->
   ?save_drawing:(path:string -> content:string -> unit) ->
   save_coordinate:(id:string -> x:int -> y:int -> unit) ->
+  goto_loc:(string -> unit) ->
   include_speaker_view:bool ->
   errors_el:Brr.El.t ->
   steal_focus:bool ->

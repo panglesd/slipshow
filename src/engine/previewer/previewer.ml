@@ -114,7 +114,7 @@ let css =
 let preview_status_class = Jstr.v "preview-status"
 
 let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
-    ?(save_drawing = fun ~path:_ ~content:_ -> ()) ~save_coordinate
+    ?(save_drawing = fun ~path:_ ~content:_ -> ()) ~save_coordinate ~goto_loc
     ~include_speaker_view ~errors_el ~steal_focus ~can_save root =
   let ( !! ) = Jstr.v in
   let name1 = Random.int 1000000 |> string_of_int |> fun s -> "id" ^ s in
@@ -181,6 +181,7 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
               save_drawing ~path ~content
           | Some { payload = SaveCoordinates { x; y; id }; _ } ->
               save_coordinate ~id ~x ~y
+          | Some { payload = GotoLoc loc; _ } -> goto_loc loc
           | None
           | Some { payload = Speaker_notes _; _ }
           | Some { payload = Drawing _; _ }
@@ -231,7 +232,7 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
                   | State (_, _)
                   | Speaker_notes _ | Drawing _ | Receive_all_drawing _
                   | Save_drawing (_, _)
-                  | ActivateGUI _ | SaveCoordinates _ );
+                  | ActivateGUI _ | SaveCoordinates _ | GotoLoc _ );
                 id = _;
               }
           | None ->

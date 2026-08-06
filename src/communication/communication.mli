@@ -16,6 +16,7 @@ type payload =
   | ActivateGUI of string
   | DeActivateGUI
   | SaveCoordinates of { id : string; x : int; y : int }
+  | GotoLoc of string
 
 type t = { payload : payload; id : string }
 

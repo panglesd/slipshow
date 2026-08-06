@@ -193,6 +193,45 @@ let polling (roots, _get_roots)
                 path
             in
             notify msg
+      | Some (GotoLoc s) -> (
+          match notify_back with
+          | None -> pong ()
+          | Some (notify_back, _gui) ->
+              let s = Base64.decode s |> Result.get_ok in
+              let textloc : Cmarkit.Textloc.t = Marshal.from_string s 0 in
+              let uri =
+                Linol_lsp.Uri0.of_string (Cmarkit.Textloc.file textloc)
+              in
+              let linoloc_of_textloc (loc : Cmarkit.Textloc.t) =
+                let start =
+                  let line, byte_pos = Cmarkit.Textloc.first_line loc in
+                  let line = line - 1 in
+                  let character = Cmarkit.Textloc.first_byte loc - byte_pos in
+                  Linol_lwt.Position.create ~character ~line
+                in
+                let end_ =
+                  let line, byte_pos = Cmarkit.Textloc.last_line loc in
+                  let line = line - 1 in
+                  let character =
+                    Cmarkit.Textloc.last_byte loc - byte_pos + 1
+                  in
+                  Linol_lwt.Position.create ~character ~line
+                in
+                Linol_lwt.Range.create ~end_ ~start
+              in
+              let range = linoloc_of_textloc textloc in
+              let _ =
+                notify_back#send_request
+                  (ShowDocumentRequest
+                     {
+                       external_ = None;
+                       takeFocus = None;
+                       uri;
+                       selection = Some range;
+                     })
+                  (fun _ -> Lwt.return ())
+              in
+              pong ())
       | Some (Save_gui_position { id = _; x; y }) -> (
           match notify_back with
           | None -> pong ()
