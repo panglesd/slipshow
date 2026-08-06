@@ -198,9 +198,9 @@ module Attributes = struct
   (** Merge *)
 
   let map f attrs =
-    let class' = List.filter_map (fun x -> f (`Class x)) attrs.class' in
-    let id = match attrs.id with None -> [] | Some id -> List.filter_map (fun _ -> f (`Id id)) [()] in
-    let kv_attrs = List.filter_map (fun x -> f (`Kv x)) attrs.kv_attributes in
+    let kv_attrs = List.concat_map (fun x -> f (`Kv x)) attrs.kv_attributes in
+    let class' = List.concat_map (fun x -> f (`Class x)) attrs.class' in
+    let id = match attrs.id with None -> [] | Some id -> List.concat_map (fun _ -> f (`Id id)) [()] in
     List.fold_left
       (fun acc -> function
         | `Class x -> add_class acc x
@@ -3516,7 +3516,7 @@ module Mapper = struct
          [ `Class of string node
          | `Id of string node
          | `Kv of Attributes.key node * Attributes.value node option ]
-           option);
+           list);
       block : Block.t mapper }
   and 'a map = t -> 'a -> 'a filter_map
   and 'a mapper = t -> 'a -> 'a result
@@ -3524,7 +3524,7 @@ module Mapper = struct
   let none _ _ = `Default
   let ext_inline_none _ _ = invalid_arg Inline.err_unknown
   let ext_block_none _ _ = invalid_arg Block.err_unknown
-  let attrs x = Some x
+  let attrs x = [x]
   let make
       ?(inline_ext_default = ext_inline_none)
       ?(block_ext_default = ext_block_none)

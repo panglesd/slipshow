@@ -332,7 +332,7 @@ module Attributes : sig
      [< `Class of string node
      | `Id of string node
      | `Kv of (key node) * value node option ]
-       option) ->
+       list) ->
     t -> t
 
   val merge : base:t -> new_attrs:t -> t
@@ -1584,7 +1584,7 @@ module Mapper : sig
         | `Kv of Attributes.key node * Attributes.value node option ] ->
         [ `Class of string node
         | `Id of string node
-        | `Kv of Attributes.key node * Attributes.value node option ] option) ->
+        | `Kv of Attributes.key node * Attributes.value node option ] list) ->
  unit -> t
   (** [make ?inline ?block ()] is a mapper using [inline] and [block]
       to map the abstract syntax tree. Both default to [fun _ _ -> `Default].

@@ -265,50 +265,49 @@ module Stage1 = struct
     match res with [] -> None | res -> Some (Block.Blocks (res, meta))
 
   let map_attrs = function
-    | `Kv (("up", m), v) -> Some (`Kv (("up-at-unpause", m), v))
-    | `Kv (("center", m), v) -> Some (`Kv (("center-at-unpause", m), v))
-    | `Kv (("down", m), v) -> Some (`Kv (("down-at-unpause", m), v))
-    | `Kv (("exec", m), v) -> Some (`Kv (("exec-at-unpause", m), v))
-    | `Kv (("scroll", m), v) -> Some (`Kv (("scroll-at-unpause", m), v))
-    | `Kv (("enter", m), v) -> Some (`Kv (("enter-at-unpause", m), v))
-    | `Kv (("emph", m), v) -> Some (`Kv (("emph-at-unpause", m), v))
-    | `Kv (("focus", m), v) -> Some (`Kv (("focus-at-unpause", m), v))
-    | `Kv (("reveal", m), v) -> Some (`Kv (("reveal-at-unpause", m), v))
-    | `Kv (("static", m), v) -> Some (`Kv (("static-at-unpause", m), v))
-    | `Kv (("unemph", m), v) -> Some (`Kv (("unemph-at-unpause", m), v))
-    | `Kv (("unfocus", m), v) -> Some (`Kv (("unfocus-at-unpause", m), v))
-    | `Kv (("unreveal", m), v) -> Some (`Kv (("unreveal-at-unpause", m), v))
-    | `Kv (("unstatic", m), v) -> Some (`Kv (("unstatic-at-unpause", m), v))
+    | `Kv (("up", m), v) -> [ `Kv (("up-at-unpause", m), v) ]
+    | `Kv (("center", m), v) -> [ `Kv (("center-at-unpause", m), v) ]
+    | `Kv (("down", m), v) -> [ `Kv (("down-at-unpause", m), v) ]
+    | `Kv (("exec", m), v) -> [ `Kv (("exec-at-unpause", m), v) ]
+    | `Kv (("scroll", m), v) -> [ `Kv (("scroll-at-unpause", m), v) ]
+    | `Kv (("enter", m), v) -> [ `Kv (("enter-at-unpause", m), v) ]
+    | `Kv (("emph", m), v) -> [ `Kv (("emph-at-unpause", m), v) ]
+    | `Kv (("focus", m), v) -> [ `Kv (("focus-at-unpause", m), v) ]
+    | `Kv (("reveal", m), v) -> [ `Kv (("reveal-at-unpause", m), v) ]
+    | `Kv (("static", m), v) -> [ `Kv (("static-at-unpause", m), v) ]
+    | `Kv (("unemph", m), v) -> [ `Kv (("unemph-at-unpause", m), v) ]
+    | `Kv (("unfocus", m), v) -> [ `Kv (("unfocus-at-unpause", m), v) ]
+    | `Kv (("unreveal", m), v) -> [ `Kv (("unreveal-at-unpause", m), v) ]
+    | `Kv (("unstatic", m), v) -> [ `Kv (("unstatic-at-unpause", m), v) ]
     (* TODO: Improve this (eg by moving it to another phase) *)
-    | `Kv (("children:up", m), v) ->
-        Some (`Kv (("children:up-at-unpause", m), v))
+    | `Kv (("children:up", m), v) -> [ `Kv (("children:up-at-unpause", m), v) ]
     | `Kv (("children:center", m), v) ->
-        Some (`Kv (("children:center-at-unpause", m), v))
+        [ `Kv (("children:center-at-unpause", m), v) ]
     | `Kv (("children:down", m), v) ->
-        Some (`Kv (("children:down-at-unpause", m), v))
+        [ `Kv (("children:down-at-unpause", m), v) ]
     | `Kv (("children:exec", m), v) ->
-        Some (`Kv (("children:exec-at-unpause", m), v))
+        [ `Kv (("children:exec-at-unpause", m), v) ]
     | `Kv (("children:scroll", m), v) ->
-        Some (`Kv (("children:scroll-at-unpause", m), v))
+        [ `Kv (("children:scroll-at-unpause", m), v) ]
     | `Kv (("children:enter", m), v) ->
-        Some (`Kv (("children:enter-at-unpause", m), v))
+        [ `Kv (("children:enter-at-unpause", m), v) ]
     | `Kv (("children:emph", m), v) ->
-        Some (`Kv (("children:emph-at-unpause", m), v))
+        [ `Kv (("children:emph-at-unpause", m), v) ]
     | `Kv (("children:focus", m), v) ->
-        Some (`Kv (("children:focus-at-unpause", m), v))
+        [ `Kv (("children:focus-at-unpause", m), v) ]
     | `Kv (("children:reveal", m), v) ->
-        Some (`Kv (("children:reveal-at-unpause", m), v))
+        [ `Kv (("children:reveal-at-unpause", m), v) ]
     | `Kv (("children:static", m), v) ->
-        Some (`Kv (("children:static-at-unpause", m), v))
+        [ `Kv (("children:static-at-unpause", m), v) ]
     | `Kv (("children:unemph", m), v) ->
-        Some (`Kv (("children:unemph-at-unpause", m), v))
+        [ `Kv (("children:unemph-at-unpause", m), v) ]
     | `Kv (("children:unfocus", m), v) ->
-        Some (`Kv (("children:unfocus-at-unpause", m), v))
+        [ `Kv (("children:unfocus-at-unpause", m), v) ]
     | `Kv (("children:unreveal", m), v) ->
-        Some (`Kv (("children:unreveal-at-unpause", m), v))
+        [ `Kv (("children:unreveal-at-unpause", m), v) ]
     | `Kv (("children:unstatic", m), v) ->
-        Some (`Kv (("children:unstatic-at-unpause", m), v))
-    | x -> Some x
+        [ `Kv (("children:unstatic-at-unpause", m), v) ]
+    | x -> [ x ]
 
   let execute ~htbl_include current_path defs =
     let ret x = `Map x in
@@ -778,13 +777,13 @@ let to_cmarkit units =
     | _ -> Mapper.default
   in
   let attrs = function
-    | `Kv (("up-at-unpause", m), v) -> Some (`Kv (("up", m), v))
-    | `Kv (("center-at-unpause", m), v) -> Some (`Kv (("center", m), v))
-    | `Kv (("enter-at-unpause", m), v) -> Some (`Kv (("enter", m), v))
-    | `Kv (("down-at-unpause", m), v) -> Some (`Kv (("down", m), v))
-    | `Kv (("exec-at-unpause", m), v) -> Some (`Kv (("exec", m), v))
-    | `Kv (("scroll-at-unpause", m), v) -> Some (`Kv (("scroll", m), v))
-    | x -> Some x
+    | `Kv (("up-at-unpause", m), v) -> [ `Kv (("up", m), v) ]
+    | `Kv (("center-at-unpause", m), v) -> [ `Kv (("center", m), v) ]
+    | `Kv (("enter-at-unpause", m), v) -> [ `Kv (("enter", m), v) ]
+    | `Kv (("down-at-unpause", m), v) -> [ `Kv (("down", m), v) ]
+    | `Kv (("exec-at-unpause", m), v) -> [ `Kv (("exec", m), v) ]
+    | `Kv (("scroll-at-unpause", m), v) -> [ `Kv (("scroll", m), v) ]
+    | x -> [ x ]
   in
   Ast.Mapper.make ~block ~inline ~attrs ()
 
