@@ -310,7 +310,7 @@ module Stage1 = struct
         [ `Kv (("children:unreveal-at-unpause", m), v) ]
     | `Kv (("children:unstatic", m), v) ->
         [ `Kv (("children:unstatic-at-unpause", m), v) ]
-    | `Kv (("gui", meta), _) as gui ->
+    | `Kv (("gui", _), Some (_, meta)) as gui ->
         let loc = Meta.textloc meta in
         let v = Marshal.to_string loc [] |> Base64.encode_string in
         let attr = { Cmarkit.Attributes.v; delimiter = Some '"' } in
