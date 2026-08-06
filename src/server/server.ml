@@ -1,3 +1,19 @@
+let linoloc_of_textloc (loc : Cmarkit.Textloc.t) =
+  let uri = Linol_lsp.Uri0.of_string (Cmarkit.Textloc.file loc) in
+  let start =
+    let line, byte_pos = Cmarkit.Textloc.first_line loc in
+    let line = line - 1 in
+    let character = Cmarkit.Textloc.first_byte loc - byte_pos in
+    Linol_lwt.Position.create ~character ~line
+  in
+  let end_ =
+    let line, byte_pos = Cmarkit.Textloc.last_line loc in
+    let line = line - 1 in
+    let character = Cmarkit.Textloc.last_byte loc - byte_pos + 1 in
+    Linol_lwt.Position.create ~character ~line
+  in
+  (uri, Linol_lwt.Range.create ~end_ ~start)
+
 type to_server =
   | Update
   | Control of Proto.Server_to_client.control
@@ -197,29 +213,10 @@ let polling (roots, _get_roots)
           match notify_back with
           | None -> pong ()
           | Some (notify_back, _gui) ->
+              Format.eprintf "Received loc request\n%!";
               let s = Base64.decode s |> Result.get_ok in
               let textloc : Cmarkit.Textloc.t = Marshal.from_string s 0 in
-              let uri =
-                Linol_lsp.Uri0.of_string (Cmarkit.Textloc.file textloc)
-              in
-              let linoloc_of_textloc (loc : Cmarkit.Textloc.t) =
-                let start =
-                  let line, byte_pos = Cmarkit.Textloc.first_line loc in
-                  let line = line - 1 in
-                  let character = Cmarkit.Textloc.first_byte loc - byte_pos in
-                  Linol_lwt.Position.create ~character ~line
-                in
-                let end_ =
-                  let line, byte_pos = Cmarkit.Textloc.last_line loc in
-                  let line = line - 1 in
-                  let character =
-                    Cmarkit.Textloc.last_byte loc - byte_pos + 1
-                  in
-                  Linol_lwt.Position.create ~character ~line
-                in
-                Linol_lwt.Range.create ~end_ ~start
-              in
-              let range = linoloc_of_textloc textloc in
+              let uri, range = linoloc_of_textloc textloc in
               let _ =
                 notify_back#send_request
                   (ShowDocumentRequest
@@ -232,37 +229,56 @@ let polling (roots, _get_roots)
                   (fun _ -> Lwt.return ())
               in
               pong ())
-      | Some (Save_gui_position { id = _; x; y }) -> (
-          match notify_back with
-          | None -> pong ()
-          | Some (notify_back, gui) -> (
-              match !gui with
-              | None -> pong ()
-              | Some (uri, range) ->
-                  let newText = Format.sprintf "%d,%d" x y in
-                  let end_ =
-                    {
-                      range.Linol_lwt.Range.start with
-                      character = range.start.character + String.length newText;
-                    }
-                  in
-                  gui :=
-                    Some (uri, { Linol_lwt.Range.start = range.start; end_ });
-                  let _ =
-                    notify_back#send_request
-                      (WorkspaceApplyEdit
-                         {
-                           edit =
-                             {
-                               changeAnnotations = None;
-                               changes = Some [ (uri, [ { newText; range } ]) ];
-                               documentChanges = None;
-                             };
-                           label = None;
-                         })
-                      (fun _ -> Lwt.return ())
-                  in
-                  pong ())))
+      | Some (Save_gui_position { id; x; y }) ->
+          Format.eprintf "1%!\n";
+          let ( let> ) x f = Option.bind x f in
+          let _res : unit option =
+            let> notify_back, gui = notify_back in
+            Format.eprintf "2: %s%!\n" id;
+            let> { definition; usage = _ } =
+              Slipshow.Id_map.SMap.find_opt id root.units.id_map
+            in
+            Format.eprintf "3%!\n";
+            let def = Slipshow.Id_map.Unionable_set.get definition in
+            let> attrs, _ =
+              match def.elem with
+              | `Block b ->
+                  let> _, attrs = Slipshow.Ast.Utils.Block.get_attribute b in
+                  Some attrs
+              | `Inline i ->
+                  let> _, attrs = Slipshow.Ast.Utils.Inline.get_attribute i in
+                  Some attrs
+              | `External -> None
+            in
+            let> _key, value = Cmarkit.Attributes.find "gui" attrs in
+            let> _value, meta = value in
+            let textloc = Cmarkit.Meta.textloc meta in
+            let uri, range = linoloc_of_textloc textloc in
+            let newText = Format.sprintf "%d,%d" x y in
+            let end_ =
+              {
+                range.Linol_lwt.Range.start with
+                character = range.start.character + String.length newText;
+              }
+            in
+            gui := Some (uri, { Linol_lwt.Range.start = range.start; end_ });
+            let _ =
+              notify_back#send_request
+                (WorkspaceApplyEdit
+                   {
+                     edit =
+                       {
+                         changeAnnotations = None;
+                         changes = Some [ (uri, [ { newText; range } ]) ];
+                         documentChanges = None;
+                       };
+                     label = None;
+                   })
+                (fun _ -> Lwt.return ())
+            in
+            None
+          in
+          pong ())
 
 let do_serve ~port ~(notify_back : (Linol_lwt.Jsonrpc2.notify_back * _) option)
     (roots : roots) =

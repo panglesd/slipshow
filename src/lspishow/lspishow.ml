@@ -285,6 +285,7 @@ class lsp_server =
           let loc = Cmarkit.Meta.textloc meta in
           let range = Diagnostic.linoloc_of_textloc loc in
           let () = currently_modified := Some (uri, range) in
+          Format.eprintf "activating%!\n";
           (* let _ = *)
           (*   notify_back#send_request *)
           (*     (WorkspaceApplyEdit *)
@@ -302,6 +303,7 @@ class lsp_server =
           (* in *)
           Lwt_condition.broadcast root.condition (ActivateGUI id)
       | _ ->
+          Format.eprintf "deactivating%!\n";
           let () = currently_modified := None in
           Lwt_condition.broadcast root.condition DeActivateGUI
 
