@@ -8,6 +8,7 @@ let keyboard_setup (window : Universe.Window.t) =
       let try_handle handler k =
         match handler with true -> () | false -> k ()
       in
+      try_handle (Gui.Controller.handle ev) @@ fun () ->
       try_handle (Drawing_controller.Controller.handle ev) @@ fun () ->
       try_handle (check_modif_key Brr.Ev.Keyboard.ctrl_key) @@ fun () ->
       try_handle (check_modif_key Brr.Ev.Keyboard.meta_key) @@ fun () ->
@@ -71,6 +72,9 @@ let keyboard_setup (window : Universe.Window.t) =
             Universe.Move.move_relative_pure Fast.slow ~scale:(1. /. 1.02)
               window ~duration:0.
           in
+          ()
+      | "G" ->
+          Drawing_state.Status.set Gui_mode;
           ()
       | _ -> ()
     in
@@ -243,8 +247,10 @@ let message_setup window =
           in
           ()
       | Some { payload = Drawing d; id = _window_id } -> handle_drawing window d
-      | Some { payload = ActivateGUI id; id = _window_id } -> Gui.activate id
-      | Some { payload = DeActivateGUI; id = _window_id } -> Gui.deactivate ()
+      | Some { payload = ActivateGUI id; id = _window_id } ->
+          Gui.Action.activate id
+      | Some { payload = DeActivateGUI; id = _window_id } ->
+          Gui.Action.deactivate ()
       | Some { payload = Send_all_drawing; id = _ } ->
           Drawing_controller.Messages.send_all_strokes ()
       | Some { payload = Receive_all_drawing all_strokes; id = _ } ->

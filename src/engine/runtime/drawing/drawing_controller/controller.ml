@@ -122,6 +122,7 @@ let shortcuts key =
       | Some s ->
           if is_up_to_date s.recording then shortcut_editing s key else false
       | None -> false)
+  | Gui_mode -> false
 
 let handle ev =
   let key = ev |> Brr.Ev.as_type |> Brr.Ev.Keyboard.key |> Jstr.to_string in

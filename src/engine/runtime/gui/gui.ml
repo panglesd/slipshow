@@ -1,10 +1,12 @@
 open Brr
 open Brr_lwd
 open Lwd_infix
+module Types = Types
+module State = State
+module Controller = Controller
+module Action = Action
 
-let current = Lwd.var None
 let ( !! ) = Jstr.v
-let activate_class = !!"slipshow-activated"
 let sof x = Printf.sprintf "%.25f" x
 let transform_s x y = "translate(" ^ sof x ^ "px, " ^ sof y ^ "px)"
 let x_coord = El.Prop.int !!"slipshow-x-coord"
@@ -13,15 +15,15 @@ let pos_attr = !!"slipshow-original-loc"
 
 let for_events window =
   let display =
-    let$ status = Lwd.get current in
-    match status with
-    | Some _ -> (!!"display", !!"block")
-    | None -> (!!"display", !!"none")
+    let$ mode = Lwd.get State.status and$ status = Drawing_state.Status.get in
+    match (status, mode) with
+    | Gui_mode, (Move | Scale | Dimension) -> (!!"display", !!"block")
+    | _ -> (!!"display", !!"none")
   in
   let handler =
     let ( let> ) x f = Option.iter f x in
     let start _x _y _ev =
-      let el = Lwd.peek current in
+      let el = Lwd.peek State.current in
       let x0, y0, scale =
         match el with
         | None -> (0, 0, 1.)
@@ -103,7 +105,10 @@ let make_clickable el =
   | Some pos ->
       let _unlisten : Ev.listener =
         Ev.listen Ev.click
-          (fun _ev -> Messaging.send_loc (Jstr.to_string pos))
+          (fun _ev ->
+            Messaging.send_loc (Jstr.to_string pos);
+            if Drawing_state.Status.peek () = Gui_mode then
+              Action.activate_el el)
           (El.as_target el)
       in
       ()
@@ -114,7 +119,9 @@ let init window =
       (fun el () ->
         setup_elem el;
         make_clickable el)
-      !!"[gui]" ()
+      (* TODO: make Special_attributes shared and use it *)
+      !!("[" ^ "slipshow-original-loc" ^ "]")
+      ()
   in
   let for_events = for_events window in
   let main =
@@ -122,23 +129,3 @@ let init window =
   in
   let _root = Elwd.append_child main for_events in
   ()
-
-let activate id =
-  match El.find_first_by_selector !!("#" ^ id) with
-  | None -> ()
-  | Some el ->
-      let () =
-        match Lwd.peek current with
-        | Some old_el when old_el <> el ->
-            El.set_class activate_class false old_el
-        | _ -> ()
-      in
-      Lwd.set current (Some el);
-      El.set_class activate_class true el
-
-let deactivate () =
-  match Lwd.peek current with
-  | Some old_el ->
-      Lwd.set current None;
-      El.set_class activate_class false old_el
-  | None -> ()
