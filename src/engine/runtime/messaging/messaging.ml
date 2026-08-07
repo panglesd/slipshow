@@ -36,6 +36,15 @@ let opened_recording_panel () = send Open_recording_panel
 let closed_recording_panel () = send Close_recording_panel
 
 let send_gui_coordinate id (coord : Actions_arguments.Gui.t) =
-  send (SaveCoordinates { x = coord.x; y = coord.y; scale = coord.scale; id })
+  send
+    (SaveCoordinates
+       {
+         x = coord.x;
+         y = coord.y;
+         scale = coord.scale;
+         w = coord.width;
+         h = coord.height;
+         id;
+       })
 
 let send_loc loc = send (GotoLoc loc)

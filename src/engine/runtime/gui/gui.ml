@@ -23,7 +23,7 @@ let for_events window =
     | Select -> Lwd_seq.empty
     | Move -> Lwd_seq.element @@ Gui_tools.move window
     | Scale -> Lwd_seq.element @@ Gui_tools.scale window
-    | Dimension -> Lwd_seq.empty
+    | Dimension -> Lwd_seq.element @@ Gui_tools.dimension window
   in
   Elwd.div
     ~ev:[ `S handler ]
@@ -48,7 +48,8 @@ let setup_elem el =
       let coord =
         match Gui_tools.Syntax.parse (Jstr.to_string s) with
         | Ok (x, _warnings) -> x
-        | Error _ -> { x = None; y = None; scale = None }
+        | Error _ ->
+            { x = None; y = None; scale = None; width = None; height = None }
       in
       Gui_tools.save_coord_el coord el;
       Gui_tools.apply_coord coord el

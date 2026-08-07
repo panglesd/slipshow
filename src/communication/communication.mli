@@ -19,6 +19,8 @@ type payload =
       id : string;
       x : int option;
       y : int option;
+      w : int option;
+      h : int option;
       scale : float option;
     }
   | GotoLoc of string
