@@ -280,7 +280,7 @@ class lsp_server =
       let ( let> ) x f = Option.iter f x in
       let trail = Current_ast.get_leave ~path position buffer.unit.ast in
       match trail.attribute with
-      | Some (attrs, Some (Key (("gui", _meta), Some (_, meta)))) ->
+      | Some (attrs, Some (Key (("gui", meta), _ (* Some (_, meta) *)))) ->
           let> id, _ = Cmarkit.Attributes.id attrs in
           let loc = Cmarkit.Meta.textloc meta in
           let range = Diagnostic.linoloc_of_textloc loc in

@@ -247,11 +247,28 @@ let polling (roots, _get_roots)
                   Some attrs
               | `External -> None
             in
-            let> _key, value = Cmarkit.Attributes.find "gui" attrs in
-            let> _value, meta = value in
-            let textloc = Cmarkit.Meta.textloc meta in
+            let> (_key, meta_key), value =
+              Cmarkit.Attributes.find "gui" attrs
+            in
+            let prefix, textloc, suffix =
+              match value with
+              | None ->
+                  let textloc = Cmarkit.Meta.textloc meta_key in
+                  let byte, line =
+                    ( Cmarkit.Textloc.last_byte textloc,
+                      Cmarkit.Textloc.last_line textloc )
+                  in
+                  let textloc =
+                    textloc
+                    |> Cmarkit.Textloc.set_first ~first_byte:(byte + 1)
+                         ~first_line:line
+                    |> Cmarkit.Textloc.set_last ~last_byte:byte ~last_line:line
+                  in
+                  ("=\"", textloc, "\"")
+              | Some (_value, meta) -> ("", Cmarkit.Meta.textloc meta, "")
+            in
             let uri, range = linoloc_of_textloc textloc in
-            let newText = coord in
+            let newText = prefix ^ coord ^ suffix in
             let end_ =
               {
                 range.Linol_lwt.Range.start with
