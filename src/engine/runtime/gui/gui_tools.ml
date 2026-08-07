@@ -71,7 +71,7 @@ let move window =
   let ( let> ) x f = Option.iter f x in
   let start _x _y _ev =
     let el = Lwd.peek State.current in
-    let coord, scale =
+    let coord, factor =
       match el with
       | None ->
           ({ x = None; y = None; scale = None; width = None; height = None }, 1.)
@@ -79,14 +79,15 @@ let move window =
           let scale0 = Universe.Window.scale_in_universe window el in
           let { Universe.Coordinates.scale; _ } = Universe.State.get_coord () in
           let coord = coord_el el in
-          (coord, Normalization.scale @@ (scale0 /. scale))
+          (coord, Normalization.scale @@ (1. /. (scale0 *. scale)))
     in
-    (el, coord, coord, scale)
+    (el, coord, coord, factor)
   in
-  let drag ~x:_ ~y:_ ~dx ~dy (el, _, coord0, scale) _ev =
-    let scale_coord = get_scale coord0 in
-    let dx = dx *. scale /. scale_coord in
-    let dy = dy *. scale /. scale_coord in
+  let drag ~x:_ ~y:_ ~dx ~dy (el, _, coord0, factor) _ev =
+    (* translate precedes scale... *)
+    let parent_factor = factor *. get_scale coord0 in
+    let dx = dx *. parent_factor in
+    let dy = dy *. parent_factor in
     let x = Some (int_of_float dx + get_x coord0)
     and y = Some (int_of_float dy + get_y coord0) in
     let coord1 = { coord0 with x; y } in
@@ -94,9 +95,9 @@ let move window =
       let> el = el in
       apply_coord coord1 el
     in
-    (el, coord1, coord0, scale)
+    (el, coord1, coord0, factor)
   in
-  let end_ (el, coord1, _coord0, _scale) _ev =
+  let end_ (el, coord1, _coord0, _factor) _ev =
     let> el = el in
     let> id =
       El.prop El.Prop.id el |> Jstr.to_string |> function
@@ -112,31 +113,36 @@ let scale window =
   let ( let> ) x f = Option.iter f x in
   let start _x _y _ev =
     let el = Lwd.peek State.current in
-    let coord, scale =
+    let coord, factor =
       match el with
       | None ->
-          ({ x = None; y = None; scale = None; width = None; height = None }, 1.)
+          ( { x = None; y = None; scale = None; width = None; height = None },
+            (0., 0.) )
       | Some el ->
           let scale0 = Universe.Window.scale_in_universe window el in
           let { Universe.Coordinates.scale; _ } = Universe.State.get_coord () in
           let coord = coord_el el in
-          (coord, Normalization.scale @@ (scale0 /. scale))
+          let factor = Normalization.scale @@ (1. /. (scale0 *. scale)) in
+          let per_px size =
+            if size = 0 then 0. else factor /. float_of_int size
+          in
+          (coord, (per_px (get_width el coord), per_px (get_height el coord)))
     in
-    (el, coord, coord, scale)
+    (el, coord, coord, factor)
   in
-  let drag ~x:_ ~y:_ ~dx ~dy (el, _, coord0, scale) _ev =
-    let dx = dx *. scale in
-    let dy = dy *. scale in
-    let diff = (dx +. dy) /. 100. in
-    let scale_coord = Some (get_scale coord0 +. diff) in
+  let drag ~x:_ ~y:_ ~dx ~dy (el, _, coord0, ((fw, fh) as factor)) _ev =
+    let s = get_scale coord0 in
+    (* pfiou! *)
+    let diff = ((dx *. fw) +. (dy *. fh)) *. s /. 2. in
+    let scale_coord = Some (Float.max 0.01 (s +. diff)) in
     let coord1 = { coord0 with scale = scale_coord } in
     let () =
       let> el = el in
       apply_coord coord1 el
     in
-    (el, coord1, coord0, scale)
+    (el, coord1, coord0, factor)
   in
-  let end_ (el, coord1, _coord0, _scale) _ev =
+  let end_ (el, coord1, _coord0, _factor) _ev =
     let> el = el in
     let> id =
       El.prop El.Prop.id el |> Jstr.to_string |> function
@@ -150,35 +156,34 @@ let scale window =
 
 let dimension window =
   let ( let> ) x f = Option.iter f x in
+  let ( let+ ) x f = Option.map f x in
   let start _x _y _ev =
     let el = Lwd.peek State.current in
-    let coord, scale =
-      match el with
-      | None ->
-          ({ x = None; y = None; scale = None; width = None; height = None }, 1.)
-      | Some el ->
-          let scale0 = Universe.Window.scale_in_universe window el in
-          let { Universe.Coordinates.scale; _ } = Universe.State.get_coord () in
-          let coord = coord_el el in
-          (coord, Normalization.scale @@ (scale0 /. scale))
+    let+ el = el in
+    let coord, factor =
+      let scale0 = Universe.Window.scale_in_universe window el in
+      let { Universe.Coordinates.scale; _ } = Universe.State.get_coord () in
+      let coord = coord_el el in
+      (coord, Normalization.scale @@ (1. /. (scale0 *. scale)))
     in
-    (el, coord, coord, scale)
+    let coord0 =
+      let w0 = get_width el coord and h0 = get_height el coord in
+      (w0, h0)
+    in
+    (el, coord, coord0, factor)
   in
-  let drag ~x:_ ~y:_ ~dx ~dy ((el, _, coord0, scale) as orig) _ev =
-    match el with
-    | None -> orig
-    | Some el as elo ->
-        let scale_coord = get_scale coord0 in
-        let dx = dx *. scale /. scale_coord in
-        let dy = dy *. scale /. scale_coord in
-        let width = Some (int_of_float dx + get_width el coord0)
-        and height = Some (int_of_float dy + get_height el coord0) in
-        let coord1 = { coord0 with width; height } in
-        let () = apply_coord coord1 el in
-        (elo, coord1, coord0, scale)
+  let drag ~x:_ ~y:_ ~dx ~dy acc _ev =
+    let+ el, coord, ((w0, h0) as coord0), factor = acc in
+    let dx = dx *. factor in
+    let dy = dy *. factor in
+    let width = Some (int_of_float dx + w0)
+    and height = Some (int_of_float dy + h0) in
+    let coord = { coord with width; height } in
+    let () = apply_coord coord el in
+    (el, coord, coord0, factor)
   in
-  let end_ (el, coord1, _coord0, _scale) _ev =
-    let> el = el in
+  let end_ acc _ev =
+    let> el, coord1, _coord0, _scale = acc in
     let> id =
       El.prop El.Prop.id el |> Jstr.to_string |> function
       | "" -> None
