@@ -17,9 +17,16 @@ let for_events window =
     | Gui_mode, (Move | Scale | Dimension) -> (!!"display", !!"block")
     | _ -> (!!"display", !!"none")
   in
-  let handler = Gui_tools.move window in
+  let handler =
+    let$ mode = Lwd.get State.status in
+    match mode with
+    | Select -> Lwd_seq.empty
+    | Move -> Lwd_seq.element @@ Gui_tools.move window
+    | Scale -> Lwd_seq.empty
+    | Dimension -> Lwd_seq.empty
+  in
   Elwd.div
-    ~ev:[ `P handler ]
+    ~ev:[ `S handler ]
     ~at:[ `P (Brr.At.id !!"slipshow-gui-for-events") ]
     ~st:
       [
@@ -37,19 +44,13 @@ let setup_elem el =
   (* TODO: Use "special_attributes.ml" *)
   match El.at !!"gui" el with
   | None -> ()
-  | Some s -> (
-      match String.split_on_char ',' (Jstr.to_string s) with
-      | [] | [ _ ] | _ :: _ :: _ :: _ -> ()
-      | [ a; b ] -> (
-          match (int_of_string_opt a, int_of_string_opt b) with
-          | Some a, Some b ->
-              let new_position =
-                Gui_tools.transform_s (float_of_int a) (float_of_int b)
-              in
-              El.set_prop Gui_tools.x_coord a el;
-              El.set_prop Gui_tools.y_coord b el;
-              El.set_inline_style !!"transform" !!new_position el
-          | _ -> ()))
+  | Some s ->
+      let coord =
+        match Gui_tools.Syntax.parse (Jstr.to_string s) with
+        | Ok (x, _warnings) -> x
+        | Error _ -> { x = None; y = None; scale = None }
+      in
+      Gui_tools.save_coord_el coord el
 
 let make_clickable el =
   (* TODO: Use "special_attributes.ml" *)

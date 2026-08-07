@@ -13,7 +13,7 @@ val create_previewer :
   ?initial_stage:int ->
   ?callback:(int -> unit) ->
   ?save_drawing:(path:string -> content:string -> unit) ->
-  save_coordinate:(id:string -> x:int -> y:int -> unit) ->
+  save_coordinate:(id:string -> coord:Actions_arguments.Gui.t -> unit) ->
   goto_loc:(string -> unit) ->
   include_speaker_view:bool ->
   errors_el:Brr.El.t ->

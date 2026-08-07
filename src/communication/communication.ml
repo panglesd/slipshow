@@ -17,7 +17,12 @@ type payload =
   | Can_save
   | ActivateGUI of string
   | DeActivateGUI
-  | SaveCoordinates of { id : string; x : int; y : int }
+  | SaveCoordinates of {
+      id : string;
+      x : int option;
+      y : int option;
+      scale : float option;
+    }
   | GotoLoc of string
 [@@deriving sexp]
 

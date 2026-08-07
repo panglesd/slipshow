@@ -129,8 +129,9 @@ let previewer' =
     let _ = proto_request uri (Save_drawing (path, content)) in
     ()
   in
-  let save_coordinate ~id ~x ~y =
-    let _ = proto_request uri (Save_gui_position { id; x; y }) in
+  let save_coordinate ~id ~coord =
+    let coord = Actions_arguments.Gui.to_string coord in
+    let _ = proto_request uri (Save_gui_position { id; coord }) in
     ()
   in
   let goto_loc s =
