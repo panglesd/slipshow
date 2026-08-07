@@ -179,8 +179,10 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
               if can_save then send_can_save panels.(p.index)
           | Some { payload = Save_drawing (path, content); id = _ } ->
               save_drawing ~path ~content
-          | Some { payload = SaveCoordinates { x; y; scale; id }; _ } ->
-              save_coordinate ~id ~coord:{ Actions_arguments.Gui.x; y; scale }
+          | Some { payload = SaveCoordinates { x; y; scale; id; w; h }; _ } ->
+              save_coordinate ~id
+                ~coord:
+                  { Actions_arguments.Gui.x; y; scale; width = w; height = h }
           | Some { payload = GotoLoc loc; _ } -> goto_loc loc
           | None
           | Some { payload = Speaker_notes _; _ }

@@ -1,7 +1,13 @@
 open Brr
 module Syntax = Actions_arguments.Gui
 
-type t = Syntax.t = { x : int option; y : int option; scale : float option }
+type t = Syntax.t = {
+  x : int option;
+  y : int option;
+  scale : float option;
+  width : int option;
+  height : int option;
+}
 
 let ( !! ) = Jstr.v
 let x_coord = El.Prop.int !!"slipshow-x-coord"
@@ -12,11 +18,24 @@ let get_x { x; _ } = Option.value ~default:0 x
 let get_y { y; _ } = Option.value ~default:0 y
 let get_scale { scale; _ } = Option.value ~default:1. scale
 
+let get_width el { width; _ } =
+  match width with
+  | Some width -> width
+  | None ->
+      El.computed_style !!"width" el |> Jstr.to_int |> Option.value ~default:100
+
+let get_height el { height; _ } =
+  match height with
+  | Some height -> height
+  | None ->
+      El.computed_style !!"height" el
+      |> Jstr.to_int |> Option.value ~default:100
+
 let coord_el el =
   let gui = El.prop gui_prop el |> Jstr.to_string in
   match Syntax.parse gui with
   | Ok (x, _warnings) -> x
-  | Error _ -> { x = None; y = None; scale = None }
+  | Error _ -> { x = None; y = None; scale = None; width = None; height = None }
 
 let save_coord_el coord el =
   let s = Syntax.to_string coord in
@@ -30,7 +49,22 @@ let apply_coord c el =
   let s =
     "translate(" ^ soi x ^ "px, " ^ soi y ^ "px) scale(" ^ sof scale ^ ")"
   in
-  El.set_inline_style !!"transform" !!s el
+  El.set_inline_style !!"transform" !!s el;
+  let () =
+    match c.width with
+    | None -> ()
+    | Some w ->
+        let s = soi w ^ "px" in
+        El.set_inline_style !!"width" !!s el
+  in
+  let () =
+    match c.height with
+    | None -> ()
+    | Some h ->
+        let s = soi h ^ "px" in
+        El.set_inline_style !!"height" !!s el
+  in
+  ()
 
 let move window =
   let ( let> ) x f = Option.iter f x in
@@ -38,7 +72,8 @@ let move window =
     let el = Lwd.peek State.current in
     let coord, scale =
       match el with
-      | None -> ({ x = None; y = None; scale = None }, 1.)
+      | None ->
+          ({ x = None; y = None; scale = None; width = None; height = None }, 1.)
       | Some el ->
           let scale0 = Universe.Window.scale_in_universe window el in
           let { Universe.Coordinates.scale; _ } = Universe.State.get_coord () in
@@ -78,7 +113,8 @@ let scale window =
     let el = Lwd.peek State.current in
     let coord, scale =
       match el with
-      | None -> ({ x = None; y = None; scale = None }, 1.)
+      | None ->
+          ({ x = None; y = None; scale = None; width = None; height = None }, 1.)
       | Some el ->
           let scale0 = Universe.Window.scale_in_universe window el in
           let { Universe.Coordinates.scale; _ } = Universe.State.get_coord () in
@@ -98,6 +134,47 @@ let scale window =
       apply_coord coord1 el
     in
     (el, coord1, coord0, scale)
+  in
+  let end_ (el, coord1, _coord0, _scale) _ev =
+    let> el = el in
+    let> id =
+      El.prop El.Prop.id el |> Jstr.to_string |> function
+      | "" -> None
+      | s -> Some s
+    in
+    save_coord_el coord1 el;
+    Messaging.send_gui_coordinate id coord1
+  in
+  Drawing_controller.Ui_widgets.mouse_drag start drag end_
+
+let dimension window =
+  let ( let> ) x f = Option.iter f x in
+  let start _x _y _ev =
+    let el = Lwd.peek State.current in
+    let coord, scale =
+      match el with
+      | None ->
+          ({ x = None; y = None; scale = None; width = None; height = None }, 1.)
+      | Some el ->
+          let scale0 = Universe.Window.scale_in_universe window el in
+          let { Universe.Coordinates.scale; _ } = Universe.State.get_coord () in
+          let coord = coord_el el in
+          (coord, Normalization.scale @@ (scale0 /. scale))
+    in
+    (el, coord, coord, scale)
+  in
+  let drag ~x:_ ~y:_ ~dx ~dy ((el, _, coord0, scale) as orig) _ev =
+    match el with
+    | None -> orig
+    | Some el as elo ->
+        let scale_coord = get_scale coord0 in
+        let dx = dx *. scale /. scale_coord in
+        let dy = dy *. scale /. scale_coord in
+        let width = Some (int_of_float dx + get_width el coord0)
+        and height = Some (int_of_float dy + get_height el coord0) in
+        let coord1 = { coord0 with width; height } in
+        let () = apply_coord coord1 el in
+        (elo, coord1, coord0, scale)
   in
   let end_ (el, coord1, _coord0, _scale) _ev =
     let> el = el in
