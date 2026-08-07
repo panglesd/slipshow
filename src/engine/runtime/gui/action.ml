@@ -13,6 +13,7 @@ let activate_el el =
             El.set_class activate_class false old_el
         | _ -> ()
       in
+      Drawing_state.Status.set Gui_mode;
       Lwd.set State.current (Some el);
       El.set_class activate_class true el
 
@@ -22,6 +23,7 @@ let activate id =
   | Some el -> activate_el el
 
 let deactivate () =
+  Drawing_state.Status.set (Drawing Presenting);
   match Lwd.peek State.current with
   | Some old_el ->
       Lwd.set State.current None;
