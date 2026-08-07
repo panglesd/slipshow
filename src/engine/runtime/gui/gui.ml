@@ -22,7 +22,7 @@ let for_events window =
     match mode with
     | Select -> Lwd_seq.empty
     | Move -> Lwd_seq.element @@ Gui_tools.move window
-    | Scale -> Lwd_seq.empty
+    | Scale -> Lwd_seq.element @@ Gui_tools.scale window
     | Dimension -> Lwd_seq.empty
   in
   Elwd.div
