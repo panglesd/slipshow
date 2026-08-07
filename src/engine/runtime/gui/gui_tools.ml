@@ -25,9 +25,12 @@ let save_coord_el coord el =
 let sof x = Printf.sprintf "%.25f" x
 let soi x = string_of_int x
 
-let transform_s c =
+let apply_coord c el =
   let x = get_x c and y = get_y c and scale = get_scale c in
-  "translate(" ^ soi x ^ "px, " ^ soi y ^ "px) scale(" ^ sof scale ^ ")"
+  let s =
+    "translate(" ^ soi x ^ "px, " ^ soi y ^ "px) scale(" ^ sof scale ^ ")"
+  in
+  El.set_inline_style !!"transform" !!s el
 
 let move window =
   let ( let> ) x f = Option.iter f x in
@@ -53,8 +56,7 @@ let move window =
     let coord1 = { coord0 with x; y } in
     let () =
       let> el = el in
-      let new_position = transform_s coord1 in
-      El.set_inline_style !!"transform" !!new_position el
+      apply_coord coord1 el
     in
     (el, coord1, coord0, scale)
   in
@@ -93,8 +95,7 @@ let scale window =
     let coord1 = { coord0 with scale = scale_coord } in
     let () =
       let> el = el in
-      let new_position = transform_s coord1 in
-      El.set_inline_style !!"transform" !!new_position el
+      apply_coord coord1 el
     in
     (el, coord1, coord0, scale)
   in
