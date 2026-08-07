@@ -30,12 +30,8 @@ let update_root read_file roots_state units root currently_modified =
   in
   let version =
     match currently_modified with
-    | Some _ ->
-        Format.eprintf "not broadcasting%!\n";
-        old_version
-    | None ->
-        Format.eprintf "broadcasting%!\n";
-        generate_version ()
+    | Some _ -> old_version
+    | None -> generate_version ()
   in
   let updated = { units; diagnostics; condition; version } in
   Hashtbl.replace roots_state root updated;

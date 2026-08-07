@@ -14,7 +14,7 @@ module Client_to_server = struct
     | Ping
     | UpdateFrom of string
     | Save_drawing of string * string (* path * content *)
-    | Save_gui_position of { id : string; x : int; y : int }
+    | Save_gui_position of { id : string; coord : string }
     | GotoLoc of string
 
   include Marsharializing

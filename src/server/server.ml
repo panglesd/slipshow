@@ -229,16 +229,13 @@ let polling (roots, _get_roots)
                   (fun _ -> Lwt.return ())
               in
               pong ())
-      | Some (Save_gui_position { id; x; y }) ->
-          Format.eprintf "1%!\n";
+      | Some (Save_gui_position { id; coord }) ->
           let ( let> ) x f = Option.bind x f in
           let _res : unit option =
             let> notify_back, gui = notify_back in
-            Format.eprintf "2: %s%!\n" id;
             let> { definition; usage = _ } =
               Slipshow.Id_map.SMap.find_opt id root.units.id_map
             in
-            Format.eprintf "3%!\n";
             let def = Slipshow.Id_map.Unionable_set.get definition in
             let> attrs, _ =
               match def.elem with
@@ -254,7 +251,7 @@ let polling (roots, _get_roots)
             let> _value, meta = value in
             let textloc = Cmarkit.Meta.textloc meta in
             let uri, range = linoloc_of_textloc textloc in
-            let newText = Format.sprintf "%d,%d" x y in
+            let newText = coord in
             let end_ =
               {
                 range.Linol_lwt.Range.start with
