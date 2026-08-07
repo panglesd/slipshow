@@ -50,6 +50,7 @@ let apply_coord c el =
     "translate(" ^ soi x ^ "px, " ^ soi y ^ "px) scale(" ^ sof scale ^ ")"
   in
   El.set_inline_style !!"transform" !!s el;
+  El.set_inline_style !!"transform-origin" !!"top left" el;
   let () =
     match c.width with
     | None -> ()
