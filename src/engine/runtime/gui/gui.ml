@@ -50,7 +50,9 @@ let setup_elem el =
         | Ok (x, _warnings) -> x
         | Error _ -> { x = None; y = None; scale = None }
       in
-      Gui_tools.save_coord_el coord el
+      Gui_tools.save_coord_el coord el;
+      let new_position = Gui_tools.transform_s coord in
+      El.set_inline_style !!"transform" !!new_position el
 
 let make_clickable el =
   (* TODO: Use "special_attributes.ml" *)
