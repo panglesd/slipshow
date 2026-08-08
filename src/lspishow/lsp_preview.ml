@@ -12,7 +12,7 @@ let send_info ~(notify_back : Linol_lwt.Jsonrpc2.notify_back) msg =
   in
   Format.kasprintf k msg
 
-let initialize ~notify_back ~gui_loc () =
+let initialize ~notify_back ~to_lsp_server () =
   let root_htbl () =
     match Config.Refresh.when_ () with
     | Save -> Roots.saved
@@ -37,8 +37,7 @@ let initialize ~notify_back ~gui_loc () =
       else send_info ~notify_back "Port %d appears already used" port
     in
     let* try_port =
-      Slipshow_server.Server.do_serve ~port
-        ~notify_back:(Some (notify_back, gui_loc))
+      Slipshow_server.Server.do_serve ~port ~to_lsp_server:(Some to_lsp_server)
         (roots_state, roots_list)
     in
     match try_port with
@@ -58,10 +57,10 @@ let initialize ~notify_back ~gui_loc () =
   in
   loop port0
 
-let initialize ~notify_back ~gui_loc () =
+let initialize ~notify_back ~to_lsp_server () =
   match !server_promise with
   | None ->
-      let lwt = initialize ~notify_back ~gui_loc () in
+      let lwt = initialize ~notify_back ~to_lsp_server () in
       server_promise := Some lwt
   | Some _ -> ()
 

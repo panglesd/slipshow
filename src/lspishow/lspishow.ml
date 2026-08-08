@@ -117,6 +117,94 @@ class lsp_server =
       @@ InitializeResult.create ~capabilities
            ?serverInfo:self#config_server_info ()
 
+    method private from_preview ~(notify_back : Linol_lwt.Jsonrpc2.notify_back)
+        (event : Proto.Client_to_server.t) (root : Slipshow_server.root) =
+      match event with
+      | Ping -> ()
+      | UpdateFrom _ -> ()
+      | Save_drawing (_, _) -> ()
+      | Save_gui_position { id; coord } ->
+          let ( let> ) x f = Option.bind x f in
+          let _res : unit option =
+            let> { definition; usage = _ } =
+              Slipshow.Id_map.SMap.find_opt id root.units.id_map
+            in
+            let def = Slipshow.Id_map.Unionable_set.get definition in
+            let> attrs, _ =
+              match def.elem with
+              | `Block b ->
+                  let> _, attrs = Slipshow.Ast.Utils.Block.get_attribute b in
+                  Some attrs
+              | `Inline i ->
+                  let> _, attrs = Slipshow.Ast.Utils.Inline.get_attribute i in
+                  Some attrs
+              | `External -> None
+            in
+            let> (_key, meta_key), value =
+              Cmarkit.Attributes.find "gui" attrs
+            in
+            let prefix, textloc, suffix =
+              match value with
+              | None ->
+                  let textloc = Cmarkit.Meta.textloc meta_key in
+                  let byte, line =
+                    ( Cmarkit.Textloc.last_byte textloc,
+                      Cmarkit.Textloc.last_line textloc )
+                  in
+                  let textloc =
+                    textloc
+                    |> Cmarkit.Textloc.set_first ~first_byte:(byte + 1)
+                         ~first_line:line
+                    |> Cmarkit.Textloc.set_last ~last_byte:byte ~last_line:line
+                  in
+                  ("=\"", textloc, "\"")
+              | Some (_value, meta) -> ("", Cmarkit.Meta.textloc meta, "")
+            in
+            let uri = Linol_lsp.Uri0.of_string (Cmarkit.Textloc.file textloc) in
+            let range = Diagnostic.linoloc_of_textloc textloc in
+            let newText = prefix ^ coord ^ suffix in
+            let _end_ =
+              {
+                range.Linol_lwt.Range.start with
+                character = range.start.character + String.length newText;
+              }
+            in
+            Hashtbl.add ignored_changes (range, newText) ();
+            let _ =
+              notify_back#send_request
+                (WorkspaceApplyEdit
+                   {
+                     edit =
+                       {
+                         changeAnnotations = None;
+                         changes = Some [ (uri, [ { newText; range } ]) ];
+                         documentChanges = None;
+                       };
+                     label = None;
+                   })
+                (fun _ -> Lwt.return ())
+            in
+            None
+          in
+          ()
+      | GotoLoc s ->
+          let s = Base64.decode s |> Result.get_ok in
+          let textloc : Cmarkit.Textloc.t = Marshal.from_string s 0 in
+          let range = Diagnostic.linoloc_of_textloc textloc in
+          let uri = Linol_lsp.Uri0.of_string (Cmarkit.Textloc.file textloc) in
+          let _ =
+            notify_back#send_request
+              (ShowDocumentRequest
+                 {
+                   external_ = None;
+                   takeFocus = None;
+                   uri;
+                   selection = Some range;
+                 })
+              (fun _ -> Lwt.return ())
+          in
+          ()
+
     method! on_req_initialize ~notify_back
         (params : Linol_lwt.InitializeParams.t) :
         Linol_lwt.InitializeResult.t Lwt.t =
@@ -136,9 +224,8 @@ class lsp_server =
             | None -> None)
       in
       let roots = Option.value root ~default:[] in
-      let () =
-        Lsp_preview.initialize ~notify_back ~gui_loc:ignored_changes ()
-      in
+      let to_lsp_server = self#from_preview ~notify_back in
+      let () = Lsp_preview.initialize ~notify_back ~to_lsp_server () in
       let* () =
         Format.eprintf
           "We find all markdown files in the root and compute their dependencies\n\

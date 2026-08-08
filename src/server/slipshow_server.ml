@@ -59,7 +59,7 @@ let do_serve ~port entry_point
   let dream =
     let open Lwt.Syntax in
     let+ res =
-      Server.do_serve ~notify_back:None ~port
+      Server.do_serve ~to_lsp_server:None ~port
         ((fun _ -> !content), fun () -> [ Fpath.v "-" ])
     in
     match res with
