@@ -18,11 +18,12 @@ let to_units () =
   Hashtbl.fold (fun path u -> Fpath.Map.add path u.unit) buffers Fpath.Map.empty
 
 (** Update the root of an updated buffer *)
-let update_root broadcast root =
+let update_root ~should_broadcast root =
   let parent = Fpath.parent root in
   let units = to_units () in
   let _root : Slipshow_server.root =
-    Roots.update_root (read_file parent) Roots.buffers units root broadcast
+    Roots.update_root (read_file parent) Roots.buffers units root
+      ~should_broadcast
   in
   ()
 
@@ -31,13 +32,13 @@ let update_state ~new_ file =
   Hashtbl.replace buffers file new_;
   Rev_deps.update_state ~new_unit:new_.unit file
 
-let update file source broadcast =
+let update ~should_broadcast file source =
   match Hashtbl.find_opt buffers file with
   | Some { source = old_source; _ } when String.equal source old_source ->
       let rs = Rev_deps.get_roots file in
       let compile_missing_roots root =
         match Hashtbl.find_opt Roots.buffers root with
-        | None -> update_root broadcast root
+        | None -> update_root ~should_broadcast root
         | Some _ -> ()
       in
       Fpath.Set.iter compile_missing_roots rs
@@ -49,4 +50,4 @@ let update file source broadcast =
       let new_ = { source; unit } in
       update_state ~new_ file;
       let roots = Rev_deps.get_roots file in
-      roots |> Fpath.Set.iter (update_root broadcast)
+      roots |> Fpath.Set.iter (update_root ~should_broadcast)

@@ -24,7 +24,8 @@ let lwt_list_iter f l =
       f x)
     Lwt.return_unit l
 
-let currently_modified = ref None
+let ignored_changes : (Linol_lwt.Range.t * string, unit) Hashtbl.t =
+  Hashtbl.create 10
 
 module State = struct
   let mutex = Lwt_mutex.create ()
@@ -43,9 +44,9 @@ module State = struct
     in
     Lwt.return_unit
 
-  let update_from_buffer (file : Fpath.t) s =
+  let update_from_buffer (file : Fpath.t) s should_broadcast =
     Lwt_mutex.with_lock mutex @@ fun () ->
-    Lwt.return @@ Buffers.update file s !currently_modified
+    Lwt.return @@ Buffers.update file s ~should_broadcast
 end
 
 let diagnostics file : Linol.Lsp.Types.Diagnostic.t list option =
@@ -136,7 +137,7 @@ class lsp_server =
       in
       let roots = Option.value root ~default:[] in
       let () =
-        Lsp_preview.initialize ~notify_back ~gui_loc:currently_modified ()
+        Lsp_preview.initialize ~notify_back ~gui_loc:ignored_changes ()
       in
       let* () =
         Format.eprintf
@@ -266,46 +267,24 @@ class lsp_server =
       }
 
     method private on_doc ~(notify_back : Linol_lwt.Jsonrpc2.notify_back)
-        (uri : Linol.Lsp.Types.DocumentUri.t) (contents : string) =
+        (uri : Linol.Lsp.Types.DocumentUri.t) (contents : string)
+        should_broadcast =
       let file = uri |> Linol.Lsp.Types.DocumentUri.to_path |> Fpath.v in
-      let* () = State.update_from_buffer file contents in
+      let* () = State.update_from_buffer file contents should_broadcast in
       let diags = diagnostics file in
       match diags with
       | None -> Lwt.return ()
       | Some diags -> notify_back#send_diagnostic diags
 
-    method private activate_gui
-        (*  ~(notify_back : Linol_lwt.Jsonrpc2.notify_back) *)
-        ~uri position path (root : Roots.root) (buffer : Buffers.buffer) =
+    method private activate_gui position path (root : Roots.root)
+        (buffer : Buffers.buffer) =
       let ( let> ) x f = Option.iter f x in
       let trail = Current_ast.get_leave ~path position buffer.unit.ast in
       match trail.attribute with
-      | Some (attrs, Some (Key (("gui", meta), _ (* Some (_, meta) *)))) ->
+      | Some (attrs, Some (Key (("gui", _meta), _))) ->
           let> id, _ = Cmarkit.Attributes.id attrs in
-          let loc = Cmarkit.Meta.textloc meta in
-          let range = Diagnostic.linoloc_of_textloc loc in
-          let () = currently_modified := Some (uri, range) in
-          Format.eprintf "activating%!\n";
-          (* let _ = *)
-          (*   notify_back#send_request *)
-          (*     (WorkspaceApplyEdit *)
-          (*        { *)
-          (*          edit = *)
-          (*            { *)
-          (*              changeAnnotations = None; *)
-          (*              changes = *)
-          (*                Some [ (uri, [ { newText = "cuicui"; range } ]) ]; *)
-          (*              documentChanges = None; *)
-          (*            }; *)
-          (*          label = None; *)
-          (*        }) *)
-          (*     (fun _ -> Lwt.return ()) *)
-          (* in *)
           Lwt_condition.broadcast root.condition (ActivateGUI id)
-      | _ ->
-          Format.eprintf "deactivating%!\n";
-          let () = currently_modified := None in
-          Lwt_condition.broadcast root.condition DeActivateGUI
+      | _ -> Lwt_condition.broadcast root.condition DeActivateGUI
 
     method private on_req_document_highlight ~notify_back:_ ~uri ~id:_
         (params : Linol_lwt.DocumentHighlightParams.t) :
@@ -319,10 +298,7 @@ class lsp_server =
           Hashtbl.find_opt Roots.buffers root
         in
         let* buffer = Hashtbl.find_opt Buffers.buffers path in
-        let _ =
-          self#activate_gui (* ~notify_back *) ~uri params.position path root
-            buffer
-        in
+        let _ = self#activate_gui params.position path root buffer in
         let* id =
           let res1 =
             Current_ast.get_target ~path params.position ast.action_plan
@@ -592,12 +568,10 @@ class lsp_server =
             let parent = Fpath.parent root_path in
             let _updated_root : Slipshow_server.root =
               Roots.update_root (Read_file.fs parent) Roots.saved
-                Fpath.Map.empty root_path
-                !currently_modified (* None *)
+                Fpath.Map.empty root_path ~should_broadcast:true
             and _updated_root_buffers : Slipshow_server.root =
               Roots.update_root (Buffers.read_file parent) Roots.buffers
-                (Buffers.to_units ()) root_path
-                !currently_modified (* None *)
+                (Buffers.to_units ()) root_path ~should_broadcast:true
             in
             ()
           end
@@ -629,16 +603,29 @@ class lsp_server =
         let parent = Fpath.parent file in
         let _root : Slipshow_server.root =
           Roots.update_root (Read_file.fs parent) Roots.saved Fpath.Map.empty
-            file
-            (* None *) !currently_modified
+            file ~should_broadcast:false
         in
         ()
       in
-      self#on_doc ~notify_back uri content
+      self#on_doc ~notify_back uri content false
 
-    method on_notif_doc_did_change ~notify_back d _c ~old_content:_old
+    method on_notif_doc_did_change ~notify_back d changes ~old_content:_old
         ~new_content =
-      self#on_doc ~notify_back d.uri new_content
+      let should_broadcast =
+        List.exists
+          (fun ({ range; rangeLength = _; text } :
+                 Linol_lwt.TextDocumentContentChangeEvent.t) ->
+            match range with
+            | None -> true
+            | Some range -> (
+                match Hashtbl.find_opt ignored_changes (range, text) with
+                | None -> true
+                | Some () ->
+                    Hashtbl.remove ignored_changes (range, text);
+                    false))
+          changes
+      in
+      self#on_doc ~notify_back d.uri new_content should_broadcast
 
     method! on_notif_doc_did_save ~notify_back:_ params =
       let uri = params.textDocument.uri in
@@ -649,8 +636,7 @@ class lsp_server =
         let parent = Fpath.parent file in
         let root : Slipshow_server.root =
           Roots.update_root (Read_file.fs parent) Roots.saved Fpath.Map.empty
-            file
-            (* None *) !currently_modified
+            file ~should_broadcast:true
         in
         Lwt_condition.broadcast root.condition Update;
         let html =

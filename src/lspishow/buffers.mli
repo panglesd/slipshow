@@ -9,5 +9,5 @@ val read_file : Fpath.t -> Slipshow.file_reader
 val to_units : unit -> Slipshow.Ast.unit' Fpath.map
 (** The opened buffer units *)
 
-val update : Fpath.t -> string -> 'b option -> unit
+val update : should_broadcast:bool -> Fpath.t -> string -> unit
 (** Update a buffer to contain a source *)

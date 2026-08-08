@@ -163,7 +163,7 @@ let wait_for_event root roots file =
   | `Master DeActivateGUI -> send_deactivate_gui ()
 
 let polling (roots, _get_roots)
-    ~(notify_back : (Linol_lwt.Jsonrpc2.notify_back * _) option) req =
+    ~(notify_back : (Linol_lwt.Jsonrpc2.notify_back * _ Hashtbl.t) option) req =
   let open Lwt.Syntax in
   let file = Dream.target req in
   let file =
@@ -213,7 +213,6 @@ let polling (roots, _get_roots)
           match notify_back with
           | None -> pong ()
           | Some (notify_back, _gui) ->
-              Format.eprintf "Received loc request\n%!";
               let s = Base64.decode s |> Result.get_ok in
               let textloc : Cmarkit.Textloc.t = Marshal.from_string s 0 in
               let uri, range = linoloc_of_textloc textloc in
@@ -232,7 +231,7 @@ let polling (roots, _get_roots)
       | Some (Save_gui_position { id; coord }) ->
           let ( let> ) x f = Option.bind x f in
           let _res : unit option =
-            let> notify_back, gui = notify_back in
+            let> notify_back, ignored_changes = notify_back in
             let> { definition; usage = _ } =
               Slipshow.Id_map.SMap.find_opt id root.units.id_map
             in
@@ -269,13 +268,13 @@ let polling (roots, _get_roots)
             in
             let uri, range = linoloc_of_textloc textloc in
             let newText = prefix ^ coord ^ suffix in
-            let end_ =
+            let _end_ =
               {
                 range.Linol_lwt.Range.start with
                 character = range.start.character + String.length newText;
               }
             in
-            gui := Some (uri, { Linol_lwt.Range.start = range.start; end_ });
+            Hashtbl.add ignored_changes (range, newText) ();
             let _ =
               notify_back#send_request
                 (WorkspaceApplyEdit
