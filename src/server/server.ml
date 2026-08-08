@@ -1,19 +1,3 @@
-let linoloc_of_textloc (loc : Cmarkit.Textloc.t) =
-  let uri = Linol_lsp.Uri0.of_string (Cmarkit.Textloc.file loc) in
-  let start =
-    let line, byte_pos = Cmarkit.Textloc.first_line loc in
-    let line = line - 1 in
-    let character = Cmarkit.Textloc.first_byte loc - byte_pos in
-    Linol_lwt.Position.create ~character ~line
-  in
-  let end_ =
-    let line, byte_pos = Cmarkit.Textloc.last_line loc in
-    let line = line - 1 in
-    let character = Cmarkit.Textloc.last_byte loc - byte_pos + 1 in
-    Linol_lwt.Position.create ~character ~line
-  in
-  (uri, Linol_lwt.Range.create ~end_ ~start)
-
 type to_server =
   | Update
   | Control of Proto.Server_to_client.control
@@ -162,8 +146,7 @@ let wait_for_event root roots file =
   | `Master (ActivateGUI id) -> send_activate_gui id
   | `Master DeActivateGUI -> send_deactivate_gui ()
 
-let polling (roots, _get_roots)
-    ~(notify_back : (Linol_lwt.Jsonrpc2.notify_back * _ Hashtbl.t) option) req =
+let polling (roots, _get_roots) ~to_lsp_server req =
   let open Lwt.Syntax in
   let file = Dream.target req in
   let file =
@@ -183,118 +166,44 @@ let polling (roots, _get_roots)
       match msg with
       | None ->
           Dream.respond ~status:`Bad_Request "Error while decoding the payload"
-      | Some Ping -> pong ()
-      | Some (UpdateFrom version) ->
-          if not @@ String.equal version root.version then send root
-          else wait_for_event root roots file
-      | Some (Save_drawing (path, drawing)) ->
-          let from = root.units.directory in
-          let path = Fpath.v path in
-          if Fpath.has_ext ".draw" path && Fpath.Map.mem path root.units.files
-          then (
-            let path = Fpath.( // ) from path in
-            Dream.log "Saving drawing in %a with from %a" Fpath.pp path Fpath.pp
-              from;
-            let res = Bos.OS.File.write path drawing in
-            match res with
-            | Ok () -> saved path
-            | Error (`Msg err) ->
-                let msg =
-                  Format.asprintf "Could not write %a: %s" Fpath.pp path err
-                in
-                notify msg)
-          else
-            let msg =
-              Format.asprintf "Path %a is not part of the current unit" Fpath.pp
-                path
-            in
-            notify msg
-      | Some (GotoLoc s) -> (
-          match notify_back with
-          | None -> pong ()
-          | Some (notify_back, _gui) ->
-              let s = Base64.decode s |> Result.get_ok in
-              let textloc : Cmarkit.Textloc.t = Marshal.from_string s 0 in
-              let uri, range = linoloc_of_textloc textloc in
-              let _ =
-                notify_back#send_request
-                  (ShowDocumentRequest
-                     {
-                       external_ = None;
-                       takeFocus = None;
-                       uri;
-                       selection = Some range;
-                     })
-                  (fun _ -> Lwt.return ())
-              in
-              pong ())
-      | Some (Save_gui_position { id; coord }) ->
-          let ( let> ) x f = Option.bind x f in
-          let _res : unit option =
-            let> notify_back, ignored_changes = notify_back in
-            let> { definition; usage = _ } =
-              Slipshow.Id_map.SMap.find_opt id root.units.id_map
-            in
-            let def = Slipshow.Id_map.Unionable_set.get definition in
-            let> attrs, _ =
-              match def.elem with
-              | `Block b ->
-                  let> _, attrs = Slipshow.Ast.Utils.Block.get_attribute b in
-                  Some attrs
-              | `Inline i ->
-                  let> _, attrs = Slipshow.Ast.Utils.Inline.get_attribute i in
-                  Some attrs
-              | `External -> None
-            in
-            let> (_key, meta_key), value =
-              Cmarkit.Attributes.find "gui" attrs
-            in
-            let prefix, textloc, suffix =
-              match value with
-              | None ->
-                  let textloc = Cmarkit.Meta.textloc meta_key in
-                  let byte, line =
-                    ( Cmarkit.Textloc.last_byte textloc,
-                      Cmarkit.Textloc.last_line textloc )
-                  in
-                  let textloc =
-                    textloc
-                    |> Cmarkit.Textloc.set_first ~first_byte:(byte + 1)
-                         ~first_line:line
-                    |> Cmarkit.Textloc.set_last ~last_byte:byte ~last_line:line
-                  in
-                  ("=\"", textloc, "\"")
-              | Some (_value, meta) -> ("", Cmarkit.Meta.textloc meta, "")
-            in
-            let uri, range = linoloc_of_textloc textloc in
-            let newText = prefix ^ coord ^ suffix in
-            let _end_ =
-              {
-                range.Linol_lwt.Range.start with
-                character = range.start.character + String.length newText;
-              }
-            in
-            Hashtbl.add ignored_changes (range, newText) ();
-            let _ =
-              notify_back#send_request
-                (WorkspaceApplyEdit
-                   {
-                     edit =
-                       {
-                         changeAnnotations = None;
-                         changes = Some [ (uri, [ { newText; range } ]) ];
-                         documentChanges = None;
-                       };
-                     label = None;
-                   })
-                (fun _ -> Lwt.return ())
-            in
-            None
+      | Some msg -> (
+          let () =
+            match to_lsp_server with
+            | None -> ()
+            | Some to_lsp_server -> to_lsp_server msg root
           in
-          pong ())
+          match msg with
+          | Ping -> pong ()
+          | UpdateFrom version ->
+              if not @@ String.equal version root.version then send root
+              else wait_for_event root roots file
+          | Save_drawing (path, drawing) ->
+              let from = root.units.directory in
+              let path = Fpath.v path in
+              if
+                Fpath.has_ext ".draw" path
+                && Fpath.Map.mem path root.units.files
+              then (
+                let path = Fpath.( // ) from path in
+                Dream.log "Saving drawing in %a with from %a" Fpath.pp path
+                  Fpath.pp from;
+                let res = Bos.OS.File.write path drawing in
+                match res with
+                | Ok () -> saved path
+                | Error (`Msg err) ->
+                    let msg =
+                      Format.asprintf "Could not write %a: %s" Fpath.pp path err
+                    in
+                    notify msg)
+              else
+                let msg =
+                  Format.asprintf "Path %a is not part of the current unit"
+                    Fpath.pp path
+                in
+                notify msg
+          | GotoLoc _ | Save_gui_position _ -> pong ()))
 
-let do_serve ~port ~(notify_back : (Linol_lwt.Jsonrpc2.notify_back * _) option)
-    (roots : roots) =
+let do_serve ~port ~to_lsp_server (roots : roots) =
   let () = if Sys.unix then Sys.(set_signal sigpipe Signal_ignore) in
   (* We need this, otherwise the program is killed when sending a long string to
      a closed connection... See https://github.com/aantron/dream/issues/378 *)
@@ -315,7 +224,7 @@ let do_serve ~port ~(notify_back : (Linol_lwt.Jsonrpc2.notify_back * _) option)
            [
              Dream.get "/" (home_page roots);
              Dream.get "/preview/**" (preview roots);
-             Dream.post "/polling/**" (polling roots ~notify_back);
+             Dream.post "/polling/**" (polling roots ~to_lsp_server);
            ]
     in
     Ok ()
