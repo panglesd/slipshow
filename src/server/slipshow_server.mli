@@ -30,7 +30,7 @@ module Server : sig
     port:int ->
     notify_back:
       (Linol_lwt.Jsonrpc2.notify_back
-      * (Linol_lwt.DocumentUri.t * Linol_lwt.Range.t) option ref)
+      * (Linol_lwt.Range.t * string, unit) Hashtbl.t)
       option ->
     roots ->
     (unit, [> `Addr_in_use ]) result Lwt.t

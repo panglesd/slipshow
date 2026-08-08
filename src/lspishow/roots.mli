@@ -14,9 +14,9 @@ val saved : t
 (** The roots for the saved buffers. *)
 
 val update_root :
+  should_broadcast: bool ->
   Slipshow.Compile.file_reader ->
   t ->
   Slipshow.Ast.unit' Fpath.map ->
   Fpath.t ->
-  'b option ->
   root
