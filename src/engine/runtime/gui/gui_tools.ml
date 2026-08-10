@@ -67,6 +67,18 @@ let apply_coord c el =
   in
   ()
 
+let get_loc_id el =
+  let id =
+    El.prop El.Prop.id el |> Jstr.to_string |> function
+    | "" -> None
+    | s -> Some s
+  in
+  let loc = El.at !!"slipshow-original-loc" el |> Option.map Jstr.to_string in
+  match (id, loc) with
+  | Some id, _ -> Some (Common_types.Id id)
+  | _, Some loc -> Some (Loc loc)
+  | None, None -> None
+
 let move window =
   let ( let> ) x f = Option.iter f x in
   let start _x _y _ev =
@@ -99,11 +111,7 @@ let move window =
   in
   let end_ (el, coord1, _coord0, _factor) _ev =
     let> el = el in
-    let> id =
-      El.prop El.Prop.id el |> Jstr.to_string |> function
-      | "" -> None
-      | s -> Some s
-    in
+    let> id = get_loc_id el in
     save_coord_el coord1 el;
     Messaging.send_gui_coordinate id coord1
   in
@@ -144,11 +152,7 @@ let scale window =
   in
   let end_ (el, coord1, _coord0, _factor) _ev =
     let> el = el in
-    let> id =
-      El.prop El.Prop.id el |> Jstr.to_string |> function
-      | "" -> None
-      | s -> Some s
-    in
+    let> id = get_loc_id el in
     save_coord_el coord1 el;
     Messaging.send_gui_coordinate id coord1
   in
@@ -184,11 +188,7 @@ let dimension window =
   in
   let end_ acc _ev =
     let> el, coord1, _coord0, _scale = acc in
-    let> id =
-      El.prop El.Prop.id el |> Jstr.to_string |> function
-      | "" -> None
-      | s -> Some s
-    in
+    let> id = get_loc_id el in
     save_coord_el coord1 el;
     Messaging.send_gui_coordinate id coord1
   in

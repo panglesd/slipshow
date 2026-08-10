@@ -1,7 +1,7 @@
 type to_server =
   | Update
   | Control of Proto.Server_to_client.control
-  | ActivateGUI of string
+  | ActivateGUI of Common_types.gui_id
   | DeActivateGUI
 
 type root = {
@@ -77,12 +77,8 @@ let saved s = send_event (Saved (Fpath.to_string s))
 let notify s = send_event (Notify s)
 let send_update content = send_event (Update content)
 let send_control c = send_event (Control c)
-
-let send_activate_gui id =
-  send_event (Replace { id = Some id; x = None; y = None })
-
-let send_deactivate_gui () =
-  send_event (Replace { id = None; x = None; y = None })
+let send_activate_gui id = send_event (Replace (Some id))
+let send_deactivate_gui () = send_event (Replace None)
 
 let home_page (_, get_roots) _req =
   Dream.log "A browser reloaded";

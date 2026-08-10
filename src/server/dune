@@ -15,4 +15,5 @@
   server_assets
   proto
   linol-lwt
-  cmarkit))
+  cmarkit
+  common_types))
