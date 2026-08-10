@@ -105,7 +105,7 @@ body.slipshow-editing-mode{
   position: absolute;
 }
 
-[id][gui] {
+[gui] {
   position: absolute;
 }
 .slipshow-activated {

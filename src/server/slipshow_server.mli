@@ -1,7 +1,7 @@
 type to_server =
   | Update
   | Control of Proto.Server_to_client.control
-  | ActivateGUI of string
+  | ActivateGUI of Common_types.gui_id
   | DeActivateGUI
 
 type root = {

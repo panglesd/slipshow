@@ -12,7 +12,10 @@ module Client_to_server : sig
     | Ping
     | UpdateFrom of string
     | Save_drawing of string * string (* path * content *)
-    | Save_gui_position of { id : string; coord : string }
+    | Save_gui_position of {
+        id : Common_types.gui_id;
+        coord : string;
+      }
     | GotoLoc of string
 
   include Serializing with type t := t
@@ -28,7 +31,7 @@ module Server_to_client : sig
     | Control of control
     | Saved of string
     | Notify of string
-    | Replace of { id : string option; x : int option; y : int option }
+    | Replace of Common_types.gui_id option
 
   include Serializing with type t := t
 end

@@ -1,3 +1,3 @@
 (library
  (name proto)
- (libraries base64 slipshow))
+ (libraries base64 slipshow common_types))

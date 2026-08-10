@@ -13,10 +13,10 @@ type payload =
   | Next
   | Previous
   | Can_save
-  | ActivateGUI of string
+  | ActivateGUI of Common_types.gui_id
   | DeActivateGUI
   | SaveCoordinates of {
-      id : string;
+      id : Common_types.gui_id;
       x : int option;
       y : int option;
       w : int option;

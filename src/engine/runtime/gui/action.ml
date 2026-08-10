@@ -18,9 +18,17 @@ let activate_el el =
       El.set_class activate_class true el
 
 let activate id =
-  match El.find_first_by_selector !!("#" ^ id) with
-  | None -> ()
-  | Some el -> activate_el el
+  match id with
+  | Common_types.Id id -> (
+      match El.find_first_by_selector !!("#" ^ id) with
+      | None -> ()
+      | Some el -> activate_el el)
+  | Loc loc -> (
+      match
+        El.find_first_by_selector !!("[slipshow-original-loc=" ^ loc ^ "]")
+      with
+      | None -> ()
+      | Some el -> activate_el el)
 
 let deactivate () =
   Drawing_state.Status.set (Drawing Presenting);

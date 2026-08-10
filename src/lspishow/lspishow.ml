@@ -136,29 +136,45 @@ class lsp_server =
     method private from_preview ~(notify_back : Linol_lwt.Jsonrpc2.notify_back)
         (event : Proto.Client_to_server.t) (root : Slipshow_server.root) =
       match event with
-      | Ping -> ()
-      | UpdateFrom _ -> ()
-      | Save_drawing (_, _) -> ()
+      | Ping | UpdateFrom _ | Save_drawing (_, _) -> ()
       | Save_gui_position { id; coord } ->
           let ( let> ) x f = Option.iter f x in
           let _res : unit =
-            let> { definition; usage = _ } =
-              Slipshow.Id_map.SMap.find_opt id root.units.id_map
-            in
-            let def = Slipshow.Id_map.Unionable_set.get definition in
-            let> attrs, _ =
-              let ( let+ ) x f = Option.map f x in
-              match def.elem with
-              | `Block b ->
-                  let+ _, attrs = Slipshow.Ast.Utils.Block.get_attribute b in
-                  attrs
-              | `Inline i ->
-                  let+ _, attrs = Slipshow.Ast.Utils.Inline.get_attribute i in
-                  attrs
-              | `External -> None
-            in
             let> (_key, meta_key), value =
-              Cmarkit.Attributes.find "gui" attrs
+              let ( let+ ) x f = Option.map f x in
+              let ( let* ) x f = Option.bind x f in
+              match id with
+              | Common_types.Id id ->
+                  let* { definition; usage = _ } =
+                    Slipshow.Id_map.SMap.find_opt id root.units.id_map
+                  in
+                  let def = Slipshow.Id_map.Unionable_set.get definition in
+                  let* attrs, _ =
+                    match def.elem with
+                    | `Block b ->
+                        let+ _, attrs =
+                          Slipshow.Ast.Utils.Block.get_attribute b
+                        in
+                        attrs
+                    | `Inline i ->
+                        let+ _, attrs =
+                          Slipshow.Ast.Utils.Inline.get_attribute i
+                        in
+                        attrs
+                    | `External -> None
+                  in
+                  Cmarkit.Attributes.find "gui" attrs
+              | Loc loc ->
+                  let* loc =
+                    loc |> Base64.decode |> Result.to_option
+                    |> Option.map (fun s -> Marshal.from_string s 0)
+                  in
+                  let path = Fpath.v (Cmarkit.Textloc.file loc) in
+                  let* unit = Fpath.Map.find_opt path root.units.units in
+                  List.find_opt
+                    (fun ((_key, meta), _) ->
+                      Cmarkit.Textloc.equal (Cmarkit.Meta.textloc meta) loc)
+                    unit.gui_map
             in
             let prefix, textloc, suffix =
               match value with
@@ -433,7 +449,6 @@ class lsp_server =
 
     method private activate_gui position path (root : Roots.root)
         (buffer : Buffers.buffer) =
-      let ( let> ) x f = Option.iter f x in
       let trail =
         Current_ast.get_leave ~positionEncoding
           ~source:
@@ -442,9 +457,13 @@ class lsp_server =
           ~path position buffer.unit.ast
       in
       match trail.attribute with
-      | Some (attrs, Some (Key (("gui", _meta), _))) ->
-          let> id, _ = Cmarkit.Attributes.id attrs in
-          Lwt_condition.broadcast root.condition (ActivateGUI id)
+      | Some (_, Some (Key (("gui", meta), _))) ->
+          let loc =
+            Cmarkit.Meta.textloc meta
+            |> (fun s -> Marshal.to_string s [])
+            |> Base64.encode_string
+          in
+          Lwt_condition.broadcast root.condition (ActivateGUI (Loc loc))
       | _ -> Lwt_condition.broadcast root.condition DeActivateGUI
 
     method private on_req_document_highlight ~notify_back:_ ~uri ~id:_

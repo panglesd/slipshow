@@ -133,6 +133,7 @@ type unit' = {
   deps : Cmarkit.Textloc.t list Fpath.Map.t;
       (** Map of dependency -> List of places it is included *)
   id_map : Id_map.definitions;
+  gui_map : ((string * Meta.t) * (Attributes.value * Meta.t) option) list;
   source : string option;
   files : Files.unread Files.map;
   option : Frontmatter.Global.t;
@@ -409,7 +410,8 @@ module Mapper = struct
         let attrs = map_attrs attrs in
         let block =
           (* A block quote can be empty *)
-          Option.value ~default:(Blocks ([], Meta.none))
+          Option.value
+            ~default:(Blocks ([], Meta.none))
             (Mapper.map_block m (Block_quote.block bq))
         in
         let bq = Block_quote.make ~indent:(Block_quote.indent bq) block in
@@ -422,10 +424,12 @@ module Mapper = struct
         let attrs = map_attrs attrs in
         let map_list_item (i, meta) =
           let+ block = Mapper.map_block m (List_item.block i) in
-          ( List_item.make ~before_marker:(List_item.before_marker i)
+          ( List_item.make
+              ~before_marker:(List_item.before_marker i)
               ~marker:(List_item.marker i)
               ~after_marker:(List_item.after_marker i)
-              ?ext_task_marker:(List_item.ext_task_marker i) block,
+              ?ext_task_marker:(List_item.ext_task_marker i)
+              block,
             meta )
         in
         match List.filter_map map_list_item (List'.items l) with
@@ -438,8 +442,10 @@ module Mapper = struct
         `Map
           (let+ inline = Mapper.map_inline m (Paragraph.inline p) in
            let p =
-             Paragraph.make ~leading_indent:(Paragraph.leading_indent p)
-               ~trailing_blanks:(Paragraph.trailing_blanks p) inline
+             Paragraph.make
+               ~leading_indent:(Paragraph.leading_indent p)
+               ~trailing_blanks:(Paragraph.trailing_blanks p)
+               inline
            in
            Paragraph ((p, attrs), meta))
     | Ext_table ((t, attrs), meta) ->
@@ -462,12 +468,14 @@ module Mapper = struct
         let attrs = map_attrs attrs in
         let block =
           (* A footnote can be empty *)
-          Option.value ~default:(Blocks ([], Meta.none))
+          Option.value
+            ~default:(Blocks ([], Meta.none))
             (Mapper.map_block m (Footnote.block fn))
         in
         let fn =
           Footnote.make ~indent:(Footnote.indent fn)
-            ~defined_label:(Footnote.defined_label fn) (Footnote.label fn) block
+            ~defined_label:(Footnote.defined_label fn)
+            (Footnote.label fn) block
         in
         `Map (Some (Ext_footnote_definition ((fn, attrs), meta)))
     | Ext_attribute_definition ((atd, attrs), meta) ->

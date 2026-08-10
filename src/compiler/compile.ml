@@ -521,35 +521,50 @@ module Stage4 = struct
     Fpath.Map.update path add fpath_map
 
   let execute =
-    let block f (files, id_list) c =
+    let block f (files, id_list, gui_list) c =
       let files =
         match c with
         | Ast.S_block (IncludedHTML ((p, _), meta)) ->
             fpath_map_add_to_list p (Id.gen (), Meta.textloc meta) files
         | _ -> files
       in
-      let acc =
+      let id_list, gui_list =
         match Ast.Utils.Block.get_attribute c with
-        | None -> (files, id_list)
-        | Some (_, (attrs, meta)) -> (
-            match Attributes.id attrs with
-            | None -> (files, id_list)
-            | Some id -> (files, { Id_map.id; elem = `Block c; meta } :: id_list)
-            )
+        | None -> (id_list, gui_list)
+        | Some (_, (attrs, meta)) ->
+            let id_list =
+              match Attributes.id attrs with
+              | None -> id_list
+              | Some id -> { Id_map.id; elem = `Block c; meta } :: id_list
+            in
+            let gui_list =
+              match Attributes.find "gui" attrs with
+              | None -> gui_list
+              | Some kv -> kv :: gui_list
+            in
+            (id_list, gui_list)
       in
-      let res = Ast.Folder.continue_block f c acc in
+      let res = Ast.Folder.continue_block f c (files, id_list, gui_list) in
       Folder.ret res
     in
-    let inline f (acc, id_list) i =
-      let id_list =
+    let inline f (files, id_list, gui_list) i =
+      let id_list, gui_list =
         match Ast.Utils.Inline.get_attribute i with
-        | None -> id_list
-        | Some (_, (attrs, meta)) -> (
-            match Attributes.id attrs with
-            | None -> id_list
-            | Some id -> { Id_map.id; elem = `Inline i; meta } :: id_list)
+        | None -> (id_list, gui_list)
+        | Some (_, (attrs, meta)) ->
+            let id_list =
+              match Attributes.id attrs with
+              | None -> id_list
+              | Some id -> { Id_map.id; elem = `Inline i; meta } :: id_list
+            in
+            let gui_list =
+              match Attributes.find "gui" attrs with
+              | None -> gui_list
+              | Some kv -> kv :: gui_list
+            in
+            (id_list, gui_list)
       in
-      let acc =
+      let files =
         match i with
         | Ast.S_inline i -> (
             match i with
@@ -562,11 +577,11 @@ module Stage4 = struct
             | Image media -> (
                 match media with
                 | { uri = Path p, meta; id; origin = _ } ->
-                    fpath_map_add_to_list p (id, Meta.textloc meta) acc
-                | _ -> acc))
-        | _ -> acc
+                    fpath_map_add_to_list p (id, Meta.textloc meta) files
+                | _ -> files))
+        | _ -> files
       in
-      let acc = Ast.Folder.continue_inline f i (acc, id_list) in
+      let acc = Ast.Folder.continue_inline f i (files, id_list, gui_list) in
       Folder.ret acc
     in
     Ast.Folder.make ~block ~inline ()
@@ -578,8 +593,9 @@ module Stage4 = struct
       |> List.map (fun x ->
           { Id_map.id = (x, Meta.none); elem = `External; meta = Meta.none })
     in
-    let files, id_list =
-      Cmarkit.Folder.fold_doc execute (files, external_ids) md
+    let gui_list = [] in
+    let files, id_list, gui_list =
+      Cmarkit.Folder.fold_doc execute (files, external_ids, gui_list) md
     in
     let id_list = List.rev id_list in
     let id_map =
@@ -592,7 +608,7 @@ module Stage4 = struct
             acc)
         Id_map.SMap.empty id_list
     in
-    (md, files, id_map)
+    (md, files, id_map, gui_list)
 end
 
 let action_plan _ = failwith "TODO: Action plan"
@@ -610,16 +626,16 @@ let of_cmarkit ~path ~(fm : Frontmatter.t) ~source md =
     Doc.make ~nl:(Doc.nl md) ~defs b
   in
   let current_path = Fpath.parent path in
-  let (ast, deps, id_map, files, option), warnings =
+  let (ast, deps, id_map, files, option, gui_map), warnings =
     Diagnosis.with_ @@ fun () ->
     let md1, htbl_include, fm = Stage1.execute current_path defs md fm in
     let md2 = Stage2.execute md1 in
     let md3 = Stage3.execute md2 in
-    let md4, files, id_map = Stage4.execute ~fm md3 in
+    let md4, files, id_map, gui_map = Stage4.execute ~fm md3 in
     let deps = htbl_include |> Hashtbl.to_seq |> Fpath.Map.of_seq in
-    (md4, deps, id_map, files, fm.global)
+    (md4, deps, id_map, files, fm.global, gui_map)
   in
-  { Ast.ast; deps; id_map; source; files; option; warnings; path }
+  { Ast.ast; deps; id_map; source; files; option; warnings; path; gui_map }
 
 let _add_file read_file file content =
  fun p -> if Fpath.equal p file then Ok (Some content) else read_file p
