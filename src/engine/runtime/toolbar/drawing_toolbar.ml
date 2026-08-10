@@ -165,7 +165,11 @@ let v mode =
     let icon = panel_icon [ `P (Brr.El.txt !!"✗") ] in
     panel_block
       ~buttons:
-        [ `R (panel_button ~handler ~icon (Lwd.pure "Clear") ~shortcut:"X") ]
+        [
+          `R
+            (panel_button ~handler ~icon (Lwd.pure "Clear")
+               ~shortcut:"Shift + X");
+        ]
       ()
   in
   let record_button =
