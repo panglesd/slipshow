@@ -24,9 +24,6 @@ let lwt_list_iter f l =
       f x)
     Lwt.return_unit l
 
-let ignored_changes : (Linol_lwt.Range.t * string, unit) Hashtbl.t =
-  Hashtbl.create 10
-
 module State = struct
   let mutex = Lwt_mutex.create ()
 
@@ -44,7 +41,7 @@ module State = struct
     in
     Lwt.return_unit
 
-  let update_from_buffer (file : Fpath.t) s should_broadcast =
+  let update_from_buffer (file : Fpath.t) s ~should_broadcast =
     Lwt_mutex.with_lock mutex @@ fun () ->
     Lwt.return @@ Buffers.update file s ~should_broadcast
 end
@@ -124,20 +121,21 @@ class lsp_server =
       | UpdateFrom _ -> ()
       | Save_drawing (_, _) -> ()
       | Save_gui_position { id; coord } ->
-          let ( let> ) x f = Option.bind x f in
-          let _res : unit option =
+          let ( let> ) x f = Option.iter f x in
+          let _res : unit =
             let> { definition; usage = _ } =
               Slipshow.Id_map.SMap.find_opt id root.units.id_map
             in
             let def = Slipshow.Id_map.Unionable_set.get definition in
             let> attrs, _ =
+              let ( let+ ) x f = Option.map f x in
               match def.elem with
               | `Block b ->
-                  let> _, attrs = Slipshow.Ast.Utils.Block.get_attribute b in
-                  Some attrs
+                  let+ _, attrs = Slipshow.Ast.Utils.Block.get_attribute b in
+                  attrs
               | `Inline i ->
-                  let> _, attrs = Slipshow.Ast.Utils.Inline.get_attribute i in
-                  Some attrs
+                  let+ _, attrs = Slipshow.Ast.Utils.Inline.get_attribute i in
+                  attrs
               | `External -> None
             in
             let> (_key, meta_key), value =
@@ -163,28 +161,46 @@ class lsp_server =
             let uri = Linol_lsp.Uri0.of_string (Cmarkit.Textloc.file textloc) in
             let range = Diagnostic.linoloc_of_textloc textloc in
             let newText = prefix ^ coord ^ suffix in
-            let _end_ =
-              {
-                range.Linol_lwt.Range.start with
-                character = range.start.character + String.length newText;
-              }
+            let _ : unit Lwt.t =
+              let* () =
+                match Hashtbl.find_opt docs uri with
+                | Some st ->
+                    let open Linol_lsp in
+                    let open Linol_lwt in
+                    let old_doc =
+                      Text_document.make ~position_encoding:positionEncoding
+                        (DidOpenTextDocumentParams.create
+                           ~textDocument:
+                             (TextDocumentItem.create ~languageId:st.languageId
+                                ~uri ~version:st.version ~text:st.content))
+                    in
+                    let new_doc =
+                      Text_document.apply_text_document_edits old_doc
+                        [ { newText; range } ]
+                    in
+                    let contents = Text_document.text new_doc in
+                    let file = uri |> DocumentUri.to_path |> Fpath.v in
+                    State.update_from_buffer file contents
+                      ~should_broadcast:false
+                | None -> Lwt.return ()
+              in
+              let+ _ : Linol_jsonrpc.Jsonrpc.Id.t =
+                notify_back#send_request
+                  (WorkspaceApplyEdit
+                     {
+                       edit =
+                         {
+                           changeAnnotations = None;
+                           changes = Some [ (uri, [ { newText; range } ]) ];
+                           documentChanges = None;
+                         };
+                       label = None;
+                     })
+                  (fun _ -> Lwt.return ())
+              in
+              ()
             in
-            Hashtbl.add ignored_changes (range, newText) ();
-            let _ =
-              notify_back#send_request
-                (WorkspaceApplyEdit
-                   {
-                     edit =
-                       {
-                         changeAnnotations = None;
-                         changes = Some [ (uri, [ { newText; range } ]) ];
-                         documentChanges = None;
-                       };
-                     label = None;
-                   })
-                (fun _ -> Lwt.return ())
-            in
-            None
+            ()
           in
           ()
       | GotoLoc s ->
@@ -355,9 +371,9 @@ class lsp_server =
 
     method private on_doc ~(notify_back : Linol_lwt.Jsonrpc2.notify_back)
         (uri : Linol.Lsp.Types.DocumentUri.t) (contents : string)
-        should_broadcast =
+        ~should_broadcast =
       let file = uri |> Linol.Lsp.Types.DocumentUri.to_path |> Fpath.v in
-      let* () = State.update_from_buffer file contents should_broadcast in
+      let* () = State.update_from_buffer file contents ~should_broadcast in
       let diags = diagnostics file in
       match diags with
       | None -> Lwt.return ()
@@ -694,25 +710,11 @@ class lsp_server =
         in
         ()
       in
-      self#on_doc ~notify_back uri content false
+      self#on_doc ~notify_back uri content ~should_broadcast:false
 
-    method on_notif_doc_did_change ~notify_back d changes ~old_content:_old
+    method on_notif_doc_did_change ~notify_back d _changes ~old_content:_old
         ~new_content =
-      let should_broadcast =
-        List.exists
-          (fun ({ range; rangeLength = _; text } :
-                 Linol_lwt.TextDocumentContentChangeEvent.t) ->
-            match range with
-            | None -> true
-            | Some range -> (
-                match Hashtbl.find_opt ignored_changes (range, text) with
-                | None -> true
-                | Some () ->
-                    Hashtbl.remove ignored_changes (range, text);
-                    false))
-          changes
-      in
-      self#on_doc ~notify_back d.uri new_content should_broadcast
+      self#on_doc ~notify_back d.uri new_content ~should_broadcast:true
 
     method! on_notif_doc_did_save ~notify_back:_ params =
       let uri = params.textDocument.uri in
