@@ -17,6 +17,14 @@ let for_events window =
     | Gui_mode, (Move | Scale | Dimension) -> (!!"display", !!"block")
     | _ -> (!!"display", !!"none")
   in
+  let cursor =
+    let$ mode = Lwd.get State.status in
+    match mode with
+    | Move -> (!!"cursor", !!"all-scroll")
+    | Scale -> (!!"cursor", !!"nwse-resize")
+    | Dimension -> (!!"cursor", !!"se-resize")
+    | Select -> (!!"cursor", !!"crosshair")
+  in
   let handler =
     let$ mode = Lwd.get State.status in
     match mode with
@@ -30,7 +38,7 @@ let for_events window =
     ~at:[ `P (Brr.At.id !!"slipshow-gui-for-events") ]
     ~st:
       [
-        `P (!!"cursor", !!"move");
+        `R cursor;
         `R display;
         `P (!!"position", !!"absolute");
         `P (!!"top", !!"0");
