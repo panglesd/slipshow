@@ -4,7 +4,6 @@ type key_trace =
   | Class of string Cmarkit.node
   | Id of string Cmarkit.node
 
-
 type attribute_trace = Cmarkit.Attributes.t * key_trace option
 type inline_trace = Cmarkit.Inline.t list
 type block_trace = Cmarkit.Block.t list
@@ -15,9 +14,17 @@ type trace = {
   block : block_trace;
 }
 
-val get_leave : path:Fpath.t -> Linol_lwt.Position.t -> Cmarkit.Doc.t -> trace
+val get_leave :
+  positionEncoding:[ `UTF16 | `UTF8 ] ->
+  source:string ->
+  path:Fpath.t ->
+  Linol_lwt.Position.t ->
+  Cmarkit.Doc.t ->
+  trace
 
 val get_target :
+  positionEncoding:[ `UTF16 | `UTF8 ] ->
+  source:string ->
   path:Fpath.t ->
   Linol_lwt.Position.t ->
   Slipshow.Ast.Action_plan.t ->
