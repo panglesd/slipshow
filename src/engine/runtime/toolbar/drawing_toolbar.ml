@@ -201,6 +201,18 @@ let v mode =
             ]
           ()
   in
+  let gui_mode =
+    let handler = Elwd.handler Brr.Ev.click (fun _ -> Status.set Gui_mode) in
+    let icon = panel_icon [ `P (Brr.El.txt !!"🐁") ] in
+    panel_block ~class_:"slipshow-gui-block"
+      ~buttons:
+        [
+          `R
+            (panel_button ~handler ~icon (Lwd.pure "GUI mode")
+               ~shortcut:"Shift + G");
+        ]
+      ()
+  in
   toplevel_panel_el
     [
       `R tool_buttons;
@@ -208,4 +220,5 @@ let v mode =
       `R width_buttons;
       `R clear_button;
       `R record_button;
+      `R gui_mode;
     ]
