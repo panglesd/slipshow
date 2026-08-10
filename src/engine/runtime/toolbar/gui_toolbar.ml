@@ -23,4 +23,20 @@ let v =
   let block =
     panel_block ~buttons:[ `R select; `R move; `R resize; `R dimension ] ()
   in
-  toplevel_panel_el [ `R block ]
+  let back_mode =
+    let handler =
+      Elwd.handler Brr.Ev.click (fun _ ->
+          Drawing_state.Status.set (Drawing Presenting))
+    in
+    let icon = panel_icon [ `P (Brr.El.txt !!"⤶") ] in
+    panel_block ~class_:"slipshow-gui-back-block"
+      ~buttons:
+        [
+          `R
+            (panel_button ~handler ~icon (Lwd.pure "Exit gui mode")
+               ~shortcut:"Shift + G");
+        ]
+      ()
+  in
+
+  toplevel_panel_el [ `R block; `R back_mode ]
