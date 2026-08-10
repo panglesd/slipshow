@@ -29,8 +29,10 @@ end = struct
   let set s =
     (match (Lwd.peek status, s) with
     | Drawing Presenting, Drawing Presenting -> ()
-    | _, Drawing Presenting -> Messaging.closed_recording_panel ()
-    | Drawing Presenting, _ -> Messaging.opened_recording_panel ()
+    | Editing, (Drawing Presenting | Gui_mode) ->
+        Messaging.closed_recording_panel ()
+    | (Drawing Presenting | Gui_mode), Editing ->
+        Messaging.opened_recording_panel ()
     | _ -> ());
     Lwd.set status s
 
