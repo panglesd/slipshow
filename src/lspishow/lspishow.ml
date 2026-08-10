@@ -46,7 +46,8 @@ module State = struct
     Lwt.return @@ Buffers.update ~force file s ~should_broadcast
 end
 
-let diagnostics file : Linol.Lsp.Types.Diagnostic.t list option =
+let diagnostics ~positionEncoding file :
+    Linol.Lsp.Types.Diagnostic.t list option =
   let roots = Rev_deps.get_roots file in
   let root = Fpath.Set.choose_opt roots in
   match root with
@@ -54,8 +55,12 @@ let diagnostics file : Linol.Lsp.Types.Diagnostic.t list option =
   | Some root -> (
       match Hashtbl.find_opt Roots.buffers root with
       | None -> None
-      | Some { diagnostics = errors; _ } ->
-          Some (List.concat_map (Diagnostic.of_error ~root ~file) errors))
+      | Some { diagnostics = errors; units; _ } ->
+          Some
+            (List.concat_map
+               (Diagnostic.of_error ~positionEncoding ~units:units.units ~root
+                  ~file)
+               errors))
 
 let is_slipshow_file p = Fpath.has_ext "md" p || Fpath.has_ext "slp" p
 
@@ -90,6 +95,20 @@ class lsp_server =
       let open Linol_lwt in
       let sync_opts = self#config_sync_opts in
       self#set_positionEncoding i;
+      let () =
+        match i.capabilities.general with
+        | Some { positionEncodings = Some el; _ } ->
+            let encoding =
+              if
+                List.exists
+                  (function PositionEncodingKind.UTF8 -> true | _ -> false)
+                  el
+              then `UTF8
+              else `UTF16
+            in
+            positionEncoding <- encoding
+        | _ -> ()
+      in
       let positionEncoding =
         match positionEncoding with
         | `UTF8 -> PositionEncodingKind.UTF8
@@ -159,7 +178,12 @@ class lsp_server =
               | Some (_value, meta) -> ("", Cmarkit.Meta.textloc meta, "")
             in
             let uri = Linol_lsp.Uri0.of_string (Cmarkit.Textloc.file textloc) in
-            let range = Diagnostic.linoloc_of_textloc textloc in
+            let fpath = Fpath.v (Cmarkit.Textloc.file textloc) in
+            let> source = Fpath.Map.find_opt fpath root.units.units in
+            let> source = source.source in
+            let range =
+              Diagnostic.linoloc_of_textloc ~positionEncoding ~source textloc
+            in
             let newText = prefix ^ coord ^ suffix in
             let _ : unit Lwt.t =
               let* () =
@@ -206,18 +230,29 @@ class lsp_server =
       | GotoLoc s ->
           let s = Base64.decode s |> Result.get_ok in
           let textloc : Cmarkit.Textloc.t = Marshal.from_string s 0 in
-          let range = Diagnostic.linoloc_of_textloc textloc in
-          let uri = Linol_lsp.Uri0.of_string (Cmarkit.Textloc.file textloc) in
-          let _ =
-            notify_back#send_request
-              (ShowDocumentRequest
-                 {
-                   external_ = None;
-                   takeFocus = None;
-                   uri;
-                   selection = Some range;
-                 })
-              (fun _ -> Lwt.return ())
+          let fpath = Fpath.v (Cmarkit.Textloc.file textloc) in
+          let () =
+            match Fpath.Map.find_opt fpath root.units.units with
+            | Some { source = Some source; _ } ->
+                let range =
+                  Diagnostic.linoloc_of_textloc ~positionEncoding ~source
+                    textloc
+                in
+                let uri =
+                  Linol_lsp.Uri0.of_string (Cmarkit.Textloc.file textloc)
+                in
+                ignore
+                @@ notify_back#send_request
+                     (ShowDocumentRequest
+                        {
+                          external_ = None;
+                          takeFocus = None;
+                          uri;
+                          selection = Some range;
+                        })
+                     (fun _ -> Lwt.return ());
+                ()
+            | _ -> ()
           in
           ()
 
@@ -283,7 +318,11 @@ class lsp_server =
         let* root = Rev_deps.get_roots path |> Fpath.Set.choose_opt in
         let* { units = ast; _ } = Hashtbl.find_opt Roots.buffers root in
         let+ () =
-          Current_ast.get_target ~path pos ast.action_plan |> Option.map ignore
+          let* source = Fpath.Map.find_opt path ast.units in
+          let* source = source.source in
+          Current_ast.get_target ~positionEncoding ~source ~path pos
+            ast.action_plan
+          |> Option.map ignore
           (* Just as a way to test we are in the context of a target. Later, it
              would be even better to filter the IDs using what the action
              expects (eg, only show ids for slip-script in an exec action) *)
@@ -308,14 +347,21 @@ class lsp_server =
       let res =
         let* root = Rev_deps.get_roots path |> Fpath.Set.choose_opt in
         let* { units = ast; _ } = Hashtbl.find_opt Roots.buffers root in
-        let* id = Current_ast.get_target ~path pos ast.action_plan in
+        let* source = Fpath.Map.find_opt path ast.units in
+        let* source = source.source in
+        let* id =
+          Current_ast.get_target ~positionEncoding ~source ~path pos
+            ast.action_plan
+        in
         let+ x = Slipshow.Id_map.SMap.find_opt id ast.id_map in
         let meta = snd (Slipshow.Id_map.Unionable_set.get x.definition).id in
         let loc = Cmarkit.Meta.textloc meta in
         let file = Cmarkit.Textloc.file loc |> Fpath.v |> Fpath.normalize in
         Format.eprintf "Going to location %a%!\n" Fpath.pp file;
         let uri = file |> Fpath.to_string |> Linol_lsp.Uri0.of_string in
-        let range = Diagnostic.linoloc_of_textloc loc in
+        let range =
+          Diagnostic.linoloc_of_textloc ~positionEncoding ~source loc
+        in
         let loc = Linol_lwt.Location.create ~range ~uri in
         `Location [ loc ]
       in
@@ -329,7 +375,10 @@ class lsp_server =
         let path = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
         let* buffer = Hashtbl.find_opt Buffers.buffers path in
         let* _, tail_attrs =
-          let trail = Current_ast.get_leave ~path pos buffer.unit.ast in
+          let trail =
+            Current_ast.get_leave ~positionEncoding ~source:buffer.source ~path
+              pos buffer.unit.ast
+          in
           trail.attribute
         in
         let* tail_attrs = tail_attrs in
@@ -345,7 +394,10 @@ class lsp_server =
             in
             let contents = `MarkupContent contents in
             let loc = Cmarkit.Meta.textloc meta in
-            let range = Diagnostic.linoloc_of_textloc loc in
+            let range =
+              Diagnostic.linoloc_of_textloc ~positionEncoding
+                ~source:buffer.source loc
+            in
             Linol_lwt.Hover.create ~contents ~range ()
         | _ -> None
       in
@@ -376,7 +428,7 @@ class lsp_server =
       let* () =
         State.update_from_buffer ~force:false file contents ~should_broadcast
       in
-      let diags = diagnostics file in
+      let diags = diagnostics ~positionEncoding file in
       match diags with
       | None -> Lwt.return ()
       | Some diags -> notify_back#send_diagnostic diags
@@ -384,7 +436,13 @@ class lsp_server =
     method private activate_gui position path (root : Roots.root)
         (buffer : Buffers.buffer) =
       let ( let> ) x f = Option.iter f x in
-      let trail = Current_ast.get_leave ~path position buffer.unit.ast in
+      let trail =
+        Current_ast.get_leave ~positionEncoding
+          ~source:
+            (buffer.unit.source
+           |> Option.get (* TODO: do something about that *))
+          ~path position buffer.unit.ast
+      in
       match trail.attribute with
       | Some (attrs, Some (Key (("gui", _meta), _))) ->
           let> id, _ = Cmarkit.Attributes.id attrs in
@@ -406,14 +464,16 @@ class lsp_server =
         let _ = self#activate_gui params.position path root buffer in
         let* id =
           let res1 =
-            Current_ast.get_target ~path params.position ast.action_plan
+            Current_ast.get_target ~positionEncoding ~source:buffer.source ~path
+              params.position ast.action_plan
           in
           match res1 with
           | Some _ -> res1
           | None -> (
               let* _, tail_attrs =
                 let trail =
-                  Current_ast.get_leave ~path params.position buffer.unit.ast
+                  Current_ast.get_leave ~positionEncoding ~source:buffer.source
+                    ~path params.position buffer.unit.ast
                 in
                 trail.attribute
               in
@@ -435,7 +495,10 @@ class lsp_server =
               Fpath.equal path1 path2
             in
             if loc_in_file loc then
-              let range = Diagnostic.linoloc_of_textloc loc in
+              let range =
+                Diagnostic.linoloc_of_textloc ~positionEncoding
+                  ~source:buffer.source loc
+              in
               Some (Linol_lwt.DocumentHighlight.create ~range ())
             else None)
           locs
