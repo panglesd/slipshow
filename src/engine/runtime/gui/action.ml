@@ -15,6 +15,7 @@ let activate_el el =
       in
       Drawing_state.Status.set Gui_mode;
       Lwd.set State.current (Some el);
+      if Lwd.peek State.status = Select then Lwd.set State.status Move;
       El.set_class activate_class true el
 
 let activate id =
