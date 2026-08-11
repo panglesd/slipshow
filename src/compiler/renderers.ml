@@ -232,25 +232,9 @@ let pure_embed ~path_prefix c ~name uri files attrs =
           let name =
             match name with
             | "" -> (
-                match Fpath.find_prefix path_prefix p with
+                match Fpath.relativize ~root:path_prefix p with
                 | None -> ""
-                | Some prefix ->
-                    let relativized =
-                      let relativized_right_part =
-                        Fpath.rem_prefix prefix p |> Option.get
-                      in
-                      (* For every segment we "miss" from the root directory, we append a "../" *)
-                      let excedent = Fpath.rem_prefix prefix path_prefix in
-                      match Option.map Fpath.segs excedent with
-                      | None -> relativized_right_part
-                      | Some segs ->
-                          List.fold_left
-                            (fun acc s ->
-                              if String.equal "" s then acc
-                              else Fpath.(v "../" // acc))
-                            relativized_right_part segs
-                    in
-                    relativized |> Fpath.normalize |> Fpath.to_string)
+                | Some prefix -> prefix |> Fpath.to_string)
             | s -> s
           in
           let attrs =
