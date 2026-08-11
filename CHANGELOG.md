@@ -1,6 +1,6 @@
 # Changelog
 
-## unreleased
+## [v0.12.0] The Lord of the Slips: The Two Editors (Wednesday, the 12th of August, 2026)
 
 ### Added
 
