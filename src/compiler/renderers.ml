@@ -222,7 +222,7 @@ let svg c ~uri ~files i attrs =
       in
       RenderAttrs.with_attrs_span c attrs @@ fun () -> C.string c content
 
-let pure_embed ~path_prefix c ~name uri files attrs =
+let pure_embed ~root c ~name uri files attrs =
   let open Cmarkit_renderer in
   match uri with
   | Asset.Uri.Link _ -> Logs.err (fun m -> m "Could not embed a pure embed")
@@ -231,10 +231,12 @@ let pure_embed ~path_prefix c ~name uri files attrs =
       | Some { content; mode = `Base64; _ } ->
           let name =
             match name with
-            | "" -> (
-                match Fpath.relativize ~root:path_prefix p with
-                | None -> ""
-                | Some prefix -> prefix |> Fpath.to_string)
+            | "" ->
+                let path =
+                  if Fpath.is_rel p then p
+                  else Fpath.relativize ~root p |> Option.value ~default:p
+                in
+                Fpath.to_string path
             | s -> s
           in
           let attrs =
@@ -284,7 +286,7 @@ let custom_html_renderer (units : Ast.units)
               (Ast.S_inline el)
           in
           let name = String.concat "\n" (List.map (String.concat "") name) in
-          pure_embed ~path_prefix:units.directory c ~name uri files attrs;
+          pure_embed ~root:units.directory c ~name uri files attrs;
           true
     in
 
