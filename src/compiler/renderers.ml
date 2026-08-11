@@ -222,13 +222,37 @@ let svg c ~uri ~files i attrs =
       in
       RenderAttrs.with_attrs_span c attrs @@ fun () -> C.string c content
 
-let pure_embed c ~name uri files attrs =
+let pure_embed ~path_prefix c ~name uri files attrs =
   let open Cmarkit_renderer in
   match uri with
   | Asset.Uri.Link _ -> Logs.err (fun m -> m "Could not embed a pure embed")
   | Path p -> (
       match Fpath.Map.find_opt p (files : Ast.Files.read Ast.Files.map) with
       | Some { content; mode = `Base64; _ } ->
+          let name =
+            match name with
+            | "" -> (
+                match Fpath.find_prefix path_prefix p with
+                | None -> ""
+                | Some prefix ->
+                    let relativized =
+                      let relativized_right_part =
+                        Fpath.rem_prefix prefix p |> Option.get
+                      in
+                      (* For every segment we "miss" from the root directory, we append a "../" *)
+                      let excedent = Fpath.rem_prefix prefix path_prefix in
+                      match Option.map Fpath.segs excedent with
+                      | None -> relativized_right_part
+                      | Some segs ->
+                          List.fold_left
+                            (fun acc s ->
+                              if String.equal "" s then acc
+                              else Fpath.(v "../" // acc))
+                            relativized_right_part segs
+                    in
+                    relativized |> Fpath.normalize |> Fpath.to_string)
+            | s -> s
+          in
           let attrs =
             attrs
             |> add_escaped_attrs "x-path" (Fpath.to_string p)
@@ -276,7 +300,7 @@ let custom_html_renderer (units : Ast.units)
               (Ast.S_inline el)
           in
           let name = String.concat "\n" (List.map (String.concat "") name) in
-          pure_embed c ~name uri files attrs;
+          pure_embed ~path_prefix:units.directory c ~name uri files attrs;
           true
     in
 
