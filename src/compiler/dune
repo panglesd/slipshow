@@ -13,4 +13,5 @@
   katex
   mermaid
   actions_arguments
-  diagnosis))
+  diagnosis
+  common_types))

@@ -1,4 +1,5 @@
 open Cmarkit
+module Special_attrs = Common_types.Special_strings
 
 type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
 
@@ -85,7 +86,7 @@ module Stage1 = struct
       let h = Block.Code_block.code cb in
       Block.Html_block ((h, attrs), meta2)
     in
-    if has_attrs (fst attrs) Special_attrs.as_html then html ()
+    if has_attrs (fst attrs) Common_types.Special_strings.as_html then html ()
     else
       match Block.Code_block.info_string cb with
       | None -> Block.Code_block ((cb, attrs), meta2)
@@ -98,7 +99,7 @@ module Stage1 = struct
 
   let handle_code_span m ((cs, (attrs, meta)), meta2) =
     let attrs = Mapper.map_attrs m attrs in
-    if has_attrs attrs Special_attrs.as_html then
+    if has_attrs attrs Common_types.Special_strings.as_html then
       let code = Inline.Code_span.code_layout cs in
       let html = Inline.Raw_html (code, meta2) in
       let span = Inline.Attributes_span.make html (attrs, meta) in
@@ -313,9 +314,7 @@ module Stage1 = struct
         let attr = { Cmarkit.Attributes.v; delimiter = Some '"' } in
         let original_loc =
           if embed_loc then
-            [
-              `Kv (("slipshow-original-loc", Meta.none), Some (attr, Meta.none));
-            ]
+            [ `Kv (("slipshow-gui-loc", Meta.none), Some (attr, Meta.none)) ]
           else []
         in
         gui :: original_loc
@@ -333,7 +332,7 @@ module Stage1 = struct
             Ast.Utils.Block.update_attribute
               (fun (attrs, meta) ->
                 ( Cmarkit.Attributes.add
-                    (Special_attrs.loc_attr, Meta.none)
+                    (Special_attrs.original_loc, Meta.none)
                     (Some (attr, Meta.none))
                     attrs,
                   meta ))
