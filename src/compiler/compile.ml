@@ -328,20 +328,22 @@ module Stage1 = struct
     let ret x = `Map x in
     let block m b =
       let b =
-        let loc = b |> Ast.Utils.Block.meta |> Cmarkit.Meta.textloc in
-        let v = Marshal.to_string loc [] |> Base64.encode_string in
-        let attr = { Cmarkit.Attributes.v; delimiter = Some '"' } in
-        let res =
-          Ast.Utils.Block.update_attribute
-            (fun (attrs, meta) ->
-              ( Cmarkit.Attributes.add
-                  (Special_attrs.loc_attr, Meta.none)
-                  (Some (attr, Meta.none))
-                  attrs,
-                meta ))
-            b
-        in
-        match res with None -> b | Some (b, _) -> b
+        if embed_loc then
+          let loc = b |> Ast.Utils.Block.meta |> Cmarkit.Meta.textloc in
+          let v = Marshal.to_string loc [] |> Base64.encode_string in
+          let attr = { Cmarkit.Attributes.v; delimiter = Some '"' } in
+          let res =
+            Ast.Utils.Block.update_attribute
+              (fun (attrs, meta) ->
+                ( Cmarkit.Attributes.add
+                    (Special_attrs.loc_attr, Meta.none)
+                    (Some (attr, Meta.none))
+                    attrs,
+                  meta ))
+              b
+          in
+          match res with None -> b | Some (b, _) -> b
+        else b
       in
       let res =
         match b with
