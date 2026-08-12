@@ -40,11 +40,7 @@ let shortcut_editing (replaying_state : replaying_state) key =
       Drawing_state.delete selected;
       true
   | "Escape" ->
-      let selected =
-        Lwd.observe (Drawing_state.selection replaying_state.recording)
-      in
-      let selected = Lwd.quick_sample selected in
-      Drawing_state.unselect selected;
+      Drawing_state.unselect_all replaying_state;
       true
   | "s" ->
       Lwd.set editing_tool Select;
@@ -52,7 +48,7 @@ let shortcut_editing (replaying_state : replaying_state) key =
   | "r" ->
       Lwd.set editing_tool Rescale;
       true
-  | "R" ->
+  | "S" ->
       start_recording replaying_state;
       true
   | " " ->
@@ -76,6 +72,10 @@ let shortcut_editing (replaying_state : replaying_state) key =
           let total_time = Lwd.peek replaying_state.recording.total_time in
           Float.max (t -. (total_time /. 100.)) 0.)
         replaying_state.time;
+      true
+  | "R" ->
+      Drawing_state.unselect_all replaying_state;
+      Status.set (Drawing Presenting);
       true
   | _ -> false
 
@@ -102,7 +102,7 @@ let shortcut_drawing mode key =
       in
       Tools.Clear.event ~replayed_strokes started_at strokes;
       true
-  | "R" ->
+  | "S" | "R" ->
       (match mode with
       | Presenting -> Status.set Editing
       | Recording state -> finish_recording state);

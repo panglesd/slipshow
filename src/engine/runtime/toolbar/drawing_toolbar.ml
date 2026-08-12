@@ -200,7 +200,7 @@ let v mode =
           ~buttons:
             [
               `R
-                (panel_button ~shortcut:"Shift + R" ~handler ~icon
+                (panel_button ~shortcut:"Shift + S" ~handler ~icon
                    (Lwd.pure "Stop recording"));
             ]
           ()
