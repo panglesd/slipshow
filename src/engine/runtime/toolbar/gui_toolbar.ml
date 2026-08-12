@@ -26,6 +26,7 @@ let v =
   let back_mode =
     let handler =
       Elwd.handler Brr.Ev.click (fun _ ->
+          Lwd.set Gui.State.current None;
           Drawing_state.Status.set (Drawing Presenting))
     in
     let icon = panel_icon [ `P (Brr.El.txt !!"⤶") ] in
