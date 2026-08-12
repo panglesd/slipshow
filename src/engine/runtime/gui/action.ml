@@ -26,7 +26,8 @@ let activate id =
       | Some el -> activate_el el)
   | Loc loc -> (
       match
-        El.find_first_by_selector !!("[slipshow-original-loc=\"" ^ loc ^ "\"]")
+        El.find_first_by_selector
+          !!("[" ^ Common_types.Special_strings.gui_loc ^ "=\"" ^ loc ^ "\"]")
       with
       | None -> ()
       | Some el -> activate_el el)

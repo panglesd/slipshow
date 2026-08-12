@@ -8,7 +8,8 @@ module Action = Action
 
 let ( !! ) = Jstr.v
 let sof x = Printf.sprintf "%.25f" x
-let pos_attr = !!"slipshow-original-loc"
+let gui_pos_attr = !!Common_types.Special_strings.gui_loc
+let block_pos_attr = !!Common_types.Special_strings.original_loc
 
 let for_events window =
   let display =
@@ -49,30 +50,37 @@ let for_events window =
     []
 
 let setup_elem el =
-  (* TODO: Use "special_attributes.ml" *)
-  match El.at !!"gui" el with
-  | None -> ()
-  | Some s ->
+  match
+    ( El.at !!Common_types.Special_strings.gui el,
+      El.at !!Common_types.Special_strings.gui_loc el )
+  with
+  | None, _ | _, None -> ()
+  | Some gui, Some loc ->
       let coord =
-        match Gui_tools.Syntax.parse (Jstr.to_string s) with
+        match Gui_tools.Syntax.parse (Jstr.to_string gui) with
         | Ok (x, _warnings) -> x
         | Error _ ->
             { x = None; y = None; scale = None; width = None; height = None }
       in
       Gui_tools.save_coord_el coord el;
-      Gui_tools.apply_coord coord el
+      Gui_tools.apply_coord coord el;
+      let _unlisten : Ev.listener =
+        Ev.listen Ev.click
+          (fun _ev ->
+            Messaging.send_loc (Jstr.to_string loc);
+            if Drawing_state.Status.peek () = Gui_mode then
+              Action.activate_el el)
+          (El.as_target el)
+      in
+      ()
 
 let make_clickable el =
-  (* TODO: Use "special_attributes.ml" *)
-  match El.at pos_attr el with
+  match El.at block_pos_attr el with
   | None -> ()
   | Some pos ->
       let _unlisten : Ev.listener =
         Ev.listen Ev.click
-          (fun _ev ->
-            Messaging.send_loc (Jstr.to_string pos);
-            if Drawing_state.Status.peek () = Gui_mode then
-              Action.activate_el el)
+          (fun _ev -> Messaging.send_loc (Jstr.to_string pos))
           (El.as_target el)
       in
       ()
@@ -80,11 +88,15 @@ let make_clickable el =
 let init window =
   let () =
     El.fold_find_by_selector
-      (fun el () ->
-        setup_elem el;
-        make_clickable el)
-      (* TODO: make Special_attributes shared and use it *)
-      !!("[" ^ "slipshow-original-loc" ^ "]")
+      (fun el () -> make_clickable el)
+      !!("[" ^ Common_types.Special_strings.original_loc ^ "]")
+      ()
+  in
+  let () =
+    El.fold_find_by_selector
+      (fun el () -> setup_elem el)
+      !!("[" ^ Common_types.Special_strings.gui_loc ^ "]["
+       ^ Common_types.Special_strings.gui ^ "]")
       ()
   in
   let for_events = for_events window in
