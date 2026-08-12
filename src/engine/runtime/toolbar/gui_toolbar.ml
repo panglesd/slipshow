@@ -37,5 +37,4 @@ let v =
         ]
       ()
   in
-
   toplevel_panel_el [ `R block; `R back_mode ]

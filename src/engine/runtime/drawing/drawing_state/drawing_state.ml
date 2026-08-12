@@ -198,3 +198,9 @@ let unselect selection =
   List.iter
     (fun (_, pause) -> Lwd.set pause.p_selected false)
     selection.s_pauses
+
+let unselect_all replaying_state =
+  let selected_root = Lwd.observe (selection replaying_state.recording) in
+  let selected = Lwd.quick_sample selected_root in
+  let () = Lwd.quick_release selected_root in
+  unselect selected

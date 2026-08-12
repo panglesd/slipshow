@@ -49,9 +49,25 @@ let v =
             in
             if is_empty then "Start recording" else "Continue recording"
           in
-          panel_button ~handler ~icon txt ~shortcut:"Shift + R"
+          panel_button ~handler ~icon txt ~shortcut:"Shift + S"
         in
         let$ panel = panel_block ~buttons:[ `R record ] () in
         Lwd_seq.element panel
   in
-  toplevel_panel_el [ `R block; `S recording_block ]
+  let back_mode =
+    let handler =
+      Elwd.handler Brr.Ev.click (fun _ ->
+          Drawing_state.Status.set (Drawing Presenting))
+    in
+    let icon = panel_icon [ `P (Brr.El.txt !!"⤶") ] in
+    panel_block ~class_:"slipshow-gui-back-block"
+      ~buttons:
+        [
+          `R
+            (panel_button ~handler ~icon
+               (Lwd.pure "Exit editing mode")
+               ~shortcut:"Shift + R");
+        ]
+      ()
+  in
+  toplevel_panel_el [ `R block; `S recording_block; `R back_mode ]
