@@ -449,12 +449,11 @@ class lsp_server =
 
     method private activate_gui position path (root : Roots.root)
         (buffer : Buffers.buffer) =
+      let ( let> ) x f = Option.iter f x in
+      let> source = buffer.unit.source in
       let trail =
-        Current_ast.get_leave ~positionEncoding
-          ~source:
-            (buffer.unit.source
-           |> Option.get (* TODO: do something about that *))
-          ~path position buffer.unit.ast
+        Current_ast.get_leave ~positionEncoding ~source ~path position
+          buffer.unit.ast
       in
       match trail.attribute with
       | Some (_, Some (Key (("gui", meta), _))) ->
