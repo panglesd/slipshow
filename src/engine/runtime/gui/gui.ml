@@ -49,55 +49,71 @@ let for_events window =
       ]
     []
 
-let setup_elem el =
-  match
-    ( El.at !!Common_types.Special_strings.gui el,
-      El.at !!Common_types.Special_strings.gui_loc el )
-  with
-  | None, _ | _, None -> ()
-  | Some gui, Some loc ->
-      let coord =
-        match Gui_tools.Syntax.parse (Jstr.to_string gui) with
-        | Ok (x, _warnings) -> x
-        | Error _ ->
-            { x = None; y = None; scale = None; width = None; height = None }
-      in
-      Gui_tools.save_coord_el coord el;
-      Gui_tools.apply_coord coord el;
-      let _unlisten : Ev.listener =
-        Ev.listen Ev.click
-          (fun _ev ->
-            Messaging.send_loc (Jstr.to_string loc);
-            if Drawing_state.Status.peek () = Gui_mode then
-              Action.activate_el el)
-          (El.as_target el)
-      in
-      ()
+let setup_gui_elem el gui loc =
+  let coord =
+    match Gui_tools.Syntax.parse (Jstr.to_string gui) with
+    | Ok (x, _warnings) -> x
+    | Error _ ->
+        { x = None; y = None; scale = None; width = None; height = None }
+  in
+  Gui_tools.save_coord_el coord el;
+  Gui_tools.apply_coord coord el;
+  let _unlisten : Ev.listener =
+    Ev.listen Ev.click
+      (fun ev ->
+        let loc =
+          match (El.at block_pos_attr el, Drawing_state.Status.peek ()) with
+          | None, _ | _, Gui_mode -> loc
+          | Some loc, _ -> loc
+        in
+        Messaging.send_loc (Jstr.to_string loc);
+        Ev.stop_propagation ev;
+        if Drawing_state.Status.peek () = Gui_mode then Action.activate_el el)
+      (El.as_target el)
+  in
+  ()
 
-let make_clickable el =
+let setup_non_gui_elem el =
   match El.at block_pos_attr el with
   | None -> ()
   | Some pos ->
       let _unlisten : Ev.listener =
         Ev.listen Ev.click
-          (fun _ev -> Messaging.send_loc (Jstr.to_string pos))
+          (fun ev ->
+            Ev.stop_propagation ev;
+            Messaging.send_loc (Jstr.to_string pos))
           (El.as_target el)
       in
       ()
 
+let setup_elem el =
+  let gui_attrs =
+    let gui = El.at !!Common_types.Special_strings.gui el in
+    let gui_loc = El.at !!Common_types.Special_strings.gui_loc el in
+    match (gui, gui_loc) with
+    | Some gui, Some gui_loc -> Some (gui, gui_loc)
+    | _ -> None
+  in
+  match gui_attrs with
+  | Some (gui, gui_loc) -> setup_gui_elem el gui gui_loc
+  | None -> setup_non_gui_elem el
+
 let init window =
-  let () =
-    El.fold_find_by_selector
-      (fun el () -> make_clickable el)
-      !!("[" ^ Common_types.Special_strings.original_loc ^ "]")
-      ()
+  let block_with_loc_selector =
+    "[" ^ Common_types.Special_strings.original_loc ^ "]"
+  in
+  let gui_selector =
+    "[" ^ Common_types.Special_strings.gui_loc ^ "]["
+    ^ Common_types.Special_strings.gui ^ "]"
   in
   let () =
     El.fold_find_by_selector
       (fun el () -> setup_elem el)
-      !!("[" ^ Common_types.Special_strings.gui_loc ^ "]["
-       ^ Common_types.Special_strings.gui ^ "]")
+      !!(block_with_loc_selector ^ "," ^ gui_selector)
       ()
+  in
+  let () =
+    El.fold_find_by_selector (fun el () -> setup_elem el) !!gui_selector ()
   in
   let for_events = for_events window in
   let main =
