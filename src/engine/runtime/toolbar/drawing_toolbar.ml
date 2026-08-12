@@ -218,11 +218,11 @@ let v mode =
       ()
   in
   toplevel_panel_el
-    [
-      `R tool_buttons;
-      `R color_buttons;
-      `R width_buttons;
-      `R clear_button;
-      `R record_button;
-      `R gui_mode;
-    ]
+    ([
+       `R tool_buttons;
+       `R color_buttons;
+       `R width_buttons;
+       `R clear_button;
+       `R record_button;
+     ]
+    @ match mode with Presenting -> [ `R gui_mode ] | Recording _ -> [])
