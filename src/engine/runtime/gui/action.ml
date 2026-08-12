@@ -19,23 +19,29 @@ let activate_el el =
       El.set_class activate_class true el
 
 let activate id =
-  match id with
-  | Common_types.Id id -> (
-      match El.find_first_by_selector !!("#" ^ id) with
-      | None -> ()
-      | Some el -> activate_el el)
-  | Loc loc -> (
-      match
-        El.find_first_by_selector
-          !!("[" ^ Common_types.Special_strings.gui_loc ^ "=\"" ^ loc ^ "\"]")
-      with
-      | None -> ()
-      | Some el -> activate_el el)
+  match Drawing_state.Status.peek () with
+  | Drawing Presenting | Gui_mode -> (
+      match id with
+      | Common_types.Id id -> (
+          match El.find_first_by_selector !!("#" ^ id) with
+          | None -> ()
+          | Some el -> activate_el el)
+      | Loc loc -> (
+          match
+            El.find_first_by_selector
+              !!("[" ^ Common_types.Special_strings.gui_loc ^ "=\"" ^ loc
+               ^ "\"]")
+          with
+          | None -> ()
+          | Some el -> activate_el el))
+  | _ -> ()
 
 let deactivate () =
-  Drawing_state.Status.set (Drawing Presenting);
-  match Lwd.peek State.current with
-  | Some old_el ->
-      Lwd.set State.current None;
-      El.set_class activate_class false old_el
-  | None -> ()
+  if Drawing_state.Status.peek () = Gui_mode then (
+    Drawing_state.Status.set (Drawing Presenting);
+    match Lwd.peek State.current with
+    | Some old_el ->
+        Lwd.set State.current None;
+        El.set_class activate_class false old_el
+    | None -> ())
+  else ()
