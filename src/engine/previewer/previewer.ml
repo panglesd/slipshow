@@ -284,8 +284,8 @@ let preview ?options ?slipshow_js previewer source =
     if Fpath.equal this_file f then Ok (Some source) else Ok None
   in
   let slipshow, warnings =
-    Slipshow.convert ~directory ~has_speaker_view ?slipshow_js ?options
-      ~read_file ~autofocus:false ~starting_state this_file
+    Slipshow.convert ~embed_loc:true ~directory ~has_speaker_view ?slipshow_js
+      ?options ~read_file ~autofocus:false ~starting_state this_file
   in
   let warnings =
     List.map

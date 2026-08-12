@@ -264,7 +264,7 @@ module Stage1 = struct
     in
     match res with [] -> None | res -> Some (Block.Blocks (res, meta))
 
-  let map_attrs = function
+  let map_attrs ~embed_loc = function
     | `Kv (("up", m), v) -> [ `Kv (("up-at-unpause", m), v) ]
     | `Kv (("center", m), v) -> [ `Kv (("center-at-unpause", m), v) ]
     | `Kv (("down", m), v) -> [ `Kv (("down-at-unpause", m), v) ]
@@ -311,12 +311,17 @@ module Stage1 = struct
         let loc = Meta.textloc meta in
         let v = Marshal.to_string loc [] |> Base64.encode_string in
         let attr = { Cmarkit.Attributes.v; delimiter = Some '"' } in
-        [
-          gui; `Kv (("slipshow-original-loc", Meta.none), Some (attr, Meta.none));
-        ]
+        let original_loc =
+          if embed_loc then
+            [
+              `Kv (("slipshow-original-loc", Meta.none), Some (attr, Meta.none));
+            ]
+          else []
+        in
+        gui :: original_loc
     | x -> [ x ]
 
-  let execute ~htbl_include current_path defs =
+  let execute ~htbl_include ~embed_loc current_path defs =
     let ret x = `Map x in
     let block m b =
       let b =
@@ -348,7 +353,7 @@ module Stage1 = struct
       | `Default -> Ast.Mapper.continue_block m b
       | `Map _ as map -> map
     in
-    let attrs = map_attrs in
+    let attrs = map_attrs ~embed_loc in
     let inline m = function
       | Inline.Image img -> handle_image_inlining m defs current_path img
       | Inline.Code_span cs -> Mapper.ret (handle_code_span m cs)
@@ -356,15 +361,17 @@ module Stage1 = struct
     in
     Ast.Mapper.make ~block ~inline ~attrs ()
 
-  let execute current_path defs md fm =
+  let execute ~embed_loc current_path defs md fm =
     let htbl_include = Hashtbl.create 3 in
-    let res = Mapper.map_doc (execute ~htbl_include current_path defs) md in
+    let res =
+      Mapper.map_doc (execute ~htbl_include ~embed_loc current_path defs) md
+    in
     let fm =
       let toplevel_attributes =
         match fm.Frontmatter.global.toplevel_attributes with
         | None -> None
         | Some (attrs, meta) ->
-            Some (Cmarkit.Attributes.map map_attrs attrs, meta)
+            Some (Cmarkit.Attributes.map (map_attrs ~embed_loc) attrs, meta)
       in
       {
         fm with
@@ -613,7 +620,7 @@ end
 
 let action_plan _ = failwith "TODO: Action plan"
 
-let of_cmarkit ~path ~(fm : Frontmatter.t) ~source md =
+let of_cmarkit ~embed_loc ~path ~(fm : Frontmatter.t) ~source md =
   let defs = Doc.defs md in
   let block = Doc.block md in
   let md =
@@ -628,7 +635,9 @@ let of_cmarkit ~path ~(fm : Frontmatter.t) ~source md =
   let current_path = Fpath.parent path in
   let (ast, deps, id_map, files, option, gui_map), warnings =
     Diagnosis.with_ @@ fun () ->
-    let md1, htbl_include, fm = Stage1.execute current_path defs md fm in
+    let md1, htbl_include, fm =
+      Stage1.execute ~embed_loc current_path defs md fm
+    in
     let md2 = Stage2.execute md1 in
     let md3 = Stage3.execute md2 in
     let md4, files, id_map, gui_map = Stage4.execute ~fm md3 in
@@ -640,7 +649,7 @@ let of_cmarkit ~path ~(fm : Frontmatter.t) ~source md =
 let _add_file read_file file content =
  fun p -> if Fpath.equal p file then Ok (Some content) else read_file p
 
-let unit ?locs ~read_file file =
+let unit ?locs ~read_file ~embed_loc file =
   let locs =
     match locs with
     | Some locs -> locs
@@ -664,25 +673,25 @@ let unit ?locs ~read_file file =
     | Ok (Some s' as s) -> (s, s')
   in
   let doc, frontmatter = Cmarkit_proxy.of_string ~read_file ~file s in
-  of_cmarkit ~source ~path:file doc ~fm:frontmatter
+  of_cmarkit ~embed_loc ~source ~path:file doc ~fm:frontmatter
 
-let rec add_to_compile ?locs ~units file units_cache ~read_file =
+let rec add_to_compile ?locs ~embed_loc ~units file units_cache ~read_file =
   if Fpath.Map.mem file units then units
   else
     let u =
       match Fpath.Map.find_opt file units_cache with
       | Some u -> u
-      | None -> unit ~read_file ?locs file
+      | None -> unit ~embed_loc ~read_file ?locs file
     in
     let units = Fpath.Map.add file u units in
     Fpath.Map.fold
       (fun dep locs units ->
-        add_to_compile ~locs ~units dep units_cache ~read_file)
+        add_to_compile ~locs ~units ~embed_loc dep units_cache ~read_file)
       u.deps units
 
-let compile_all ~directory ~read_file units_cache file =
+let compile_all ~directory ~read_file ~embed_loc units_cache file =
   let units = Fpath.Map.empty in
-  let units = add_to_compile file ~units units_cache ~read_file in
+  let units = add_to_compile file ~units ~embed_loc units_cache ~read_file in
   let files, options =
     Ast.Folder.fold_just_units
       (fun unit (files, option) ->
@@ -726,7 +735,7 @@ let compile_all ~directory ~read_file units_cache file =
       in
       Cmarkit.Doc.make block
     in
-    of_cmarkit ~path:internal ~fm:Frontmatter.empty ~source:None doc
+    of_cmarkit ~embed_loc ~path:internal ~fm:Frontmatter.empty ~source:None doc
   in
   let units = Fpath.Map.add internal u units in
   let action_plan, id_map = Action_plan.execute u units in
@@ -755,8 +764,9 @@ let compile_all ~directory ~read_file units_cache file =
     directory;
   }
 
-let compile_all ~read_file ~directory units file =
-  Diagnosis.with_ @@ fun () -> compile_all ~directory ~read_file units file
+let compile_all ~read_file ~directory ~embed_loc units file =
+  Diagnosis.with_ @@ fun () ->
+  compile_all ~directory ~read_file ~embed_loc units file
 
 (* let add_to_compile file c ~read_file = *)
 (*   Diagnosis.with_ @@ fun () -> add_to_compile file c ~read_file *)

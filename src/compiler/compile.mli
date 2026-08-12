@@ -6,7 +6,11 @@ type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
 val to_cmarkit : Ast.units -> Cmarkit.Doc.t
 
 val unit :
-  ?locs:Cmarkit.Textloc.t list -> read_file:file_reader -> Fpath.t -> Ast.unit'
+  ?locs:Cmarkit.Textloc.t list ->
+  read_file:file_reader ->
+  embed_loc:bool ->
+  Fpath.t ->
+  Ast.unit'
 
 (* val add_to_compile : *)
 (*   Fpath.t -> *)
@@ -17,6 +21,7 @@ val unit :
 val compile_all :
   read_file:file_reader ->
   directory:Fpath.t ->
+  embed_loc:bool ->
   Ast.unit' Fpath.Map.t ->
   Fpath.t ->
   Ast.units * Diagnosis.t list

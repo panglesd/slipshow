@@ -247,9 +247,9 @@ let string_to_delayed s =
   let s = s |> Base64.decode |> Result.to_option in
   Option.bind s @@ fun s -> try Some (Marshal.from_string s 0) with _ -> None
 
-let convert_to_md ~read_file ~directory file =
+let convert_to_md ~embed_loc ~read_file ~directory file =
   let units, _ =
-    Compile.compile_all ~directory ~read_file Fpath.Map.empty file
+    Compile.compile_all ~embed_loc ~directory ~read_file Fpath.Map.empty file
   in
   let sd = Compile.to_cmarkit units in
   Cmarkit_commonmark.of_doc ~include_attributes:false sd
@@ -298,9 +298,10 @@ let delayed_from_units ?(options = Frontmatter.Global.empty) ?slipshow_js
   embed_in_page ~has_speaker_view ~slipshow_js ~dimension ~has ~math_link ~theme
     ~css_links ~js_links content ~highlightjs_theme ~math_mode
 
-let delayed ~directory ?options ?slipshow_js ~read_file ~has_speaker_view file =
+let delayed ~directory ?options ?slipshow_js ~read_file ~has_speaker_view
+    ~embed_loc file =
   let units, errors =
-    Compile.compile_all ~directory Fpath.Map.empty file ~read_file
+    Compile.compile_all ~embed_loc ~directory Fpath.Map.empty file ~read_file
   in
   let warnings = to_grace units errors in
   let res = delayed_from_units ?options ?slipshow_js ~has_speaker_view units in
@@ -367,9 +368,10 @@ let add_starting_state ?(autofocus = true) (start, end_, has_speaker_view)
   if has_speaker_view then html else orig_html
 
 let convert ~directory ?options ~has_speaker_view ?autofocus ?slipshow_js
-    ?starting_state ~read_file file =
+    ?starting_state ~read_file ~embed_loc file =
   let delayed, w =
-    delayed ~directory ?options ~has_speaker_view ?slipshow_js ~read_file file
+    delayed ~embed_loc ~directory ?options ~has_speaker_view ?slipshow_js
+      ~read_file file
   in
   let res = add_starting_state ?autofocus delayed starting_state in
   (res, w)

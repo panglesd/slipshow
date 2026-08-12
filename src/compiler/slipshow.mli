@@ -40,6 +40,7 @@ val delayed :
   ?slipshow_js:Asset.t ->
   read_file:file_reader ->
   has_speaker_view:bool ->
+  embed_loc:bool ->
   Fpath.t ->
   delayed * Diagnosis.t Grace.Diagnostic.t list
 (** This function is used to delay the decision on the starting state. It allows
@@ -57,11 +58,16 @@ val convert :
   ?slipshow_js:Asset.t ->
   ?starting_state:starting_state ->
   read_file:file_reader ->
+  embed_loc:bool ->
   Fpath.t ->
   string * Diagnosis.t Grace.Diagnostic.t list
 
 val convert_to_md :
-  read_file:file_reader -> directory:Fpath.t -> Fpath.t -> string
+  embed_loc:bool ->
+  read_file:file_reader ->
+  directory:Fpath.t ->
+  Fpath.t ->
+  string
 
 val to_grace :
   Ast.units -> Diagnosis.t list -> Diagnosis.t Grace.Diagnostic.t list

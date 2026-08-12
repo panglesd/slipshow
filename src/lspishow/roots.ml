@@ -18,7 +18,8 @@ let generate_version () =
 let update_root ~should_broadcast read_file roots_state units root =
   let directory = Fpath.parent root in
   let units, diagnostics =
-    Slipshow.Compile.compile_all ~directory ~read_file units root
+    Slipshow.Compile.compile_all ~embed_loc:true ~directory ~read_file units
+      root
   in
   let condition, old_version =
     match Hashtbl.find_opt roots_state root with
