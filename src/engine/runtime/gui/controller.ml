@@ -43,7 +43,6 @@ let shortcut_editing key =
       Action.deactivate ();
       true
   | "G" ->
-      Drawing_state.Status.set (Drawing Presenting);
       Action.deactivate ();
       true
   | _ -> false
