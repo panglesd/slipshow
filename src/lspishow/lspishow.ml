@@ -860,15 +860,14 @@ class lsp_server =
       let roots = Rev_deps.get_roots file in
       (* TODO: IMPORTANT DO THAT BEFORE ANY RELEASE: It seems send_control would
          not work in "save" mode (compared to keystroke mode). Fix that. *)
-      let make_root_go_next root =
-        match Hashtbl.find_opt Roots.buffers root with
+      let make_root_go_next roots root =
+        match Hashtbl.find_opt roots root with
         | None -> ()
-        | Some { condition; units; _ } ->
-            Format.eprintf "Going next for root %a\n%!" Fpath.pp
-              units.entry_point;
+        | Some { Roots.condition; _ } ->
             Lwt_condition.broadcast condition (Control c)
       in
-      Fpath.Set.iter make_root_go_next roots
+      Fpath.Set.iter (make_root_go_next Roots.buffers) roots;
+      Fpath.Set.iter (make_root_go_next Roots.saved) roots
 
     method! on_req_execute_command ~notify_back ~id ~workDoneToken (c : string)
         (args : Yojson.Safe.t list option) : Yojson.Safe.t Linol_lwt.t =
