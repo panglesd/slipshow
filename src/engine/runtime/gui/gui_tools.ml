@@ -10,10 +10,7 @@ type t = Syntax.t = {
 }
 
 let ( !! ) = Jstr.v
-let x_coord = El.Prop.int !!"slipshow-x-coord"
-let y_coord = El.Prop.int !!"slipshow-y-coord"
-let gui_prop = El.Prop.jstr !!"slipshow-y-coord"
-let scale_coord = El.Prop.float !!"slipshow-scale-coord"
+let gui_prop = El.Prop.jstr !!"slipshow-gui-coord"
 let get_x { x; _ } = Option.value ~default:0 x
 let get_y { y; _ } = Option.value ~default:0 y
 let get_scale { scale; _ } = Option.value ~default:1. scale
@@ -73,7 +70,9 @@ let get_loc_id el =
     | "" -> None
     | s -> Some s
   in
-  let loc = El.at !!"slipshow-original-loc" el |> Option.map Jstr.to_string in
+  let loc =
+    El.at !!Common_types.Special_strings.gui_loc el |> Option.map Jstr.to_string
+  in
   match (id, loc) with
   | Some id, _ -> Some (Common_types.Id id)
   | _, Some loc -> Some (Loc loc)
