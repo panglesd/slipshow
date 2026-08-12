@@ -34,7 +34,12 @@ end = struct
     | (Drawing Presenting | Gui_mode), Editing ->
         Messaging.opened_recording_panel ()
     | _ -> ());
-    Lwd.set status s
+    (* Some transitions are forbidden here. *)
+    match (Lwd.peek status, s) with
+    | (Editing | Drawing (Recording _)), Gui_mode
+    | Gui_mode, (Editing | Drawing (Recording _)) ->
+        ()
+    | _ -> Lwd.set status s
 
   let peek () = Lwd.peek status
   let get = Lwd.get status
