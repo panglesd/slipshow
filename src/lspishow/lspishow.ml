@@ -805,14 +805,19 @@ class lsp_server =
       let () =
         let+ file = Rev_deps.get_roots file in
         let parent = Fpath.parent file in
-        let root : Slipshow_server.root =
-          Roots.update_root (Read_file.fs parent) Roots.saved Fpath.Map.empty
-            file ~should_broadcast:true
+        let read_file = Read_file.fs parent in
+        let _root : Slipshow_server.root =
+          Roots.update_root read_file Roots.saved Fpath.Map.empty file
+            ~should_broadcast:true
         in
-        Lwt_condition.broadcast root.condition Update;
         let html =
+          let units, _diagnostics =
+            let directory = Fpath.parent file in
+            Slipshow.Compile.compile_all ~embed_loc:false ~directory ~read_file
+              Fpath.Map.empty file
+          in
           let delayed =
-            Slipshow.delayed_from_units ~has_speaker_view:true root.units
+            Slipshow.delayed_from_units ~has_speaker_view:true units
           in
           Slipshow.add_starting_state delayed None
         in
