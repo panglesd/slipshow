@@ -47,7 +47,7 @@ let update ~force ~should_broadcast file source =
       let parent = Fpath.parent file in
       let open Read_file.Syntax in
       let read_file = Read_file.with_ file source ||| read_file parent in
-      let unit = Slipshow.Compile.unit ~read_file file in
+      let unit = Slipshow.Compile.unit ~embed_loc:true ~read_file file in
       let new_ = { source; unit } in
       update_state ~new_ file;
       let roots = Rev_deps.get_roots file in
