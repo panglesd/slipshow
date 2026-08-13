@@ -28,7 +28,7 @@
   (crunch :with-dev-setup)
   (lambdasoup :with-test)
   (cmdliner (>= 1.3.0))
-   base64
+  (base64 (>= 3.3.0))
    bos
    lwt
    (inotify (= :os "linux"))
