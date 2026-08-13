@@ -74,7 +74,8 @@ let keyboard_setup (window : Universe.Window.t) =
           in
           ()
       | "G" ->
-          Drawing_state.Status.set Gui_mode;
+          if Lwd.peek Drawing_state.can_gui then
+            Drawing_state.Status.set Gui_mode;
           ()
       | _ -> ()
     in
@@ -257,6 +258,7 @@ let message_setup window =
           Drawing_controller.Messages.receive_all_strokes all_strokes
       | Some { payload = Can_save; id = _ } ->
           Lwd.set Drawing_state.can_save true
+      | Some { payload = Can_gui; id = _ } -> Lwd.set Drawing_state.can_gui true
       | None
       | Some
           {

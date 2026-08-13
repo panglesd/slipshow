@@ -29,30 +29,6 @@ let send_message panel payload =
   in
   Window.post_message window ~msg
 
-let send_open_speaker_view panel =
-  let payload = Communication.Open_speaker_notes in
-  send_message panel payload
-
-let send_can_save panel =
-  let payload = Communication.Can_save in
-  send_message panel payload
-
-let send_next panel =
-  let payload = Communication.Next in
-  send_message panel payload
-
-let send_previous panel =
-  let payload = Communication.Previous in
-  send_message panel payload
-
-let send_activate_gui panel id =
-  let payload = Communication.ActivateGUI id in
-  send_message panel payload
-
-let send_deactivate_gui panel =
-  let payload = Communication.DeActivateGUI in
-  send_message panel payload
-
 let () = Random.self_init ()
 
 let css =
@@ -115,7 +91,7 @@ let preview_status_class = Jstr.v "preview-status"
 
 let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
     ?(save_drawing = fun ~path:_ ~content:_ -> ()) ~save_coordinate ~goto_loc
-    ~include_speaker_view ~errors_el ~steal_focus ~can_save root =
+    ~include_speaker_view ~errors_el ~steal_focus ~can_save ~can_gui root =
   let ( !! ) = Jstr.v in
   let name1 = Random.int 1000000 |> string_of_int |> fun s -> "id" ^ s in
   let name2 = Random.int 1000000 |> string_of_int |> fun s -> "id" ^ s in
@@ -176,7 +152,8 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
           | Some { payload = Close_speaker_notes; id = _ } ->
               is_speaker_view_open := false
           | Some { payload = Ready; id = _ } ->
-              if can_save then send_can_save panels.(p.index)
+              if can_save then send_message panels.(p.index) Can_save;
+              if can_gui then send_message panels.(p.index) Can_gui
           | Some { payload = Save_drawing (path, content); id = _ } ->
               save_drawing ~path ~content
           | Some { payload = SaveCoordinates { x; y; scale; id; w; h }; _ } ->
@@ -192,6 +169,7 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
           | Some { payload = Next; _ }
           | Some { payload = Previous; _ }
           | Some { payload = Can_save; _ }
+          | Some { payload = Can_gui; _ }
           | Some { payload = ActivateGUI _; _ }
           | Some { payload = DeActivateGUI; _ } ->
               ()
@@ -200,9 +178,10 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
           | Some { payload = Ready; id = _ } ->
               Jv.set (El.to_jv panels.(p.index)) "srcdoc" (Jv.of_string "");
               let () = El.set_class preview_status_class true preview_status in
-              if can_save then send_can_save panels.(1 - p.index);
+              if can_save then send_message panels.(1 - p.index) Can_save;
+              if can_gui then send_message panels.(1 - p.index) Can_gui;
               if !is_speaker_view_open then
-                send_open_speaker_view panels.(1 - p.index);
+                send_message panels.(1 - p.index) Open_speaker_notes;
               p.index <- 1 - p.index;
               El.set_class (Jstr.v "active_panel") true panels.(p.index);
               let () =
@@ -229,7 +208,7 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
                 payload =
                   ( Open_speaker_notes | Close_speaker_notes
                   | Open_recording_panel | Close_recording_panel
-                  | Send_all_drawing | Next | Previous | Can_save
+                  | Send_all_drawing | Next | Previous | Can_save | Can_gui
                   | DeActivateGUI
                   | State (_, _)
                   | Speaker_notes _ | Drawing _ | Receive_all_drawing _
@@ -309,16 +288,16 @@ let ids { ids; _ } = ids
 
 let next (previewer : previewer) =
   let current_window = previewer.panels.(previewer.index) in
-  send_next current_window
+  send_message current_window Next
 
 let previous (previewer : previewer) =
   let current_window = previewer.panels.(previewer.index) in
-  send_previous current_window
+  send_message current_window Previous
 
 let activate_gui (previewer : previewer) id =
   let current_window = previewer.panels.(previewer.index) in
-  send_activate_gui current_window id
+  send_message current_window (ActivateGUI id)
 
 let deactivate_gui (previewer : previewer) =
   let current_window = previewer.panels.(previewer.index) in
-  send_deactivate_gui current_window
+  send_message current_window DeActivateGUI

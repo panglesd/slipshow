@@ -13,7 +13,7 @@ type root = {
 
 type roots = (Fpath.t -> root option) * (unit -> Fpath.t list)
 
-let html_source filename =
+let html_source filename can_gui =
   let segments =
     filename |> Fpath.segs |> fun x ->
     Marshal.to_string x [] |> Base64.encode_string
@@ -36,11 +36,13 @@ let html_source filename =
            </style>
            <style>%s</style>
            <script>route_segment = "%s" </script>
+           <script>can_gui = %b </script>
            <script>%s</script>
 </body>
 </html>
   |html}
-    Server_assets.Style.v Ansi.css segments [%blob "./client/client.bc.js"]
+    Server_assets.Style.v Ansi.css segments can_gui
+    [%blob "./client/client.bc.js"]
 
 let choose_roots rs =
   Format.sprintf
@@ -80,15 +82,15 @@ let send_control c = send_event (Control c)
 let send_activate_gui id = send_event (Replace (Some id))
 let send_deactivate_gui () = send_event (Replace None)
 
-let home_page (_, get_roots) _req =
+let home_page can_gui (_, get_roots) _req =
   Dream.log "A browser reloaded";
   let rs = get_roots () in
   match rs with
-  | [] -> Dream.html (html_source (Fpath.v "/"))
-  | [ unique_root ] -> Dream.html (html_source unique_root)
+  | [] -> Dream.html (html_source (Fpath.v "/") can_gui)
+  | [ unique_root ] -> Dream.html (html_source unique_root can_gui)
   | rs -> Dream.html (choose_roots rs)
 
-let preview (roots, get_roots) req =
+let preview can_gui (roots, get_roots) req =
   let file = Dream.target req in
   let file =
     let n = String.length "/preview/" in
@@ -97,10 +99,10 @@ let preview (roots, get_roots) req =
   let file = Fpath.v file in
   let root = roots file in
   match root with
-  | None -> home_page (roots, get_roots) req
+  | None -> home_page can_gui (roots, get_roots) req
   | Some _root ->
       Dream.log "A browser reloaded";
-      Dream.html (html_source file)
+      Dream.html (html_source file can_gui)
 
 let send root =
   let content =
@@ -200,6 +202,7 @@ let polling (roots, _get_roots) ~to_lsp_server req =
           | GotoLoc _ | Save_gui_position _ -> pong ()))
 
 let do_serve ~port ~to_lsp_server (roots : roots) =
+  let can_gui = Option.is_some to_lsp_server in
   let () = if Sys.unix then Sys.(set_signal sigpipe Signal_ignore) in
   (* We need this, otherwise the program is killed when sending a long string to
      a closed connection... See https://github.com/aantron/dream/issues/378 *)
@@ -218,8 +221,8 @@ let do_serve ~port ~to_lsp_server (roots : roots) =
       (* @@ Dream.logger *)
       @@ Dream.router
            [
-             Dream.get "/" (home_page roots);
-             Dream.get "/preview/**" (preview roots);
+             Dream.get "/" (home_page can_gui roots);
+             Dream.get "/preview/**" (preview can_gui roots);
              Dream.post "/polling/**" (polling roots ~to_lsp_server);
            ]
     in

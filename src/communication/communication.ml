@@ -15,6 +15,7 @@ type payload =
   | Next
   | Previous
   | Can_save
+  | Can_gui
   | ActivateGUI of Common_types.gui_id
   | DeActivateGUI
   | SaveCoordinates of {
