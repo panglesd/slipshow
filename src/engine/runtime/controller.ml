@@ -9,9 +9,9 @@ let keyboard_setup (window : Universe.Window.t) =
         match handler with true -> () | false -> k ()
       in
       try_handle (Gui.Controller.handle ev) @@ fun () ->
-      try_handle (Drawing_controller.Controller.handle ev) @@ fun () ->
       try_handle (check_modif_key Brr.Ev.Keyboard.ctrl_key) @@ fun () ->
       try_handle (check_modif_key Brr.Ev.Keyboard.meta_key) @@ fun () ->
+      try_handle (Drawing_controller.Controller.handle ev) @@ fun () ->
       try_handle (Drawing_controller.Controller.check_in_textarea ())
       @@ fun () ->
       match key with
