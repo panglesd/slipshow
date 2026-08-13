@@ -143,7 +143,8 @@ type unit' = {
 type units = {
   units : unit' Fpath.Map.t;
   directory : Fpath.t;
-  entry_point : Fpath.t;
+  entry_point : unit';
+  entry_file : Fpath.t;
   options : Frontmatter.Global.t;
   files : Files.read Files.map;
   id_map : Id_map.t;
@@ -184,14 +185,14 @@ module Folder = struct
   let make ~block ~inline () =
     Folder.make ~block_ext_default ~inline_ext_default ~block ~inline ()
 
-  let rec fold_just_units f acc entry_point units =
-    match Fpath.Map.find_opt entry_point units with
-    | None -> acc
-    | Some unit ->
-        let acc = f unit acc in
-        Fpath.Map.fold
-          (fun fpath _ acc -> fold_just_units f acc fpath units)
-          unit.deps acc
+  let rec fold_just_units f acc unit units =
+    let acc = f unit acc in
+    Fpath.Map.fold
+      (fun fpath _ acc ->
+        match Fpath.Map.find_opt fpath units with
+        | None -> acc
+        | Some unit -> fold_just_units f acc unit units)
+      unit.deps acc
 
   let fold_units' ~block ~inline (acc : 'a) entry_point units : 'a =
     let block (f : 'a Folder.t) (acc : 'a) = function
@@ -210,9 +211,7 @@ module Folder = struct
     Folder.fold_doc folder acc entry_point.ast
 
   let fold_units ~block ~inline (acc : 'a) units : 'a =
-    match Fpath.Map.find_opt units.entry_point units.units with
-    | None -> acc (* TODO: show error somehow *)
-    | Some unit -> fold_units' ~block ~inline acc unit units.units
+    fold_units' ~block ~inline acc units.entry_point units.units
 
   let continue_block f c acc =
     let open Block in

@@ -423,9 +423,6 @@ let custom_html_renderer (units : Ast.units)
   compose default custom_html
 
 let to_html_string (units : Ast.units) =
-  match Fpath.Map.find_opt units.entry_point units.units with
-  | None -> "Could not find entry point in compiled presentation"
-  | Some unit ->
-      Cmarkit_renderer.doc_to_string
-        (custom_html_renderer units units.files)
-        unit.ast
+  Cmarkit_renderer.doc_to_string
+    (custom_html_renderer units units.files)
+    units.entry_point.ast
