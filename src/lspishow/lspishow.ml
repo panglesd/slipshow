@@ -487,7 +487,12 @@ class lsp_server =
         let path = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
         let* root = Rev_deps.get_roots path |> Fpath.Set.choose_opt in
         let* ({ units = ast; _ } as root) =
-          Hashtbl.find_opt Roots.buffers root
+          let roots =
+            match Config.Refresh.when_ () with
+            | Edit -> Roots.buffers
+            | _ -> Roots.saved
+          in
+          Hashtbl.find_opt roots root
         in
         let* buffer = Hashtbl.find_opt Buffers.buffers path in
         let _ = self#activate_gui params.position path root buffer in
