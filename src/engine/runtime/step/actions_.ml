@@ -799,71 +799,17 @@ module Draw = struct
 
   let setup = Some setup
 
-  let replay ?(speedup = 1.) mode (record : Drawing_state.replaying_state) =
+  let replay ?speedup mode (record : Drawing_state.replaying_state) =
     let fut, resolve_fut = Fut.create () in
-    let start_replay = Drawing_controller.Tools.now () in
-    let original_time = Lwd.peek record.time in
-    let max_time = Lwd.peek record.recording.total_time in
-    let current_time = ref @@ Drawing_controller.Tools.now () in
-    let rec draw_loop _ =
-      let when_slow () =
-        let now = Drawing_controller.Tools.now () in
-        let increment = now -. !current_time in
-        current_time := now;
-        let before = now -. increment in
-        let new_time = original_time +. ((now -. start_replay) *. speedup) in
-        let time_before =
-          original_time +. ((before -. start_replay) *. speedup)
-        in
-        let has_crossed_pause =
-          Lwd_table.fold
-            (fun b (pause : Drawing_state.pause) ->
-              match b with
-              | Some _ as b -> b
-              | None ->
-                  let at = Lwd.peek pause.p_at in
-                  if time_before <= at && at < new_time then Some at else None)
-            None record.recording.pauses
-        in
-        Lwd.set record.time new_time;
-        match has_crossed_pause with
-        | Some max_time ->
-            Lwd.set record.time (Float.next_after max_time Float.infinity);
-            resolve_fut ()
-        | None ->
-            if new_time >= max_time then (
-              Lwd.set record.time max_time;
-              resolve_fut ())
-            else
-              let _animation_frame_id = G.request_animation_frame draw_loop in
-              ()
-      in
-      match mode with
-      | Fast.Slow -> when_slow ()
-      | Fast.Normal hurry_bomb when not (Fast.has_detonated hurry_bomb) ->
-          when_slow ()
-      | _ ->
-          let now = Drawing_controller.Tools.now () in
-          let increment = now -. !current_time in
-          current_time := now;
-          let before = now -. increment in
-          let time_before =
-            original_time +. ((before -. start_replay) *. speedup)
-          in
-          let next_time =
-            Lwd_table.fold
-              (fun acc (pause : Drawing_state.pause) ->
-                let at = Lwd.peek pause.p_at in
-                if at < time_before then acc
-                else Float.min acc (Float.next_after at (at +. 1.)))
-              (Lwd.peek record.recording.total_time)
-              record.recording.pauses
-          in
-          Lwd.set record.time next_time;
-          resolve_fut ()
-      (* | Counting_for_toc -> assert false (\* See "only_if_not_fast" *\) *)
-    in
-    let _animation_frame_id = G.request_animation_frame draw_loop in
+    Drawing_state.play ?speedup
+      ~continue:(fun () ->
+        match mode with
+        | Fast.Slow -> `Continue
+        | Fast.Normal hurry_bomb when not (Fast.has_detonated hurry_bomb) ->
+            `Continue
+        | _ -> `Skip_to_next_pause
+        (* | Counting_for_toc -> assert false (\* See "only_if_not_fast" *\) *))
+      ~finish:resolve_fut record;
     fut
 
   type js_args = El.t list
