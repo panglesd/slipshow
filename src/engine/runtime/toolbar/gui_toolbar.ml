@@ -1,19 +1,17 @@
 open Brr_lwd
+open Brr
 open Lwd_infix
 open Widgets
 
 let v =
   let gui_tool v icon name shortcut =
-    let handler =
-      Elwd.handler Brr.Ev.click (fun _ -> Lwd.set Gui.State.status v)
-    in
+    let handler = Elwd.handler Ev.click (fun _ -> Lwd.set Gui.State.status v) in
     let class_ =
       let$ current_tool = Lwd.get Gui.State.status in
-      if current_tool = v then
-        Lwd_seq.of_list [ Brr.At.class' !!"slip-set-tool" ]
+      if current_tool = v then Lwd_seq.of_list [ At.class' !!"slip-set-tool" ]
       else Lwd_seq.of_list []
     in
-    let icon = panel_icon ~at:[ `S class_ ] [ `P (Brr.El.txt' icon) ] in
+    let icon = panel_icon ~at:[ `S class_ ] [ `P (El.txt' icon) ] in
     panel_button ~handler ~icon name ~shortcut
   in
   let select = gui_tool Select "☝" (Lwd.pure "Select") "s" in
