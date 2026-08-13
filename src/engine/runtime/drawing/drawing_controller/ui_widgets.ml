@@ -29,8 +29,9 @@ let float ?(callback = fun _ -> ()) ?(ev = []) ?st ?(prop = []) ?type'
   in
   let prop =
     let v =
-      let$ v = Lwd.get var in
-      (Jstr.v "value", Jv.of_float v)
+      let$ f = Lwd.get var in
+      let i = Float.to_int f in
+      (Jstr.v "value", Jv.of_int i)
     in
     `R v :: prop
   in
