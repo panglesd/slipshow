@@ -167,43 +167,17 @@ let global_panel recording =
 
 let play (replaying_state : replaying_state) =
   Lwd.set replaying_state.is_playing true;
-  let max = Lwd.peek replaying_state.recording.total_time in
   let () =
-    if Lwd.peek replaying_state.time >= max then Lwd.set replaying_state.time 0.
+    if
+      Lwd.peek replaying_state.time
+      >= Lwd.peek replaying_state.recording.total_time
+    then Lwd.set replaying_state.time 0.
   in
-  let start_time = now () -. Lwd.peek replaying_state.time in
-  let current_time = ref @@ Tools.now () in
-  let rec loop _ =
-    let now = Tools.now () in
-    let increment = now -. !current_time in
-    current_time := now;
-    let now = now -. start_time in
-    let before = now -. increment in
-    let has_crossed_pause =
-      Lwd_table.fold
-        (fun b (pause : Drawing_state.pause) ->
-          match b with
-          | Some _ as b -> b
-          | None ->
-              let at = Lwd.peek pause.p_at in
-              if before <= at && at < now then Some at else None)
-        None replaying_state.recording.pauses
-    in
-    match has_crossed_pause with
-    | Some max_time ->
-        Lwd.set replaying_state.time (Float.next_after max_time Float.infinity);
-        Lwd.set replaying_state.is_playing false
-    | None ->
-        if now <= max && Lwd.peek replaying_state.is_playing then
-          let () = Lwd.set replaying_state.time now in
-          let _animation_frame_id = Brr.G.request_animation_frame loop in
-          ()
-        else if now > max && Lwd.peek replaying_state.is_playing then
-          let () = Lwd.set replaying_state.time max in
-          Lwd.set replaying_state.is_playing false
-        else ()
-  in
-  loop 0.
+  Drawing_state.play
+    ~continue:(fun () ->
+      if Lwd.peek replaying_state.is_playing then `Continue else `Stop)
+    ~finish:(fun () -> Lwd.set replaying_state.is_playing false)
+    replaying_state
 
 let play_button editing_state =
   let$* is_playing = Lwd.get editing_state.is_playing in

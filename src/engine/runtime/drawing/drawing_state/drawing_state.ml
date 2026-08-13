@@ -137,6 +137,61 @@ let finish_recording
     recording_temp;
   Status.set Editing
 
+let play ?(speedup = 1.) ?(continue = fun () -> `Continue) ~finish state =
+  let start_replay = now () in
+  let original_time = Lwd.peek state.time in
+  let max_time = Lwd.peek state.recording.total_time in
+  (* Timestamp of the frame preceding the one being computed *)
+  let previous_frame = ref start_replay in
+  let time_of frame = original_time +. ((frame -. start_replay) *. speedup) in
+  let skip_to_next_pause () =
+    let from = Lwd.peek state.time in
+    let next_time =
+      Lwd_table.fold
+        (fun acc pause ->
+          let at = Lwd.peek pause.p_at in
+          if at < from then acc
+          else Float.min acc (Float.next_after at (at +. 1.)))
+        max_time state.recording.pauses
+    in
+    Lwd.set state.time next_time;
+    finish ()
+  in
+  let rec loop _ =
+    match continue () with
+    | `Stop -> ()
+    | `Skip_to_next_pause -> skip_to_next_pause ()
+    | `Continue -> (
+        let frame = now () in
+        let time_before = time_of !previous_frame in
+        let new_time = time_of frame in
+        previous_frame := frame;
+        let crossed_pause =
+          Lwd_table.fold
+            (fun acc pause ->
+              match acc with
+              | Some _ -> acc
+              | None ->
+                  let at = Lwd.peek pause.p_at in
+                  if time_before <= at && at < new_time then Some at else None)
+            None state.recording.pauses
+        in
+        match crossed_pause with
+        | Some at ->
+            Lwd.set state.time (Float.next_after at Float.infinity);
+            finish ()
+        | None ->
+            if new_time >= max_time then (
+              Lwd.set state.time max_time;
+              finish ())
+            else (
+              Lwd.set state.time new_time;
+              let _animation_frame_id = Brr.G.request_animation_frame loop in
+              ()))
+  in
+  let _animation_frame_id = Brr.G.request_animation_frame loop in
+  ()
+
 type selection = {
   s_strokes : (stro Lwd_table.row * stro) list;
   s_erasures : (stro * erased) list;
