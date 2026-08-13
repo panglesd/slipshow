@@ -8,6 +8,7 @@ module Action = Action
 
 let ( !! ) = Jstr.v
 let sof x = Printf.sprintf "%.25f" x
+let gui_attr = !!Common_types.Special_strings.gui
 let gui_pos_attr = !!Common_types.Special_strings.gui_loc
 let block_pos_attr = !!Common_types.Special_strings.original_loc
 
@@ -49,71 +50,68 @@ let for_events window =
       ]
     []
 
-let setup_gui_elem el gui =
-  let coord =
-    match Gui_tools.Syntax.parse (Jstr.to_string gui) with
-    | Ok (x, _warnings) -> x
-    | Error _ ->
-        { x = None; y = None; scale = None; width = None; height = None }
-  in
-  Gui_tools.save_coord_el coord el;
-  Gui_tools.apply_coord coord el;
-  let () =
-    match El.at !!Common_types.Special_strings.gui_loc el with
-    | None -> ()
-    | Some loc ->
-        let _unlisten : Ev.listener =
-          Ev.listen Ev.click
-            (fun ev ->
-              let loc =
-                match
-                  (El.at block_pos_attr el, Drawing_state.Status.peek ())
-                with
-                | None, _ | _, Gui_mode -> loc
-                | Some loc, _ -> loc
-              in
-              Messaging.send_loc (Jstr.to_string loc);
-              Ev.stop_propagation ev;
-              if Drawing_state.Status.peek () = Gui_mode then
-                Action.activate_el el)
-            (El.as_target el)
-        in
-        ()
-  in
-  ()
+let is_gui el = El.at gui_pos_attr el
+let is_block el = El.at block_pos_attr el
 
-let setup_non_gui_elem el =
-  match El.at block_pos_attr el with
+let rec find_up condition el =
+  (* JavaScript's "closest" would be a good fit for replacing this *)
+  match condition el with
+  | None -> (
+      if Jstr.equal (El.prop El.Prop.id el) !!"slipshow-main" then None
+      else
+        match El.parent el with
+        | None -> None
+        | Some parent -> find_up condition parent)
+  | Some gui_loc -> Some (el, gui_loc)
+
+let handle_gui_el_up el =
+  match find_up is_gui el with
+  | None -> false
+  | Some (el, gui_loc) ->
+      Messaging.send_loc (Jstr.to_string gui_loc);
+      if Drawing_state.Status.peek () = Gui_mode then Action.activate_el el;
+      true
+
+let handle_block_el_up el =
+  match find_up is_block el with
+  | None -> false
+  | Some (_el, block_loc) ->
+      Messaging.send_loc (Jstr.to_string block_loc);
+      true
+
+let handle el =
+  if handle_gui_el_up el then () else if handle_block_el_up el then ()
+
+let replace_positioned_el el =
+  match El.at gui_attr el with
   | None -> ()
   | Some pos ->
-      let _unlisten : Ev.listener =
-        Ev.listen Ev.click
-          (fun ev ->
-            Ev.stop_propagation ev;
-            Messaging.send_loc (Jstr.to_string pos))
-          (El.as_target el)
+      let coord =
+        match Gui_tools.Syntax.parse (Jstr.to_string pos) with
+        | Ok (x, _warnings) -> x
+        | Error _ ->
+            { x = None; y = None; scale = None; width = None; height = None }
       in
-      ()
-
-let setup_elem el =
-  match El.at !!Common_types.Special_strings.gui el with
-  | Some gui -> setup_gui_elem el gui
-  | None -> setup_non_gui_elem el
+      Gui_tools.save_coord_el coord el;
+      Gui_tools.apply_coord coord el
 
 let init window =
-  let block_with_loc_selector =
-    "[" ^ Common_types.Special_strings.original_loc ^ "]"
-  in
-  let gui_selector = "[" ^ Common_types.Special_strings.gui_loc ^ "]" in
+  let gui_selector = "[" ^ Common_types.Special_strings.gui ^ "]" in
   let () =
     El.fold_find_by_selector
-      (fun el () -> setup_elem el)
-      !!(block_with_loc_selector ^ "," ^ gui_selector)
-      ()
+      (fun el () -> replace_positioned_el el)
+      !!gui_selector ()
   in
-  let for_events = for_events window in
   let main =
     Brr.El.find_first_by_selector (Jstr.v "#slipshow-main") |> Option.get
   in
+  let _unlisten =
+    Ev.listen Ev.click
+      (fun ev ->
+        let el = Ev.target ev in
+        handle (el |> Ev.target_to_jv |> El.of_jv))
+      (El.as_target main)
+  in
+  let for_events = for_events window in
   let _root = Elwd.append_child main for_events in
   ()
