@@ -112,9 +112,6 @@ let init window =
       !!(block_with_loc_selector ^ "," ^ gui_selector)
       ()
   in
-  let () =
-    El.fold_find_by_selector (fun el () -> setup_elem el) !!gui_selector ()
-  in
   let for_events = for_events window in
   let main =
     Brr.El.find_first_by_selector (Jstr.v "#slipshow-main") |> Option.get
