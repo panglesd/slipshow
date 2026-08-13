@@ -244,7 +244,13 @@ class lsp_server =
           in
           ()
       | GotoLoc s ->
-          let s = Base64.decode s |> Result.get_ok in
+          let ( let> ) x f =
+            match x with
+            | Error (`Msg s) ->
+                Format.eprintf "Error in handling of gotoloc: %s" s
+            | Ok x -> f x
+          in
+          let> s = Base64.decode s in
           let textloc : Cmarkit.Textloc.t = Marshal.from_string s 0 in
           let fpath = Fpath.v (Cmarkit.Textloc.file textloc) in
           let () =

@@ -46,13 +46,17 @@ let linoloc_of_textloc ~source ~positionEncoding (loc : Cmarkit.Textloc.t) =
   Linol_lwt.Range.create ~end_ ~start
 
 let create ~source ~positionEncoding ~loc ?ploc msg =
-  let loc =
-    match ploc with None -> loc | Some ploc -> Diagnosis.loc_of_ploc loc ploc
-  in
-  let range = linoloc_of_textloc ~source ~positionEncoding loc in
-  let severity = Linol_lwt.DiagnosticSeverity.Warning in
+  let ( let+ ) x f = Option.map f x in
   Format.kasprintf
     (fun msg ->
+      let+ source = source in
+      let loc =
+        match ploc with
+        | None -> loc
+        | Some ploc -> Diagnosis.loc_of_ploc loc ploc
+      in
+      let range = linoloc_of_textloc ~source ~positionEncoding loc in
+      let severity = Linol_lwt.DiagnosticSeverity.Warning in
       Linol.Lsp.Types.Diagnostic.create ~severity ~message:(`String msg) ~range
         ())
     msg
@@ -88,9 +92,8 @@ let of_error ~positionEncoding ~(units : Slipshow.Ast.unit' Fpath.map) ~root
     ~file (e : Diagnosis.t) =
   let create ~loc ?ploc s =
     let file = Cmarkit.Textloc.file loc in
-    match get_source (Fpath.v file) ~units with
-    | Some source -> create ~positionEncoding ~source ~loc ?ploc s
-    | None -> failwith "TODO"
+    let source = get_source (Fpath.v file) ~units in
+    create ~positionEncoding ~source ~loc ?ploc s
   in
   let loc_in_file loc =
     let path1 =
@@ -100,11 +103,11 @@ let of_error ~positionEncoding ~(units : Slipshow.Ast.unit' Fpath.map) ~root
     let path2 = Fpath.normalize file in
     Fpath.equal path1 path2
   in
-  let if_in loc f = if loc_in_file loc then [ f () ] else [] in
+  let if_in loc f = if loc_in_file loc then Option.to_list (f ()) else [] in
   match e with
   | DuplicateID { id; occurrences } ->
       let occurrences = List.filter loc_in_file occurrences in
-      List.map
+      List.filter_map
         (fun loc -> create ~loc "ID '%s' is not unique in the document" id)
         occurrences
   | MissingFile { file; error_msg; locs } ->
@@ -115,7 +118,7 @@ let of_error ~positionEncoding ~(units : Slipshow.Ast.unit' Fpath.map) ~root
            Open the record panel in the preview to record and save a draw file."
         else ""
       in
-      List.map
+      List.filter_map
         (fun loc ->
           create ~loc "Error when reading file '%s': %s%s" file error_msg
             draw_precision)
