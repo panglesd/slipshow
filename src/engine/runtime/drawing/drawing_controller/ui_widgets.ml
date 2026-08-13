@@ -7,7 +7,7 @@ let float ?(callback = fun _ -> ()) ?(ev = []) ?st ?(prop = []) ?type'
     let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv in
     let new_value = Jv.get el "value" |> Jv.to_string |> float_of_string in
     callback new_value;
-    Lwd.set var new_value;
+    if Brr.Ev.is_trusted ev then Lwd.set var new_value;
     let () =
       let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv |> Brr.El.of_jv in
       (* We unfocus so that shortcuts work *)
