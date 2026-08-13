@@ -677,22 +677,31 @@ let unit ?locs ~read_file ~embed_loc file =
   of_cmarkit ~embed_loc ~source ~path:file doc ~fm:frontmatter
 
 let rec add_to_compile ?locs ~embed_loc ~units file units_cache ~read_file =
-  if Fpath.Map.mem file units then units
-  else
-    let u =
-      match Fpath.Map.find_opt file units_cache with
-      | Some u -> u
-      | None -> unit ~embed_loc ~read_file ?locs file
-    in
-    let units = Fpath.Map.add file u units in
-    Fpath.Map.fold
-      (fun dep locs units ->
-        add_to_compile ~locs ~units ~embed_loc dep units_cache ~read_file)
-      u.deps units
+  match Fpath.Map.find_opt file units with
+  | Some unit -> (unit, units)
+  | None ->
+      let u =
+        match Fpath.Map.find_opt file units_cache with
+        | Some u -> u
+        | None -> unit ~embed_loc ~read_file ?locs file
+      in
+      let units = Fpath.Map.add file u units in
+      let units =
+        Fpath.Map.fold
+          (fun dep locs units ->
+            let _, units =
+              add_to_compile ~locs ~units ~embed_loc dep units_cache ~read_file
+            in
+            units)
+          u.deps units
+      in
+      (u, units)
 
 let compile_all ~directory ~read_file ~embed_loc units_cache file =
   let units = Fpath.Map.empty in
-  let units = add_to_compile file ~units ~embed_loc units_cache ~read_file in
+  let unit, units =
+    add_to_compile file ~units ~embed_loc units_cache ~read_file
+  in
   let files, options =
     Ast.Folder.fold_just_units
       (fun unit (files, option) ->
@@ -706,14 +715,13 @@ let compile_all ~directory ~read_file ~embed_loc units_cache file =
         in
         (files, option))
       (Fpath.Map.empty, Frontmatter.Global.empty)
-      file units
+      unit units
   in
   let toplevel_attributes =
     Option.value ~default:Frontmatter.Toplevel_attributes.default
       options.toplevel_attributes
   in
-  let internal = Fpath.v "internal" in
-  let u =
+  let entry_point =
     let doc =
       let block =
         let open Cmarkit.Block in
@@ -736,10 +744,10 @@ let compile_all ~directory ~read_file ~embed_loc units_cache file =
       in
       Cmarkit.Doc.make block
     in
-    of_cmarkit ~embed_loc ~path:internal ~fm:Frontmatter.empty ~source:None doc
+    of_cmarkit ~embed_loc ~path:(Fpath.v "internal") ~fm:Frontmatter.empty
+      ~source:None doc
   in
-  let units = Fpath.Map.add internal u units in
-  let action_plan, id_map = Action_plan.execute u units in
+  let action_plan, id_map = Action_plan.execute entry_point units in
   let files : Ast.Files.read Ast.Files.map =
     Fpath.Map.mapi
       (fun path file ->
@@ -759,10 +767,11 @@ let compile_all ~directory ~read_file ~embed_loc units_cache file =
     Ast.units;
     files;
     id_map;
-    entry_point = internal;
+    entry_point;
     options;
     action_plan;
     directory;
+    entry_file = file;
   }
 
 let compile_all ~read_file ~directory ~embed_loc units file =
@@ -852,7 +861,6 @@ let to_cmarkit
       id_map = _;
       action_plan = _;
       directory = _;
+      entry_file = _;
     } =
-  match Fpath.Map.find_opt entry_point units with
-  | None -> failwith "Fail during markdown output"
-  | Some sd -> Cmarkit.Mapper.map_doc (to_cmarkit units) sd.ast
+  Cmarkit.Mapper.map_doc (to_cmarkit units) entry_point.ast
