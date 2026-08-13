@@ -30,7 +30,7 @@
   (cmdliner (>= 1.3.0))
   (base64 (>= 3.3.0))
    bos
-   lwt
+  (lwt (>= 6.0.0))
    (inotify (= :os "linux"))
    (cf-lwt (>="0.4"))
    astring
@@ -47,7 +47,7 @@
    ppx_sexp_conv
    ppx_deriving_yojson
   (ansi (>= 0.7.0))
-   linol
+  (linol (>= 0.11))
    linol-lwt
   (odoc :with-doc)
   (ocamlformat
