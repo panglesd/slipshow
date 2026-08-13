@@ -21,11 +21,32 @@ let v =
   let block =
     panel_block ~buttons:[ `R select; `R move; `R resize; `R dimension ] ()
   in
-  let back_mode =
-    let handler =
-      Elwd.handler Brr.Ev.click (fun _ -> Gui.Action.deactivate ())
+  let block =
+    let gui_selector =
+      "[" ^ Common_types.Special_strings.gui_loc ^ "]["
+      ^ Common_types.Special_strings.gui ^ "]"
     in
-    let icon = panel_icon [ `P (Brr.El.txt !!"⤶") ] in
+    match El.find_first_by_selector !!gui_selector with
+    | Some _ -> block
+    | None ->
+        let icon = panel_icon [ `P (El.txt !!"?") ] in
+        let handler =
+          Elwd.handler Ev.click (fun _ev ->
+              let _new_window : El.window option =
+                Window.open' G.window !!"https://docs.slipshow.org"
+              in
+              ())
+        in
+        let warning_button =
+          panel_button ~handler ~icon
+            (Lwd.pure "Add elements with 'gui' attribute to use this mode")
+        in
+        panel_block ~buttons:[ `R warning_button ] ()
+  in
+
+  let back_mode =
+    let handler = Elwd.handler Ev.click (fun _ -> Gui.Action.deactivate ()) in
+    let icon = panel_icon [ `P (El.txt !!"⤶") ] in
     panel_block ~class_:"slipshow-gui-back-block"
       ~buttons:
         [
