@@ -140,14 +140,14 @@ class lsp_server =
       | Save_gui_position { id; coord } ->
           let ( let> ) x f = Option.iter f x in
           let _res : unit =
+            let> root =
+              (* We need to switch to the buffer version to get an updated location  *)
+              Hashtbl.find_opt Roots.buffers root.units.entry_file
+            in
             (* TODO: Send a notification if we did not find meta_key and value *)
             let> (_key, meta_key), value =
               let ( let+ ) x f = Option.map f x in
               let ( let* ) x f = Option.bind x f in
-              let* root =
-                (* We need to switch to the buffer version to get an updated location  *)
-                Hashtbl.find_opt Roots.buffers root.units.entry_file
-              in
               match id with
               | Common_types.Id id ->
                   let* { definition; usage = _ } =
