@@ -31,6 +31,10 @@
   display: inline-block;
 }
 
+.slipshow-toc-step:hover {
+    box-shadow: 2px 2px 2px black;
+}
+
 .slipshow-toc-entry {
   cursor: pointer;
 }
