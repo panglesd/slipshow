@@ -49,7 +49,7 @@ let for_events window =
       ]
     []
 
-let setup_gui_elem el gui loc =
+let setup_gui_elem el gui =
   let coord =
     match Gui_tools.Syntax.parse (Jstr.to_string gui) with
     | Ok (x, _warnings) -> x
@@ -58,18 +58,27 @@ let setup_gui_elem el gui loc =
   in
   Gui_tools.save_coord_el coord el;
   Gui_tools.apply_coord coord el;
-  let _unlisten : Ev.listener =
-    Ev.listen Ev.click
-      (fun ev ->
-        let loc =
-          match (El.at block_pos_attr el, Drawing_state.Status.peek ()) with
-          | None, _ | _, Gui_mode -> loc
-          | Some loc, _ -> loc
+  let () =
+    match El.at !!Common_types.Special_strings.gui_loc el with
+    | None -> ()
+    | Some loc ->
+        let _unlisten : Ev.listener =
+          Ev.listen Ev.click
+            (fun ev ->
+              let loc =
+                match
+                  (El.at block_pos_attr el, Drawing_state.Status.peek ())
+                with
+                | None, _ | _, Gui_mode -> loc
+                | Some loc, _ -> loc
+              in
+              Messaging.send_loc (Jstr.to_string loc);
+              Ev.stop_propagation ev;
+              if Drawing_state.Status.peek () = Gui_mode then
+                Action.activate_el el)
+            (El.as_target el)
         in
-        Messaging.send_loc (Jstr.to_string loc);
-        Ev.stop_propagation ev;
-        if Drawing_state.Status.peek () = Gui_mode then Action.activate_el el)
-      (El.as_target el)
+        ()
   in
   ()
 
@@ -87,25 +96,15 @@ let setup_non_gui_elem el =
       ()
 
 let setup_elem el =
-  let gui_attrs =
-    let gui = El.at !!Common_types.Special_strings.gui el in
-    let gui_loc = El.at !!Common_types.Special_strings.gui_loc el in
-    match (gui, gui_loc) with
-    | Some gui, Some gui_loc -> Some (gui, gui_loc)
-    | _ -> None
-  in
-  match gui_attrs with
-  | Some (gui, gui_loc) -> setup_gui_elem el gui gui_loc
+  match El.at !!Common_types.Special_strings.gui el with
+  | Some gui -> setup_gui_elem el gui
   | None -> setup_non_gui_elem el
 
 let init window =
   let block_with_loc_selector =
     "[" ^ Common_types.Special_strings.original_loc ^ "]"
   in
-  let gui_selector =
-    "[" ^ Common_types.Special_strings.gui_loc ^ "]["
-    ^ Common_types.Special_strings.gui ^ "]"
-  in
+  let gui_selector = "[" ^ Common_types.Special_strings.gui_loc ^ "]" in
   let () =
     El.fold_find_by_selector
       (fun el () -> setup_elem el)
