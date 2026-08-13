@@ -80,7 +80,9 @@ let handle_block_el_up el =
       true
 
 let handle el =
-  if handle_gui_el_up el then () else if handle_block_el_up el then ()
+  if Lwd.peek Drawing_state.can_gui then
+    if handle_gui_el_up el then () else if handle_block_el_up el then () else ()
+  else ()
 
 let replace_positioned_el el =
   match El.at gui_attr el with
