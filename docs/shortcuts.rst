@@ -22,7 +22,8 @@ In addition, the drawing shortcuts are more discoverable:
 
 Finally, when the recording manager is open you have the following shortcut:
 
-- :kbd:`Shift` + :kbd:`R` to start recording
+- :kbd:`Shift` + :kbd:`S` to start recording
+- :kbd:`Shift` + :kbd:`R` to close the recording manager.
 - :kbd:`s` to select the "Select" tool,
 - :kbd:`m` to select the "Move" tool,
 - :kbd:`r` to select the "Resize" tool,

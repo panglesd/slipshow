@@ -80,6 +80,7 @@ We advise you to start by reading the tutorials, starting with the :doc:`first <
    actions-api
    math
    custom-scripts-ref
+   gui
    frontmatter
    themes
    shortcuts
