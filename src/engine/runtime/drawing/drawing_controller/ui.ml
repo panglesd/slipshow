@@ -168,6 +168,9 @@ let global_panel recording =
 let play (replaying_state : replaying_state) =
   Lwd.set replaying_state.is_playing true;
   let max = Lwd.peek replaying_state.recording.total_time in
+  let () =
+    if Lwd.peek replaying_state.time >= max then Lwd.set replaying_state.time 0.
+  in
   let start_time = now () -. Lwd.peek replaying_state.time in
   let current_time = ref @@ Tools.now () in
   let rec loop _ =
