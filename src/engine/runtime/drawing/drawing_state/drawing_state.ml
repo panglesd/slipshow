@@ -5,6 +5,7 @@ module Json = Json
 module Path_editing = Path_editing
 
 let can_save = Lwd.var false
+let can_gui = Lwd.var false
 
 let workspaces : workspaces =
   { recordings = Lwd_table.make (); live_drawing = Lwd_table.make () }

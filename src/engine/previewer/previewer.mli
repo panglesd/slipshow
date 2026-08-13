@@ -22,6 +22,7 @@ val create_previewer :
   errors_el:Brr.El.t ->
   steal_focus:bool ->
   can_save:bool ->
+  can_gui:bool ->
   Brr.El.t ->
   previewer
 

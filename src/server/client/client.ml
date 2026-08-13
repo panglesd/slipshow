@@ -136,9 +136,12 @@ let previewer' =
     let _ = proto_request uri (GotoLoc s) in
     ()
   in
+  let can_gui =
+    Jv.get (Brr.Window.to_jv Brr.G.window) "can_gui" |> Jv.to_bool
+  in
   Previewer.create_previewer ?initial_stage ~callback ~save_drawing
     ~include_speaker_view:true ~errors_el:warnings ~steal_focus:true
-    ~can_save:true ~save_coordinate ~goto_loc elem
+    ~can_save:true ~can_gui ~save_coordinate ~goto_loc elem
 
 let () = previewer := Some previewer'
 

@@ -29,7 +29,7 @@ let slipshow_plugin ?slipshow_js ?options ~errors_el preview_element =
   View.ViewPlugin.define (fun view ->
       let state =
         Previewer.create_previewer ~include_speaker_view:false ~errors_el
-          ~steal_focus:false ~can_save:false
+          ~steal_focus:false ~can_save:false ~can_gui:false
           ~save_coordinate:(fun ~id:_ ~coord:_ -> ())
           ~goto_loc:(fun _ -> ())
           preview_element

@@ -206,16 +206,22 @@ let v mode =
           ()
   in
   let gui_mode =
-    let handler = Elwd.handler Brr.Ev.click (fun _ -> Status.set Gui_mode) in
-    let icon = panel_icon [ `P (Brr.El.txt !!"🐁") ] in
-    panel_block ~class_:"slipshow-gui-block"
-      ~buttons:
-        [
-          `R
-            (panel_button ~handler ~icon (Lwd.pure "GUI mode")
-               ~shortcut:"Shift + G");
-        ]
-      ()
+    let$* can_gui = Lwd.get Drawing_state.can_gui in
+    if can_gui then
+      let handler = Elwd.handler Brr.Ev.click (fun _ -> Status.set Gui_mode) in
+      let icon = panel_icon [ `P (Brr.El.txt !!"🐁") ] in
+      let$ el =
+        panel_block ~class_:"slipshow-gui-block"
+          ~buttons:
+            [
+              `R
+                (panel_button ~handler ~icon (Lwd.pure "GUI mode")
+                   ~shortcut:"Shift + G");
+            ]
+          ()
+      in
+      Lwd_seq.element el
+    else Lwd.pure Lwd_seq.empty
   in
   toplevel_panel_el
     ([
@@ -225,4 +231,4 @@ let v mode =
        `R clear_button;
        `R record_button;
      ]
-    @ match mode with Presenting -> [ `R gui_mode ] | Recording _ -> [])
+    @ match mode with Presenting -> [ `S gui_mode ] | Recording _ -> [])
