@@ -16,17 +16,17 @@ function call in one direction, and callback calling in the other.
   (`src/engine/previewer/previewer.ml`) and the speaker note scheduler
   (`src/engine/scheduler/scheduler.ml`). Back and forth:
   - The previewer may send "`go next/previous`", "`open_speaker_note`",
-    "`can_save`".
+    "`can_save`", + some things related to GUI.
   - The previewer receives all communication values and handles "State",
     "`open/close_recording_panel`", "`open/close_speaker_notes`", "`Ready`",
-    "`Save_drawing`"
+    "`Save_drawing`", plus some things related to gui.
 
 - In the communication between the speaker note scheduler
   (`src/engine/scheduler/scheduler.ml`) and the presentation frame
   (`src/engine/runtime/controller.ml`). Back and forth:
-  - controller receives State, Next, Previous, `Drawing _`, `send_all_strokes`, `can_save`.
+  - controller receives State, Next, Previous, `Drawing _`, `send_all_strokes`, `can_save`, plus some things related to gui.
   - It sends "Ready", State, Draw, `send_all_strokes`, `save_drawing`,
-    `open_speaker_notes`, `send_speaker_note`, `opened/closed_recording_panel`
+    `open_speaker_notes`, `send_speaker_note`, `opened/closed_recording_panel`, plus some things related to gui
 
 Note that the communication between the server and server's client is done
 through `src/server/proto/proto.ml`.
