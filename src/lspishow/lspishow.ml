@@ -145,7 +145,7 @@ class lsp_server =
               Hashtbl.find_opt Roots.buffers root.units.entry_file
             in
             (* TODO: Send a notification if we did not find meta_key and value *)
-            let> (_key, meta_key), value =
+            let res =
               let ( let+ ) x f = Option.map f x in
               let ( let* ) x f = Option.bind x f in
               match id with
@@ -180,6 +180,22 @@ class lsp_server =
                     (fun ((_key, meta), _) ->
                       Cmarkit.Textloc.equal (Cmarkit.Meta.textloc meta) loc)
                     unit.gui_map
+            in
+            let> (_key, meta_key), value =
+              let () =
+                match res with
+                | None ->
+                    let _ =
+                      let type_ = Linol_lwt.MessageType.Warning in
+                      Lsp_preview.send_info ~type_ ~notify_back
+                        "Could not save new gui location, due to stale \
+                         something"
+                      (* TODO: better error message *)
+                    in
+                    ()
+                | Some _ -> ()
+              in
+              res
             in
             let prefix, textloc, suffix =
               match value with
