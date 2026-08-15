@@ -139,19 +139,28 @@ class lsp_server =
       | Ping | UpdateFrom _ | Save_drawing (_, _) -> ()
       | Save_gui_position { id; coord } ->
           let ( let> ) x f = Option.iter f x in
-          let _res : unit =
-            let> root =
+          let ( let+ ) x f = Result.map f x in
+          let ( let* ) x f = Result.bind x f in
+          let to_error s =
+            let k message = function
+              | None -> Error (`Msg message)
+              | Some x -> Ok x
+            in
+            Format.kasprintf k s
+          in
+          let res =
+            let* root =
               (* We need to switch to the buffer version to get an updated location  *)
               Hashtbl.find_opt Roots.buffers root.units.entry_file
+              |> to_error "Root of %a not found" Fpath.pp root.units.entry_file
             in
             (* TODO: Send a notification if we did not find meta_key and value *)
-            let res =
-              let ( let+ ) x f = Option.map f x in
-              let ( let* ) x f = Option.bind x f in
+            let* (_key, meta_key), value =
               match id with
-              | Common_types.Id id ->
+              | Id id ->
                   let* { definition; usage = _ } =
                     Slipshow.Id_map.SMap.find_opt id root.units.id_map
+                    |> to_error "Id %s could not be found" id
                   in
                   let def = Slipshow.Id_map.Unionable_set.get definition in
                   let* attrs, _ =
@@ -159,43 +168,42 @@ class lsp_server =
                     | `Block b ->
                         let+ _, attrs =
                           Slipshow.Ast.Utils.Block.get_attribute b
+                          |> to_error "Id %s does not have attributes" id
                         in
                         attrs
                     | `Inline i ->
                         let+ _, attrs =
                           Slipshow.Ast.Utils.Inline.get_attribute i
+                          |> to_error "Id %s does not have attributes" id
                         in
                         attrs
-                    | `External -> None
+                    | `External -> None |> to_error "Id %s is external" id
                   in
                   Cmarkit.Attributes.find Common_types.Special_strings.gui attrs
+                  |> to_error "Id %s does not have a gui attribute" id
               | Loc loc ->
                   let* loc =
-                    loc |> Base64.decode |> Result.to_option
-                    |> Option.map (fun s -> Marshal.from_string s 0)
+                    loc |> Base64.decode
+                    |> Result.map_error (fun (`Msg s) ->
+                        `Msg "Error during decoding of base64 payload")
+                  in
+                  let* loc =
+                    Marshal.from_string loc 0
+                    |> to_error "Error during unmarshalling"
                   in
                   let path = Fpath.v (Cmarkit.Textloc.file loc) in
-                  let* unit = Fpath.Map.find_opt path root.units.units in
+                  let* unit =
+                    Fpath.Map.find_opt path root.units.units
+                    |> to_error "Could not find %a root" Fpath.pp path
+                  in
                   List.find_opt
                     (fun ((_key, meta), _) ->
                       Cmarkit.Textloc.equal (Cmarkit.Meta.textloc meta) loc)
                     unit.gui_map
-            in
-            let> (_key, meta_key), value =
-              let () =
-                match res with
-                | None ->
-                    let _ =
-                      let type_ = Linol_lwt.MessageType.Warning in
-                      Lsp_preview.send_info ~type_ ~notify_back
-                        "Could not save new gui location, due to stale \
-                         something"
-                      (* TODO: better error message *)
-                    in
-                    ()
-                | Some _ -> ()
-              in
-              res
+                  |> to_error "Could not find a gui attribute at location %a"
+                       Cmarkit.Textloc.pp_ocaml loc
+              (* TODO: why do we need gui_map, why can't we just use
+                 current_ast's get_leave? *)
             in
             let prefix, textloc, suffix =
               match value with
@@ -216,13 +224,17 @@ class lsp_server =
             in
             let uri = Linol_lsp.Uri0.of_string (Cmarkit.Textloc.file textloc) in
             let fpath = Fpath.v (Cmarkit.Textloc.file textloc) in
-            let> source = Fpath.Map.find_opt fpath root.units.units in
-            let> source = source.source in
+            let* source =
+              Fpath.Map.find_opt fpath root.units.units
+              |> to_error "Source not found"
+            in
+            let* source = source.source |> to_error "Source not found" in
             let range =
               Diagnostic.linoloc_of_textloc ~positionEncoding ~source textloc
             in
             let newText = prefix ^ coord ^ suffix in
             let _ : unit Lwt.t =
+              let open Lwt.Syntax in
               let* () =
                 match Hashtbl.find_opt docs uri with
                 | Some st ->
@@ -261,9 +273,16 @@ class lsp_server =
               in
               ()
             in
-            ()
+            Ok ()
           in
-          ()
+          res
+          |> Result.iter_error (fun (`Msg message) ->
+              let type_ = Linol_lwt.MessageType.Warning in
+              let _ : unit Lwt.t =
+                Lsp_preview.send_info ~type_ ~notify_back
+                  "Could not save new gui location: %s" message
+              in
+              ())
       | GotoLoc s ->
           let ( let> ) x f =
             match x with
