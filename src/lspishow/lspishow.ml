@@ -168,7 +168,7 @@ class lsp_server =
                         attrs
                     | `External -> None
                   in
-                  Cmarkit.Attributes.find "gui" attrs
+                  Cmarkit.Attributes.find Common_types.Special_strings.gui attrs
               | Loc loc ->
                   let* loc =
                     loc |> Base64.decode |> Result.to_option
@@ -483,7 +483,8 @@ class lsp_server =
           buffer.unit.ast
       in
       match trail.attribute with
-      | Some (_, Some (Key (("gui", meta), _))) ->
+      | Some (_, Some (Key ((gui, meta), _)))
+        when String.equal Common_types.Special_strings.gui gui ->
           let loc =
             Cmarkit.Meta.textloc meta
             |> (fun s -> Marshal.to_string s [])
