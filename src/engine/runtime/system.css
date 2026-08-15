@@ -103,6 +103,7 @@ body.slipshow-editing-mode{
 
 .slipshow-hand-drawn {
   position: absolute;
+  z-index: 1000;
 }
 
 [gui] {
