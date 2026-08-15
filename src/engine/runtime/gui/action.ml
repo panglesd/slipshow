@@ -4,7 +4,7 @@ let ( !! ) = Jstr.v
 let activate_class = !!"slipshow-activated"
 
 let activate_el el =
-  match El.at !!"gui" el with
+  match El.at !!Common_types.Special_strings.gui el with
   | None -> ()
   | Some _ ->
       let () =

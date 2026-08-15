@@ -18,7 +18,7 @@ let correct_syntax = "~x:<int> ~y:<int> ~scale:<float> ~w:<int> ~h:<int>"
 
 let parse s =
   let res =
-    Parse.parse ~action_name:"gui"
+    Parse.parse ~action_name:Common_types.Special_strings.gui
       ~named:
         [ ("x", int); ("y", int); ("scale", float); ("w", int); ("h", int) ]
       ~positional:Fun.id s

@@ -311,7 +311,8 @@ module Stage1 = struct
         [ `Kv (("children:unreveal-at-unpause", m), v) ]
     | `Kv (("children:unstatic", m), v) ->
         [ `Kv (("children:unstatic-at-unpause", m), v) ]
-    | `Kv (("gui", meta), _) as gui ->
+    | `Kv ((gui_s, meta), _) as gui
+      when String.equal Common_types.Special_strings.gui gui_s ->
         let loc = Meta.textloc meta in
         let v = Marshal.to_string loc [] |> Base64.encode_string in
         let attr = { Cmarkit.Attributes.v; delimiter = Some '"' } in
@@ -549,7 +550,7 @@ module Stage4 = struct
               | Some id -> { Id_map.id; elem = `Block c; meta } :: id_list
             in
             let gui_list =
-              match Attributes.find "gui" attrs with
+              match Attributes.find Common_types.Special_strings.gui attrs with
               | None -> gui_list
               | Some kv -> kv :: gui_list
             in
@@ -569,7 +570,7 @@ module Stage4 = struct
               | Some id -> { Id_map.id; elem = `Inline i; meta } :: id_list
             in
             let gui_list =
-              match Attributes.find "gui" attrs with
+              match Attributes.find Common_types.Special_strings.gui attrs with
               | None -> gui_list
               | Some kv -> kv :: gui_list
             in
