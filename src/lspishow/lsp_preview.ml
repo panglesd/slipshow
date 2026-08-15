@@ -3,8 +3,8 @@ open Lwt.Syntax
 let server_promise = ref None
 let server_port = ref None
 
-let send_info ~(notify_back : Linol_lwt.Jsonrpc2.notify_back) msg =
-  let type_ = Linol_lwt.MessageType.Info in
+let send_info ~(notify_back : Linol_lwt.Jsonrpc2.notify_back)
+    ?(type_ = Linol_lwt.MessageType.Info) msg =
   let k message =
     let msg = Linol_lwt.ShowMessageParams.create ~message ~type_ in
     let notif = Linol_lsp.Server_notification.ShowMessage msg in
