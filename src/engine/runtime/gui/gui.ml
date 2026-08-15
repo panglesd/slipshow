@@ -66,30 +66,23 @@ let rec find_up condition el =
 
 let handle_gui_el_up el =
   match find_up is_gui el with
-  | None -> false
+  | None -> ()
   | Some (el, gui_loc) ->
       Messaging.send_loc (Jstr.to_string gui_loc);
-      if Drawing_state.Status.peek () = Gui_mode then Action.activate_el el;
-      true
+      if Drawing_state.Status.peek () = Gui_mode then Action.activate_el el
 
 let handle_block_el_up el =
   match find_up is_block el with
-  | None -> false
-  | Some (_el, block_loc) ->
-      Messaging.send_loc (Jstr.to_string block_loc);
-      true
+  | None -> ()
+  | Some (_el, block_loc) -> Messaging.send_loc (Jstr.to_string block_loc)
 
-let handle el =
-  if Lwd.peek Drawing_state.can_gui then
-    match Drawing_state.Status.peek () with
-    | Drawing _ | Editing ->
-        let _handled = handle_block_el_up el in
-        ()
-    | Gui_mode ->
-        if handle_gui_el_up el then ()
-        else if handle_block_el_up el then ()
-        else ()
-  else ()
+let handle is_ctrl_pressed el =
+  let is_gui_selection =
+    Drawing_state.Status.peek () = Gui_mode
+    && Lwd.peek State.status = Types.Select
+  in
+  if is_ctrl_pressed then handle_block_el_up el
+  else if is_gui_selection then handle_gui_el_up el
 
 let replace_positioned_el el =
   match El.at gui_attr el with
@@ -118,7 +111,8 @@ let init window =
     Ev.listen Ev.click
       (fun ev ->
         let el = Ev.target ev in
-        handle (el |> Ev.target_to_jv |> El.of_jv))
+        let is_ctrl_pressed = ev |> Ev.as_type |> Ev.Mouse.ctrl_key in
+        handle is_ctrl_pressed (el |> Ev.target_to_jv |> El.of_jv))
       (El.as_target main)
   in
   let for_events = for_events window in
