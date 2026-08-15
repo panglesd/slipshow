@@ -87,7 +87,7 @@ let is_pressed ev =
     - [drag] takes as input the original coordinates of the start of the drag,
       the difference with the current position of the mouse, the last
       accumulator and the raw event. Must return an accumulator.
-    - [end_] takes as input the last accumulator and the rw event, and should
+    - [end_] takes as input the last accumulator and the raw event, and should
       return unit. *)
 let mouse_drag start drag end_ =
   let mouse_move x y acc =

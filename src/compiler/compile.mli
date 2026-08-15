@@ -25,8 +25,8 @@ val compile_all :
   Ast.unit' Fpath.Map.t ->
   Fpath.t ->
   Ast.units * Diagnosis.t list
-(** [compile_all ~read_file units_cache file] will compile [file] and all the
-    units it depends on, using [units_cache] if some units already have been
-    compiled. *)
+(** [compile_all ~read_file ~embed_loc units_cache file] will compile [file] and
+    all the units it depends on, using [units_cache] if some units already have
+    been compiled. *)
 
 val action_plan : Ast.units -> Ast.Action_plan.t
