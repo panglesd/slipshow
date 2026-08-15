@@ -2025,6 +2025,8 @@ module Navigator = struct
     if Jv.is_none t then 0 else Jv.to_int t
 
   let online n = Jv.Bool.get n "onLine"
+
+  let user_agent n = Jv.Jstr.get n "userAgent"
 end
 
 module Performance = struct

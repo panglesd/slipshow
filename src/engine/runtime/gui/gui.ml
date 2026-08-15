@@ -7,6 +7,12 @@ module Controller = Controller
 module Action = Action
 
 let ( !! ) = Jstr.v
+
+let is_mac =
+  let navigator = Navigator.user_agent G.navigator in
+  let substrings = [ !!"Mac"; !!"iPod"; !!"iPhone"; !!"iPad" ] in
+  List.exists (fun affix -> Jstr.includes ~affix navigator) substrings
+
 let sof x = Printf.sprintf "%.25f" x
 let gui_attr = !!Common_types.Special_strings.gui
 let gui_pos_attr = !!Common_types.Special_strings.gui_loc
@@ -111,7 +117,10 @@ let init window =
     Ev.listen Ev.click
       (fun ev ->
         let el = Ev.target ev in
-        let is_ctrl_pressed = ev |> Ev.as_type |> Ev.Mouse.ctrl_key in
+        let is_ctrl_pressed =
+          ev |> Ev.as_type
+          |> if is_mac then Ev.Mouse.meta_key else Ev.Mouse.ctrl_key
+        in
         handle is_ctrl_pressed (el |> Ev.target_to_jv |> El.of_jv))
       (El.as_target main)
   in

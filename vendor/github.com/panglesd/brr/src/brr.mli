@@ -3645,6 +3645,8 @@ module Navigator : sig
       {{:https://developer.mozilla.org/en-US/docs/Web/API/NavigatorOnLine/onLine} online status} of the browser. See the docs, the semantics is
       browser dependent. *)
 
+  val user_agent : t -> Jstr.t
+
   (**/**)
   include Jv.CONV with type t := t
   (**/**)
