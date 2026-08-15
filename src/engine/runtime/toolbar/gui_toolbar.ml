@@ -33,7 +33,7 @@ let v =
         let handler =
           Elwd.handler Ev.click (fun _ev ->
               let _new_window : El.window option =
-                Window.open' G.window !!"https://docs.slipshow.org"
+                Window.open' G.window !!"https://docs.slipshow.org/gui.html"
               in
               ())
         in
