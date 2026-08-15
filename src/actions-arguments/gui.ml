@@ -14,6 +14,8 @@ let int (i, _loc) =
 let float (i, _loc) =
   i |> float_of_string_opt |> result_of_option "Expected a float"
 
+let correct_syntax = "~x:<int> ~y:<int> ~scale:<float> ~w:<int> ~h:<int>"
+
 let parse s =
   let res =
     Parse.parse ~action_name:"gui"
@@ -33,13 +35,10 @@ let parse s =
       Ok ({ x; y; scale; width; height }, warnings)
   | Error _ as e -> e
   | Ok ((_, _ :: _), _) ->
-      Error
-        (`Msg "Invalid syntax for gui. Use ~x:<int> ~y:<int> ~scale:<float>.")
+      Error (`Msg ("Invalid syntax for gui. Use " ^ correct_syntax ^ "."))
   | Ok ((({ p_named = _; p_pos = _ :: _ }, _), []), _) ->
       Error
-        (`Msg
-           "Invalid syntax for gui. Use ~x:<int> ~y:<int> ~scale:<float>, \
-            without ';'")
+        (`Msg ("Invalid syntax for gui. Use " ^ correct_syntax ^ ", without ';'"))
 
 let to_string { x; y; scale; width; height } =
   let x = Option.map (fun x -> "~x:" ^ string_of_int x) x in
