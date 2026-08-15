@@ -510,7 +510,7 @@ class lsp_server =
           Hashtbl.find_opt roots root
         in
         let* buffer = Hashtbl.find_opt Buffers.buffers path in
-        let _ = self#activate_gui params.position path root buffer in
+        let () = self#activate_gui params.position path root buffer in
         let* id =
           let res1 =
             Current_ast.get_target ~positionEncoding ~source:buffer.source ~path
