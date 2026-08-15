@@ -81,7 +81,14 @@ let handle_block_el_up el =
 
 let handle el =
   if Lwd.peek Drawing_state.can_gui then
-    if handle_gui_el_up el then () else if handle_block_el_up el then () else ()
+    match Drawing_state.Status.peek () with
+    | Drawing _ | Editing ->
+        let _handled = handle_block_el_up el in
+        ()
+    | Gui_mode ->
+        if handle_gui_el_up el then ()
+        else if handle_block_el_up el then ()
+        else ()
   else ()
 
 let replace_positioned_el el =
