@@ -522,7 +522,9 @@ module Stage3' = struct
     let block _m c =
       match c with
       | Ast.S_block (Ast.Carousel (((_, (attrs, _)), _) as x)) -> (
-          match Attributes.find "poll-element" attrs with
+          match
+            Attributes.find Common_types.Special_strings.poll_element attrs
+          with
           | None -> Mapper.default
           | Some _ -> Mapper.ret @@ Ast.S_block (Ast.Poll_element x))
       (* | None -> Mapper.default *)

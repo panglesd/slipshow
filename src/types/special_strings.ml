@@ -16,6 +16,7 @@ let auto_continue = "auto-continue"
 let gui = "gui"
 let original_loc = "slipshow-original-loc"
 let gui_loc = "slipshow-gui-loc"
+let poll_element = "poll-element"
 
 let all_attrs =
   [
@@ -37,4 +38,5 @@ let all_attrs =
     gui;
     original_loc;
     gui_loc;
+    poll_element;
   ]
