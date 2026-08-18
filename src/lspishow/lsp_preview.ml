@@ -3,12 +3,22 @@ open Lwt.Syntax
 let server_promise = ref None
 let server_port = ref None
 
-let send_info ~(notify_back : Linol_lwt.Jsonrpc2.notify_back)
+let send_info ?(root : Slipshow_server.root option)
+    ~(notify_back : Linol_lwt.Jsonrpc2.notify_back)
     ?(type_ = Linol_lwt.MessageType.Info) msg =
   let k message =
-    let msg = Linol_lwt.ShowMessageParams.create ~message ~type_ in
-    let notif = Linol_lsp.Server_notification.ShowMessage msg in
-    notify_back#send_notification notif
+    let _ : unit Lwt.t =
+      let msg = Linol_lwt.ShowMessageParams.create ~message ~type_ in
+      let notif = Linol_lsp.Server_notification.ShowMessage msg in
+      notify_back#send_notification notif
+    in
+    let () =
+      match root with
+      | Some { units; diagnostics; condition; version } ->
+          Lwt_condition.broadcast condition _
+      | None -> ()
+    in
+    ()
   in
   Format.kasprintf k msg
 

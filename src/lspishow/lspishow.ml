@@ -138,7 +138,6 @@ class lsp_server =
       match event with
       | Ping | UpdateFrom _ | Save_drawing (_, _) -> ()
       | Save_gui_position { id; coord } ->
-          let ( let> ) x f = Option.iter f x in
           let ( let+ ) x f = Result.map f x in
           let ( let* ) x f = Result.bind x f in
           let to_error s =

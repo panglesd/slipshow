@@ -3,6 +3,7 @@ type to_server = Server.to_server =
   | Control of Proto.Server_to_client.control
   | ActivateGUI of Common_types.gui_id
   | DeActivateGUI
+  | Notify of string
 
 type root = Server.root = {
   units : Slipshow.Ast.units;
