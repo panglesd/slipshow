@@ -56,6 +56,16 @@ body {
     sans-serif;
 }
 
+pre, code {
+  font-family: "Liberation Mono", monospace;
+}
+
+/* I've had problems with another font being used, so now I fix the line
+   height. */
+pre {
+  line-height: 1.35;
+}
+
 h1:not(#slipshow-toc h1) {
   text-align: center;
 }
