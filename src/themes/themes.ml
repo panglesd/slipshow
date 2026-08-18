@@ -18,10 +18,13 @@ let of_string = function
   | "none" -> Some NoTheme
   | _ -> None
 
+let mono = [%blob "font-embedding-mono.css"]
+
 let content ?(lite = true) = function
   | Default when lite ->
-      [%blob "font-embedding-lite.css"] ^ [%blob "default.css"]
-  | Default -> [%blob "font-embedding.css"] ^ [%blob "default.css"]
-  | Vanier when lite -> [%blob "font-embedding-lite.css"] ^ [%blob "vanier.css"]
-  | Vanier -> [%blob "font-embedding.css"] ^ [%blob "vanier.css"]
+      [%blob "font-embedding-lite.css"] ^ mono ^ [%blob "default.css"]
+  | Default -> [%blob "font-embedding.css"] ^ mono ^ [%blob "default.css"]
+  | Vanier when lite ->
+      [%blob "font-embedding-lite.css"] ^ mono ^ [%blob "vanier.css"]
+  | Vanier -> [%blob "font-embedding.css"] ^ mono ^ [%blob "vanier.css"]
   | NoTheme -> ""
