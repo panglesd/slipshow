@@ -25,6 +25,13 @@ body {
 	font-family: "Dosis";
 }
 
+pre, code {
+	font-family: "Liberation Mono", monospace;
+}
+
+pre {
+	line-height: 1.35;
+}
 
 .slip-slip.titlepage{
 	display:flex;

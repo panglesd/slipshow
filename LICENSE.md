@@ -28,7 +28,7 @@
 - The file
   [`src/themes/font-embedding.css`](https://github.com/panglesd/slipshow/blob/main/src/themes/vanier.css)
   contains a base64 distribution of the [Liberation Sans
-  font](https://fonts.google.com/specimen/Dosis/license), under the [SIL OPEN
+  and Liberation Mono fonts](https://fonts.google.com/specimen/Dosis/license), under the [SIL OPEN
   FONT LICENSE Version 1.1](#dosis-font-copyrights).
 - The Vanier theme, in
   [`src/themes/vanier.css`](https://github.com/panglesd/slipshow/blob/main/src/themes/vanier.css)

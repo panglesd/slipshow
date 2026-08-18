@@ -7,4 +7,5 @@
   vanier.css
   default.css
   font-embedding.css
-  font-embedding-lite.css))
+  font-embedding-lite.css
+  font-embedding-mono.css))
