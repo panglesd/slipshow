@@ -225,9 +225,7 @@ module Present = struct
   let cmd =
     let doc = "Present a Slipshow" in
     let man = [] in
-    let info =
-      Cmd.info "present" ~version:("%%VERSION%%: " ^ version_title) ~doc ~man
-    in
+    let info = Cmd.info "present" ~version:Slipshow_version.full ~doc ~man in
     Cmd.v info term
 end
 
@@ -235,7 +233,8 @@ let group =
   let doc = "A tool to compile and preview slipshow presentation" in
   let man = [] in
   let info = Cmd.info "slipshow" ~version:Slipshow_version.full ~doc ~man in
-  Cmd.group info [ Compile.cmd; Serve.cmd; Markdownify.cmd; Theme.cmd; Lsp.cmd; Present.cmd ]
+  Cmd.group info
+    [ Compile.cmd; Serve.cmd; Markdownify.cmd; Theme.cmd; Lsp.cmd; Present.cmd ]
 
 let main () = exit (Cmd.eval_result group)
 let () = main ()

@@ -162,16 +162,15 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
                   { Actions_arguments.Gui.x; y; scale; width = w; height = h }
           | Some { payload = GotoLoc loc; _ } -> goto_loc loc
           | None
-          | Some { payload = Speaker_notes _; _ }
-          | Some { payload = Drawing _; _ }
-          | Some { payload = Send_all_drawing; _ }
-          | Some { payload = Receive_all_drawing _; _ }
-          | Some { payload = Next; _ }
-          | Some { payload = Previous; _ }
-          | Some { payload = Can_save; _ }
-          | Some { payload = Can_gui; _ }
-          | Some { payload = ActivateGUI _; _ }
-          | Some { payload = DeActivateGUI; _ } ->
+          | Some
+              {
+                payload =
+                  ( Speaker_notes _ | Drawing _ | Send_all_drawing
+                  | Receive_all_drawing _ | Poll_vote _ | Set_state _
+                  | Stop_moving | Next | Previous | Can_save | Can_gui
+                  | ActivateGUI _ | DeActivateGUI );
+                _;
+              } ->
               ()
         else if from_other then
           match msg with
@@ -213,7 +212,8 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
                   | State (_, _)
                   | Speaker_notes _ | Drawing _ | Receive_all_drawing _
                   | Save_drawing (_, _)
-                  | ActivateGUI _ | SaveCoordinates _ | GotoLoc _ );
+                  | ActivateGUI _ | SaveCoordinates _ | GotoLoc _ | Stop_moving
+                  | Set_state _ | Poll_vote _ );
                 id = _;
               }
           | None ->

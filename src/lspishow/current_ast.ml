@@ -229,8 +229,12 @@ let rec enter_block ~positionEncoding ~source ~path acc pos
           | None -> acc
           | Some b -> enter_block ~positionEncoding ~source ~path acc pos b)
       | Poll_element ((bs, _), _) -> (
-          let next = List.find_opt (pos_in_block ~path ~pos) bs in
-          match next with None -> acc | Some b -> enter_block ~path acc pos b))
+          let next =
+            List.find_opt (pos_in_block ~positionEncoding ~source ~path ~pos) bs
+          in
+          match next with
+          | None -> acc
+          | Some b -> enter_block ~positionEncoding ~source ~path acc pos b))
   | _ -> assert false
 
 let get_leave ~positionEncoding ~source ~path pos doc =

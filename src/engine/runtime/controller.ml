@@ -277,7 +277,7 @@ let message_setup window =
               ( Save_drawing (_, _)
               | Speaker_notes _ | Close_recording_panel | Open_recording_panel
               | Close_speaker_notes | Open_speaker_notes | Ready
-              | SaveCoordinates _ | GotoLoc _ );
+              | SaveCoordinates _ | GotoLoc _ | Set_state _ | Poll_vote _ );
             id = _;
           } ->
           ())
