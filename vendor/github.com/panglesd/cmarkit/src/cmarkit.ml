@@ -986,7 +986,7 @@ type parser =
     exts : bool; (* parse extensions if [true]. *)
     nolocs : bool; (* do not compute locations if [true]. *)
     nolayout : bool; (* do not compute layout fields if [true]. *)
-    loc_offset : int * int; (* byte offset and line offset *)
+    loc_offset : int * (int * int); (* byte offset and line offset *)
     heading_auto_ids : bool; (* compute heading ids. *)
     nested_links : bool;
     mutable defs : Label.defs;
@@ -1008,7 +1008,8 @@ type parser =
 let parser
     ?(defs = Label.Map.empty) ?(resolver = Label.default_resolver)
     ?(nested_links = false) ?(heading_auto_ids = false) ?(layout = false)
-    ?(locs = false) ?(file = Textloc.file_none) ?(loc_offset = 0,0) ~strict i
+    ?(locs = false) ?(file = Textloc.file_none)
+    ?(loc_offset = 0, Textloc.line_pos_first) ~strict i
   =
   let nolocs = not locs and nolayout = not layout and exts = not strict in
   { file; i; buf = Buffer.create 512; exts; nolocs; nolayout;
@@ -1048,12 +1049,14 @@ let current_line_span p ~first ~last =
 let meta p textloc = if p.nolocs then Meta.none else Meta.make ~textloc ()
 
 let offseted_loc ~loc_offset ~file ~first_byte ~last_byte ~first_line ~last_line =
-  let byte_offset, line_offset = loc_offset in
+  let byte_offset, (anchor_line, anchor_line_byte) = loc_offset in
   let first_byte = first_byte + byte_offset and last_byte = last_byte + byte_offset in
-  let offset_line (line_n, line_byte) = (line_n + line_offset, line_byte + byte_offset) in
-  let first_line = offset_line first_line in
-  let last_line = offset_line last_line in
-  Textloc.v ~file ~first_byte ~last_byte ~first_line ~last_line
+  let offset_line (line_n, line_byte) =
+    if line_n = 1 then (anchor_line, anchor_line_byte)
+    else (line_n + anchor_line - 1, line_byte + byte_offset)
+  in
+  Textloc.v ~file ~first_byte ~last_byte ~first_line:(offset_line first_line)
+    ~last_line:(offset_line last_line)
 
 let textloc_of_span p span =
   if p.nolocs then Textloc.none else

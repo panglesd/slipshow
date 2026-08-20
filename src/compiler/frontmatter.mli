@@ -86,7 +86,7 @@ val of_string :
 type extraction = {
   frontmatter : string;
   rest : string;
-  rest_offset : int * int;
+  rest_offset : int * (int * int);
   fm_offset : int;
 }
 
