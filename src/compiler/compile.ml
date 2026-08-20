@@ -62,11 +62,6 @@ let classify_image p =
   | ".html" -> `Html
   | _ -> `Image
 
-let resolve_file parent s =
-  match Asset.Uri.of_string s with
-  | Link _ as l -> l
-  | Path p -> Path (Fpath.normalize @@ Fpath.( // ) parent p)
-
 module Stage1 = struct
   let turn_block_quotes_into_divs m ((bq, (attrs, meta2)), meta) =
     let b = Block.Block_quote.block bq in
@@ -160,7 +155,7 @@ module Stage1 = struct
     let label, layout, defined_label, (dest, meta_dest), title =
       Link_definition.(label ld, layout ld, defined_label ld, dest ld, title ld)
     in
-    let uri = resolve_file current_path dest in
+    let uri = Asset.Uri.of_string ~parent:current_path dest in
     let dest = (Asset.Uri.to_string uri, meta_dest) in
     ( (uri, meta),
       Link_definition.make ~layout ~defined_label ?label ~dest ?title () )
