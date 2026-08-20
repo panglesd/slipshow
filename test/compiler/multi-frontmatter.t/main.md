@@ -1,6 +1,6 @@
 ---
 dimension: 16:9
-css: file.css
+css:   file.css other-file.css   other-other-file.css
 math-mode: mathjax
 ---
 

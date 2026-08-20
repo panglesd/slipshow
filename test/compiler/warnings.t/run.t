@@ -153,9 +153,9 @@ Testing with an include
       │                    ^^^^^^^^^^ 
   
   warning: Error while parsing frontmatter field 'dimension'
-      ┌─ all.md:4:11
+      ┌─ all.md:4:12
     4 │  dimension: 16:16
-      │            ^^^^^^ Expected "4:3", "16:9", or two integers separated by a 'x'
+      │             ^^^^^ Expected "4:3", "16:9", or two integers separated by a 'x'
   
   warning: Frontmatter field 'unknown-frontmatter' is not interpreted by slipshow
       ┌─ all.md:3:1

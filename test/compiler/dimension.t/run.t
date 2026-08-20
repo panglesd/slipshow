@@ -7,9 +7,9 @@ We can provide the dimension with dimension
   > EOF
   $ slipshow compile file.md
   warning: Error while parsing frontmatter field 'dimension'
-      ┌─ file.md:2:11
+      ┌─ file.md:2:12
     2 │  dimension: qfdesfesf
-      │            ^^^^^^^^^^ Expected "4:3", "16:9", or two integers separated by a 'x'
+      │             ^^^^^^^^^ Expected "4:3", "16:9", or two integers separated by a 'x'
   
 
   $ cat > file.md << EOF
@@ -19,9 +19,9 @@ We can provide the dimension with dimension
   > EOF
   $ slipshow compile file.md
   warning: Error while parsing frontmatter field 'dimension'
-      ┌─ file.md:2:11
+      ┌─ file.md:2:12
     2 │  dimension: wrongxefzefezf
-      │            ^^^^^^^^^^^^^^^ Expected "4:3", "16:9", or two integers separated by a 'x'
+      │             ^^^^^^^^^^^^^^ Expected "4:3", "16:9", or two integers separated by a 'x'
   
 
   $ cat > file.md << EOF
@@ -31,9 +31,9 @@ We can provide the dimension with dimension
   > EOF
   $ slipshow compile file.md
   warning: Error while parsing frontmatter field 'dimension'
-      ┌─ file.md:2:11
+      ┌─ file.md:2:12
     2 │  dimension: 1920xwrong
-      │            ^^^^^^^^^^^ Expected "4:3", "16:9", or two integers separated by a 'x'
+      │             ^^^^^^^^^^ Expected "4:3", "16:9", or two integers separated by a 'x'
   
 
   $ cat > file.md << EOF

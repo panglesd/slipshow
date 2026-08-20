@@ -110,7 +110,6 @@ module Attributes = struct
   let default = (Cmarkit.Attributes.empty, Cmarkit.Meta.none)
 
   let of_string ~to_uri:_ (s, loc) =
-    let s = String.trim s in
     let s =
       if String.length s > 0 && s.[0] = '{' then
         (* Just so emacs does not find an unmatched curly brace: '}'! *)
@@ -118,7 +117,7 @@ module Attributes = struct
       else "{" ^ s ^ "}"
     in
     let loc_offset =
-      (Cmarkit.Textloc.first_byte loc, fst @@ Cmarkit.Textloc.first_line loc)
+      (Cmarkit.Textloc.first_byte loc - 1, fst @@ Cmarkit.Textloc.first_line loc)
     in
     let file = Cmarkit.Textloc.file loc in
     let cmarkit =
@@ -212,15 +211,31 @@ module Css_links = struct
 
   let key = css_links_key
 
+  let offset_loc loc i l =
+    let first_line = Cmarkit.Textloc.first_line loc in
+    let first_byte = Cmarkit.Textloc.first_byte loc + i in
+    let last_line = first_line in
+    let last_byte = first_byte + l - 1 in
+    loc
+    |> Cmarkit.Textloc.set_first ~first_byte ~first_line
+    |> Cmarkit.Textloc.set_last ~last_byte ~last_line
+
   let of_string ~to_uri (s, loc) =
-    (* TODO: more precise asset location, here all assets have the whole line as
-       loc *)
     s |> String.split_on_char ' '
-    |> List.filter_map (function
-      | "" -> None
-      | x -> (
-          match to_uri x with Error _ -> None | Ok uri -> Some (uri, loc)))
-    |> Result.ok
+    |> List.fold_left
+         (fun (acc, i) -> function
+           | "" -> (acc, i + 1)
+           | x -> (
+               let l = String.length x in
+               let loc = offset_loc loc i l in
+               let i = i + l + 1 in
+               match to_uri x with
+               | Error (`Msg msg) ->
+                   Diagnosis.add @@ Simple { loc; msg };
+                   (acc, i)
+               | Ok uri -> ((uri, loc) :: acc, i)))
+         ([], 0)
+    |> fst |> List.rev |> Result.ok
 
   let update_frontmatter (fm : fm) v =
     { fm with global = { fm.global with css_links = v @ fm.global.css_links } }
@@ -230,16 +245,7 @@ module Js_links = struct
   type t = Uri.t loced list
 
   let key = js_links_key
-
-  let of_string ~to_uri (s, loc) =
-    (* TODO: more precise asset location, here all assets have the whole line as
-       loc *)
-    s |> String.split_on_char ' '
-    |> List.filter_map (function
-      | "" -> None
-      | x -> (
-          match to_uri x with Error _ -> None | Ok uri -> Some (uri, loc)))
-    |> Result.ok
+  let of_string ~to_uri (s, loc) = Css_links.of_string ~to_uri (s, loc)
 
   let update_frontmatter (fm : fm) v =
     { fm with global = { fm.global with js_links = v @ fm.global.js_links } }
@@ -388,7 +394,18 @@ let split_in_lines s =
 let cut file offset (i, line, (byte_start, _)) c =
   let i = i + 1 in
   let byte_start = byte_start + offset in
-  let update_loc (beg, end_) =
+  let update_loc (beg, _end_) s =
+    let beg, end_ =
+      let i0 =
+        String.find_first_index (fun x -> not @@ Char.Ascii.is_white x) s
+        |> Option.value ~default:0
+      in
+      let i1 =
+        String.find_last_index (fun x -> not @@ Char.Ascii.is_white x) s
+        |> Option.value ~default:0
+      in
+      (beg + i0, beg + i1)
+    in
     Cmarkit.Textloc.v ~file ~first_line:(i, byte_start)
       ~last_line:(i, byte_start) ~first_byte:(beg + byte_start)
       ~last_byte:(end_ + byte_start)
@@ -396,9 +413,9 @@ let cut file offset (i, line, (byte_start, _)) c =
   String.index_opt line c
   |> Option.map @@ fun idx ->
      let key, kloc = string_sub line 0 idx in
-     let key = (String.trim key, update_loc kloc) in
+     let key = (String.trim key, update_loc kloc key) in
      let v, loc = string_sub line (idx + 1) (String.length line - (idx + 1)) in
-     let v = (String.trim v, update_loc loc) in
+     let v = (String.trim v, update_loc loc v) in
      (key, v)
 
 let send_unrecognized_field ~key ~kloc:loc =
