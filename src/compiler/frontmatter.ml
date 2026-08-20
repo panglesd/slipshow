@@ -110,14 +110,14 @@ module Attributes = struct
   let default = (Cmarkit.Attributes.empty, Cmarkit.Meta.none)
 
   let of_string ~to_uri:_ (s, loc) =
-    let s =
+    let s, o =
       if String.length s > 0 && s.[0] = '{' then
         (* Just so emacs does not find an unmatched curly brace: '}'! *)
-        s
-      else "{" ^ s ^ "}"
+        (s, 0)
+      else ("{" ^ s ^ "}", 1)
     in
     let loc_offset =
-      (Cmarkit.Textloc.first_byte loc - 1, fst @@ Cmarkit.Textloc.first_line loc)
+      (Cmarkit.Textloc.first_byte loc - o, fst @@ Cmarkit.Textloc.first_line loc)
     in
     let file = Cmarkit.Textloc.file loc in
     let cmarkit =
