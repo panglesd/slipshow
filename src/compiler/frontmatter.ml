@@ -25,6 +25,11 @@ let css_links_key = "css"
 let js_links_key = "js"
 let external_ids_key = "external-ids"
 
+let relativized_to_asset ~file ~to_asset s =
+  let s = Fpath.v s in
+  let path = Fpath.normalize @@ Fpath.(parent file // s) in
+  to_asset path
+
 module Global = struct
   type t = {
     math_link : Asset.t loced option;
@@ -109,7 +114,7 @@ module Attributes = struct
   let key = "attributes"
   let default = (Cmarkit.Attributes.empty, Cmarkit.Meta.none)
 
-  let of_string ~to_asset:_ (s, loc) =
+  let of_string ~file:_ ~to_asset:_ (s, loc) =
     let s = String.trim s in
     let s =
       if String.length s > 0 && s.[0] = '{' then
@@ -177,7 +182,9 @@ module Math_link = struct
   type t = Asset.t loced
 
   let key = math_link_key
-  let of_string ~to_asset (s, loc) = Ok (to_asset s, loc)
+
+  let of_string ~file ~to_asset (s, loc) =
+    Ok (relativized_to_asset ~to_asset ~file s, loc)
 
   let update_frontmatter (fm : fm) v =
     let math_link = combine_opt key (Some v) fm.global.math_link in
@@ -190,11 +197,11 @@ module Theme = struct
   let key = theme_key
   let default = (`Builtin Themes.Default, Cmarkit.Textloc.none)
 
-  let of_string ~to_asset (s, loc) =
+  let of_string ~file ~to_asset (s, loc) =
     match Themes.of_string s with
     | Some theme -> Ok (`Builtin theme, loc)
     | None ->
-        let theme = to_asset s in
+        let theme = relativized_to_asset ~to_asset ~file s in
         Ok (`External theme, loc)
 
   let update_frontmatter (fm : fm) v =
@@ -207,11 +214,13 @@ module Css_links = struct
 
   let key = css_links_key
 
-  let of_string ~to_asset (s, loc) =
+  let of_string ~file ~to_asset (s, loc) =
     (* TODO: more precise asset location, here all assets have the whole line as
        loc *)
     s |> String.split_on_char ' '
-    |> List.filter_map (function "" -> None | x -> Some (to_asset x, loc))
+    |> List.filter_map (function
+      | "" -> None
+      | x -> Some (relativized_to_asset ~to_asset ~file x, loc))
     |> Result.ok
 
   let update_frontmatter (fm : fm) v =
@@ -223,11 +232,13 @@ module Js_links = struct
 
   let key = js_links_key
 
-  let of_string ~to_asset (s, loc) =
+  let of_string ~file ~to_asset (s, loc) =
     (* TODO: more precise asset location, here all assets have the whole line as
        loc *)
     s |> String.split_on_char ' '
-    |> List.filter_map (function "" -> None | x -> Some (to_asset x, loc))
+    |> List.filter_map (function
+      | "" -> None
+      | x -> Some (relativized_to_asset ~to_asset ~file x, loc))
     |> Result.ok
 
   let update_frontmatter (fm : fm) v =
@@ -240,7 +251,7 @@ module Dimension = struct
   let key = dimension_key
   let default = ((1440, 1080), Cmarkit.Textloc.none)
 
-  let of_string ~to_asset:_ (s, loc) =
+  let of_string ~file:_ ~to_asset:_ (s, loc) =
     let ( let* ) = Result.bind in
     let error =
       Error
@@ -272,7 +283,7 @@ module Hljs_theme = struct
   type t = string loced
 
   let key = highlightjs_theme_key
-  let of_string ~to_asset:_ = fun (x, loc) -> Ok (x, loc)
+  let of_string ~file:_ ~to_asset:_ = fun (x, loc) -> Ok (x, loc)
   let default = ("default", Cmarkit.Textloc.none)
 
   let update_frontmatter (fm : fm) v =
@@ -287,7 +298,7 @@ module Math_mode = struct
 
   let key = math_mode_key
 
-  let of_string ~to_asset:_ = function
+  let of_string ~file:_ ~to_asset:_ = function
     | "mathjax", loc -> Ok (`Mathjax, loc)
     | "katex", loc -> Ok (`Katex, loc)
     | _ -> Error (`Msg "Expected \"mathjax\" or \"katex\"")
@@ -305,7 +316,8 @@ module type Field = sig
   val key : string
 
   val of_string :
-    to_asset:(string -> Asset.t) ->
+    file:Fpath.t ->
+    to_asset:(Fpath.t -> Asset.t) ->
     string * Cmarkit.Textloc.t ->
     (t, [ `Msg of string ]) result
 
@@ -317,7 +329,7 @@ module External_ids = struct
 
   let key = external_ids_key
 
-  let of_string ~to_asset:_ (s, _) =
+  let of_string ~file:_ ~to_asset:_ (s, _) =
     String.split_on_char ' ' s
     |> List.filter (fun x -> not @@ String.equal String.empty x)
     |> Result.ok
@@ -397,13 +409,14 @@ let send_general_error ~key ~msg ~vloc =
   Diagnosis.add (FrontmatterParsing { key; msg; loc = vloc })
 
 let of_string ~to_asset file offset s =
+  let file_s = Fpath.to_string file in
   let raise_warning line =
     let loc =
       let i, _, (byte_start, byte_end) = line in
       let i = i + 1 in
       let first_byte = byte_start + offset
       and last_byte = byte_end + offset - 1 in
-      Cmarkit.Textloc.v ~file ~first_line:(i, first_byte)
+      Cmarkit.Textloc.v ~file:file_s ~first_line:(i, first_byte)
         ~last_line:(i, first_byte) ~first_byte ~last_byte
     in
     Diagnosis.add (InvalidFrontmatterLine { loc })
@@ -411,7 +424,7 @@ let of_string ~to_asset file offset s =
   let assoc =
     s |> split_in_lines
     |> List.filter_map @@ fun line ->
-       match cut file offset line ':' with
+       match cut file_s offset line ':' with
        | None ->
            raise_warning line;
            None
@@ -423,7 +436,7 @@ let of_string ~to_asset file offset s =
         send_unrecognized_field ~key ~kloc;
         fm
     | Some (module F) -> (
-        match F.of_string ~to_asset value with
+        match F.of_string ~file ~to_asset value with
         | Ok x -> F.update_frontmatter fm x
         | Error (`Msg msg) ->
             send_general_error ~key ~msg ~vloc;
