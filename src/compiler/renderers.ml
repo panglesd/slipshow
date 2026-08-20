@@ -128,7 +128,7 @@ module C = Cmarkit_renderer.Context
 
 let src uri files =
   match uri with
-  | Asset.Uri.Link l -> `Link l
+  | Uri.Link l -> `Link l
   | Path p -> (
       match Fpath.Map.find_opt p (files : Ast.Files.read Ast.Files.map) with
       | Some { content = Some content; mode = `Base64; _ } ->
@@ -146,7 +146,7 @@ let src_to_link = function
 let pdf c ~uri ~files i attrs =
   let open Cmarkit in
   match uri with
-  | Asset.Uri.Link l ->
+  | Uri.Link l ->
       Logs.warn (fun m -> m "pdf does not work with urls: ignoring %s" l)
   | Path p ->
       let attrs =
@@ -225,7 +225,7 @@ let svg c ~uri ~files i attrs =
 let pure_embed ~root c ~name uri files attrs =
   let open Cmarkit_renderer in
   match uri with
-  | Asset.Uri.Link _ -> Logs.err (fun m -> m "Could not embed a pure embed")
+  | Uri.Link _ -> Logs.err (fun m -> m "Could not embed a pure embed")
   | Path p -> (
       match Fpath.Map.find_opt p (files : Ast.Files.read Ast.Files.map) with
       | Some { content; mode = `Base64; _ } ->

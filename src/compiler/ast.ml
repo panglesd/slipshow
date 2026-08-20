@@ -26,7 +26,7 @@ let mermaid_js d = S_block (MermaidJS d)
 let carousel d = S_block (Carousel d)
 
 type media = {
-  uri : Asset.Uri.t node;
+  uri : Uri.t node;
   id : string;
   origin : Cmarkit.Inline.Link.t attributed node;
 }
