@@ -8,7 +8,8 @@ let of_string ~read_file ~file s =
     match Frontmatter.extract s with
     | None -> (Frontmatter.empty, s, (0, 0))
     | Some { frontmatter = txt_fm; rest; rest_offset; fm_offset } ->
-        let to_asset s = Asset.of_string ~read_file (Fpath.to_string s) in
+        let parent = Fpath.parent file in
+        let to_asset s = Asset.of_string ~parent ~read_file s in
         let frontmatter =
           Frontmatter.of_string ~to_asset file fm_offset txt_fm
         in

@@ -1,13 +1,13 @@
 module Uri = struct
   type t = Link of string | Path of Fpath.t
 
-  let of_string s =
+  let of_string ~parent s =
     if
       Astring.String.is_infix ~affix:"://" s
       || String.starts_with ~prefix:"//" s
       || String.starts_with ~prefix:"data:" s
     then Link s
-    else Path (Fpath.v s)
+    else Path (Fpath.normalize @@ Fpath.( // ) parent (Fpath.v s))
 
   let to_string = function Link s -> s | Path p -> Fpath.to_string p
 end
@@ -34,4 +34,5 @@ let of_uri ~read_file s =
             (MissingFile { file = Fpath.to_string fp; error_msg; locs });
           Remote (Fpath.to_string fp))
 
-let of_string ~read_file s = s |> Uri.of_string |> of_uri ~read_file
+let of_string ~parent ~read_file s =
+  s |> Uri.of_string ~parent |> of_uri ~read_file

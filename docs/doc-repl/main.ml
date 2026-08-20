@@ -46,8 +46,7 @@ let handle_elem =
     El.at !!"dimension" el |> Option.map Jstr.to_string |> fun x ->
     Option.bind x (fun s ->
         match
-          Slipshow.Frontmatter.Dimension.of_string' ~file:(Fpath.v "_none_")
-            (s, Cmarkit.Textloc.none)
+          Slipshow.Frontmatter.Dimension.of_string' (s, Cmarkit.Textloc.none)
         with
         | Ok x -> Some x
         | Error _ -> None)
