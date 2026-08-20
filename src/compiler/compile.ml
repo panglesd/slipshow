@@ -160,7 +160,7 @@ module Stage1 = struct
       match uri with
       | Ok uri -> uri
       | Error (`Msg s) ->
-          let loc = Meta.textloc meta in
+          let loc = Meta.textloc meta_dest in
           Diagnosis.add (Simple { msg = s; loc });
           Link dest
     in
