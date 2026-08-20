@@ -46,8 +46,11 @@ let mathjax_element math_mode has_math math_link =
   if not has_math then ""
   else
     match math_link with
-    | Some (Asset.Local { content = t; _ }) ->
+    | Some (Asset.Local { content = Some t; _ }) ->
         Format.sprintf "<script id=\"MathJax-script\">%s</script>" t
+    | Some (Asset.Local { content = None; path; _ }) ->
+        Format.sprintf "<script id=\"MathJax-script\" src=\"%s\"></script>"
+          (Fpath.to_string path)
     | Some (Remote r) ->
         Format.sprintf "<script id=\"MathJax-script\" src=\"%s\"></script>" r
     | None -> (
@@ -82,7 +85,10 @@ let mermaid_element has_mermaid =
       ]
 
 let asset_to_css = function
-  | Asset.Local { content = t; _ } -> Format.sprintf "<style>%s</style>" t
+  | Asset.Local { content = Some t; _ } -> Format.sprintf "<style>%s</style>" t
+  | Asset.Local { content = None; path; _ } ->
+      Format.sprintf {|<link href="%s" rel="stylesheet" />|}
+        (Fpath.to_string path)
   | Remote r -> Format.sprintf {|<link href="%s" rel="stylesheet" />|} r
 
 let css_element (asset, _loc) = asset_to_css asset
@@ -105,8 +111,10 @@ let variable_css ~width ~height =
 
 let slipshow_js_element slipshow_link =
   match slipshow_link with
-  | Some (Asset.Local { content = t; _ }) ->
+  | Some (Asset.Local { content = Some t; _ }) ->
       Format.sprintf "<script>%s</script>" t
+  | Some (Asset.Local { content = None; path; _ }) ->
+      Format.sprintf "<script src=\"%s\"></script>" (Fpath.to_string path)
   | Some (Remote r) -> Format.sprintf "<script src=\"%s\"></script>" r
   | None -> Format.sprintf "<script>%s</script>" Data_files.(read Slipshow_js)
 
@@ -170,8 +178,10 @@ let embed_in_page ~has_speaker_view ~slipshow_js content ~has ~math_link
   let js =
     js_links
     |> List.map (function
-      | Asset.Local { content = t; _ }, _loc ->
+      | Asset.Local { content = Some t; _ }, _loc ->
           Format.sprintf "<script>%s</script>" t
+      | Asset.Local { content = None; path; _ }, _loc ->
+          Format.asprintf {|<script src="%a"></script>|} Fpath.pp path
       | Remote r, _loc -> Format.sprintf {|<script src="%s"></script>|} r)
     |> String.concat ""
   in
