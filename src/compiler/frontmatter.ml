@@ -173,11 +173,16 @@ module Toplevel_attributes = struct
     }
 end
 
+let ( let+ ) x f = Result.map f x
+
 module Math_link = struct
   type t = Uri.t loced
 
   let key = math_link_key
-  let of_string ~to_uri (s, loc) = Ok ((to_uri s, loc) : t)
+
+  let of_string ~to_uri (s, loc) =
+    let+ uri = to_uri s in
+    ((uri, loc) : t)
 
   let update_frontmatter (fm : fm) v =
     let math_link = combine_opt key (Some v) fm.global.math_link in
@@ -194,8 +199,8 @@ module Theme = struct
     match Themes.of_string s with
     | Some theme -> Ok (`Builtin theme, loc)
     | None ->
-        let theme = to_uri s in
-        Ok (`External theme, loc)
+        let+ theme = to_uri s in
+        (`External theme, loc)
 
   let update_frontmatter (fm : fm) v =
     let theme = combine_opt key (Some v) fm.global.theme in
@@ -211,7 +216,10 @@ module Css_links = struct
     (* TODO: more precise asset location, here all assets have the whole line as
        loc *)
     s |> String.split_on_char ' '
-    |> List.filter_map (function "" -> None | x -> Some (to_uri x, loc))
+    |> List.filter_map (function
+      | "" -> None
+      | x -> (
+          match to_uri x with Error _ -> None | Ok uri -> Some (uri, loc)))
     |> Result.ok
 
   let update_frontmatter (fm : fm) v =
@@ -227,7 +235,10 @@ module Js_links = struct
     (* TODO: more precise asset location, here all assets have the whole line as
        loc *)
     s |> String.split_on_char ' '
-    |> List.filter_map (function "" -> None | x -> Some (to_uri x, loc))
+    |> List.filter_map (function
+      | "" -> None
+      | x -> (
+          match to_uri x with Error _ -> None | Ok uri -> Some (uri, loc)))
     |> Result.ok
 
   let update_frontmatter (fm : fm) v =
@@ -305,7 +316,7 @@ module type Field = sig
   val key : string
 
   val of_string :
-    to_uri:(string -> Uri.t) ->
+    to_uri:(string -> (Uri.t, [ `Msg of string ]) result) ->
     string * Cmarkit.Textloc.t ->
     (t, [ `Msg of string ]) result
 

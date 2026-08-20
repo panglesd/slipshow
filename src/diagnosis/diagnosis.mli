@@ -19,6 +19,7 @@ type t =
   | FrontmatterParsing of { key : string; msg : string; loc : loc }
   | InvalidFrontmatterLine of { loc : loc }
   | ChildrenClassWithValue of { loc : loc }
+  | Simple of { loc : loc; msg : string }
 
 val pp : Format.formatter -> t -> unit
 val to_grace : (Fpath.t -> Grace.Source.t option) -> t -> t Grace.Diagnostic.t
