@@ -15,8 +15,8 @@ module Global : sig
     dimension : (int * int) loced option;
     highlightjs_theme : string loced option;
     math_mode : [ `Mathjax | `Katex ] loced option;
-    css_links : Asset.t list;
-    js_links : Asset.t list;
+    css_links : Asset.t loced list;
+    js_links : Asset.t loced list;
     external_ids : string list;
     toplevel_attributes : Cmarkit.Attributes.t Cmarkit.node option;
   }
@@ -26,6 +26,7 @@ module Global : sig
   val empty : t
   val with_empty : 'a -> 'a with_
   val combine : t -> t -> t
+  val assets : t -> Asset.t loced list
 end
 
 type t = { local : Local.t; global : Global.t }
@@ -63,8 +64,8 @@ module Theme :
   Field_with_default
     with type t = [ `Builtin of Themes.t | `External of Asset.t ] loced
 
-module Css_links : Field with type t = Asset.t list
-module Js_links : Field with type t = Asset.t list
+module Css_links : Field with type t = Asset.t loced list
+module Js_links : Field with type t = Asset.t loced list
 
 module Dimension : sig
   include Field_with_default with type t = (int * int) loced

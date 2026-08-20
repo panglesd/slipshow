@@ -564,6 +564,15 @@ module Stage4 = struct
             acc)
         Id_map.SMap.empty id_list
     in
+    let files =
+      let add_asset files (asset, loc) =
+        match asset with
+        | Asset.Remote _ -> files
+        | Local { path; _ } -> fpath_map_add_to_list path (Id.gen (), loc) files
+      in
+      let assets = Frontmatter.Global.assets fm.global in
+      List.fold_left add_asset files assets
+    in
     (md, files, id_map)
 end
 
