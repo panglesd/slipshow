@@ -109,7 +109,7 @@ module Attributes = struct
   let key = "attributes"
   let default = (Cmarkit.Attributes.empty, Cmarkit.Meta.none)
 
-  let of_string ~to_asset:_ (s, loc) =
+  let of_string ~to_uri:_ (s, loc) =
     let s = String.trim s in
     let s =
       if String.length s > 0 && s.[0] = '{' then
@@ -177,7 +177,7 @@ module Math_link = struct
   type t = Uri.t loced
 
   let key = math_link_key
-  let of_string ~to_asset (s, loc) = Ok ((to_asset s, loc) : t)
+  let of_string ~to_uri (s, loc) = Ok ((to_uri s, loc) : t)
 
   let update_frontmatter (fm : fm) v =
     let math_link = combine_opt key (Some v) fm.global.math_link in
@@ -190,11 +190,11 @@ module Theme = struct
   let key = theme_key
   let default = (`Builtin Themes.Default, Cmarkit.Textloc.none)
 
-  let of_string ~to_asset (s, loc) =
+  let of_string ~to_uri (s, loc) =
     match Themes.of_string s with
     | Some theme -> Ok (`Builtin theme, loc)
     | None ->
-        let theme = to_asset s in
+        let theme = to_uri s in
         Ok (`External theme, loc)
 
   let update_frontmatter (fm : fm) v =
@@ -207,11 +207,11 @@ module Css_links = struct
 
   let key = css_links_key
 
-  let of_string ~to_asset (s, loc) =
+  let of_string ~to_uri (s, loc) =
     (* TODO: more precise asset location, here all assets have the whole line as
        loc *)
     s |> String.split_on_char ' '
-    |> List.filter_map (function "" -> None | x -> Some (to_asset x, loc))
+    |> List.filter_map (function "" -> None | x -> Some (to_uri x, loc))
     |> Result.ok
 
   let update_frontmatter (fm : fm) v =
@@ -223,11 +223,11 @@ module Js_links = struct
 
   let key = js_links_key
 
-  let of_string ~to_asset (s, loc) =
+  let of_string ~to_uri (s, loc) =
     (* TODO: more precise asset location, here all assets have the whole line as
        loc *)
     s |> String.split_on_char ' '
-    |> List.filter_map (function "" -> None | x -> Some (to_asset x, loc))
+    |> List.filter_map (function "" -> None | x -> Some (to_uri x, loc))
     |> Result.ok
 
   let update_frontmatter (fm : fm) v =
@@ -240,7 +240,7 @@ module Dimension = struct
   let key = dimension_key
   let default = ((1440, 1080), Cmarkit.Textloc.none)
 
-  let of_string ~to_asset:_ (s, loc) =
+  let of_string ~to_uri:_ (s, loc) =
     let ( let* ) = Result.bind in
     let error =
       Error
@@ -261,7 +261,7 @@ module Dimension = struct
     in
     Result.map (fun x -> (x, loc)) res
 
-  let of_string' = of_string ~to_asset:()
+  let of_string' = of_string ~to_uri:()
 
   let update_frontmatter (fm : fm) v =
     let dimension = combine_opt key (Some v) fm.global.dimension in
@@ -272,7 +272,7 @@ module Hljs_theme = struct
   type t = string loced
 
   let key = highlightjs_theme_key
-  let of_string ~to_asset:_ = fun (x, loc) -> Ok (x, loc)
+  let of_string ~to_uri:_ = fun (x, loc) -> Ok (x, loc)
   let default = ("default", Cmarkit.Textloc.none)
 
   let update_frontmatter (fm : fm) v =
@@ -287,7 +287,7 @@ module Math_mode = struct
 
   let key = math_mode_key
 
-  let of_string ~to_asset:_ = function
+  let of_string ~to_uri:_ = function
     | "mathjax", loc -> Ok (`Mathjax, loc)
     | "katex", loc -> Ok (`Katex, loc)
     | _ -> Error (`Msg "Expected \"mathjax\" or \"katex\"")
@@ -305,7 +305,7 @@ module type Field = sig
   val key : string
 
   val of_string :
-    to_asset:(string -> Uri.t) ->
+    to_uri:(string -> Uri.t) ->
     string * Cmarkit.Textloc.t ->
     (t, [ `Msg of string ]) result
 
@@ -317,7 +317,7 @@ module External_ids = struct
 
   let key = external_ids_key
 
-  let of_string ~to_asset:_ (s, _) =
+  let of_string ~to_uri:_ (s, _) =
     String.split_on_char ' ' s
     |> List.filter (fun x -> not @@ String.equal String.empty x)
     |> Result.ok
@@ -396,7 +396,7 @@ let send_unrecognized_field ~key ~kloc:loc =
 let send_general_error ~key ~msg ~vloc =
   Diagnosis.add (FrontmatterParsing { key; msg; loc = vloc })
 
-let of_string ~to_asset file offset s =
+let of_string ~to_uri file offset s =
   let file_s = Fpath.to_string file in
   let raise_warning line =
     let loc =
@@ -424,7 +424,7 @@ let of_string ~to_asset file offset s =
         send_unrecognized_field ~key ~kloc;
         fm
     | Some (module F) -> (
-        match F.of_string ~to_asset value with
+        match F.of_string ~to_uri value with
         | Ok x -> F.update_frontmatter fm x
         | Error (`Msg msg) ->
             send_general_error ~key ~msg ~vloc;
