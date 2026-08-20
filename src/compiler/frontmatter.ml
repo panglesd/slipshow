@@ -32,8 +32,8 @@ module Global = struct
     dimension : (int * int) loced option;
     highlightjs_theme : string loced option;
     math_mode : [ `Mathjax | `Katex ] loced option;
-    css_links : Asset.t list;
-    js_links : Asset.t list;
+    css_links : Asset.t loced list;
+    js_links : Asset.t loced list;
     external_ids : string list;
     toplevel_attributes : Cmarkit.Attributes.t Cmarkit.node option;
   }
@@ -77,6 +77,27 @@ module Global = struct
         | (Some _ as a), _ | _, (Some _ as a) -> a
         | None, None -> None);
     }
+
+  let assets
+      ({
+         math_link;
+         theme;
+         dimension = _;
+         highlightjs_theme = _;
+         math_mode = _;
+         css_links;
+         js_links;
+         external_ids = _;
+         toplevel_attributes = _;
+       } :
+        t) =
+    let math_link = Option.to_list math_link in
+    let theme =
+      match theme with
+      | Some (`External asset, loc) -> [ (asset, loc) ]
+      | _ -> []
+    in
+    List.concat [ math_link; theme; css_links; js_links ]
 end
 
 type t = { local : Local.t; global : Global.t }
@@ -182,13 +203,15 @@ module Theme = struct
 end
 
 module Css_links = struct
-  type t = Asset.t list
+  type t = Asset.t loced list
 
   let key = css_links_key
 
-  let of_string ~to_asset (s, _) =
+  let of_string ~to_asset (s, loc) =
+    (* TODO: more precise asset location, here all assets have the whole line as
+       loc *)
     s |> String.split_on_char ' '
-    |> List.filter_map (function "" -> None | x -> Some (to_asset x))
+    |> List.filter_map (function "" -> None | x -> Some (to_asset x, loc))
     |> Result.ok
 
   let update_frontmatter (fm : fm) v =
@@ -196,13 +219,15 @@ module Css_links = struct
 end
 
 module Js_links = struct
-  type t = Asset.t list
+  type t = Asset.t loced list
 
   let key = js_links_key
 
-  let of_string ~to_asset (s, _) =
+  let of_string ~to_asset (s, loc) =
+    (* TODO: more precise asset location, here all assets have the whole line as
+       loc *)
     s |> String.split_on_char ' '
-    |> List.filter_map (function "" -> None | x -> Some (to_asset x))
+    |> List.filter_map (function "" -> None | x -> Some (to_asset x, loc))
     |> Result.ok
 
   let update_frontmatter (fm : fm) v =

@@ -81,14 +81,16 @@ let mermaid_element has_mermaid =
         "<script>mermaid.initialize(window.Mermaid)</script>";
       ]
 
-let css_element = function
+let asset_to_css = function
   | Asset.Local { content = t; _ } -> Format.sprintf "<style>%s</style>" t
   | Remote r -> Format.sprintf {|<link href="%s" rel="stylesheet" />|} r
+
+let css_element (asset, _loc) = asset_to_css asset
 
 let theme_css = function
   | `Builtin theme ->
       Format.sprintf "<style>%s</style>" (Themes.content ~lite:true theme)
-  | `External asset -> css_element asset
+  | `External asset -> asset_to_css asset
 
 let internal_css =
   Format.sprintf "<style>%s</style>" Data_files.(read Slip_internal_css)
@@ -168,8 +170,9 @@ let embed_in_page ~has_speaker_view ~slipshow_js content ~has ~math_link
   let js =
     js_links
     |> List.map (function
-      | Asset.Local { content = t; _ } -> Format.sprintf "<script>%s</script>" t
-      | Remote r -> Format.sprintf {|<script src="%s"></script>|} r)
+      | Asset.Local { content = t; _ }, _loc ->
+          Format.sprintf "<script>%s</script>" t
+      | Remote r, _loc -> Format.sprintf {|<script src="%s"></script>|} r)
     |> String.concat ""
   in
   let mathjax_element = mathjax_element math_mode has.math math_link in
