@@ -22,7 +22,7 @@ val create_previewer :
 
 val preview :
   ?options:Slipshow.Frontmatter.Global.t ->
-  ?slipshow_js:Slipshow.Asset.t ->
+  ?slipshow_js:Slipshow.Uri.t ->
   previewer ->
   string ->
   unit

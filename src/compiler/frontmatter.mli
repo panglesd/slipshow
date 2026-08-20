@@ -10,13 +10,13 @@ end
 
 module Global : sig
   type t = {
-    math_link : Asset.t loced option;
-    theme : [ `Builtin of Themes.t | `External of Asset.t ] loced option;
+    math_link : Uri.t loced option;
+    theme : [ `Builtin of Themes.t | `External of Uri.t ] loced option;
     dimension : (int * int) loced option;
     highlightjs_theme : string loced option;
     math_mode : [ `Mathjax | `Katex ] loced option;
-    css_links : Asset.t loced list;
-    js_links : Asset.t loced list;
+    css_links : Uri.t loced list;
+    js_links : Uri.t loced list;
     external_ids : string list;
     toplevel_attributes : Cmarkit.Attributes.t Cmarkit.node option;
   }
@@ -26,7 +26,7 @@ module Global : sig
   val empty : t
   val with_empty : 'a -> 'a with_
   val combine : t -> t -> t
-  val assets : t -> Asset.t loced list
+  val assets : t -> Uri.t loced list
 end
 
 type t = { local : Local.t; global : Global.t }
@@ -41,7 +41,7 @@ module type Field := sig
   val key : string
 
   val of_string :
-    to_asset:(string -> Asset.t) ->
+    to_asset:(string -> Uri.t) ->
     string * Cmarkit.Textloc.t ->
     (t, [ `Msg of string ]) result
 
@@ -58,14 +58,14 @@ module Toplevel_attributes :
   Field_with_default with type t = Cmarkit.Attributes.t Cmarkit.node
 
 module Attributes : Field_with_default with type t = Toplevel_attributes.t
-module Math_link : Field with type t = Asset.t loced
+module Math_link : Field with type t = Uri.t loced
 
 module Theme :
   Field_with_default
-    with type t = [ `Builtin of Themes.t | `External of Asset.t ] loced
+    with type t = [ `Builtin of Themes.t | `External of Uri.t ] loced
 
-module Css_links : Field with type t = Asset.t loced list
-module Js_links : Field with type t = Asset.t loced list
+module Css_links : Field with type t = Uri.t loced list
+module Js_links : Field with type t = Uri.t loced list
 
 module Dimension : sig
   include Field_with_default with type t = (int * int) loced
@@ -76,7 +76,7 @@ end
 module Hljs_theme : Field_with_default with type t = string loced
 module Math_mode : Field_with_default with type t = [ `Mathjax | `Katex ] loced
 
-val of_string : to_asset:(string -> Asset.t) -> Fpath.t -> int -> string -> t
+val of_string : to_asset:(string -> Uri.t) -> Fpath.t -> int -> string -> t
 
 type extraction = {
   frontmatter : string;

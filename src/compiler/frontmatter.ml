@@ -27,13 +27,13 @@ let external_ids_key = "external-ids"
 
 module Global = struct
   type t = {
-    math_link : Asset.t loced option;
-    theme : [ `Builtin of Themes.t | `External of Asset.t ] loced option;
+    math_link : Uri.t loced option;
+    theme : [ `Builtin of Themes.t | `External of Uri.t ] loced option;
     dimension : (int * int) loced option;
     highlightjs_theme : string loced option;
     math_mode : [ `Mathjax | `Katex ] loced option;
-    css_links : Asset.t loced list;
-    js_links : Asset.t loced list;
+    css_links : Uri.t loced list;
+    js_links : Uri.t loced list;
     external_ids : string list;
     toplevel_attributes : Cmarkit.Attributes.t Cmarkit.node option;
   }
@@ -174,7 +174,7 @@ module Toplevel_attributes = struct
 end
 
 module Math_link = struct
-  type t = Asset.t loced
+  type t = Uri.t loced
 
   let key = math_link_key
   let of_string ~to_asset (s, loc) = Ok ((to_asset s, loc) : t)
@@ -185,7 +185,7 @@ module Math_link = struct
 end
 
 module Theme = struct
-  type t = [ `Builtin of Themes.t | `External of Asset.t ] loced
+  type t = [ `Builtin of Themes.t | `External of Uri.t ] loced
 
   let key = theme_key
   let default = (`Builtin Themes.Default, Cmarkit.Textloc.none)
@@ -203,7 +203,7 @@ module Theme = struct
 end
 
 module Css_links = struct
-  type t = Asset.t loced list
+  type t = Uri.t loced list
 
   let key = css_links_key
 
@@ -219,7 +219,7 @@ module Css_links = struct
 end
 
 module Js_links = struct
-  type t = Asset.t loced list
+  type t = Uri.t loced list
 
   let key = js_links_key
 
@@ -305,7 +305,7 @@ module type Field = sig
   val key : string
 
   val of_string :
-    to_asset:(string -> Asset.t) ->
+    to_asset:(string -> Uri.t) ->
     string * Cmarkit.Textloc.t ->
     (t, [ `Msg of string ]) result
 

@@ -1,4 +1,4 @@
-module Asset = Asset
+module Uri = Uri
 module Frontmatter = Frontmatter
 module Compile = Compile
 module Ast = Ast
@@ -42,17 +42,19 @@ let mermaid_option_elem ~has_mermaid =
   in
   "<script>" ^ elem ^ "</script>"
 
-let mathjax_element math_mode has_math math_link =
+let mathjax_element files math_mode has_math math_link =
   if not has_math then ""
   else
     match math_link with
-    | Some (Asset.Local { content = Some t; _ }) ->
-        Format.sprintf "<script id=\"MathJax-script\">%s</script>" t
-    | Some (Asset.Local { content = None; path; _ }) ->
-        Format.sprintf "<script id=\"MathJax-script\" src=\"%s\"></script>"
-          (Fpath.to_string path)
-    | Some (Remote r) ->
-        Format.sprintf "<script id=\"MathJax-script\" src=\"%s\"></script>" r
+    | Some (Uri.Link l) ->
+        Format.sprintf "<script id=\"MathJax-script\" src=\"%s\"></script>" l
+    | Some (Path p) -> (
+        match Fpath.Map.find_opt p files with
+        | Some { Ast.Files.content = Some s; _ } ->
+            Format.sprintf "<script id=\"MathJax-script\">%s</script>" s
+        | _ ->
+            Format.sprintf "<script id=\"MathJax-script\" src=\"%s\"></script>"
+              (Fpath.to_string p))
     | None -> (
         match math_mode with
         | `Katex ->
@@ -84,19 +86,22 @@ let mermaid_element has_mermaid =
         "<script>mermaid.initialize(window.Mermaid)</script>";
       ]
 
-let asset_to_css = function
-  | Asset.Local { content = Some t; _ } -> Format.sprintf "<style>%s</style>" t
-  | Asset.Local { content = None; path; _ } ->
-      Format.sprintf {|<link href="%s" rel="stylesheet" />|}
-        (Fpath.to_string path)
-  | Remote r -> Format.sprintf {|<link href="%s" rel="stylesheet" />|} r
+let asset_to_css files = function
+  | Uri.Path p -> (
+      match Fpath.Map.find_opt p files with
+      | Some { Ast.Files.content = Some s; _ } ->
+          Format.sprintf "<style>%s</style>" s
+      | _ ->
+          Format.sprintf {|<link href="%s" rel="stylesheet" />|}
+            (Fpath.to_string p))
+  | Uri.Link l -> Format.sprintf {|<link href="%s" rel="stylesheet" />|} l
 
-let css_element (asset, _loc) = asset_to_css asset
+let css_element files (asset, _loc) = asset_to_css files asset
 
-let theme_css = function
+let theme_css files = function
   | `Builtin theme ->
       Format.sprintf "<style>%s</style>" (Themes.content ~lite:true theme)
-  | `External asset -> asset_to_css asset
+  | `External asset -> asset_to_css files asset
 
 let internal_css =
   Format.sprintf "<style>%s</style>" Data_files.(read Slip_internal_css)
@@ -109,18 +114,19 @@ let variable_css ~width ~height =
     "<style>:root {  --page-width: %dpx;  --page-height: %dpx;}</style>" width
     height
 
-let slipshow_js_element slipshow_link =
+let slipshow_js_element files slipshow_link =
   match slipshow_link with
-  | Some (Asset.Local { content = Some t; _ }) ->
-      Format.sprintf "<script>%s</script>" t
-  | Some (Asset.Local { content = None; path; _ }) ->
-      Format.sprintf "<script src=\"%s\"></script>" (Fpath.to_string path)
-  | Some (Remote r) -> Format.sprintf "<script src=\"%s\"></script>" r
+  | Some (Uri.Path p) -> (
+      match Fpath.Map.find_opt p files with
+      | Some { Ast.Files.content = Some s; _ } ->
+          Format.sprintf "<script>%s</script>" s
+      | _ -> Format.sprintf "<script src=\"%s\"></script>" (Fpath.to_string p))
+  | Some (Link r) -> Format.sprintf "<script src=\"%s\"></script>" r
   | None -> Format.sprintf "<script>%s</script>" Data_files.(read Slipshow_js)
 
-let head ~width ~height ~theme ~highlightjs_theme ~(has : Has.t) ~math_mode
-    ~css_links =
-  let theme = theme_css theme in
+let head ~files ~width ~height ~theme ~highlightjs_theme ~(has : Has.t)
+    ~math_mode ~css_links =
+  let theme = theme_css files theme in
   let highlight_css_element =
     let s = Highlightjs.styles highlightjs_theme in
     "<style>" ^ s ^ "</style>"
@@ -146,7 +152,9 @@ let head ~width ~height ~theme ~highlightjs_theme ~(has : Has.t) ~math_mode
     in
     Format.sprintf {|<link rel="icon" type="image/x-icon" href="%s">|} href
   in
-  let css_elements = List.map css_element css_links |> String.concat "" in
+  let css_elements =
+    List.map (css_element files) css_links |> String.concat ""
+  in
   let math_option = math_option_elem math_mode ~has_math:has.math in
   let mermaid_option = mermaid_option_elem ~has_mermaid:has.mermaid in
   String.concat "\n"
@@ -168,24 +176,26 @@ let head ~width ~height ~theme ~highlightjs_theme ~(has : Has.t) ~math_mode
 let no_engine = ref false
 let set_no_engine () = no_engine := true
 
-let embed_in_page ~has_speaker_view ~slipshow_js content ~has ~math_link
+let embed_in_page ~files ~has_speaker_view ~slipshow_js content ~has ~math_link
     ~css_links ~js_links ~theme ~dimension ~highlightjs_theme ~math_mode =
   let width, height = dimension in
   let head =
-    head ~has ~css_links ~theme ~width ~height ~highlightjs_theme ~math_mode
+    head ~files ~has ~css_links ~theme ~width ~height ~highlightjs_theme
+      ~math_mode
   in
-  let slipshow_js_element = slipshow_js_element slipshow_js in
+  let slipshow_js_element = slipshow_js_element files slipshow_js in
   let js =
     js_links
     |> List.map (function
-      | Asset.Local { content = Some t; _ }, _loc ->
-          Format.sprintf "<script>%s</script>" t
-      | Asset.Local { content = None; path; _ }, _loc ->
-          Format.asprintf {|<script src="%a"></script>|} Fpath.pp path
-      | Remote r, _loc -> Format.sprintf {|<script src="%s"></script>|} r)
+      | Uri.Path p, _loc -> (
+          match Fpath.Map.find_opt p files with
+          | Some { Ast.Files.content = Some s; _ } ->
+              Format.sprintf "<script>%s</script>" s
+          | _ -> Format.asprintf {|<script src="%a"></script>|} Fpath.pp p)
+      | Link r, _loc -> Format.sprintf {|<script src="%s"></script>|} r)
     |> String.concat ""
   in
-  let mathjax_element = mathjax_element math_mode has.math math_link in
+  let mathjax_element = mathjax_element files math_mode has.math math_link in
   let mermaid_element = mermaid_element has.mermaid in
   let start =
     String.concat ""
@@ -308,8 +318,9 @@ let delayed_from_units ?(options = Frontmatter.Global.empty) ?slipshow_js
       (fun unit h -> Has.combine (Has.find_out unit.Ast.ast) h)
       Has.empty units.entry_point units.units
   in
-  embed_in_page ~has_speaker_view ~slipshow_js ~dimension ~has ~math_link ~theme
-    ~css_links ~js_links content ~highlightjs_theme ~math_mode
+  let files = units.files in
+  embed_in_page ~files ~has_speaker_view ~slipshow_js ~dimension ~has ~math_link
+    ~theme ~css_links ~js_links content ~highlightjs_theme ~math_mode
 
 let delayed ~directory ?options ?slipshow_js ~read_file ~has_speaker_view file =
   let units, errors =

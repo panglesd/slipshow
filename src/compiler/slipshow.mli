@@ -1,4 +1,4 @@
-module Asset = Asset
+module Uri = Uri
 module Frontmatter = Frontmatter
 module Compile = Compile
 module Ast = Ast
@@ -26,7 +26,7 @@ type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
 
 val delayed_from_units :
   ?options:Frontmatter.Global.t ->
-  ?slipshow_js:Asset.t ->
+  ?slipshow_js:Uri.t ->
   has_speaker_view:bool ->
   Ast.units ->
   delayed
@@ -37,7 +37,7 @@ val delayed_from_units :
 val delayed :
   directory:Fpath.t ->
   ?options:Frontmatter.Global.t ->
-  ?slipshow_js:Asset.t ->
+  ?slipshow_js:Uri.t ->
   read_file:file_reader ->
   has_speaker_view:bool ->
   Fpath.t ->
@@ -54,7 +54,7 @@ val convert :
   ?options:Frontmatter.Global.t ->
   has_speaker_view:bool ->
   ?autofocus:bool ->
-  ?slipshow_js:Asset.t ->
+  ?slipshow_js:Uri.t ->
   ?starting_state:starting_state ->
   read_file:file_reader ->
   Fpath.t ->

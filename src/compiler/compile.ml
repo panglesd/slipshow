@@ -155,8 +155,8 @@ module Stage1 = struct
     let label, layout, defined_label, (dest, meta_dest), title =
       Link_definition.(label ld, layout ld, defined_label ld, dest ld, title ld)
     in
-    let uri = Asset.Uri.of_string ~parent:current_path dest in
-    let dest = (Asset.Uri.to_string uri, meta_dest) in
+    let uri = Uri.of_string ~parent:current_path dest in
+    let dest = (Uri.to_string uri, meta_dest) in
     ( (uri, meta),
       Link_definition.make ~layout ~defined_label ?label ~dest ?title () )
 
@@ -562,8 +562,8 @@ module Stage4 = struct
     let files =
       let add_asset files (asset, loc) =
         match asset with
-        | Asset.Remote _ -> files
-        | Local { path; _ } -> fpath_map_add_to_list path (Id.gen (), loc) files
+        | Uri.Link _ -> files
+        | Path path -> fpath_map_add_to_list path (Id.gen (), loc) files
       in
       let assets = Frontmatter.Global.assets fm.global in
       List.fold_left add_asset files assets
@@ -623,7 +623,7 @@ let unit ?locs ~read_file file =
         (None, "")
     | Ok (Some s' as s) -> (s, s')
   in
-  let doc, frontmatter = Cmarkit_proxy.of_string ~read_file ~file s in
+  let doc, frontmatter = Cmarkit_proxy.of_string ~file s in
   of_cmarkit ~source ~path:file doc ~fm:frontmatter
 
 let rec add_to_compile ?locs ~units file units_cache ~read_file =

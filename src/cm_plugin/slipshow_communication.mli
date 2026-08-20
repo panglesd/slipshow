@@ -2,7 +2,7 @@
     editor *)
 
 val slipshow_plugin :
-  ?slipshow_js:Slipshow.Asset.t ->
+  ?slipshow_js:Slipshow.Uri.t ->
   ?options:Slipshow.Frontmatter.Global.t ->
   errors_el:Brr.El.t ->
   Brr.El.t ->
