@@ -550,10 +550,12 @@ class lsp_server =
                 Fpath.Map.empty root_path
             and _updated_root_buffers =
               let () =
-                Hashtbl.iter
-                  (fun fpath buffer ->
-                    Buffers.update ~force:true fpath buffer.Buffers.source)
-                  Buffers.buffers
+                Fpath.Map.iter
+                  (fun fpath _ ->
+                    match Hashtbl.find_opt Buffers.buffers fpath with
+                    | None -> ()
+                    | Some b -> Buffers.update ~force:true fpath b.source)
+                  root.units.units
               in
               Roots.update_root (Buffers.read_file parent) Roots.buffers
                 (Buffers.to_units ()) root_path
