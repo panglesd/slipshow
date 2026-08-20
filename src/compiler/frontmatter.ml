@@ -422,17 +422,18 @@ let cut file offset (i, line, (byte_start, _)) c =
       done;
       if !i < 0 then None else Some !i
   in
+  let is_white = function ' ' | '\t' .. '\r' -> true | _ -> false in
   (* end of copy from OCaml 5.5 *)
   let i = i + 1 in
   let byte_start = byte_start + offset in
   let update_loc (beg, _end_) s =
     let beg, end_ =
       let i0 =
-        find_first_index (fun x -> not @@ Char.Ascii.is_white x) s
+        find_first_index (fun x -> not @@ is_white x) s
         |> Option.value ~default:0
       in
       let i1 =
-        find_last_index (fun x -> not @@ Char.Ascii.is_white x) s
+        find_last_index (fun x -> not @@ is_white x) s
         |> Option.value ~default:0
       in
       (beg + i0, beg + i1)
