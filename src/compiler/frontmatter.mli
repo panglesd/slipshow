@@ -41,7 +41,7 @@ module type Field := sig
   val key : string
 
   val of_string :
-    to_uri:(string -> Uri.t) ->
+    to_uri:(string -> (Uri.t, [ `Msg of string ]) result) ->
     string * Cmarkit.Textloc.t ->
     (t, [ `Msg of string ]) result
 
@@ -76,7 +76,12 @@ end
 module Hljs_theme : Field_with_default with type t = string loced
 module Math_mode : Field_with_default with type t = [ `Mathjax | `Katex ] loced
 
-val of_string : to_uri:(string -> Uri.t) -> Fpath.t -> int -> string -> t
+val of_string :
+  to_uri:(string -> (Uri.t, [ `Msg of string ]) result) ->
+  Fpath.t ->
+  int ->
+  string ->
+  t
 
 type extraction = {
   frontmatter : string;

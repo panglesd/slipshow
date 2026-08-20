@@ -26,12 +26,15 @@ type t =
   | FrontmatterParsing of { key : string; msg : string; loc : loc }
   | InvalidFrontmatterLine of { loc : loc }
   | ChildrenClassWithValue of { loc : loc }
+  | Simple of { loc : loc; msg : string }
 
 (* This is currently used to render issues on things that don't have location:
    mostly CLI input. CLI input have much less errors they can raise, so it's OK
    if (most) of them are not great messages. But I still keep all of those here
    since this function will have some things to be taken for LSP integration. *)
 let pp ppf = function
+  | Simple { loc; msg } ->
+      Format.fprintf ppf "%a: %s." Cmarkit.Textloc.pp_ocaml loc msg
   | DuplicateID id ->
       Format.fprintf ppf "ID '%s' has already been given at %a." id.id
         (Fmt.list Cmarkit.Textloc.pp_ocaml)
@@ -83,6 +86,7 @@ let to_code = function
   | FrontmatterParsing _ -> "FrontmatterParsing"
   | ChildrenClassWithValue _ -> "ChildrenClassWithValue"
   | InconsistentOption _ -> "InconsistentOption"
+  | Simple _ -> "Simple"
 
 let report_no_src fmt x =
   let msg = Format.asprintf "%a" pp x in
@@ -251,6 +255,12 @@ let to_grace source_map error =
       Diagnostic.createf ~labels Warning
         "Option '%s' is assigned multiple times in incompatible ways"
         option_name
+  | Simple { loc; msg } ->
+      let labels =
+        List.filter_map Fun.id
+          [ with_range loc @@ Diagnostic.Label.primaryf "" ]
+      in
+      Diagnostic.createf ~labels Warning "%s" msg
 
 let errors_acc = ref []
 let add x = errors_acc := x :: !errors_acc

@@ -156,6 +156,14 @@ module Stage1 = struct
       Link_definition.(label ld, layout ld, defined_label ld, dest ld, title ld)
     in
     let uri = Uri.of_string ~parent:current_path dest in
+    let uri =
+      match uri with
+      | Ok uri -> uri
+      | Error (`Msg s) ->
+          let loc = Meta.textloc meta in
+          Diagnosis.add (Simple { msg = s; loc });
+          Link dest
+    in
     let dest = (Uri.to_string uri, meta_dest) in
     ( (uri, meta),
       Link_definition.make ~layout ~defined_label ?label ~dest ?title () )

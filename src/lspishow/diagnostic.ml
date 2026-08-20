@@ -129,3 +129,4 @@ let of_error ~root ~file (e : Diagnosis.t) =
       create ~loc:loc2
         "option '%s' is defined multiple times in an incompatible way"
         option_name
+  | Simple { loc; msg } -> if_in loc @@ fun () -> create ~loc "%s" msg
