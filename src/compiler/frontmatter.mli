@@ -41,7 +41,8 @@ module type Field := sig
   val key : string
 
   val of_string :
-    to_asset:(string -> Asset.t) ->
+    file:Fpath.t ->
+    to_asset:(Fpath.t -> Asset.t) ->
     string * Cmarkit.Textloc.t ->
     (t, [ `Msg of string ]) result
 
@@ -70,13 +71,13 @@ module Js_links : Field with type t = Asset.t loced list
 module Dimension : sig
   include Field_with_default with type t = (int * int) loced
 
-  val of_string' : string * Cmarkit.Textloc.t -> (t, [ `Msg of string ]) result
+  val of_string' : file:Fpath.t -> string * Cmarkit.Textloc.t -> (t, [ `Msg of string ]) result
 end
 
 module Hljs_theme : Field_with_default with type t = string loced
 module Math_mode : Field_with_default with type t = [ `Mathjax | `Katex ] loced
 
-val of_string : to_asset:(string -> Asset.t) -> string -> int -> string -> t
+val of_string : to_asset:(Fpath.t -> Asset.t) -> Fpath.t -> int -> string -> t
 
 type extraction = {
   frontmatter : string;
