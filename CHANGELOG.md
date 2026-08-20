@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Resolution of css and js files in frontmatter are now relative to the file
+  they are in (and not to the root file). (#272)
+- LSP: correctly refresh on changes on files mentioned in frontmatter (such as
+  css and js files). (#272)
+- Improve uri vs local path detection. (#272)
+- Improve locations of errors in `css:` and `js:` frontmatter fields. (#272)
+- LSP: Fix locations reported for frontmatter `attributes:`. (#272)
+
 ## [v0.12.0] The Lord of the Slips: The Two Editors (Wednesday, the 12th of August, 2026)
 
 ### Added
