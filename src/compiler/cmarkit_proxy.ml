@@ -9,10 +9,8 @@ let of_string ~file s =
     | None -> (Frontmatter.empty, s, (0, 0))
     | Some { frontmatter = txt_fm; rest; rest_offset; fm_offset } ->
         let parent = Fpath.parent file in
-        let to_asset s = Uri.of_string ~parent s in
-        let frontmatter =
-          Frontmatter.of_string ~to_asset file fm_offset txt_fm
-        in
+        let to_uri s = Uri.of_string ~parent s in
+        let frontmatter = Frontmatter.of_string ~to_uri file fm_offset txt_fm in
         (frontmatter, rest, rest_offset)
   in
   let doc = of_string ~loc_offset ~file s in
