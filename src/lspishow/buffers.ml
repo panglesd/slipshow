@@ -29,9 +29,10 @@ let update_state ~new_ file =
   Hashtbl.replace buffers file new_;
   Rev_deps.update_state ~new_unit:new_.unit file
 
-let update file source =
+let update ~force file source =
   match Hashtbl.find_opt buffers file with
-  | Some { source = old_source; _ } when String.equal source old_source ->
+  | Some { source = old_source; _ }
+    when String.equal source old_source && not force ->
       let rs = Rev_deps.get_roots file in
       let compile_missing_roots root =
         match Hashtbl.find_opt Roots.buffers root with
@@ -47,4 +48,4 @@ let update file source =
       let new_ = { source; unit } in
       update_state ~new_ file;
       let roots = Rev_deps.get_roots file in
-      roots |> Fpath.Set.iter update_root
+      if not force then roots |> Fpath.Set.iter update_root

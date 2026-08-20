@@ -41,8 +41,9 @@ module State = struct
     in
     Lwt.return_unit
 
-  let update_from_buffer (file : Fpath.t) s =
-    Lwt_mutex.with_lock mutex @@ fun () -> Lwt.return @@ Buffers.update file s
+  let update_from_buffer ~force (file : Fpath.t) s =
+    Lwt_mutex.with_lock mutex @@ fun () ->
+    Lwt.return @@ Buffers.update ~force file s
 end
 
 let diagnostics file : Linol.Lsp.Types.Diagnostic.t list option =
@@ -262,7 +263,7 @@ class lsp_server =
     method private on_doc ~(notify_back : Linol_lwt.Jsonrpc2.notify_back)
         (uri : Linol.Lsp.Types.DocumentUri.t) (contents : string) =
       let file = uri |> Linol.Lsp.Types.DocumentUri.to_path |> Fpath.v in
-      let* () = State.update_from_buffer file contents in
+      let* () = State.update_from_buffer ~force:false file contents in
       let diags = diagnostics file in
       match diags with
       | None -> Lwt.return ()
@@ -548,6 +549,12 @@ class lsp_server =
               Roots.update_root (Read_file.fs parent) Roots.saved
                 Fpath.Map.empty root_path
             and _updated_root_buffers =
+              let () =
+                Hashtbl.iter
+                  (fun fpath buffer ->
+                    Buffers.update ~force:true fpath buffer.Buffers.source)
+                  Buffers.buffers
+              in
               Roots.update_root (Buffers.read_file parent) Roots.buffers
                 (Buffers.to_units ()) root_path
             in
