@@ -26,7 +26,7 @@ module Global : sig
   val empty : t
   val with_empty : 'a -> 'a with_
   val combine : t -> t -> t
-  val assets : t -> Uri.t loced list
+  val uris : t -> Uri.t loced list
 end
 
 type t = { local : Local.t; global : Global.t }

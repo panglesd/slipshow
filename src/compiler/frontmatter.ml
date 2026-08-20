@@ -78,7 +78,7 @@ module Global = struct
         | None, None -> None);
     }
 
-  let assets
+  let uris
       ({
          math_link;
          theme;
@@ -93,9 +93,7 @@ module Global = struct
         t) =
     let math_link = Option.to_list math_link in
     let theme =
-      match theme with
-      | Some (`External asset, loc) -> [ (asset, loc) ]
-      | _ -> []
+      match theme with Some (`External uri, loc) -> [ (uri, loc) ] | _ -> []
     in
     List.concat [ math_link; theme; css_links; js_links ]
 end
@@ -206,11 +204,7 @@ module Theme = struct
     { fm with global = { fm.global with theme } }
 end
 
-module Css_links = struct
-  type t = Uri.t loced list
-
-  let key = css_links_key
-
+let parse_uri_list =
   let offset_loc loc i l =
     let first_line = Cmarkit.Textloc.first_line loc in
     let first_byte = Cmarkit.Textloc.first_byte loc + i in
@@ -219,8 +213,8 @@ module Css_links = struct
     loc
     |> Cmarkit.Textloc.set_first ~first_byte ~first_line
     |> Cmarkit.Textloc.set_last ~last_byte ~last_line
-
-  let of_string ~to_uri (s, loc) =
+  in
+  fun ~to_uri (s, loc) ->
     s |> String.split_on_char ' '
     |> List.fold_left
          (fun (acc, i) -> function
@@ -237,6 +231,12 @@ module Css_links = struct
          ([], 0)
     |> fst |> List.rev |> Result.ok
 
+module Css_links = struct
+  type t = Uri.t loced list
+
+  let key = css_links_key
+  let of_string = parse_uri_list
+
   let update_frontmatter (fm : fm) v =
     { fm with global = { fm.global with css_links = v @ fm.global.css_links } }
 end
@@ -245,7 +245,7 @@ module Js_links = struct
   type t = Uri.t loced list
 
   let key = js_links_key
-  let of_string ~to_uri (s, loc) = Css_links.of_string ~to_uri (s, loc)
+  let of_string = parse_uri_list
 
   let update_frontmatter (fm : fm) v =
     { fm with global = { fm.global with js_links = v @ fm.global.js_links } }
