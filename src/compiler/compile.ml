@@ -568,13 +568,13 @@ module Stage4 = struct
         Id_map.SMap.empty id_list
     in
     let files =
-      let add_asset files (asset, loc) =
-        match asset with
+      let add_uri files (uri, loc) =
+        match uri with
         | Uri.Link _ -> files
         | Path path -> fpath_map_add_to_list path (Id.gen (), loc) files
       in
-      let assets = Frontmatter.Global.assets fm.global in
-      List.fold_left add_asset files assets
+      let uris = Frontmatter.Global.uris fm.global in
+      List.fold_left add_uri files uris
     in
     (md, files, id_map)
 end
