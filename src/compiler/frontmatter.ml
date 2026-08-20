@@ -117,7 +117,7 @@ module Attributes = struct
       else ("{" ^ s ^ "}", 1)
     in
     let loc_offset =
-      (Cmarkit.Textloc.first_byte loc - o, fst @@ Cmarkit.Textloc.first_line loc)
+      (Cmarkit.Textloc.first_byte loc - o, Cmarkit.Textloc.first_line loc)
     in
     let file = Cmarkit.Textloc.file loc in
     let cmarkit =
@@ -492,7 +492,7 @@ let find_closing s start =
 type extraction = {
   frontmatter : string;
   rest : string;
-  rest_offset : int * int;
+  rest_offset : int * (int * int);
   fm_offset : int;
 }
 
@@ -508,6 +508,6 @@ let extract s =
         let acc = if s.[index] = '\n' then acc + 1 else acc in
         n_lines acc (index - 1)
     in
-    (after, n_lines 0 (after - 1))
+    (after, (n_lines 0 (after - 1) + 1, after))
   in
   { frontmatter; rest; rest_offset = offset; fm_offset = start }
