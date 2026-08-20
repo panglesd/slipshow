@@ -13,7 +13,11 @@ module Uri = struct
 end
 
 type t =
-  | Local of { mime_type : string option; content : string; path : Fpath.t }
+  | Local of {
+      mime_type : string option;
+      content : string option;
+      path : Fpath.t;
+    }
   | Remote of string
 
 let mime_of_ext x = Magic_mime.lookup x
@@ -23,16 +27,14 @@ let of_uri ~read_file s =
   | Uri.Link s -> Remote s
   | Path p -> (
       let fp = Fpath.normalize p in
+      let mime_type = Some (mime_of_ext (Fpath.filename fp)) in
       match read_file fp with
-      | Ok (Some content) ->
-          let mime_type = Some (mime_of_ext (Fpath.filename fp)) in
-          Local { mime_type; content; path = fp }
-      | Ok None -> Remote (Fpath.to_string fp)
+      | Ok content -> Local { mime_type; content; path = fp }
       | Error (`Msg error_msg) ->
           let locs = [] in
           Diagnosis.add
             (MissingFile { file = Fpath.to_string fp; error_msg; locs });
-          Remote (Fpath.to_string fp))
+          Local { mime_type; content = None; path = fp })
 
 let of_string ~parent ~read_file s =
   s |> Uri.of_string ~parent |> of_uri ~read_file
