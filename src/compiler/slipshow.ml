@@ -86,7 +86,7 @@ let mermaid_element has_mermaid =
         "<script>mermaid.initialize(window.Mermaid)</script>";
       ]
 
-let asset_to_css files = function
+let uri_to_css files = function
   | Uri.Path p -> (
       match Fpath.Map.find_opt p files with
       | Some { Ast.Files.content = Some s; _ } ->
@@ -96,12 +96,12 @@ let asset_to_css files = function
             (Fpath.to_string p))
   | Uri.Link l -> Format.sprintf {|<link href="%s" rel="stylesheet" />|} l
 
-let css_element files (asset, _loc) = asset_to_css files asset
+let css_element files (uri, _loc) = uri_to_css files uri
 
 let theme_css files = function
   | `Builtin theme ->
       Format.sprintf "<style>%s</style>" (Themes.content ~lite:true theme)
-  | `External asset -> asset_to_css files asset
+  | `External uri -> uri_to_css files uri
 
 let internal_css =
   Format.sprintf "<style>%s</style>" Data_files.(read Slip_internal_css)
