@@ -392,16 +392,47 @@ let split_in_lines s =
   |> List.rev_map (fun (n, (x, y)) -> (n, String.sub s x (y - x), (x, y)))
 
 let cut file offset (i, line, (byte_start, _)) c =
+  (* Begin of copy from OCaml 5.5 *)
+  let invalid_start ~start len =
+    let open String in
+    let i = string_of_int in
+    invalid_arg
+    @@ concat "" [ "start: "; i start; " not in range [0;"; i len; "]" ]
+  in
+  let find_first_index sat ?(start = 0) s =
+    let open String in
+    let len = length s in
+    if not (0 <= start && start <= len) then invalid_start ~start len
+    else
+      let i = ref start in
+      while !i < len && not (sat (unsafe_get s !i)) do
+        incr i
+      done;
+      if !i < len then Some !i else None
+  in
+  let find_last_index sat ?start s =
+    let open String in
+    let len = length s in
+    let start = match start with None -> len | Some s -> s in
+    if not (0 <= start && start <= len) then invalid_start ~start len
+    else
+      let i = ref (if start = len then len - 1 else start) in
+      while !i >= 0 && not (sat (unsafe_get s !i)) do
+        decr i
+      done;
+      if !i < 0 then None else Some !i
+  in
+  (* end of copy from OCaml 5.5 *)
   let i = i + 1 in
   let byte_start = byte_start + offset in
   let update_loc (beg, _end_) s =
     let beg, end_ =
       let i0 =
-        String.find_first_index (fun x -> not @@ Char.Ascii.is_white x) s
+        find_first_index (fun x -> not @@ Char.Ascii.is_white x) s
         |> Option.value ~default:0
       in
       let i1 =
-        String.find_last_index (fun x -> not @@ Char.Ascii.is_white x) s
+        find_last_index (fun x -> not @@ Char.Ascii.is_white x) s
         |> Option.value ~default:0
       in
       (beg + i0, beg + i1)
