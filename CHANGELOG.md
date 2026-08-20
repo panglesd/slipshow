@@ -4,13 +4,14 @@
 
 ### Fixed
 
+- Fixed standalonity of html by embedding mono fonts (#272)
 - Resolution of css and js files in frontmatter are now relative to the file
-  they are in (and not to the root file). (#272)
+  they are in (and not to the root file). (#271)
 - LSP: correctly refresh on changes on files mentioned in frontmatter (such as
-  css and js files). (#272)
-- Improve uri vs local path detection. (#272)
-- Improve locations of errors in `css:` and `js:` frontmatter fields. (#272)
-- LSP: Fix locations reported for frontmatter `attributes:`. (#272)
+  css and js files). (#271)
+- Improve uri vs local path detection. (#271)
+- Improve locations of errors in `css:` and `js:` frontmatter fields. (#271)
+- LSP: Fix locations reported for frontmatter `attributes:`. (#271)
 
 ## [v0.12.0] The Lord of the Slips: The Two Editors (Wednesday, the 12th of August, 2026)
 
