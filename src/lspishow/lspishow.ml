@@ -184,11 +184,11 @@ class lsp_server =
                   let* loc =
                     loc |> Base64.decode
                     |> Result.map_error (fun (`Msg s) ->
-                        `Msg "Error during decoding of base64 payload")
+                        `Msg ("Error during decoding of base64 payload: " ^ s))
                   in
                   let* loc =
-                    Marshal.from_string loc 0
-                    |> to_error "Error during unmarshalling"
+                    try Ok (Marshal.from_string loc 0)
+                    with _ -> Error (`Msg "Error during unmarshalling")
                   in
                   let path = Fpath.v (Cmarkit.Textloc.file loc) in
                   let* unit =
@@ -277,11 +277,8 @@ class lsp_server =
           res
           |> Result.iter_error (fun (`Msg message) ->
               let type_ = Linol_lwt.MessageType.Warning in
-              let _ : unit Lwt.t =
-                Lsp_preview.send_info ~type_ ~notify_back
-                  "Could not save new gui location: %s" message
-              in
-              ())
+              Lsp_preview.send_info ~root ~type_ ~notify_back
+                "Could not save new gui location: %s" message)
       | GotoLoc s ->
           let ( let> ) x f =
             match x with

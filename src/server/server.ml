@@ -82,6 +82,7 @@ let send_update content = send_event (Update content)
 let send_control c = send_event (Control c)
 let send_activate_gui id = send_event (Replace (Some id))
 let send_deactivate_gui () = send_event (Replace None)
+let send_notify s = send_event (Notify s)
 
 let home_page can_gui (_, get_roots) _req =
   Dream.log "A browser reloaded";
@@ -144,6 +145,7 @@ let wait_for_event root roots file =
       | Some root -> send root)
   | `Master (ActivateGUI id) -> send_activate_gui id
   | `Master DeActivateGUI -> send_deactivate_gui ()
+  | `Master (Notify s) -> send_notify s
 
 let polling (roots, _get_roots) ~to_lsp_server req =
   let open Lwt.Syntax in

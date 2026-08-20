@@ -12,13 +12,10 @@ let send_info ?(root : Slipshow_server.root option)
       let notif = Linol_lsp.Server_notification.ShowMessage msg in
       notify_back#send_notification notif
     in
-    let () =
-      match root with
-      | Some { units; diagnostics; condition; version } ->
-          Lwt_condition.broadcast condition _
-      | None -> ()
-    in
-    ()
+    match root with
+    | Some { condition; _ } ->
+        Lwt_condition.broadcast condition (Notify message)
+    | None -> ()
   in
   Format.kasprintf k msg
 
@@ -41,7 +38,7 @@ let initialize ~notify_back ~to_lsp_server () =
   let rec loop port =
     server_port := Some port;
     let to_cancel =
-      let* () = Lwt_unix.sleep 1.0 in
+      let+ () = Lwt_unix.sleep 1.0 in
       if !server_port = Some port then
         send_info ~notify_back "Starting preview server on port %d" port
       else send_info ~notify_back "Port %d appears already used" port
@@ -57,7 +54,7 @@ let initialize ~notify_back ~to_lsp_server () =
         Lwt.cancel to_cancel;
         if port - port0 > 100 then (
           server_port := None;
-          let* () =
+          let () =
             send_info ~notify_back
               "Tried 100 ports, starting from %d, none of them appeared usable"
               port0

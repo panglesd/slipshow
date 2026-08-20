@@ -2,9 +2,10 @@ val server_promise : unit -> unit Lwt.t option
 val server_port : unit -> int option
 
 val send_info :
+  ?root:Slipshow_server.root ->
   notify_back:Linol_lwt.Jsonrpc2.notify_back ->
   ?type_:Linol_lwt.MessageType.t ->
-  ('a, Format.formatter, unit, unit Lwt.t) format4 ->
+  ('a, Format.formatter, unit, unit) format4 ->
   'a
 
 val initialize :
