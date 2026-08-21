@@ -13,7 +13,6 @@ let is_mac =
   let substrings = [ !!"Mac"; !!"iPod"; !!"iPhone"; !!"iPad" ] in
   List.exists (fun affix -> Jstr.includes ~affix navigator) substrings
 
-let sof x = Printf.sprintf "%.25f" x
 let gui_attr = !!Common_types.Special_strings.gui
 let gui_file_attr = !!Common_types.Special_strings.gui_file
 let gui_id_attr = !!Common_types.Special_strings.gui_id
