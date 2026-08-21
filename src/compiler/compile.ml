@@ -81,7 +81,7 @@ module Stage1 = struct
       let h = Block.Code_block.code cb in
       Block.Html_block ((h, attrs), meta2)
     in
-    if has_attrs (fst attrs) Common_types.Special_strings.as_html then html ()
+    if has_attrs (fst attrs) Special_attrs.as_html then html ()
     else
       match Block.Code_block.info_string cb with
       | None -> Block.Code_block ((cb, attrs), meta2)
@@ -94,7 +94,7 @@ module Stage1 = struct
 
   let handle_code_span m ((cs, (attrs, meta)), meta2) =
     let attrs = Mapper.map_attrs m attrs in
-    if has_attrs attrs Common_types.Special_strings.as_html then
+    if has_attrs attrs Special_attrs.as_html then
       let code = Inline.Code_span.code_layout cs in
       let html = Inline.Raw_html (code, meta2) in
       let span = Inline.Attributes_span.make html (attrs, meta) in
@@ -311,8 +311,7 @@ module Stage1 = struct
         [ `Kv (("children:unreveal-at-unpause", m), v) ]
     | `Kv (("children:unstatic", m), v) ->
         [ `Kv (("children:unstatic-at-unpause", m), v) ]
-    | `Kv ((gui_s, meta), _) as gui
-      when String.equal Common_types.Special_strings.gui gui_s ->
+    | `Kv ((gui_s, meta), _) as gui when String.equal Special_attrs.gui gui_s ->
         let id_attr =
           let v = get_gui_id () in
           { Cmarkit.Attributes.v; delimiter = Some '"' }
@@ -555,7 +554,7 @@ module Stage4 = struct
     Fpath.Map.update path add fpath_map
 
   let add_to_gui_list ~attrs ~gui_list =
-    let open Common_types.Special_strings in
+    let open Special_attrs in
     match (Attributes.find gui attrs, Attributes.find gui_id attrs) with
     | Some kv, Some (_loc, Some (gui_id, _)) -> (gui_id.v, kv) :: gui_list
     | _ -> gui_list
