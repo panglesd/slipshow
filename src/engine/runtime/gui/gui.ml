@@ -101,8 +101,10 @@ let handle is_ctrl_pressed el =
     Drawing_state.Status.peek () = Gui_mode
     && Lwd.peek State.status = Types.Select
   in
-  if is_ctrl_pressed then handle_block_el_up el
-  else if is_gui_selection then handle_gui_el_up el
+  if Lwd.peek Drawing_state.can_gui then
+    if is_ctrl_pressed then handle_block_el_up el
+    else if is_gui_selection then handle_gui_el_up el
+    else ()
 
 let replace_positioned_el el =
   match El.at gui_attr el with
