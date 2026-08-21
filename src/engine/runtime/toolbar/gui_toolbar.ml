@@ -23,8 +23,9 @@ let v =
   in
   let block =
     let gui_selector =
-      "[" ^ Common_types.Special_strings.gui_loc ^ "]["
-      ^ Common_types.Special_strings.gui ^ "]"
+      "[" ^ Common_types.Special_strings.gui ^ "]["
+      ^ Common_types.Special_strings.gui_file ^ "]["
+      ^ Common_types.Special_strings.gui_id ^ "]"
     in
     match El.find_first_by_selector !!gui_selector with
     | Some _ -> block

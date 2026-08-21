@@ -268,7 +268,7 @@ module Stage1 = struct
     in
     match res with [] -> None | res -> Some (Block.Blocks (res, meta))
 
-  let map_attrs ~embed_loc = function
+  let map_attrs ~get_gui_id ~embed_loc = function
     | `Kv (("up", m), v) -> [ `Kv (("up-at-unpause", m), v) ]
     | `Kv (("center", m), v) -> [ `Kv (("center-at-unpause", m), v) ]
     | `Kv (("down", m), v) -> [ `Kv (("down-at-unpause", m), v) ]
@@ -313,18 +313,30 @@ module Stage1 = struct
         [ `Kv (("children:unstatic-at-unpause", m), v) ]
     | `Kv ((gui_s, meta), _) as gui
       when String.equal Common_types.Special_strings.gui gui_s ->
-        let loc = Meta.textloc meta in
-        let v = Marshal.to_string loc [] |> Base64.encode_string in
-        let attr = { Cmarkit.Attributes.v; delimiter = Some '"' } in
+        let id_attr =
+          let v = get_gui_id () in
+          { Cmarkit.Attributes.v; delimiter = Some '"' }
+        in
+        let file_attr =
+          let v = meta |> Cmarkit.Meta.textloc |> Cmarkit.Textloc.file in
+          { Cmarkit.Attributes.v; delimiter = Some '"' }
+        in
         let original_loc =
           if embed_loc then
-            [ `Kv (("slipshow-gui-loc", Meta.none), Some (attr, Meta.none)) ]
+            [
+              `Kv
+                ( (Common_types.Special_strings.gui_id, Meta.none),
+                  Some (id_attr, Meta.none) );
+              `Kv
+                ( (Common_types.Special_strings.gui_file, Meta.none),
+                  Some (file_attr, Meta.none) );
+            ]
           else []
         in
         gui :: original_loc
     | x -> [ x ]
 
-  let execute ~htbl_include ~embed_loc current_path defs =
+  let execute ~get_gui_id ~htbl_include ~embed_loc current_path defs =
     let ret x = `Map x in
     let block m b =
       let b =
@@ -358,7 +370,7 @@ module Stage1 = struct
       | `Default -> Ast.Mapper.continue_block m b
       | `Map _ as map -> map
     in
-    let attrs = map_attrs ~embed_loc in
+    let attrs = map_attrs ~get_gui_id ~embed_loc in
     let inline m = function
       | Inline.Image img -> handle_image_inlining m defs current_path img
       | Inline.Code_span cs -> Mapper.ret (handle_code_span m cs)
@@ -367,16 +379,26 @@ module Stage1 = struct
     Ast.Mapper.make ~block ~inline ~attrs ()
 
   let execute ~embed_loc current_path defs md fm =
+    let get_gui_id =
+      let r = ref 0 in
+      fun () ->
+        incr r;
+        "slipshow__gui_id-" ^ string_of_int !r
+    in
     let htbl_include = Hashtbl.create 3 in
     let res =
-      Mapper.map_doc (execute ~htbl_include ~embed_loc current_path defs) md
+      Mapper.map_doc
+        (execute ~get_gui_id ~htbl_include ~embed_loc current_path defs)
+        md
     in
     let fm =
       let toplevel_attributes =
         match fm.Frontmatter.global.toplevel_attributes with
         | None -> None
         | Some (attrs, meta) ->
-            Some (Cmarkit.Attributes.map (map_attrs ~embed_loc) attrs, meta)
+            Some
+              ( Cmarkit.Attributes.map (map_attrs ~get_gui_id ~embed_loc) attrs,
+                meta )
       in
       {
         fm with
@@ -532,6 +554,12 @@ module Stage4 = struct
     in
     Fpath.Map.update path add fpath_map
 
+  let add_to_gui_list ~attrs ~gui_list =
+    let open Common_types.Special_strings in
+    match (Attributes.find gui attrs, Attributes.find gui_id attrs) with
+    | Some kv, Some (_loc, Some (gui_id, _)) -> (gui_id.v, kv) :: gui_list
+    | _ -> gui_list
+
   let execute =
     let block f (files, id_list, gui_list) c =
       let files =
@@ -549,11 +577,7 @@ module Stage4 = struct
               | None -> id_list
               | Some id -> { Id_map.id; elem = `Block c; meta } :: id_list
             in
-            let gui_list =
-              match Attributes.find Common_types.Special_strings.gui attrs with
-              | None -> gui_list
-              | Some kv -> kv :: gui_list
-            in
+            let gui_list = add_to_gui_list ~attrs ~gui_list in
             (id_list, gui_list)
       in
       let res = Ast.Folder.continue_block f c (files, id_list, gui_list) in
@@ -569,11 +593,7 @@ module Stage4 = struct
               | None -> id_list
               | Some id -> { Id_map.id; elem = `Inline i; meta } :: id_list
             in
-            let gui_list =
-              match Attributes.find Common_types.Special_strings.gui attrs with
-              | None -> gui_list
-              | Some kv -> kv :: gui_list
-            in
+            let gui_list = add_to_gui_list ~attrs ~gui_list in
             (id_list, gui_list)
       in
       let files =

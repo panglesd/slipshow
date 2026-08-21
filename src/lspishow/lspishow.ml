@@ -180,27 +180,17 @@ class lsp_server =
                   in
                   Cmarkit.Attributes.find Common_types.Special_strings.gui attrs
                   |> to_error "Id %s does not have a gui attribute" id
-              | Loc loc ->
-                  let* loc =
-                    loc |> Base64.decode
-                    |> Result.map_error (fun (`Msg s) ->
-                        `Msg ("Error during decoding of base64 payload: " ^ s))
-                  in
-                  let* loc =
-                    try Ok (Marshal.from_string loc 0)
-                    with _ -> Error (`Msg "Error during unmarshalling")
-                  in
-                  let path = Fpath.v (Cmarkit.Textloc.file loc) in
+              | Loc { file; gui_id } ->
+                  let path = Fpath.v file in
                   let* unit =
                     Fpath.Map.find_opt path root.units.units
                     |> to_error "Could not find %a root" Fpath.pp path
                   in
-                  List.find_opt
-                    (fun ((_key, meta), _) ->
-                      Cmarkit.Textloc.equal (Cmarkit.Meta.textloc meta) loc)
-                    unit.gui_map
-                  |> to_error "Could not find a gui attribute at location %a"
-                       Cmarkit.Textloc.pp_ocaml loc
+                  List.assoc_opt gui_id unit.gui_map
+                  |> to_error
+                       "Can't identify gui element named %s. Give an ID to the \
+                        GUI element to improve robustness."
+                       gui_id
               (* TODO: why do we need gui_map, why can't we just use
                  current_ast's get_leave? *)
             in
@@ -500,14 +490,16 @@ class lsp_server =
           buffer.unit.ast
       in
       match trail.attribute with
-      | Some (_, Some (Key ((gui, meta), _)))
-        when String.equal Common_types.Special_strings.gui gui ->
-          let loc =
-            Cmarkit.Meta.textloc meta
-            |> (fun s -> Marshal.to_string s [])
-            |> Base64.encode_string
-          in
-          Lwt_condition.broadcast root.condition (ActivateGUI (Loc loc))
+      | Some (attrs, Some (Key ((gui, meta), _)))
+        when String.equal Common_types.Special_strings.gui gui -> (
+          match
+            Cmarkit.Attributes.find Common_types.Special_strings.gui_id attrs
+          with
+          | Some (_, Some ({ v = gui_id; _ }, _)) ->
+              let file = meta |> Cmarkit.Meta.textloc |> Cmarkit.Textloc.file in
+              Lwt_condition.broadcast root.condition
+                (ActivateGUI (Loc { file; gui_id }))
+          | _ -> Lwt_condition.broadcast root.condition DeActivateGUI)
       | _ -> Lwt_condition.broadcast root.condition DeActivateGUI
 
     method private on_req_document_highlight ~notify_back:_ ~uri ~id:_

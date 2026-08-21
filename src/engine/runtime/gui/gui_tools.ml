@@ -70,13 +70,17 @@ let get_loc_id el =
     | "" -> None
     | s -> Some s
   in
-  let loc =
-    El.at !!Common_types.Special_strings.gui_loc el |> Option.map Jstr.to_string
+  let file =
+    El.at !!Common_types.Special_strings.gui_file el
+    |> Option.map Jstr.to_string
   in
-  match (id, loc) with
-  | Some id, _ -> Some (Common_types.Id id)
-  | _, Some loc -> Some (Loc loc)
-  | None, None -> None
+  let gui_id =
+    El.at !!Common_types.Special_strings.gui_id el |> Option.map Jstr.to_string
+  in
+  match (id, file, gui_id) with
+  | Some id, _, _ -> Some (Common_types.Id id)
+  | _, Some file, Some gui_id -> Some (Loc { file; gui_id })
+  | None, None, _ | None, _, None -> None
 
 let move window =
   let ( let> ) x f = Option.iter f x in

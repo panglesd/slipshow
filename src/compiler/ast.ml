@@ -133,7 +133,8 @@ type unit' = {
   deps : Cmarkit.Textloc.t list Fpath.Map.t;
       (** Map of dependency -> List of places it is included *)
   id_map : Id_map.definitions;
-  gui_map : ((string * Meta.t) * (Attributes.value * Meta.t) option) list;
+  gui_map :
+    (string * ((string * Meta.t) * (Attributes.value * Meta.t) option)) list;
   source : string option;
   files : Files.unread Files.map;
   option : Frontmatter.Global.t;

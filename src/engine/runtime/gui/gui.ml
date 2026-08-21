@@ -15,7 +15,8 @@ let is_mac =
 
 let sof x = Printf.sprintf "%.25f" x
 let gui_attr = !!Common_types.Special_strings.gui
-let gui_pos_attr = !!Common_types.Special_strings.gui_loc
+let gui_file_attr = !!Common_types.Special_strings.gui_file
+let gui_id_attr = !!Common_types.Special_strings.gui_id
 let block_pos_attr = !!Common_types.Special_strings.original_loc
 
 let for_events window =
@@ -56,7 +57,11 @@ let for_events window =
       ]
     []
 
-let is_gui el = El.at gui_pos_attr el
+let is_gui el =
+  match (El.at gui_file_attr el, El.at gui_id_attr el) with
+  | Some file, Some gui_id -> Some (file, gui_id)
+  | None, _ | _, None -> None
+
 let is_block el = El.at block_pos_attr el
 
 let rec find_up condition el =
@@ -73,8 +78,9 @@ let rec find_up condition el =
 let handle_gui_el_up el =
   match find_up is_gui el with
   | None -> ()
-  | Some (el, gui_loc) ->
-      Messaging.send_loc (Jstr.to_string gui_loc);
+  | Some (el, (_gui_file, _gui_id)) ->
+      (* Messaging.send_loc (Jstr.to_string gui_loc); *)
+      (* TODO: we used to send the location of the gui attribute *)
       if Drawing_state.Status.peek () = Gui_mode then Action.activate_el el
 
 let handle_block_el_up el =

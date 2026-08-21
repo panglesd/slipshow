@@ -15,7 +15,8 @@ let as_html = "as-html"
 let auto_continue = "auto-continue"
 let gui = "gui"
 let original_loc = "slipshow-original-loc"
-let gui_loc = "slipshow-gui-loc"
+let gui_file = "slipshow-gui-file"
+let gui_id = "slipshow-gui-id"
 
 let all_attrs =
   [
@@ -36,5 +37,6 @@ let all_attrs =
     auto_continue;
     gui;
     original_loc;
-    gui_loc;
+    gui_file;
+    gui_id;
   ]

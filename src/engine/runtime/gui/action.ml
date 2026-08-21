@@ -26,10 +26,11 @@ let activate id =
           match El.find_first_by_selector !!("#" ^ id) with
           | None -> ()
           | Some el -> activate_el el)
-      | Loc loc -> (
+      | Loc { file; gui_id } -> (
           match
             El.find_first_by_selector
-              !!("[" ^ Common_types.Special_strings.gui_loc ^ "=\"" ^ loc
+              !!("[" ^ Common_types.Special_strings.gui_file ^ "=\"" ^ file
+               ^ "\"][" ^ Common_types.Special_strings.gui_id ^ "=\"" ^ gui_id
                ^ "\"]")
           with
           | None -> ()
