@@ -105,6 +105,7 @@ let handle is_ctrl_pressed el =
     if is_ctrl_pressed then handle_block_el_up el
     else if is_gui_selection then handle_gui_el_up el
     else ()
+  else ()
 
 let replace_positioned_el el =
   match El.at gui_attr el with

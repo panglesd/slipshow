@@ -506,16 +506,23 @@ class lsp_server =
           buffer.unit.ast
       in
       match trail.attribute with
-      | Some (attrs, Some (Key ((gui, meta), _)))
+      | Some (attrs, Some (Key ((gui, _meta), _)))
         when String.equal Common_types.Special_strings.gui gui -> (
-          match
-            Cmarkit.Attributes.find Common_types.Special_strings.gui_id attrs
-          with
-          | Some (_, Some ({ v = gui_id; _ }, _)) ->
-              let file = meta |> Cmarkit.Meta.textloc |> Cmarkit.Textloc.file in
-              Lwt_condition.broadcast root.condition
-                (ActivateGUI (Loc { file; gui_id }))
-          | _ -> Lwt_condition.broadcast root.condition DeActivateGUI)
+          match Cmarkit.Attributes.id attrs with
+          | Some (id, _) ->
+              Lwt_condition.broadcast root.condition (ActivateGUI (Id id))
+          | None -> (
+              match
+                ( Cmarkit.Attributes.find Common_types.Special_strings.gui_id
+                    attrs,
+                  Cmarkit.Attributes.find Common_types.Special_strings.gui_file
+                    attrs )
+              with
+              | ( Some (_, Some ({ v = gui_id; _ }, _)),
+                  Some (_, Some ({ v = file; _ }, _)) ) ->
+                  Lwt_condition.broadcast root.condition
+                    (ActivateGUI (Loc { file; gui_id }))
+              | _ -> Lwt_condition.broadcast root.condition DeActivateGUI))
       | _ -> Lwt_condition.broadcast root.condition DeActivateGUI
 
     method private on_req_document_highlight ~notify_back:_ ~uri ~id:_
