@@ -181,6 +181,15 @@ class lsp_server =
                   Cmarkit.Attributes.find Common_types.Special_strings.gui attrs
                   |> to_error "Id %s does not have a gui attribute" id
               | Loc { file; gui_id } ->
+                  let* () =
+                    match Config.Refresh.when_ () with
+                    | Edit -> Ok ()
+                    | Save | Never ->
+                        None
+                        |> to_error
+                             "In \"refresh on save\" mode, you can only set \
+                              gui coordinates of elements with an ID"
+                  in
                   let path = Fpath.v file in
                   let* unit =
                     Fpath.Map.find_opt path root.units.units
