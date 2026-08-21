@@ -1579,13 +1579,8 @@ module Mapper : sig
 
   val make :
     ?inline_ext_default:Inline.t map -> ?block_ext_default:Block.t map ->
-    ?inline:Inline.t mapper -> ?block:Block.t mapper -> ?attrs:([ `Class of string node
-        | `Id of string node
-        | `Kv of Attributes.key node * Attributes.value node option ] ->
-        [ `Class of string node
-        | `Id of string node
-        | `Kv of Attributes.key node * Attributes.value node option ] list) ->
- unit -> t
+    ?inline:Inline.t mapper -> ?block:Block.t mapper ->
+    ?attrs:(Attributes.t -> Attributes.t) -> unit -> t
   (** [make ?inline ?block ()] is a mapper using [inline] and [block]
       to map the abstract syntax tree. Both default to [fun _ _ -> `Default].
 

@@ -268,70 +268,72 @@ module Stage1 = struct
     in
     match res with [] -> None | res -> Some (Block.Blocks (res, meta))
 
-  let map_attrs ~get_gui_id ~embed_loc = function
-    | `Kv (("up", m), v) -> [ `Kv (("up-at-unpause", m), v) ]
-    | `Kv (("center", m), v) -> [ `Kv (("center-at-unpause", m), v) ]
-    | `Kv (("down", m), v) -> [ `Kv (("down-at-unpause", m), v) ]
-    | `Kv (("exec", m), v) -> [ `Kv (("exec-at-unpause", m), v) ]
-    | `Kv (("scroll", m), v) -> [ `Kv (("scroll-at-unpause", m), v) ]
-    | `Kv (("enter", m), v) -> [ `Kv (("enter-at-unpause", m), v) ]
-    | `Kv (("emph", m), v) -> [ `Kv (("emph-at-unpause", m), v) ]
-    | `Kv (("focus", m), v) -> [ `Kv (("focus-at-unpause", m), v) ]
-    | `Kv (("reveal", m), v) -> [ `Kv (("reveal-at-unpause", m), v) ]
-    | `Kv (("static", m), v) -> [ `Kv (("static-at-unpause", m), v) ]
-    | `Kv (("unemph", m), v) -> [ `Kv (("unemph-at-unpause", m), v) ]
-    | `Kv (("unfocus", m), v) -> [ `Kv (("unfocus-at-unpause", m), v) ]
-    | `Kv (("unreveal", m), v) -> [ `Kv (("unreveal-at-unpause", m), v) ]
-    | `Kv (("unstatic", m), v) -> [ `Kv (("unstatic-at-unpause", m), v) ]
-    (* TODO: Improve this (eg by moving it to another phase) *)
-    | `Kv (("children:up", m), v) -> [ `Kv (("children:up-at-unpause", m), v) ]
-    | `Kv (("children:center", m), v) ->
-        [ `Kv (("children:center-at-unpause", m), v) ]
-    | `Kv (("children:down", m), v) ->
-        [ `Kv (("children:down-at-unpause", m), v) ]
-    | `Kv (("children:exec", m), v) ->
-        [ `Kv (("children:exec-at-unpause", m), v) ]
-    | `Kv (("children:scroll", m), v) ->
-        [ `Kv (("children:scroll-at-unpause", m), v) ]
-    | `Kv (("children:enter", m), v) ->
-        [ `Kv (("children:enter-at-unpause", m), v) ]
-    | `Kv (("children:emph", m), v) ->
-        [ `Kv (("children:emph-at-unpause", m), v) ]
-    | `Kv (("children:focus", m), v) ->
-        [ `Kv (("children:focus-at-unpause", m), v) ]
-    | `Kv (("children:reveal", m), v) ->
-        [ `Kv (("children:reveal-at-unpause", m), v) ]
-    | `Kv (("children:static", m), v) ->
-        [ `Kv (("children:static-at-unpause", m), v) ]
-    | `Kv (("children:unemph", m), v) ->
-        [ `Kv (("children:unemph-at-unpause", m), v) ]
-    | `Kv (("children:unfocus", m), v) ->
-        [ `Kv (("children:unfocus-at-unpause", m), v) ]
-    | `Kv (("children:unreveal", m), v) ->
-        [ `Kv (("children:unreveal-at-unpause", m), v) ]
-    | `Kv (("children:unstatic", m), v) ->
-        [ `Kv (("children:unstatic-at-unpause", m), v) ]
-    | `Kv ((gui_s, meta), _) as gui when String.equal Special_attrs.gui gui_s ->
-        let id_attr =
-          let v = get_gui_id () in
-          { Cmarkit.Attributes.v; delimiter = Some '"' }
-        in
-        let file_attr =
-          let v = meta |> Cmarkit.Meta.textloc |> Cmarkit.Textloc.file in
-          { Cmarkit.Attributes.v; delimiter = Some '"' }
-        in
-        let original_loc =
-          if embed_loc then
-            [
-              `Kv ((Special_attrs.gui_id, Meta.none), Some (id_attr, Meta.none));
-              `Kv
-                ( (Special_attrs.gui_file, Meta.none),
-                  Some (file_attr, Meta.none) );
-            ]
-          else []
-        in
-        gui :: original_loc
-    | x -> [ x ]
+  let map_attrs ~get_gui_id ~embed_loc attrs =
+    let map_attrs attrs = function
+      | `Kv (("up", m), v) -> [ `Kv (("up-at-unpause", m), v) ]
+      | `Kv (("center", m), v) -> [ `Kv (("center-at-unpause", m), v) ]
+      | `Kv (("down", m), v) -> [ `Kv (("down-at-unpause", m), v) ]
+      | `Kv (("exec", m), v) -> [ `Kv (("exec-at-unpause", m), v) ]
+      | `Kv (("scroll", m), v) -> [ `Kv (("scroll-at-unpause", m), v) ]
+      | `Kv (("enter", m), v) -> [ `Kv (("enter-at-unpause", m), v) ]
+      | `Kv (("emph", m), v) -> [ `Kv (("emph-at-unpause", m), v) ]
+      | `Kv (("focus", m), v) -> [ `Kv (("focus-at-unpause", m), v) ]
+      | `Kv (("reveal", m), v) -> [ `Kv (("reveal-at-unpause", m), v) ]
+      | `Kv (("static", m), v) -> [ `Kv (("static-at-unpause", m), v) ]
+      | `Kv (("unemph", m), v) -> [ `Kv (("unemph-at-unpause", m), v) ]
+      | `Kv (("unfocus", m), v) -> [ `Kv (("unfocus-at-unpause", m), v) ]
+      | `Kv (("unreveal", m), v) -> [ `Kv (("unreveal-at-unpause", m), v) ]
+      | `Kv (("unstatic", m), v) -> [ `Kv (("unstatic-at-unpause", m), v) ]
+      (* TODO: Improve this (eg by moving it to another phase) *)
+      | `Kv (("children:up", m), v) ->
+          [ `Kv (("children:up-at-unpause", m), v) ]
+      | `Kv (("children:center", m), v) ->
+          [ `Kv (("children:center-at-unpause", m), v) ]
+      | `Kv (("children:down", m), v) ->
+          [ `Kv (("children:down-at-unpause", m), v) ]
+      | `Kv (("children:exec", m), v) ->
+          [ `Kv (("children:exec-at-unpause", m), v) ]
+      | `Kv (("children:scroll", m), v) ->
+          [ `Kv (("children:scroll-at-unpause", m), v) ]
+      | `Kv (("children:enter", m), v) ->
+          [ `Kv (("children:enter-at-unpause", m), v) ]
+      | `Kv (("children:emph", m), v) ->
+          [ `Kv (("children:emph-at-unpause", m), v) ]
+      | `Kv (("children:focus", m), v) ->
+          [ `Kv (("children:focus-at-unpause", m), v) ]
+      | `Kv (("children:reveal", m), v) ->
+          [ `Kv (("children:reveal-at-unpause", m), v) ]
+      | `Kv (("children:static", m), v) ->
+          [ `Kv (("children:static-at-unpause", m), v) ]
+      | `Kv (("children:unemph", m), v) ->
+          [ `Kv (("children:unemph-at-unpause", m), v) ]
+      | `Kv (("children:unfocus", m), v) ->
+          [ `Kv (("children:unfocus-at-unpause", m), v) ]
+      | `Kv (("children:unreveal", m), v) ->
+          [ `Kv (("children:unreveal-at-unpause", m), v) ]
+      | `Kv (("children:unstatic", m), v) ->
+          [ `Kv (("children:unstatic-at-unpause", m), v) ]
+      | `Kv ((gui_s, meta), _) as gui when String.equal Special_attrs.gui gui_s
+        ->
+          let if_not_already_defined key value =
+            match Cmarkit.Attributes.find key attrs with
+            | None when embed_loc ->
+                let v = value () in
+                let value = { Cmarkit.Attributes.v; delimiter = Some '"' } in
+                [ `Kv ((key, Meta.none), Some (value, Meta.none)) ]
+            | _ -> []
+          in
+          let id_attr =
+            if_not_already_defined Special_attrs.gui_id @@ get_gui_id
+          in
+          let file_attr =
+            if_not_already_defined Special_attrs.gui_file @@ fun () ->
+            meta |> Cmarkit.Meta.textloc |> Cmarkit.Textloc.file
+          in
+          gui :: (id_attr @ file_attr)
+      | x -> [ x ]
+    in
+    Cmarkit.Attributes.map (map_attrs attrs) attrs
 
   let execute ~get_gui_id ~htbl_include ~embed_loc current_path defs =
     let ret x = `Map x in
@@ -402,9 +404,7 @@ module Stage1 = struct
         match fm.Frontmatter.global.toplevel_attributes with
         | None -> None
         | Some (attrs, meta) ->
-            Some
-              ( Cmarkit.Attributes.map (map_attrs ~get_gui_id ~embed_loc) attrs,
-                meta )
+            Some ((map_attrs ~get_gui_id ~embed_loc) attrs, meta)
       in
       {
         fm with
@@ -880,14 +880,15 @@ let to_cmarkit units =
     | Ast.S_inline i -> inline m i
     | _ -> Mapper.default
   in
-  let attrs = function
-    | `Kv (("up-at-unpause", m), v) -> [ `Kv (("up", m), v) ]
-    | `Kv (("center-at-unpause", m), v) -> [ `Kv (("center", m), v) ]
-    | `Kv (("enter-at-unpause", m), v) -> [ `Kv (("enter", m), v) ]
-    | `Kv (("down-at-unpause", m), v) -> [ `Kv (("down", m), v) ]
-    | `Kv (("exec-at-unpause", m), v) -> [ `Kv (("exec", m), v) ]
-    | `Kv (("scroll-at-unpause", m), v) -> [ `Kv (("scroll", m), v) ]
-    | x -> [ x ]
+  let attrs =
+    Cmarkit.Attributes.map (function
+      | `Kv (("up-at-unpause", m), v) -> [ `Kv (("up", m), v) ]
+      | `Kv (("center-at-unpause", m), v) -> [ `Kv (("center", m), v) ]
+      | `Kv (("enter-at-unpause", m), v) -> [ `Kv (("enter", m), v) ]
+      | `Kv (("down-at-unpause", m), v) -> [ `Kv (("down", m), v) ]
+      | `Kv (("exec-at-unpause", m), v) -> [ `Kv (("exec", m), v) ]
+      | `Kv (("scroll-at-unpause", m), v) -> [ `Kv (("scroll", m), v) ]
+      | x -> [ x ])
   in
   Ast.Mapper.make ~block ~inline ~attrs ()
 
