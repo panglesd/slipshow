@@ -293,11 +293,7 @@ class lsp_server =
             | Ok x -> f x
           in
           let> elem = self#elem_of_gui_id root gui_id in
-          let textloc =
-            match elem with
-            | `Inline i -> Slipshow.Ast.Utils.Inline.textloc i
-            | `Block b -> Slipshow.Ast.Utils.Block.textloc b
-          in
+          let textloc = Slipshow.Ast.Bol.text_loc elem in
           let fpath = Fpath.v (Cmarkit.Textloc.file textloc) in
           let () =
             match Fpath.Map.find_opt fpath root.units.units with
