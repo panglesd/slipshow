@@ -79,8 +79,11 @@ let handle_gui_el_up el =
   match find_up is_gui el with
   | None -> ()
   | Some (el, (_gui_file, _gui_id)) ->
-      (* Messaging.send_loc (Jstr.to_string gui_loc); *)
-      (* TODO: we used to send the location of the gui attribute *)
+      let () =
+        match El.at block_pos_attr el with
+        | None -> ()
+        | Some gui_loc -> Messaging.send_loc (Jstr.to_string gui_loc)
+      in
       if Drawing_state.Status.peek () = Gui_mode then Action.activate_el el
 
 let handle_block_el_up el =

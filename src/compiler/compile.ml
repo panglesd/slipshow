@@ -320,15 +320,21 @@ module Stage1 = struct
           let v = meta |> Cmarkit.Meta.textloc |> Cmarkit.Textloc.file in
           { Cmarkit.Attributes.v; delimiter = Some '"' }
         in
+        let original_loc_attr =
+          let loc = meta |> Cmarkit.Meta.textloc in
+          let v = Marshal.to_string loc [] |> Base64.encode_string in
+          { Cmarkit.Attributes.v; delimiter = Some '"' }
+        in
         let original_loc =
           if embed_loc then
             [
+              `Kv ((Special_attrs.gui_id, Meta.none), Some (id_attr, Meta.none));
               `Kv
-                ( (Common_types.Special_strings.gui_id, Meta.none),
-                  Some (id_attr, Meta.none) );
-              `Kv
-                ( (Common_types.Special_strings.gui_file, Meta.none),
+                ( (Special_attrs.gui_file, Meta.none),
                   Some (file_attr, Meta.none) );
+              `Kv
+                ( (Special_attrs.original_loc, Meta.none),
+                  Some (original_loc_attr, Meta.none) );
             ]
           else []
         in
