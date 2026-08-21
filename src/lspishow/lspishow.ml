@@ -153,7 +153,6 @@ class lsp_server =
               Hashtbl.find_opt Roots.buffers root.units.entry_file
               |> to_error "Root of %a not found" Fpath.pp root.units.entry_file
             in
-            (* TODO: Send a notification if we did not find meta_key and value *)
             let* (_key, meta_key), value =
               match id with
               | Id id ->
@@ -200,8 +199,6 @@ class lsp_server =
                        "Can't identify gui element named %s. Give an ID to the \
                         GUI element to improve robustness."
                        gui_id
-              (* TODO: why do we need gui_map, why can't we just use
-                 current_ast's get_leave? *)
             in
             let prefix, textloc, suffix =
               match value with
