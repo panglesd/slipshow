@@ -64,6 +64,8 @@ let apply_coord c el =
   in
   ()
 
+(* None that the "id first then gui_id" is "duplicated" in [gui.ml]. (Just in
+   case future me decides to change it) *)
 let get_loc_id el =
   let id =
     El.prop El.Prop.id el |> Jstr.to_string |> function

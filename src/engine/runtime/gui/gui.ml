@@ -79,6 +79,8 @@ let rec find_up condition el =
         | Some parent -> find_up condition parent)
   | Some gui_loc -> Some (el, gui_loc)
 
+(* None that the "id first then gui_id" is "duplicated" in [gui_tools.ml]. (Just
+   in case future me decides to change it) *)
 let send_loc ~file ~gui_id elem =
   match El.at At.Name.id elem with
   | None -> Messaging.send_loc (Loc { file; gui_id })
