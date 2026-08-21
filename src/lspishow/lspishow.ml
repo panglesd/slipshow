@@ -74,6 +74,10 @@ let find_markdown_files path =
 let client_capabilities = ref None
 let rebounce = Hashtbl.create 10
 
+let to_error s =
+  let k message = function None -> Error (`Msg message) | Some x -> Ok x in
+  Format.kasprintf k s
+
 class lsp_server =
   object (self)
     inherit Linol_lwt.Jsonrpc2.server as super
@@ -133,6 +137,30 @@ class lsp_server =
       @@ InitializeResult.create ~capabilities
            ?serverInfo:self#config_server_info ()
 
+    method private elem_of_gui_id (root : Slipshow_server.root) gui_id =
+      let ( let* ) x f = Result.bind x f in
+      match gui_id with
+      | Common_types.Id id -> (
+          let* { definition; usage = _ } =
+            Slipshow.Id_map.SMap.find_opt id root.units.id_map
+            |> to_error "Id %s could not be found" id
+          in
+          let def = Slipshow.Id_map.Unionable_set.get definition in
+          match def.elem with
+          | `External -> Error (`Msg "External IDs can't be gui")
+          | (`Inline _ | `Block _) as bol -> Ok bol)
+      | Loc { file; gui_id } ->
+          let path = Fpath.v file in
+          let* unit =
+            Fpath.Map.find_opt path root.units.units
+            |> to_error "Could not find %a root" Fpath.pp path
+          in
+          List.assoc_opt gui_id unit.gui_map
+          |> to_error
+               "Can't identify gui element named %s. Give an ID to the GUI \
+                element to improve robustness."
+               gui_id
+
     method private from_preview ~(notify_back : Linol_lwt.Jsonrpc2.notify_back)
         (event : Proto.Client_to_server.t) (root : Slipshow_server.root) =
       match event with
@@ -148,57 +176,39 @@ class lsp_server =
             Format.kasprintf k s
           in
           let res =
+            let* () =
+              match (Config.Refresh.when_ (), id) with
+              | _, Id _ | Edit, Loc _ -> Ok ()
+              | (Save | Never), Loc _ ->
+                  Error
+                    (`Msg
+                       "In \"refresh on save\" mode, you can only set gui \
+                        coordinates of elements with an ID")
+            in
             let* root =
               (* We need to switch to the buffer version to get an updated location  *)
               Hashtbl.find_opt Roots.buffers root.units.entry_file
               |> to_error "Root of %a not found" Fpath.pp root.units.entry_file
             in
+            let* elem = self#elem_of_gui_id root id in
             let* (_key, meta_key), value =
-              match id with
-              | Id id ->
-                  let* { definition; usage = _ } =
-                    Slipshow.Id_map.SMap.find_opt id root.units.id_map
-                    |> to_error "Id %s could not be found" id
-                  in
-                  let def = Slipshow.Id_map.Unionable_set.get definition in
-                  let* attrs, _ =
-                    match def.elem with
-                    | `Block b ->
-                        let+ _, attrs =
-                          Slipshow.Ast.Utils.Block.get_attribute b
-                          |> to_error "Id %s does not have attributes" id
-                        in
-                        attrs
-                    | `Inline i ->
-                        let+ _, attrs =
-                          Slipshow.Ast.Utils.Inline.get_attribute i
-                          |> to_error "Id %s does not have attributes" id
-                        in
-                        attrs
-                    | `External -> None |> to_error "Id %s is external" id
-                  in
-                  Cmarkit.Attributes.find Common_types.Special_strings.gui attrs
-                  |> to_error "Id %s does not have a gui attribute" id
-              | Loc { file; gui_id } ->
-                  let* () =
-                    match Config.Refresh.when_ () with
-                    | Edit -> Ok ()
-                    | Save | Never ->
-                        None
-                        |> to_error
-                             "In \"refresh on save\" mode, you can only set \
-                              gui coordinates of elements with an ID"
-                  in
-                  let path = Fpath.v file in
-                  let* unit =
-                    Fpath.Map.find_opt path root.units.units
-                    |> to_error "Could not find %a root" Fpath.pp path
-                  in
-                  List.assoc_opt gui_id unit.gui_map
-                  |> to_error
-                       "Can't identify gui element named %s. Give an ID to the \
-                        GUI element to improve robustness."
-                       gui_id
+              let* attrs =
+                match elem with
+                | `Block b ->
+                    let+ _, (attrs, _) =
+                      Slipshow.Ast.Utils.Block.get_attribute b
+                      |> to_error "Element does not have attributes"
+                    in
+                    attrs
+                | `Inline i ->
+                    let+ _, (attrs, _) =
+                      Slipshow.Ast.Utils.Inline.get_attribute i
+                      |> to_error "Element does not have attributes"
+                    in
+                    attrs
+              in
+              Cmarkit.Attributes.find Common_types.Special_strings.gui attrs
+              |> to_error "Element does not have a gui attribute"
             in
             let prefix, textloc, suffix =
               match value with
@@ -275,15 +285,19 @@ class lsp_server =
               let type_ = Linol_lwt.MessageType.Warning in
               Lsp_preview.send_info ~root ~type_ ~notify_back
                 "Could not save new gui location: %s" message)
-      | GotoLoc s ->
+      | GotoLoc gui_id ->
           let ( let> ) x f =
             match x with
             | Error (`Msg s) ->
                 Format.eprintf "Error in handling of gotoloc: %s" s
             | Ok x -> f x
           in
-          let> s = Base64.decode s in
-          let textloc : Cmarkit.Textloc.t = Marshal.from_string s 0 in
+          let> elem = self#elem_of_gui_id root gui_id in
+          let textloc =
+            match elem with
+            | `Inline i -> Slipshow.Ast.Utils.Inline.textloc i
+            | `Block b -> Slipshow.Ast.Utils.Block.textloc b
+          in
           let fpath = Fpath.v (Cmarkit.Textloc.file textloc) in
           let () =
             match Fpath.Map.find_opt fpath root.units.units with

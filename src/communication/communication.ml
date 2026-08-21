@@ -26,7 +26,7 @@ type payload =
       h : int option;
       scale : float option;
     }
-  | GotoLoc of string
+  | GotoLoc of Common_types.gui_id
 [@@deriving sexp]
 
 type t = { payload : payload; id : string } [@@deriving sexp]

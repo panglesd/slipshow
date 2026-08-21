@@ -17,7 +17,7 @@ val create_previewer :
     (id:Common_types.gui_id ->
     coord:Actions_arguments.Gui.t ->
     unit) ->
-  goto_loc:(string -> unit) ->
+  goto_loc:(Common_types.gui_id -> unit) ->
   include_speaker_view:bool ->
   errors_el:Brr.El.t ->
   steal_focus:bool ->

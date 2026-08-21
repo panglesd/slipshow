@@ -320,11 +320,6 @@ module Stage1 = struct
           let v = meta |> Cmarkit.Meta.textloc |> Cmarkit.Textloc.file in
           { Cmarkit.Attributes.v; delimiter = Some '"' }
         in
-        let original_loc_attr =
-          let loc = meta |> Cmarkit.Meta.textloc in
-          let v = Marshal.to_string loc [] |> Base64.encode_string in
-          { Cmarkit.Attributes.v; delimiter = Some '"' }
-        in
         let original_loc =
           if embed_loc then
             [
@@ -332,9 +327,6 @@ module Stage1 = struct
               `Kv
                 ( (Special_attrs.gui_file, Meta.none),
                   Some (file_attr, Meta.none) );
-              `Kv
-                ( (Special_attrs.original_loc, Meta.none),
-                  Some (original_loc_attr, Meta.none) );
             ]
           else []
         in
@@ -346,16 +338,25 @@ module Stage1 = struct
     let block m b =
       let b =
         if embed_loc then
-          let loc = b |> Ast.Utils.Block.meta |> Cmarkit.Meta.textloc in
-          let v = Marshal.to_string loc [] |> Base64.encode_string in
-          let attr = { Cmarkit.Attributes.v; delimiter = Some '"' } in
           let res =
             Ast.Utils.Block.update_attribute
               (fun (attrs, meta) ->
-                ( Cmarkit.Attributes.add
-                    (Special_attrs.original_loc, Meta.none)
-                    (Some (attr, Meta.none))
-                    attrs,
+                let loc = Ast.Utils.Block.textloc b in
+                let id_attr =
+                  let v = get_gui_id () in
+                  { Cmarkit.Attributes.v; delimiter = Some '"' }
+                in
+                let file_attr =
+                  let v = Cmarkit.Textloc.file loc in
+                  { Cmarkit.Attributes.v; delimiter = Some '"' }
+                in
+                ( attrs
+                  |> Cmarkit.Attributes.add
+                       (Special_attrs.gui_file, Meta.none)
+                       (Some (file_attr, Meta.none))
+                  |> Cmarkit.Attributes.add
+                       (Special_attrs.gui_id, Meta.none)
+                       (Some (id_attr, Meta.none)),
                   meta ))
               b
           in
@@ -559,10 +560,10 @@ module Stage4 = struct
     in
     Fpath.Map.update path add fpath_map
 
-  let add_to_gui_list ~attrs ~gui_list =
+  let add_to_gui_list ~attrs ~gui_list elem =
     let open Special_attrs in
-    match (Attributes.find gui attrs, Attributes.find gui_id attrs) with
-    | Some kv, Some (_loc, Some (gui_id, _)) -> (gui_id.v, kv) :: gui_list
+    match Attributes.find gui_id attrs with
+    | Some (_loc, Some (gui_id, _)) -> (gui_id.v, elem) :: gui_list
     | _ -> gui_list
 
   let execute =
@@ -582,7 +583,7 @@ module Stage4 = struct
               | None -> id_list
               | Some id -> { Id_map.id; elem = `Block c; meta } :: id_list
             in
-            let gui_list = add_to_gui_list ~attrs ~gui_list in
+            let gui_list = add_to_gui_list ~attrs ~gui_list (`Block c) in
             (id_list, gui_list)
       in
       let res = Ast.Folder.continue_block f c (files, id_list, gui_list) in
@@ -598,7 +599,7 @@ module Stage4 = struct
               | None -> id_list
               | Some id -> { Id_map.id; elem = `Inline i; meta } :: id_list
             in
-            let gui_list = add_to_gui_list ~attrs ~gui_list in
+            let gui_list = add_to_gui_list ~attrs ~gui_list (`Inline i) in
             (id_list, gui_list)
       in
       let files =

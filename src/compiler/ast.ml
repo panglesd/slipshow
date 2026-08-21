@@ -126,6 +126,233 @@ module Files = struct
           })
 end
 
+module Utils = struct
+  module Block = struct
+    (** Get the attributes of a cmarkit node, updates it and returns the block
+        with the new attribute as well as the old one. *)
+    let update_attribute :
+        (Attributes.t node -> Attributes.t node) ->
+        Block.t ->
+        (Block.t * Attributes.t node) option =
+     fun attr_upd ->
+      let open Block in
+      function
+      (* Standard Cmarkit nodes *)
+      | Blank_line _ | Blocks _ -> None
+      | Block_quote ((bq, attrs), meta) ->
+          Some (Block_quote ((bq, attr_upd attrs), meta), attrs)
+      | Code_block ((cb, attrs), meta) ->
+          Some (Code_block ((cb, attr_upd attrs), meta), attrs)
+      | Heading ((h, attrs), meta) ->
+          Some (Heading ((h, attr_upd attrs), meta), attrs)
+      | Html_block ((hb, attrs), meta) ->
+          Some (Html_block ((hb, attr_upd attrs), meta), attrs)
+      | Link_reference_definition _ -> None
+      | List ((l, attrs), meta) -> Some (List ((l, attr_upd attrs), meta), attrs)
+      | Paragraph ((p, attrs), meta) ->
+          Some (Paragraph ((p, attr_upd attrs), meta), attrs)
+      | Thematic_break ((tb, attrs), meta) ->
+          Some (Thematic_break ((tb, attr_upd attrs), meta), attrs)
+      (* Extension Cmarkit nodes *)
+      | Ext_standalone_attributes attrs ->
+          Some (Ext_standalone_attributes (attr_upd attrs), attrs)
+      | Ext_math_block ((mb, attrs), meta) ->
+          Some (Ext_math_block ((mb, attr_upd attrs), meta), attrs)
+      | Ext_table ((table, attrs), meta) ->
+          Some (Ext_table ((table, attr_upd attrs), meta), attrs)
+      | Ext_footnote_definition _ | Ext_attribute_definition _ -> None
+      (* Slipshow nodes *)
+      | S_block b -> (
+          match b with
+          | Included ((inc, attrs), meta) ->
+              Some (included ((inc, attr_upd attrs), meta), attrs)
+          | IncludedHTML ((inc, attrs), meta) ->
+              Some (included_html ((inc, attr_upd attrs), meta), attrs)
+          | Div ((d, attrs), meta) ->
+              Some (div ((d, attr_upd attrs), meta), attrs)
+          | Slide ((s, attrs), meta) ->
+              Some (slide ((s, attr_upd attrs), meta), attrs)
+          | Slip ((s, attrs), meta) ->
+              Some (slip ((s, attr_upd attrs), meta), attrs)
+          | SlipScript ((slscr, attrs), meta) ->
+              Some (slipscript ((slscr, attr_upd attrs), meta), attrs)
+          | MermaidJS ((slscr, attrs), meta) ->
+              Some (mermaid_js ((slscr, attr_upd attrs), meta), attrs)
+          | Carousel ((c, attrs), meta) ->
+              Some (carousel ((c, attr_upd attrs), meta), attrs))
+      | _ -> None
+
+    (** Get the attributes of a cmarkit node, returns them and the element
+        stripped of its attributes *)
+    let get_attribute b =
+      let no_attrs = (Attributes.empty, Meta.none) in
+      let attr_upd _ = no_attrs in
+      update_attribute attr_upd b
+
+    (** Get the attributes of a cmarkit node, returns them and the element
+        stripped of its attributes *)
+    let merge_attribute new_attrs b =
+      let merge (base, meta) =
+        (Attributes.merge ~base ~new_attrs, meta)
+        (* Old attributes take precendence over "new" one *)
+      in
+      match update_attribute merge b with None -> b | Some (b, _) -> b
+
+    let meta b =
+      let ext b =
+        match b with
+        | S_block b -> (
+            match b with
+            | Included (_, meta) -> meta
+            | IncludedHTML (_, meta) -> meta
+            | Div (_, meta) -> meta
+            | Slide (_, meta) -> meta
+            | Slip (_, meta) -> meta
+            | SlipScript (_, meta) -> meta
+            | Carousel (_, meta) -> meta
+            | MermaidJS (_, meta) -> meta)
+        | _ -> assert false
+      in
+      Block.meta ~ext b
+
+    let textloc b = b |> meta |> Meta.textloc
+  end
+
+  module Inline = struct
+    (** Get the attributes of a cmarkit node, returns them and the element
+        stripped of its attributes *)
+    let update_attribute :
+        (Attributes.t node -> Attributes.t node) ->
+        Inline.t ->
+        (Inline.t * Attributes.t node) option =
+     fun attr_upd ->
+      let open Inline in
+      function
+      (* Standard Cmarkit nodes *)
+      | Autolink ((al, attrs), meta) ->
+          Some (Autolink ((al, attr_upd attrs), meta), attrs)
+      | Break _ -> None
+      | Code_span ((cs, attrs), meta) ->
+          Some (Code_span ((cs, attr_upd attrs), meta), attrs)
+      | Emphasis ((em, attrs), meta) ->
+          Some (Emphasis ((em, attr_upd attrs), meta), attrs)
+      | Image ((im, attrs), meta) ->
+          Some (Image ((im, attr_upd attrs), meta), attrs)
+      | Inlines _ -> None
+      | Link ((link, attrs), meta) ->
+          Some (Link ((link, attr_upd attrs), meta), attrs)
+      | Raw_html _ -> None
+      | Strong_emphasis ((sem, attrs), meta) ->
+          Some (Strong_emphasis ((sem, attr_upd attrs), meta), attrs)
+      | Text ((txt, attrs), meta) ->
+          Some (Text ((txt, attr_upd attrs), meta), attrs)
+      (* Extension Cmarkit nodes *)
+      | Ext_strikethrough ((strk, attrs), meta) ->
+          Some (Ext_strikethrough ((strk, attr_upd attrs), meta), attrs)
+      | Ext_math_span ((ms, attrs), meta) ->
+          Some (Ext_math_span ((ms, attr_upd attrs), meta), attrs)
+      | Ext_attrs (attr_span, meta) ->
+          let inline = Attributes_span.content attr_span in
+          let attrs = Attributes_span.attrs attr_span in
+          Some
+            ( Ext_attrs (Attributes_span.make inline (attr_upd attrs), meta),
+              attrs )
+      (* Slipshow nodes *)
+      | S_inline i -> (
+          match i with
+          | Hand_drawn m ->
+              let (link, attrs), meta = m.origin in
+              let origin = ((link, attr_upd attrs), meta) in
+              Some (S_inline (Hand_drawn { m with origin }), attrs)
+          | Image m ->
+              let (link, attrs), meta = m.origin in
+              let origin = ((link, attr_upd attrs), meta) in
+              Some (S_inline (Image { m with origin }), attrs)
+          | Svg m ->
+              let (link, attrs), meta = m.origin in
+              let origin = ((link, attr_upd attrs), meta) in
+              Some (S_inline (Svg { m with origin }), attrs)
+          | Video m ->
+              let (link, attrs), meta = m.origin in
+              let origin = ((link, attr_upd attrs), meta) in
+              Some (S_inline (Video { m with origin }), attrs)
+          | Audio m ->
+              let (link, attrs), meta = m.origin in
+              let origin = ((link, attr_upd attrs), meta) in
+              Some (S_inline (Audio { m with origin }), attrs)
+          | Html m ->
+              let (link, attrs), meta = m.origin in
+              let origin = ((link, attr_upd attrs), meta) in
+              Some (S_inline (Html { m with origin }), attrs)
+          | Pdf m ->
+              let (link, attrs), meta = m.origin in
+              let origin = ((link, attr_upd attrs), meta) in
+              Some (S_inline (Pdf { m with origin }), attrs))
+      | _ -> None
+
+    (** Get the attributes of a cmarkit node, returns them and the element
+        stripped of its attributes *)
+    let get_attribute b =
+      let no_attrs = (Attributes.empty, Meta.none) in
+      let attr_upd _ = no_attrs in
+      update_attribute attr_upd b
+
+    (** Get the attributes of a cmarkit node, returns them and the element
+        stripped of its attributes *)
+    let merge_attribute new_attrs b =
+      let merge (base, meta) =
+        (Attributes.merge ~base ~new_attrs, meta)
+        (* Old attributes take precendence over "new" one *)
+      in
+      match update_attribute merge b with None -> b | Some (b, _) -> b
+
+    let meta i =
+      let ext i =
+        match i with
+        | S_inline i -> (
+            match i with
+            | Image { origin = _, meta; _ } -> meta
+            | Svg { origin = _, meta; _ } -> meta
+            | Video { origin = _, meta; _ } -> meta
+            | Audio { origin = _, meta; _ } -> meta
+            | Pdf { origin = _, meta; _ } -> meta
+            | Html { origin = _, meta; _ } -> meta
+            | Hand_drawn { origin = _, meta; _ } -> meta)
+        | _ -> assert false
+      in
+      Inline.meta ~ext i
+
+    let textloc i = i |> meta |> Meta.textloc
+
+    let to_plain_text =
+      let ext_i = function
+        | Image media
+        | Svg media
+        | Video media
+        | Audio media
+        | Pdf media
+        | Html media
+        | Hand_drawn media ->
+            let (origin, _), _ = media.origin in
+            Cmarkit.Inline.Link.text origin
+      in
+      let ext ~break_on_soft:_ = function
+        | S_inline i -> ext_i i
+        | _ -> assert false
+      in
+      Cmarkit.Inline.to_plain_text ~ext
+  end
+end
+
+module Bol = struct
+  type t = [ `Block of Block.t | `Inline of Inline.t ]
+
+  let text_loc (bol : t) =
+    match bol with
+    | `Block b -> b |> Utils.Block.meta |> Meta.textloc
+    | `Inline i -> i |> Utils.Inline.meta |> Meta.textloc
+end
+
 (* TODO: turn deps into an associative list to retain the order *)
 type unit' = {
   path : Fpath.t;
@@ -133,8 +360,7 @@ type unit' = {
   deps : Cmarkit.Textloc.t list Fpath.Map.t;
       (** Map of dependency -> List of places it is included *)
   id_map : Id_map.definitions;
-  gui_map :
-    (string * ((string * Meta.t) * (Attributes.value * Meta.t) option)) list;
+  gui_map : (string * Bol.t) list;
   source : string option;
   files : Files.unread Files.map;
   option : Frontmatter.Global.t;
@@ -606,233 +832,6 @@ module Fold_mapper = struct
 
   let make ?(block = block) ?(inline = inline) ?attrs () =
     Fold_mapper.make ~block ~inline ?attrs ()
-end
-
-module Utils = struct
-  module Block = struct
-    (** Get the attributes of a cmarkit node, updates it and returns the block
-        with the new attribute as well as the old one. *)
-    let update_attribute :
-        (Attributes.t node -> Attributes.t node) ->
-        Block.t ->
-        (Block.t * Attributes.t node) option =
-     fun attr_upd ->
-      let open Block in
-      function
-      (* Standard Cmarkit nodes *)
-      | Blank_line _ | Blocks _ -> None
-      | Block_quote ((bq, attrs), meta) ->
-          Some (Block_quote ((bq, attr_upd attrs), meta), attrs)
-      | Code_block ((cb, attrs), meta) ->
-          Some (Code_block ((cb, attr_upd attrs), meta), attrs)
-      | Heading ((h, attrs), meta) ->
-          Some (Heading ((h, attr_upd attrs), meta), attrs)
-      | Html_block ((hb, attrs), meta) ->
-          Some (Html_block ((hb, attr_upd attrs), meta), attrs)
-      | Link_reference_definition _ -> None
-      | List ((l, attrs), meta) -> Some (List ((l, attr_upd attrs), meta), attrs)
-      | Paragraph ((p, attrs), meta) ->
-          Some (Paragraph ((p, attr_upd attrs), meta), attrs)
-      | Thematic_break ((tb, attrs), meta) ->
-          Some (Thematic_break ((tb, attr_upd attrs), meta), attrs)
-      (* Extension Cmarkit nodes *)
-      | Ext_standalone_attributes attrs ->
-          Some (Ext_standalone_attributes (attr_upd attrs), attrs)
-      | Ext_math_block ((mb, attrs), meta) ->
-          Some (Ext_math_block ((mb, attr_upd attrs), meta), attrs)
-      | Ext_table ((table, attrs), meta) ->
-          Some (Ext_table ((table, attr_upd attrs), meta), attrs)
-      | Ext_footnote_definition _ | Ext_attribute_definition _ -> None
-      (* Slipshow nodes *)
-      | S_block b -> (
-          match b with
-          | Included ((inc, attrs), meta) ->
-              Some (included ((inc, attr_upd attrs), meta), attrs)
-          | IncludedHTML ((inc, attrs), meta) ->
-              Some (included_html ((inc, attr_upd attrs), meta), attrs)
-          | Div ((d, attrs), meta) ->
-              Some (div ((d, attr_upd attrs), meta), attrs)
-          | Slide ((s, attrs), meta) ->
-              Some (slide ((s, attr_upd attrs), meta), attrs)
-          | Slip ((s, attrs), meta) ->
-              Some (slip ((s, attr_upd attrs), meta), attrs)
-          | SlipScript ((slscr, attrs), meta) ->
-              Some (slipscript ((slscr, attr_upd attrs), meta), attrs)
-          | MermaidJS ((slscr, attrs), meta) ->
-              Some (mermaid_js ((slscr, attr_upd attrs), meta), attrs)
-          | Carousel ((c, attrs), meta) ->
-              Some (carousel ((c, attr_upd attrs), meta), attrs))
-      | _ -> None
-
-    (** Get the attributes of a cmarkit node, returns them and the element
-        stripped of its attributes *)
-    let get_attribute b =
-      let no_attrs = (Attributes.empty, Meta.none) in
-      let attr_upd _ = no_attrs in
-      update_attribute attr_upd b
-
-    (** Get the attributes of a cmarkit node, returns them and the element
-        stripped of its attributes *)
-    let merge_attribute new_attrs b =
-      let merge (base, meta) =
-        (Attributes.merge ~base ~new_attrs, meta)
-        (* Old attributes take precendence over "new" one *)
-      in
-      match update_attribute merge b with None -> b | Some (b, _) -> b
-
-    let meta b =
-      let ext b =
-        match b with
-        | S_block b -> (
-            match b with
-            | Included (_, meta) -> meta
-            | IncludedHTML (_, meta) -> meta
-            | Div (_, meta) -> meta
-            | Slide (_, meta) -> meta
-            | Slip (_, meta) -> meta
-            | SlipScript (_, meta) -> meta
-            | Carousel (_, meta) -> meta
-            | MermaidJS (_, meta) -> meta)
-        | _ -> assert false
-      in
-      Block.meta ~ext b
-
-    let textloc b = b |> meta |> Meta.textloc
-  end
-
-  module Inline = struct
-    (** Get the attributes of a cmarkit node, returns them and the element
-        stripped of its attributes *)
-    let update_attribute :
-        (Attributes.t node -> Attributes.t node) ->
-        Inline.t ->
-        (Inline.t * Attributes.t node) option =
-     fun attr_upd ->
-      let open Inline in
-      function
-      (* Standard Cmarkit nodes *)
-      | Autolink ((al, attrs), meta) ->
-          Some (Autolink ((al, attr_upd attrs), meta), attrs)
-      | Break _ -> None
-      | Code_span ((cs, attrs), meta) ->
-          Some (Code_span ((cs, attr_upd attrs), meta), attrs)
-      | Emphasis ((em, attrs), meta) ->
-          Some (Emphasis ((em, attr_upd attrs), meta), attrs)
-      | Image ((im, attrs), meta) ->
-          Some (Image ((im, attr_upd attrs), meta), attrs)
-      | Inlines _ -> None
-      | Link ((link, attrs), meta) ->
-          Some (Link ((link, attr_upd attrs), meta), attrs)
-      | Raw_html _ -> None
-      | Strong_emphasis ((sem, attrs), meta) ->
-          Some (Strong_emphasis ((sem, attr_upd attrs), meta), attrs)
-      | Text ((txt, attrs), meta) ->
-          Some (Text ((txt, attr_upd attrs), meta), attrs)
-      (* Extension Cmarkit nodes *)
-      | Ext_strikethrough ((strk, attrs), meta) ->
-          Some (Ext_strikethrough ((strk, attr_upd attrs), meta), attrs)
-      | Ext_math_span ((ms, attrs), meta) ->
-          Some (Ext_math_span ((ms, attr_upd attrs), meta), attrs)
-      | Ext_attrs (attr_span, meta) ->
-          let inline = Attributes_span.content attr_span in
-          let attrs = Attributes_span.attrs attr_span in
-          Some
-            ( Ext_attrs (Attributes_span.make inline (attr_upd attrs), meta),
-              attrs )
-      (* Slipshow nodes *)
-      | S_inline i -> (
-          match i with
-          | Hand_drawn m ->
-              let (link, attrs), meta = m.origin in
-              let origin = ((link, attr_upd attrs), meta) in
-              Some (S_inline (Hand_drawn { m with origin }), attrs)
-          | Image m ->
-              let (link, attrs), meta = m.origin in
-              let origin = ((link, attr_upd attrs), meta) in
-              Some (S_inline (Image { m with origin }), attrs)
-          | Svg m ->
-              let (link, attrs), meta = m.origin in
-              let origin = ((link, attr_upd attrs), meta) in
-              Some (S_inline (Svg { m with origin }), attrs)
-          | Video m ->
-              let (link, attrs), meta = m.origin in
-              let origin = ((link, attr_upd attrs), meta) in
-              Some (S_inline (Video { m with origin }), attrs)
-          | Audio m ->
-              let (link, attrs), meta = m.origin in
-              let origin = ((link, attr_upd attrs), meta) in
-              Some (S_inline (Audio { m with origin }), attrs)
-          | Html m ->
-              let (link, attrs), meta = m.origin in
-              let origin = ((link, attr_upd attrs), meta) in
-              Some (S_inline (Html { m with origin }), attrs)
-          | Pdf m ->
-              let (link, attrs), meta = m.origin in
-              let origin = ((link, attr_upd attrs), meta) in
-              Some (S_inline (Pdf { m with origin }), attrs))
-      | _ -> None
-
-    (** Get the attributes of a cmarkit node, returns them and the element
-        stripped of its attributes *)
-    let get_attribute b =
-      let no_attrs = (Attributes.empty, Meta.none) in
-      let attr_upd _ = no_attrs in
-      update_attribute attr_upd b
-
-    (** Get the attributes of a cmarkit node, returns them and the element
-        stripped of its attributes *)
-    let merge_attribute new_attrs b =
-      let merge (base, meta) =
-        (Attributes.merge ~base ~new_attrs, meta)
-        (* Old attributes take precendence over "new" one *)
-      in
-      match update_attribute merge b with None -> b | Some (b, _) -> b
-
-    let meta i =
-      let ext i =
-        match i with
-        | S_inline i -> (
-            match i with
-            | Image { origin = _, meta; _ } -> meta
-            | Svg { origin = _, meta; _ } -> meta
-            | Video { origin = _, meta; _ } -> meta
-            | Audio { origin = _, meta; _ } -> meta
-            | Pdf { origin = _, meta; _ } -> meta
-            | Html { origin = _, meta; _ } -> meta
-            | Hand_drawn { origin = _, meta; _ } -> meta)
-        | _ -> assert false
-      in
-      Inline.meta ~ext i
-
-    let textloc i = i |> meta |> Meta.textloc
-
-    let to_plain_text =
-      let ext_i = function
-        | Image media
-        | Svg media
-        | Video media
-        | Audio media
-        | Pdf media
-        | Html media
-        | Hand_drawn media ->
-            let (origin, _), _ = media.origin in
-            Cmarkit.Inline.Link.text origin
-      in
-      let ext ~break_on_soft:_ = function
-        | S_inline i -> ext_i i
-        | _ -> assert false
-      in
-      Cmarkit.Inline.to_plain_text ~ext
-  end
-end
-
-module Bol = struct
-  type t = [ `Block of Block.t | `Inline of Inline.t ]
-
-  let text_loc (bol : t) =
-    match bol with
-    | `Block b -> b |> Utils.Block.meta |> Meta.textloc
-    | `Inline i -> i |> Utils.Inline.meta |> Meta.textloc
 end
 
 module Ast_printer = struct

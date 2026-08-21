@@ -19,4 +19,4 @@ val closed_recording_panel : unit -> unit
 val send_gui_coordinate :
   Common_types.gui_id -> Actions_arguments.Gui.t -> unit
 
-val send_loc : string -> unit
+val send_loc : Common_types.gui_id -> unit

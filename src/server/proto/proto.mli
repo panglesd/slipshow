@@ -16,7 +16,7 @@ module Client_to_server : sig
         id : Common_types.gui_id;
         coord : string;
       }
-    | GotoLoc of string
+    | GotoLoc of Common_types.gui_id
 
   include Serializing with type t := t
 end

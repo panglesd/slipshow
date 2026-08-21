@@ -17,7 +17,6 @@ let sof x = Printf.sprintf "%.25f" x
 let gui_attr = !!Common_types.Special_strings.gui
 let gui_file_attr = !!Common_types.Special_strings.gui_file
 let gui_id_attr = !!Common_types.Special_strings.gui_id
-let block_pos_attr = !!Common_types.Special_strings.original_loc
 
 let for_events window =
   let display =
@@ -57,12 +56,17 @@ let for_events window =
       ]
     []
 
-let is_gui el =
-  match (El.at gui_file_attr el, El.at gui_id_attr el) with
-  | Some file, Some gui_id -> Some (file, gui_id)
-  | None, _ | _, None -> None
+let ( !? ) = Jstr.to_string
 
-let is_block el = El.at block_pos_attr el
+let is_gui el =
+  match (El.at gui_attr el, El.at gui_file_attr el, El.at gui_id_attr el) with
+  | Some coord, Some file, Some gui_id -> Some (!?coord, !?file, !?gui_id)
+  | None, _, _ | _, None, _ | _, _, None -> None
+
+let is_block el =
+  match (El.at gui_file_attr el, El.at gui_id_attr el) with
+  | Some file, Some gui_id -> Some (!?file, !?gui_id)
+  | None, _ | _, None -> None
 
 let rec find_up condition el =
   (* JavaScript's "closest" would be a good fit for replacing this *)
@@ -78,18 +82,19 @@ let rec find_up condition el =
 let handle_gui_el_up el =
   match find_up is_gui el with
   | None -> ()
-  | Some (el, (_gui_file, _gui_id)) ->
-      let () =
-        match El.at block_pos_attr el with
-        | None -> ()
-        | Some gui_loc -> Messaging.send_loc (Jstr.to_string gui_loc)
-      in
+  | Some (el, (_coord, file, gui_id)) ->
+      let () = Messaging.send_loc (Loc { file; gui_id }) in
       if Drawing_state.Status.peek () = Gui_mode then Action.activate_el el
+
+let send_loc ~file ~gui_id elem =
+  match El.at At.Name.id elem with
+  | None -> Messaging.send_loc (Loc { file; gui_id })
+  | Some id -> Messaging.send_loc (Id !?id)
 
 let handle_block_el_up el =
   match find_up is_block el with
   | None -> ()
-  | Some (_el, block_loc) -> Messaging.send_loc (Jstr.to_string block_loc)
+  | Some (_el, (file, gui_id)) -> Messaging.send_loc (Loc { file; gui_id })
 
 let handle is_ctrl_pressed el =
   let is_gui_selection =
