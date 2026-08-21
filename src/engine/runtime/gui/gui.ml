@@ -79,22 +79,22 @@ let rec find_up condition el =
         | Some parent -> find_up condition parent)
   | Some gui_loc -> Some (el, gui_loc)
 
-let handle_gui_el_up el =
-  match find_up is_gui el with
-  | None -> ()
-  | Some (el, (_coord, file, gui_id)) ->
-      let () = Messaging.send_loc (Loc { file; gui_id }) in
-      if Drawing_state.Status.peek () = Gui_mode then Action.activate_el el
-
 let send_loc ~file ~gui_id elem =
   match El.at At.Name.id elem with
   | None -> Messaging.send_loc (Loc { file; gui_id })
   | Some id -> Messaging.send_loc (Id !?id)
 
+let handle_gui_el_up el =
+  match find_up is_gui el with
+  | None -> ()
+  | Some (el, (_coord, file, gui_id)) ->
+      let () = send_loc ~file ~gui_id el in
+      if Drawing_state.Status.peek () = Gui_mode then Action.activate_el el
+
 let handle_block_el_up el =
   match find_up is_block el with
   | None -> ()
-  | Some (_el, (file, gui_id)) -> Messaging.send_loc (Loc { file; gui_id })
+  | Some (el, (file, gui_id)) -> send_loc ~file ~gui_id el
 
 let handle is_ctrl_pressed el =
   let is_gui_selection =
