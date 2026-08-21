@@ -126,4 +126,4 @@ let shortcuts key =
 
 let handle ev =
   let key = ev |> Brr.Ev.as_type |> Brr.Ev.Keyboard.key |> Jstr.to_string in
-  shortcuts key
+  if check_in_textarea () then false else shortcuts key
