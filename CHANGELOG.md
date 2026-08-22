@@ -35,6 +35,10 @@
 - Improve locations of errors in `css:` and `js:` frontmatter fields. (#271)
 - LSP: Fix locations reported for frontmatter `attributes:`. (#271)
 
+### Docs
+
+- Added documentation on the new GUI mode (#270)
+
 ## [v0.12.0] The Lord of the Slips: The Two Editors (Wednesday, the 12th of August, 2026)
 
 ### Added
