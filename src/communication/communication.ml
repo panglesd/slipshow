@@ -15,6 +15,18 @@ type payload =
   | Next
   | Previous
   | Can_save
+  | Can_gui
+  | ActivateGUI of Common_types.gui_id
+  | DeActivateGUI
+  | SaveCoordinates of {
+      id : Common_types.gui_id;
+      x : int option;
+      y : int option;
+      w : int option;
+      h : int option;
+      scale : float option;
+    }
+  | GotoLoc of Common_types.gui_id
 [@@deriving sexp]
 
 type t = { payload : payload; id : string } [@@deriving sexp]

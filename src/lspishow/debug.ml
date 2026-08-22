@@ -7,10 +7,7 @@ module Ast_printer = struct
   let pp_loc ppf meta =
     let loc = Meta.textloc meta in
     if Textloc.is_none loc then fprintf ppf "<no location>"
-    else
-      let loc = Diagnostic.linoloc_of_textloc loc in
-      fprintf ppf "%d:%d -> %d:%d" loc.start.line loc.start.character
-        loc.end_.line loc.end_.character
+    else fprintf ppf "%a" Textloc.pp_dump loc
 
   (** Prints the location of attributes if they exist *)
   let pp_attrs ppf (attrs, meta) =

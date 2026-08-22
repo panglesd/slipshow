@@ -198,9 +198,9 @@ module Attributes = struct
   (** Merge *)
 
   let map f attrs =
-    let class' = List.filter_map (fun x -> f (`Class x)) attrs.class' in
-    let id = match attrs.id with None -> [] | Some id -> List.filter_map (fun _ -> f (`Id id)) [()] in
-    let kv_attrs = List.filter_map (fun x -> f (`Kv x)) attrs.kv_attributes in
+    let kv_attrs = List.concat_map (fun x -> f (`Kv x)) attrs.kv_attributes in
+    let class' = List.concat_map (fun x -> f (`Class x)) attrs.class' in
+    let id = match attrs.id with None -> [] | Some id -> List.concat_map (fun _ -> f (`Id id)) [()] in
     List.fold_left
       (fun acc -> function
         | `Class x -> add_class acc x
@@ -2050,6 +2050,12 @@ module Inline_struct = struct
        convert them to [inline] values and [Break]s. [Text] inlines
        are created for data between them. *)
     let add_attr ((_, attrs_meta) as attrs) position acc =
+      let merge_loc meta =
+        let old_textloc = Meta.textloc meta in
+        let attr_textloc = Meta.textloc attrs_meta in
+        let new_textloc = Textloc.span old_textloc attr_textloc in
+        Meta.with_textloc ~keep_id:true meta new_textloc
+      in
       match position with
       | `Standalone ->
          let t =
@@ -2060,25 +2066,25 @@ module Inline_struct = struct
       | `Attached ->
         match acc with
         | Inline.Autolink ((a, _old_attrs), meta) :: q ->
-           Inline.Autolink ((a, attrs), meta) :: q
+           Inline.Autolink ((a, attrs), merge_loc meta) :: q
         | Inline.Code_span ((a, _old_attrs), meta) :: q ->
-           Inline.Code_span ((a, attrs), meta) :: q
+           Inline.Code_span ((a, attrs), merge_loc meta) :: q
         | Inline.Emphasis ((a, _old_attrs), meta) :: q ->
-           Inline.Emphasis ((a, attrs), meta) :: q
+           Inline.Emphasis ((a, attrs), merge_loc meta) :: q
         | Inline.Image ((a, _old_attrs), meta) :: q ->
-           Inline.Image ((a, attrs), meta) :: q
+           Inline.Image ((a, attrs), merge_loc meta) :: q
         | Inline.Link ((a, _old_attrs), meta) :: q ->
-           Inline.Link ((a, attrs), meta) :: q
+           Inline.Link ((a, attrs), merge_loc meta) :: q
         | Inline.Strong_emphasis ((a, _old_attrs), meta) :: q ->
-           Inline.Strong_emphasis ((a, attrs), meta) :: q
+           Inline.Strong_emphasis ((a, attrs), merge_loc meta) :: q
         | Inline.Text ((a, _old_attrs), meta) :: q ->
-           Inline.Text ((a, attrs), meta) :: q
+           Inline.Text ((a, attrs), merge_loc meta) :: q
            (* let t = Inline.Attributes_span.make i attrs in *)
            (* Inline.Ext_attrs (t, Meta.none) :: q *)
         | Inline.Ext_strikethrough ((a, _old_attrs), meta) :: q ->
-           Inline.Ext_strikethrough ((a, attrs), meta) :: q
+           Inline.Ext_strikethrough ((a, attrs), merge_loc meta) :: q
         | Inline.Ext_math_span ((a, _old_attrs), meta) :: q ->
-           Inline.Ext_math_span ((a, attrs), meta) :: q
+           Inline.Ext_math_span ((a, attrs), merge_loc meta) :: q
         | _ ->
           let t =
             Inline.Attributes_span.make (Inline.Inlines ([], attrs_meta))
@@ -3506,14 +3512,7 @@ module Mapper = struct
     { inline_ext_default : Inline.t map;
       block_ext_default : Block.t map;
       inline : Inline.t mapper;
-      attrs :
-        ([ `Class of string node
-         | `Id of string node
-         | `Kv of Attributes.key node * Attributes.value node option ] ->
-         [ `Class of string node
-         | `Id of string node
-         | `Kv of Attributes.key node * Attributes.value node option ]
-           option);
+      attrs : Attributes.t -> Attributes.t;
       block : Block.t mapper }
   and 'a map = t -> 'a -> 'a filter_map
   and 'a mapper = t -> 'a -> 'a result
@@ -3521,7 +3520,7 @@ module Mapper = struct
   let none _ _ = `Default
   let ext_inline_none _ _ = invalid_arg Inline.err_unknown
   let ext_block_none _ _ = invalid_arg Block.err_unknown
-  let attrs x = Some x
+  let attrs x = x
   let make
       ?(inline_ext_default = ext_inline_none)
       ?(block_ext_default = ext_block_none)
@@ -3536,13 +3535,13 @@ module Mapper = struct
 
   let ( let* ) = Option.bind
 
-  let map_attrs m attrs = Attributes.map m.attrs attrs
+  let map_attrs m attrs = m.attrs attrs
 
   let rec map_inline m i = match m.inline m i with
   | `Map i -> i
   | `Default ->
       let open Inline in
-     let map_attrs (attrs, meta) = Attributes.map m.attrs attrs, meta in
+     let map_attrs (attrs, meta) = m.attrs attrs, meta in
       match i with
       | Break _ | Raw_html _ as i -> Some i
       | Autolink ((al, attrs), meta) ->
@@ -3583,7 +3582,7 @@ module Mapper = struct
       | Ext_attrs ({ content; attrs }, meta) ->
          let attrs =
            let attrs, meta = attrs in
-           Attributes.map m.attrs attrs, meta
+           m.attrs attrs, meta
          in
          let content = map_inline m content in
          let content = Option.value ~default:(Inline.Inlines ([], Meta.none)) content in
@@ -3593,7 +3592,7 @@ module Mapper = struct
   let rec map_block m b = match m.block m b with
   | `Map b -> b
   | `Default ->
-     let map_attrs (attrs, meta) = Attributes.map m.attrs attrs, meta in
+     let map_attrs (attrs, meta) = m.attrs attrs, meta in
       let open Block in
       match b with
       | Blank_line _ as b -> Some b
@@ -3675,7 +3674,7 @@ module Mapper = struct
         let block = map_block m (Block.Footnote.block fn) in
         Block.Footnote.Def (({ fn with block }, attrs), meta)
     | Block.Attribute_definition.Def ((label, attrs), meta) ->
-        let attrs = Attributes.map m.attrs attrs in
+        let attrs = m.attrs attrs in
         Block.Attribute_definition.Def ((label, attrs), meta)
     | def -> def
     in

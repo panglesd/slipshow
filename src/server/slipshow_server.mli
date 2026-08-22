@@ -1,4 +1,9 @@
-type to_server = Update | Control of Proto.Server_to_client.control
+type to_server =
+  | Update
+  | Control of Proto.Server_to_client.control
+  | ActivateGUI of Common_types.gui_id
+  | DeActivateGUI
+  | Notify of string
 
 type root = {
   units : Slipshow.Ast.units;
@@ -22,5 +27,11 @@ val do_watch :
   Fpath.t -> (unit -> (Fpath.Set.t, [ `Msg of string ]) result) -> unit
 
 module Server : sig
-  val do_serve : port:int -> roots -> (unit, [> `Addr_in_use ]) result Lwt.t
+  val do_serve :
+    port:int ->
+    to_lsp_server:
+      (Proto.Client_to_server.t -> root -> unit)
+      option ->
+    roots ->
+    (unit, [> `Addr_in_use ]) result Lwt.t
 end

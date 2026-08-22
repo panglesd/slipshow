@@ -126,375 +126,10 @@ module Files = struct
           })
 end
 
-(* TODO: turn deps into an associative list to retain the order *)
-type unit' = {
-  path : Fpath.t;
-  ast : t;
-  deps : Cmarkit.Textloc.t list Fpath.Map.t;
-      (** Map of dependency -> List of places it is included *)
-  id_map : Id_map.definitions;
-  source : string option;
-  files : Files.unread Files.map;
-  option : Frontmatter.Global.t;
-  warnings : Diagnosis.t list;
-}
-
-type units = {
-  units : unit' Fpath.Map.t;
-  directory : Fpath.t;
-  entry_point : Fpath.t;
-  options : Frontmatter.Global.t;
-  files : Files.read Files.map;
-  id_map : Id_map.t;
-  action_plan : Action_plan.t;
-}
-
-module Folder = struct
-  let block_ext_default f acc = function
-    | Slide (({ content = b; title = Some (title, _) }, _), _) ->
-        let acc = Folder.fold_inline f acc title in
-        Folder.fold_block f acc b
-    | Slide (({ content = b; title = None }, _), _)
-    | Div ((b, _), _)
-    | Slip ((b, _), _) ->
-        Folder.fold_block f acc b
-    | IncludedHTML _ | Included _ | MermaidJS _ | SlipScript _ -> acc
-    | Carousel ((l, _), _) ->
-        List.fold_left (fun acc x -> Folder.fold_block f acc x) acc l
-
-  let block_ext_default f acc = function
-    | S_block b -> block_ext_default f acc b
-    | _ -> assert false
-
-  let inline_ext_default f acc = function
-    | Pdf { origin = (l, _), _; uri = _; id = _ }
-    | Audio { origin = (l, _), _; uri = _; id = _ }
-    | Video { origin = (l, _), _; uri = _; id = _ }
-    | Hand_drawn { origin = (l, _), _; uri = _; id = _ }
-    | Svg { origin = (l, _), _; uri = _; id = _ }
-    | Html { origin = (l, _), _; uri = _; id = _ }
-    | Image { origin = (l, _), _; uri = _; id = _ } ->
-        Folder.fold_inline f acc (Cmarkit.Inline.Link.text l)
-
-  let inline_ext_default f acc = function
-    | S_inline i -> inline_ext_default f acc i
-    | _ -> assert false
-
-  let make ~block ~inline () =
-    Folder.make ~block_ext_default ~inline_ext_default ~block ~inline ()
-
-  let rec fold_just_units f acc entry_point units =
-    match Fpath.Map.find_opt entry_point units with
-    | None -> acc
-    | Some unit ->
-        let acc = f unit acc in
-        Fpath.Map.fold
-          (fun fpath _ acc -> fold_just_units f acc fpath units)
-          unit.deps acc
-
-  let fold_units' ~block ~inline (acc : 'a) entry_point units : 'a =
-    let block (f : 'a Folder.t) (acc : 'a) = function
-      | S_block (Included ((fpath, _), _)) as b -> (
-          let acc =
-            match block f acc b with `Default -> acc | `Fold acc -> acc
-          in
-          match Fpath.Map.find_opt fpath units with
-          | None -> `Fold acc
-          | Some unit ->
-              let b = Doc.block unit.ast in
-              `Fold (Cmarkit.Folder.fold_block f acc b))
-      | b -> block f acc b
-    in
-    let folder = make ~block ~inline () in
-    Folder.fold_doc folder acc entry_point.ast
-
-  let fold_units ~block ~inline (acc : 'a) units : 'a =
-    match Fpath.Map.find_opt units.entry_point units.units with
-    | None -> acc (* TODO: show error somehow *)
-    | Some unit -> fold_units' ~block ~inline acc unit units.units
-
-  let continue_block f c acc =
-    let open Block in
-    match c with
-    | Blank_line _ | Code_block _ | Html_block _ | Ext_standalone_attributes _
-    | Link_reference_definition _ | Thematic_break _ | Ext_math_block _
-    | Ext_attribute_definition _ ->
-        acc
-    | Heading ((h, _attrs), _) ->
-        Folder.fold_inline f acc (Block.Heading.inline h)
-    | Block_quote ((bq, _attrs), _) ->
-        Folder.fold_block f acc (Cmarkit.Block.Block_quote.block bq)
-    | Blocks (bs, _) -> List.fold_left (Folder.fold_block f) acc bs
-    | List ((l, _attrs), _) ->
-        let fold_list_item m acc (i, _) =
-          Folder.fold_block m acc (Block.List_item.block i)
-        in
-        List.fold_left (fold_list_item f) acc (List'.items l)
-    | Paragraph ((p, _attrs), _) ->
-        Folder.fold_inline f acc (Block.Paragraph.inline p)
-    | Ext_table ((t, _attrs), _) ->
-        let fold_row acc ((r, _), _) =
-          match r with
-          | `Header is | `Data is ->
-              List.fold_left
-                (fun acc (i, _) -> Folder.fold_inline f acc i)
-                acc is
-          | `Sep _ -> acc
-        in
-        List.fold_left fold_row acc (Table.rows t)
-    | Ext_footnote_definition ((_fn, _attrs), _) -> acc (* TODO: do *)
-    | S_block b -> (
-        match b with
-        | Slide (({ content = b; title = Some (title, _) }, _), _) ->
-            let acc = Folder.fold_inline f acc title in
-            Folder.fold_block f acc b
-        | Slide (({ content = b; title = None }, _), _)
-        | Div ((b, _), _)
-        | Slip ((b, _), _) ->
-            Folder.fold_block f acc b
-        | IncludedHTML _ | Included _ | MermaidJS _ | SlipScript _ -> acc
-        | Carousel ((l, _), _) ->
-            List.fold_left (fun acc x -> Folder.fold_block f acc x) acc l)
-    | _ -> assert false
-
-  let continue_inline f i acc =
-    let open Inline in
-    match i with
-    | Autolink _ | Break _ | Code_span _ | Raw_html _ | Text _ | Ext_math_span _
-      ->
-        acc
-    | Image ((l, _), _) | Link ((l, _), _) ->
-        let text = Link.text l in
-        Folder.fold_inline f acc text
-    | Ext_attrs (attrs, _) ->
-        let inline = Attributes_span.content attrs in
-        Folder.fold_inline f acc inline
-    | Emphasis ((e, _), _) ->
-        let inline = Emphasis.inline e in
-        Folder.fold_inline f acc inline
-    | Strong_emphasis ((e, _), _) ->
-        let inline = Emphasis.inline e in
-        Folder.fold_inline f acc inline
-    | Inlines (is, _) -> List.fold_left (Folder.fold_inline f) acc is
-    | Ext_strikethrough ((inline, _), _) ->
-        let inline = Strikethrough.inline inline in
-        Folder.fold_inline f acc inline
-    | S_inline ext -> (
-        match ext with
-        | Html m | Hand_drawn m | Image m | Svg m | Video m | Audio m | Pdf m ->
-            let (link, _), _ = m.origin in
-            let inline = Link.text link in
-            Folder.fold_inline f acc inline)
-    | _ -> assert false
-end
-
-module Mapper = struct
-  let ( let* ) = Option.bind
-  let ( let+ ) x f = Option.map f x
-
-  let block_ext_default m = function
-    | Div ((b, attrs), meta) ->
-        let* b = Mapper.map_block m b in
-        let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
-        Some (Div ((b, attrs), meta))
-    | Included ((fpath, attrs), meta) ->
-        let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
-        Some (Included ((fpath, attrs), meta))
-    | IncludedHTML ((fpath, attrs), meta) ->
-        let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
-        Some (IncludedHTML ((fpath, attrs), meta))
-    | Slide (({ content = b; title }, attrs), meta) ->
-        let* b = Mapper.map_block m b in
-        let title =
-          let* title, attrs = title in
-          let+ inline = Mapper.map_inline m title in
-          (inline, (Mapper.map_attrs m (fst attrs), snd attrs))
-        in
-        let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
-        Some (Slide (({ content = b; title }, attrs), meta))
-    | Slip ((b, attrs), meta) ->
-        let* b = Mapper.map_block m b in
-        let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
-        Some (Slip ((b, attrs), meta))
-    | SlipScript ((s, attrs), meta) ->
-        let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
-        Some (SlipScript ((s, attrs), meta))
-    | MermaidJS ((s, attrs), meta) ->
-        let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
-        Some (MermaidJS ((s, attrs), meta))
-    | Carousel ((l, attrs), meta) -> (
-        let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
-        List.filter_map (Mapper.map_block m) l |> function
-        | [] -> None
-        | l -> Some (Carousel ((l, attrs), meta)))
-
-  let block_ext_default m = function
-    | S_block b -> block_ext_default m b |> Option.map (fun b -> S_block b)
-    | _ -> assert false
-
-  let map_origin m ((l, (attrs, a_meta)), meta) =
-    let attrs = Mapper.map_attrs m attrs in
-    let text =
-      Option.value ~default:Inline.empty
-        (Mapper.map_inline m (Cmarkit.Inline.Link.text l))
-    in
-    let reference = Cmarkit.Inline.Link.reference l in
-    let l = Cmarkit.Inline.Link.make text reference in
-    ((l, (attrs, a_meta)), meta)
-
-  let map_media m { origin; uri; id } =
-    let origin = map_origin m origin in
-    { origin; uri; id }
-
-  let inline_ext_default m = function
-    | Pdf media ->
-        let media = map_media m media in
-        Some (Pdf media)
-    | Video media ->
-        let media = map_media m media in
-        Some (Video media)
-    | Audio media ->
-        let media = map_media m media in
-        Some (Audio media)
-    | Image media ->
-        let media = map_media m media in
-        Some (Image media)
-    | Svg media ->
-        let media = map_media m media in
-        Some (Svg media)
-    | Hand_drawn media ->
-        let media = map_media m media in
-        Some (Hand_drawn media)
-    | Html media ->
-        let media = map_media m media in
-        Some (Html media)
-
-  let inline_ext_default m = function
-    | S_inline i -> inline_ext_default m i |> Option.map (fun i -> S_inline i)
-    | _ -> assert false
-
-  let make = Mapper.make ~block_ext_default ~inline_ext_default
-end
-
-module Fold_mapper = struct
-  let ( $ ) f (x, meta) =
-    let acc, res = f x in
-    (acc, (res, meta))
-
-  let map_origin (m : 'a Fold_mapper.t) acc ((l, attrs), meta) =
-    let acc, attrs = m.attrs acc $ attrs in
-    let acc, text = m.inline m acc (Cmarkit.Inline.Link.text l) in
-    let text = Option.value ~default:Cmarkit.Inline.empty text in
-    let reference = Cmarkit.Inline.Link.reference l in
-    let l = Cmarkit.Inline.Link.make text reference in
-    (acc, ((l, attrs), meta))
-
-  let map_media m acc { origin; uri; id } =
-    let acc, origin = map_origin m acc origin in
-    (acc, { origin; uri; id })
-
-  let block (m : 'a Fold_mapper.t) acc = function
-    | S_block b ->
-        let acc, b =
-          match b with
-          | Included ((fpath, attrs), meta) ->
-              let acc, attrs = m.attrs acc $ attrs in
-              let res = Included ((fpath, attrs), meta) in
-              (acc, Some res)
-          | IncludedHTML ((fpath, attrs), meta) ->
-              let acc, attrs = m.attrs acc $ attrs in
-              let res = IncludedHTML ((fpath, attrs), meta) in
-              (acc, Some res)
-          | Div ((block, attrs), meta) ->
-              let acc, attrs = m.attrs acc $ attrs in
-              let acc, block = m.block m acc block in
-              let res =
-                Option.map (fun block -> Div ((block, attrs), meta)) block
-              in
-              (acc, res)
-          | Slide (({ content; title }, attrs), meta) ->
-              let acc, attrs = m.attrs acc $ attrs in
-              let acc, content = m.block m acc content in
-              let acc, title =
-                match title with
-                | None -> (acc, None)
-                | Some (title, t_attrs) ->
-                    let acc, t_attrs = m.attrs acc $ t_attrs in
-                    let acc, title = m.inline m acc title in
-                    let title =
-                      Option.map (fun title -> (title, t_attrs)) title
-                    in
-                    (acc, title)
-              in
-              let res =
-                Option.map
-                  (fun content -> Slide (({ content; title }, attrs), meta))
-                  content
-              in
-              (acc, res)
-          | Slip ((block, attrs), meta) ->
-              let acc, attrs = m.attrs acc $ attrs in
-              let acc, block = m.block m acc block in
-              let res =
-                Option.map (fun block -> Slip ((block, attrs), meta)) block
-              in
-              (acc, res)
-          | SlipScript ((s, attrs), meta) ->
-              let acc, attrs = m.attrs acc $ attrs in
-              (acc, Some (SlipScript ((s, attrs), meta)))
-          | MermaidJS ((s, attrs), meta) ->
-              let acc, attrs = m.attrs acc $ attrs in
-              (acc, Some (MermaidJS ((s, attrs), meta)))
-          | Carousel ((bs, attrs), meta) -> (
-              let acc, attrs = m.attrs acc $ attrs in
-              let acc, bs = List.fold_left_map (m.block m) acc bs in
-              match List.filter_map Fun.id bs with
-              | [] -> (acc, None)
-              | bs -> (acc, Some (Carousel ((bs, attrs), meta))))
-        in
-        let res = Option.map (fun b -> S_block b) b in
-        (acc, res)
-    | normal -> Fold_mapper.default.block m acc normal
-
-  let inline (m : 'a Fold_mapper.t) acc = function
-    | S_inline i ->
-        let acc, i =
-          match i with
-          | Image media ->
-              let acc, media = map_media m acc media in
-              (acc, Image media)
-          | Svg media ->
-              let acc, media = map_media m acc media in
-              (acc, Svg media)
-          | Video media ->
-              let acc, media = map_media m acc media in
-              (acc, Video media)
-          | Audio media ->
-              let acc, media = map_media m acc media in
-              (acc, Audio media)
-          | Pdf media ->
-              let acc, media = map_media m acc media in
-              (acc, Pdf media)
-          | Hand_drawn media ->
-              let acc, media = map_media m acc media in
-              (acc, Hand_drawn media)
-          | Html media ->
-              let acc, media = map_media m acc media in
-              (acc, Html media)
-        in
-        (acc, Some (S_inline i))
-    | normal -> Fold_mapper.default.inline m acc normal
-
-  let default = { Fold_mapper.default with block; inline }
-
-  let make ?(block = block) ?(inline = inline) ?attrs () =
-    Fold_mapper.make ~block ~inline ?attrs ()
-end
-
 module Utils = struct
   module Block = struct
-    (** Get the attributes of a cmarkit node, returns them and the element
-        stripped of its attributes *)
+    (** Get the attributes of a cmarkit node, updates it and returns the block
+        with the new attribute as well as the old one. *)
     let update_attribute :
         (Attributes.t node -> Attributes.t node) ->
         Block.t ->
@@ -716,6 +351,487 @@ module Bol = struct
     match bol with
     | `Block b -> b |> Utils.Block.meta |> Meta.textloc
     | `Inline i -> i |> Utils.Inline.meta |> Meta.textloc
+end
+
+(* TODO: turn deps into an associative list to retain the order *)
+type unit' = {
+  path : Fpath.t;
+  ast : t;
+  deps : Cmarkit.Textloc.t list Fpath.Map.t;
+      (** Map of dependency -> List of places it is included *)
+  id_map : Id_map.definitions;
+  gui_map : (string * Bol.t) list;
+  source : string option;
+  files : Files.unread Files.map;
+  option : Frontmatter.Global.t;
+  warnings : Diagnosis.t list;
+}
+
+type units = {
+  units : unit' Fpath.Map.t;
+  directory : Fpath.t;
+  entry_point : unit';
+  entry_file : Fpath.t;
+  options : Frontmatter.Global.t;
+  files : Files.read Files.map;
+  id_map : Id_map.t;
+  action_plan : Action_plan.t;
+}
+
+module Folder = struct
+  let block_ext_default f acc = function
+    | Slide (({ content = b; title = Some (title, _) }, _), _) ->
+        let acc = Folder.fold_inline f acc title in
+        Folder.fold_block f acc b
+    | Slide (({ content = b; title = None }, _), _)
+    | Div ((b, _), _)
+    | Slip ((b, _), _) ->
+        Folder.fold_block f acc b
+    | IncludedHTML _ | Included _ | MermaidJS _ | SlipScript _ -> acc
+    | Carousel ((l, _), _) ->
+        List.fold_left (fun acc x -> Folder.fold_block f acc x) acc l
+
+  let block_ext_default f acc = function
+    | S_block b -> block_ext_default f acc b
+    | _ -> assert false
+
+  let inline_ext_default f acc = function
+    | Pdf { origin = (l, _), _; uri = _; id = _ }
+    | Audio { origin = (l, _), _; uri = _; id = _ }
+    | Video { origin = (l, _), _; uri = _; id = _ }
+    | Hand_drawn { origin = (l, _), _; uri = _; id = _ }
+    | Svg { origin = (l, _), _; uri = _; id = _ }
+    | Html { origin = (l, _), _; uri = _; id = _ }
+    | Image { origin = (l, _), _; uri = _; id = _ } ->
+        Folder.fold_inline f acc (Cmarkit.Inline.Link.text l)
+
+  let inline_ext_default f acc = function
+    | S_inline i -> inline_ext_default f acc i
+    | _ -> assert false
+
+  let make ~block ~inline () =
+    Folder.make ~block_ext_default ~inline_ext_default ~block ~inline ()
+
+  let rec fold_just_units f acc unit units =
+    let acc = f unit acc in
+    Fpath.Map.fold
+      (fun fpath _ acc ->
+        match Fpath.Map.find_opt fpath units with
+        | None -> acc
+        | Some unit -> fold_just_units f acc unit units)
+      unit.deps acc
+
+  let fold_units' ~block ~inline (acc : 'a) entry_point units : 'a =
+    let block (f : 'a Folder.t) (acc : 'a) = function
+      | S_block (Included ((fpath, _), _)) as b -> (
+          let acc =
+            match block f acc b with `Default -> acc | `Fold acc -> acc
+          in
+          match Fpath.Map.find_opt fpath units with
+          | None -> `Fold acc
+          | Some unit ->
+              let b = Doc.block unit.ast in
+              `Fold (Cmarkit.Folder.fold_block f acc b))
+      | b -> block f acc b
+    in
+    let folder = make ~block ~inline () in
+    Folder.fold_doc folder acc entry_point.ast
+
+  let fold_units ~block ~inline (acc : 'a) units : 'a =
+    fold_units' ~block ~inline acc units.entry_point units.units
+
+  let continue_block f c acc =
+    let open Block in
+    match c with
+    | Blank_line _ | Code_block _ | Html_block _ | Ext_standalone_attributes _
+    | Link_reference_definition _ | Thematic_break _ | Ext_math_block _
+    | Ext_attribute_definition _ ->
+        acc
+    | Heading ((h, _attrs), _) ->
+        Folder.fold_inline f acc (Block.Heading.inline h)
+    | Block_quote ((bq, _attrs), _) ->
+        Folder.fold_block f acc (Cmarkit.Block.Block_quote.block bq)
+    | Blocks (bs, _) -> List.fold_left (Folder.fold_block f) acc bs
+    | List ((l, _attrs), _) ->
+        let fold_list_item m acc (i, _) =
+          Folder.fold_block m acc (Block.List_item.block i)
+        in
+        List.fold_left (fold_list_item f) acc (List'.items l)
+    | Paragraph ((p, _attrs), _) ->
+        Folder.fold_inline f acc (Block.Paragraph.inline p)
+    | Ext_table ((t, _attrs), _) ->
+        let fold_row acc ((r, _), _) =
+          match r with
+          | `Header is | `Data is ->
+              List.fold_left
+                (fun acc (i, _) -> Folder.fold_inline f acc i)
+                acc is
+          | `Sep _ -> acc
+        in
+        List.fold_left fold_row acc (Table.rows t)
+    | Ext_footnote_definition ((_fn, _attrs), _) -> acc (* TODO: do *)
+    | S_block b -> (
+        match b with
+        | Slide (({ content = b; title = Some (title, _) }, _), _) ->
+            let acc = Folder.fold_inline f acc title in
+            Folder.fold_block f acc b
+        | Slide (({ content = b; title = None }, _), _)
+        | Div ((b, _), _)
+        | Slip ((b, _), _) ->
+            Folder.fold_block f acc b
+        | IncludedHTML _ | Included _ | MermaidJS _ | SlipScript _ -> acc
+        | Carousel ((l, _), _) ->
+            List.fold_left (fun acc x -> Folder.fold_block f acc x) acc l)
+    | _ -> assert false
+
+  let continue_inline f i acc =
+    let open Inline in
+    match i with
+    | Autolink _ | Break _ | Code_span _ | Raw_html _ | Text _ | Ext_math_span _
+      ->
+        acc
+    | Image ((l, _), _) | Link ((l, _), _) ->
+        let text = Link.text l in
+        Folder.fold_inline f acc text
+    | Ext_attrs (attrs, _) ->
+        let inline = Attributes_span.content attrs in
+        Folder.fold_inline f acc inline
+    | Emphasis ((e, _), _) ->
+        let inline = Emphasis.inline e in
+        Folder.fold_inline f acc inline
+    | Strong_emphasis ((e, _), _) ->
+        let inline = Emphasis.inline e in
+        Folder.fold_inline f acc inline
+    | Inlines (is, _) -> List.fold_left (Folder.fold_inline f) acc is
+    | Ext_strikethrough ((inline, _), _) ->
+        let inline = Strikethrough.inline inline in
+        Folder.fold_inline f acc inline
+    | S_inline ext -> (
+        match ext with
+        | Html m | Hand_drawn m | Image m | Svg m | Video m | Audio m | Pdf m ->
+            let (link, _), _ = m.origin in
+            let inline = Link.text link in
+            Folder.fold_inline f acc inline)
+    | _ -> assert false
+end
+
+module Mapper = struct
+  let ( let* ) = Option.bind
+  let ( let+ ) x f = Option.map f x
+
+  let block_ext_default m = function
+    | Div ((b, attrs), meta) ->
+        let* b = Mapper.map_block m b in
+        let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
+        Some (Div ((b, attrs), meta))
+    | Included ((fpath, attrs), meta) ->
+        let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
+        Some (Included ((fpath, attrs), meta))
+    | IncludedHTML ((fpath, attrs), meta) ->
+        let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
+        Some (IncludedHTML ((fpath, attrs), meta))
+    | Slide (({ content = b; title }, attrs), meta) ->
+        let* b = Mapper.map_block m b in
+        let title =
+          let* title, attrs = title in
+          let+ inline = Mapper.map_inline m title in
+          (inline, (Mapper.map_attrs m (fst attrs), snd attrs))
+        in
+        let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
+        Some (Slide (({ content = b; title }, attrs), meta))
+    | Slip ((b, attrs), meta) ->
+        let* b = Mapper.map_block m b in
+        let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
+        Some (Slip ((b, attrs), meta))
+    | SlipScript ((s, attrs), meta) ->
+        let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
+        Some (SlipScript ((s, attrs), meta))
+    | MermaidJS ((s, attrs), meta) ->
+        let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
+        Some (MermaidJS ((s, attrs), meta))
+    | Carousel ((l, attrs), meta) -> (
+        let attrs = (Mapper.map_attrs m (fst attrs), snd attrs) in
+        List.filter_map (Mapper.map_block m) l |> function
+        | [] -> None
+        | l -> Some (Carousel ((l, attrs), meta)))
+
+  let block_ext_default m = function
+    | S_block b -> block_ext_default m b |> Option.map (fun b -> S_block b)
+    | _ -> assert false
+
+  let map_origin m ((l, (attrs, a_meta)), meta) =
+    let attrs = Mapper.map_attrs m attrs in
+    let text =
+      Option.value ~default:Inline.empty
+        (Mapper.map_inline m (Cmarkit.Inline.Link.text l))
+    in
+    let reference = Cmarkit.Inline.Link.reference l in
+    let l = Cmarkit.Inline.Link.make text reference in
+    ((l, (attrs, a_meta)), meta)
+
+  let map_media m { origin; uri; id } =
+    let origin = map_origin m origin in
+    { origin; uri; id }
+
+  let inline_ext_default m = function
+    | Pdf media ->
+        let media = map_media m media in
+        Some (Pdf media)
+    | Video media ->
+        let media = map_media m media in
+        Some (Video media)
+    | Audio media ->
+        let media = map_media m media in
+        Some (Audio media)
+    | Image media ->
+        let media = map_media m media in
+        Some (Image media)
+    | Svg media ->
+        let media = map_media m media in
+        Some (Svg media)
+    | Hand_drawn media ->
+        let media = map_media m media in
+        Some (Hand_drawn media)
+    | Html media ->
+        let media = map_media m media in
+        Some (Html media)
+
+  let inline_ext_default m = function
+    | S_inline i -> inline_ext_default m i |> Option.map (fun i -> S_inline i)
+    | _ -> assert false
+
+  (** [continue_block m b] maps the children of [b] with [m], as the default
+      mapper would do. Contrarily to returning [`Default], this works on a block
+      that was modified by the mapper. *)
+  let continue_block m c =
+    let open Block in
+    let map_attrs (attrs, meta) = (Mapper.map_attrs m attrs, meta) in
+    match c with
+    | Blank_line _ -> `Map (Some c)
+    | Link_reference_definition ((lrd, attrs), meta) ->
+        `Map (Some (Link_reference_definition ((lrd, map_attrs attrs), meta)))
+    | Ext_standalone_attributes attrs ->
+        `Map (Some (Ext_standalone_attributes (map_attrs attrs)))
+    | Ext_math_block ((mb, attrs), meta) ->
+        `Map (Some (Ext_math_block ((mb, map_attrs attrs), meta)))
+    | Thematic_break ((tb, attrs), meta) ->
+        `Map (Some (Thematic_break ((tb, map_attrs attrs), meta)))
+    | Html_block ((hb, attrs), meta) ->
+        `Map (Some (Html_block ((hb, map_attrs attrs), meta)))
+    | Code_block ((cb, attrs), meta) ->
+        `Map (Some (Code_block ((cb, map_attrs attrs), meta)))
+    | Heading ((h, attrs), meta) ->
+        let attrs = map_attrs attrs in
+        let inline =
+          (* A heading can be empty *)
+          Option.value ~default:Inline.empty
+            (Mapper.map_inline m (Heading.inline h))
+        in
+        let h =
+          Heading.make ?id:(Heading.id h) ~layout:(Heading.layout h)
+            ~level:(Heading.level h) inline
+        in
+        `Map (Some (Heading ((h, attrs), meta)))
+    | Block_quote ((bq, attrs), meta) ->
+        let attrs = map_attrs attrs in
+        let block =
+          (* A block quote can be empty *)
+          Option.value
+            ~default:(Blocks ([], Meta.none))
+            (Mapper.map_block m (Block_quote.block bq))
+        in
+        let bq = Block_quote.make ~indent:(Block_quote.indent bq) block in
+        `Map (Some (Block_quote ((bq, attrs), meta)))
+    | Blocks (bs, meta) -> (
+        match List.filter_map (Mapper.map_block m) bs with
+        | [] -> `Map None
+        | bs -> `Map (Some (Blocks (bs, meta))))
+    | List ((l, attrs), meta) -> (
+        let attrs = map_attrs attrs in
+        let map_list_item (i, meta) =
+          let+ block = Mapper.map_block m (List_item.block i) in
+          ( List_item.make
+              ~before_marker:(List_item.before_marker i)
+              ~marker:(List_item.marker i)
+              ~after_marker:(List_item.after_marker i)
+              ?ext_task_marker:(List_item.ext_task_marker i)
+              block,
+            meta )
+        in
+        match List.filter_map map_list_item (List'.items l) with
+        | [] -> `Map None
+        | items ->
+            let l = List'.make ~tight:(List'.tight l) (List'.type' l) items in
+            `Map (Some (List ((l, attrs), meta))))
+    | Paragraph ((p, attrs), meta) ->
+        let attrs = map_attrs attrs in
+        `Map
+          (let+ inline = Mapper.map_inline m (Paragraph.inline p) in
+           let p =
+             Paragraph.make
+               ~leading_indent:(Paragraph.leading_indent p)
+               ~trailing_blanks:(Paragraph.trailing_blanks p)
+               inline
+           in
+           Paragraph ((p, attrs), meta))
+    | Ext_table ((t, attrs), meta) ->
+        let attrs = map_attrs attrs in
+        let map_col (i, layout) =
+          match Mapper.map_inline m i with
+          | None -> (Inline.empty, layout)
+          | Some i -> (i, layout)
+        in
+        let map_row (((r, meta), blanks) as row) =
+          match r with
+          | `Header is -> ((`Header (List.map map_col is), meta), blanks)
+          | `Data is -> ((`Data (List.map map_col is), meta), blanks)
+          | `Sep _ -> row
+        in
+        let rows = List.map map_row (Table.rows t) in
+        let t = Table.make ~indent:(Table.indent t) rows in
+        `Map (Some (Ext_table ((t, attrs), meta)))
+    | Ext_footnote_definition ((fn, attrs), meta) ->
+        let attrs = map_attrs attrs in
+        let block =
+          (* A footnote can be empty *)
+          Option.value
+            ~default:(Blocks ([], Meta.none))
+            (Mapper.map_block m (Footnote.block fn))
+        in
+        let fn =
+          Footnote.make ~indent:(Footnote.indent fn)
+            ~defined_label:(Footnote.defined_label fn)
+            (Footnote.label fn) block
+        in
+        `Map (Some (Ext_footnote_definition ((fn, attrs), meta)))
+    | Ext_attribute_definition ((atd, attrs), meta) ->
+        let attrs = map_attrs attrs in
+        let atd =
+          Attribute_definition.make
+            ~indent:(Attribute_definition.indent atd)
+            (Attribute_definition.label atd)
+            (map_attrs (Attribute_definition.attrs atd))
+        in
+        `Map (Some (Ext_attribute_definition ((atd, attrs), meta)))
+    | S_block _ -> `Map (block_ext_default m c)
+    | _ -> assert false
+
+  let make = Mapper.make ~block_ext_default ~inline_ext_default
+end
+
+module Fold_mapper = struct
+  let ( $ ) f (x, meta) =
+    let acc, res = f x in
+    (acc, (res, meta))
+
+  let map_origin (m : 'a Fold_mapper.t) acc ((l, attrs), meta) =
+    let acc, attrs = m.attrs acc $ attrs in
+    let acc, text = m.inline m acc (Cmarkit.Inline.Link.text l) in
+    let text = Option.value ~default:Cmarkit.Inline.empty text in
+    let reference = Cmarkit.Inline.Link.reference l in
+    let l = Cmarkit.Inline.Link.make text reference in
+    (acc, ((l, attrs), meta))
+
+  let map_media m acc { origin; uri; id } =
+    let acc, origin = map_origin m acc origin in
+    (acc, { origin; uri; id })
+
+  let block (m : 'a Fold_mapper.t) acc = function
+    | S_block b ->
+        let acc, b =
+          match b with
+          | Included ((fpath, attrs), meta) ->
+              let acc, attrs = m.attrs acc $ attrs in
+              let res = Included ((fpath, attrs), meta) in
+              (acc, Some res)
+          | IncludedHTML ((fpath, attrs), meta) ->
+              let acc, attrs = m.attrs acc $ attrs in
+              let res = IncludedHTML ((fpath, attrs), meta) in
+              (acc, Some res)
+          | Div ((block, attrs), meta) ->
+              let acc, attrs = m.attrs acc $ attrs in
+              let acc, block = m.block m acc block in
+              let res =
+                Option.map (fun block -> Div ((block, attrs), meta)) block
+              in
+              (acc, res)
+          | Slide (({ content; title }, attrs), meta) ->
+              let acc, attrs = m.attrs acc $ attrs in
+              let acc, content = m.block m acc content in
+              let acc, title =
+                match title with
+                | None -> (acc, None)
+                | Some (title, t_attrs) ->
+                    let acc, t_attrs = m.attrs acc $ t_attrs in
+                    let acc, title = m.inline m acc title in
+                    let title =
+                      Option.map (fun title -> (title, t_attrs)) title
+                    in
+                    (acc, title)
+              in
+              let res =
+                Option.map
+                  (fun content -> Slide (({ content; title }, attrs), meta))
+                  content
+              in
+              (acc, res)
+          | Slip ((block, attrs), meta) ->
+              let acc, attrs = m.attrs acc $ attrs in
+              let acc, block = m.block m acc block in
+              let res =
+                Option.map (fun block -> Slip ((block, attrs), meta)) block
+              in
+              (acc, res)
+          | SlipScript ((s, attrs), meta) ->
+              let acc, attrs = m.attrs acc $ attrs in
+              (acc, Some (SlipScript ((s, attrs), meta)))
+          | MermaidJS ((s, attrs), meta) ->
+              let acc, attrs = m.attrs acc $ attrs in
+              (acc, Some (MermaidJS ((s, attrs), meta)))
+          | Carousel ((bs, attrs), meta) -> (
+              let acc, attrs = m.attrs acc $ attrs in
+              let acc, bs = List.fold_left_map (m.block m) acc bs in
+              match List.filter_map Fun.id bs with
+              | [] -> (acc, None)
+              | bs -> (acc, Some (Carousel ((bs, attrs), meta))))
+        in
+        let res = Option.map (fun b -> S_block b) b in
+        (acc, res)
+    | normal -> Fold_mapper.default.block m acc normal
+
+  let inline (m : 'a Fold_mapper.t) acc = function
+    | S_inline i ->
+        let acc, i =
+          match i with
+          | Image media ->
+              let acc, media = map_media m acc media in
+              (acc, Image media)
+          | Svg media ->
+              let acc, media = map_media m acc media in
+              (acc, Svg media)
+          | Video media ->
+              let acc, media = map_media m acc media in
+              (acc, Video media)
+          | Audio media ->
+              let acc, media = map_media m acc media in
+              (acc, Audio media)
+          | Pdf media ->
+              let acc, media = map_media m acc media in
+              (acc, Pdf media)
+          | Hand_drawn media ->
+              let acc, media = map_media m acc media in
+              (acc, Hand_drawn media)
+          | Html media ->
+              let acc, media = map_media m acc media in
+              (acc, Html media)
+        in
+        (acc, Some (S_inline i))
+    | normal -> Fold_mapper.default.inline m acc normal
+
+  let default = { Fold_mapper.default with block; inline }
+
+  let make ?(block = block) ?(inline = inline) ?attrs () =
+    Fold_mapper.make ~block ~inline ?attrs ()
 end
 
 module Ast_printer = struct

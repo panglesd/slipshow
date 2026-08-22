@@ -8,9 +8,10 @@ let keyboard_setup (window : Universe.Window.t) =
       let try_handle handler k =
         match handler with true -> () | false -> k ()
       in
-      try_handle (Drawing_controller.Controller.handle ev) @@ fun () ->
       try_handle (check_modif_key Brr.Ev.Keyboard.ctrl_key) @@ fun () ->
       try_handle (check_modif_key Brr.Ev.Keyboard.meta_key) @@ fun () ->
+      try_handle (Gui.Controller.handle ev) @@ fun () ->
+      try_handle (Drawing_controller.Controller.handle ev) @@ fun () ->
       try_handle (Drawing_controller.Controller.check_in_textarea ())
       @@ fun () ->
       match key with
@@ -71,6 +72,10 @@ let keyboard_setup (window : Universe.Window.t) =
             Universe.Move.move_relative_pure Fast.slow ~scale:(1. /. 1.02)
               window ~duration:0.
           in
+          ()
+      | "G" ->
+          if Lwd.peek Drawing_state.can_gui then
+            Drawing_state.Status.set Gui_mode;
           ()
       | _ -> ()
     in
@@ -243,19 +248,25 @@ let message_setup window =
           in
           ()
       | Some { payload = Drawing d; id = _window_id } -> handle_drawing window d
+      | Some { payload = ActivateGUI id; id = _window_id } ->
+          Gui.Action.activate id
+      | Some { payload = DeActivateGUI; id = _window_id } ->
+          Gui.Action.deactivate ()
       | Some { payload = Send_all_drawing; id = _ } ->
           Drawing_controller.Messages.send_all_strokes ()
       | Some { payload = Receive_all_drawing all_strokes; id = _ } ->
           Drawing_controller.Messages.receive_all_strokes all_strokes
       | Some { payload = Can_save; id = _ } ->
           Lwd.set Drawing_state.can_save true
+      | Some { payload = Can_gui; id = _ } -> Lwd.set Drawing_state.can_gui true
       | None
       | Some
           {
             payload =
               ( Save_drawing (_, _)
               | Speaker_notes _ | Close_recording_panel | Open_recording_panel
-              | Close_speaker_notes | Open_speaker_notes | Ready );
+              | Close_speaker_notes | Open_speaker_notes | Ready
+              | SaveCoordinates _ | GotoLoc _ );
             id = _;
           } ->
           ())

@@ -86,4 +86,4 @@ type recording_state = {
 }
 
 type drawing_status = Presenting | Recording of recording_state
-type status = Drawing of drawing_status | Editing
+type status = Drawing of drawing_status | Editing | Gui_mode

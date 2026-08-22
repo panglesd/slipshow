@@ -2,8 +2,30 @@
 
 ## Unreleased
 
+### Added
+
+- "What You See Is What You Want" — positions any "GUI" element absolutely, by
+  dragging it in the preview! Supports moving, redimensioning and scaling
+  elements. (#270)
+- "Go to source" by `Ctrl`+clicking (or `Cmd`+clicking on Mac) anywhere in the
+  preview. (#270)
+
+### Changed
+
+- Improved toolbar and shortcut consistency, notably in recording manager mode,
+  `Shift+R` now closes the recording manager (previously it started a
+  recording). `Shift+S` is used to start a recording. (#270)
+
 ### Fixed
 
+- LSP:
+  - Respect UTF-16 position encoding when it is the only one supported by the
+    editor. (#270)
+  - Fix a bug in detection of element at cursor, and one in locations of "glued"
+    attribute, in effect improving hover and highlight reliability. (#270)
+  - Fix `go_next` / `go_previous` doing nothing in "refresh on save"
+    mode. (#270)
+- Fix drawings being drawn behind positioned elements. (#270)
 - Fixed standalonity of html by embedding mono fonts (#272)
 - Resolution of css and js files in frontmatter are now relative to the file
   they are in (and not to the root file). (#271)
@@ -12,6 +34,10 @@
 - Improve uri vs local path detection. (#271)
 - Improve locations of errors in `css:` and `js:` frontmatter fields. (#271)
 - LSP: Fix locations reported for frontmatter `attributes:`. (#271)
+
+### Docs
+
+- Added documentation on the new GUI mode (#270)
 
 ## [v0.12.0] The Lord of the Slips: The Two Editors (Wednesday, the 12th of August, 2026)
 

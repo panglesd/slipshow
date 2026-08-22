@@ -82,6 +82,13 @@ let is_pressed ev =
   is_pressed
     (ev |> Brr.Ev.as_type |> Brr.Ev.Pointer.as_mouse |> Brr.Ev.Mouse.buttons)
 
+(** - [start] takes as input the original coordinates of the click, as well as
+      the raw event. It returns an accumulator.
+    - [drag] takes as input the original coordinates of the start of the drag,
+      the difference with the current position of the mouse, the last
+      accumulator and the raw event. Must return an accumulator.
+    - [end_] takes as input the last accumulator and the raw event, and should
+      return unit. *)
 let mouse_drag start drag end_ =
   let mouse_move x y acc =
    fun ev ->

@@ -1,4 +1,9 @@
-type to_server = Update | Control of Proto.Server_to_client.control
+type to_server =
+  | Update
+  | Control of Proto.Server_to_client.control
+  | ActivateGUI of Common_types.gui_id
+  | DeActivateGUI
+  | Notify of string
 
 type root = {
   units : Slipshow.Ast.units;
@@ -9,7 +14,7 @@ type root = {
 
 type roots = (Fpath.t -> root option) * (unit -> Fpath.t list)
 
-let html_source filename =
+let html_source filename can_gui =
   let segments =
     filename |> Fpath.segs |> fun x ->
     Marshal.to_string x [] |> Base64.encode_string
@@ -32,11 +37,13 @@ let html_source filename =
            </style>
            <style>%s</style>
            <script>route_segment = "%s" </script>
+           <script>can_gui = %b </script>
            <script>%s</script>
 </body>
 </html>
   |html}
-    Server_assets.Style.v Ansi.css segments [%blob "./client/client.bc.js"]
+    Server_assets.Style.v Ansi.css segments can_gui
+    [%blob "./client/client.bc.js"]
 
 let choose_roots rs =
   Format.sprintf
@@ -64,40 +71,28 @@ let choose_roots rs =
           (p |> Fpath.to_string |> Dream.html_escape))
     |> String.concat "")
 
-let pong () =
-  let c = Proto.Server_to_client.Pong in
+let send_event c =
   let c = Proto.Server_to_client.to_string c in
   Dream.respond ~headers:[ ("Content-Type", "text/plain") ] c
 
-let saved s =
-  let c = Proto.Server_to_client.Saved (Fpath.to_string s) in
-  let c = Proto.Server_to_client.to_string c in
-  Dream.respond ~headers:[ ("Content-Type", "text/plain") ] c
+let pong () = send_event Pong
+let saved s = send_event (Saved (Fpath.to_string s))
+let notify s = send_event (Notify s)
+let send_update content = send_event (Update content)
+let send_control c = send_event (Control c)
+let send_activate_gui id = send_event (Replace (Some id))
+let send_deactivate_gui () = send_event (Replace None)
+let send_notify s = send_event (Notify s)
 
-let notify s =
-  let c = Proto.Server_to_client.Notify s in
-  let c = Proto.Server_to_client.to_string c in
-  Dream.respond ~headers:[ ("Content-Type", "text/plain") ] c
-
-let send_update content =
-  let c = Proto.Server_to_client.Update content in
-  let c = Proto.Server_to_client.to_string c in
-  Dream.respond ~headers:[ ("Content-Type", "text/plain") ] c
-
-let send_control c =
-  let c = Proto.Server_to_client.Control c in
-  let c = Proto.Server_to_client.to_string c in
-  Dream.respond ~headers:[ ("Content-Type", "text/plain") ] c
-
-let home_page (_, get_roots) _req =
+let home_page can_gui (_, get_roots) _req =
   Dream.log "A browser reloaded";
   let rs = get_roots () in
   match rs with
-  | [] -> Dream.html (html_source (Fpath.v "/"))
-  | [ unique_root ] -> Dream.html (html_source unique_root)
+  | [] -> Dream.html (html_source (Fpath.v "/") can_gui)
+  | [ unique_root ] -> Dream.html (html_source unique_root can_gui)
   | rs -> Dream.html (choose_roots rs)
 
-let preview (roots, get_roots) req =
+let preview can_gui (roots, get_roots) req =
   let file = Dream.target req in
   let file =
     let n = String.length "/preview/" in
@@ -106,10 +101,10 @@ let preview (roots, get_roots) req =
   let file = Fpath.v file in
   let root = roots file in
   match root with
-  | None -> home_page (roots, get_roots) req
+  | None -> home_page can_gui (roots, get_roots) req
   | Some _root ->
       Dream.log "A browser reloaded";
-      Dream.html (html_source file)
+      Dream.html (html_source file can_gui)
 
 let send root =
   let content =
@@ -148,8 +143,11 @@ let wait_for_event root roots file =
             (Format.asprintf "File %a is not part of the possible preview"
                Fpath.pp file)
       | Some root -> send root)
+  | `Master (ActivateGUI id) -> send_activate_gui id
+  | `Master DeActivateGUI -> send_deactivate_gui ()
+  | `Master (Notify s) -> send_notify s
 
-let polling (roots, _get_roots) req =
+let polling (roots, _get_roots) ~to_lsp_server req =
   let open Lwt.Syntax in
   let file = Dream.target req in
   let file =
@@ -169,34 +167,45 @@ let polling (roots, _get_roots) req =
       match msg with
       | None ->
           Dream.respond ~status:`Bad_Request "Error while decoding the payload"
-      | Some Ping -> pong ()
-      | Some (UpdateFrom version) ->
-          if not @@ String.equal version root.version then send root
-          else wait_for_event root roots file
-      | Some (Save_drawing (path, drawing)) ->
-          let from = root.units.directory in
-          let path = Fpath.v path in
-          if Fpath.has_ext ".draw" path && Fpath.Map.mem path root.units.files
-          then (
-            let path = Fpath.( // ) from path in
-            Dream.log "Saving drawing in %a with from %a" Fpath.pp path Fpath.pp
-              from;
-            let res = Bos.OS.File.write path drawing in
-            match res with
-            | Ok () -> saved path
-            | Error (`Msg err) ->
+      | Some msg -> (
+          let () =
+            match to_lsp_server with
+            | None -> ()
+            | Some to_lsp_server -> to_lsp_server msg root
+          in
+          match msg with
+          | Ping -> pong ()
+          | UpdateFrom version ->
+              if not @@ String.equal version root.version then send root
+              else wait_for_event root roots file
+          | Save_drawing (path, drawing) ->
+              let from = root.units.directory in
+              let path = Fpath.v path in
+              if
+                Fpath.has_ext ".draw" path
+                && Fpath.Map.mem path root.units.files
+              then (
+                let path = Fpath.( // ) from path in
+                Dream.log "Saving drawing in %a with from %a" Fpath.pp path
+                  Fpath.pp from;
+                let res = Bos.OS.File.write path drawing in
+                match res with
+                | Ok () -> saved path
+                | Error (`Msg err) ->
+                    let msg =
+                      Format.asprintf "Could not write %a: %s" Fpath.pp path err
+                    in
+                    notify msg)
+              else
                 let msg =
-                  Format.asprintf "Could not write %a: %s" Fpath.pp path err
+                  Format.asprintf "Path %a is not part of the current unit"
+                    Fpath.pp path
                 in
-                notify msg)
-          else
-            let msg =
-              Format.asprintf "Path %a is not part of the current unit" Fpath.pp
-                path
-            in
-            notify msg)
+                notify msg
+          | GotoLoc _ | Save_gui_position _ -> pong ()))
 
-let do_serve ~port (roots : roots) =
+let do_serve ~port ~to_lsp_server (roots : roots) =
+  let can_gui = Option.is_some to_lsp_server in
   let () = if Sys.unix then Sys.(set_signal sigpipe Signal_ignore) in
   (* We need this, otherwise the program is killed when sending a long string to
      a closed connection... See https://github.com/aantron/dream/issues/378 *)
@@ -215,9 +224,9 @@ let do_serve ~port (roots : roots) =
       (* @@ Dream.logger *)
       @@ Dream.router
            [
-             Dream.get "/" (home_page roots);
-             Dream.get "/preview/**" (preview roots);
-             Dream.post "/polling/**" (polling roots);
+             Dream.get "/" (home_page can_gui roots);
+             Dream.get "/preview/**" (preview can_gui roots);
+             Dream.post "/polling/**" (polling roots ~to_lsp_server);
            ]
     in
     Ok ()

@@ -2,4 +2,4 @@
  (name nottui)
  (public_name nottui)
  (wrapped false)
- (libraries lwd notty))
+ (libraries lwd notty-community))

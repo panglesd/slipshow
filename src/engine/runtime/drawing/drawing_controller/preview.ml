@@ -351,6 +351,9 @@ let for_events =
       match status with
       | Drawing d -> draw_mode d
       | Editing -> Lwd.pure Lwd_seq.empty
+      | Gui_mode ->
+          (* One time I should unify all those "for-events" *)
+          Lwd.pure Lwd_seq.empty
     in
     let display =
       let$* status = Status.get in

@@ -3,7 +3,7 @@
  (modules cbor_explorer)
  (modes byte exe)
  (flags :standard -warn-error -a)
- (libraries notty notty.unix nottui nottui-unix cbor containers))
+ (libraries notty-community notty-community.unix nottui nottui-unix cbor containers))
 
 (executable
  (name cbor_of_fs)

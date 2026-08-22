@@ -1,26 +1,62 @@
-let linoloc_of_textloc (loc : Cmarkit.Textloc.t) =
+let corrected_position ~positionEncoding s ~utf8_bol ~utf8_position =
+  match positionEncoding with
+  | `UTF8 -> utf8_position - utf8_bol
+  | `UTF16 ->
+      let len = String.length s in
+      let target_u8 = Int.min utf8_position len in
+      let rec loop u8_idx u16_idx =
+        if u8_idx >= target_u8 then u16_idx
+        else
+          let d = String.get_utf_8_uchar s u8_idx in
+          let d_len = Uchar.utf_decode_length d in
+          if u8_idx + d_len > target_u8 then u16_idx
+            (* Target offset falls inside a multi-byte UTF-8 character... *)
+          else
+            let u = Uchar.utf_decode_uchar d in
+            let u16_len = if Uchar.to_int u >= 0x10000 then 2 else 1 in
+            loop (u8_idx + d_len) (u16_idx + u16_len)
+      in
+      loop utf8_bol 0
+
+let pos_of_textloc ~source ~positionEncoding ~line ~byte =
+  let line, utf8_bol = line in
+  let character =
+    corrected_position ~positionEncoding source ~utf8_bol ~utf8_position:byte
+  in
+  (line - 1, character)
+
+let linoloc_of_textloc ~source ~positionEncoding (loc : Cmarkit.Textloc.t) =
   let start =
-    let line, byte_pos = Cmarkit.Textloc.first_line loc in
-    let line = line - 1 in
-    let character = Cmarkit.Textloc.first_byte loc - byte_pos in
+    let line = Cmarkit.Textloc.first_line loc in
+    let byte = Cmarkit.Textloc.first_byte loc in
+    let line, character =
+      pos_of_textloc ~source ~positionEncoding ~line ~byte
+    in
     Linol_lwt.Position.create ~character ~line
   in
   let end_ =
-    let line, byte_pos = Cmarkit.Textloc.last_line loc in
-    let line = line - 1 in
-    let character = Cmarkit.Textloc.last_byte loc - byte_pos + 1 in
+    let line = Cmarkit.Textloc.last_line loc in
+    let byte = Cmarkit.Textloc.last_byte loc in
+    let line, character =
+      pos_of_textloc ~source ~positionEncoding ~line ~byte
+    in
+    let character = character + 1 in
     Linol_lwt.Position.create ~character ~line
   in
   Linol_lwt.Range.create ~end_ ~start
 
-let create ~loc ?ploc msg =
-  let loc =
-    match ploc with None -> loc | Some ploc -> Diagnosis.loc_of_ploc loc ploc
-  in
-  let range = linoloc_of_textloc loc in
-  let severity = Linol_lwt.DiagnosticSeverity.Warning in
+let create ~source ~positionEncoding ~loc ?ploc msg =
+  let ( let+ ) x f = Option.map f x in
   Format.kasprintf
     (fun msg ->
+      let+ source = source in
+      let loc =
+        match ploc with
+        | None -> loc
+        | Some ploc -> Diagnosis.loc_of_ploc loc ploc
+      in
+      let range = linoloc_of_textloc ~source ~positionEncoding loc in
+      let severity = Linol_lwt.DiagnosticSeverity.Warning in
       Linol.Lsp.Types.Diagnostic.create ~severity ~message:(`String msg) ~range
         ())
     msg
@@ -47,7 +83,18 @@ let create ~loc ?ploc msg =
 (*   | InvalidFrontmatterLine _ -> _ *)
 (*   | ChildrenClassWithValue _ -> _ *)
 
-let of_error ~root ~file (e : Diagnosis.t) =
+let get_source fpath ~(units : Slipshow.Ast.unit' Fpath.map) =
+  match Fpath.Map.find_opt fpath units with
+  | Some { source; _ } -> source
+  | None -> None
+
+let of_error ~positionEncoding ~(units : Slipshow.Ast.unit' Fpath.map) ~root
+    ~file (e : Diagnosis.t) =
+  let create ~loc ?ploc s =
+    let file = Cmarkit.Textloc.file loc in
+    let source = get_source (Fpath.v file) ~units in
+    create ~positionEncoding ~source ~loc ?ploc s
+  in
   let loc_in_file loc =
     let path1 =
       Fpath.normalize
@@ -56,11 +103,11 @@ let of_error ~root ~file (e : Diagnosis.t) =
     let path2 = Fpath.normalize file in
     Fpath.equal path1 path2
   in
-  let if_in loc f = if loc_in_file loc then [ f () ] else [] in
+  let if_in loc f = if loc_in_file loc then Option.to_list (f ()) else [] in
   match e with
   | DuplicateID { id; occurrences } ->
       let occurrences = List.filter loc_in_file occurrences in
-      List.map
+      List.filter_map
         (fun loc -> create ~loc "ID '%s' is not unique in the document" id)
         occurrences
   | MissingFile { file; error_msg; locs } ->
@@ -71,7 +118,7 @@ let of_error ~root ~file (e : Diagnosis.t) =
            Open the record panel in the preview to record and save a draw file."
         else ""
       in
-      List.map
+      List.filter_map
         (fun loc ->
           create ~loc "Error when reading file '%s': %s%s" file error_msg
             draw_precision)

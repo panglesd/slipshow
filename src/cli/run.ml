@@ -49,7 +49,8 @@ let compile ~input ~output =
       | `File f -> Fpath.split_base f
     in
     with_read_file parent @@ fun read_file ->
-    Slipshow.convert ~directory:parent ~has_speaker_view:true ~read_file file
+    Slipshow.convert ~embed_loc:false ~directory:parent ~has_speaker_view:true
+      ~read_file file
   in
   let () =
     List.iter
@@ -88,8 +89,8 @@ let serve ~input ~output ~port =
       let parent, input = Fpath.split_base input in
       with_read_file parent @@ fun read_file ->
       let result, warnings =
-        Slipshow.Compile.compile_all ~directory:parent ~read_file
-          Fpath.Map.empty input
+        Slipshow.Compile.compile_all ~embed_loc:false ~directory:parent
+          ~read_file Fpath.Map.empty input
       in
       let result' = Slipshow.delayed_from_units ~has_speaker_view:true result in
       let html = Slipshow.add_starting_state result' None in
@@ -112,7 +113,7 @@ let markdown_compile ~input ~output =
   in
   let md, _used_files =
     with_read_file parent @@ fun read_file ->
-    Slipshow.convert_to_md ~directory:parent ~read_file file
+    Slipshow.convert_to_md ~embed_loc:false ~directory:parent ~read_file file
   in
   match output with
   | `Stdout ->

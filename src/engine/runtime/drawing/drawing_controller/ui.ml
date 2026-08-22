@@ -384,7 +384,7 @@ let el window =
               `P
                 (Brr.El.kbd
                    ~at:[ Brr.At.class' !!"slipshow-key-panel" ]
-                   [ Brr.El.txt' "Shift + R" ]);
+                   [ Brr.El.txt' "Shift + S" ]);
               `P (Brr.El.txt' " (or select another recording to edit). Or ");
               `R close_button;
             ]

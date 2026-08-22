@@ -9,7 +9,7 @@ module Unknown_attributes = struct
       Actions_arguments.all_actions
     |> SSet.of_list
 
-  let all_special = Special_attrs.all_attrs |> SSet.of_list
+  let all_special = Common_types.Special_strings.all_attrs |> SSet.of_list
 
   let all_attributes = [
       "accept";"accept-charset";"accesskey";"action";"align";"allow";"alpha";"alt";"as";"async";"autocapitalize";"autocomplete";"autoplay";"background";"bgcolor";"border";"capture";"charset";"checked";"cite";"class";"color";"colorspace";"cols";"colspan";"content";"contenteditable";"controls";"coords";"crossorigin";"csp";"data";"datetime";"decoding";"default";"defer";"dir";"dirname";"disabled";"download";"draggable";"enctype";"enterkeyhint";"elementtiming";"fetchpriority";"for";"form";"formaction";"formenctype";"formmethod";"formnovalidate";"formtarget";"headers";"height";"hidden";"high";"href";"hreflang";"http-equiv";"id";"integrity";"inputmode";"ismap";"itemprop";"kind";"label";"lang";"language";"loading";"list";"loop";"low";"max";"maxlength";"minlength";"media";"method";"min";"multiple";"muted";"name";"novalidate";"open";"optimum";"pattern";"ping";"placeholder";"playsinline";"poster";"preload";"readonly";"referrerpolicy";"rel";"required";"reversed";"role";"rows";"rowspan";"sandbox";"scope";"selected";"shape";"size";"sizes";"slot";"span";"spellcheck";"src";"srcdoc";"srclang";"srcset";"start";"step";"style";"summary";"tabindex";"target";"title";"translate";"type";"usemap";"value";"width";"wrap" ]

@@ -71,7 +71,9 @@ let handle_answer msg =
       | Control (Movement Forward) -> Previewer.next previewer
       | Control (Movement Backward) -> Previewer.previous previewer
       | Saved path -> Previewer.notify previewer ("Saved drawing as: " ^ path)
-      | Notify msg -> Previewer.notify previewer msg)
+      | Notify msg -> Previewer.notify previewer msg
+      | Replace (Some id) -> Previewer.activate_gui previewer id
+      | Replace None -> Previewer.deactivate_gui previewer)
 
 let proto_request_single ?signal uri msg =
   let open Brr_io.Fetch in
@@ -125,9 +127,21 @@ let previewer' =
     let _ = proto_request uri (Save_drawing (path, content)) in
     ()
   in
+  let save_coordinate ~id ~coord =
+    let coord = Actions_arguments.Gui.to_string coord in
+    let _ = proto_request uri (Save_gui_position { id; coord }) in
+    ()
+  in
+  let goto_loc s =
+    let _ = proto_request uri (GotoLoc s) in
+    ()
+  in
+  let can_gui =
+    Jv.get (Brr.Window.to_jv Brr.G.window) "can_gui" |> Jv.to_bool
+  in
   Previewer.create_previewer ?initial_stage ~callback ~save_drawing
     ~include_speaker_view:true ~errors_el:warnings ~steal_focus:true
-    ~can_save:true elem
+    ~can_save:true ~can_gui ~save_coordinate ~goto_loc elem
 
 let () = previewer := Some previewer'
 

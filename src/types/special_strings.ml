@@ -13,6 +13,9 @@ let pdf_resolution = "pdf-resolution"
 let pause_block = "pause-block"
 let as_html = "as-html"
 let auto_continue = "auto-continue"
+let gui = "gui"
+let gui_file = "slipshow-gui-file"
+let gui_id = "slipshow-gui-id"
 
 let all_attrs =
   [
@@ -31,4 +34,7 @@ let all_attrs =
     pause_block;
     as_html;
     auto_continue;
+    gui;
+    gui_file;
+    gui_id;
   ]

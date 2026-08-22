@@ -1,4 +1,5 @@
 open Cmarkit
+module Special_attrs = Common_types.Special_strings
 
 type file_reader = Fpath.t -> (string option, [ `Msg of string ]) result
 
@@ -267,63 +268,117 @@ module Stage1 = struct
     in
     match res with [] -> None | res -> Some (Block.Blocks (res, meta))
 
-  let map_attrs = function
-    | `Kv (("up", m), v) -> Some (`Kv (("up-at-unpause", m), v))
-    | `Kv (("center", m), v) -> Some (`Kv (("center-at-unpause", m), v))
-    | `Kv (("down", m), v) -> Some (`Kv (("down-at-unpause", m), v))
-    | `Kv (("exec", m), v) -> Some (`Kv (("exec-at-unpause", m), v))
-    | `Kv (("scroll", m), v) -> Some (`Kv (("scroll-at-unpause", m), v))
-    | `Kv (("enter", m), v) -> Some (`Kv (("enter-at-unpause", m), v))
-    | `Kv (("emph", m), v) -> Some (`Kv (("emph-at-unpause", m), v))
-    | `Kv (("focus", m), v) -> Some (`Kv (("focus-at-unpause", m), v))
-    | `Kv (("reveal", m), v) -> Some (`Kv (("reveal-at-unpause", m), v))
-    | `Kv (("static", m), v) -> Some (`Kv (("static-at-unpause", m), v))
-    | `Kv (("unemph", m), v) -> Some (`Kv (("unemph-at-unpause", m), v))
-    | `Kv (("unfocus", m), v) -> Some (`Kv (("unfocus-at-unpause", m), v))
-    | `Kv (("unreveal", m), v) -> Some (`Kv (("unreveal-at-unpause", m), v))
-    | `Kv (("unstatic", m), v) -> Some (`Kv (("unstatic-at-unpause", m), v))
-    (* TODO: Improve this (eg by moving it to another phase) *)
-    | `Kv (("children:up", m), v) ->
-        Some (`Kv (("children:up-at-unpause", m), v))
-    | `Kv (("children:center", m), v) ->
-        Some (`Kv (("children:center-at-unpause", m), v))
-    | `Kv (("children:down", m), v) ->
-        Some (`Kv (("children:down-at-unpause", m), v))
-    | `Kv (("children:exec", m), v) ->
-        Some (`Kv (("children:exec-at-unpause", m), v))
-    | `Kv (("children:scroll", m), v) ->
-        Some (`Kv (("children:scroll-at-unpause", m), v))
-    | `Kv (("children:enter", m), v) ->
-        Some (`Kv (("children:enter-at-unpause", m), v))
-    | `Kv (("children:emph", m), v) ->
-        Some (`Kv (("children:emph-at-unpause", m), v))
-    | `Kv (("children:focus", m), v) ->
-        Some (`Kv (("children:focus-at-unpause", m), v))
-    | `Kv (("children:reveal", m), v) ->
-        Some (`Kv (("children:reveal-at-unpause", m), v))
-    | `Kv (("children:static", m), v) ->
-        Some (`Kv (("children:static-at-unpause", m), v))
-    | `Kv (("children:unemph", m), v) ->
-        Some (`Kv (("children:unemph-at-unpause", m), v))
-    | `Kv (("children:unfocus", m), v) ->
-        Some (`Kv (("children:unfocus-at-unpause", m), v))
-    | `Kv (("children:unreveal", m), v) ->
-        Some (`Kv (("children:unreveal-at-unpause", m), v))
-    | `Kv (("children:unstatic", m), v) ->
-        Some (`Kv (("children:unstatic-at-unpause", m), v))
-    | x -> Some x
-
-  let execute ~htbl_include current_path defs =
-    let ret x = `Map x in
-    let block m = function
-      | Block.Blocks bs -> ret @@ handle_dash_separated_blocks m bs
-      | Block.Block_quote bq -> ret @@ Some (turn_block_quotes_into_divs m bq)
-      | Block.Code_block cb -> ret @@ Some (handle_code_blocks m cb)
-      | Block.Ext_standalone_attributes sa ->
-          handle_includes m ~htbl_include current_path sa
-      | _ -> Mapper.default
+  let map_attrs ~get_gui_id ~embed_loc attrs =
+    let map_attrs attrs = function
+      | `Kv (("up", m), v) -> [ `Kv (("up-at-unpause", m), v) ]
+      | `Kv (("center", m), v) -> [ `Kv (("center-at-unpause", m), v) ]
+      | `Kv (("down", m), v) -> [ `Kv (("down-at-unpause", m), v) ]
+      | `Kv (("exec", m), v) -> [ `Kv (("exec-at-unpause", m), v) ]
+      | `Kv (("scroll", m), v) -> [ `Kv (("scroll-at-unpause", m), v) ]
+      | `Kv (("enter", m), v) -> [ `Kv (("enter-at-unpause", m), v) ]
+      | `Kv (("emph", m), v) -> [ `Kv (("emph-at-unpause", m), v) ]
+      | `Kv (("focus", m), v) -> [ `Kv (("focus-at-unpause", m), v) ]
+      | `Kv (("reveal", m), v) -> [ `Kv (("reveal-at-unpause", m), v) ]
+      | `Kv (("static", m), v) -> [ `Kv (("static-at-unpause", m), v) ]
+      | `Kv (("unemph", m), v) -> [ `Kv (("unemph-at-unpause", m), v) ]
+      | `Kv (("unfocus", m), v) -> [ `Kv (("unfocus-at-unpause", m), v) ]
+      | `Kv (("unreveal", m), v) -> [ `Kv (("unreveal-at-unpause", m), v) ]
+      | `Kv (("unstatic", m), v) -> [ `Kv (("unstatic-at-unpause", m), v) ]
+      (* TODO: Improve this (eg by moving it to another phase) *)
+      | `Kv (("children:up", m), v) ->
+          [ `Kv (("children:up-at-unpause", m), v) ]
+      | `Kv (("children:center", m), v) ->
+          [ `Kv (("children:center-at-unpause", m), v) ]
+      | `Kv (("children:down", m), v) ->
+          [ `Kv (("children:down-at-unpause", m), v) ]
+      | `Kv (("children:exec", m), v) ->
+          [ `Kv (("children:exec-at-unpause", m), v) ]
+      | `Kv (("children:scroll", m), v) ->
+          [ `Kv (("children:scroll-at-unpause", m), v) ]
+      | `Kv (("children:enter", m), v) ->
+          [ `Kv (("children:enter-at-unpause", m), v) ]
+      | `Kv (("children:emph", m), v) ->
+          [ `Kv (("children:emph-at-unpause", m), v) ]
+      | `Kv (("children:focus", m), v) ->
+          [ `Kv (("children:focus-at-unpause", m), v) ]
+      | `Kv (("children:reveal", m), v) ->
+          [ `Kv (("children:reveal-at-unpause", m), v) ]
+      | `Kv (("children:static", m), v) ->
+          [ `Kv (("children:static-at-unpause", m), v) ]
+      | `Kv (("children:unemph", m), v) ->
+          [ `Kv (("children:unemph-at-unpause", m), v) ]
+      | `Kv (("children:unfocus", m), v) ->
+          [ `Kv (("children:unfocus-at-unpause", m), v) ]
+      | `Kv (("children:unreveal", m), v) ->
+          [ `Kv (("children:unreveal-at-unpause", m), v) ]
+      | `Kv (("children:unstatic", m), v) ->
+          [ `Kv (("children:unstatic-at-unpause", m), v) ]
+      | `Kv ((gui_s, meta), _) as gui when String.equal Special_attrs.gui gui_s
+        ->
+          let if_not_already_defined key value =
+            match Cmarkit.Attributes.find key attrs with
+            | None when embed_loc ->
+                let v = value () in
+                let value = { Cmarkit.Attributes.v; delimiter = Some '"' } in
+                [ `Kv ((key, Meta.none), Some (value, Meta.none)) ]
+            | _ -> []
+          in
+          let id_attr =
+            if_not_already_defined Special_attrs.gui_id @@ get_gui_id
+          in
+          let file_attr =
+            if_not_already_defined Special_attrs.gui_file @@ fun () ->
+            meta |> Cmarkit.Meta.textloc |> Cmarkit.Textloc.file
+          in
+          gui :: (id_attr @ file_attr)
+      | x -> [ x ]
     in
-    let attrs = map_attrs in
+    Cmarkit.Attributes.map (map_attrs attrs) attrs
+
+  let execute ~get_gui_id ~htbl_include ~embed_loc current_path defs =
+    let ret x = `Map x in
+    let block m b =
+      let b =
+        if embed_loc then
+          let res =
+            Ast.Utils.Block.update_attribute
+              (fun (attrs, meta) ->
+                let loc = Ast.Utils.Block.textloc b in
+                let id_attr =
+                  let v = get_gui_id () in
+                  { Cmarkit.Attributes.v; delimiter = Some '"' }
+                in
+                let file_attr =
+                  let v = Cmarkit.Textloc.file loc in
+                  { Cmarkit.Attributes.v; delimiter = Some '"' }
+                in
+                ( attrs
+                  |> Cmarkit.Attributes.add
+                       (Special_attrs.gui_file, Meta.none)
+                       (Some (file_attr, Meta.none))
+                  |> Cmarkit.Attributes.add
+                       (Special_attrs.gui_id, Meta.none)
+                       (Some (id_attr, Meta.none)),
+                  meta ))
+              b
+          in
+          match res with None -> b | Some (b, _) -> b
+        else b
+      in
+      let res =
+        match b with
+        | Block.Blocks bs -> ret @@ handle_dash_separated_blocks m bs
+        | Block.Block_quote bq -> ret @@ Some (turn_block_quotes_into_divs m bq)
+        | Block.Code_block cb -> ret @@ Some (handle_code_blocks m cb)
+        | Block.Ext_standalone_attributes sa ->
+            handle_includes m ~htbl_include current_path sa
+        | _ -> Mapper.default
+      in
+      match res with
+      | `Default -> Ast.Mapper.continue_block m b
+      | `Map _ as map -> map
+    in
+    let attrs = map_attrs ~get_gui_id ~embed_loc in
     let inline m = function
       | Inline.Image img -> handle_image_inlining m defs current_path img
       | Inline.Code_span cs -> Mapper.ret (handle_code_span m cs)
@@ -331,15 +386,25 @@ module Stage1 = struct
     in
     Ast.Mapper.make ~block ~inline ~attrs ()
 
-  let execute current_path defs md fm =
+  let execute ~embed_loc current_path defs md fm =
+    let get_gui_id =
+      let r = ref 0 in
+      fun () ->
+        incr r;
+        "slipshow__gui_id-" ^ string_of_int !r
+    in
     let htbl_include = Hashtbl.create 3 in
-    let res = Mapper.map_doc (execute ~htbl_include current_path defs) md in
+    let res =
+      Mapper.map_doc
+        (execute ~get_gui_id ~htbl_include ~embed_loc current_path defs)
+        md
+    in
     let fm =
       let toplevel_attributes =
         match fm.Frontmatter.global.toplevel_attributes with
         | None -> None
         | Some (attrs, meta) ->
-            Some (Cmarkit.Attributes.map map_attrs attrs, meta)
+            Some ((map_attrs ~get_gui_id ~embed_loc) attrs, meta)
       in
       {
         fm with
@@ -495,36 +560,49 @@ module Stage4 = struct
     in
     Fpath.Map.update path add fpath_map
 
+  let add_to_gui_list ~attrs ~gui_list elem =
+    let open Special_attrs in
+    match Attributes.find gui_id attrs with
+    | Some (_loc, Some (gui_id, _)) -> (gui_id.v, elem) :: gui_list
+    | _ -> gui_list
+
   let execute =
-    let block f (files, id_list) c =
+    let block f (files, id_list, gui_list) c =
       let files =
         match c with
         | Ast.S_block (IncludedHTML ((p, _), meta)) ->
             fpath_map_add_to_list p (Id.gen (), Meta.textloc meta) files
         | _ -> files
       in
-      let acc =
+      let id_list, gui_list =
         match Ast.Utils.Block.get_attribute c with
-        | None -> (files, id_list)
-        | Some (_, (attrs, meta)) -> (
-            match Attributes.id attrs with
-            | None -> (files, id_list)
-            | Some id -> (files, { Id_map.id; elem = `Block c; meta } :: id_list)
-            )
+        | None -> (id_list, gui_list)
+        | Some (_, (attrs, meta)) ->
+            let id_list =
+              match Attributes.id attrs with
+              | None -> id_list
+              | Some id -> { Id_map.id; elem = `Block c; meta } :: id_list
+            in
+            let gui_list = add_to_gui_list ~attrs ~gui_list (`Block c) in
+            (id_list, gui_list)
       in
-      let res = Ast.Folder.continue_block f c acc in
+      let res = Ast.Folder.continue_block f c (files, id_list, gui_list) in
       Folder.ret res
     in
-    let inline f (acc, id_list) i =
-      let id_list =
+    let inline f (files, id_list, gui_list) i =
+      let id_list, gui_list =
         match Ast.Utils.Inline.get_attribute i with
-        | None -> id_list
-        | Some (_, (attrs, meta)) -> (
-            match Attributes.id attrs with
-            | None -> id_list
-            | Some id -> { Id_map.id; elem = `Inline i; meta } :: id_list)
+        | None -> (id_list, gui_list)
+        | Some (_, (attrs, meta)) ->
+            let id_list =
+              match Attributes.id attrs with
+              | None -> id_list
+              | Some id -> { Id_map.id; elem = `Inline i; meta } :: id_list
+            in
+            let gui_list = add_to_gui_list ~attrs ~gui_list (`Inline i) in
+            (id_list, gui_list)
       in
-      let acc =
+      let files =
         match i with
         | Ast.S_inline i -> (
             match i with
@@ -537,11 +615,11 @@ module Stage4 = struct
             | Image media -> (
                 match media with
                 | { uri = Path p, meta; id; origin = _ } ->
-                    fpath_map_add_to_list p (id, Meta.textloc meta) acc
-                | _ -> acc))
-        | _ -> acc
+                    fpath_map_add_to_list p (id, Meta.textloc meta) files
+                | _ -> files))
+        | _ -> files
       in
-      let acc = Ast.Folder.continue_inline f i (acc, id_list) in
+      let acc = Ast.Folder.continue_inline f i (files, id_list, gui_list) in
       Folder.ret acc
     in
     Ast.Folder.make ~block ~inline ()
@@ -553,8 +631,9 @@ module Stage4 = struct
       |> List.map (fun x ->
           { Id_map.id = (x, Meta.none); elem = `External; meta = Meta.none })
     in
-    let files, id_list =
-      Cmarkit.Folder.fold_doc execute (files, external_ids) md
+    let gui_list = [] in
+    let files, id_list, gui_list =
+      Cmarkit.Folder.fold_doc execute (files, external_ids, gui_list) md
     in
     let id_list = List.rev id_list in
     let id_map =
@@ -576,12 +655,12 @@ module Stage4 = struct
       let uris = Frontmatter.Global.uris fm.global in
       List.fold_left add_uri files uris
     in
-    (md, files, id_map)
+    (md, files, id_map, gui_list)
 end
 
 let action_plan _ = failwith "TODO: Action plan"
 
-let of_cmarkit ~path ~(fm : Frontmatter.t) ~source md =
+let of_cmarkit ~embed_loc ~path ~(fm : Frontmatter.t) ~source md =
   let defs = Doc.defs md in
   let block = Doc.block md in
   let md =
@@ -594,21 +673,23 @@ let of_cmarkit ~path ~(fm : Frontmatter.t) ~source md =
     Doc.make ~nl:(Doc.nl md) ~defs b
   in
   let current_path = Fpath.parent path in
-  let (ast, deps, id_map, files, option), warnings =
+  let (ast, deps, id_map, files, option, gui_map), warnings =
     Diagnosis.with_ @@ fun () ->
-    let md1, htbl_include, fm = Stage1.execute current_path defs md fm in
+    let md1, htbl_include, fm =
+      Stage1.execute ~embed_loc current_path defs md fm
+    in
     let md2 = Stage2.execute md1 in
     let md3 = Stage3.execute md2 in
-    let md4, files, id_map = Stage4.execute ~fm md3 in
+    let md4, files, id_map, gui_map = Stage4.execute ~fm md3 in
     let deps = htbl_include |> Hashtbl.to_seq |> Fpath.Map.of_seq in
-    (md4, deps, id_map, files, fm.global)
+    (md4, deps, id_map, files, fm.global, gui_map)
   in
-  { Ast.ast; deps; id_map; source; files; option; warnings; path }
+  { Ast.ast; deps; id_map; source; files; option; warnings; path; gui_map }
 
 let _add_file read_file file content =
  fun p -> if Fpath.equal p file then Ok (Some content) else read_file p
 
-let unit ?locs ~read_file file =
+let unit ?locs ~read_file ~embed_loc file =
   let locs =
     match locs with
     | Some locs -> locs
@@ -632,25 +713,34 @@ let unit ?locs ~read_file file =
     | Ok (Some s' as s) -> (s, s')
   in
   let doc, frontmatter = Cmarkit_proxy.of_string ~file s in
-  of_cmarkit ~source ~path:file doc ~fm:frontmatter
+  of_cmarkit ~embed_loc ~source ~path:file doc ~fm:frontmatter
 
-let rec add_to_compile ?locs ~units file units_cache ~read_file =
-  if Fpath.Map.mem file units then units
-  else
-    let u =
-      match Fpath.Map.find_opt file units_cache with
-      | Some u -> u
-      | None -> unit ~read_file ?locs file
-    in
-    let units = Fpath.Map.add file u units in
-    Fpath.Map.fold
-      (fun dep locs units ->
-        add_to_compile ~locs ~units dep units_cache ~read_file)
-      u.deps units
+let rec add_to_compile ?locs ~embed_loc ~units file units_cache ~read_file =
+  match Fpath.Map.find_opt file units with
+  | Some unit -> (unit, units)
+  | None ->
+      let u =
+        match Fpath.Map.find_opt file units_cache with
+        | Some u -> u
+        | None -> unit ~embed_loc ~read_file ?locs file
+      in
+      let units = Fpath.Map.add file u units in
+      let units =
+        Fpath.Map.fold
+          (fun dep locs units ->
+            let _, units =
+              add_to_compile ~locs ~units ~embed_loc dep units_cache ~read_file
+            in
+            units)
+          u.deps units
+      in
+      (u, units)
 
-let compile_all ~directory ~read_file units_cache file =
+let compile_all ~directory ~read_file ~embed_loc units_cache file =
   let units = Fpath.Map.empty in
-  let units = add_to_compile file ~units units_cache ~read_file in
+  let unit, units =
+    add_to_compile file ~units ~embed_loc units_cache ~read_file
+  in
   let files, options =
     Ast.Folder.fold_just_units
       (fun unit (files, option) ->
@@ -664,14 +754,13 @@ let compile_all ~directory ~read_file units_cache file =
         in
         (files, option))
       (Fpath.Map.empty, Frontmatter.Global.empty)
-      file units
+      unit units
   in
   let toplevel_attributes =
     Option.value ~default:Frontmatter.Toplevel_attributes.default
       options.toplevel_attributes
   in
-  let internal = Fpath.v "internal" in
-  let u =
+  let entry_point =
     let doc =
       let block =
         let open Cmarkit.Block in
@@ -694,10 +783,10 @@ let compile_all ~directory ~read_file units_cache file =
       in
       Cmarkit.Doc.make block
     in
-    of_cmarkit ~path:internal ~fm:Frontmatter.empty ~source:None doc
+    of_cmarkit ~embed_loc ~path:(Fpath.v "internal") ~fm:Frontmatter.empty
+      ~source:None doc
   in
-  let units = Fpath.Map.add internal u units in
-  let action_plan, id_map = Action_plan.execute u units in
+  let action_plan, id_map = Action_plan.execute entry_point units in
   let files : Ast.Files.read Ast.Files.map =
     Fpath.Map.mapi
       (fun path file ->
@@ -717,14 +806,16 @@ let compile_all ~directory ~read_file units_cache file =
     Ast.units;
     files;
     id_map;
-    entry_point = internal;
+    entry_point;
     options;
     action_plan;
     directory;
+    entry_file = file;
   }
 
-let compile_all ~read_file ~directory units file =
-  Diagnosis.with_ @@ fun () -> compile_all ~directory ~read_file units file
+let compile_all ~read_file ~directory ~embed_loc units file =
+  Diagnosis.with_ @@ fun () ->
+  compile_all ~directory ~read_file ~embed_loc units file
 
 (* let add_to_compile file c ~read_file = *)
 (*   Diagnosis.with_ @@ fun () -> add_to_compile file c ~read_file *)
@@ -789,14 +880,15 @@ let to_cmarkit units =
     | Ast.S_inline i -> inline m i
     | _ -> Mapper.default
   in
-  let attrs = function
-    | `Kv (("up-at-unpause", m), v) -> Some (`Kv (("up", m), v))
-    | `Kv (("center-at-unpause", m), v) -> Some (`Kv (("center", m), v))
-    | `Kv (("enter-at-unpause", m), v) -> Some (`Kv (("enter", m), v))
-    | `Kv (("down-at-unpause", m), v) -> Some (`Kv (("down", m), v))
-    | `Kv (("exec-at-unpause", m), v) -> Some (`Kv (("exec", m), v))
-    | `Kv (("scroll-at-unpause", m), v) -> Some (`Kv (("scroll", m), v))
-    | x -> Some x
+  let attrs =
+    Cmarkit.Attributes.map (function
+      | `Kv (("up-at-unpause", m), v) -> [ `Kv (("up", m), v) ]
+      | `Kv (("center-at-unpause", m), v) -> [ `Kv (("center", m), v) ]
+      | `Kv (("enter-at-unpause", m), v) -> [ `Kv (("enter", m), v) ]
+      | `Kv (("down-at-unpause", m), v) -> [ `Kv (("down", m), v) ]
+      | `Kv (("exec-at-unpause", m), v) -> [ `Kv (("exec", m), v) ]
+      | `Kv (("scroll-at-unpause", m), v) -> [ `Kv (("scroll", m), v) ]
+      | x -> [ x ])
   in
   Ast.Mapper.make ~block ~inline ~attrs ()
 
@@ -809,7 +901,6 @@ let to_cmarkit
       id_map = _;
       action_plan = _;
       directory = _;
+      entry_file = _;
     } =
-  match Fpath.Map.find_opt entry_point units with
-  | None -> failwith "Fail during markdown output"
-  | Some sd -> Cmarkit.Mapper.map_doc (to_cmarkit units) sd.ast
+  Cmarkit.Mapper.map_doc (to_cmarkit units) entry_point.ast

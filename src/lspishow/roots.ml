@@ -15,19 +15,20 @@ let saved : t = Hashtbl.create 10
 let generate_version () =
   String.init 10 (fun _ -> Char.chr (97 + Random.int 26))
 
-let update_root read_file roots_state units root =
+let update_root ~should_broadcast read_file roots_state units root =
   let directory = Fpath.parent root in
   let units, diagnostics =
-    Slipshow.Compile.compile_all ~directory ~read_file units root
+    Slipshow.Compile.compile_all ~embed_loc:true ~directory ~read_file units
+      root
   in
-  let condition =
+  let condition, old_version =
     match Hashtbl.find_opt roots_state root with
-    | None -> Lwt_condition.create ()
-    | Some { condition; _ } ->
-        Lwt_condition.broadcast condition Update;
-        condition
+    | None -> (Lwt_condition.create (), generate_version ())
+    | Some { condition; version; _ } ->
+        if should_broadcast then Lwt_condition.broadcast condition Update;
+        (condition, version)
   in
-  let version = generate_version () in
+  let version = if should_broadcast then generate_version () else old_version in
   let updated = { units; diagnostics; condition; version } in
   Hashtbl.replace roots_state root updated;
   updated

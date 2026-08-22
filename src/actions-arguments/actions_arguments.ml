@@ -503,3 +503,5 @@ let all_actions =
     (module Speaker_note : S);
     (module Play_media : S);
   ]
+
+module Gui = Gui

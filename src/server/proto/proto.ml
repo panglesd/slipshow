@@ -14,6 +14,8 @@ module Client_to_server = struct
     | Ping
     | UpdateFrom of string
     | Save_drawing of string * string (* path * content *)
+    | Save_gui_position of { id : Common_types.gui_id; coord : string }
+    | GotoLoc of Common_types.gui_id
 
   include Marsharializing
 end
@@ -28,6 +30,7 @@ module Server_to_client = struct
     | Control of control
     | Saved of string
     | Notify of string
+    | Replace of Common_types.gui_id option
 
   include Marsharializing
 end

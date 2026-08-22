@@ -1,50 +1,7 @@
+open Brr_lwd
 open Lwd_infix
 open Drawing_state
-open Brr_lwd
-
-let set_handler v value = Elwd.handler Brr.Ev.click (fun _ -> Lwd.set v value)
-let ( !! ) = Jstr.v
-
-let panel_icon ?ev ?(at = []) ?st el =
-  Elwd.div ?ev ~at:(`P (Brr.At.class' !!"slipshow-icon") :: at) ?st el
-
-let panel_button ?label_for ?shortcut ?handler ?(at = []) ~icon text =
-  let shortcut =
-    match shortcut with
-    | None -> []
-    | Some shortcut ->
-        [
-          `P
-            (Brr.El.kbd
-               ~at:[ Brr.At.class' !!"slipshow-key" ]
-               [ Brr.El.txt' shortcut ]);
-        ]
-  in
-  let text =
-    let txt =
-      match label_for with
-      | None ->
-          let$ text = text in
-          Brr.El.txt' text
-      | Some lbl ->
-          let$ text = text in
-          Brr.El.label
-            ~at:[ Brr.At.style !!"cursor:pointer"; Brr.At.for' !!lbl ]
-            [ Brr.El.txt' text ]
-    in
-    Elwd.div ~at:[ `P (Brr.At.style !!"flex-grow:11") ] [ `R txt ]
-  in
-  Elwd.div
-    ~at:(`P (Brr.At.class' !!"slipshow-button") :: at)
-    ~ev:(match handler with None -> [] | Some c -> [ `P c ])
-    ([ `R icon; `R text ] @ shortcut)
-
-let panel_block ?class_ ~buttons () =
-  Elwd.div
-    ~at:
-      ((match class_ with None -> [] | Some c -> [ `P (Brr.At.class' !!c) ])
-      @ [ `P (Brr.At.class' !!"tool-block") ])
-    buttons
+open Widgets
 
 let svg_button v (value : live_drawing_tool) svg name shortcut =
   let handler = set_handler v value in
@@ -141,10 +98,7 @@ let width_button var width c name =
   let at = [ `P (Brr.At.class' !!"slipshow-button") ] in
   Elwd.div ~at ~ev [ `R icon; `P (Brr.El.txt' name) ]
 
-let toplevel_panel_el =
-  Elwd.div ~at:[ `P (Brr.At.class' !!"slip-writing-toolbar") ]
-
-let drawing_panel mode =
+let v mode =
   let lds = Drawing_state.live_drawing_state in
   let pen_button = pen_button lds.tool (Lwd.pure "Pen") "p" in
   let highlighter_button =
@@ -201,16 +155,21 @@ let drawing_panel mode =
       Elwd.handler Brr.Ev.click (fun _ ->
           let strokes, started_at, replayed_strokes =
             match mode with
-            | Presenting -> (workspaces.live_drawing, Tools.now (), None)
+            | Presenting -> (workspaces.live_drawing, now (), None)
             | Recording { started_at; replayed_part; recording_temp; _ } ->
                 (recording_temp, started_at, Some replayed_part)
           in
-          Tools.Clear.event ~replayed_strokes started_at strokes)
+          Drawing_controller.Tools.Clear.event ~replayed_strokes started_at
+            strokes)
     in
     let icon = panel_icon [ `P (Brr.El.txt !!"✗") ] in
     panel_block
       ~buttons:
-        [ `R (panel_button ~handler ~icon (Lwd.pure "Clear") ~shortcut:"X") ]
+        [
+          `R
+            (panel_button ~handler ~icon (Lwd.pure "Clear")
+               ~shortcut:"Shift + X");
+        ]
       ()
   in
   let record_button =
@@ -241,76 +200,35 @@ let drawing_panel mode =
           ~buttons:
             [
               `R
-                (panel_button ~shortcut:"Shift + R" ~handler ~icon
+                (panel_button ~shortcut:"Shift + S" ~handler ~icon
                    (Lwd.pure "Stop recording"));
             ]
           ()
   in
+  let gui_mode =
+    let$* can_gui = Lwd.get Drawing_state.can_gui in
+    if can_gui then
+      let handler = Elwd.handler Brr.Ev.click (fun _ -> Status.set Gui_mode) in
+      let icon = panel_icon [ `P (Brr.El.txt !!"🐁") ] in
+      let$ el =
+        panel_block ~class_:"slipshow-gui-block"
+          ~buttons:
+            [
+              `R
+                (panel_button ~handler ~icon (Lwd.pure "GUI mode")
+                   ~shortcut:"Shift + G");
+            ]
+          ()
+      in
+      Lwd_seq.element el
+    else Lwd.pure Lwd_seq.empty
+  in
   toplevel_panel_el
-    [
-      `R tool_buttons;
-      `R color_buttons;
-      `R width_buttons;
-      `R clear_button;
-      `R record_button;
-    ]
-
-let editing_panel =
-  let editing_tool v icon name shortcut =
-    let handler = Elwd.handler Brr.Ev.click (fun _ -> Lwd.set editing_tool v) in
-    let class_ =
-      let$ current_tool = Lwd.get editing_tool in
-      if current_tool = v then
-        Lwd_seq.of_list [ Brr.At.class' !!"slip-set-tool" ]
-      else Lwd_seq.of_list []
-    in
-    let icon = panel_icon ~at:[ `S class_ ] [ `P (Brr.El.txt' icon) ] in
-    panel_button ~handler ~icon name ~shortcut
-  in
-  let select = editing_tool Select "☝" (Lwd.pure "Select") "s" in
-  let move = editing_tool Move "⌖" (Lwd.pure "Move") "m" in
-  let resize = editing_tool Rescale "⇲" (Lwd.pure "Resize") "r" in
-  let block = panel_block ~buttons:[ `R select; `R move; `R resize ] () in
-  let recording_block =
-    let$* current_replaying_state = Lwd.get current_replaying_state in
-    match current_replaying_state with
-    | None -> Lwd.pure @@ Lwd_seq.empty
-    | Some current_replaying_state ->
-        let record =
-          let handler =
-            Elwd.handler Brr.Ev.click (fun _ ->
-                Drawing_state.start_recording current_replaying_state)
-          in
-          let icon =
-            Brr.El.div
-              ~at:
-                [
-                  Brr.At.style
-                    !!"width:10px;height:10px;background:red;border-radius:5px";
-                ]
-              []
-          in
-          let icon = panel_icon [ `P icon ] in
-          let txt =
-            let strokes = current_replaying_state.recording.strokes in
-            let$ is_empty =
-              Lwd_table.map_reduce
-                (fun _ _ -> false)
-                (true, fun _ _ -> false)
-                strokes
-            in
-            if is_empty then "Start recording" else "Continue recording"
-          in
-          panel_button ~handler ~icon txt ~shortcut:"Shift + R"
-        in
-        let$ panel = panel_block ~buttons:[ `R record ] () in
-        Lwd_seq.element panel
-  in
-  toplevel_panel_el [ `R block; `S recording_block ]
-
-let panel =
-  let content =
-    let$* status = Status.get in
-    match status with Drawing d -> drawing_panel d | Editing -> editing_panel
-  in
-  Elwd.div ~at:[ `P (Brr.At.id !!"slipshow-drawing-toolbar") ] [ `R content ]
+    ([
+       `R tool_buttons;
+       `R color_buttons;
+       `R width_buttons;
+       `R clear_button;
+       `R record_button;
+     ]
+    @ match mode with Presenting -> [ `S gui_mode ] | Recording _ -> [])

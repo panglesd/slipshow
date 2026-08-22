@@ -103,4 +103,18 @@ body.slipshow-editing-mode{
 
 .slipshow-hand-drawn {
   position: absolute;
+  z-index: 1000;
+}
+
+[gui] {
+  position: absolute;
+}
+.slipshow-activated {
+  box-shadow: 0 0 0 5px red !important;
+}
+.slipshow-guiing-mode [gui] {
+  cursor: pointer;
+}
+.slipshow-guiing-mode [gui]:hover:not(:has([gui]:hover)) {
+  box-shadow: 0 0 0 5px grey !important;
 }

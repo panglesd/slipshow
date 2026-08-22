@@ -29,22 +29,6 @@ let send_message panel payload =
   in
   Window.post_message window ~msg
 
-let send_open_speaker_view panel =
-  let payload = Communication.Open_speaker_notes in
-  send_message panel payload
-
-let send_can_save panel =
-  let payload = Communication.Can_save in
-  send_message panel payload
-
-let send_next panel =
-  let payload = Communication.Next in
-  send_message panel payload
-
-let send_previous panel =
-  let payload = Communication.Previous in
-  send_message panel payload
-
 let () = Random.self_init ()
 
 let css =
@@ -106,8 +90,8 @@ let css =
 let preview_status_class = Jstr.v "preview-status"
 
 let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
-    ?(save_drawing = fun ~path:_ ~content:_ -> ()) ~include_speaker_view
-    ~errors_el ~steal_focus ~can_save root =
+    ?(save_drawing = fun ~path:_ ~content:_ -> ()) ~save_coordinate ~goto_loc
+    ~include_speaker_view ~errors_el ~steal_focus ~can_save ~can_gui root =
   let ( !! ) = Jstr.v in
   let name1 = Random.int 1000000 |> string_of_int |> fun s -> "id" ^ s in
   let name2 = Random.int 1000000 |> string_of_int |> fun s -> "id" ^ s in
@@ -154,52 +138,87 @@ let create_previewer ?(initial_stage = 0) ?(callback = fun _ -> ())
         let msg = Msg.of_jv raw_data in
         let from_current = String.equal source_name ids.(p.index)
         and from_other = String.equal source_name ids.(1 - p.index) in
-        match msg with
-        | Some { payload = State (new_stage, _mode); id = _ } when from_current
-          ->
-            callback new_stage;
-            p.stage <- new_stage
-        | Some { payload = Open_recording_panel; id = _ } when from_current ->
-            p.should_refresh <- false
-        | Some { payload = Close_recording_panel; id = _ } when from_current ->
-            p.should_refresh <- true
-        | Some { payload = Open_speaker_notes; id = _ } when from_current ->
-            is_speaker_view_open := true
-        | Some { payload = Close_speaker_notes; id = _ } when from_current ->
-            is_speaker_view_open := false
-        | Some { payload = Ready; id = _ } when from_current ->
-            if can_save then send_can_save panels.(p.index)
-        | Some { payload = Ready; id = _ } when from_other ->
-            Jv.set (El.to_jv panels.(p.index)) "srcdoc" (Jv.of_string "");
-            let () = El.set_class preview_status_class true preview_status in
-            if can_save then send_can_save panels.(1 - p.index);
-            if !is_speaker_view_open then
-              send_open_speaker_view panels.(1 - p.index);
-            p.index <- 1 - p.index;
-            El.set_class (Jstr.v "active_panel") true panels.(p.index);
-            let () =
-              if steal_focus then
-                let contentDocument el =
-                  Jv.get (El.to_jv el) "contentDocument" |> Document.of_jv
-                in
-                (* Depending on whether a speaker view is possible, the focus
+        if from_current then
+          match msg with
+          | Some { payload = State (new_stage, _mode); id = _ } ->
+              callback new_stage;
+              p.stage <- new_stage
+          | Some { payload = Open_recording_panel; id = _ } ->
+              p.should_refresh <- false
+          | Some { payload = Close_recording_panel; id = _ } ->
+              p.should_refresh <- true
+          | Some { payload = Open_speaker_notes; id = _ } ->
+              is_speaker_view_open := true
+          | Some { payload = Close_speaker_notes; id = _ } ->
+              is_speaker_view_open := false
+          | Some { payload = Ready; id = _ } ->
+              if can_save then send_message panels.(p.index) Can_save;
+              if can_gui then send_message panels.(p.index) Can_gui
+          | Some { payload = Save_drawing (path, content); id = _ } ->
+              save_drawing ~path ~content
+          | Some { payload = SaveCoordinates { x; y; scale; id; w; h }; _ } ->
+              save_coordinate ~id
+                ~coord:
+                  { Actions_arguments.Gui.x; y; scale; width = w; height = h }
+          | Some { payload = GotoLoc loc; _ } -> goto_loc loc
+          | None
+          | Some { payload = Speaker_notes _; _ }
+          | Some { payload = Drawing _; _ }
+          | Some { payload = Send_all_drawing; _ }
+          | Some { payload = Receive_all_drawing _; _ }
+          | Some { payload = Next; _ }
+          | Some { payload = Previous; _ }
+          | Some { payload = Can_save; _ }
+          | Some { payload = Can_gui; _ }
+          | Some { payload = ActivateGUI _; _ }
+          | Some { payload = DeActivateGUI; _ } ->
+              ()
+        else if from_other then
+          match msg with
+          | Some { payload = Ready; id = _ } ->
+              Jv.set (El.to_jv panels.(p.index)) "srcdoc" (Jv.of_string "");
+              let () = El.set_class preview_status_class true preview_status in
+              if can_save then send_message panels.(1 - p.index) Can_save;
+              if can_gui then send_message panels.(1 - p.index) Can_gui;
+              if !is_speaker_view_open then
+                send_message panels.(1 - p.index) Open_speaker_notes;
+              p.index <- 1 - p.index;
+              El.set_class (Jstr.v "active_panel") true panels.(p.index);
+              let () =
+                if steal_focus then
+                  let contentDocument el =
+                    Jv.get (El.to_jv el) "contentDocument" |> Document.of_jv
+                  in
+                  (* Depending on whether a speaker view is possible, the focus
                    target is not accessible the same way *)
-                let focus_target =
-                  let d = contentDocument panels.(p.index) in
-                  match
-                    Document.find_el_by_id d
-                      (Jstr.v "slipshow__internal_iframe")
-                  with
-                  | Some iframe -> iframe
-                  | None -> panels.(p.index)
-                in
-                El.set_has_focus true focus_target
-            in
-            El.set_class (Jstr.v "active_panel") false panels.(1 - p.index)
-        | Some { payload = Save_drawing (path, content); id = _ }
-          when from_current ->
-            save_drawing ~path ~content
-        | _ -> ())
+                  let focus_target =
+                    let d = contentDocument panels.(p.index) in
+                    match
+                      Document.find_el_by_id d
+                        (Jstr.v "slipshow__internal_iframe")
+                    with
+                    | Some iframe -> iframe
+                    | None -> panels.(p.index)
+                  in
+                  El.set_has_focus true focus_target
+              in
+              El.set_class (Jstr.v "active_panel") false panels.(1 - p.index)
+          | Some
+              {
+                payload =
+                  ( Open_speaker_notes | Close_speaker_notes
+                  | Open_recording_panel | Close_recording_panel
+                  | Send_all_drawing | Next | Previous | Can_save | Can_gui
+                  | DeActivateGUI
+                  | State (_, _)
+                  | Speaker_notes _ | Drawing _ | Receive_all_drawing _
+                  | Save_drawing (_, _)
+                  | ActivateGUI _ | SaveCoordinates _ | GotoLoc _ );
+                id = _;
+              }
+          | None ->
+              ()
+        else ())
       (Window.as_target G.window)
   in
   p
@@ -244,8 +263,8 @@ let preview ?options ?slipshow_js previewer source =
     if Fpath.equal this_file f then Ok (Some source) else Ok None
   in
   let slipshow, warnings =
-    Slipshow.convert ~directory ~has_speaker_view ?slipshow_js ?options
-      ~read_file ~autofocus:false ~starting_state this_file
+    Slipshow.convert ~embed_loc:true ~directory ~has_speaker_view ?slipshow_js
+      ?options ~read_file ~autofocus:false ~starting_state this_file
   in
   let warnings =
     List.map
@@ -269,8 +288,16 @@ let ids { ids; _ } = ids
 
 let next (previewer : previewer) =
   let current_window = previewer.panels.(previewer.index) in
-  send_next current_window
+  send_message current_window Next
 
 let previous (previewer : previewer) =
   let current_window = previewer.panels.(previewer.index) in
-  send_previous current_window
+  send_message current_window Previous
+
+let activate_gui (previewer : previewer) id =
+  let current_window = previewer.panels.(previewer.index) in
+  send_message current_window (ActivateGUI id)
+
+let deactivate_gui (previewer : previewer) =
+  let current_window = previewer.panels.(previewer.index) in
+  send_message current_window DeActivateGUI

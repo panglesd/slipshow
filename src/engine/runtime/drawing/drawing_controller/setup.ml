@@ -7,20 +7,6 @@ let ( !! ) = Jstr.v
 
 open Brr
 
-let init_ui () =
-  let body =
-    Brr.El.find_first_by_selector (Jstr.v "#slipshow-main") |> Option.get
-  in
-  let _root = Elwd.append_child body Panel.panel in
-  ()
-
-(* let _ = *)
-(*   let el = *)
-(*     Brr.El.find_first_by_selector (Jstr.v "#slipshow-main") |> Option.get *)
-(*   in *)
-(*   let content = "" in *)
-(*   (ignore content, ignore el) *)
-
 module Rec_in_progress = struct
   let init () =
     let visib =
@@ -79,29 +65,33 @@ module Garbage = struct
           match tool with Pointer -> `Presenting | _ -> `Drawing)
       | Drawing (Recording _) -> Lwd.pure `Drawing
       | Editing -> Lwd.pure `Editing
+      | Gui_mode -> Lwd.pure `Guiing
     in
     let ui = Lwd.observe panel in
     let on_invalidate _ =
       let _ : int =
         G.request_animation_frame @@ fun _ ->
         let is_drawing = Lwd.quick_sample ui in
+        List.iter
+          (fun c ->
+            Brr.El.set_class !!c false (Brr.Document.body Brr.G.document))
+          [
+            "slipshow-drawing-mode";
+            "slipshow-editing-mode";
+            "slipshow-guiing-mode";
+          ];
         ignore
         @@
         match is_drawing with
-        | `Presenting ->
-            Brr.El.set_class !!"slipshow-drawing-mode" false
-              (Brr.Document.body Brr.G.document);
-            Brr.El.set_class !!"slipshow-editing-mode" false
-              (Brr.Document.body Brr.G.document)
+        | `Presenting -> ()
         | `Drawing ->
             Brr.El.set_class !!"slipshow-drawing-mode" true
-              (Brr.Document.body Brr.G.document);
-            Brr.El.set_class !!"slipshow-editing-mode" false
               (Brr.Document.body Brr.G.document)
         | `Editing ->
-            Brr.El.set_class !!"slipshow-drawing-mode" false
-              (Brr.Document.body Brr.G.document);
             Brr.El.set_class !!"slipshow-editing-mode" true
+              (Brr.Document.body Brr.G.document)
+        | `Guiing ->
+            Brr.El.set_class !!"slipshow-guiing-mode" true
               (Brr.Document.body Brr.G.document)
       in
       ()
@@ -191,7 +181,6 @@ let init_ui window =
   connect window;
   Preview.for_events window;
   Rec_in_progress.init ();
-  init_ui ();
   Garbage.g ();
   Ui.init window
 (* ; *)

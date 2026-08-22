@@ -5,6 +5,7 @@ module Json = Json
 module Path_editing = Path_editing
 
 let can_save = Lwd.var false
+let can_gui = Lwd.var false
 
 let workspaces : workspaces =
   { recordings = Lwd_table.make (); live_drawing = Lwd_table.make () }
@@ -27,12 +28,32 @@ end = struct
   let status = Lwd.var (Drawing Presenting)
 
   let set s =
-    (match (Lwd.peek status, s) with
+    match (Lwd.peek status, s) with
+    (* When we do nothing *)
     | Drawing Presenting, Drawing Presenting -> ()
-    | _, Drawing Presenting -> Messaging.closed_recording_panel ()
-    | Drawing Presenting, _ -> Messaging.opened_recording_panel ()
-    | _ -> ());
-    Lwd.set status s
+    | Drawing (Recording _), Drawing (Recording _) -> ()
+    | Gui_mode, Gui_mode -> ()
+    | Editing, Editing -> ()
+    (* Editing <-> Recording is allowed *)
+    | Editing, Drawing (Recording _) -> Lwd.set status s
+    | Drawing (Recording _), Editing -> Lwd.set status s
+    (* Editing <-> Presenting is allowed and message is sent *)
+    | Editing, Drawing Presenting ->
+        Messaging.closed_recording_panel ();
+        Lwd.set status s
+    | Drawing Presenting, Editing ->
+        Messaging.opened_recording_panel ();
+        Lwd.set status s
+    (* Gui <-> Presenting is allowed *)
+    | Gui_mode, Drawing Presenting -> Lwd.set status s
+    | Drawing Presenting, Gui_mode -> Lwd.set status s
+    (* Other transitions are not allowed *)
+    | Drawing Presenting, Drawing (Recording _) -> ()
+    | Drawing (Recording _), Drawing Presenting -> ()
+    | Drawing (Recording _), Gui_mode -> ()
+    | Gui_mode, Drawing (Recording _) -> ()
+    | Gui_mode, Editing -> ()
+    | Editing, Gui_mode -> ()
 
   let peek () = Lwd.peek status
   let get = Lwd.get status
@@ -191,3 +212,9 @@ let unselect selection =
   List.iter
     (fun (_, pause) -> Lwd.set pause.p_selected false)
     selection.s_pauses
+
+let unselect_all replaying_state =
+  let selected_root = Lwd.observe (selection replaying_state.recording) in
+  let selected = Lwd.quick_sample selected_root in
+  let () = Lwd.quick_release selected_root in
+  unselect selected

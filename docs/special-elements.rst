@@ -172,3 +172,8 @@ For consistency, it is also possible to import HTML as a code block by setting t
    ```=html
    <marquee>This is included as html, not as a code block</marquee>
    ```
+
+GUI elements
+------------
+
+Any element can be assigned the ``gui`` attribute. See :doc:`gui`.
