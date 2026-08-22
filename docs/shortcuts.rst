@@ -17,13 +17,22 @@ In addition, the drawing shortcuts are more discoverable:
 - :kbd:`h` to select the "Highlighter" tool,
 - :kbd:`e` to select the "Eraser" tool,
 - :kbd:`x` to select the "Cursor" tool,
-- :kbd:`Shift` + :kbd:`X` to clear the drawing canvas.
-- :kbd:`Shift` + :kbd:`R` to open the recording manager.
+- :kbd:`Shift` + :kbd:`X` to clear the drawing canvas,
+- :kbd:`Shift` + :kbd:`R` to open the recording manager,
+- :kbd:`Shift` + :kbd:`G` to open the GUI mode.
 
-Finally, when the recording manager is open you have the following shortcut:
+When the recording manager is open you have the following shortcut:
 
-- :kbd:`Shift` + :kbd:`S` to start recording
+- :kbd:`Shift` + :kbd:`S` to start recording,
 - :kbd:`Shift` + :kbd:`R` to close the recording manager.
 - :kbd:`s` to select the "Select" tool,
 - :kbd:`m` to select the "Move" tool,
+- :kbd:`r` to select the "Rescale" tool.
+
+When the GUI mode is active you have the following shortcut:
+
+- :kbd:`Shift` + :kbd:`G` or :kbd:`Escape` to close the GUI mode,
+- :kbd:`s` to select the "Select" tool,
+- :kbd:`m` to select the "Move" tool,
 - :kbd:`r` to select the "Resize" tool,
+- :kbd:`d` to select the "Dimension" tool.
