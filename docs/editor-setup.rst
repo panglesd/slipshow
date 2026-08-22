@@ -14,8 +14,8 @@ This integration helps in several ways:
   - showing documentation for actions on hover,
   - jumping to identifier definitions
 
-- :kbd:`Ctrl` + :kbd:`Click` or :kbd:`Cmd` + :kbd:`Click` on the preview will jump to the
-  corresponding source in the editor.
+- :kbd:`Ctrl` + :kbd:`Click` or :kbd:`Cmd` + :kbd:`Click` on the preview will
+  jump to the corresponding source in the editor.
 - It unlocks :doc:`gui`.
 - It also allows you to see a preview of your presentation, updated in real time
   as you type.

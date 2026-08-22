@@ -4,16 +4,16 @@
 
 ### Added
 
-- "What You See Is What You Want" — positions any element absolutely, by
+- "What You See Is What You Want" — positions any "GUI" element absolutely, by
   dragging it in the preview! Supports moving, redimensioning and scaling
   elements. (#270)
-- "Go to source" by `Ctrl`+clicking (or `Cmd`+click on Mac) anywhere in the
-  preview jumps. (#270)
+- "Go to source" by `Ctrl`+clicking (or `Cmd`+clicking on Mac) anywhere in the
+  preview. (#270)
 
 ### Changed
 
-- Improved toolbar and shortcut consistency, notably in drawing manager mode,
-  `Shift+R` now closes the drawing manager (previously it started a
+- Improved toolbar and shortcut consistency, notably in recording manager mode,
+  `Shift+R` now closes the recording manager (previously it started a
   recording). `Shift+S` is used to start a recording. (#270)
 
 ### Fixed

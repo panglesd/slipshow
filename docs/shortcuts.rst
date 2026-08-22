@@ -24,15 +24,15 @@ In addition, the drawing shortcuts are more discoverable:
 When the recording manager is open you have the following shortcut:
 
 - :kbd:`Shift` + :kbd:`S` to start recording,
-- :kbd:`Shift` + :kbd:`R` to close the recording manager.
+- :kbd:`Shift` + :kbd:`R` to close the recording manager,
 - :kbd:`s` to select the "Select" tool,
 - :kbd:`m` to select the "Move" tool,
-- :kbd:`r` to select the "Rescale" tool.
+- :kbd:`r` to select the "Resize" tool.
 
 When the GUI mode is active you have the following shortcut:
 
 - :kbd:`Shift` + :kbd:`G` or :kbd:`Escape` to close the GUI mode,
 - :kbd:`s` to select the "Select" tool,
 - :kbd:`m` to select the "Move" tool,
-- :kbd:`r` to select the "Resize" tool,
+- :kbd:`r` to select the "Rescale" tool,
 - :kbd:`d` to select the "Dimension" tool.

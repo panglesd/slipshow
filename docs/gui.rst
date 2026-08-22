@@ -40,7 +40,7 @@ element is removed from the text flow, it does not take any space.
 Entering GUI mode
 -----------------
 
-The GUI mode is the mode that allows you to select, move rescale and dimension
+The GUI mode is the mode that allows you to select, move, rescale and dimension
 your GUI elements.
 
 To enter it, click on the "GUI mode" button in the top-left toolbar. You can
