@@ -2,8 +2,30 @@
 
 ## Unreleased
 
+### Added
+
+- "What You See Is What You Want" — positions any element absolutely, by
+  dragging it in the preview! Supports moving, redimensioning and scaling
+  elements. (#270)
+- "Go to source" by `Ctrl`+clicking (or `Cmd`+click on Mac) anywhere in the
+  preview jumps. (#270)
+
+### Changed
+
+- Improved toolbar and shortcut consistency, notably in drawing manager mode,
+  `Shift+R` now closes the drawing manager (previously it started a
+  recording). `Shift+S` is used to start a recording. (#270)
+
 ### Fixed
 
+- LSP:
+  - Respect UTF-16 position encoding when it is the only one supported by the
+    editor. (#270)
+  - Fix a bug in detection of element at cursor, and one in locations of "glued"
+    attribute, in effect improving hover and highlight reliability. (#270)
+  - Fix `go_next` / `go_previous` doing nothing in "refresh on save"
+    mode. (#270)
+- Fix drawings being drawn behind positioned elements. (#270)
 - Fixed standalonity of html by embedding mono fonts (#272)
 - Resolution of css and js files in frontmatter are now relative to the file
   they are in (and not to the root file). (#271)
