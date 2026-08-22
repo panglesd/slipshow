@@ -43,6 +43,7 @@ let deactivate () =
     match Lwd.peek State.current with
     | Some old_el ->
         Lwd.set State.current None;
+        Lwd.set State.status Select;
         El.set_class activate_class false old_el
     | None -> ())
   else ()
