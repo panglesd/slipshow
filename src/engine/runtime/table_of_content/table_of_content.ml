@@ -60,6 +60,23 @@ let generate window root =
       []
     |> List.rev |> List.concat
   in
+  (* When an action has first element (computed recursively) a title, the title should be first (just as when a title is an action) *)
+  let same el el' = Jv.equal (Brr.El.to_jv el) (Brr.El.to_jv el') in
+  let blank el =
+    Brr.El.is_txt el && Jstr.is_empty (Jstr.trim (Brr.El.txt_text el))
+  in
+  let rec opens_with a ~title =
+    match List.filter (Fun.negate blank) (Brr.El.children a) with
+    | first :: _ -> same first title || opens_with first ~title
+    | [] -> false
+  in
+  let rec hoist_opening_titles = function
+    | (`Action a as action) :: `Title t :: rest when not (Step.Action_scheduler.is_action t) && opens_with a ~title:t ->
+        `Title t :: action :: hoist_opening_titles rest
+    | x :: rest -> x :: hoist_opening_titles rest
+    | [] -> []
+  in
+  let categorized_els = hoist_opening_titles categorized_els in
   let rec loop ~auto_continue undo entries step categorized_els =
     match categorized_els with
     | `Title t :: res ->
