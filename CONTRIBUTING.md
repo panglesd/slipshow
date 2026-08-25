@@ -51,7 +51,8 @@ dune exec slipshow -- <other options>
 The directory structure is the following:
 - `docs/` for the readthedocs documentation
   - `docs/odoc/` for the doc build by `odoc` and served on ocaml.org
-- `example/` for ... examples (to be kept up to date?! Is that going to make the repo big? TODO: add a dune rule for that)
+- `example/` stores the examples that are kept up to date with the slipshow
+  version, by ensuring they are built at the same time as the docs.
 - `release/` for scripts used in the release process
 - `test/` for tests
 - `vendor/` for vendored library, see the vendoring section of this document
@@ -71,6 +72,7 @@ The directory structure is the following:
     deserialize data exchanged between server and client.
   - `src/engine/previewer/` contains the code for the previewer panel (used by
     slipshow's preview mode but also sliphub, the VSCode extension, ...)
+  - `src/lspishow/` contains the code for the lsp server.
 
 ## Releasing
 
