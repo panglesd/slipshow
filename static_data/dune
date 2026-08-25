@@ -54,27 +54,13 @@
 ; If you add new javascript dependency or update the package.json
 ; you should run `dune build --profile=with-bundle`
 
-(rule
- (aliases runtest data-files)
- (deps
-  (:x data_contents.ml)
-  (glob_files *.crunch))
- (enabled_if
-  (= %{profile} "with-bundle"))
- (action
-  (progn
-   (setenv
-    SOURCE_DATE_EPOCH
-    0
-    (run ocaml-crunch . -e crunch -o %{x}.corrected -m plain -s))
-   (diff? %{x} %{x}.corrected))))
-
 (library
  (name data_files)
  (public_name slipshow.datafiles)
  (preprocess
   (pps ppx_blob))
  (preprocessor_deps
+   tex-svg-full.js
   ../src/engine/pdf-support/pdf_support.bc.js
   ../src/engine/scheduler/scheduler.bc.js
   ../logo/favicon.ico
