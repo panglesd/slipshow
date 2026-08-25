@@ -74,6 +74,13 @@ The directory structure is the following:
     slipshow's preview mode but also sliphub, the VSCode extension, ...)
   - `src/lspishow/` contains the code for the lsp server.
 
+## Getting more help
+
+Absolutely do not hesitate to ask for help, either on the
+[Zulip](https://slipshow.zulipchat.com/) or in [github
+issues](https://github.com/panglesd/slipshow/issues). Whenever in doubt for the
+implementation of a feature, it is better to start the discussion.
+
 ## Releasing
 
 In order to release a new version, you need to:
