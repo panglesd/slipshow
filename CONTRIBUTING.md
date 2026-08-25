@@ -13,7 +13,7 @@ Improvements to the docs are always welcome!
 The source for the docs can be found in the `docs/` folder, as `.rst` files. In
 order to be turned into the static html website, you need to have
 [sphinx](https://www.sphinx-doc.org/en/master/). Moreover, since the docs
-contains editable slipshow examples, you also need to be able to [build the
+contain editable slipshow examples, you also need to be able to [build the
 project](#building-the-project). In the future, I'll try to allow the docs to be
 built without requiring the whole project to be built, do not hesitate to open
 an issue if that is getting on the way of your documentation PR.
