@@ -6,9 +6,27 @@ If you are willing to contribute, thanks!
 
 To write a theme, see [this page](https://slipshow.readthedocs.io/en/stable/themes.html). If you'd like it to be included in the set of builtin themes, the best is to open a PR with your theme added to the `src/themes/` directory. I can then help on the rest of the OCaml plumbing so you don't have to!
 
-## Getting started
+## Improving the docs
 
-This project is written in OCaml, so you need to be able to compile such programs. The official website ocaml.org provides explanation on getting started with OCaml.
+Improvements to the docs are always welcome!
+
+The source for the docs can be found in the `doc/`, as `.rst` files. In order to
+be turned into the static html website, you need to have
+[sphinx](https://www.sphinx-doc.org/en/master/). Moreover, if you add editable
+slipshow examples, you also need to be able to [build the
+project](#building-the-project).
+
+Once you satisfy the requirement above, the docs are built with
+
+```
+$ make html
+```
+
+from the `docs/` directory.
+
+## Building the project
+
+This project is written in OCaml, so you need to be able to compile such programs. The official website [ocaml.org](https://ocaml.org) provides explanation on getting started with OCaml.
 
 Once you have opam, and a switch ready, install the dependencies with:
 
