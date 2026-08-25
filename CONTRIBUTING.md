@@ -59,6 +59,8 @@ The directory structure is the following:
 - `release/` for scripts used in the release process
 - `test/` for tests
 - `vendor/` for vendored library, see the vendoring section of this document
+- `static_data/` contains static data such as highlightjs code to embed in a
+   presentation.
 - `src/` for the source:
   - `src/engine/` for all code running in the browser
   - `src/engine/runtime/` contains the code for the engine, the part translated to
@@ -67,8 +69,6 @@ The directory structure is the following:
     - `src/engine/themes/` contains the CSS themes.
   - `src/cli/` contains the code for the CLI parsing (using cmdliner) and calling
     the right entry point (preview server, compiler, ...)
-  - `src/static_data/` contains static data such as highlightjs code to embed in a
-    presentation.
   - `src/server/` contains the code for the preview server
     - `src/server/client/` contains the code for the client-side javascript of the preview server
   - `src/communication/` contains the types and utilities to serialize and
