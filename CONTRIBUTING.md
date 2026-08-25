@@ -12,17 +12,20 @@ Improvements to the docs are always welcome!
 
 The source for the docs can be found in the `docs/` folder, as `.rst` files. In
 order to be turned into the static html website, you need to have
-[sphinx](https://www.sphinx-doc.org/en/master/). Moreover, if you add editable
-slipshow examples, you also need to be able to [build the
-project](#building-the-project).
+[sphinx](https://www.sphinx-doc.org/en/master/). Moreover, since the docs
+contains editable slipshow examples, you also need to be able to [build the
+project](#building-the-project). In the future, I'll try to allow the docs to be
+built without requiring the whole project to be built, do not hesitate to open
+an issue if that is getting on the way of your documentation PR.
 
-Once you satisfy the requirement above, the docs are built with
+Once you satisfy the requirements above, the docs are built with
 
 ```shell
 make html
 ```
 
-from the `docs/` directory. The docs are in `docs/_build/html/index.html`
+from the `docs/` directory. The generated docs are in `docs/_build/html/`, with
+`docs/_build/html/index.html` being a good entrypoint.
 
 ## Building the project
 
