@@ -10,19 +10,19 @@ To write a theme, see [this page](https://slipshow.readthedocs.io/en/stable/them
 
 Improvements to the docs are always welcome!
 
-The source for the docs can be found in the `doc/`, as `.rst` files. In order to
-be turned into the static html website, you need to have
+The source for the docs can be found in the `docs/` folder, as `.rst` files. In
+order to be turned into the static html website, you need to have
 [sphinx](https://www.sphinx-doc.org/en/master/). Moreover, if you add editable
 slipshow examples, you also need to be able to [build the
 project](#building-the-project).
 
 Once you satisfy the requirement above, the docs are built with
 
-```
-$ make html
+```shell
+make html
 ```
 
-from the `docs/` directory.
+from the `docs/` directory. The docs are in `docs/_build/html/index.html`
 
 ## Building the project
 
@@ -77,13 +77,13 @@ The directory structure is the following:
 ## Getting more help
 
 Absolutely do not hesitate to ask for help, either on the
-[Zulip](https://slipshow.zulipchat.com/) or in [github
+[Zulip](https://slipshow.zulipchat.com/) or in [GitHub
 issues](https://github.com/panglesd/slipshow/issues). Whenever in doubt for the
 implementation of a feature, it is better to start the discussion.
 
 ## AI use
 
-Slipshow is a project for humans. I hope we have fun using it to present, assist presentations, and developping it. Fun is the main goal!
+Slipshow is a project for humans. I hope we have fun presenting with it, attending presentations made with it, and developing it. Fun is the main goal!
 
 I enjoy writing code by hand, but I do not enjoy reviewing big PRs, so I probably won't if it has been written by an LLM. If it has been written by a human, I'll respect the work and time and will happily review the code!
 
