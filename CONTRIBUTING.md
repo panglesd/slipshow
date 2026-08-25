@@ -81,6 +81,16 @@ Absolutely do not hesitate to ask for help, either on the
 issues](https://github.com/panglesd/slipshow/issues). Whenever in doubt for the
 implementation of a feature, it is better to start the discussion.
 
+## AI use
+
+Slipshow is a project for humans. I hope we have fun using it to present, assist presentations, and developping it. Fun is the main goal!
+
+I enjoy writing code by hand, but I do not enjoy reviewing big PRs, so I probably won't if it has been written by an LLM. If it has been written by a human, I'll respect the work and time and will happily review the code!
+
+If you have a doubt, open a PR or an issue, I don't bite!
+
+AI use should also be disclaimed, and avoided in communication. Thanks!
+
 ## Releasing
 
 In order to release a new version, you need to:
