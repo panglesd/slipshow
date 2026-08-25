@@ -13,7 +13,7 @@ Improvements to the docs are always welcome!
 The source for the docs can be found in the `docs/` folder, as `.rst` files. In
 order to be turned into the static html website, you need to have
 [sphinx](https://www.sphinx-doc.org/en/master/). Moreover, since the docs
-contain editable slipshow examples, you also need to be able to [build the
+contain editable Slipshow examples, you also need to be able to [build the
 project](#building-the-project). In the future, I'll try to allow the docs to be
 built without requiring the whole project to be built, do not hesitate to open
 an issue if that is getting on the way of your documentation PR.
@@ -54,7 +54,7 @@ dune exec slipshow -- <other options>
 The directory structure is the following:
 - `docs/` for the readthedocs documentation
   - `docs/odoc/` for the doc build by `odoc` and served on ocaml.org
-- `example/` stores the examples that are kept up to date with the slipshow
+- `example/` stores the examples that are kept up to date with the Slipshow
   version, by ensuring they are built at the same time as the docs.
 - `release/` for scripts used in the release process
 - `test/` for tests
