@@ -495,29 +495,36 @@ let of_string ~to_uri file offset s =
 let ( let* ) x f = Option.bind x f
 let ( let+ ) x f = Option.map f x
 
-let find_opening s =
+let delimiter_end s start =
+  let length = String.length s in
+  let rec skip_whitespace index =
+    if index >= length then None
+    else
+      match s.[index] with
+      | ' ' | '\t' -> skip_whitespace (index + 1)
+      | '\n' -> Some (index + 1)
+      | '\r' when index + 1 < length && s.[index + 1] = '\n' -> Some (index + 2)
+      | _ -> None
+  in
   if
-    String.starts_with ~prefix:"---\n" s
-    || String.starts_with ~prefix:"---\r\n" s
-  then if s.[4] = '\n' then Some 3 else Some 4
+    start + 3 <= length
+    && s.[start] = '-'
+    && s.[start + 1] = '-'
+    && s.[start + 2] = '-'
+  then skip_whitespace (start + 3)
   else None
 
+let find_opening s = delimiter_end s 0
+
 let find_closing s start =
-  let is_closing idx =
-    s.[idx + 1] = '-'
-    && s.[idx + 2] = '-'
-    && s.[idx + 3] = '-'
-    && (s.[idx + 4] = '\n' || (s.[idx + 4] = '\r' && s.[idx + 5] = '\n'))
-  in
-  let closing_length idx = if s.[idx + 4] = '\n' then 4 else 5 in
   let rec aux idx =
     match String.index_from_opt s idx '\n' with
     | None -> None
     | Some idx -> (
-        try
-          if is_closing idx then Some (idx + 1, idx + 1 + closing_length idx)
-          else aux (idx + 1)
-        with Invalid_argument _ -> None)
+        let start = idx + 1 in
+        match delimiter_end s start with
+        | Some after -> Some (start, after)
+        | None -> aux start)
   in
   aux start
 
