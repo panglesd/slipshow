@@ -15,7 +15,7 @@ We can compile the file using the slip_of_mark binary
   <div class="slip-body">
   <div src=slides.md include>
   <div style="display: flex">
-  <div id="slide1" class="slipshow-rescaler" slide enter-at-unpause>
+  <div id="slide1" class="slipshow-rescaler" enter-at-unpause slide>
   <div class="slide">
   <div class="slide-title">
   <span>First title</span></div>
