@@ -73,7 +73,9 @@ module Global = struct
         (match (x.toplevel_attributes, y.toplevel_attributes) with
         | Some (a1, meta1), Some (a2, _meta2) ->
             (* Hopefully not merging the locations is fine *)
-            Some (Cmarkit.Attributes.merge ~base:a1 ~new_attrs:a2, meta1)
+            Some
+              ( Cmarkit.Attributes.merge ~keep_base:false ~base:a1 ~new_attrs:a2,
+                meta1 )
         | (Some _ as a), _ | _, (Some _ as a) -> a
         | None, None -> None);
     }
@@ -132,7 +134,7 @@ module Attributes = struct
       | None -> v
       | Some (a, _meta2) ->
           (* Hopefully not merging the locations is fine *)
-          Cmarkit.Attributes.merge ~base:a ~new_attrs:v
+          Cmarkit.Attributes.merge ~keep_base:false ~base:a ~new_attrs:v
     in
     { fm with local = { attributes = Some (v, meta1) } }
 end
@@ -162,7 +164,7 @@ module Toplevel_attributes = struct
       | None -> v
       | Some (a, _meta2) ->
           (* Hopefully not merging the locations is fine *)
-          Cmarkit.Attributes.merge ~base:a ~new_attrs:v
+          Cmarkit.Attributes.merge ~keep_base:false ~base:a ~new_attrs:v
     in
     {
       fm with

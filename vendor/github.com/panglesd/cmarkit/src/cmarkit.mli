@@ -313,7 +313,7 @@ module Attributes : sig
   val mem : key -> t -> bool
   (** [mem k m] is [true] iff [k] is bound in [m]. *)
 
-  val add : key node -> value node option -> t -> t
+  val add : keep_base:bool -> key node -> value node option -> t -> t
   (** [add k v m] is [m] with key [k] bound to [v]. *)
 
   val remove : key -> t -> t
@@ -335,7 +335,7 @@ module Attributes : sig
        list) ->
     t -> t
 
-  val merge : base:t -> new_attrs:t -> t
+  val merge : keep_base:bool -> base:t -> new_attrs:t -> t
 end
 
 type 'a attributed = 'a * Attributes.t node

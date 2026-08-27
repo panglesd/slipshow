@@ -191,10 +191,9 @@ module Utils = struct
 
     (** Get the attributes of a cmarkit node, returns them and the element
         stripped of its attributes *)
-    let merge_attribute new_attrs b =
+    let merge_attribute ~keep_base new_attrs b =
       let merge (base, meta) =
-        (Attributes.merge ~base ~new_attrs, meta)
-        (* Old attributes take precendence over "new" one *)
+        (Attributes.merge ~keep_base ~base ~new_attrs, meta)
       in
       match update_attribute merge b with None -> b | Some (b, _) -> b
 
@@ -299,10 +298,9 @@ module Utils = struct
 
     (** Get the attributes of a cmarkit node, returns them and the element
         stripped of its attributes *)
-    let merge_attribute new_attrs b =
+    let merge_attribute ~keep_base new_attrs b =
       let merge (base, meta) =
-        (Attributes.merge ~base ~new_attrs, meta)
-        (* Old attributes take precendence over "new" one *)
+        (Attributes.merge ~keep_base ~base ~new_attrs, meta)
       in
       match update_attribute merge b with None -> b | Some (b, _) -> b
 

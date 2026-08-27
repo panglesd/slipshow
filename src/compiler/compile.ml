@@ -177,7 +177,8 @@ module Stage1 = struct
       | None -> None
       | Some ((ld, (attrs_ld, meta2)), meta) ->
           let attrs =
-            Cmarkit.Attributes.merge ~base:attrs ~new_attrs:attrs_ld
+            Cmarkit.Attributes.merge ~keep_base:true ~base:attrs
+              ~new_attrs:attrs_ld
           in
           let kind = classify_link_definition ld attrs in
           let attrs_ld = Mapper.map_attrs m attrs_ld in
@@ -353,10 +354,10 @@ module Stage1 = struct
                   { Cmarkit.Attributes.v; delimiter = Some '"' }
                 in
                 ( attrs
-                  |> Cmarkit.Attributes.add
+                  |> Cmarkit.Attributes.add ~keep_base:true
                        (Special_attrs.gui_file, Meta.none)
                        (Some (file_attr, Meta.none))
-                  |> Cmarkit.Attributes.add
+                  |> Cmarkit.Attributes.add ~keep_base:true
                        (Special_attrs.gui_id, Meta.none)
                        (Some (id_attr, Meta.none)),
                   meta ))
@@ -441,14 +442,20 @@ module Stage2 = struct
                 | Some key -> (
                     match (categorize key, value) with
                     | `Class c, None -> Attributes.add_class acc (c, meta)
-                    | `Kv c, _ -> Attributes.add (c, meta) value acc
+                    | `Kv c, _ ->
+                        Attributes.add ~keep_base:false (c, meta) value acc
                     | `Class c, Some (_, v_meta) ->
                         Diagnosis.add
                           (ChildrenClassWithValue { loc = Meta.textloc v_meta });
                         Attributes.add_class acc (c, meta)))
               Attributes.empty kvs
           in
-          let bs = List.map (Ast.Utils.Block.merge_attribute new_attrs) bs in
+          let bs =
+            (* keep_base true to avoid erasing more specific attributes *)
+            List.map
+              (Ast.Utils.Block.merge_attribute ~keep_base:true new_attrs)
+              bs
+          in
           let bs =
             match Mapper.map_block m (Block.Blocks (bs, m_bs)) with
             | None -> Block.Blocks ([], m_bs)
@@ -497,7 +504,10 @@ module Stage3 = struct
             || Attributes.mem Actions_arguments.Enter.on attrs)
             || not may_enter
           then attrs
-          else Attributes.add (Actions_arguments.Enter.on, Meta.none) None attrs
+          else
+            Attributes.add ~keep_base:true
+              (Actions_arguments.Enter.on, Meta.none)
+              None attrs
         in
         let attrs = Mapper.map_attrs m attrs in
         (b, (attrs, meta2))
@@ -880,16 +890,16 @@ let to_cmarkit units =
     | Ast.S_inline i -> inline m i
     | _ -> Mapper.default
   in
-  let attrs =
-    Cmarkit.Attributes.map (function
-      | `Kv (("up-at-unpause", m), v) -> [ `Kv (("up", m), v) ]
-      | `Kv (("center-at-unpause", m), v) -> [ `Kv (("center", m), v) ]
-      | `Kv (("enter-at-unpause", m), v) -> [ `Kv (("enter", m), v) ]
-      | `Kv (("down-at-unpause", m), v) -> [ `Kv (("down", m), v) ]
-      | `Kv (("exec-at-unpause", m), v) -> [ `Kv (("exec", m), v) ]
-      | `Kv (("scroll-at-unpause", m), v) -> [ `Kv (("scroll", m), v) ]
-      | x -> [ x ])
+  let attrs = function
+    | `Kv (("up-at-unpause", m), v) -> [ `Kv (("up", m), v) ]
+    | `Kv (("center-at-unpause", m), v) -> [ `Kv (("center", m), v) ]
+    | `Kv (("enter-at-unpause", m), v) -> [ `Kv (("enter", m), v) ]
+    | `Kv (("down-at-unpause", m), v) -> [ `Kv (("down", m), v) ]
+    | `Kv (("exec-at-unpause", m), v) -> [ `Kv (("exec", m), v) ]
+    | `Kv (("scroll-at-unpause", m), v) -> [ `Kv (("scroll", m), v) ]
+    | x -> [ x ]
   in
+  let attrs = Attributes.map attrs in
   Ast.Mapper.make ~block ~inline ~attrs ()
 
 let to_cmarkit

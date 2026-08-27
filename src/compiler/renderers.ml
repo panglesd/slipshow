@@ -212,8 +212,9 @@ let svg c ~uri ~files i attrs =
   match src with
   | `Link l ->
       let attrs =
-        attrs |> add_escaped_attrs "data" l
-        |> add_escaped_attrs "type" "image/svg+xml"
+        attrs
+        |> add_escaped_attrs ~keep_base:false "data" l
+        |> add_escaped_attrs ~keep_base:false "type" "image/svg+xml"
       in
       media ~self_closing:false ~media_name:"object" c ~uri ~files i attrs
   | `Source (content, _mime_type) ->
@@ -241,9 +242,10 @@ let pure_embed ~root c ~name uri files attrs =
           in
           let attrs =
             attrs
-            |> add_escaped_attrs "x-path" (Fpath.to_string p)
-            |> add_escaped_attrs "x-data" (Option.value ~default:"" content)
-            |> add_escaped_attrs "x-name" name
+            |> add_escaped_attrs ~keep_base:false "x-path" (Fpath.to_string p)
+            |> add_escaped_attrs ~keep_base:false "x-data"
+                 (Option.value ~default:"" content)
+            |> add_escaped_attrs ~keep_base:false "x-name" name
           in
           Context.string c "<span";
           RenderAttrs.add_attrs c attrs;
@@ -404,7 +406,7 @@ let custom_html_renderer (units : Ast.units)
           true
       | Ast.SlipScript ((cb, (attrs, _)), _) ->
           let attrs =
-            Attributes.add ("type", Meta.none)
+            Attributes.add ~keep_base:false ("type", Meta.none)
               (Some ({ v = "slip-script"; delimiter = None }, Meta.none))
               attrs
           in

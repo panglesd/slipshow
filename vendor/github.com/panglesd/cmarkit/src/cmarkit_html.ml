@@ -264,7 +264,9 @@ let link_dest_and_title c ld =
 let image ?(close = " >") c i attrs =
   match Inline.Link.reference_definition (C.get_defs c) i with
   | Some (Link_definition.Def ((ld, (attributes, _)), _)) ->
-     let attributes = Attributes.merge ~base:attributes ~new_attrs:attrs in
+      let attributes =
+        Attributes.merge ~keep_base:false ~base:attributes ~new_attrs:attrs
+      in
       let plain_text c i =
         let lines = Inline.to_plain_text ~break_on_soft:false i in
         String.concat "\n" (List.map (String.concat "") lines)
@@ -303,7 +305,9 @@ let link_footnote c l fn =
 
 let link c l attrs = match Inline.Link.reference_definition (C.get_defs c) l with
 | Some (Link_definition.Def ((ld, (attributes, _)), _)) ->
-    let attributes = Attributes.merge ~base:attributes ~new_attrs:attrs in
+    let attributes =
+      Attributes.merge ~keep_base:false ~base:attributes ~new_attrs:attrs
+    in
     let link, title = link_dest_and_title c ld in
     C.string c "<a href=\""; pct_encoded_string c link;
     C.string c "\"";
