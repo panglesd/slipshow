@@ -29,9 +29,7 @@ val do_watch :
 module Server : sig
   val do_serve :
     port:int ->
-    to_lsp_server:
-      (Proto.Client_to_server.t -> root -> unit)
-      option ->
+    to_lsp_server:(Proto.Client_to_server.t -> root -> unit) option ->
     roots ->
     (unit, [> `Addr_in_use ]) result Lwt.t
 end
