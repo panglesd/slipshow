@@ -34,6 +34,7 @@
 - Improve uri vs local path detection. (#271)
 - Improve locations of errors in `css:` and `js:` frontmatter fields. (#271)
 - LSP: Fix locations reported for frontmatter `attributes:`. (#271)
+- Allow spaces and tabs after frontmatter delimiters. (#275)
 
 ### Docs
 
