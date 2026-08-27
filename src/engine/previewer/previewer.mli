@@ -14,9 +14,7 @@ val create_previewer :
   ?callback:(int -> unit) ->
   ?save_drawing:(path:string -> content:string -> unit) ->
   save_coordinate:
-    (id:Common_types.gui_id ->
-    coord:Actions_arguments.Gui.t ->
-    unit) ->
+    (id:Common_types.gui_id -> coord:Actions_arguments.Gui.t -> unit) ->
   goto_loc:(Common_types.gui_id -> unit) ->
   include_speaker_view:bool ->
   errors_el:Brr.El.t ->
