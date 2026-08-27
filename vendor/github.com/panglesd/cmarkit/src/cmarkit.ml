@@ -148,11 +148,15 @@ module Attributes = struct
 
   let class' t = t.class'
 
-  let add_class t class' = { t with class' = class' :: t.class'}
+  let add_class t class' =
+    if
+      List.exists (fun (cl, _meta) -> String.equal cl (fst class')) t.class'
+    then t
+    else { t with class' = class' :: t.class'}
 
   let remove_class t class' =
     { t with
-      class' = List.filter (fun (c, _) -> compare class' c <> 0) t.class'
+      class' = List.filter (fun (c, _) -> not (String.equal class' c)) t.class'
     }
 
   (** {1 Id}) *)
@@ -170,15 +174,27 @@ module Attributes = struct
   let mem key t =
     List.exists (function ((k, _), _) -> String.equal k key) t.kv_attributes
 
-  let add (key, meta) value t =
+  let add ~keep_base (key, meta) value t =
     match key, value with
     | "id", Some ({v = value; _}, meta) ->
-       set_id t (value, meta)
+        (match id t with
+        | Some _ when keep_base -> t
+        | _ -> set_id t (value, meta)
+        )
     | "class", Some ({v = value; _}, meta) ->
        let values = String.split_on_char ' ' value in
        List.fold_left (fun t value -> add_class t (value, meta)) t values
     | _ ->
-       let kv_attributes = ((key, meta), value) :: t.kv_attributes in
+       let mem_key = mem key t in
+       if keep_base && mem_key then t else
+       let kv_attributes =
+         if mem_key then
+           List.map
+             (function | ((k, _), _) when String.equal k key -> ((key, meta), value)
+                       | x -> x)
+           t.kv_attributes
+         else ((key, meta), value) :: t.kv_attributes
+       in
        { t with kv_attributes }
 
   let remove key t =
@@ -190,10 +206,17 @@ module Attributes = struct
   let find key t =
     List.find_opt (function ((k, _), _) -> String.equal k key) t.kv_attributes
 
-  let merge ~base ~new_attrs =
-    let base = match id new_attrs with None -> base | Some id -> set_id base id in
+  let merge ~keep_base ~base ~new_attrs =
+    let base =
+      match id base, id new_attrs with
+      | Some _, _ when keep_base -> base
+      | _, None -> base
+      | _, Some id -> set_id base id
+    in
     let base = List.fold_left add_class base (class' new_attrs) in
-    List.fold_left (fun base (k, v) -> add k v base) base (kv_attributes new_attrs)
+    List.fold_left
+      (fun base (k, v) -> add ~keep_base k v base)
+      base (kv_attributes new_attrs)
 
   (** Merge *)
 
@@ -205,7 +228,7 @@ module Attributes = struct
       (fun acc -> function
         | `Class x -> add_class acc x
         | `Id id -> set_id acc id
-        | `Kv (x,y) -> add x y acc)
+        | `Kv (x,y) -> add ~keep_base:false x y acc)
       empty (class' @ id @ kv_attrs)
 end
 
@@ -1779,7 +1802,7 @@ module Inline_struct = struct
               let v, meta = attr_of_rev_spans p value in
               Some ({Attributes.v ; delimiter}, meta)
          in
-         Attributes.add key value attrs
+         Attributes.add ~keep_base:false key value attrs
     in
     let attrs = List.fold_right add_attribute new_attrs attrs in
     let first = p.current_char and last = p.current_line_last_char in
@@ -2852,7 +2875,7 @@ module Block_struct = struct
               let (v, meta) = Inline_struct.attr_of_rev_spans p value in
               Some ({Attributes.v ; delimiter}, meta)
          in
-         Attributes.add key value attrs
+         Attributes.add ~keep_base:false key value attrs
     in
     let new_attrs =
       List.fold_right add_attribute new_attrs Attributes.empty, Meta.none
@@ -2883,7 +2906,7 @@ module Block_struct = struct
               let (v, meta) =  (Inline_struct.attr_of_rev_spans p value) in
               Some ({Attributes.v ; delimiter}, meta)
          in
-         Attributes.add key value attrs
+         Attributes.add ~keep_base:false key value attrs
     in
     let attrs = List.fold_right add_attribute new_attrs attrs in
     let first = p.current_char and last = p.current_line_last_char in

@@ -20,11 +20,6 @@
    24 │  {children:key=value #attributes}
       │   ^^^^^^^^^^^^ 
   
-  warning: Non standard attribute: 'key'
-      ┌─ slides.md:24:2
-   24 │  {children:key=value #attributes}
-      │   ^^^^^^^^^^^^ 
-  
 
   $ show_source slides.html | htmlq -p "#slides"
   
@@ -85,7 +80,7 @@
           This is a second slide</span>
       </p>
     </div>
-    <div k="v" key="value">
+    <div k="v" key="other value">
       <p>
         <span>
           Hello!</span>
