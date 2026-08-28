@@ -19,6 +19,7 @@ module Global : sig
     js_links : Uri.t loced list;
     external_ids : string list;
     toplevel_attributes : Cmarkit.Attributes.t Cmarkit.node option;
+    css_framework : [ `Tachyons ] loced option;
   }
 
   type 'a with_ = { x : 'a; fm : t }

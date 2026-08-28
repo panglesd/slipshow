@@ -78,7 +78,7 @@ Testing with an include
       ┌─ all.md:3:1
     3 │  unknown-frontmatter: field
       │  ^^^^^^^^^^^^^^^^^^^ 
-      = Recognized fields are: 'dimension', 'toplevel-attributes', 'math-link', 'theme', 'css', 'js', 'highlightjs-theme', 'math-mode', 'external-ids', 'attributes'
+      = Recognized fields are: 'dimension', 'toplevel-attributes', 'math-link', 'theme', 'css', 'css-framework', 'js', 'highlightjs-theme', 'math-mode', 'external-ids', 'attributes'
   
   warning: Error while parsing frontmatter field 'dimension'
       ┌─ all.md:4:12
