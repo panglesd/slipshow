@@ -50,6 +50,9 @@ The current options for the frontmatter are:
   of space-separated ids. This is just in order to silence some warnings. This
   is useful when including svgs or math where some IDs are given.
 
+- ``tachyons``, for telling the Slipshow compiler to include the ``tachyons``
+  CSS framework. See the docs on :doc:`tachyons` support.
+
 Multifile presentations
 =======================
 

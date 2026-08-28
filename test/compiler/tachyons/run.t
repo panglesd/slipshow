@@ -12,7 +12,7 @@ No tachyon is included by default
 Tachyon should be included from the frontmatter
   $ cat > main.slp <<EOF
   > ---
-  > css-framework: tachyons
+  > tachyons: true
   > ---
   > {.red}
   > Red text
@@ -24,19 +24,20 @@ Tachyon should be included from the frontmatter
 
 No typo allowed!
 
+
   $ cat > main.slp <<EOF
   > ---
-  > css-framework: fsefes
+  > tachyons: oui
   > ---
   > {.red}
   > Red text
   > EOF
 
   $ slipshow compile main.slp
-  warning: Error while parsing frontmatter field 'css-framework'
-      ┌─ main.slp:2:16
-    2 │  css-framework: fsefes
-      │                 ^^^^^^ The only allowed value is 'tachyons'
+  warning: Error while parsing frontmatter field 'tachyons'
+      ┌─ main.slp:2:11
+    2 │  tachyons: oui
+      │            ^^^ The only allowed value is 'tachyons'
   
   $ grep "\.bg-red" main.html 
   [1]
