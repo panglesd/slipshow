@@ -731,7 +731,9 @@ let rec add_to_compile ?locs ~embed_loc ~units file units_cache ~read_file =
   | None ->
       let u =
         match Fpath.Map.find_opt file units_cache with
-        | Some u -> u
+        | Some (u, diagnostics) ->
+            List.iter Diagnosis.add diagnostics;
+            u
         | None -> unit ~embed_loc ~read_file ?locs file
       in
       let units = Fpath.Map.add file u units in
@@ -826,6 +828,9 @@ let compile_all ~directory ~read_file ~embed_loc units_cache file =
 let compile_all ~read_file ~directory ~embed_loc units file =
   Diagnosis.with_ @@ fun () ->
   compile_all ~directory ~read_file ~embed_loc units file
+
+let unit ?locs ~read_file ~embed_loc file =
+  Diagnosis.with_ @@ fun () -> unit ?locs ~read_file ~embed_loc file
 
 (* let add_to_compile file c ~read_file = *)
 (*   Diagnosis.with_ @@ fun () -> add_to_compile file c ~read_file *)
