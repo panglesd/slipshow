@@ -7,11 +7,11 @@ We can compile the file using the slip_of_mark binary
       │               ^^^^^^^^^^^^^ This should be an ID present in the document
   
   warning: Wrong type
-      ┌─ video.md:7:1
+      ┌─ video.md:7:2
     7 │  {play-media}
       │  ^^^^^^^^^^^^
-      │  │
-      │  This expects the id of a video or audio
+      │  ││          
+      │  │This expects the id of a video or audio
       │  This is not a video or audio
   
 

@@ -1,6 +1,11 @@
 This file has many problems:
 
   $ slipshow compile slip.md
+  warning: file 'img.png' could not be read: img.png: No such file or directory
+      ┌─ slip.md:3:25
+    3 │  A missing file: ![image](img.png)
+      │                          ^^^^^^^^^ 
+  
   warning: ID id1 is assigned multiple times
       ┌─ slip.md:10:9
     7 │  Hello1{#id1}
@@ -11,16 +16,16 @@ This file has many problems:
    10 │  Hello3{#id1}
       │          ^^^ 
   
-  warning: file 'img.png' could not be read: img.png: No such file or directory
-      ┌─ slip.md:3:25
-    3 │  A missing file: ![image](img.png)
-      │                          ^^^^^^^^^ 
-  
 
 Adding a frontmatter, locations are still cool
 
   $ cat frontmatter slip.md > slip-with-frontmatter.md
   $ slipshow compile slip-with-frontmatter.md
+  warning: file 'img.png' could not be read: img.png: No such file or directory
+      ┌─ slip-with-frontmatter.md:5:25
+    5 │  A missing file: ![image](img.png)
+      │                          ^^^^^^^^^ 
+  
   warning: ID id1 is assigned multiple times
       ┌─ slip-with-frontmatter.md:12:9
     9 │  Hello1{#id1}
@@ -31,16 +36,16 @@ Adding a frontmatter, locations are still cool
    12 │  Hello3{#id1}
       │          ^^^ 
   
-  warning: file 'img.png' could not be read: img.png: No such file or directory
-      ┌─ slip-with-frontmatter.md:5:25
-    5 │  A missing file: ![image](img.png)
-      │                          ^^^^^^^^^ 
-  
 
 Testing with an include
 
   $ cat slip.md include > slip-with-include.md
   $ slipshow compile slip-with-include.md
+  warning: file 'img.png' could not be read: img.png: No such file or directory
+      ┌─ slip-with-include.md:3:25
+    3 │  A missing file: ![image](img.png)
+      │                          ^^^^^^^^^ 
+  
   warning: ID id1 is assigned multiple times
       ┌─ slip-with-include.md:10:9
     7 │  Hello1{#id1}
@@ -57,24 +62,17 @@ Testing with an include
     4 │  {#id1}
       │    ^^^ 
   
-  warning: file 'img.png' could not be read: img.png: No such file or directory
-      ┌─ slip-with-include.md:3:25
-    3 │  A missing file: ![image](img.png)
-      │                          ^^^^^^^^^ 
-  
 
   $ slipshow compile all.md
-  warning: Invalid frontmatter entry
-      ┌─ all.md:5:1
-    5 │  wrong line
-      │  ^^^^^^^^^^ 
-      = Frontmatter have to be of the form "key:value" on a single line.
+  warning: No element with id 'yo' was found
+      ┌─ all.md:2:27
+    2 │  toplevel-attributes: exec=yo dqzd
+      │                            ^^ This should be an ID present in the document
   
-  warning: Invalid frontmatter entry
-      ┌─ all.md:7:1
-    7 │  anothe rwrong line
-      │  ^^^^^^^^^^^^^^^^^^ 
-      = Frontmatter have to be of the form "key:value" on a single line.
+  warning: Non standard attribute: 'dqzd'
+      ┌─ all.md:2:30
+    2 │  toplevel-attributes: exec=yo dqzd
+      │                               ^^^^ 
   
   warning: Frontmatter field 'unknown-frontmatter' is not interpreted by slipshow
       ┌─ all.md:3:1
@@ -87,10 +85,17 @@ Testing with an include
     4 │  dimension: 16:16
       │             ^^^^^ Expected "4:3", "16:9", or two integers separated by a 'x'
   
-  warning: Children classes cannot have a value
-      ┌─ all.md:27:19
-   27 │  {children:.class="have value"}
-      │                    ^^^^^^^^^^ 
+  warning: Invalid frontmatter entry
+      ┌─ all.md:5:1
+    5 │  wrong line
+      │  ^^^^^^^^^^ 
+      = Frontmatter have to be of the form "key:value" on a single line.
+  
+  warning: Invalid frontmatter entry
+      ┌─ all.md:7:1
+    7 │  anothe rwrong line
+      │  ^^^^^^^^^^^^^^^^^^ 
+      = Frontmatter have to be of the form "key:value" on a single line.
   
   warning: ID duplicated-id is assigned multiple times
       ┌─ all.md:25:3
@@ -103,31 +108,24 @@ Testing with an include
    25 │  {#duplicated-id}
       │    ^^^^^^^^^^^^^ 
   
-  warning: Non standard attribute: 'dqzd'
-      ┌─ all.md:2:30
-    2 │  toplevel-attributes: exec=yo dqzd
-      │                               ^^^^ 
-  
-  warning: No element with id 'yo' was found
-      ┌─ all.md:2:27
-    2 │  toplevel-attributes: exec=yo dqzd
-      │                            ^^ This should be an ID present in the document
+  warning: file 'missing.md' could not be read: missing.md: No such file or directory
+      ┌─ all.md:11:4
+   11 │  ![](missing.md)
+      │     ^^^^^^^^^^^^ 
   
   warning: Wrong type
       ┌─ all.md:14:1
+   13 │  {exec}
+      │   ^^^^ This expects the id of a slip-script
    14 │  Hello
-      │  ^^^^^
-      │  │
-      │  This expects the id of a slip-script
-      │  This is not a slip-script
+      │  ^^^^^ This is not a slip-script
   
   warning: Wrong type
       ┌─ all.md:17:1
+   16 │  {change-page}
+      │   ^^^^^^^^^^^ This expects the id of a carousel or pdf
    17 │  This is not a carousel
-      │  ^^^^^^^^^^^^^^^^^^^^^^
-      │  │
-      │  This expects the id of a carousel or pdf
-      │  This is not a carousel or pdf
+      │  ^^^^^^^^^^^^^^^^^^^^^^ This is not a carousel or pdf
   
   warning: No element with id 'missing-id' was found
       ┌─ all.md:19:8
@@ -138,6 +136,11 @@ Testing with an include
       ┌─ all.md:21:2
    21 │  {unknown-attribute}
       │   ^^^^^^^^^^^^^^^^^ 
+  
+  warning: Children classes cannot have a value
+      ┌─ all.md:27:19
+   27 │  {children:.class="have value"}
+      │                    ^^^^^^^^^^ 
   
   warning: Invalid action argument
       ┌─ all.md:32:6
@@ -169,9 +172,4 @@ Testing with an include
       ┌─ all.md:44:16
    44 │  {up="~margin:2 ~margin:3"}
       │                 ^^^^^^^ Named argument 'margin' is duplicated. This instance is ignored.
-  
-  warning: file 'missing.md' could not be read: missing.md: No such file or directory
-      ┌─ all.md:11:4
-   11 │  ![](missing.md)
-      │     ^^^^^^^^^^^^ 
   

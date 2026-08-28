@@ -114,9 +114,7 @@ let targets (is, expected_type) id_map ~args ~val_loc bol =
       | #Ast.Bol.t as bol ->
           if not (is bol) then
             let loc_block = Ast.Bol.text_loc bol in
-            let loc_reason =
-              Option.value id_loc ~default:(Ast.Bol.text_loc bol)
-            in
+            let loc_reason = Option.value id_loc ~default:val_loc in
             Diagnosis.add @@ WrongType { loc_reason; loc_block; expected_type }
       | `External -> ())
     targets;

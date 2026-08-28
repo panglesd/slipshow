@@ -288,7 +288,39 @@ let to_grace htbl_include er =
       `String { name = Some (Fpath.to_string f); content })
     er
 
-let to_grace units errors = List.map (to_grace units.Ast.units) errors
+let to_grace units errors =
+  let primary_loc = function
+    | Diagnosis.DuplicateID { occurrences; _ } -> List.nth_opt occurrences 0
+    | MissingFile { locs; _ } -> List.nth_opt locs 0
+    | WrongType { loc_reason; _ } -> Some loc_reason
+    | InconsistentOption { loc1; _ } -> Some loc1
+    | ParsingWarnor { warnor = UnusedArgument { loc = ploc; _ }; loc }
+    | ParsingWarnor { warnor = Parsing_failure { loc = ploc; _ }; loc } ->
+        Some (Diagnosis.loc_of_ploc loc ploc)
+    | ParsingError { loc; _ }
+    | MissingID { loc; _ }
+    | UnknownAttribute { loc; _ }
+    | UnknownFrontmatterField { loc; _ }
+    | FrontmatterParsing { loc; _ }
+    | InvalidFrontmatterLine { loc }
+    | ChildrenClassWithValue { loc }
+    | Simple { loc; _ } ->
+        Some loc
+  in
+  let compare_position a b =
+    let open Cmarkit in
+    match (primary_loc a, primary_loc b) with
+    | None, None -> 0
+    | None, _ -> 1
+    | _, None -> -1
+    | Some a, Some b ->
+        let c = String.compare (Textloc.file a) (Textloc.file b) in
+        if c <> 0 then c
+        else Int.compare (Textloc.first_byte a) (Textloc.first_byte b)
+  in
+  errors
+  |> List.stable_sort compare_position
+  |> List.map (to_grace units.Ast.units)
 
 let delayed_from_units ?(options = Frontmatter.Global.empty) ?slipshow_js
     ~has_speaker_view units =
