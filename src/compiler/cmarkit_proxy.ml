@@ -4,7 +4,8 @@ let of_string ?loc_offset ~file =
     ?loc_offset ~file
 
 let of_string ~file s =
-  let frontmatter, s, loc_offset =
+  let (frontmatter, s, loc_offset), warnings =
+    Diagnosis.with_ @@ fun () ->
     match Frontmatter.extract s with
     | None -> (Frontmatter.empty, s, None)
     | Some { frontmatter = txt_fm; rest; rest_offset; fm_offset } ->
@@ -14,4 +15,4 @@ let of_string ~file s =
         (frontmatter, rest, Some rest_offset)
   in
   let doc = of_string ?loc_offset ~file s in
-  (doc, frontmatter)
+  (doc, (frontmatter, warnings))
