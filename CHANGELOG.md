@@ -9,6 +9,7 @@
   elements. (#270)
 - "Go to source" by `Ctrl`+clicking (or `Cmd`+clicking on Mac) anywhere in the
   preview. (#270)
+- Added [tachyons](https://tachyons.io/) support (#278)
 
 ### Changed
 
