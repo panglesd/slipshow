@@ -128,7 +128,7 @@ let head ~files ~width ~height ~theme ~highlightjs_theme ~(has : Has.t)
     ~math_mode ~css_links ~tachyons =
   let tachyons =
     match tachyons with
-    | Some true -> "<style>" ^ Data_files.read Tachyon_css ^ "</style>"
+    | Some true -> "<style>" ^ Data_files.read Tachyons_css ^ "</style>"
     | _ -> ""
   in
   let theme = theme_css files theme in
