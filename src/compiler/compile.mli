@@ -10,7 +10,7 @@ val unit :
   read_file:file_reader ->
   embed_loc:bool ->
   Fpath.t ->
-  Ast.unit'
+  Ast.unit' * Diagnosis.t list
 
 (* val add_to_compile : *)
 (*   Fpath.t -> *)
@@ -22,7 +22,7 @@ val compile_all :
   read_file:file_reader ->
   directory:Fpath.t ->
   embed_loc:bool ->
-  Ast.unit' Fpath.Map.t ->
+  (Ast.unit' * Diagnosis.t list) Fpath.Map.t ->
   Fpath.t ->
   Ast.units * Diagnosis.t list
 (** [compile_all ~read_file ~embed_loc units_cache file] will compile [file] and
