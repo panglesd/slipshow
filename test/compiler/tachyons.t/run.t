@@ -37,7 +37,7 @@ No typo allowed!
   warning: Error while parsing frontmatter field 'tachyons'
       ┌─ main.slp:2:11
     2 │  tachyons: oui
-      │            ^^^ The only allowed value is 'tachyons'
+      │            ^^^ Expected 'true' or 'false'
   
   $ grep "\.bg-red" main.html 
   [1]

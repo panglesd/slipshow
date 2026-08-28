@@ -249,25 +249,19 @@ module Css_links = struct
 end
 
 module Tachyons = struct
-  type t = bool loced option
+  type t = bool loced
 
   let key = tachyons_key
 
   let of_string ~to_uri:_ (s, loc) =
-    match String.trim s with
-    | "true" -> Ok (Some (true, loc))
-    | "false" -> Ok (Some (false, loc))
-    | _ -> Error (`Msg "The only allowed value is 'tachyons'")
+    match s with
+    | "true" -> Ok (true, loc)
+    | "false" -> Ok (false, loc)
+    | _ -> Error (`Msg "Expected 'true' or 'false'")
 
   let update_frontmatter (fm : fm) v =
-    {
-      fm with
-      global =
-        {
-          fm.global with
-          tachyons = (match v with None -> fm.global.tachyons | Some _ -> v);
-        };
-    }
+    let tachyons = combine_opt key (Some v) fm.global.tachyons in
+    { fm with global = { fm.global with tachyons } }
 end
 
 module Js_links = struct
