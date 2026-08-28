@@ -41,13 +41,13 @@
   [perfect-freehand](https://github.com/steveruizok/perfect-freehand) JS
   library, under the [MIT licence](#perfect-freehand-copyrights).
 - The [`katex` javascript library](https://github.com/KaTeX/KaTeX/) is present
-  in `static_data/katex/` , under the [MIT licence](#katex-copyright).
+  in `static_data/katex/` , under the [MIT licence](#katex-copyrights).
 - The [`mermaid` javascript library](https://github.com/mermaid-js/mermaid/) is
   present in `static_data/mermaidjs/` , under the [MIT
-  licence](#mermaid-js-copyright).
+  licence](#mermaid-js-copyrights).
 - The [`tachyons` css framework](https://github.com/tachyons-css/tachyons) is
   present in `static_data/tachyons-4.12.0.min.css`, under the [MIT
-  licence](#tachyons-copyright). It was
+  licence](#tachyons-copyrights). It was
   [modified](https://github.com/panglesd/tachyons/).
 
 The rest of the code, and the Slipshow project in general, is licensed under the
