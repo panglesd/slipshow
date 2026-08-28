@@ -19,7 +19,7 @@ module Global : sig
     js_links : Uri.t loced list;
     external_ids : string list;
     toplevel_attributes : Cmarkit.Attributes.t Cmarkit.node option;
-    css_framework : [ `Tachyons ] loced option;
+    tachyons : bool loced option;
   }
 
   type 'a with_ = { x : 'a; fm : t }
@@ -76,6 +76,7 @@ end
 
 module Hljs_theme : Field_with_default with type t = string loced
 module Math_mode : Field_with_default with type t = [ `Mathjax | `Katex ] loced
+module Tachyons : Field with type t = bool loced option
 
 val of_string :
   to_uri:(string -> (Uri.t, [ `Msg of string ]) result) ->

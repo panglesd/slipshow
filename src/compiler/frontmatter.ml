@@ -22,7 +22,7 @@ let dimension_key = "dimension"
 let highlightjs_theme_key = "highlightjs-theme"
 let math_mode_key = "math-mode"
 let css_links_key = "css"
-let css_framework_key = "css-framework"
+let tachyons_key = "tachyons"
 let js_links_key = "js"
 let external_ids_key = "external-ids"
 
@@ -37,7 +37,7 @@ module Global = struct
     js_links : Uri.t loced list;
     external_ids : string list;
     toplevel_attributes : Cmarkit.Attributes.t Cmarkit.node option;
-    css_framework : [ `Tachyons ] loced option;
+    tachyons : bool loced option;
   }
   (** We keep an option even though there are default value to be able to merge
       two frontmatter. None and default value represent different things. *)
@@ -55,7 +55,7 @@ module Global = struct
       js_links = [];
       external_ids = [];
       toplevel_attributes = None;
-      css_framework = None;
+      tachyons = None;
     }
 
   let with_empty x = { x; fm = empty }
@@ -81,8 +81,7 @@ module Global = struct
                 meta1 )
         | (Some _ as a), _ | _, (Some _ as a) -> a
         | None, None -> None);
-      css_framework =
-        (match x.css_framework with None -> y.css_framework | x -> x);
+      tachyons = (match x.tachyons with None -> y.tachyons | x -> x);
     }
 
   let uris
@@ -96,7 +95,7 @@ module Global = struct
          js_links;
          external_ids = _;
          toplevel_attributes = _;
-         css_framework = _;
+         tachyons = _;
        } :
         t) =
     let math_link = Option.to_list math_link in
@@ -249,14 +248,15 @@ module Css_links = struct
     { fm with global = { fm.global with css_links = v @ fm.global.css_links } }
 end
 
-module Css_framework = struct
-  type t = [ `Tachyons ] loced option
+module Tachyons = struct
+  type t = bool loced option
 
-  let key = css_framework_key
+  let key = tachyons_key
 
   let of_string ~to_uri:_ (s, loc) =
     match String.trim s with
-    | "tachyons" -> Ok (Some (`Tachyons, loc))
+    | "true" -> Ok (Some (true, loc))
+    | "false" -> Ok (Some (false, loc))
     | _ -> Error (`Msg "The only allowed value is 'tachyons'")
 
   let update_frontmatter (fm : fm) v =
@@ -265,8 +265,7 @@ module Css_framework = struct
       global =
         {
           fm.global with
-          css_framework =
-            (match v with None -> fm.global.css_framework | Some _ -> v);
+          tachyons = (match v with None -> fm.global.tachyons | Some _ -> v);
         };
     }
 end
@@ -383,7 +382,7 @@ let all_fields =
     (module Math_link : Field);
     (module Theme : Field);
     (module Css_links : Field);
-    (module Css_framework : Field);
+    (module Tachyons : Field);
     (module Js_links : Field);
     (module Hljs_theme : Field);
     (module Math_mode : Field);

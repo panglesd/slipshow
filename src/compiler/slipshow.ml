@@ -125,11 +125,11 @@ let slipshow_js_element files slipshow_link =
   | None -> Format.sprintf "<script>%s</script>" Data_files.(read Slipshow_js)
 
 let head ~files ~width ~height ~theme ~highlightjs_theme ~(has : Has.t)
-    ~math_mode ~css_links ~css_framework =
-  let css_framework =
-    match css_framework with
-    | None -> ""
-    | Some `Tachyons -> "<style>" ^ Data_files.read Tachyon_css ^ "</style>"
+    ~math_mode ~css_links ~tachyons =
+  let tachyons =
+    match tachyons with
+    | Some true -> "<style>" ^ Data_files.read Tachyon_css ^ "</style>"
+    | _ -> ""
   in
   let theme = theme_css files theme in
   let highlight_css_element =
@@ -164,7 +164,7 @@ let head ~files ~width ~height ~theme ~highlightjs_theme ~(has : Has.t)
   let mermaid_option = mermaid_option_elem ~has_mermaid:has.mermaid in
   String.concat "\n"
     [
-      css_framework;
+      tachyons;
       pdf_support;
       variable_css ~width ~height;
       favicon_element;
@@ -184,11 +184,11 @@ let set_no_engine () = no_engine := true
 
 let embed_in_page ~files ~has_speaker_view ~slipshow_js content ~has ~math_link
     ~css_links ~js_links ~theme ~dimension ~highlightjs_theme ~math_mode
-    ~css_framework =
+    ~tachyons =
   let width, height = dimension in
   let head =
     head ~files ~has ~css_links ~theme ~width ~height ~highlightjs_theme
-      ~math_mode ~css_framework
+      ~math_mode ~tachyons
   in
   let slipshow_js_element = slipshow_js_element files slipshow_js in
   let js =
@@ -340,10 +340,9 @@ let delayed_from_units ?(options = Frontmatter.Global.empty) ?slipshow_js
       Has.empty units.entry_point units.units
   in
   let files = units.files in
-  let css_framework = options.css_framework |> Option.map fst in
+  let tachyons = options.tachyons |> Option.map fst in
   embed_in_page ~files ~has_speaker_view ~slipshow_js ~dimension ~has ~math_link
-    ~theme ~css_links ~js_links content ~highlightjs_theme ~math_mode
-    ~css_framework
+    ~theme ~css_links ~js_links content ~highlightjs_theme ~math_mode ~tachyons
 
 let delayed ~directory ?options ?slipshow_js ~read_file ~has_speaker_view
     ~embed_loc file =
