@@ -36,9 +36,7 @@ module State = struct
     let parent = Fpath.parent file in
     let read_file = Read_file.fs parent in
     let () =
-      let new_unit, _diagnostic =
-        Slipshow.Compile.unit ~embed_loc:true ~read_file file
-      in
+      let new_unit = Slipshow.Compile.unit ~embed_loc:true ~read_file file in
       Rev_deps.update_state ~new_unit file
     in
     Lwt.return_unit
@@ -58,7 +56,6 @@ let diagnostics ~positionEncoding file :
       match Hashtbl.find_opt Roots.buffers root with
       | None -> None
       | Some { diagnostics = errors; units; _ } ->
-          Format.eprintf "%d errors to report\n%!" (List.length errors);
           Some
             (List.concat_map
                (Diagnostic.of_error ~positionEncoding ~units:units.units ~root

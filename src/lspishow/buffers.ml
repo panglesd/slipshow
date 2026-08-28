@@ -1,9 +1,4 @@
-type buffer = {
-  source : string;
-  unit : Slipshow.Ast.unit';
-  diagnostic : Diagnosis.t list;
-}
-
+type buffer = { source : string; unit : Slipshow.Ast.unit' }
 type t = (Fpath.t, buffer) Hashtbl.t
 
 let buffers : t = Hashtbl.create 10
@@ -20,9 +15,7 @@ let read_file parent =
   read_file parent ||| Read_file.fs parent
 
 let to_units () =
-  Hashtbl.fold
-    (fun path u -> Fpath.Map.add path (u.unit, u.diagnostic))
-    buffers Fpath.Map.empty
+  Hashtbl.fold (fun path u -> Fpath.Map.add path u.unit) buffers Fpath.Map.empty
 
 (** Update the root of an updated buffer *)
 let update_root ~should_broadcast root =
@@ -54,10 +47,8 @@ let update ~force ~should_broadcast file source =
       let parent = Fpath.parent file in
       let open Read_file.Syntax in
       let read_file = Read_file.with_ file source ||| read_file parent in
-      let unit, diagnostic =
-        Slipshow.Compile.unit ~embed_loc:true ~read_file file
-      in
-      let new_ = { source; unit; diagnostic } in
+      let unit = Slipshow.Compile.unit ~embed_loc:true ~read_file file in
+      let new_ = { source; unit } in
       update_state ~new_ file;
       let roots = Rev_deps.get_roots file in
       if not force then roots |> Fpath.Set.iter (update_root ~should_broadcast)

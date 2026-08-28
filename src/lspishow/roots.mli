@@ -17,6 +17,6 @@ val update_root :
   should_broadcast:bool ->
   Slipshow.Compile.file_reader ->
   t ->
-  (Slipshow.Ast.unit' * Diagnosis.t list) Fpath.map ->
+  Slipshow.Ast.unit' Fpath.map ->
   Fpath.t ->
   root

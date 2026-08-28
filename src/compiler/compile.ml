@@ -670,7 +670,9 @@ end
 
 let action_plan _ = failwith "TODO: Action plan"
 
-let of_cmarkit ~embed_loc ~path ~(fm : Frontmatter.t) ~source md =
+let of_cmarkit ~embed_loc ~path ~(fm : Frontmatter.t * Diagnosis.t list) ~source
+    md =
+  let fm, fm_warnings = fm in
   let defs = Doc.defs md in
   let block = Doc.block md in
   let md =
@@ -694,6 +696,7 @@ let of_cmarkit ~embed_loc ~path ~(fm : Frontmatter.t) ~source md =
     let deps = htbl_include |> Hashtbl.to_seq |> Fpath.Map.of_seq in
     (md4, deps, id_map, files, fm.global, gui_map)
   in
+  let warnings = fm_warnings @ warnings in
   { Ast.ast; deps; id_map; source; files; option; warnings; path; gui_map }
 
 let _add_file read_file file content =
@@ -731,9 +734,7 @@ let rec add_to_compile ?locs ~embed_loc ~units file units_cache ~read_file =
   | None ->
       let u =
         match Fpath.Map.find_opt file units_cache with
-        | Some (u, diagnostics) ->
-            List.iter Diagnosis.add diagnostics;
-            u
+        | Some u -> u
         | None -> unit ~embed_loc ~read_file ?locs file
       in
       let units = Fpath.Map.add file u units in
@@ -760,8 +761,8 @@ let compile_all ~directory ~read_file ~embed_loc units_cache file =
         let option = Frontmatter.Global.combine option unit.Ast.option in
         let () =
           (* Rethrow the few warnings raised during the unit phase (currently,
-               only "children:#id is not supported") warnings not to miss
-               them *)
+             only "children:#id is not supported" and frontmatter errors)
+             warnings not to miss them *)
           List.iter Diagnosis.add unit.warnings
         in
         (files, option))
@@ -795,7 +796,7 @@ let compile_all ~directory ~read_file ~embed_loc units_cache file =
       in
       Cmarkit.Doc.make block
     in
-    of_cmarkit ~embed_loc ~path:(Fpath.v "internal") ~fm:Frontmatter.empty
+    of_cmarkit ~embed_loc ~path:(Fpath.v "internal") ~fm:(Frontmatter.empty, [])
       ~source:None doc
   in
   let action_plan, id_map = Action_plan.execute entry_point units in
@@ -828,9 +829,6 @@ let compile_all ~directory ~read_file ~embed_loc units_cache file =
 let compile_all ~read_file ~directory ~embed_loc units file =
   Diagnosis.with_ @@ fun () ->
   compile_all ~directory ~read_file ~embed_loc units file
-
-let unit ?locs ~read_file ~embed_loc file =
-  Diagnosis.with_ @@ fun () -> unit ?locs ~read_file ~embed_loc file
 
 (* let add_to_compile file c ~read_file = *)
 (*   Diagnosis.with_ @@ fun () -> add_to_compile file c ~read_file *)
