@@ -86,3 +86,4 @@ We advise you to start by reading the tutorials, starting with the :doc:`first <
    shortcuts
    cli
    mermaid
+   tachyons
