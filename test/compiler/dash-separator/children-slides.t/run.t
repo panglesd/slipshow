@@ -1,24 +1,24 @@
   $ export SLIPSHOW__SECRET__NO_ENGINE=TRUE
   $ slipshow compile slides.md
-  warning: Non standard attribute: 'k'
-      ┌─ slides.md:33:2
-   33 │  {k=v key="other value"}
-      │   ^ 
+  warning: Non standard attribute: 'key'
+      ┌─ slides.md:24:2
+   24 │  {children:key=value #attributes}
+      │   ^^^^^^^^^^^^ 
+  
+  warning: Non standard attribute: 'key'
+      ┌─ slides.md:24:2
+   24 │  {children:key=value #attributes}
+      │   ^^^^^^^^^^^^ 
   
   warning: Non standard attribute: 'key'
       ┌─ slides.md:33:6
    33 │  {k=v key="other value"}
       │       ^^^ 
   
-  warning: Non standard attribute: 'key'
-      ┌─ slides.md:24:2
-   24 │  {children:key=value #attributes}
-      │   ^^^^^^^^^^^^ 
-  
-  warning: Non standard attribute: 'key'
-      ┌─ slides.md:24:2
-   24 │  {children:key=value #attributes}
-      │   ^^^^^^^^^^^^ 
+  warning: Non standard attribute: 'k'
+      ┌─ slides.md:33:2
+   33 │  {k=v key="other value"}
+      │   ^ 
   
 
   $ show_source slides.html | htmlq -p "#slides"
