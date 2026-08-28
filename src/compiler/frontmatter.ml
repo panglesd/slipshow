@@ -81,7 +81,7 @@ module Global = struct
                 meta1 )
         | (Some _ as a), _ | _, (Some _ as a) -> a
         | None, None -> None);
-      tachyons = (match x.tachyons with None -> y.tachyons | x -> x);
+      tachyons = combine_opt tachyons_key x.tachyons y.tachyons;
     }
 
   let uris
