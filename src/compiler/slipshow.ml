@@ -164,13 +164,13 @@ let head ~files ~width ~height ~theme ~highlightjs_theme ~(has : Has.t)
   let mermaid_option = mermaid_option_elem ~has_mermaid:has.mermaid in
   String.concat "\n"
     [
-      tachyons;
       pdf_support;
       variable_css ~width ~height;
       favicon_element;
       internal_css;
       system_css;
       theme;
+      tachyons;
       css_elements;
       highlight_css_element;
       highlight_js_element;
