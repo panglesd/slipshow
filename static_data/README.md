@@ -67,3 +67,14 @@ Mathjax is harder to make standalone.
 - Download the latest version from https://cdn.jsdelivr.net/npm/mermaid@latest/dist/mermaid.min.js
 - Put it in `mermaidjs/data/`
 - run `dune build @mermaid --profile with-bundle` and promote the new files
+
+------------
+
+## Tachyons
+
+- Clone https://github.com/panglesd/tachyons
+- On main, do `npm install` and then `npm run build`
+- Output is at `css/tachyons.min.css`
+
+As you can see in the git history, this is basically tachyons without media query,
+font-family or css reset.

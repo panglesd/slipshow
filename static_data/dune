@@ -61,6 +61,7 @@
   (pps ppx_blob))
  (preprocessor_deps
    tex-svg-full.js
+   tachyons-4.12.0.min.css
   ../src/engine/pdf-support/pdf_support.bc.js
   ../src/engine/scheduler/scheduler.bc.js
   ../logo/favicon.ico
