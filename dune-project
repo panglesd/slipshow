@@ -11,7 +11,7 @@
 
 (maintainers "Paul-Elliot")
 
-(license GPL-3.0-or-later ISC BSD-3-Clause Apache-2.0 OFL-1.1)
+(license GPL-3.0-or-later ISC BSD-3-Clause Apache-2.0 OFL-1.1 MIT)
 
 (documentation https://slipshow.readthedocs.io)
 
