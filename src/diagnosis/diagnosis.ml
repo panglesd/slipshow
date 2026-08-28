@@ -28,50 +28,23 @@ type t =
   | ChildrenClassWithValue of { loc : loc }
   | Simple of { loc : loc; msg : string }
 
-(* This is currently used to render issues on things that don't have location:
-   mostly CLI input. CLI input have much less errors they can raise, so it's OK
-   if (most) of them are not great messages. But I still keep all of those here
-   since this function will have some things to be taken for LSP integration. *)
-let pp ppf = function
-  | Simple { loc; msg } ->
-      Format.fprintf ppf "%a: %s." Cmarkit.Textloc.pp_ocaml loc msg
-  | DuplicateID id ->
-      Format.fprintf ppf "ID '%s' has already been given at %a." id.id
-        (Fmt.list Cmarkit.Textloc.pp_ocaml)
-        id.occurrences
-  | MissingFile s ->
-      Format.fprintf ppf "Missing file: %s, considering it as an URL. (%s)"
-        s.file s.error_msg
-  | WrongType { loc_reason = _; loc_block = _; expected_type } ->
-      Format.fprintf ppf "Wrong type: expected type '%s'" expected_type
-  | ParsingError { action; msg; loc = _ } ->
-      Format.fprintf ppf
-        "Parsing of the arguments of actions '%s' failed with '%s'" action msg
-  | ParsingWarnor
-      { warnor = UnusedArgument { action_name; argument_name; _ }; loc = _ } ->
-      Format.fprintf ppf "Action '%s' does not accept argument '%s'" action_name
-        argument_name
-  | ParsingWarnor { warnor = Parsing_failure { msg; loc = _ }; loc = _ } ->
-      Format.fprintf ppf "Action argument parsing failure: %s" msg
-  | MissingID { id; loc = _ } ->
-      Format.fprintf ppf "Id '%s' could not be found" id
-  | UnknownAttribute { attr; loc = _ } ->
-      Format.fprintf ppf
-        "Attribute '%s' is neither a standard HTML attribute nor a slipshow \
-         specific one"
-        attr
-  | UnknownFrontmatterField { key; _ } ->
-      Format.fprintf ppf "Frontmatter field '%s' is not interpreted by slipshow"
-        key
-  | InvalidFrontmatterLine _ ->
-      Format.fprintf ppf
-        "Invalid frontmatter entry: Frontmatter have to be of the form \
-         \"key:value\" on a single line."
-  | FrontmatterParsing { msg; _ } -> Format.fprintf ppf "%s" msg
-  | ChildrenClassWithValue _ ->
-      Format.fprintf ppf "%s" "Children classes cannot have a value"
-  | InconsistentOption { option_name; _ } ->
-      Format.fprintf ppf "option '%s' is provided multiple times" option_name
+let primary_loc = function
+  | DuplicateID { occurrences; _ } -> List.nth_opt occurrences 0
+  | MissingFile { locs; _ } -> List.nth_opt locs 0
+  | WrongType { loc_reason; _ } -> Some loc_reason
+  | InconsistentOption { loc1; _ } -> Some loc1
+  | ParsingWarnor { warnor = UnusedArgument { loc = ploc; _ }; loc }
+  | ParsingWarnor { warnor = Parsing_failure { loc = ploc; _ }; loc } ->
+      Some (loc_of_ploc loc ploc)
+  | ParsingError { loc; _ }
+  | MissingID { loc; _ }
+  | UnknownAttribute { loc; _ }
+  | UnknownFrontmatterField { loc; _ }
+  | FrontmatterParsing { loc; _ }
+  | InvalidFrontmatterLine { loc }
+  | ChildrenClassWithValue { loc }
+  | Simple { loc; _ } ->
+      Some loc
 
 let to_code = function
   | DuplicateID _ -> "DupID"
@@ -87,13 +60,6 @@ let to_code = function
   | ChildrenClassWithValue _ -> "ChildrenClassWithValue"
   | InconsistentOption _ -> "InconsistentOption"
   | Simple _ -> "Simple"
-
-let report_no_src fmt x =
-  let msg = Format.asprintf "%a" pp x in
-  let msg = Grace.Diagnostic.createf ~labels:[] ~code:x Warning "%s" msg in
-  Format.fprintf fmt "%a@.@."
-    (Grace_ansi_renderer.pp_diagnostic ?config:None ~code_to_string:to_code)
-    msg
 
 let with_range source_map loc f =
   let open Grace in

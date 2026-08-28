@@ -21,11 +21,8 @@ type t =
   | ChildrenClassWithValue of { loc : loc }
   | Simple of { loc : loc; msg : string }
 
-val pp : Format.formatter -> t -> unit
+val primary_loc : t -> loc option
 val to_grace : (Fpath.t -> Grace.Source.t option) -> t -> t Grace.Diagnostic.t
 val add : t -> unit
 val with_ : (unit -> 'a) -> 'a * t list
 val to_code : t -> string
-
-val report_no_src : Format.formatter -> t -> unit
-(** This one reports badly, without source code. Used for reporting cli. *)

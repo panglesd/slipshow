@@ -15,7 +15,7 @@
 - Improved toolbar and shortcut consistency, notably in recording manager mode,
   `Shift+R` now closes the recording manager (previously it started a
   recording). `Shift+S` is used to start a recording. (#270)
-- Diagnostics on `slipshow compile` is sorted by location (#277)
+- Diagnostics on `slipshow compile` are sorted by location (#277)
 - Improve location of "Wrong Type" diagnostic (#277)
 
 ### Fixed
