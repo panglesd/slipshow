@@ -30,7 +30,7 @@ Here is how to include highlightJS:
       - The styles/*.min.css (embed the images files from `styles/` as base64
         urls where they are used)
 - To remove all .js but none .min.js you can use: `find . -type f -name "*.js" ! -name "*.min.js" -delete`
-- Copy those files in `src/static_data/highlightjs/data`:
+- Copy those files in `static_data/highlightjs/data`:
   - The styles in `styles/`
   - The js in `languages/`
   - `highlight.min.js` in `./`
@@ -55,10 +55,9 @@ KaTeX is nice because it is somehow simpler to make it standalone:
 ## Mathjax
 
 Mathjax is harder to make standalone.
-- Somewhere, do `npm install mathjax@3`
-- Get the file `node_modules/mathjax/es5/tex-svg-full.js` but name it with
-  `.crunch` at the end.
-- run `dune build @data-files --profile with-bundle` and promote the new files
+- Somewhere, do `npm install mathjax@3`.
+- Get the file `node_modules/mathjax/es5/tex-svg-full.js`.
+- Copy it inside the `static_data` folder.
 
 ------------
 
@@ -75,6 +74,7 @@ Mathjax is harder to make standalone.
 - Clone https://github.com/panglesd/tachyons
 - On main, do `npm install` and then `npm run build`
 - Output is at `css/tachyons.min.css`
+- Copy this file at `static_data/tachyons-4.12.0.min.css`
 
 As you can see in the git history, this is basically tachyons without media query,
 font-family or css reset.
