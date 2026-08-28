@@ -6,7 +6,7 @@ type file =
   | Slip_system_css
   | Favicon
   | Mathjax_js
-  | Tachyon_css
+  | Tachyons_css
 
 let read f = match f with
   | Slipshow_js -> [%blob "../src/engine/runtime/slipshow.js"]
@@ -16,4 +16,4 @@ let read f = match f with
   | Pdf_support -> [%blob "../src/engine/pdf-support/pdf_support.bc.js"]
   | Mathjax_js -> [%blob "tex-svg-full.js"]
   | Favicon -> [%blob "../logo/favicon.ico"]
-  | Tachyon_css -> [%blob "tachyons-4.12.0.min.css"]
+  | Tachyons_css -> [%blob "tachyons-4.12.0.min.css"]

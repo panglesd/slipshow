@@ -2,7 +2,7 @@
 Tachyons
 ========
 
-`Tachyons <https://tachyons.io/>`_ is a CSS framwork. It allows to style
+`Tachyons <https://tachyons.io/>`_ is a CSS framework. It allows to style
 elements by assigning them classes. For instance, to give a blue text color on a
 red background:
 
