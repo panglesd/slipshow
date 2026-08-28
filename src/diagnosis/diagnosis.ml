@@ -269,7 +269,7 @@ let with_ f =
   let old_errors = !errors_acc in
   errors_acc := [];
   let clean_up () =
-    let errors = !errors_acc in
+    let errors = List.rev !errors_acc in
     errors_acc := old_errors;
     errors
   in

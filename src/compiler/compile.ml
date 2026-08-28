@@ -703,30 +703,34 @@ let _add_file read_file file content =
  fun p -> if Fpath.equal p file then Ok (Some content) else read_file p
 
 let unit ?locs ~read_file ~embed_loc file =
-  let locs =
-    match locs with
-    | Some locs -> locs
-    | None ->
-        [
-          Textloc.v ~file:(Fpath.to_string file) ~first_byte:0 ~last_byte:1
-            ~first_line:(0, 0) ~last_line:(0, 0);
-        ]
+  let unit, warnings =
+    Diagnosis.with_ @@ fun () ->
+    let locs =
+      match locs with
+      | Some locs -> locs
+      | None ->
+          [
+            Textloc.v ~file:(Fpath.to_string file) ~first_byte:0 ~last_byte:1
+              ~first_line:(0, 0) ~last_line:(0, 0);
+          ]
+    in
+    let source, s =
+      match read_file file with
+      | Error (`Msg s) ->
+          Diagnosis.add
+            (MissingFile { file = Fpath.to_string file; error_msg = s; locs });
+          (None, "")
+      | Ok None ->
+          let error_msg = "Unable to read a slipshow file" in
+          Diagnosis.add
+            (MissingFile { file = Fpath.to_string file; error_msg; locs });
+          (None, "")
+      | Ok (Some s' as s) -> (s, s')
+    in
+    let doc, frontmatter = Cmarkit_proxy.of_string ~file s in
+    of_cmarkit ~embed_loc ~source ~path:file doc ~fm:frontmatter
   in
-  let source, s =
-    match read_file file with
-    | Error (`Msg s) ->
-        Diagnosis.add
-          (MissingFile { file = Fpath.to_string file; error_msg = s; locs });
-        (None, "")
-    | Ok None ->
-        let error_msg = "Unable to read a slipshow file" in
-        Diagnosis.add
-          (MissingFile { file = Fpath.to_string file; error_msg; locs });
-        (None, "")
-    | Ok (Some s' as s) -> (s, s')
-  in
-  let doc, frontmatter = Cmarkit_proxy.of_string ~file s in
-  of_cmarkit ~embed_loc ~source ~path:file doc ~fm:frontmatter
+  { unit with warnings = warnings @ unit.warnings }
 
 let rec add_to_compile ?locs ~embed_loc ~units file units_cache ~read_file =
   match Fpath.Map.find_opt file units with
