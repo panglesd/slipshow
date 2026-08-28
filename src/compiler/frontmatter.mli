@@ -76,7 +76,7 @@ end
 
 module Hljs_theme : Field_with_default with type t = string loced
 module Math_mode : Field_with_default with type t = [ `Mathjax | `Katex ] loced
-module Tachyons : Field with type t = bool loced option
+module Tachyons : Field with type t = bool loced
 
 val of_string :
   to_uri:(string -> (Uri.t, [ `Msg of string ]) result) ->
