@@ -15,6 +15,8 @@
 - Improved toolbar and shortcut consistency, notably in recording manager mode,
   `Shift+R` now closes the recording manager (previously it started a
   recording). `Shift+S` is used to start a recording. (#270)
+- Diagnostics on `slipshow compile` is sorted by location (#277)
+- Improve location of "Wrong Type" diagnostic (#277)
 
 ### Fixed
 
@@ -25,6 +27,8 @@
     attribute, in effect improving hover and highlight reliability. (#270)
   - Fix `go_next` / `go_previous` doing nothing in "refresh on save"
     mode. (#270)
+  - Fix frontmatter error sometimes not being reported (#277)
+- Fix locations reported for frontmatter `attributes:`. (#271)
 - Fix drawings being drawn behind positioned elements. (#270)
 - Fixed standalonity of html by embedding mono fonts (#272)
 - Resolution of css and js files in frontmatter are now relative to the file
@@ -33,7 +37,6 @@
   css and js files). (#271)
 - Improve uri vs local path detection. (#271)
 - Improve locations of errors in `css:` and `js:` frontmatter fields. (#271)
-- LSP: Fix locations reported for frontmatter `attributes:`. (#271)
 - Allow spaces and tabs after frontmatter delimiters. (#275)
 
 ### Docs
