@@ -6,5 +6,6 @@ type file =
   | Slip_system_css
   | Favicon
   | Mathjax_js
+  | Tachyon_css
 
 val read : file -> string

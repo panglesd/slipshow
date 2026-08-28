@@ -16,8 +16,8 @@
   contains a vendored and slightly modified copy of
   [lwd](https://github.com/let-def/lwd). It is licensed under the [MIT
   license](#lwd-copyrights).
-- The [`src/static_data`
-  directory](https://github.com/panglesd/slipshow/tree/main/src/static_data/)
+- The [`static_data`
+  directory](https://github.com/panglesd/slipshow/tree/main/static_data/)
   contains various (compiled) JavaScript libraries:
   - Files that start with `highlight-js.` are part of the [highlight-js
     project](https://highlightjs.org/) and under the [BSD 3-Clause
@@ -41,11 +41,13 @@
   [perfect-freehand](https://github.com/steveruizok/perfect-freehand) JS
   library, under the [MIT licence](#perfect-freehand-copyrights).
 - The [`katex` javascript library](https://github.com/KaTeX/KaTeX/) is present
-  in `src/static_data/katex/` , under the [MIT
-  licence](#katex-copyright).
-- The [`mermaid` javascript library](https://github.com/mermaid-js/mermaid/) is present
-  in `src/static_data/mermaid/` , under the [MIT
+  in `static_data/katex/` , under the [MIT licence](#katex-copyright).
+- The [`mermaid` javascript library](https://github.com/mermaid-js/mermaid/) is
+  present in `static_data/mermaid/` , under the [MIT
   licence](#mermaid-js-copyright).
+- The [`tachyons` css framework](https://github.com/tachyons-css/tachyons) is
+  present in `static_data/tachyons.min.css`, under the [MIT
+  licence](#tachyons-copyright).
 
 The rest of the code, and the Slipshow project in general, is licensed under the
 GPL v3 license:
@@ -1288,7 +1290,6 @@ SOFTWARE.
 
 # Mermaid JS copyrights
 
-
 ```
 The MIT License (MIT)
 
@@ -1311,4 +1312,18 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+```
+
+# Tachyons copyrights
+
+```
+The MIT License (MIT)
+
+Copyright © 2020 Adam Morse & John Otander 
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
