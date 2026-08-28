@@ -33,14 +33,14 @@ let targets arg =
         argl
 
 let kv_attribute_to_step id_map bol
-    (((key, _), value) as kv : Cmarkit.Attributes.kv) =
+    (((key, meta_key), value) as kv : Cmarkit.Attributes.kv) =
   let ( let* ) = Option.bind in
   let* (module X) =
     List.find_opt (fun (module X : S) -> String.equal key X.on) all_actions
   in
   let value, val_loc =
     match value with
-    | None -> ("", Cmarkit.Textloc.none)
+    | None -> ("", Cmarkit.Meta.textloc meta_key)
     | Some (value, meta) -> (value.v, Cmarkit.Meta.textloc meta)
   in
   let ( let< ) x f =
