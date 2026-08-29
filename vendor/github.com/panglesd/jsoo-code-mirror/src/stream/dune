@@ -1,4 +1,0 @@
-(library
- (name stream)
- (public_name code-mirror.stream)
- (libraries code-mirror))

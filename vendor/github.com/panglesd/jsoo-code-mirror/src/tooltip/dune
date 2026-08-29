@@ -1,4 +1,0 @@
-(library
- (name tooltip)
- (public_name code-mirror.tooltip)
- (libraries code-mirror))

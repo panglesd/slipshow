@@ -1,4 +1,0 @@
-(library
- (name lint)
- (public_name code-mirror.lint)
- (libraries code-mirror))

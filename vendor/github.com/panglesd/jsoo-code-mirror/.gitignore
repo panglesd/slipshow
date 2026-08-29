@@ -1,8 +1,0 @@
-node_modules
-_build
-dist
-vendor/code-mirror.min.js
-*.install
-
-# editors
-.vscode

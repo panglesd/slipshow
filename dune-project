@@ -49,6 +49,7 @@
    cmarkit
    brr-lwd
    brr
+   code-mirror
   (ansi (>= 0.7.0))
   (linol (>= 0.11))
   (linol-lwt (>= 0.11))
