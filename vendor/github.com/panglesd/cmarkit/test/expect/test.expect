@@ -1,8 +1,0 @@
-Expectation for mapper table bug #14:
-
-| a | b | c |
-|---|---|---|
-| a | b | c |
-|   | b | c |
-|   |   | c |
-

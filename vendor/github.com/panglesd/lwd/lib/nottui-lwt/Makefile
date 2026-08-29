@@ -1,2 +1,0 @@
-all:
-	dune build @all

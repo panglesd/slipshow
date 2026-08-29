@@ -1,6 +1,0 @@
-(library
- (name brr_poke)
- (public_name brr.poke)
- (modules brr_poke)
- (libraries js_of_ocaml-toplevel brr)
- (wrapped false))

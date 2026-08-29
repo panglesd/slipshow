@@ -1,3 +1,0 @@
-(srcs-x pkg myocamlbuild.ml attic test)
-(srcs-i . test/test_browser.ml)
-(ocaml (libs js_of_ocaml js_of_ocaml-compiler/runtime))

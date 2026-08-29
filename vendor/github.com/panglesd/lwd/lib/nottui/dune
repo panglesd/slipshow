@@ -1,5 +1,0 @@
-(library
- (name nottui)
- (public_name nottui)
- (wrapped false)
- (libraries lwd notty-community))
