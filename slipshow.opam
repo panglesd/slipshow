@@ -62,3 +62,9 @@ dev-repo: "git+https://github.com/panglesd/slipshow.git"
 # whose size exceed the maximum size in 32 bits OCaml...
 available: arch != "arm32" & arch != "x86_32"
 x-maintenance-intent: [ "(latest)" ]
+
+pin-depends: [
+  ["brr.dev" "git+https://github.com/panglesd/brr#3ea1f708e84c47347cd49b50e109d44c40725baf"]
+  ["cmarkit.dev" "git+https://github.com/panglesd/cmarkit#a80155b44f329a3ad09475ea50115ca563964e52"]
+  ["brr-lwd.dev" "git+https://github.com/panglesd/lwd#7ecb1812bab79d4b6221c85a1c5a02abffe56e24"]
+]
