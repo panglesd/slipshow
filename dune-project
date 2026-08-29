@@ -46,6 +46,9 @@
    sexplib
    ppx_sexp_conv
    ppx_deriving_yojson
+   cmarkit
+   brr-lwd
+   brr
   (ansi (>= 0.7.0))
   (linol (>= 0.11))
   (linol-lwt (>= 0.11))
