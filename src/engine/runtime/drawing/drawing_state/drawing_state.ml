@@ -162,6 +162,7 @@ let play ?(speedup = 1.) ?(continue = fun () -> `Continue) ~finish state =
   let start_replay = now () in
   let original_time = Lwd.peek state.time in
   let max_time = Lwd.peek state.recording.total_time in
+  let max_time = Float.next_after max_time Float.infinity in
   (* Timestamp of the frame preceding the one being computed *)
   let previous_frame = ref start_replay in
   let time_of frame = original_time +. ((frame -. start_replay) *. speedup) in
@@ -203,7 +204,7 @@ let play ?(speedup = 1.) ?(continue = fun () -> `Continue) ~finish state =
             finish ()
         | None ->
             if new_time > max_time then (
-              Lwd.set state.time (Float.next_after max_time Float.infinity);
+              Lwd.set state.time max_time;
               finish ())
             else (
               Lwd.set state.time new_time;
