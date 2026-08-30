@@ -18,6 +18,10 @@
   recording). `Shift+S` is used to start a recording. (#270)
 - Diagnostics on `slipshow compile` are sorted by location (#277)
 - Improve location of "Wrong Type" diagnostic (#277)
+- Hint that step counter and toc entries are clickable. (#278)
+- Pressing play in drawing editor when the cursor is at the end of the recording
+  now replays from the beginning. (#278)
+- Round sub-millisecond time precision in drawing editor. (#278)
 
 ### Fixed
 
@@ -39,6 +43,9 @@
 - Improve uri vs local path detection. (#271)
 - Improve locations of errors in `css:` and `js:` frontmatter fields. (#271)
 - Allow spaces and tabs after frontmatter delimiters. (#275)
+- Fix drawing replay in editor stuck on a pause. (#278)
+- Fix last point of a stroke not being displayed when the recording ends at this
+  time. (#278)
 
 ### Docs
 
