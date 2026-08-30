@@ -171,7 +171,7 @@ let play ?(speedup = 1.) ?(continue = fun () -> `Continue) ~finish state =
       Lwd_table.fold
         (fun acc pause ->
           let at = Lwd.peek pause.p_at in
-          if at < from then acc else Float.min acc at)
+          if at <= from then acc else Float.min acc at)
         max_time state.recording.pauses
     in
     Lwd.set state.time next_time;
@@ -190,7 +190,7 @@ let play ?(speedup = 1.) ?(continue = fun () -> `Continue) ~finish state =
           Lwd_table.fold
             (fun acc pause ->
               let at = Lwd.peek pause.p_at in
-              if time_before < at && at < new_time then
+              if time_before < at && at <= new_time then
                 match acc with
                 | Some earliest when earliest < at -> acc
                 | _ -> Some at
