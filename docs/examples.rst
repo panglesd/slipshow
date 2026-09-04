@@ -109,6 +109,27 @@ FunOCaml
    :Source: :github_src:`example/funocaml-2025/`
    :Rendered version: `<funocaml-2025/main.html>`_
 
+Package Managers à la Carte
+===========================
+
+.. container:: example-card
+
+   .. figure:: pkg-man-a-la-carte.png
+      :scale: 30 %
+      :align: center
+      :alt: A screenshot of the "Package Managers à la Carte" presentation
+      :target: https://ryan.freumh.org/talks/slides/2026-icfp-package-calculus.html
+
+      The "Package Managers à la Carte" presentation
+
+   :Type: Typed presentation
+   :Author: Ryan Gibb
+   :Slipshow version: 0.12.0: The Lord of the Slips: The Two Editors
+   :Date: 2026
+   :Source: `<https://github.com/RyanGibb/package-managers-a-la-carte-presentation>`_
+   :Rendered version: `<https://ryan.freumh.org/talks/slides/2026-icfp-package-calculus.html>`_
+   :About: Computer Science
+
 When magic meets multicore
 ==========================
 
@@ -259,4 +280,4 @@ On the two paths problem and theorem
    :Source: `<https://perso.ens-lyon.fr/samuel.humeau/slipshow/slides_JGA_2025>`_
    :Rendered version: `<https://perso.ens-lyon.fr/samuel.humeau/pages/slides_JGA_2025_HUMEAU.html>`_
    :About: Computer Science
-           
+
