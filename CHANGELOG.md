@@ -46,6 +46,7 @@
 - Fix drawing replay in editor stuck on a pause. (#278)
 - Fix last point of a stroke not being displayed when the recording ends at this
   time. (#278)
+- Group a slide's entrance with its own heading in the table of contents (#273)
 
 ### Docs
 
@@ -77,7 +78,6 @@
 - Fix action detection in LSP in multifile settings (#243)
 - Fix external themes in serve mode (#245)
 - Fix LSP preview with multiple files when some of them are not opened (#250)
-- Group a slide's entrance with its own heading in the table of contents (#273)
 
 ### Docs
 
