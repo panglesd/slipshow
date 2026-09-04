@@ -78,6 +78,10 @@ jobs:
             -f release/Dockerfile \
             --output type=local,dest=new_release .
 
+      - name: Test version output
+        run: |
+          ./new_release/bin/slipshow --version
+
       - name: upload archives
         # if: startsWith(github.ref, 'refs/tags/')
         uses: actions/upload-artifact@v4
