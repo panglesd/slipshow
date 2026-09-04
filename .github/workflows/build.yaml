@@ -38,6 +38,14 @@ jobs:
       - name: Fetch tags
         run: git fetch --tags --force origin
 
+      - name: Use dune
+        uses: ocaml-dune/setup-dune@v2
+        with:
+          steps: install-dune
+
+      - name: Substitute the version watermarks
+        run: dune subst
+
       - name: Expose GitHub Runtime
         uses: crazy-max/ghaction-github-runtime@v3
 
