@@ -41,6 +41,7 @@ jobs:
       - name: Use dune
         uses: ocaml-dune/setup-dune@v2
         with:
+          version: 3.24.2
           steps: install-dune
 
       - name: Substitute the version watermarks
