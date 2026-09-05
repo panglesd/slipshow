@@ -47,6 +47,7 @@
 - Fix last point of a stroke not being displayed when the recording ends at this
   time. (#278)
 - Group a slide's entrance with its own heading in the table of contents (#273)
+- Fixed missing version number in precompiled binary (#281)
 
 ### Docs
 
