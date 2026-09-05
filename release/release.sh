@@ -5,6 +5,10 @@ archive_name=$OUTPUT/slipshow-$TARGETOS-$TARGETARCH.tar
 
 dune subst
 
+dune build --profile release -p slipshow
+
+echo $(./_build/install/default/bin/slipshow --version)
+
 # I've had sufficiently many issues with version to check. Hardcoding the file
 # name is not satisfactory though.
 if grep -q '%%VERSION%%' src/version/slipshow_version.ml; then
@@ -13,7 +17,6 @@ if grep -q '%%VERSION%%' src/version/slipshow_version.ml; then
   exit 1
 fi
 
-dune build --profile release -p slipshow
 
 mkdir -p $OUTPUT
 
