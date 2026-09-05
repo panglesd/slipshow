@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [v0.13.0] Juraslip Park (Satursday, the 5th of September, 2026)
 
 ### Added
 
