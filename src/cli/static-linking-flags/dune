@@ -1,4 +1,10 @@
 (rule
- (with-stdout-to
-  flags
-  (run ocaml %{dep:static_linking_flags.ml} %{ocaml-config:target})))
+ (targets flags)
+ (deps
+  (env_var SLIPSHOW_STATIC)
+  (env_var SLIPSHOW_DELETE_HOMEBREW_DYLIBS)
+  (env_var HOMEBREW_PREFIX))
+ (action
+  (with-stdout-to
+   flags
+   (run ocaml %{dep:static_linking_flags.ml} %{ocaml-config:system}))))

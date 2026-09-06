@@ -20,7 +20,7 @@ COPY --chown=opam . .
 
 RUN opam exec -- dune subst
 
-RUN sed -i 's/"()"/"(-cclib -static -cclib -no-pie)"/g' src/cli/static-linking-flags/static_linking_flags.ml
+ENV SLIPSHOW_STATIC=1
 
 # Run the release script inside the build
 RUN opam exec -- bash release/release.sh
