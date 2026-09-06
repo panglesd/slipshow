@@ -2,15 +2,8 @@
  (public_name slipshow)
  (name main)
  (flags
-  (-cclib
-   /usr/local/opt/libffi/lib/libffi.a
-   -cclib
-   /usr/local/opt/openssl@3/lib/libssl.a
-   -cclib
-   /usr/local/opt/openssl@3/lib/libcrypto.a
-   -cclib
-   /usr/local/opt/libev/lib/libev.a
-   :standard))
+  (:standard
+   (:include static-linking-flags/flags)))
  (libraries
   slipshow_version
   slipshow_server

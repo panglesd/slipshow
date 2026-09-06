@@ -126,6 +126,12 @@ jobs:
           export TARGETOS=macos;
           export TARGETARCH=${{ matrix.config.arch }};
           export VERSION=$GITHUB_REF_NAME;
+          # Delete Homebrew's .dylib files so the link picks up the static
+          # archives instead, like in semgrep before they switched to noautolink
+          # and listing all dependencies. Destructive, hence only on a
+          # throw-away CI runner. See
+          # src/cli/static-linking-flags/static_linking_flags.ml.
+          export SLIPSHOW_DELETE_HOMEBREW_DYLIBS=1;
           opam exec -- bash release/release.sh
 
       - name: upload archives
