@@ -25,6 +25,9 @@ esac
 # dynamically. See src/cli/static-linking-flags/static_linking_flags.ml.
 if [ "$(uname -s)" = "Darwin" ]; then
   otool -L "$binary"
+  # Checks if the produced binary only contains system dependencies, with a
+  # magic shell string processing: skip the first line (which is a "heading")
+  # and check that all dynamic deps start with system path
   if otool -L "$binary" | tail -n +2 \
       | grep -qvE '^[[:space:]]*(/usr/lib/|/System/Library/)'; then
     echo "Error: the binary links against non-system libraries." >&2
