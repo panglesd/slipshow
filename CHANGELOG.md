@@ -4,7 +4,7 @@
 
 ## Fixed
 
-- Precompiled binary for MacOS do not rely on homebrew libraries anymore (#146)
+- Precompiled binaries for macOS no longer rely on Homebrew libraries (#146)
 
 ## [v0.13.0] Juraslip Park (Satursday, the 5th of September, 2026)
 
