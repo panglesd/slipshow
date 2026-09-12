@@ -232,7 +232,11 @@ jobs:
         # Just to test caching
       - name: Try building
         env: SLIPSHOW_STATIC=1
-        run: opam exec -- dune build --ignore-promoted-rules
+        run: opam exec -- dune build --ignore-promoted-rules -p slipshow
+
+      - name: Try building
+        env: SLIPSHOW_STATIC=1
+        run: objdump -p _build/install/default/bin/slipshow
 
       - name: Uninstall 32-bit packages
         run: >
