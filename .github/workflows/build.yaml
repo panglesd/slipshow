@@ -230,13 +230,78 @@ jobs:
         if: steps.wincache.outputs.cache-hit
         run: opam install --deps-only --with-test --depext-only --with-doc -y . && opam upgrade
         # Just to test caching
+      # flexlink resolves -lfoo itself and tries libfoo.dll.a before libfoo.a,
+      # so autolink's -lssl/-lcrypto would pick the import libraries and the
+      # binary would need OpenSSL's DLLs beside it. flexlink searches -L
+      # directories before the toolchain's own, one whole directory at a time,
+      # so a directory holding only the archives redirects those flags without
+      # having to disable autolink. See
+      # src/cli/static-linking-flags/static_linking_flags.ml.
+      - name: Stage the static archives
+        shell: bash
+        run: |
+          set -x
+          sysroot=$(x86_64-w64-mingw32-gcc -print-sysroot 2>/dev/null \
+                    || echo /usr/x86_64-w64-mingw32/sys-root)/mingw
+          mkdir -p _static_libs
+          for lib in libssl.a libcrypto.a libz.a; do
+            cp "$sysroot/lib/$lib" _static_libs/
+          done
+          ls -l _static_libs
+          echo "SLIPSHOW_STATIC_LIBS=$(cygpath -m "$PWD/_static_libs")" >> "$GITHUB_ENV"
+
       - name: Try building
+        shell: bash
         env:
           SLIPSHOW_STATIC: 1
         run: opam exec -- dune build -p slipshow
 
-      - name: Try building
-        run: objdump -p _build/install/default/bin/slipshow
+      - name: Check the binary needs no third-party DLL
+        shell: bash
+        run: |
+          bin=_build/install/default/bin/slipshow.exe
+          objdump -p "$bin" | sed -n 's/^[[:space:]]*DLL Name:[[:space:]]*//p' \
+            | tr -d '\r' | sort -u > dlls.txt
+          cat dlls.txt
+          # DLLs that ship with Windows itself. Extend the list if a legitimate
+          # system DLL turns up; anything not on it (libcrypto-3-x64.dll,
+          # libgcc_s_seh-1.dll, libwinpthread-1.dll, zlib1.dll, ...) means one
+          # of the link flags did not land.
+          cat > allowed.txt <<'EOF'
+          kernel32.dll
+          kernelbase.dll
+          msvcrt.dll
+          ucrtbase.dll
+          advapi32.dll
+          ws2_32.dll
+          crypt32.dll
+          gdi32.dll
+          user32.dll
+          shell32.dll
+          shlwapi.dll
+          ole32.dll
+          oleaut32.dll
+          version.dll
+          userenv.dll
+          bcrypt.dll
+          ncrypt.dll
+          ntdll.dll
+          rpcrt4.dll
+          secur32.dll
+          iphlpapi.dll
+          dbghelp.dll
+          psapi.dll
+          winmm.dll
+          mswsock.dll
+          dnsapi.dll
+          imm32.dll
+          EOF
+          if grep -vixFf allowed.txt dlls.txt > unexpected.txt; then
+            echo "Error: the binary depends on non-system DLLs:" >&2
+            cat unexpected.txt >&2
+            echo "It would not run on a machine without the build environment." >&2
+            exit 1
+          fi
 
       - name: Uninstall 32-bit packages
         run: >
