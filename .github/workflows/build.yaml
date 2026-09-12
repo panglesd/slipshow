@@ -200,10 +200,17 @@ jobs:
 
       - name: Try pkg-config
         shell: bash
+        continue-on-error: true
         run: opam exec -- pkg-config --static --libs openssl
       - name: Try pkg-config
+        continue-on-error: true
         run: pkg-config --static --libs gmp
-
+      - name: Try pkg-config
+        continue-on-error: true
+        run: pkg-config --static --libs gmp --personality=x86_64-w64-mingw32
+      - name: Try pkg-config
+        continue-on-error: true
+        run: cat /usr/x86_64-w64-mingw32/sys-root/mingw/lib/pkgconfig/libcrypto.pc
 
       - name: Install dependencies
         if: steps.wincache.outputs.cache-hit != 'true'
