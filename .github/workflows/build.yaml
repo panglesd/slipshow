@@ -233,7 +233,7 @@ jobs:
       - name: Try building
         env:
           SLIPSHOW_STATIC: 1
-        run: opam exec -- dune build --ignore-promoted-rules -p slipshow
+        run: opam exec -- dune build -p slipshow
 
       - name: Try building
         run: objdump -p _build/install/default/bin/slipshow
