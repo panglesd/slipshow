@@ -12,13 +12,8 @@
     element.
 *)
 
-(*BEGIN INJECTIVITY*)
 type !+'a t
 type !+'a seq = 'a t
-(*ELSE*)
-type +'a t
-type +'a seq = 'a t
-(*END*)
 
 (** The type of sequences *)
 

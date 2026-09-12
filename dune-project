@@ -32,7 +32,6 @@
    bos
   (lwt (>= 5.9.2))
    (inotify (= :os "linux"))
-   (cf-lwt (>="0.4"))
    astring
    fmt
    logs
