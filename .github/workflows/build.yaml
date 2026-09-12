@@ -195,6 +195,9 @@ jobs:
         run: opam install --deps-only --with-test --depext-only --with-doc -y . && opam upgrade
         # Just to test caching
 
+      - name: Install dependencies
+        run: opam install conf-pkg-config
+
       - name: Try pkg-config
         shell: bash
         run: opam exec -- pkg-config --static --libs openssl
