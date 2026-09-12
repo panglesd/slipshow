@@ -203,6 +203,7 @@ jobs:
         continue-on-error: true
         run: opam exec -- pkg-config --static --libs openssl
       - name: Try pkg-config
+        shell: bash
         continue-on-error: true
         run: pkg-config --static --libs gmp
       - name: Try pkg-config
@@ -213,6 +214,7 @@ jobs:
         run: cat /usr/x86_64-w64-mingw32/sys-root/mingw/lib/pkgconfig/libcrypto.pc
 
       - name: Probe pkg-config
+        shell: bash
         run: |
           set -x
           command -v pkg-config pkgconf || true
