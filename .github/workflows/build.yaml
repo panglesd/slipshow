@@ -296,7 +296,14 @@ jobs:
           dnsapi.dll
           imm32.dll
           EOF
-          if grep -vixFf allowed.txt dlls.txt > unexpected.txt; then
+          # api-ms-win-*.dll and ext-ms-win-*.dll are API sets: virtual names the
+          # Windows loader redirects to a real system DLL. They are part of
+          # Windows, never files we could ship, and which ones appear depends on
+          # what the statically linked runtime happens to call.
+          grep -vixFf allowed.txt dlls.txt \
+            | grep -viE '^(api|ext)-ms-win-[a-z0-9_.-]+\.dll$' \
+            > unexpected.txt || true
+          if [ -s unexpected.txt ]; then
             echo "Error: the binary depends on non-system DLLs:" >&2
             cat unexpected.txt >&2
             echo "It would not run on a machine without the build environment." >&2
