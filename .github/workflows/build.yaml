@@ -194,6 +194,11 @@ jobs:
         if: steps.wincache.outputs.cache-hit != 'true'
         run: opam install --deps-only --with-test --with-doc -y .
 
+      - name: Try pkg-config
+        run: pkg-config --static --libs openssl
+      - name: Try pkg-config
+        run: pkg-config --static --libs gmp
+
       - name: Install dependencies
         if: steps.wincache.outputs.cache-hit
         run: opam install --deps-only --with-test --depext-only --with-doc -y . && opam upgrade
