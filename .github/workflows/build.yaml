@@ -196,6 +196,7 @@ jobs:
         # Just to test caching
 
       - name: Try pkg-config
+        shell: bash
         run: opam exec -- pkg-config --static --libs openssl
       - name: Try pkg-config
         run: pkg-config --static --libs gmp
