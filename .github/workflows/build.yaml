@@ -231,6 +231,7 @@ jobs:
         run: opam install --deps-only --with-test --depext-only --with-doc -y . && opam upgrade
         # Just to test caching
       - name: Try building
+        env: SLIPSHOW_STATIC=1
         run: opam exec -- dune build --ignore-promoted-rules
 
       - name: Uninstall 32-bit packages
