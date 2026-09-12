@@ -191,14 +191,19 @@ jobs:
         run: opam install conf-gmp-powm-sec
 
       - name: Install dependencies
-        if: steps.wincache.outputs.cache-hit != 'true'
-        run: opam install --deps-only --with-test --with-doc -y .
+        if: steps.wincache.outputs.cache-hit
+        run: opam install --deps-only --with-test --depext-only --with-doc -y . && opam upgrade
+        # Just to test caching
 
       - name: Try pkg-config
-        run: pkg-config --static --libs openssl
+        run: opam exec -- pkg-config --static --libs openssl
       - name: Try pkg-config
         run: pkg-config --static --libs gmp
 
+
+      - name: Install dependencies
+        if: steps.wincache.outputs.cache-hit != 'true'
+        run: opam install --deps-only --with-test --with-doc -y .
       - name: Install dependencies
         if: steps.wincache.outputs.cache-hit
         run: opam install --deps-only --with-test --depext-only --with-doc -y . && opam upgrade
