@@ -212,6 +212,15 @@ jobs:
         continue-on-error: true
         run: cat /usr/x86_64-w64-mingw32/sys-root/mingw/lib/pkgconfig/libcrypto.pc
 
+      - name: Probe pkg-config
+        run: |
+          set -x
+          command -v pkg-config pkgconf || true
+          target=$(opam exec -- ocamlopt -config-var target)   # opam exec IS right here
+          pkg-config --personality="$target" --variable=pcfiledir openssl || true
+          pkg-config --personality="$target" --libs           openssl || true
+          pkg-config --personality="$target" --static --libs  openssl || true
+
       - name: Install dependencies
         if: steps.wincache.outputs.cache-hit != 'true'
         run: opam install --deps-only --with-test --with-doc -y .
