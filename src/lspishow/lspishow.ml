@@ -85,57 +85,10 @@ class lsp_server =
     method! config_hover = Some (`Bool true)
     method! config_definition = Some (`Bool true)
 
-    method private config_server_info :
-        Linol_lwt.InitializeResult.serverInfo option =
+    method! config_server_info : Linol_lwt.InitializeResult.serverInfo option =
       Some
         (Linol_lwt.InitializeResult.create_serverInfo ~name:"slipshow"
            ~version:Slipshow_version.full ())
-
-    (* Remove when/if {:https://github.com/c-cube/linol/pull/67} is merged *)
-    method private on_req_initialize'
-        ~notify_back:(_ : Linol_lwt.Jsonrpc2.notify_back)
-        (i : Linol_lwt.InitializeParams.t) : Linol_lwt.InitializeResult.t Lwt.t
-        =
-      let open Linol_lwt in
-      let sync_opts = self#config_sync_opts in
-      self#set_positionEncoding i;
-      let () =
-        match i.capabilities.general with
-        | Some { positionEncodings = Some el; _ } ->
-            let encoding =
-              if
-                List.exists
-                  (function PositionEncodingKind.UTF8 -> true | _ -> false)
-                  el
-              then `UTF8
-              else `UTF16
-            in
-            positionEncoding <- encoding
-        | _ -> ()
-      in
-      let positionEncoding =
-        match positionEncoding with
-        | `UTF8 -> PositionEncodingKind.UTF8
-        | `UTF16 -> UTF16
-      in
-      let capabilities =
-        ServerCapabilities.create
-          ?codeLensProvider:self#config_code_lens_options
-          ~codeActionProvider:self#config_code_action_provider
-          ~executeCommandProvider:
-            (ExecuteCommandOptions.create ~commands:self#config_list_commands ())
-          ?completionProvider:self#config_completion
-          ?definitionProvider:self#config_definition
-          ?hoverProvider:self#config_hover
-          ?inlayHintProvider:self#config_inlay_hints
-          ?documentSymbolProvider:self#config_symbol
-          ~textDocumentSync:(`TextDocumentSyncOptions sync_opts)
-          ~positionEncoding ()
-        |> self#config_modify_capabilities
-      in
-      Lwt.return
-      @@ InitializeResult.create ~capabilities
-           ?serverInfo:self#config_server_info ()
 
     method private elem_of_gui_id (root : Slipshow_server.root) gui_id =
       let ( let* ) x f = Result.bind x f in
@@ -368,7 +321,7 @@ class lsp_server =
                 |> List.map Fpath.to_string)))
           Rev_deps.(as_map current)
       in
-      self#on_req_initialize' ~notify_back params
+      super#on_req_initialize ~notify_back params
 
     method! config_completion =
       Some (Linol_lwt.CompletionOptions.create ~triggerCharacters:[ "#" ] ())

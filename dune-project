@@ -47,7 +47,7 @@
    ppx_sexp_conv
    ppx_deriving_yojson
   (ansi (>= 0.7.0))
-  (linol (>= 0.11))
+  (linol (>= 0.12))
   (linol-lwt (>= 0.11))
   (odoc :with-doc)
   (ocamlformat
