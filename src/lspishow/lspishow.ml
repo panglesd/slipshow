@@ -90,6 +90,16 @@ class lsp_server =
         (Linol_lwt.InitializeResult.create_serverInfo ~name:"slipshow"
            ~version:Slipshow_version.full ())
 
+    method! set_positionEncoding (i : Linol_lwt.InitializeParams.t) =
+      let open Linol_lwt in
+      match i.capabilities.general with
+      | Some { positionEncodings = Some el; _ } ->
+          let encoding =
+            if List.mem PositionEncodingKind.UTF8 el then `UTF8 else `UTF16
+          in
+          positionEncoding <- encoding
+      | _ -> ()
+
     method private elem_of_gui_id (root : Slipshow_server.root) gui_id =
       let ( let* ) x f = Result.bind x f in
       match gui_id with
