@@ -31,7 +31,7 @@ from the `docs/` directory. The generated docs are in `docs/_build/html/`, with
 
 This project is written in OCaml, so you need to be able to compile such programs. The official website [ocaml.org](https://ocaml.org) provides explanation on getting started with OCaml.
 
-Once you have opam, and a switch ready, install the dependencies with:
+Once you have opam (of version at least `2.2`), and a switch ready (make sure to run `eval $(opam env)` or the equivalent on windows), install the dependencies with:
 
 ```shell
 opam install . --deps-only --with-dev-setup --with-test
