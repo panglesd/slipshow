@@ -177,15 +177,20 @@ let pure_unit = Lwd.pure ()
 
 let dummy_kv_at = (Jstr.empty, Jstr.empty)
 
-let attach l set_kv unset_kv to_kv dummy =
+let equal_jstr_kv (k, v) (k', v') = Jstr.equal k k' && Jstr.equal v v'
+
+let attach l set_kv unset_kv to_kv equal_kv dummy =
   let set_lwd () =
     let prev = ref dummy in
     fun x ->
-      if !prev != dummy then
-        unset_kv !prev;
       let kv = to_kv x in
-      set_kv kv;
-      prev := kv
+      if !prev != dummy && equal_kv !prev kv then ()
+      else begin
+        if !prev != dummy then
+          unset_kv !prev;
+        set_kv kv;
+        prev := kv
+      end
   in
   Lwd_utils.map_reduce (function
       | `P _ -> assert false
@@ -226,7 +231,7 @@ let attach_attribs el attribs =
     then El.set_class v false el
     else El.set_at k None el
   in
-  attach attribs set_at unset_at At.to_pair dummy_kv_at
+  attach attribs set_at unset_at At.to_pair equal_jstr_kv dummy_kv_at
 
 let attach_style el styles =
   let set_st (k,v) =
@@ -235,7 +240,7 @@ let attach_style el styles =
   let unset_st (k,_) =
     El.remove_inline_style k el
   in
-  attach styles set_st unset_st Fun.id dummy_kv_at
+  attach styles set_st unset_st Fun.id equal_jstr_kv dummy_kv_at
 
 let attach_prop el props =
   let set_prop (k,v) =
@@ -254,7 +259,9 @@ let attach_prop el props =
     [Jv.undefined] *)
     ()
   in
-  attach props set_prop unset_prop Fun.id (Jstr.v "", Jv.undefined)
+  attach props set_prop unset_prop Fun.id
+    (fun (k, v) (k', v') -> Jstr.equal k k' && v == v')
+    (Jstr.v "", Jv.undefined)
 
 let listen el (Handler {opts; type'; func}) =
   Ev.listen ?opts type' func (El.as_target el)
