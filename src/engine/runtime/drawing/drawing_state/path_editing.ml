@@ -113,3 +113,34 @@ let svg_path scale path =
         :: List.map (fun (x, y) -> Format.sprintf "L %f,%f" x y) rest
   in
   String.concat " " res |> Jstr.of_string
+
+let pfo_options width =
+  let size = width in
+  Perfect_freehand.Options.v ~thinning:0.5 ~smoothing:0.5 ~size ~streamline:0.5
+    ~last:true ()
+
+let make_d_with ~elapsed_time path path_to_svg =
+  let open Lwd_infix in
+  let with_path path =
+    let path = List.map fst path in
+    let v = path_to_svg path in
+    Brr.At.v (Jstr.v "d") v
+  in
+  let$* path = Lwd.get path in
+  match elapsed_time with
+  | None -> Lwd.pure @@ with_path path
+  | Some elapsed_time ->
+      let$ elapsed_time = elapsed_time in
+      let path = List.filter (fun (_, t) -> t < elapsed_time) path in
+      with_path path
+
+let make_d kind ~elapsed_time ~scale path =
+  let path_to_svg =
+    match kind with
+    | `Pfh width ->
+        fun path ->
+          let options = pfo_options width in
+          pfo_svg_path options scale path
+    | `Normal -> fun path -> svg_path scale path
+  in
+  make_d_with ~elapsed_time path path_to_svg

@@ -96,25 +96,10 @@ module Draw_stroke = struct
       [ (Translation.forward translation x y, now () -. started_time) ]
     in
     let el =
-      let path = Lwd.var path in
       let { Universe.Coordinates.scale; _ } = Universe.State.get_coord () in
       let scale = scale *. translation.scale in
-      let end_at = Lwd.map (Lwd.get path) ~f:end_at in
-      let starts_at = Lwd.map (Lwd.get path) ~f:starts_at in
-      {
-        id;
-        scale = Lwd.var scale;
-        path;
-        end_at;
-        starts_at;
-        color = Lwd.var color;
-        stroker;
-        width = Lwd.var width;
-        selected = Lwd.var false;
-        preselected = Lwd.var false;
-        track = Lwd.var 0;
-        erased = Lwd.var None;
-      }
+      Drawing_state.make_stro ~id ~scale ~path ~color ~width ~stroker ~track:0
+        ~erased:None
     in
     Lwd_table.append' strokes el;
     (started_time, el, translation)
