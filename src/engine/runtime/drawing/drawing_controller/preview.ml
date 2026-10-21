@@ -3,49 +3,30 @@ open Drawing_state
 open Brr_lwd
 
 let ( !! ) = Jstr.v
+let empty_d = Lwd.pure (Brr.At.v (Jstr.v "d") Jstr.empty)
 
-let pfo_options width =
-  let size = width in
-  Perfect_freehand.Options.v ~thinning:0.5 ~smoothing:0.5 ~size ~streamline:0.5
-    ~last:true ()
-
-let make_d ~elapsed_time path path_to_svg =
-  (* TODO: DO NOT DELETE THIS COMMENT! *)
-  (* let$* end_at = end_at in *)
-  (* let$* should_continue = *)
-  (*   (\* I was hoping that when a value does not change, the recomputation *)
-  (*    stops. See https://github.com/let-def/lwd/issues/55 *\) *)
-  (*   let$ elapsed_time = elapsed_time in *)
-  (*   elapsed_time <= end_at *)
-  (* in *)
-  let with_path path =
-    (* Brr.Console.(log [ "offset_x"; offset.x ]); *)
-    let path =
-      List.map fst
-        (* (fun ((x, y), _) -> *)
-        (*   ( x -. (offset.x -. 2000. -. (offset.width /. 2.)), *)
-        (*     y -. (offset.y -. 2000. -. (offset.height /. 2.)) )) *)
-        path
-    in
-    let v = path_to_svg path in
-    Brr.At.v (Jstr.v "d") v
-  in
-  let$* path = Lwd.get path in
+let d ~elapsed_time ~starts_at ~end_at ~final_d ~scale ~path kind =
   match elapsed_time with
-  | None -> Lwd.pure @@ with_path path
-  | Some elapsed_time ->
-      let$ elapsed_time = elapsed_time in
-      let path = List.filter (fun (_, t) -> t < elapsed_time) path in
-      with_path path
+  | None -> final_d
+  | Some elapsed_time' ->
+      (* Built once, so that the bind below only chooses between existing
+         nodes, instead of building a new graph at each change of time. *)
+      let partial =
+        Drawing_state.Path_editing.make_d kind ~elapsed_time ~scale path
+      in
+      let$* starts_at = starts_at
+      and$ end_at = end_at
+      and$ elapsed_time' = elapsed_time' in
+      if end_at < elapsed_time' then final_d
+      else if elapsed_time' <= starts_at then empty_d
+      else partial
 
-let pen_attributes ~width ~elapsed_time ~scale ~path ~erased ~color ~id
-    ~selected ~preselected =
+let pen_attributes ~starts_at ~end_at ~final_d ~width ~elapsed_time ~scale ~path
+    ~erased ~color ~id ~selected ~preselected =
   let at =
     let d =
       let$* width = Lwd.get width in
-      make_d ~elapsed_time path @@ fun path ->
-      let options = pfo_options width in
-      Drawing_state.Path_editing.pfo_svg_path options scale path
+      d ~elapsed_time ~starts_at ~end_at ~final_d ~scale ~path (`Pfh width)
     in
     let fill =
       let$ color =
@@ -108,13 +89,10 @@ let pen_attributes ~width ~elapsed_time ~scale ~path ~erased ~color ~id
   in
   Elwd.v ~ns:`SVG ~at ~st (Jstr.v "path") []
 
-let highlight_attributes ~elapsed_time ~width ~path ~color ~selected
-    ~preselected ~erased ~scale ~id =
+let highlight_attributes ~starts_at ~end_at ~final_d ~elapsed_time ~width ~path
+    ~color ~selected ~preselected ~erased ~scale ~id =
   let at =
-    let d =
-      make_d ~elapsed_time path @@ fun path ->
-      Drawing_state.Path_editing.svg_path scale path
-    in
+    let d = d ~elapsed_time ~starts_at ~end_at ~final_d ~scale ~path `Normal in
     let stroke =
       let$ width =
         let$ width = Lwd.get width in
@@ -185,21 +163,22 @@ let create_elem_of_stroke ~elapsed_time
       width;
       stroker;
       path;
-      end_at = _;
-      starts_at = _;
+      end_at;
+      starts_at;
       selected;
       preselected;
       track = _;
       erased;
+      final_d;
     } =
   let$* scale = Lwd.get scale in
   match stroker with
   | Highlighter ->
-      highlight_attributes ~scale ~color ~id ~width ~path ~selected ~preselected
-        ~erased ~elapsed_time
+      highlight_attributes ~starts_at ~end_at ~final_d ~scale ~color ~id ~width
+        ~path ~selected ~preselected ~erased ~elapsed_time
   | Pen ->
-      pen_attributes ~scale ~color ~id ~width ~path ~selected ~preselected
-        ~erased ~elapsed_time
+      pen_attributes ~starts_at ~end_at ~final_d ~scale ~color ~id ~width ~path
+        ~selected ~preselected ~erased ~elapsed_time
 
 let draw ~elapsed_time strokes =
   Lwd_table.map_reduce
