@@ -471,21 +471,23 @@ let wbr = void_cons Name.wbr
 
 type root = t Lwd.root
 
+let queue_microtask =
+  let queue_microtask = Jv.get Jv.global "queueMicrotask" in
+  fun f ->
+    ignore (Jv.apply queue_microtask [| Jv.callback ~arity:1 (fun _ -> f ()) |])
+
 let insert first_insert anchor reactive =
   let root = Lwd.observe reactive in
   let last_element = ref (Lwd.quick_sample root) in
   first_insert anchor [!last_element];
   let on_invalidate _ =
-    let _ : int =
-      G.request_animation_frame @@ fun _ ->
-      let new_element = Lwd.quick_sample root in
-      if !last_element = new_element then ()
-      else (
-        El.insert_siblings `Replace !last_element [ new_element ];
-        last_element := new_element
-      )
-    in
-    ()
+    queue_microtask @@ fun () ->
+    let new_element = Lwd.quick_sample root in
+    if !last_element = new_element then ()
+    else (
+      El.insert_siblings `Replace !last_element [ new_element ];
+      last_element := new_element
+    )
   in
   Lwd.set_on_invalidate root on_invalidate;
   root
@@ -511,11 +513,8 @@ let set_children el children =
   let root = Lwd.observe reactive in
   let _el = Lwd.quick_sample root in
   let on_invalidate _ =
-    let _ : int =
-      G.request_animation_frame @@ fun _ ->
-      let _el = Lwd.quick_sample root in
-      ()
-    in
+    queue_microtask @@ fun () ->
+    let _el = Lwd.quick_sample root in
     ()
   in
   Lwd.set_on_invalidate root on_invalidate;
