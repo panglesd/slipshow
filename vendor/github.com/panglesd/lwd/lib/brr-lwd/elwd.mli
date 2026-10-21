@@ -57,6 +57,11 @@ val prepend_child : t -> t Lwd.t -> root
 val release : root -> unit
 (** Stop updating the reactive elements, leaving what is currently there. *)
 
+val sample : root -> unit
+(** Updates the reactive elements now. Otherwise, changes are only applied at
+    the next animation frame, which matters when the DOM is measured before
+    (e.g. with [getBoundingClientRect]). *)
+
 (** {1:els Element constructors} *)
 
 type cons =

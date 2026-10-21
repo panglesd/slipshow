@@ -739,6 +739,14 @@ module Draw = struct
 
   let state = Hashtbl.create 10
 
+  (* Changes to a drawing are only rendered at the next animation frame. When
+     fast-forwarding, no frame happens between actions, so a later action
+     measuring the drawing (e.g. a [focus] on a stroke) would see it in its
+     previous state. So we render it right away. *)
+  let set_time ((record : Drawing_state.replaying_state), root) time =
+    Lwd.set record.time time;
+    Brr_lwd.Elwd.sample root
+
   let setup _window elem =
     match Hashtbl.find_opt state elem with
     | Some _ -> Fut.return ()
@@ -775,10 +783,8 @@ module Draw = struct
                   { recording; time = Lwd.var 0.; is_playing = Lwd.var false }
                 in
                 let svg = Drawing_controller.Preview.live_svg replaying_state in
-                let _stop_live_update_id =
-                  Brr_lwd.Elwd.set_children elem [ `R svg ]
-                in
-                Hashtbl.add state elem replaying_state;
+                let root = Brr_lwd.Elwd.set_children elem [ `R svg ] in
+                Hashtbl.add state elem (replaying_state, root);
                 Lwd_table.append' workspaces.recordings replaying_state;
                 Lwd.set current_replaying_state (Some replaying_state)));
         Fut.return ()
@@ -821,12 +827,13 @@ module Draw = struct
       (fun elem ->
         match Hashtbl.find_opt state elem with
         | None -> Undoable.return ()
-        | Some record ->
+        | Some (record, root) ->
             let open Fut.Syntax in
             let old_time = Lwd.peek record.time in
             let* () = replay ?speedup:None mode record in
+            Brr_lwd.Elwd.sample root;
             let undo () =
-              Lwd.set record.time old_time;
+              set_time (record, root) old_time;
               Fut.return ()
             in
             Undoable.return ~undo ())
@@ -854,11 +861,11 @@ module Clear_draw = struct
       (fun elem ->
         match Hashtbl.find_opt Draw.state elem with
         | None -> Undoable.return ()
-        | Some record ->
+        | Some ((record, _) as drawing) ->
             let old_time = Lwd.peek record.time in
-            Lwd.set record.time 0.;
+            Draw.set_time drawing 0.;
             let undo () =
-              Lwd.set record.time old_time;
+              Draw.set_time drawing old_time;
               Fut.return ()
             in
             Undoable.return ~undo ())

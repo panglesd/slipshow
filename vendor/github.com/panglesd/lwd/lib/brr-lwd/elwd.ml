@@ -469,26 +469,30 @@ let var = cons Name.var
 let video = cons Name.video
 let wbr = void_cons Name.wbr
 
-type root = t Lwd.root
+type root = {
+  root : t Lwd.root;
+  sync : unit -> unit;
+  (** Brings the DOM up to date with the reactive elements NOW, and not after an animation frame *)
+}
 
 let insert first_insert anchor reactive =
   let root = Lwd.observe reactive in
   let last_element = ref (Lwd.quick_sample root) in
   first_insert anchor [!last_element];
+  let sync () =
+    let new_element = Lwd.quick_sample root in
+    if !last_element = new_element then ()
+    else (
+      El.insert_siblings `Replace !last_element [ new_element ];
+      last_element := new_element
+    )
+  in
   let on_invalidate _ =
-    let _ : int =
-      G.request_animation_frame @@ fun _ ->
-      let new_element = Lwd.quick_sample root in
-      if !last_element = new_element then ()
-      else (
-        El.insert_siblings `Replace !last_element [ new_element ];
-        last_element := new_element
-      )
-    in
+    let _ : int = G.request_animation_frame @@ fun _ -> sync () in
     ()
   in
   Lwd.set_on_invalidate root on_invalidate;
-  root
+  { root; sync }
 
 let insert_sibling where anchor reactive =
   let first_insert = El.insert_siblings where in
@@ -509,16 +513,18 @@ let set_children el children =
       update_children el children
   in
   let root = Lwd.observe reactive in
-  let _el = Lwd.quick_sample root in
+  let sync () =
+    let _el = Lwd.quick_sample root in
+    ()
+  in
+  sync ();
   let on_invalidate _ =
-    let _ : int =
-      G.request_animation_frame @@ fun _ ->
-      let _el = Lwd.quick_sample root in
-      ()
-    in
+    let _ : int = G.request_animation_frame @@ fun _ -> sync () in
     ()
   in
   Lwd.set_on_invalidate root on_invalidate;
-  root
+  { root; sync }
 
-let release root = Lwd.quick_release root
+let release { root; _ } = Lwd.quick_release root
+
+let sample { sync; _ } = sync ()
