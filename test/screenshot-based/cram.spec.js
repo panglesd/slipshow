@@ -62,7 +62,18 @@ for (const dir of findTestDirs(__dirname)) {
 
             for (const step of steps) {
                 test(`step ${step}`, async ({ page }) => {
-                    await page.goto(`${presUrl}#${step}`, { waitUntil: 'load' });
+                    // The presentation runs in an iframe, which posts a
+                    // "Ready" message to its parent once it is initialized and
+                    // has reached the step given in the URL.
+                    await page.addInitScript(() => {
+                        if (window !== window.top) return;
+                        window.addEventListener('message', e => {
+                            if (typeof e.data === 'string' && e.data.includes('(payload Ready)'))
+                                window.slipshowReady = true;
+                        });
+                    });
+                    await page.goto(`${presUrl}#${step}`);
+                    await page.waitForFunction(() => window.slipshowReady, null, { timeout: 60_000 });
                     await page.mouse.move(-1, -1);
                     await expect.soft(page).toHaveScreenshot(
                         [relDir, `${name}-step-${String(step).padStart(2, '0')}.png`],
