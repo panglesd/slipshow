@@ -10,3 +10,13 @@ docs/extra_html
 docs/doc-repl/main.js
 docs/_ext/__pycache__/
 docs/_static/main.js
+
+
+# Playwright
+test/screenshot-based/node_modules/
+test/screenshot-based/test-results/
+test/screenshot-based/playwright-report/
+test/screenshot-based/blob-report/
+test/screenshot-based/playwright/.cache/
+test/screenshot-based/playwright/.auth/
+test/screenshot-based/**/*.html
