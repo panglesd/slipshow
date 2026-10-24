@@ -1,0 +1,14 @@
+; Copy the compiled examples here, so they can be screenshot-tested like the
+; other test folders.
+
+(rule
+ (target bobkonf.html)
+ (mode promote)
+ (action
+  (copy %{dep:../../../example/BOBKonf/pres.html} %{target})))
+
+(rule
+ (target campus-du-libre.html)
+ (mode promote)
+ (action
+  (copy %{dep:../../../example/campus-du-libre/cdl.html} %{target})))
