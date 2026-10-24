@@ -14,5 +14,5 @@ body {
 
 .slipshow-scale-container {
     /* contain: paint layout; */
-    will-change: transform
+    /* will-change: transform is only set during zooms, see window.ml */
 }

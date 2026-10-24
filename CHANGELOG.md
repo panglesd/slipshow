@@ -5,6 +5,7 @@
 ## Fixed
 
 - Precompiled binaries for macOS no longer rely on Homebrew libraries (#146)
+- Content is no longer blurry in Chrome after zooming in (#286)
 
 ## [v0.13.0] Juraslip Park (Satursday, the 5th of September, 2026)
 
