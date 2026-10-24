@@ -73,6 +73,30 @@ let setup el =
       ~at:[ At.class' (Jstr.v "slipshow-rotate-container") ]
       [ scale_container ]
   in
+  (* [will-change: transform] makes Chrome keep the scale container rasterized
+     at the scale it had when the property was set, so the content is blurry
+     after a zoom. We only set it while a zoom is in progress (see
+     [move_pure]), and remove it once the transition is over so that the
+     content is rasterized again at the final scale. *)
+  let () =
+    let stop_will_change ev =
+      if
+        Jv.strict_equal
+          (Ev.target_to_jv (Ev.target ev))
+          (El.to_jv scale_container)
+      then El.remove_inline_style (Jstr.v "will-change") scale_container
+    in
+    List.iter
+      (fun ev ->
+        let _listener : Ev.listener =
+          Ev.listen
+            (Ev.Type.create (Jstr.v ev))
+            stop_will_change
+            (El.as_target scale_container)
+        in
+        ())
+      [ "transitionend"; "transitioncancel" ]
+  in
   Brr.El.insert_siblings `Replace el [ rotate_container ];
   Brr.El.append_children universe [ el ];
   let+ () =
@@ -143,6 +167,10 @@ let move_pure mode window ({ x; y; scale } as target : Coordinates.window)
             ( (TransitionTiming "", TransitionDelay 0.),
               (TransitionTiming "", TransitionDelay 0.) )
       in
+      (* Only during a transition, see [setup] *)
+      if duration > 0. && scale <> (State.get_coord ()).scale then
+        El.set_inline_style (Jstr.v "will-change") (Jstr.v "transform")
+          window.scale_container;
       State.set_coord target;
       let x = -.x +. (width () /. 2.) in
       let y = -.y +. (height () /. 2.) in
