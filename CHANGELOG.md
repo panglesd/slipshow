@@ -2,10 +2,14 @@
 
 ## unreleased
 
+## Added
+
+- Screenshot-based regression tests (#286)
+
 ## Fixed
 
 - Precompiled binaries for macOS no longer rely on Homebrew libraries (#146)
-- Content is no longer blurry in Chrome after zooming in (#286)
+- Fixed some blurriness in Chrome related to zooming (#286)
 
 ## [v0.13.0] Juraslip Park (Satursday, the 5th of September, 2026)
 
