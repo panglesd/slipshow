@@ -11,7 +11,7 @@ import { pathToFileURL } from 'url';
 // `dune exec --profile release -- npx playwright test` to use the one built by
 // dune). A .html entry is used as is (it may be produced by a dune rule, so
 // run `dune build --profile release` first). Each step is then screenshotted,
-// next to the entry.
+// in the screenshots/ subfolder of the test folder.
 
 const ignoredDirs = new Set(['node_modules', 'test-results', 'playwright-report', 'blob-report']);
 
@@ -76,7 +76,7 @@ for (const dir of findTestDirs(__dirname)) {
                     await page.waitForFunction(() => window.slipshowReady, null, { timeout: 60_000 });
                     await page.mouse.move(-1, -1);
                     await expect.soft(page).toHaveScreenshot(
-                        [relDir, `${name}-step-${String(step).padStart(2, '0')}.png`],
+                        [relDir, 'screenshots', `${name}-step-${String(step).padStart(2, '0')}.png`],
                         { timeout: 15_000 });
                 });
             }
