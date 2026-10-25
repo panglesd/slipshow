@@ -1,0 +1,5 @@
+(rule
+ (target hljs.html)
+ (mode promote)
+ (action
+  (run %{bin:slipshow} compile %{dep:hljs.md} -o %{target})))

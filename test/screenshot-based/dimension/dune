@@ -1,0 +1,17 @@
+(rule
+ (target seize-neuvieme.html)
+ (mode promote)
+ (action
+  (run %{bin:slipshow} compile %{dep:seize-neuvieme.slp} -o %{target})))
+
+(rule
+ (target quatre-tiers.html)
+ (mode promote)
+ (action
+  (run %{bin:slipshow} compile %{dep:quatre-tiers.slp} -o %{target})))
+
+(rule
+ (target custom.html)
+ (mode promote)
+ (action
+  (run %{bin:slipshow} compile %{dep:custom.slp} -o %{target})))

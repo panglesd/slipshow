@@ -1,0 +1,6 @@
+(rule
+ (target slides.html)
+ (mode promote)
+ (deps happy.svg)
+ (action
+  (run %{bin:slipshow} compile %{dep:slides.md} -o %{target})))
