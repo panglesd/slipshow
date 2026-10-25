@@ -4,6 +4,8 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+permissions:
+  contents: read
 jobs:
   test:
     timeout-minutes: 60
@@ -13,6 +15,8 @@ jobs:
         working-directory: test/screenshot-based
     steps:
     - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
 
     - name: Use OCaml 4.14.x
       uses: ocaml/setup-ocaml@v3
