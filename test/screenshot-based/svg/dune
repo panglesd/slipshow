@@ -1,0 +1,6 @@
+(rule
+ (target svg.html)
+ (mode promote)
+ (deps square.svg)
+ (action
+  (run %{bin:slipshow} compile %{dep:svg.md} -o %{target})))

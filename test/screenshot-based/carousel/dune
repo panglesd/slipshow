@@ -1,0 +1,5 @@
+(rule
+ (target carousel.html)
+ (mode promote)
+ (action
+  (run %{bin:slipshow} compile %{dep:carousel.md} -o %{target})))

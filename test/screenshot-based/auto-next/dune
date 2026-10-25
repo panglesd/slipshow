@@ -1,0 +1,5 @@
+(rule
+ (target auto-next.html)
+ (mode promote)
+ (action
+  (run %{bin:slipshow} compile %{dep:auto-next.slp} -o %{target})))

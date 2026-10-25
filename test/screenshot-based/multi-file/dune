@@ -1,0 +1,12 @@
+(rule
+ (target main.html)
+ (mode promote)
+ (deps
+  (source_tree ../../compiler/multi-file.t))
+ (action
+  (run
+   %{bin:slipshow}
+   compile
+   %{dep:../../compiler/multi-file.t/main.md}
+   -o
+   %{target})))

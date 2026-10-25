@@ -1,0 +1,11 @@
+(rule
+ (target mathjax.html)
+ (mode promote)
+ (action
+  (run %{bin:slipshow} compile %{dep:mathjax.slp} -o %{target})))
+
+(rule
+ (target katex.html)
+ (mode promote)
+ (action
+  (run %{bin:slipshow} compile %{dep:katex.slp} -o %{target})))

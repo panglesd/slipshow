@@ -1,0 +1,12 @@
+(rule
+ (target drawings.html)
+ (mode promote)
+ (deps
+  (source_tree ../../compiler/drawings.t))
+ (action
+  (run
+   %{bin:slipshow}
+   compile
+   %{dep:../../compiler/drawings.t/drawings.md}
+   -o
+   %{target})))

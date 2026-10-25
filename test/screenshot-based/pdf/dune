@@ -1,0 +1,12 @@
+(rule
+ (target pdf.html)
+ (mode promote)
+ (deps
+  (source_tree ../../compiler/pdf.t))
+ (action
+  (run
+   %{bin:slipshow}
+   compile
+   %{dep:../../compiler/pdf.t/pdf.md}
+   -o
+   %{target})))
