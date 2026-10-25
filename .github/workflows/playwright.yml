@@ -36,6 +36,16 @@ jobs:
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps chromium firefox
 
+    # Temporary: to compare the font rendering with a local machine
+    - name: Font rendering info
+      continue-on-error: true
+      run: |
+        dpkg-query -W libfreetype6 libfontconfig1 libcairo2 libharfbuzz0b || true
+        echo "FREETYPE_PROPERTIES=$FREETYPE_PROPERTIES"
+        fc-match -v sans-serif | grep -E 'antialias|hint|rgba|lcdfilter' || true
+        fc-conflist | grep '^+' || true
+        ldd ~/.cache/ms-playwright/firefox-*/firefox/libxul.so | grep -E 'freetype|fontconfig|cairo|harfbuzz' || true
+
     # Tests compile .slp files with the slipshow in the PATH
     - name: Run Playwright tests
       run: opam exec -- dune exec --profile release -- npx playwright test
