@@ -16,14 +16,9 @@ dune test
 
 Browser tests take the form of screenshot tests, implemented using [playwright visual tests](https://playwright.dev/docs/test-snapshots).
 
-First, from the `screenshot-based` folder, install the dependencies and the browsers:
+Running the tests is done in two steps, from the `screenshot-based` folder.
 
-```shell
-npm ci
-npx playwright install --with-deps chromium firefox
-```
-
-Then, generate the HTML files of all tests with dune:
+First, generate the HTML files of all tests with dune:
 
 ```shell
 dune build --profile release
@@ -33,28 +28,33 @@ Each test folder has a `dune` file that compiles its `.slp` and `.md` entries
 to HTML files next to them, with the same base name. When adding an entry to a
 `run.json`, add the corresponding rule.
 
-Then, from the `screenshot-based` folder, run the tests with:
+Then, run the tests in [Playwright's Docker image](https://playwright.dev/docs/docker).
+Browser rendering depends on the fonts and libraries of the host, so using the
+same image everywhere ensures that the screenshots are the same locally and in
+the CI. This only requires Docker, not OCaml nor the Playwright browsers:
 
 ```shell
-npx playwright test
+./playwright-docker.sh
 ```
 
-To run only some tests, use `-g` with a regular expression matching the test
-titles, which have the form `<folder>/<entry> › step <N>`, and optionally
-`--project` to select a browser:
+The arguments of `playwright-docker.sh` are passed to `playwright test`. For
+instance, to run only some tests, use `-g` with a regular expression matching
+the test titles, which have the form `<folder>/<entry> › step <N>`, and
+optionally `--project` to select a browser:
 
 ```shell
 # One test folder
-npx playwright test -g 'math/'
+./playwright-docker.sh -g 'math/'
 
 # One step of one entry, in one browser
-npx playwright test -g 'bobkonf.html.*step 5$' --project=chromium
+./playwright-docker.sh -g 'bobkonf.html.*step 5$' --project=chromium
 ```
 
 Use `.*` rather than the `›` separator, and end with `$` so that `step 5` does
 not also match `step 50`. Add `--list` to see the selected tests without
 running them, and `--update-snapshots` to accept the current rendering of the
-selected tests.
+selected tests. Screenshots generated outside of the Docker image may differ
+slightly from the ones of the CI.
 
 To see the screenshots of failed tests, including the ones of the CI (download
 the `playwright-report` artifact of the workflow run), use:
