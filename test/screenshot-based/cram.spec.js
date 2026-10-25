@@ -18,8 +18,8 @@ for (const { relDir, entry, name, html, steps } of findTests()) {
         for (const step of steps) {
             test(`step ${step}`, async ({ page }) => {
                 // The presentation runs in an iframe, which posts a
-                // "Ready" message to its parent once it is initialized and
-                // has reached the step given in the URL.
+                // "Ready" message to its parent once it is initialized. The
+                // parent then sends it the step given in the URL.
                 await page.addInitScript(() => {
                     if (window !== window.top) return;
                     window.addEventListener('message', e => {
@@ -29,6 +29,10 @@ for (const { relDir, entry, name, html, steps } of findTests()) {
                 });
                 await page.goto(`${presUrl}#${step}`);
                 await page.waitForFunction(() => window.slipshowReady, null, { timeout: 60_000 });
+                // The counter shows "from→to" during a transition, and the
+                // step once it is reached.
+                await expect(page.frameLocator('#slipshow__internal_iframe').locator('#slipshow-counter'))
+                    .toHaveText(String(step), { timeout: 30_000 });
                 await page.mouse.move(-1, -1);
                 await expect.soft(page).toHaveScreenshot(
                     [relDir, 'screenshots', `${name}-step-${String(step).padStart(2, '0')}.png`],
