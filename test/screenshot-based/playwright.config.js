@@ -16,6 +16,8 @@ export default defineConfig({
   testDir: './',
   /* Snapshots are stored at the path given to toHaveScreenshot, relative to testDir. */
   snapshotPathTemplate: '{testDir}/{arg}{-projectName}{-snapshotSuffix}{ext}',
+  /* Covers the waits of cram.spec.js (loading, reaching the step, screenshot). */
+  timeout: 120_000,
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
