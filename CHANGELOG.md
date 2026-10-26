@@ -10,6 +10,8 @@
 
 - Precompiled binaries for macOS no longer rely on Homebrew libraries (#146)
 - Fixed some blurriness in Chrome related to zooming (#286)
+- Fixed wrong coordinates when focusing on drawings in fast mode (#287)
+- Improved drawing performance, especially in fast mode (#287)
 
 ## [v0.13.0] Juraslip Park (Satursday, the 5th of September, 2026)
 
