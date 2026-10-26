@@ -34,7 +34,7 @@ jobs:
     # In Playwright's Docker image, so that the rendering is the same as when
     # the screenshots were generated
     - name: Run Playwright tests
-      run: ./playwright-docker.sh
+      run: opam exec -- ./playwright-docker.sh
 
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
