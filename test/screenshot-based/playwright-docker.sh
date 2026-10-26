@@ -7,6 +7,8 @@
 set -e
 cd "$(dirname "$0")"
 
+dune build --profile release
+
 # The image must have the same version of Playwright as the one installed by
 # `npm ci`, otherwise it does not contain the right browsers.
 VERSION=$(grep -A1 '"node_modules/@playwright/test"' package-lock.json |
