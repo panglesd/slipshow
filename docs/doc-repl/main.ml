@@ -1,7 +1,6 @@
 open Code_mirror
 
 let view ~dimension ~preview_el ~errors_el ~editor_el starting =
-  let open Editor in
   let basic_setup = Jv.get Jv.global "__CM__basic_setup" |> Extension.of_jv in
   let dark_mode =
     let dark = Jv.get Jv.global "__CM__dark" in
@@ -13,24 +12,25 @@ let view ~dimension ~preview_el ~errors_el ~editor_el starting =
   in
   let options = { Slipshow.Frontmatter.Global.empty with dimension } in
   let config =
-    State.Config.create ~doc:(Jstr.v starting)
-      ~extensions:
-        [|
+    let extensions =
+      Extension.of_list
+        [
           basic_setup;
           markdown_extension;
           dark_mode;
-          Slipshow_communication.slipshow_plugin ~options ~errors_el preview_el;
-        |]
-      ()
+          Slipshow_communication.extension ~options ~errors_el preview_el;
+        ]
+    in
+    State.EditorStateConfig.create ~doc:starting ~extensions ()
   in
-  let state = State.create ~config () in
-  let opts = Editor.View.opts ~state ~parent:editor_el () in
-  Editor.View.create ~opts ()
+  let state = State.EditorState.create ~config () in
+  let config = View.EditorViewConfig.create ~state ~parent:editor_el () in
+  View.EditorView.create ~config ()
 
 let ( !! ) = Jstr.v
 
 let do_ ~dimension ~editor_el ~preview_el ~errors_el starting =
-  let _view : Editor.View.t =
+  let _view : View.editor_view =
     view ~dimension ~preview_el ~errors_el ~editor_el starting
   in
   ()

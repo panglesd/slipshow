@@ -12,19 +12,18 @@ let preview ?slipshow_js ?options () =
 let update_slipshow ?slipshow_js ?options () =
   let preview = preview ?slipshow_js ?options () in
   fun state view ->
-    let open Editor in
     let content =
-      let state = View.state view in
-      let text = State.doc state in
+      let state = View.EditorView.state view in
+      let text = State.EditorState.doc state in
       let lines =
-        Text.to_jstr_array text |> Array.map Jstr.to_string |> Array.to_list
+        State.Text.to_jstr_array text
+        |> Array.map Jstr.to_string |> Array.to_list
       in
       String.concat "\n" lines
     in
     preview state content
 
-let slipshow_plugin ?slipshow_js ?options ~errors_el preview_element =
-  let open Editor in
+let view_plugin ?slipshow_js ?options ~errors_el preview_element =
   let update_slipshow = update_slipshow ?slipshow_js ?options () in
   View.ViewPlugin.define (fun view ->
       let state =
@@ -37,10 +36,14 @@ let slipshow_plugin ?slipshow_js ?options ~errors_el preview_element =
       let _ : unit Fut.t = update_slipshow ~ms:0 state view in
       let update upd =
         let _ : unit Fut.t =
-          if View.Update.docChanged upd then update_slipshow ~ms:500 state view
+          if View.EditorView.Update.doc_changed upd then
+            update_slipshow ~ms:500 state view
           else Fut.return ()
         in
         ()
       in
-      let destruct () = () in
-      { update; destruct })
+      View.PluginValue.create ~update ())
+
+let extension ?slipshow_js ?options ~errors_el preview_element =
+  view_plugin ?slipshow_js ?options ~errors_el preview_element
+  |> View.ViewPlugin.extension
