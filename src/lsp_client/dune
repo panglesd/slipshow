@@ -1,0 +1,4 @@
+(library
+ (name lsp_client)
+ (public_name code-mirror.lsp-client)
+ (libraries code-mirror))
