@@ -1,4 +1,4 @@
-let g = Jv.get Jv.global "__CM__stream_parser"
+let g = Jv.get Jv.global "__CM__language"
 
 module Language = struct
   type t

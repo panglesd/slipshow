@@ -13,16 +13,21 @@
         "translate": "babel vendor --out-dir vendor/out"
     },
     "dependencies": {
-        "codemirror": "^6.0.0",
-        "@codemirror/view": "^6.0.0",
-        "@codemirror/state": "^6.0.0",
-	"@codemirror/collab": "^6.0.0",
-        "@codemirror/language": "^6.0.0",
-        "@codemirror/lang-markdown": "^6.0.0",
         "@codemirror/autocomplete": "^6.0.0",
+        "@codemirror/collab": "^6.1.1",
+        "@codemirror/lang-javascript": "^6.2.2",
+		"@codemirror/lsp-client": "^6.2.2",
+        "@codemirror/lang-markdown": "^6.0.0",
+        "@codemirror/language": "^6.0.0",
         "@codemirror/legacy-modes": "^6.0.0",
         "@codemirror/lint": "^6.0.0",
-        "@codemirror/theme-one-dark": "^6.0.0"
+        "@codemirror/state": "^6.0.0",
+        "@codemirror/theme-one-dark": "^6.0.0",
+        "@codemirror/view": "^6.0.0",
+        "@rollup/plugin-node-resolve": "^15.2.3",
+        "codemirror": "^6.0.1",
+        "thememirror": "^2.0.0",
+        "rollup": "^4.58.0"
     },
     "devDependencies": {
         "@babel/cli": "^7.16.8",
