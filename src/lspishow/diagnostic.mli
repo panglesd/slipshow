@@ -2,7 +2,7 @@ val linoloc_of_textloc :
   source:string ->
   positionEncoding:[ `UTF8 | `UTF16 ] ->
   Diagnosis.loc ->
-  Linol_lwt.Range.t
+  Linol.Lsp.Types.Range.t
 
 val of_error :
   positionEncoding:[ `UTF8 | `UTF16 ] ->
@@ -10,4 +10,4 @@ val of_error :
   root:Fpath.t ->
   file:Fpath.t ->
   Diagnosis.t ->
-  Linol_lwt.Diagnostic.t list
+  Linol.Lsp.Types.Diagnostic.t list

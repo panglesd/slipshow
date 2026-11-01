@@ -18,7 +18,7 @@ val get_leave :
   positionEncoding:[ `UTF16 | `UTF8 ] ->
   source:string ->
   path:Fpath.t ->
-  Linol_lwt.Position.t ->
+  Linol.Lsp.Types.Position.t ->
   Cmarkit.Doc.t ->
   trace
 
@@ -26,7 +26,7 @@ val get_target :
   positionEncoding:[ `UTF16 | `UTF8 ] ->
   source:string ->
   path:Fpath.t ->
-  Linol_lwt.Position.t ->
+  Linol.Lsp.Types.Position.t ->
   Slipshow.Ast.Action_plan.t ->
   string option
 (** Finds if we are in an action's argument that would correspond to a target *)

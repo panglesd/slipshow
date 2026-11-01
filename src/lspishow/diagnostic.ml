@@ -32,7 +32,7 @@ let linoloc_of_textloc ~source ~positionEncoding (loc : Cmarkit.Textloc.t) =
     let line, character =
       pos_of_textloc ~source ~positionEncoding ~line ~byte
     in
-    Linol_lwt.Position.create ~character ~line
+    Linol.Lsp.Types.Position.create ~character ~line
   in
   let end_ =
     let line = Cmarkit.Textloc.last_line loc in
@@ -41,9 +41,9 @@ let linoloc_of_textloc ~source ~positionEncoding (loc : Cmarkit.Textloc.t) =
       pos_of_textloc ~source ~positionEncoding ~line ~byte
     in
     let character = character + 1 in
-    Linol_lwt.Position.create ~character ~line
+    Linol.Lsp.Types.Position.create ~character ~line
   in
-  Linol_lwt.Range.create ~end_ ~start
+  Linol.Lsp.Types.Range.create ~end_ ~start
 
 let create ~source ~positionEncoding ~loc ?ploc msg =
   let ( let+ ) x f = Option.map f x in
@@ -56,7 +56,7 @@ let create ~source ~positionEncoding ~loc ?ploc msg =
         | Some ploc -> Diagnosis.loc_of_ploc loc ploc
       in
       let range = linoloc_of_textloc ~source ~positionEncoding loc in
-      let severity = Linol_lwt.DiagnosticSeverity.Warning in
+      let severity = Linol.Lsp.Types.DiagnosticSeverity.Warning in
       Linol.Lsp.Types.Diagnostic.create ~severity ~message:(`String msg) ~range
         ())
     msg
