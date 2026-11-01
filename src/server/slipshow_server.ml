@@ -12,7 +12,7 @@ type root = Server.root = {
   version : string;
 }
 
-type roots = (Fpath.t -> root option) * (unit -> Fpath.t list)
+type roots = Server_types.roots
 
 let do_watch entry_point compile =
   let callback () =

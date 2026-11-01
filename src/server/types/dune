@@ -1,0 +1,3 @@
+(library
+ (name server_types)
+ (libraries lwt fpath slipshow diagnosis proto common_types))

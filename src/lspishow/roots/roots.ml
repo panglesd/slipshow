@@ -1,6 +1,6 @@
-type to_server = Slipshow_server.to_server
+type to_server = Server_types.to_server
 
-type root = Slipshow_server.root = {
+type root = Server_types.root = {
   units : Slipshow.Ast.units;
   diagnostics : Diagnosis.t list;
   condition : to_server Lwt_condition.t;

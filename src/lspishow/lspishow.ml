@@ -113,7 +113,7 @@ struct
             positionEncoding <- encoding
         | _ -> ()
 
-      method private elem_of_gui_id (root : Slipshow_server.root) gui_id =
+      method private elem_of_gui_id (root : Roots.root) gui_id =
         let ( let* ) x f = Result.bind x f in
         match gui_id with
         | Common_types.Id id -> (
@@ -138,7 +138,7 @@ struct
                  gui_id
 
       method private from_preview ~(notify_back : Linol_lwt.notify_back)
-          (event : Proto.Client_to_server.t) (root : Slipshow_server.root) =
+          (event : Proto.Client_to_server.t) (root : Roots.root) =
         match event with
         | Ping | UpdateFrom _ | Save_drawing (_, _) -> ()
         | Save_gui_position { id; coord } ->
@@ -582,13 +582,13 @@ struct
               | Some (`String "Key stroke") ->
                   Config.Refresh.set Edit;
                   Hashtbl.iter
-                    (fun _ (root : Slipshow_server.root) ->
+                    (fun _ (root : Roots.root) ->
                       Lwt_condition.broadcast root.condition Update)
                     Roots.saved
               | Some (`String "Save") ->
                   Config.Refresh.set Save;
                   Hashtbl.iter
-                    (fun _ (root : Slipshow_server.root) ->
+                    (fun _ (root : Roots.root) ->
                       Lwt_condition.broadcast root.condition Update)
                     Roots.buffers
               | None -> (
@@ -738,7 +738,7 @@ struct
         let changes =
           change_watched_files.DidChangeWatchedFilesParams.changes
         in
-        let root_has_path_as_deps (root : Slipshow_server.root) path =
+        let root_has_path_as_deps (root : Roots.root) path =
           let test_is_relevant p _entry = Fpath.equal p path in
           let asset_deps () =
             Fpath.Map.exists test_is_relevant root.units.files
@@ -782,15 +782,15 @@ struct
               | Created | Changed -> State.rev_deps_from_fs path
             else Lwt.return_unit
           in
-          let update_root_if_needed root_path (root : Slipshow_server.root) =
+          let update_root_if_needed root_path (root : Roots.root) =
             (* Update root for saved files *)
             let needs_updating = root_has_path_as_deps root path in
             if needs_updating then begin
               let parent = Fpath.parent root_path in
-              let _updated_root : Slipshow_server.root =
+              let _updated_root : Roots.root =
                 Roots.update_root (Read_file.fs parent) Roots.saved
                   Fpath.Map.empty root_path ~should_broadcast:true
-              and _updated_root_buffers : Slipshow_server.root =
+              and _updated_root_buffers : Roots.root =
                 let () =
                   Fpath.Map.iter
                     (fun fpath _ ->
@@ -832,7 +832,7 @@ struct
         let () =
           let+ file = Rev_deps.get_roots file in
           let parent = Fpath.parent file in
-          let _root : Slipshow_server.root =
+          let _root : Roots.root =
             Roots.update_root (Read_file.fs parent) Roots.saved Fpath.Map.empty
               file ~should_broadcast:false
           in
@@ -852,7 +852,7 @@ struct
           let+ file = Rev_deps.get_roots file in
           let parent = Fpath.parent file in
           let read_file = Read_file.fs parent in
-          let _root : Slipshow_server.root =
+          let _root : Roots.root =
             Roots.update_root read_file Roots.saved Fpath.Map.empty file
               ~should_broadcast:true
           in
