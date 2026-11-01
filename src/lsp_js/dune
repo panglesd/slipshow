@@ -1,8 +1,4 @@
 (executable
  (name lsp_js)
  (modes js)
- (libraries
-  linol
-  lwt
-  js_of_ocaml
-  lspishow))
+ (libraries linol lwt js_of_ocaml js_of_ocaml-lwt lspishow))

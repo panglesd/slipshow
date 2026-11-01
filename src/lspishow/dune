@@ -3,16 +3,10 @@
  (libraries
   slipshow_version
   linol
-  server_assets
-  slipshow_server
-  ansi
-  linol-lwt
+  lwt
   slipshow
   logs
-  dream
   proto
-  bos roots lsp_preview)
- (preprocessor_deps
-  (file ../server/client/client.bc.js))
- (preprocess
-  (pps ppx_blob)))
+  bos
+  roots
+  server_types))
