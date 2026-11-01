@@ -15,4 +15,6 @@
   logs.fmt
   themes
   diagnosis
-  lspishow))
+  lspishow
+  lsp_preview
+  linol-lwt))

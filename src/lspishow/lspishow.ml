@@ -17,7 +17,22 @@
 
 module Diag = Diagnostic
 
-module Make (IO : Linol.IO with type 'a t = 'a Lwt.t and type env = unit) =
+(** What depends on the platform the LSP server runs on (native or in a web
+    worker). *)
+module type PLATFORM = sig
+  val sleep : float -> unit Lwt.t
+
+  val start_preview :
+    send_info:(string -> unit) ->
+    to_lsp_server:(Proto.Client_to_server.t -> Roots.root -> unit) ->
+    Server_types.roots ->
+    unit
+  (** Start a preview server for the given roots. Called at initialization. *)
+end
+
+module Make
+    (IO : Linol.IO with type 'a t = 'a Lwt.t and type env = unit)
+    (P : PLATFORM) =
 struct
   module Lsp = Linol.Lsp
   open Lsp.Types
@@ -342,7 +357,7 @@ struct
           let find_root x = Hashtbl.find_opt (root_htbl ()) x in
           let list_roots () = Hashtbl.to_seq_keys (root_htbl ()) |> List.of_seq in
           let send_info s = send_info ~notify_back "%s" s in
-          Lsp_preview.initialize ~send_info ~to_lsp_server (find_root, list_roots)
+          P.start_preview ~send_info ~to_lsp_server (find_root, list_roots)
         in
         let* () =
           Format.eprintf
@@ -794,7 +809,7 @@ struct
             | None -> 0
           in
           let () = Hashtbl.replace rebounce path debounce_id in
-          let* () = Lwt_unix.sleep 1. in
+          let* () = P.sleep 1. in
           let check_rebounce f =
             match Hashtbl.find_opt rebounce path with
             | Some id when Int.equal id debounce_id -> f ()
@@ -960,13 +975,6 @@ struct
   let run ic oc () =
     let s = new lsp_server in
     let server = Linol_lwt.create ~ic ~oc s in
-    let task =
-      let shutdown () = s#get_status = `ReceivedExit in
-      Linol_lwt.run ~shutdown server
-    in
-    match Lwt_main.run task with
-    | () -> Ok ()
-    | exception e ->
-        let e = Printexc.to_string e in
-        Error ("error: " ^ e)
+    let shutdown () = s#get_status = `ReceivedExit in
+    Linol_lwt.run ~shutdown server
 end
