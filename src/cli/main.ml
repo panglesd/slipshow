@@ -191,10 +191,12 @@ module Lsp = struct
     in
     Arg.(value & flag & info ~doc [ "stdio" ])
 
+  module Lsp = Lspishow.Make (Linol_lwt.IO_lwt)
+
   let term =
     let open Term.Syntax in
     let+ () = Term.const () and+ _ = stdio in
-    Lspishow.run ()
+    Lsp.run Lwt_io.stdin Lwt_io.stdout ()
 
   let cmd =
     let doc =

@@ -1,0 +1,3 @@
+(library
+ (name roots)
+ (libraries lwt slipshow slipshow_server))

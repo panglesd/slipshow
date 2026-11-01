@@ -11,7 +11,7 @@
   logs
   dream
   proto
-  bos)
+  bos roots lsp_preview)
  (preprocessor_deps
   (file ../server/client/client.bc.js))
  (preprocess

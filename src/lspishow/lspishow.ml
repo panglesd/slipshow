@@ -15,581 +15,592 @@
     - (TODO) A table for roots, but kept up to date at each save. This is for
       the preview server, if the user prefers a "refresh on save". *)
 
-open Lwt.Syntax
+module Diag = Diagnostic
 
-let lwt_list_iter f l =
-  List.fold_left
-    (fun acc x ->
-      let* () = acc in
-      f x)
-    Lwt.return_unit l
+module Make (IO : Linol.IO with type 'a t = 'a Lwt.t and type env = unit) =
+struct
+  module Lsp = Linol.Lsp
+  open Lsp.Types
+  module Linol_lwt = Linol.Make (IO)
+  open Lwt.Syntax
 
-module State = struct
-  let mutex = Lwt_mutex.create ()
+  let lwt_list_iter f l =
+    List.fold_left
+      (fun acc x ->
+        let* () = acc in
+        f x)
+      Lwt.return_unit l
 
-  (* [update_from_fs] is update done when we read a file from the filesystem
+  module State = struct
+    let mutex = Lwt_mutex.create ()
+
+    (* [update_from_fs] is update done when we read a file from the filesystem
      (and not given by the lsp client). It is the one called at initialization
      step, mostly for computing deps. *)
-  let rev_deps_from_fs (file : Fpath.t) =
-    Lwt_mutex.with_lock mutex @@ fun () ->
-    Format.eprintf "update_from_fs with file = %a\n%!" Fpath.pp file;
-    let parent = Fpath.parent file in
-    let read_file = Read_file.fs parent in
-    let () =
-      let new_unit = Slipshow.Compile.unit ~embed_loc:true ~read_file file in
-      Rev_deps.update_state ~new_unit file
-    in
-    Lwt.return_unit
-
-  let update_from_buffer ~force (file : Fpath.t) s ~should_broadcast =
-    Lwt_mutex.with_lock mutex @@ fun () ->
-    Lwt.return @@ Buffers.update ~force file s ~should_broadcast
-end
-
-let diagnostics ~positionEncoding file :
-    Linol.Lsp.Types.Diagnostic.t list option =
-  let roots = Rev_deps.get_roots file in
-  let root = Fpath.Set.choose_opt roots in
-  match root with
-  | None -> None
-  | Some root -> (
-      match Hashtbl.find_opt Roots.buffers root with
-      | None -> None
-      | Some { diagnostics = errors; units; _ } ->
-          Some
-            (List.concat_map
-               (Diagnostic.of_error ~positionEncoding ~units:units.units ~root
-                  ~file)
-               errors))
-
-let is_slipshow_file p = Fpath.has_ext "md" p || Fpath.has_ext "slp" p
-
-(* Find all markdown files in the given directory (recursing over subdirectories) *)
-let find_markdown_files path =
-  Bos.OS.Dir.fold_contents ~traverse:`Any
-    ~elements:(`Sat (fun p -> Ok (is_slipshow_file p)))
-    (fun p acc -> p :: acc)
-    [] path
-
-let client_capabilities = ref None
-let rebounce = Hashtbl.create 10
-
-let to_error s =
-  let k message = function None -> Error (`Msg message) | Some x -> Ok x in
-  Format.kasprintf k s
-
-class lsp_server =
-  object (self)
-    inherit Linol_lwt.Jsonrpc2.server as super
-    method spawn_query_handler f = Linol_lwt.spawn f
-    method! config_hover = Some (`Bool true)
-    method! config_definition = Some (`Bool true)
-
-    method! config_server_info : Linol_lwt.InitializeResult.serverInfo option =
-      Some
-        (Linol_lwt.InitializeResult.create_serverInfo ~name:"slipshow"
-           ~version:Slipshow_version.full ())
-
-    method! set_positionEncoding (i : Linol_lwt.InitializeParams.t) =
-      let open Linol_lwt in
-      match i.capabilities.general with
-      | Some { positionEncodings = Some el; _ } ->
-          let encoding =
-            if List.mem PositionEncodingKind.UTF8 el then `UTF8 else `UTF16
-          in
-          positionEncoding <- encoding
-      | _ -> ()
-
-    method private elem_of_gui_id (root : Slipshow_server.root) gui_id =
-      let ( let* ) x f = Result.bind x f in
-      match gui_id with
-      | Common_types.Id id -> (
-          let* { definition; usage = _ } =
-            Slipshow.Id_map.SMap.find_opt id root.units.id_map
-            |> to_error "Id %s could not be found" id
-          in
-          let def = Slipshow.Id_map.Unionable_set.get definition in
-          match def.elem with
-          | `External -> Error (`Msg "External IDs can't be gui")
-          | (`Inline _ | `Block _) as bol -> Ok bol)
-      | Loc { file; gui_id } ->
-          let path = Fpath.v file in
-          let* unit =
-            Fpath.Map.find_opt path root.units.units
-            |> to_error "Could not find %a root" Fpath.pp path
-          in
-          List.assoc_opt gui_id unit.gui_map
-          |> to_error
-               "Can't identify gui element named %s. Give an ID to the GUI \
-                element to improve robustness."
-               gui_id
-
-    method private from_preview ~(notify_back : Linol_lwt.Jsonrpc2.notify_back)
-        (event : Proto.Client_to_server.t) (root : Slipshow_server.root) =
-      match event with
-      | Ping | UpdateFrom _ | Save_drawing (_, _) -> ()
-      | Save_gui_position { id; coord } ->
-          let ( let+ ) x f = Result.map f x in
-          let ( let* ) x f = Result.bind x f in
-          let to_error s =
-            let k message = function
-              | None -> Error (`Msg message)
-              | Some x -> Ok x
-            in
-            Format.kasprintf k s
-          in
-          let res =
-            let* () =
-              match (Config.Refresh.when_ (), id) with
-              | _, Id _ | Edit, Loc _ -> Ok ()
-              | (Save | Never), Loc _ ->
-                  Error
-                    (`Msg
-                       "In \"refresh on save\" mode, you can only set gui \
-                        coordinates of elements with an ID")
-            in
-            let* root =
-              (* We need to switch to the buffer version to get an updated location  *)
-              Hashtbl.find_opt Roots.buffers root.units.entry_file
-              |> to_error "Root of %a not found" Fpath.pp root.units.entry_file
-            in
-            let* elem = self#elem_of_gui_id root id in
-            let* (_key, meta_key), value =
-              let* attrs =
-                match elem with
-                | `Block b ->
-                    let+ _, (attrs, _) =
-                      Slipshow.Ast.Utils.Block.get_attribute b
-                      |> to_error "Element does not have attributes"
-                    in
-                    attrs
-                | `Inline i ->
-                    let+ _, (attrs, _) =
-                      Slipshow.Ast.Utils.Inline.get_attribute i
-                      |> to_error "Element does not have attributes"
-                    in
-                    attrs
-              in
-              Cmarkit.Attributes.find Common_types.Special_strings.gui attrs
-              |> to_error "Element does not have a gui attribute"
-            in
-            let prefix, textloc, suffix =
-              match value with
-              | None ->
-                  let textloc = Cmarkit.Meta.textloc meta_key in
-                  let byte, line =
-                    ( Cmarkit.Textloc.last_byte textloc,
-                      Cmarkit.Textloc.last_line textloc )
-                  in
-                  let textloc =
-                    textloc
-                    |> Cmarkit.Textloc.set_first ~first_byte:(byte + 1)
-                         ~first_line:line
-                    |> Cmarkit.Textloc.set_last ~last_byte:byte ~last_line:line
-                  in
-                  ("=\"", textloc, "\"")
-              | Some (_value, meta) -> ("", Cmarkit.Meta.textloc meta, "")
-            in
-            let uri = Linol_lsp.Uri0.of_string (Cmarkit.Textloc.file textloc) in
-            let fpath = Fpath.v (Cmarkit.Textloc.file textloc) in
-            let* source =
-              Fpath.Map.find_opt fpath root.units.units
-              |> to_error "Source not found"
-            in
-            let* source = source.source |> to_error "Source not found" in
-            let range =
-              Diagnostic.linoloc_of_textloc ~positionEncoding ~source textloc
-            in
-            let newText = prefix ^ coord ^ suffix in
-            let _ : unit Lwt.t =
-              let open Lwt.Syntax in
-              let* () =
-                match Hashtbl.find_opt docs uri with
-                | Some st ->
-                    let open Linol_lsp in
-                    let open Linol_lwt in
-                    let old_doc =
-                      Text_document.make ~position_encoding:positionEncoding
-                        (DidOpenTextDocumentParams.create
-                           ~textDocument:
-                             (TextDocumentItem.create ~languageId:st.languageId
-                                ~uri ~version:st.version ~text:st.content))
-                    in
-                    let new_doc =
-                      Text_document.apply_text_document_edits old_doc
-                        [ { newText; range } ]
-                    in
-                    let contents = Text_document.text new_doc in
-                    let file = uri |> DocumentUri.to_path |> Fpath.v in
-                    State.update_from_buffer ~force:false file contents
-                      ~should_broadcast:false
-                | None -> Lwt.return ()
-              in
-              let+ _ : Linol_jsonrpc.Jsonrpc.Id.t =
-                notify_back#send_request
-                  (WorkspaceApplyEdit
-                     {
-                       edit =
-                         {
-                           changeAnnotations = None;
-                           changes = Some [ (uri, [ { newText; range } ]) ];
-                           documentChanges = None;
-                         };
-                       label = None;
-                     })
-                  (fun _ -> Lwt.return ())
-              in
-              ()
-            in
-            Ok ()
-          in
-          res
-          |> Result.iter_error (fun (`Msg message) ->
-              let type_ = Linol_lwt.MessageType.Warning in
-              Lsp_preview.send_info ~root ~type_ ~notify_back
-                "Could not save new gui location: %s" message)
-      | GotoLoc gui_id ->
-          let ( let> ) x f =
-            match x with
-            | Error (`Msg s) ->
-                Format.eprintf "Error in handling of gotoloc: %s" s
-            | Ok x -> f x
-          in
-          let> elem = self#elem_of_gui_id root gui_id in
-          let textloc = Slipshow.Ast.Bol.text_loc elem in
-          let fpath = Fpath.v (Cmarkit.Textloc.file textloc) in
-          let () =
-            match Fpath.Map.find_opt fpath root.units.units with
-            | Some { source = Some source; _ } ->
-                let range =
-                  Diagnostic.linoloc_of_textloc ~positionEncoding ~source
-                    textloc
-                in
-                let uri =
-                  Linol_lsp.Uri0.of_string (Cmarkit.Textloc.file textloc)
-                in
-                ignore
-                @@ notify_back#send_request
-                     (ShowDocumentRequest
-                        {
-                          external_ = None;
-                          takeFocus = None;
-                          uri;
-                          selection = Some range;
-                        })
-                     (fun _ -> Lwt.return ());
-                ()
-            | _ -> ()
-          in
-          ()
-
-    method! on_req_initialize ~notify_back
-        (params : Linol_lwt.InitializeParams.t) :
-        Linol_lwt.InitializeResult.t Lwt.t =
-      client_capabilities := Some params.capabilities;
-      let _wsf = params.workspaceFolders in
-      let _uri = params.rootUri in
-      let _pth = params.rootPath in
-      let root =
-        match params.workspaceFolders with
-        | Some ws ->
-            Option.map
-              (List.map (fun (x : Linol_lwt.WorkspaceFolder.t) -> x.uri))
-              ws
-        | None -> (
-            match params.rootUri with
-            | Some root -> Some [ root ]
-            | None -> None)
-      in
-      let roots = Option.value root ~default:[] in
-      let to_lsp_server = self#from_preview ~notify_back in
-      let () = Lsp_preview.initialize ~notify_back ~to_lsp_server () in
-      let* () =
-        Format.eprintf
-          "We find all markdown files in the root and compute their dependencies\n\
-           %!";
-        lwt_list_iter
-          (fun root ->
-            let path = root |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
-            Format.eprintf "Root: %a\n%!" Fpath.pp path;
-            match find_markdown_files path with
-            | Error (`Msg s) ->
-                Format.eprintf "  error: %s\n%!" s;
-                Lwt.return_unit
-            | Ok files ->
-                List.iter (Format.eprintf "  md: %a\n%!" Fpath.pp) files;
-                lwt_list_iter State.rev_deps_from_fs files)
-          roots
-      in
+    let rev_deps_from_fs (file : Fpath.t) =
+      Lwt_mutex.with_lock mutex @@ fun () ->
+      Format.eprintf "update_from_fs with file = %a\n%!" Fpath.pp file;
+      let parent = Fpath.parent file in
+      let read_file = Read_file.fs parent in
       let () =
-        Format.eprintf "Here are the root of each markdown file\n%!";
-        Fpath.Map.iter
-          (fun path paths ->
-            Format.eprintf "%a -> [%s]\n%!" Fpath.pp path
-              (String.concat " "
-              @@ (paths |> Fpath.Set.to_seq |> List.of_seq
-                |> List.map Fpath.to_string)))
-          Rev_deps.(as_map current)
+        let new_unit = Slipshow.Compile.unit ~embed_loc:true ~read_file file in
+        Rev_deps.update_state ~new_unit file
       in
-      super#on_req_initialize ~notify_back params
+      Lwt.return_unit
 
-    method! config_completion =
-      Some (Linol_lwt.CompletionOptions.create ~triggerCharacters:[ "#" ] ())
+    let update_from_buffer ~force (file : Fpath.t) s ~should_broadcast =
+      Lwt_mutex.with_lock mutex @@ fun () ->
+      Lwt.return @@ Buffers.update ~force file s ~should_broadcast
+  end
 
-    method! on_req_completion ~notify_back:_ ~id:_ ~uri ~pos ~ctx:_
-        ~workDoneToken:_ ~partialResultToken:_ _doc_state =
-      let ( let* ) = Option.bind in
-      let ( let+ ) x f = Option.map f x in
-      let path = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
-      let res =
-        let* root = Rev_deps.get_roots path |> Fpath.Set.choose_opt in
-        let* { units = ast; _ } = Hashtbl.find_opt Roots.buffers root in
-        let+ () =
-          let* source = Fpath.Map.find_opt path ast.units in
-          let* source = source.source in
-          Current_ast.get_target ~positionEncoding ~source ~path pos
-            ast.action_plan
-          |> Option.map ignore
-          (* Just as a way to test we are in the context of a target. Later, it
-             would be even better to filter the IDs using what the action
-             expects (eg, only show ids for slip-script in an exec action) *)
-        in
-        let all_ids =
-          Slipshow.Id_map.SMap.bindings ast.id_map |> List.map fst
-        in
-        let completions =
-          List.map
-            (fun id -> Linol_lwt.CompletionItem.create ~label:id ())
-            all_ids
-        in
-        `List completions
-      in
-      Lwt.return res
+  let diagnostics ~positionEncoding file :
+      Linol.Lsp.Types.Diagnostic.t list option =
+    let roots = Rev_deps.get_roots file in
+    let root = Fpath.Set.choose_opt roots in
+    match root with
+    | None -> None
+    | Some root -> (
+        match Hashtbl.find_opt Roots.buffers root with
+        | None -> None
+        | Some { diagnostics = errors; units; _ } ->
+            Some
+              (List.concat_map
+                 (Diag.of_error ~positionEncoding ~units:units.units ~root ~file)
+                 errors))
 
-    method! on_req_definition ~notify_back:_ ~id:_ ~uri ~pos ~workDoneToken:_
-        ~partialResultToken:_ _doc_state =
-      let ( let* ) = Option.bind in
-      let ( let+ ) x f = Option.map f x in
-      let path = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
-      let res =
-        let* root = Rev_deps.get_roots path |> Fpath.Set.choose_opt in
-        let* { units = ast; _ } = Hashtbl.find_opt Roots.buffers root in
-        let* source = Fpath.Map.find_opt path ast.units in
-        let* source = source.source in
-        let* id =
-          Current_ast.get_target ~positionEncoding ~source ~path pos
-            ast.action_plan
-        in
-        let+ x = Slipshow.Id_map.SMap.find_opt id ast.id_map in
-        let meta = snd (Slipshow.Id_map.Unionable_set.get x.definition).id in
-        let loc = Cmarkit.Meta.textloc meta in
-        let file = Cmarkit.Textloc.file loc |> Fpath.v |> Fpath.normalize in
-        Format.eprintf "Going to location %a%!\n" Fpath.pp file;
-        let uri = file |> Fpath.to_string |> Linol_lsp.Uri0.of_string in
-        let range =
-          Diagnostic.linoloc_of_textloc ~positionEncoding ~source loc
-        in
-        let loc = Linol_lwt.Location.create ~range ~uri in
-        `Location [ loc ]
-      in
-      Lwt.return res
+  let is_slipshow_file p = Fpath.has_ext "md" p || Fpath.has_ext "slp" p
 
-    method! on_req_hover ~notify_back:_ ~id:_ ~uri ~pos ~workDoneToken:_ _ :
-        Linol_lwt.Hover.t option Lwt.t =
-      let ( let* ) = Option.bind in
-      let ( let+ ) x f = Option.map f x in
-      let r =
-        let path = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
-        let* buffer = Hashtbl.find_opt Buffers.buffers path in
-        let* _, tail_attrs =
-          let trail =
-            Current_ast.get_leave ~positionEncoding ~source:buffer.source ~path
-              pos buffer.unit.ast
-          in
-          trail.attribute
-        in
-        let* tail_attrs = tail_attrs in
-        match tail_attrs with
-        | Key ((key, meta), _) | Value ((key, meta), _) ->
-            let+ (module X) =
-              List.find_opt
-                (fun (module X : Actions_arguments.S) -> key = X.on)
-                Actions_arguments.all_actions
+  (* Find all markdown files in the given directory (recursing over subdirectories) *)
+  let find_markdown_files path =
+    Bos.OS.Dir.fold_contents ~traverse:`Any
+      ~elements:(`Sat (fun p -> Ok (is_slipshow_file p)))
+      (fun p acc -> p :: acc)
+      [] path
+
+  let client_capabilities = ref None
+  let rebounce = Hashtbl.create 10
+
+  let to_error s =
+    let k message = function None -> Error (`Msg message) | Some x -> Ok x in
+    Format.kasprintf k s
+
+  (** Taken from Linol_lwt *)
+  let spawn f =
+    Lwt.async (fun () ->
+        Lwt.catch f (fun exn ->
+            Printf.eprintf "uncaught exception in `spawn`:\n%s\n%!"
+              (Printexc.to_string exn);
+            Lwt.return ()))
+
+  class lsp_server =
+    object (self)
+      inherit Linol_lwt.server as super
+      method spawn_query_handler f = spawn f
+      method! config_hover = Some (`Bool true)
+      method! config_definition = Some (`Bool true)
+
+      method! config_server_info : InitializeResult.serverInfo option =
+        Some
+          (InitializeResult.create_serverInfo ~name:"slipshow"
+             ~version:Slipshow_version.full ())
+
+      method! set_positionEncoding (i : Linol.Lsp.Types.InitializeParams.t) =
+        match i.capabilities.general with
+        | Some { positionEncodings = Some el; _ } ->
+            let encoding =
+              if List.mem PositionEncodingKind.UTF8 el then `UTF8 else `UTF16
             in
-            let contents =
-              Linol_lwt.MarkupContent.create ~kind:Markdown ~value:X.doc
+            positionEncoding <- encoding
+        | _ -> ()
+
+      method private elem_of_gui_id (root : Slipshow_server.root) gui_id =
+        let ( let* ) x f = Result.bind x f in
+        match gui_id with
+        | Common_types.Id id -> (
+            let* { definition; usage = _ } =
+              Slipshow.Id_map.SMap.find_opt id root.units.id_map
+              |> to_error "Id %s could not be found" id
             in
-            let contents = `MarkupContent contents in
-            let loc = Cmarkit.Meta.textloc meta in
-            let range =
-              Diagnostic.linoloc_of_textloc ~positionEncoding
-                ~source:buffer.source loc
+            let def = Slipshow.Id_map.Unionable_set.get definition in
+            match def.elem with
+            | `External -> Error (`Msg "External IDs can't be gui")
+            | (`Inline _ | `Block _) as bol -> Ok bol)
+        | Loc { file; gui_id } ->
+            let path = Fpath.v file in
+            let* unit =
+              Fpath.Map.find_opt path root.units.units
+              |> to_error "Could not find %a root" Fpath.pp path
             in
-            Linol_lwt.Hover.create ~contents ~range ()
-        | _ -> None
-      in
-      Lwt.return r
+            List.assoc_opt gui_id unit.gui_map
+            |> to_error
+                 "Can't identify gui element named %s. Give an ID to the GUI \
+                  element to improve robustness."
+                 gui_id
 
-    method! config_modify_capabilities capabilities =
-      let capabilities = super#config_modify_capabilities capabilities in
-      {
-        capabilities with
-        documentHighlightProvider = Some (`Bool true);
-        referencesProvider = Some (`Bool true);
-        definitionProvider = Some (`Bool true);
-        documentSymbolProvider = Some (`Bool true);
-        experimental =
-          Some
-            (`Assoc
-               [
-                 ( "slipshow",
-                   `Assoc
-                     [ ("move_from_editor", `Assoc [ ("version", `Int 1) ]) ] );
-               ]);
-      }
+      method private from_preview ~(notify_back : Linol_lwt.notify_back)
+          (event : Proto.Client_to_server.t) (root : Slipshow_server.root) =
+        match event with
+        | Ping | UpdateFrom _ | Save_drawing (_, _) -> ()
+        | Save_gui_position { id; coord } ->
+            let ( let+ ) x f = Result.map f x in
+            let ( let* ) x f = Result.bind x f in
+            let to_error s =
+              let k message = function
+                | None -> Error (`Msg message)
+                | Some x -> Ok x
+              in
+              Format.kasprintf k s
+            in
+            let res =
+              let* () =
+                match (Config.Refresh.when_ (), id) with
+                | _, Id _ | Edit, Loc _ -> Ok ()
+                | (Save | Never), Loc _ ->
+                    Error
+                      (`Msg
+                         "In \"refresh on save\" mode, you can only set gui \
+                          coordinates of elements with an ID")
+              in
+              let* root =
+                (* We need to switch to the buffer version to get an updated location  *)
+                Hashtbl.find_opt Roots.buffers root.units.entry_file
+                |> to_error "Root of %a not found" Fpath.pp
+                     root.units.entry_file
+              in
+              let* elem = self#elem_of_gui_id root id in
+              let* (_key, meta_key), value =
+                let* attrs =
+                  match elem with
+                  | `Block b ->
+                      let+ _, (attrs, _) =
+                        Slipshow.Ast.Utils.Block.get_attribute b
+                        |> to_error "Element does not have attributes"
+                      in
+                      attrs
+                  | `Inline i ->
+                      let+ _, (attrs, _) =
+                        Slipshow.Ast.Utils.Inline.get_attribute i
+                        |> to_error "Element does not have attributes"
+                      in
+                      attrs
+                in
+                Cmarkit.Attributes.find Common_types.Special_strings.gui attrs
+                |> to_error "Element does not have a gui attribute"
+              in
+              let prefix, textloc, suffix =
+                match value with
+                | None ->
+                    let textloc = Cmarkit.Meta.textloc meta_key in
+                    let byte, line =
+                      ( Cmarkit.Textloc.last_byte textloc,
+                        Cmarkit.Textloc.last_line textloc )
+                    in
+                    let textloc =
+                      textloc
+                      |> Cmarkit.Textloc.set_first ~first_byte:(byte + 1)
+                           ~first_line:line
+                      |> Cmarkit.Textloc.set_last ~last_byte:byte
+                           ~last_line:line
+                    in
+                    ("=\"", textloc, "\"")
+                | Some (_value, meta) -> ("", Cmarkit.Meta.textloc meta, "")
+              in
+              let uri =
+                Linol_lsp.Uri0.of_string (Cmarkit.Textloc.file textloc)
+              in
+              let fpath = Fpath.v (Cmarkit.Textloc.file textloc) in
+              let* source =
+                Fpath.Map.find_opt fpath root.units.units
+                |> to_error "Source not found"
+              in
+              let* source = source.source |> to_error "Source not found" in
+              let range =
+                Diag.linoloc_of_textloc ~positionEncoding ~source textloc
+              in
+              let newText = prefix ^ coord ^ suffix in
+              let _ : unit Lwt.t =
+                let open Lwt.Syntax in
+                let* () =
+                  match Hashtbl.find_opt docs uri with
+                  | Some st ->
+                      let open Linol_lsp in
+                      let open Linol_lwt in
+                      let old_doc =
+                        Text_document.make ~position_encoding:positionEncoding
+                          (DidOpenTextDocumentParams.create
+                             ~textDocument:
+                               (TextDocumentItem.create
+                                  ~languageId:st.languageId ~uri
+                                  ~version:st.version ~text:st.content))
+                      in
+                      let new_doc =
+                        Text_document.apply_text_document_edits old_doc
+                          [ { newText; range } ]
+                      in
+                      let contents = Text_document.text new_doc in
+                      let file = uri |> DocumentUri.to_path |> Fpath.v in
+                      State.update_from_buffer ~force:false file contents
+                        ~should_broadcast:false
+                  | None -> Lwt.return ()
+                in
+                let+ _ : Linol_jsonrpc.Jsonrpc.Id.t =
+                  notify_back#send_request
+                    (WorkspaceApplyEdit
+                       {
+                         edit =
+                           {
+                             changeAnnotations = None;
+                             changes = Some [ (uri, [ { newText; range } ]) ];
+                             documentChanges = None;
+                           };
+                         label = None;
+                       })
+                    (fun _ -> Lwt.return ())
+                in
+                ()
+              in
+              Ok ()
+            in
+            res
+            |> Result.iter_error (fun (`Msg message) ->
+                let type_ = MessageType.Warning in
+                Lsp_preview.send_info ~root ~type_ ~notify_back
+                  "Could not save new gui location: %s" message)
+        | GotoLoc gui_id ->
+            let ( let> ) x f =
+              match x with
+              | Error (`Msg s) ->
+                  Format.eprintf "Error in handling of gotoloc: %s" s
+              | Ok x -> f x
+            in
+            let> elem = self#elem_of_gui_id root gui_id in
+            let textloc = Slipshow.Ast.Bol.text_loc elem in
+            let fpath = Fpath.v (Cmarkit.Textloc.file textloc) in
+            let () =
+              match Fpath.Map.find_opt fpath root.units.units with
+              | Some { source = Some source; _ } ->
+                  let range =
+                    Diag.linoloc_of_textloc ~positionEncoding ~source textloc
+                  in
+                  let uri =
+                    Linol_lsp.Uri0.of_string (Cmarkit.Textloc.file textloc)
+                  in
+                  ignore
+                  @@ notify_back#send_request
+                       (ShowDocumentRequest
+                          {
+                            external_ = None;
+                            takeFocus = None;
+                            uri;
+                            selection = Some range;
+                          })
+                       (fun _ -> Lwt.return ());
+                  ()
+              | _ -> ()
+            in
+            ()
 
-    method private on_doc ~(notify_back : Linol_lwt.Jsonrpc2.notify_back)
-        (uri : Linol.Lsp.Types.DocumentUri.t) (contents : string)
-        ~should_broadcast =
-      let file = uri |> Linol.Lsp.Types.DocumentUri.to_path |> Fpath.v in
-      let* () =
-        State.update_from_buffer ~force:false file contents ~should_broadcast
-      in
-      let diags = diagnostics ~positionEncoding file in
-      match diags with
-      | None -> Lwt.return ()
-      | Some diags -> notify_back#send_diagnostic diags
-
-    method private activate_gui position path (root : Roots.root)
-        (buffer : Buffers.buffer) =
-      let ( let> ) x f = Option.iter f x in
-      let> source = buffer.unit.source in
-      let trail =
-        Current_ast.get_leave ~positionEncoding ~source ~path position
-          buffer.unit.ast
-      in
-      match trail.attribute with
-      | Some (attrs, Some (Key ((gui, _meta), _)))
-        when String.equal Common_types.Special_strings.gui gui -> (
-          match Cmarkit.Attributes.id attrs with
-          | Some (id, _) ->
-              Lwt_condition.broadcast root.condition (ActivateGUI (Id id))
+      method! on_req_initialize ~notify_back (params : InitializeParams.t) :
+          InitializeResult.t Lwt.t =
+        client_capabilities := Some params.capabilities;
+        let _wsf = params.workspaceFolders in
+        let _uri = params.rootUri in
+        let _pth = params.rootPath in
+        let root =
+          match params.workspaceFolders with
+          | Some ws ->
+              Option.map (List.map (fun (x : WorkspaceFolder.t) -> x.uri)) ws
           | None -> (
-              match
-                ( Cmarkit.Attributes.find Common_types.Special_strings.gui_id
-                    attrs,
-                  Cmarkit.Attributes.find Common_types.Special_strings.gui_file
-                    attrs )
-              with
-              | ( Some (_, Some ({ v = gui_id; _ }, _)),
-                  Some (_, Some ({ v = file; _ }, _)) ) ->
-                  Lwt_condition.broadcast root.condition
-                    (ActivateGUI (Loc { file; gui_id }))
-              | _ -> Lwt_condition.broadcast root.condition DeActivateGUI))
-      | _ -> Lwt_condition.broadcast root.condition DeActivateGUI
+              match params.rootUri with
+              | Some root -> Some [ root ]
+              | None -> None)
+        in
+        let roots = Option.value root ~default:[] in
+        let to_lsp_server = self#from_preview ~notify_back in
+        let () = Lsp_preview.initialize ~notify_back ~to_lsp_server () in
+        let* () =
+          Format.eprintf
+            "We find all markdown files in the root and compute their \
+             dependencies\n\
+             %!";
+          lwt_list_iter
+            (fun root ->
+              let path = root |> DocumentUri.to_path |> Fpath.v in
+              Format.eprintf "Root: %a\n%!" Fpath.pp path;
+              match find_markdown_files path with
+              | Error (`Msg s) ->
+                  Format.eprintf "  error: %s\n%!" s;
+                  Lwt.return_unit
+              | Ok files ->
+                  List.iter (Format.eprintf "  md: %a\n%!" Fpath.pp) files;
+                  lwt_list_iter State.rev_deps_from_fs files)
+            roots
+        in
+        let () =
+          Format.eprintf "Here are the root of each markdown file\n%!";
+          Fpath.Map.iter
+            (fun path paths ->
+              Format.eprintf "%a -> [%s]\n%!" Fpath.pp path
+                (String.concat " "
+                @@ (paths |> Fpath.Set.to_seq |> List.of_seq
+                  |> List.map Fpath.to_string)))
+            Rev_deps.(as_map current)
+        in
+        super#on_req_initialize ~notify_back params
 
-    method private on_req_document_highlight ~notify_back:_ ~uri ~id:_
-        (params : Linol_lwt.DocumentHighlightParams.t) :
-        Linol_lwt.DocumentHighlight.t list option Lwt.t =
-      let res =
+      method! config_completion =
+        Some (CompletionOptions.create ~triggerCharacters:[ "#" ] ())
+
+      method! on_req_completion ~notify_back:_ ~id:_ ~uri ~pos ~ctx:_
+          ~workDoneToken:_ ~partialResultToken:_ _doc_state =
         let ( let* ) = Option.bind in
         let ( let+ ) x f = Option.map f x in
-        let path = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
-        let* root = Rev_deps.get_roots path |> Fpath.Set.choose_opt in
-        let* ({ units = ast; _ } as root) =
-          let roots =
-            match Config.Refresh.when_ () with
-            | Edit -> Roots.buffers
-            | _ -> Roots.saved
+        let path = uri |> DocumentUri.to_path |> Fpath.v in
+        let res =
+          let* root = Rev_deps.get_roots path |> Fpath.Set.choose_opt in
+          let* { units = ast; _ } = Hashtbl.find_opt Roots.buffers root in
+          let+ () =
+            let* source = Fpath.Map.find_opt path ast.units in
+            let* source = source.source in
+            Current_ast.get_target ~positionEncoding ~source ~path pos
+              ast.action_plan
+            |> Option.map ignore
+            (* Just as a way to test we are in the context of a target. Later, it
+             would be even better to filter the IDs using what the action
+             expects (eg, only show ids for slip-script in an exec action) *)
           in
-          Hashtbl.find_opt roots root
-        in
-        let* buffer = Hashtbl.find_opt Buffers.buffers path in
-        let () = self#activate_gui params.position path root buffer in
-        let* id =
-          let res1 =
-            Current_ast.get_target ~positionEncoding ~source:buffer.source ~path
-              params.position ast.action_plan
+          let all_ids =
+            Slipshow.Id_map.SMap.bindings ast.id_map |> List.map fst
           in
-          match res1 with
-          | Some _ -> res1
-          | None -> (
-              let* _, tail_attrs =
-                let trail =
-                  Current_ast.get_leave ~positionEncoding ~source:buffer.source
-                    ~path params.position buffer.unit.ast
-                in
-                trail.attribute
-              in
-              let* tail_attrs = tail_attrs in
-              match tail_attrs with Id (id, _) -> Some id | _ -> None)
+          let completions =
+            List.map (fun id -> CompletionItem.create ~label:id ()) all_ids
+          in
+          `List completions
         in
-        let+ x = Slipshow.Id_map.SMap.find_opt id ast.id_map in
-        let id = (Slipshow.Id_map.Unionable_set.get x.definition).id in
-        let loc_def = Cmarkit.Meta.textloc @@ snd id in
-        let loc_occ = x.usage in
-        let locs = loc_def :: loc_occ in
-        List.filter_map
-          (fun loc ->
-            let loc_in_file loc =
-              let path1 =
-                Cmarkit.Textloc.file loc |> Fpath.v |> Fpath.normalize
-              in
-              let path2 = Fpath.normalize path in
-              Fpath.equal path1 path2
+        Lwt.return res
+
+      method! on_req_definition ~notify_back:_ ~id:_ ~uri ~pos ~workDoneToken:_
+          ~partialResultToken:_ _doc_state =
+        let ( let* ) = Option.bind in
+        let ( let+ ) x f = Option.map f x in
+        let path = uri |> DocumentUri.to_path |> Fpath.v in
+        let res =
+          let* root = Rev_deps.get_roots path |> Fpath.Set.choose_opt in
+          let* { units = ast; _ } = Hashtbl.find_opt Roots.buffers root in
+          let* source = Fpath.Map.find_opt path ast.units in
+          let* source = source.source in
+          let* id =
+            Current_ast.get_target ~positionEncoding ~source ~path pos
+              ast.action_plan
+          in
+          let+ x = Slipshow.Id_map.SMap.find_opt id ast.id_map in
+          let meta = snd (Slipshow.Id_map.Unionable_set.get x.definition).id in
+          let loc = Cmarkit.Meta.textloc meta in
+          let file = Cmarkit.Textloc.file loc |> Fpath.v |> Fpath.normalize in
+          Format.eprintf "Going to location %a%!\n" Fpath.pp file;
+          let uri = file |> Fpath.to_string |> Linol_lsp.Uri0.of_string in
+          let range = Diag.linoloc_of_textloc ~positionEncoding ~source loc in
+          let loc = Location.create ~range ~uri in
+          `Location [ loc ]
+        in
+        Lwt.return res
+
+      method! on_req_hover ~notify_back:_ ~id:_ ~uri ~pos ~workDoneToken:_ _ :
+          Hover.t option Lwt.t =
+        let ( let* ) = Option.bind in
+        let ( let+ ) x f = Option.map f x in
+        let r =
+          let path = uri |> DocumentUri.to_path |> Fpath.v in
+          let* buffer = Hashtbl.find_opt Buffers.buffers path in
+          let* _, tail_attrs =
+            let trail =
+              Current_ast.get_leave ~positionEncoding ~source:buffer.source
+                ~path pos buffer.unit.ast
             in
-            if loc_in_file loc then
-              let range =
-                Diagnostic.linoloc_of_textloc ~positionEncoding
-                  ~source:buffer.source loc
+            trail.attribute
+          in
+          let* tail_attrs = tail_attrs in
+          match tail_attrs with
+          | Key ((key, meta), _) | Value ((key, meta), _) ->
+              let+ (module X) =
+                List.find_opt
+                  (fun (module X : Actions_arguments.S) -> key = X.on)
+                  Actions_arguments.all_actions
               in
-              Some (Linol_lwt.DocumentHighlight.create ~range ())
-            else None)
-          locs
-      in
-      Lwt.return res
+              let contents = MarkupContent.create ~kind:Markdown ~value:X.doc in
+              let contents = `MarkupContent contents in
+              let loc = Cmarkit.Meta.textloc meta in
+              let range =
+                Diag.linoloc_of_textloc ~positionEncoding ~source:buffer.source
+                  loc
+              in
+              Hover.create ~contents ~range ()
+          | _ -> None
+        in
+        Lwt.return r
 
-    method! on_request_unhandled (type r) ~notify_back ~id
-        (r : r Linol_lsp.Client_request.t) : r Lwt.t =
-      match r with
-      | Linol.Lsp.Client_request.TextDocumentHighlight params ->
-          self#on_req_document_highlight ~notify_back ~id
-            ~uri:params.textDocument.uri params
-      | r -> super#on_request_unhandled ~notify_back ~id r
+      method! config_modify_capabilities capabilities =
+        let capabilities = super#config_modify_capabilities capabilities in
+        {
+          capabilities with
+          documentHighlightProvider = Some (`Bool true);
+          referencesProvider = Some (`Bool true);
+          definitionProvider = Some (`Bool true);
+          documentSymbolProvider = Some (`Bool true);
+          experimental =
+            Some
+              (`Assoc
+                 [
+                   ( "slipshow",
+                     `Assoc
+                       [ ("move_from_editor", `Assoc [ ("version", `Int 1) ]) ]
+                   );
+                 ]);
+        }
 
-    method private receive_config ~notify_back conf =
-      let () = Format.eprintf "Configuration: %a\n%!" Yojson.Safe.pp conf in
-      (* Depending on whether it answers a request for settings or a it notifies
+      method private on_doc ~(notify_back : Linol_lwt.notify_back)
+          (uri : Linol.Lsp.Types.DocumentUri.t) (contents : string)
+          ~should_broadcast =
+        let file = uri |> Linol.Lsp.Types.DocumentUri.to_path |> Fpath.v in
+        let* () =
+          State.update_from_buffer ~force:false file contents ~should_broadcast
+        in
+        let diags = diagnostics ~positionEncoding file in
+        match diags with
+        | None -> Lwt.return ()
+        | Some diags -> notify_back#send_diagnostic diags
+
+      method private activate_gui position path (root : Roots.root)
+          (buffer : Buffers.buffer) =
+        let ( let> ) x f = Option.iter f x in
+        let> source = buffer.unit.source in
+        let trail =
+          Current_ast.get_leave ~positionEncoding ~source ~path position
+            buffer.unit.ast
+        in
+        match trail.attribute with
+        | Some (attrs, Some (Key ((gui, _meta), _)))
+          when String.equal Common_types.Special_strings.gui gui -> (
+            match Cmarkit.Attributes.id attrs with
+            | Some (id, _) ->
+                Lwt_condition.broadcast root.condition (ActivateGUI (Id id))
+            | None -> (
+                match
+                  ( Cmarkit.Attributes.find Common_types.Special_strings.gui_id
+                      attrs,
+                    Cmarkit.Attributes.find
+                      Common_types.Special_strings.gui_file attrs )
+                with
+                | ( Some (_, Some ({ v = gui_id; _ }, _)),
+                    Some (_, Some ({ v = file; _ }, _)) ) ->
+                    Lwt_condition.broadcast root.condition
+                      (ActivateGUI (Loc { file; gui_id }))
+                | _ -> Lwt_condition.broadcast root.condition DeActivateGUI))
+        | _ -> Lwt_condition.broadcast root.condition DeActivateGUI
+
+      method private on_req_document_highlight ~notify_back:_ ~uri ~id:_
+          (params : DocumentHighlightParams.t) :
+          DocumentHighlight.t list option Lwt.t =
+        let res =
+          let ( let* ) = Option.bind in
+          let ( let+ ) x f = Option.map f x in
+          let path = uri |> DocumentUri.to_path |> Fpath.v in
+          let* root = Rev_deps.get_roots path |> Fpath.Set.choose_opt in
+          let* ({ units = ast; _ } as root) =
+            let roots =
+              match Config.Refresh.when_ () with
+              | Edit -> Roots.buffers
+              | _ -> Roots.saved
+            in
+            Hashtbl.find_opt roots root
+          in
+          let* buffer = Hashtbl.find_opt Buffers.buffers path in
+          let () = self#activate_gui params.position path root buffer in
+          let* id =
+            let res1 =
+              Current_ast.get_target ~positionEncoding ~source:buffer.source
+                ~path params.position ast.action_plan
+            in
+            match res1 with
+            | Some _ -> res1
+            | None -> (
+                let* _, tail_attrs =
+                  let trail =
+                    Current_ast.get_leave ~positionEncoding
+                      ~source:buffer.source ~path params.position
+                      buffer.unit.ast
+                  in
+                  trail.attribute
+                in
+                let* tail_attrs = tail_attrs in
+                match tail_attrs with Id (id, _) -> Some id | _ -> None)
+          in
+          let+ x = Slipshow.Id_map.SMap.find_opt id ast.id_map in
+          let id = (Slipshow.Id_map.Unionable_set.get x.definition).id in
+          let loc_def = Cmarkit.Meta.textloc @@ snd id in
+          let loc_occ = x.usage in
+          let locs = loc_def :: loc_occ in
+          List.filter_map
+            (fun loc ->
+              let loc_in_file loc =
+                let path1 =
+                  Cmarkit.Textloc.file loc |> Fpath.v |> Fpath.normalize
+                in
+                let path2 = Fpath.normalize path in
+                Fpath.equal path1 path2
+              in
+              if loc_in_file loc then
+                let range =
+                  Diag.linoloc_of_textloc ~positionEncoding
+                    ~source:buffer.source loc
+                in
+                Some (DocumentHighlight.create ~range ())
+              else None)
+            locs
+        in
+        Lwt.return res
+
+      method! on_request_unhandled (type r) ~notify_back ~id
+          (r : r Linol_lsp.Client_request.t) : r Lwt.t =
+        match r with
+        | Linol.Lsp.Client_request.TextDocumentHighlight params ->
+            self#on_req_document_highlight ~notify_back ~id
+              ~uri:params.textDocument.uri params
+        | r -> super#on_request_unhandled ~notify_back ~id r
+
+      method private receive_config ~notify_back conf =
+        let () = Format.eprintf "Configuration: %a\n%!" Yojson.Safe.pp conf in
+        (* Depending on whether it answers a request for settings or a it notifies
          a setting changes by itself, the server won't send the same json. In
          one case it is sent as "slipshow.refreshOn" and in another as
          "refreshOn". In one case it is inside a list. So we try to have a
          resilient parsing *)
-      let rec decode_payload = function
-        | `List l -> List.iter decode_payload l
-        | `Assoc x -> (
-            match List.assoc_opt "refreshOn" x with
-            | Some (`String "Key stroke") ->
-                Config.Refresh.set Edit;
-                Hashtbl.iter
-                  (fun _ (root : Slipshow_server.root) ->
-                    Lwt_condition.broadcast root.condition Update)
-                  Roots.saved
-            | Some (`String "Save") ->
-                Config.Refresh.set Save;
-                Hashtbl.iter
-                  (fun _ (root : Slipshow_server.root) ->
-                    Lwt_condition.broadcast root.condition Update)
-                  Roots.buffers
-            | None -> (
-                match List.assoc_opt "slipshow" x with
-                | Some x -> decode_payload x
-                | None -> ())
-            | _ -> ())
-        | _ -> ()
-      in
-      match conf with
-      | `Null ->
-          (* With the "pull model", when you still want to have the client
+        let rec decode_payload = function
+          | `List l -> List.iter decode_payload l
+          | `Assoc x -> (
+              match List.assoc_opt "refreshOn" x with
+              | Some (`String "Key stroke") ->
+                  Config.Refresh.set Edit;
+                  Hashtbl.iter
+                    (fun _ (root : Slipshow_server.root) ->
+                      Lwt_condition.broadcast root.condition Update)
+                    Roots.saved
+              | Some (`String "Save") ->
+                  Config.Refresh.set Save;
+                  Hashtbl.iter
+                    (fun _ (root : Slipshow_server.root) ->
+                      Lwt_condition.broadcast root.condition Update)
+                    Roots.buffers
+              | None -> (
+                  match List.assoc_opt "slipshow" x with
+                  | Some x -> decode_payload x
+                  | None -> ())
+              | _ -> ())
+          | _ -> ()
+        in
+        match conf with
+        | `Null ->
+            (* With the "pull model", when you still want to have the client
              "push" changes,the way it works is that the client will push
              "invalidating" notifications (when conf is null), and then the
              server has to "invalidate its cache" and pull the new settings
@@ -597,31 +608,30 @@ class lsp_server =
 
             (This was inferred from the lsp-sample/ example at
             https://github.com/microsoft/vscode-extension-samples/tree/main/lsp-sample) *)
-          let _ : unit Lwt.t = self#update_configuration ~notify_back in
-          ()
-      | _ -> decode_payload conf
+            let _ : unit Lwt.t = self#update_configuration ~notify_back in
+            ()
+        | _ -> decode_payload conf
 
-    method private register_capability
-        ~(notify_back : Linol_lwt.Jsonrpc2.notify_back) id ~registerOptions
-        ~method_ =
-      let ( let> ) cont f = cont f in
-      let server_request =
-        let registrations =
-          [ Linol_lwt.Registration.create ~id ~registerOptions ~method_ () ]
+      method private register_capability ~(notify_back : Linol_lwt.notify_back)
+          id ~registerOptions ~method_ =
+        let ( let> ) cont f = cont f in
+        let server_request =
+          let registrations =
+            [ Registration.create ~id ~registerOptions ~method_ () ]
+          in
+          let params = RegistrationParams.create ~registrations in
+          Linol_lsp.Server_request.ClientRegisterCapability params
         in
-        let params = Linol_lwt.RegistrationParams.create ~registrations in
-        Linol_lsp.Server_request.ClientRegisterCapability params
-      in
-      let> res = notify_back#send_request server_request in
-      match res with
-      | Ok () -> Lwt.return ()
-      | Error _ ->
-          (* TODO: display error somewhere *)
-          Lwt.return ()
+        let> res = notify_back#send_request server_request in
+        match res with
+        | Ok () -> Lwt.return ()
+        | Error _ ->
+            (* TODO: display error somewhere *)
+            Lwt.return ()
 
-    method private register_conf_changes
-        ~(notify_back : Linol_lwt.Jsonrpc2.notify_back) =
-      (* {:https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspace_configuration}
+      method private register_conf_changes
+          ~(notify_back : Linol_lwt.notify_back) =
+        (* {:https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspace_configuration}
 
           This pull model replaces the old push model were the client
           signaled configuration change via an event. If the server still
@@ -633,303 +643,304 @@ class lsp_server =
           {@javascript[
             connection.client.register(DidChangeConfigurationNotification.type, undefined);
           ]} *)
-      match !client_capabilities with
-      | Some
-          {
-            workspace =
-              Some
-                {
-                  didChangeConfiguration =
-                    Some { dynamicRegistration = Some true };
-                  _;
-                };
-            _;
-          } ->
-          let+ _ : Linol_jsonrpc.Jsonrpc.Id.t =
-            let id = "did-change-conf-id" in
-            let registerOptions = `Assoc [] in
-            let method_ = "workspace/didChangeConfiguration" in
-            self#register_capability ~notify_back id ~registerOptions ~method_
-          in
-          ()
-      | _ -> Lwt.return ()
-
-    method private register_file_watching
-        ~(notify_back : Linol_lwt.Jsonrpc2.notify_back) =
-      match !client_capabilities with
-      | Some
-          {
-            workspace =
-              Some
-                {
-                  didChangeWatchedFiles =
-                    Some { dynamicRegistration = Some true; _ };
-                  _;
-                };
-            _;
-          } ->
-          let+ _ : Linol_jsonrpc.Jsonrpc.Id.t =
-            let id = "watching-all-files" in
-            let registerOptions =
-              let globPattern = `Pattern "**" in
-              let watchers =
-                [ Linol_lwt.FileSystemWatcher.create ~globPattern () ]
-              in
-              let open Linol_lwt.DidChangeWatchedFilesRegistrationOptions in
-              let options = create ~watchers in
-              yojson_of_t options
-            in
-            let method_ = "workspace/didChangeWatchedFiles" in
-            self#register_capability ~notify_back id ~registerOptions ~method_
-          in
-          ()
-      | _ -> Lwt.return ()
-
-    method private on_initialized ~notify_back () =
-      let* _ : unit = self#register_conf_changes ~notify_back in
-      let _ : unit Lwt.t = self#register_file_watching ~notify_back in
-      let _ : unit Lwt.t = self#update_configuration ~notify_back in
-      Lwt.return ()
-
-    method private update_configuration ~notify_back =
-      let ( let> ) cont f = cont f in
-      let server_request =
-        let item = Linol_lwt.ConfigurationItem.create ~section:"slipshow" () in
-        let params = Linol_lwt.ConfigurationParams.create ~items:[ item ] in
-        Linol_lsp.Server_request.WorkspaceConfiguration params
-      in
-      let+ _id =
-        let> res = notify_back#send_request server_request in
-        match res with
-        | Ok conf ->
-            let () =
-              Format.eprintf
-                "Receiving config through the answer to a workspace \
-                 configuration request\n\
-                 %!"
-            in
-            let () = self#receive_config ~notify_back (`List conf) in
-            Lwt.return_unit
-        | Error err ->
-            let err = err |> Linol_jsonrpc.Jsonrpc.Response.Error.yojson_of_t in
-            Format.eprintf "Response error for WorkspaceConfiguration: %a"
-              Yojson.Safe.pp err;
-            Lwt.return_unit
-      in
-      ()
-
-    method private on_change_configuration ~notify_back change_conf_params =
-      let conf =
-        change_conf_params.Linol_lwt.DidChangeConfigurationParams.settings
-      in
-      let () = self#receive_config ~notify_back conf in
-      Lwt.return ()
-
-    method private on_change_watched_files ~notify_back:_ change_watched_files =
-      let changes =
-        change_watched_files.Linol_lwt.DidChangeWatchedFilesParams.changes
-      in
-      let root_has_path_as_deps (root : Slipshow_server.root) path =
-        let test_is_relevant p _entry = Fpath.equal p path in
-        let asset_deps () =
-          Fpath.Map.exists test_is_relevant root.units.files
-        in
-        let unit_deps () =
-          Fpath.Map.exists
-            (fun p unit_ ->
-              test_is_relevant p unit_
-              (* We also test in the deps of the units, as an [{include}] of a
-                  missing unit will be in deps and not in units. Creating it
-                  should trigger a refresh *)
-              || Fpath.Map.exists test_is_relevant unit_.Slipshow.Ast.deps)
-            root.units.units
-        in
-        asset_deps () || unit_deps ()
-      in
-      let handle_file_event { Linol_lwt.FileEvent.type_; uri } =
-        let path = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
-        let check_is_not_a_buffer f =
-          if Fpath.Map.mem path (Buffers.to_units ()) then Lwt.return_unit
-          else f ()
-        in
-        check_is_not_a_buffer @@ fun () ->
-        let debounce_id =
-          match Hashtbl.find_opt rebounce path with
-          | Some id -> id + 1
-          | None -> 0
-        in
-        let () = Hashtbl.replace rebounce path debounce_id in
-        let* () = Lwt_unix.sleep 1. in
-        let check_rebounce f =
-          match Hashtbl.find_opt rebounce path with
-          | Some id when Int.equal id debounce_id -> f ()
-          | _ -> Lwt.return_unit
-        in
-        check_rebounce @@ fun () ->
-        let+ () =
-          if is_slipshow_file path then
-            match type_ with
-            | Deleted -> Lwt.return @@ Rev_deps.remove path
-            | Created | Changed -> State.rev_deps_from_fs path
-          else Lwt.return_unit
-        in
-        let update_root_if_needed root_path (root : Slipshow_server.root) =
-          (* Update root for saved files *)
-          let needs_updating = root_has_path_as_deps root path in
-          if needs_updating then begin
-            let parent = Fpath.parent root_path in
-            let _updated_root : Slipshow_server.root =
-              Roots.update_root (Read_file.fs parent) Roots.saved
-                Fpath.Map.empty root_path ~should_broadcast:true
-            and _updated_root_buffers : Slipshow_server.root =
-              let () =
-                Fpath.Map.iter
-                  (fun fpath _ ->
-                    match Hashtbl.find_opt Buffers.buffers fpath with
-                    | None -> ()
-                    | Some b ->
-                        Buffers.update ~force:true ~should_broadcast:true fpath
-                          b.source)
-                  root.units.units
-              in
-              Roots.update_root (Buffers.read_file parent) Roots.buffers
-                (Buffers.to_units ()) root_path ~should_broadcast:true
+        match !client_capabilities with
+        | Some
+            {
+              workspace =
+                Some
+                  {
+                    didChangeConfiguration =
+                      Some { dynamicRegistration = Some true };
+                    _;
+                  };
+              _;
+            } ->
+            let+ _ : Linol_jsonrpc.Jsonrpc.Id.t =
+              let id = "did-change-conf-id" in
+              let registerOptions = `Assoc [] in
+              let method_ = "workspace/didChangeConfiguration" in
+              self#register_capability ~notify_back id ~registerOptions ~method_
             in
             ()
-          end
+        | _ -> Lwt.return ()
+
+      method private register_file_watching
+          ~(notify_back : Linol_lwt.notify_back) =
+        match !client_capabilities with
+        | Some
+            {
+              workspace =
+                Some
+                  {
+                    didChangeWatchedFiles =
+                      Some { dynamicRegistration = Some true; _ };
+                    _;
+                  };
+              _;
+            } ->
+            let+ _ : Linol_jsonrpc.Jsonrpc.Id.t =
+              let id = "watching-all-files" in
+              let registerOptions =
+                let globPattern = `Pattern "**" in
+                let watchers = [ FileSystemWatcher.create ~globPattern () ] in
+                let open DidChangeWatchedFilesRegistrationOptions in
+                let options = create ~watchers in
+                yojson_of_t options
+              in
+              let method_ = "workspace/didChangeWatchedFiles" in
+              self#register_capability ~notify_back id ~registerOptions ~method_
+            in
+            ()
+        | _ -> Lwt.return ()
+
+      method private on_initialized ~notify_back () =
+        let* _ : unit = self#register_conf_changes ~notify_back in
+        let _ : unit Lwt.t = self#register_file_watching ~notify_back in
+        let _ : unit Lwt.t = self#update_configuration ~notify_back in
+        Lwt.return ()
+
+      method private update_configuration ~notify_back =
+        let ( let> ) cont f = cont f in
+        let server_request =
+          let item = ConfigurationItem.create ~section:"slipshow" () in
+          let params = ConfigurationParams.create ~items:[ item ] in
+          Linol_lsp.Server_request.WorkspaceConfiguration params
         in
-        (* In [update_root_if_needed] we are going to modify [Roots.buffers], so
+        let+ _id =
+          let> res = notify_back#send_request server_request in
+          match res with
+          | Ok conf ->
+              let () =
+                Format.eprintf
+                  "Receiving config through the answer to a workspace \
+                   configuration request\n\
+                   %!"
+              in
+              let () = self#receive_config ~notify_back (`List conf) in
+              Lwt.return_unit
+          | Error err ->
+              let err =
+                err |> Linol_jsonrpc.Jsonrpc.Response.Error.yojson_of_t
+              in
+              Format.eprintf "Response error for WorkspaceConfiguration: %a"
+                Yojson.Safe.pp err;
+              Lwt.return_unit
+        in
+        ()
+
+      method private on_change_configuration ~notify_back change_conf_params =
+        let conf = change_conf_params.DidChangeConfigurationParams.settings in
+        let () = self#receive_config ~notify_back conf in
+        Lwt.return ()
+
+      method private on_change_watched_files ~notify_back:_ change_watched_files
+          =
+        let changes =
+          change_watched_files.DidChangeWatchedFilesParams.changes
+        in
+        let root_has_path_as_deps (root : Slipshow_server.root) path =
+          let test_is_relevant p _entry = Fpath.equal p path in
+          let asset_deps () =
+            Fpath.Map.exists test_is_relevant root.units.files
+          in
+          let unit_deps () =
+            Fpath.Map.exists
+              (fun p unit_ ->
+                test_is_relevant p unit_
+                (* We also test in the deps of the units, as an [{include}] of a
+                  missing unit will be in deps and not in units. Creating it
+                  should trigger a refresh *)
+                || Fpath.Map.exists test_is_relevant unit_.Slipshow.Ast.deps)
+              root.units.units
+          in
+          asset_deps () || unit_deps ()
+        in
+        let handle_file_event { FileEvent.type_; uri } =
+          let path = uri |> DocumentUri.to_path |> Fpath.v in
+          let check_is_not_a_buffer f =
+            if Fpath.Map.mem path (Buffers.to_units ()) then Lwt.return_unit
+            else f ()
+          in
+          check_is_not_a_buffer @@ fun () ->
+          let debounce_id =
+            match Hashtbl.find_opt rebounce path with
+            | Some id -> id + 1
+            | None -> 0
+          in
+          let () = Hashtbl.replace rebounce path debounce_id in
+          let* () = Lwt_unix.sleep 1. in
+          let check_rebounce f =
+            match Hashtbl.find_opt rebounce path with
+            | Some id when Int.equal id debounce_id -> f ()
+            | _ -> Lwt.return_unit
+          in
+          check_rebounce @@ fun () ->
+          let+ () =
+            if is_slipshow_file path then
+              match type_ with
+              | Deleted -> Lwt.return @@ Rev_deps.remove path
+              | Created | Changed -> State.rev_deps_from_fs path
+            else Lwt.return_unit
+          in
+          let update_root_if_needed root_path (root : Slipshow_server.root) =
+            (* Update root for saved files *)
+            let needs_updating = root_has_path_as_deps root path in
+            if needs_updating then begin
+              let parent = Fpath.parent root_path in
+              let _updated_root : Slipshow_server.root =
+                Roots.update_root (Read_file.fs parent) Roots.saved
+                  Fpath.Map.empty root_path ~should_broadcast:true
+              and _updated_root_buffers : Slipshow_server.root =
+                let () =
+                  Fpath.Map.iter
+                    (fun fpath _ ->
+                      match Hashtbl.find_opt Buffers.buffers fpath with
+                      | None -> ()
+                      | Some b ->
+                          Buffers.update ~force:true ~should_broadcast:true
+                            fpath b.source)
+                    root.units.units
+                in
+                Roots.update_root (Buffers.read_file parent) Roots.buffers
+                  (Buffers.to_units ()) root_path ~should_broadcast:true
+              in
+              ()
+            end
+          in
+          (* In [update_root_if_needed] we are going to modify [Roots.buffers], so
            we "snapshot" it before traversing it. Even though in principle it is
            probably ok, since we only replace values, not add new ones. *)
-        let buffers = Roots.buffers |> Hashtbl.to_seq |> Fpath.Map.of_seq in
-        Fpath.Map.iter update_root_if_needed buffers
-      in
-      Lwt_list.iter_s handle_file_event changes
-
-    method! on_notification_unhandled ~notify_back
-        (r : Linol_lsp.Client_notification.t) : unit Lwt.t =
-      match r with
-      | Initialized -> self#on_initialized ~notify_back ()
-      | ChangeConfiguration change_conf_params ->
-          self#on_change_configuration ~notify_back change_conf_params
-      | DidChangeWatchedFiles change_watched_files ->
-          self#on_change_watched_files ~notify_back change_watched_files
-      | r -> super#on_notification_unhandled ~notify_back r
-
-    method on_notif_doc_did_open ~notify_back doc ~content : unit Linol_lwt.t =
-      let uri = doc.uri in
-      let file = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
-      let ( let+ ) x f = Fpath.Set.iter f x in
-      let () =
-        let+ file = Rev_deps.get_roots file in
-        let parent = Fpath.parent file in
-        let _root : Slipshow_server.root =
-          Roots.update_root (Read_file.fs parent) Roots.saved Fpath.Map.empty
-            file ~should_broadcast:false
+          let buffers = Roots.buffers |> Hashtbl.to_seq |> Fpath.Map.of_seq in
+          Fpath.Map.iter update_root_if_needed buffers
         in
-        ()
-      in
-      self#on_doc ~notify_back uri content ~should_broadcast:false
+        Lwt_list.iter_s handle_file_event changes
 
-    method on_notif_doc_did_change ~notify_back d _changes ~old_content:_old
-        ~new_content =
-      self#on_doc ~notify_back d.uri new_content ~should_broadcast:true
+      method! on_notification_unhandled ~notify_back
+          (r : Linol_lsp.Client_notification.t) : unit Lwt.t =
+        match r with
+        | Initialized -> self#on_initialized ~notify_back ()
+        | ChangeConfiguration change_conf_params ->
+            self#on_change_configuration ~notify_back change_conf_params
+        | DidChangeWatchedFiles change_watched_files ->
+            self#on_change_watched_files ~notify_back change_watched_files
+        | r -> super#on_notification_unhandled ~notify_back r
 
-    method! on_notif_doc_did_save ~notify_back:_ params =
-      let uri = params.textDocument.uri in
-      let file = uri |> Linol_lwt.DocumentUri.to_path |> Fpath.v in
-      let ( let+ ) x f = Fpath.Set.iter f x in
-      let () =
-        let+ file = Rev_deps.get_roots file in
-        let parent = Fpath.parent file in
-        let read_file = Read_file.fs parent in
-        let _root : Slipshow_server.root =
-          Roots.update_root read_file Roots.saved Fpath.Map.empty file
-            ~should_broadcast:true
-        in
-        let html =
-          let units, _diagnostics =
-            let directory = Fpath.parent file in
-            Slipshow.Compile.compile_all ~embed_loc:false ~directory ~read_file
-              Fpath.Map.empty file
-          in
-          let delayed =
-            Slipshow.delayed_from_units ~has_speaker_view:true units
-          in
-          Slipshow.add_starting_state delayed None
-        in
-        let output = Fpath.set_ext "html" file in
-        let write filename content =
-          try
-            (* This test is just to give a better error message *)
-            let directory = Fpath.parent filename |> Fpath.to_string in
-            if not (Sys.is_directory directory) then
-              Error (`Msg (directory ^ " is not a directory"))
-            else
-              Out_channel.with_open_text (Fpath.to_string filename) @@ fun oc ->
-              Out_channel.output_string oc content;
-              Ok ()
-          with exn -> Error (`Msg (Printexc.to_string exn))
-        in
+      method on_notif_doc_did_open ~notify_back doc ~content : unit Lwt.t =
+        let uri = doc.uri in
+        let file = uri |> DocumentUri.to_path |> Fpath.v in
+        let ( let+ ) x f = Fpath.Set.iter f x in
         let () =
-          match write output html with
-          | Error (`Msg err) ->
-              Format.eprintf "Error while writing on output file: %s\n%!" err
-          | Ok () -> ()
-        in
-        ()
-      in
-      Linol_lwt.return ()
-
-    method on_notif_doc_did_close ~notify_back:_ _d : unit Linol_lwt.t =
-      Linol_lwt.return ()
-
-    method private parse_file (args : Yojson.Safe.t list option) =
-      match args with
-      | Some (`String uri :: _) ->
-          let uri =
-            uri |> Linol_lwt.DocumentUri.of_string
-            |> Linol_lwt.DocumentUri.to_path |> Fpath.v
+          let+ file = Rev_deps.get_roots file in
+          let parent = Fpath.parent file in
+          let _root : Slipshow_server.root =
+            Roots.update_root (Read_file.fs parent) Roots.saved Fpath.Map.empty
+              file ~should_broadcast:false
           in
-          Some uri
-      | _ -> None
+          ()
+        in
+        self#on_doc ~notify_back uri content ~should_broadcast:false
 
-    method private send_control file c =
-      let roots = Rev_deps.get_roots file in
-      let make_root_go_next roots root =
-        match Hashtbl.find_opt roots root with
-        | None -> ()
-        | Some { Roots.condition; _ } ->
-            Lwt_condition.broadcast condition (Control c)
-      in
-      Fpath.Set.iter (make_root_go_next Roots.buffers) roots;
-      Fpath.Set.iter (make_root_go_next Roots.saved) roots
+      method on_notif_doc_did_change ~notify_back d _changes ~old_content:_old
+          ~new_content =
+        self#on_doc ~notify_back d.uri new_content ~should_broadcast:true
 
-    method! on_req_execute_command ~notify_back ~id ~workDoneToken (c : string)
-        (args : Yojson.Safe.t list option) : Yojson.Safe.t Linol_lwt.t =
-      let () =
-        let ( let+ ) x f = Option.iter f x in
-        match c with
-        | "slipshow.go_next" ->
-            let+ file = self#parse_file args in
-            self#send_control file (Movement Forward)
-        | "slipshow.go_previous" ->
-            let+ file = self#parse_file args in
-            self#send_control file (Movement Backward)
-        | _ -> ()
-      in
-      super#on_req_execute_command ~notify_back ~id ~workDoneToken c args
-  end
+      method! on_notif_doc_did_save ~notify_back:_ params =
+        let uri = params.textDocument.uri in
+        let file = uri |> DocumentUri.to_path |> Fpath.v in
+        let ( let+ ) x f = Fpath.Set.iter f x in
+        let () =
+          let+ file = Rev_deps.get_roots file in
+          let parent = Fpath.parent file in
+          let read_file = Read_file.fs parent in
+          let _root : Slipshow_server.root =
+            Roots.update_root read_file Roots.saved Fpath.Map.empty file
+              ~should_broadcast:true
+          in
+          let html =
+            let units, _diagnostics =
+              let directory = Fpath.parent file in
+              Slipshow.Compile.compile_all ~embed_loc:false ~directory
+                ~read_file Fpath.Map.empty file
+            in
+            let delayed =
+              Slipshow.delayed_from_units ~has_speaker_view:true units
+            in
+            Slipshow.add_starting_state delayed None
+          in
+          let output = Fpath.set_ext "html" file in
+          let write filename content =
+            try
+              (* This test is just to give a better error message *)
+              let directory = Fpath.parent filename |> Fpath.to_string in
+              if not (Sys.is_directory directory) then
+                Error (`Msg (directory ^ " is not a directory"))
+              else
+                Out_channel.with_open_text (Fpath.to_string filename)
+                @@ fun oc ->
+                Out_channel.output_string oc content;
+                Ok ()
+            with exn -> Error (`Msg (Printexc.to_string exn))
+          in
+          let () =
+            match write output html with
+            | Error (`Msg err) ->
+                Format.eprintf "Error while writing on output file: %s\n%!" err
+            | Ok () -> ()
+          in
+          ()
+        in
+        Lwt.return ()
 
-let run () =
-  let s = new lsp_server in
-  let server = Linol_lwt.Jsonrpc2.create_stdio ~env:() s in
-  let task =
-    let shutdown () = s#get_status = `ReceivedExit in
-    Linol_lwt.Jsonrpc2.run ~shutdown server
-  in
-  match Linol_lwt.run task with
-  | () -> Ok ()
-  | exception e ->
-      let e = Printexc.to_string e in
-      Error ("error: " ^ e)
+      method on_notif_doc_did_close ~notify_back:_ _d : unit Lwt.t =
+        Lwt.return ()
+
+      method private parse_file (args : Yojson.Safe.t list option) =
+        match args with
+        | Some (`String uri :: _) ->
+            let uri =
+              uri |> DocumentUri.of_string |> DocumentUri.to_path |> Fpath.v
+            in
+            Some uri
+        | _ -> None
+
+      method private send_control file c =
+        let roots = Rev_deps.get_roots file in
+        let make_root_go_next roots root =
+          match Hashtbl.find_opt roots root with
+          | None -> ()
+          | Some { Roots.condition; _ } ->
+              Lwt_condition.broadcast condition (Control c)
+        in
+        Fpath.Set.iter (make_root_go_next Roots.buffers) roots;
+        Fpath.Set.iter (make_root_go_next Roots.saved) roots
+
+      method! on_req_execute_command ~notify_back ~id ~workDoneToken
+          (c : string) (args : Yojson.Safe.t list option) : Yojson.Safe.t Lwt.t
+          =
+        let () =
+          let ( let+ ) x f = Option.iter f x in
+          match c with
+          | "slipshow.go_next" ->
+              let+ file = self#parse_file args in
+              self#send_control file (Movement Forward)
+          | "slipshow.go_previous" ->
+              let+ file = self#parse_file args in
+              self#send_control file (Movement Backward)
+          | _ -> ()
+        in
+        super#on_req_execute_command ~notify_back ~id ~workDoneToken c args
+    end
+
+  let run ic oc () =
+    let s = new lsp_server in
+    let server = Linol_lwt.create ~ic ~oc s in
+    let task =
+      let shutdown () = s#get_status = `ReceivedExit in
+      Linol_lwt.run ~shutdown server
+    in
+    match Lwt_main.run task with
+    | () -> Ok ()
+    | exception e ->
+        let e = Printexc.to_string e in
+        Error ("error: " ^ e)
+end
