@@ -3,23 +3,8 @@ open Lwt.Syntax
 let server_promise = ref None
 let server_port = ref None
 
-let send_info ?(root : Slipshow_server.root option)
-    ~(notify_back : Linol_lwt.Jsonrpc2.notify_back)
-    ?(type_ = Linol_lwt.MessageType.Info) msg =
-  let k message =
-    let _ : unit Lwt.t =
-      let msg = Linol_lwt.ShowMessageParams.create ~message ~type_ in
-      let notif = Linol_lsp.Server_notification.ShowMessage msg in
-      notify_back#send_notification notif
-    in
-    match root with
-    | Some { condition; _ } ->
-        Lwt_condition.broadcast condition (Notify message)
-    | None -> ()
-  in
-  Format.kasprintf k msg
-
-let initialize ~notify_back ~to_lsp_server () =
+let initialize ~send_info ~to_lsp_server () =
+  let send_info fmt = Format.kasprintf send_info fmt in
   let root_htbl () =
     match Config.Refresh.when_ () with
     | Save -> Roots.saved
@@ -40,8 +25,8 @@ let initialize ~notify_back ~to_lsp_server () =
     let to_cancel =
       let+ () = Lwt_unix.sleep 1.0 in
       if !server_port = Some port then
-        send_info ~notify_back "Starting preview server on port %d" port
-      else send_info ~notify_back "Port %d appears already used" port
+        send_info "Starting preview server on port %d" port
+      else send_info "Port %d appears already used" port
     in
     let* try_port =
       Slipshow_server.Server.do_serve ~port ~to_lsp_server:(Some to_lsp_server)
@@ -55,7 +40,7 @@ let initialize ~notify_back ~to_lsp_server () =
         if port - port0 > 100 then (
           server_port := None;
           let () =
-            send_info ~notify_back
+            send_info
               "Tried 100 ports, starting from %d, none of them appeared usable"
               port0
           in
@@ -64,10 +49,10 @@ let initialize ~notify_back ~to_lsp_server () =
   in
   loop port0
 
-let initialize ~notify_back ~to_lsp_server () =
+let initialize ~send_info ~to_lsp_server () =
   match !server_promise with
   | None ->
-      let lwt = initialize ~notify_back ~to_lsp_server () in
+      let lwt = initialize ~send_info ~to_lsp_server () in
       server_promise := Some lwt
   | Some _ -> ()
 
