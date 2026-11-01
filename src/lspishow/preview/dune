@@ -1,14 +1,3 @@
 (library
  (name lsp_preview)
- (libraries
-  slipshow_version
-  linol
-  server_assets
-  slipshow_server
-  ansi
-  linol-lwt
-  slipshow
-  logs
-  dream
-  proto
-  bos roots))
+ (libraries lwt lwt.unix slipshow_server server_types proto))

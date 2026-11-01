@@ -333,8 +333,16 @@ struct
         let roots = Option.value root ~default:[] in
         let to_lsp_server = self#from_preview ~notify_back in
         let () =
+          let root_htbl () =
+            match Config.Refresh.when_ () with
+            | Save -> Roots.saved
+            | Edit -> Roots.buffers
+            | Never -> Hashtbl.create 0
+          in
+          let find_root x = Hashtbl.find_opt (root_htbl ()) x in
+          let list_roots () = Hashtbl.to_seq_keys (root_htbl ()) |> List.of_seq in
           let send_info s = send_info ~notify_back "%s" s in
-          Lsp_preview.initialize ~send_info ~to_lsp_server ()
+          Lsp_preview.initialize ~send_info ~to_lsp_server (find_root, list_roots)
         in
         let* () =
           Format.eprintf
