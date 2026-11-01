@@ -84,6 +84,21 @@ struct
     let k message = function None -> Error (`Msg message) | Some x -> Ok x in
     Format.kasprintf k s
 
+  let send_info ?(root : Roots.root option) ~(notify_back : Linol_lwt.notify_back)
+      ?(type_ = MessageType.Info) msg =
+    let k message =
+      let _ : unit Lwt.t =
+        let msg = ShowMessageParams.create ~message ~type_ in
+        let notif = Lsp.Server_notification.ShowMessage msg in
+        notify_back#send_notification notif
+      in
+      match root with
+      | Some { condition; _ } ->
+          Lwt_condition.broadcast condition (Notify message)
+      | None -> ()
+    in
+    Format.kasprintf k msg
+
   (** Taken from Linol_lwt *)
   let spawn f =
     Lwt.async (fun () ->
@@ -264,7 +279,7 @@ struct
             res
             |> Result.iter_error (fun (`Msg message) ->
                 let type_ = MessageType.Warning in
-                Lsp_preview.send_info ~root ~type_ ~notify_back
+                send_info ~root ~type_ ~notify_back
                   "Could not save new gui location: %s" message)
         | GotoLoc gui_id ->
             let ( let> ) x f =
@@ -317,7 +332,10 @@ struct
         in
         let roots = Option.value root ~default:[] in
         let to_lsp_server = self#from_preview ~notify_back in
-        let () = Lsp_preview.initialize ~notify_back ~to_lsp_server () in
+        let () =
+          let send_info s = send_info ~notify_back "%s" s in
+          Lsp_preview.initialize ~send_info ~to_lsp_server ()
+        in
         let* () =
           Format.eprintf
             "We find all markdown files in the root and compute their \
