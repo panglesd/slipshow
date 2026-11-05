@@ -99,8 +99,8 @@ struct
     let k message = function None -> Error (`Msg message) | Some x -> Ok x in
     Format.kasprintf k s
 
-  let send_info ?(root : Roots.root option) ~(notify_back : Linol_lwt.notify_back)
-      ?(type_ = MessageType.Info) msg =
+  let send_info ?(root : Roots.root option)
+      ~(notify_back : Linol_lwt.notify_back) ?(type_ = MessageType.Info) msg =
     let k message =
       let _ : unit Lwt.t =
         let msg = ShowMessageParams.create ~message ~type_ in
@@ -355,7 +355,9 @@ struct
             | Never -> Hashtbl.create 0
           in
           let find_root x = Hashtbl.find_opt (root_htbl ()) x in
-          let list_roots () = Hashtbl.to_seq_keys (root_htbl ()) |> List.of_seq in
+          let list_roots () =
+            Hashtbl.to_seq_keys (root_htbl ()) |> List.of_seq
+          in
           let send_info s = send_info ~notify_back "%s" s in
           P.start_preview ~send_info ~to_lsp_server (find_root, list_roots)
         in

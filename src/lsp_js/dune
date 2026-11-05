@@ -1,4 +1,3 @@
-(executable
+(library
  (name lsp_js)
- (modes js)
- (libraries linol lwt js_of_ocaml js_of_ocaml-lwt lspishow))
+ (libraries linol lwt js_of_ocaml js_of_ocaml-lwt lspishow code-mirror code-mirror.lsp-client brr slipshow.previewer))
