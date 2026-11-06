@@ -1,0 +1,3 @@
+(library
+ (name preview_client)
+ (libraries slipshow.previewer proto))

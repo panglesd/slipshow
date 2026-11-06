@@ -1,0 +1,9 @@
+(library
+ (name preview_protocol)
+ (libraries
+  slipshow
+  diagnosis
+  grace.ansi_renderer
+  ansi
+  proto
+  server_types))

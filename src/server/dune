@@ -17,4 +17,5 @@
   linol-lwt
   cmarkit
   common_types
-  server_types))
+  server_types
+  preview_protocol))
