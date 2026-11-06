@@ -78,11 +78,11 @@ let send_event c =
 let pong () = send_event Pong
 let saved s = send_event (Saved (Fpath.to_string s))
 let notify s = send_event (Notify s)
-let send_update content = send_event (Update content)
-let send_control c = send_event (Control c)
-let send_activate_gui id = send_event (Replace (Some id))
-let send_deactivate_gui () = send_event (Replace None)
-let send_notify s = send_event (Notify s)
+(* let send_update content = send_event (Update content) *)
+(* let send_control c = send_event (Control c) *)
+(* let send_activate_gui id = send_event (Replace (Some id)) *)
+(* let send_deactivate_gui () = send_event (Replace None) *)
+(* let send_notify s = send_event (Notify s) *)
 
 let home_page can_gui (_, get_roots) _req =
   Dream.log "A browser reloaded";
@@ -106,25 +106,6 @@ let preview can_gui (roots, get_roots) req =
       Dream.log "A browser reloaded";
       Dream.html (html_source file can_gui)
 
-let send root =
-  let content =
-    Slipshow.delayed_from_units ~has_speaker_view:false root.units
-  in
-  let warnings = Slipshow.to_grace root.units root.diagnostics in
-  let warnings =
-    List.map
-      (Format.asprintf "%a@.@."
-         (Grace_ansi_renderer.pp_diagnostic ?config:None
-            ~code_to_string:Diagnosis.to_code))
-      warnings
-  in
-  let warnings = List.map (Ansi.process (Ansi.create ())) warnings in
-  let warnings = warnings |> String.concat "" in
-  let content =
-    { Proto.content = (content, warnings); version = root.version }
-  in
-  send_update content
-
 let wait_for_event root roots file =
   let open Lwt.Infix in
   let open Lwt.Syntax in
@@ -133,8 +114,7 @@ let wait_for_event root roots file =
   let* event = Lwt.pick [ gate; timeout ] in
   match event with
   | `Pong -> pong ()
-  | `Master (Control c) -> send_control c
-  | `Master Update -> (
+  | `Master event -> (
       (* We reload root to get the updated value *)
       let root = roots file in
       match root with
@@ -142,10 +122,7 @@ let wait_for_event root roots file =
           Dream.respond ~status:`Bad_Request
             (Format.asprintf "File %a is not part of the possible preview"
                Fpath.pp file)
-      | Some root -> send root)
-  | `Master (ActivateGUI id) -> send_activate_gui id
-  | `Master DeActivateGUI -> send_deactivate_gui ()
-  | `Master (Notify s) -> send_notify s
+      | Some root -> send_event (Preview_protocol.of_event root event))
 
 let polling (roots, _get_roots) ~to_lsp_server req =
   let open Lwt.Syntax in
@@ -176,7 +153,8 @@ let polling (roots, _get_roots) ~to_lsp_server req =
           match msg with
           | Ping -> pong ()
           | UpdateFrom version ->
-              if not @@ String.equal version root.version then send root
+              if not @@ String.equal version root.version then
+                send_event (Preview_protocol.update root)
               else wait_for_event root roots file
           | Save_drawing (path, drawing) ->
               let from = root.units.directory in

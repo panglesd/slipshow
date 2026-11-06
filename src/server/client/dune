@@ -1,4 +1,4 @@
 (executable
  (name client)
  (modes js)
- (libraries brr slipshow.previewer proto))
+ (libraries brr slipshow.previewer proto preview_client))
