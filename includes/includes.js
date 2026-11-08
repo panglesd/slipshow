@@ -41,3 +41,5 @@ joo_global_object.__CM__getSyncedVersion = getSyncedVersion;
 joo_global_object.__CM__getClientID = getClientID;
 joo_global_object.__CM__changeSet = ChangeSet;
 joo_global_object.__CM__jumpToDefinitionKeymap = jumpToDefinitionKeymap;
+joo_global_object.__CM__LSPClient = LSPClient;
+joo_global_object.__CM__languageServerExtensions = languageServerExtensions;
