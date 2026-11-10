@@ -974,9 +974,8 @@ struct
         super#on_req_execute_command ~notify_back ~id ~workDoneToken c args
     end
 
-  let run ic oc () =
-    let s = new lsp_server in
-    let server = Linol_lwt.create ~ic ~oc s in
-    let shutdown () = s#get_status = `ReceivedExit in
+  let run (lsp_server : #lsp_server) ic oc () =
+    let server = Linol_lwt.create ~ic ~oc lsp_server in
+    let shutdown () = lsp_server#get_status = `ReceivedExit in
     Linol_lwt.run ~shutdown server
 end

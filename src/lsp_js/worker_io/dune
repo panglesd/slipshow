@@ -1,0 +1,3 @@
+(library
+ (name worker_io)
+ (libraries lwt js_of_ocaml js_of_ocaml-lwt brr linol))
