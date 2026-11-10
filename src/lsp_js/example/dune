@@ -1,0 +1,14 @@
+; A demo page for the CodeMirror extension using the LSP in a web worker.
+; Serve _build/default/<this directory> over HTTP and open index.html.
+
+(executable
+ (name example)
+ (modes js)
+ (libraries brr code-mirror lsp_js))
+
+(rule
+ (copy ../worker/lsp_worker.bc.js lsp_worker.bc.js))
+
+(alias
+ (name default)
+ (deps index.html example.bc.js lsp_worker.bc.js))

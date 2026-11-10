@@ -202,7 +202,8 @@ module Lsp = struct
   let term =
     let open Term.Syntax in
     let+ () = Term.const () and+ _ = stdio in
-    match Lwt_main.run (Lsp.run Lwt_io.stdin Lwt_io.stdout ()) with
+    let server = new Lsp.lsp_server in
+    match Lwt_main.run (Lsp.run server Lwt_io.stdin Lwt_io.stdout ()) with
     | () -> Ok ()
     | exception e ->
         let e = Printexc.to_string e in
