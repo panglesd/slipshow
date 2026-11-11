@@ -8,9 +8,6 @@ let roots = ref (fun _ -> None)
 let to_lsp_server = ref None
 let send_info = ref (fun _ -> ())
 
-let post port msg =
-  Brr_io.Message.Port.post port (Jstr.v (Proto.Server_to_client.to_string msg))
-
 let listen_to ~port f =
   Brr.Ev.listen Brr_io.Message.Ev.message f (Brr_io.Message.Port.as_target port)
 
@@ -29,7 +26,9 @@ let send_news (file : Fpath.t) (root : Server_types.root) port =
     (* We reload root to get the updated value *)
     let root = !roots file in
     match root with
-    | None -> failwith "TODO1"
+    | None ->
+        Brr.Console.(error [ "Something unexpected happened" ]);
+        send ()
     | Some root ->
         send_event port (Preview_protocol.of_event root event);
         send ()
@@ -46,7 +45,8 @@ let get_news fpath port =
         let data = Brr_io.Message.Ev.data ev in
         let msg = Proto.Client_to_server.of_string data in
         match msg with
-        | None -> failwith "TODO2"
+        | None ->
+            Brr.Console.(error [ "Something unexpected happened in get_news" ])
         | Some msg -> (
             let () =
               match !to_lsp_server with
@@ -83,71 +83,12 @@ let connect fpath port =
   in
   ()
 
-let wait_for_event port (root : Server_types.root) roots file =
-  let open Lwt.Infix in
-  let open Lwt.Syntax in
-  let gate = Lwt_condition.wait root.condition >|= fun x -> `Master x in
-  let timeout = Js_of_ocaml_lwt.Lwt_js.sleep 7. >|= fun () -> `Pong in
-  let+ event = Lwt.pick [ gate; timeout ] in
-  match event with
-  | `Pong -> pong port
-  | `Master event -> (
-      (* We reload root to get the updated value *)
-      let root = roots file in
-      match root with
-      | None -> failwith "TODO"
-      | Some root -> send_event port (Preview_protocol.of_event root event))
-
-(* let serve ~send_info ~to_lsp_server roots = *)
-(*   let root : Server_types.root = _ in *)
-(*   let get_request : Brr_io.Message.Ev.t Brr.Ev.t -> unit = *)
-(*    fun ev -> *)
-(*     let ev = Brr.Ev.as_type ev in *)
-(*     let data = Brr_io.Message.Ev.data ev in *)
-(*     let msg = Proto.Client_to_server.of_string data in *)
-(*     match msg with *)
-(*     | None -> _ *)
-(*     | Some msg -> ( *)
-(*         let () = *)
-(*           match to_lsp_server with *)
-(*           | None -> () *)
-(*           | Some to_lsp_server -> to_lsp_server msg root *)
-(*         in *)
-(*         match msg with *)
-(*         | Ping -> _ *)
-(*         | UpdateFrom version -> *)
-(*             if not @@ String.equal version root.version then *)
-(*               send_event port (Preview_protocol.update root) *)
-(*             else Lwt.async @@ fun () -> wait_for_event port root roots file *)
-(*         | Save_drawing _ -> () *)
-(*         | GotoLoc _ | Save_gui_position _ -> pong port) *)
-(*   in *)
-(*   let _unlisten = listen_to ~port get_request in *)
-(*   () *)
-
-(* let initialize ~send_info ~to_lsp_server roots = *)
-(*   let rec loop () = *)
-(*     match !port with *)
-(*     | Some port -> Lwt.return port *)
-(*     | None -> *)
-(*         let* () = Js_of_ocaml_lwt.Lwt_js.sleep 0.1 in *)
-(*         loop () *)
-(*   in *)
-(*   let+ port = loop () in *)
-(*   serve port ~send_info ~to_lsp_server roots *)
-
 let start :
     send_info:(string -> unit) ->
     to_lsp_server:(Proto.Client_to_server.t -> Roots.root -> unit) ->
     Server_types.roots ->
     unit =
  fun ~send_info:si ~to_lsp_server:z rs ->
-  (* match !server_promise with *)
-  (* | None -> *)
   to_lsp_server := Some z;
   send_info := si;
   roots := fst rs
-(* ; *)
-(* let lwt = serve ~send_info ~to_lsp_server roots in *)
-(* server_promise := Some lwt *)
-(* | Some _ -> () *)

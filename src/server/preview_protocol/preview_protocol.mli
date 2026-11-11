@@ -9,7 +9,5 @@ val of_event :
   Server_types.root ->
   Server_types.to_server ->
   Proto.Server_to_client.t
-(** [of_event ~current_root event] is the message to send to the preview when
-    [event] is broadcast on a root's condition. For an [Update], the content is
-    taken from [current_root ()], and [None] is returned if it does not
-    exist. *)
+(** [of_event root event] is the message to send to the preview when
+    [event] is broadcast on a root's condition. *)
