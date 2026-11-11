@@ -1,6 +1,7 @@
 open Code_mirror
 
 let lsp_client_class = lazy (Jv.get Jv.global "__CM__LSPClient")
+let lsp_plugin_class = lazy (Jv.get Jv.global "__CM__LSPPlugin")
 
 let language_server_extensions_fn =
   lazy (Jv.get Jv.global "__CM__languageServerExtensions")
@@ -77,6 +78,16 @@ module Transport = struct
     o
 end
 
+module Workspace = struct
+  type t = Jv.t
+
+  include (Jv.Id : Jv.CONV with type t := t)
+
+  let display_file v ~uri =
+    let ret = Jv.call v "displayFile" [| Jv.of_string uri |] in
+    Fut.of_promise ~ok:(Jv.to_option View.EditorView.of_jv) ret
+end
+
 module LSPClient = struct
   type t = Jv.t
 
@@ -108,6 +119,26 @@ module LSPClient = struct
     Fut.of_promise ~ok:Fun.id promise
 
   let connected t = Jv.Bool.get t "connected"
+  let workspace t = Jv.get t "workspace" |> Workspace.of_jv
+end
+
+module LSPPlugin = struct
+  type t = Jv.t
+
+  include (Jv.Id : Jv.CONV with type t := t)
+
+  let client t = Jv.get t "client" |> LSPClient.of_jv
+  let uri t = Jv.get t "uri" |> Jv.to_string
+  let view t = Jv.get t "view" |> View.EditorView.of_jv
+
+  let get view =
+    Jv.call (Lazy.force lsp_plugin_class) "get" [| View.EditorView.to_jv view |]
+    |> Jv.to_option of_jv
+
+  let from_position t ~pos ?doc () =
+    Jv.call t "fromPosition"
+      [| pos; Jv.of_option ~none:Jv.undefined State.Text.to_jv doc |]
+    |> Jv.to_int
 end
 
 module Extensions = struct

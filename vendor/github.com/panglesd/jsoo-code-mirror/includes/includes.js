@@ -9,7 +9,7 @@ import * as language from "@codemirror/language"
 import { oCaml } from "@codemirror/legacy-modes/mode/mllike"
 import { markdown } from "@codemirror/lang-markdown"
 import { dracula } from 'thememirror';
-import { LSPClient, languageServerExtensions, jumpToDefinitionKeymap } from "@codemirror/lsp-client"
+import { LSPClient, LSPPlugin, languageServerExtensions, jumpToDefinitionKeymap } from "@codemirror/lsp-client"
 
 
 joo_global_object.__CM__view = EditorView;
@@ -43,3 +43,4 @@ joo_global_object.__CM__changeSet = ChangeSet;
 joo_global_object.__CM__jumpToDefinitionKeymap = jumpToDefinitionKeymap;
 joo_global_object.__CM__LSPClient = LSPClient;
 joo_global_object.__CM__languageServerExtensions = languageServerExtensions;
+joo_global_object.__CM__LSPPlugin = LSPPlugin;
