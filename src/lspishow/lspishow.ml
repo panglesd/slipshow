@@ -236,7 +236,7 @@ struct
                 | Some (_value, meta) -> ("", Cmarkit.Meta.textloc meta, "")
               in
               let uri =
-                Linol_lsp.Uri0.of_string (Cmarkit.Textloc.file textloc)
+                Linol_lsp.Lsp.Uri.of_string (Cmarkit.Textloc.file textloc)
               in
               let fpath = Fpath.v (Cmarkit.Textloc.file textloc) in
               let* source =
@@ -313,7 +313,7 @@ struct
                     Diag.linoloc_of_textloc ~positionEncoding ~source textloc
                   in
                   let uri =
-                    Linol_lsp.Uri0.of_string (Cmarkit.Textloc.file textloc)
+                    Linol_lsp.Lsp.Uri.of_string (Cmarkit.Textloc.file textloc)
                   in
                   ignore
                   @@ notify_back#send_request
@@ -441,7 +441,7 @@ struct
           let loc = Cmarkit.Meta.textloc meta in
           let file = Cmarkit.Textloc.file loc |> Fpath.v |> Fpath.normalize in
           Format.eprintf "Going to location %a%!\n" Fpath.pp file;
-          let uri = file |> Fpath.to_string |> Linol_lsp.Uri0.of_string in
+          let uri = file |> Fpath.to_string |> Linol_lsp.Lsp.Uri.of_string in
           let range = Diag.linoloc_of_textloc ~positionEncoding ~source loc in
           let loc = Location.create ~range ~uri in
           `Location [ loc ]

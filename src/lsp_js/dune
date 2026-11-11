@@ -1,11 +1,10 @@
 (library
  (name lsp_js)
  (libraries
-  lwt
-  js_of_ocaml
-  js_of_ocaml-lwt
   code-mirror
+  fpath
   code-mirror.lsp-client
   brr
+  linol.lsp
   slipshow.previewer
   preview_client))

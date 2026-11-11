@@ -12,37 +12,6 @@ module L =
           Server_types.roots ->
           unit =
         Preview.start
-      (* let root = *)
-      (*   match snd roots () with *)
-      (*   | path :: _ -> fst roots path |> Option.get *)
-      (*   | _ -> failwith "TODO" *)
-      (* in *)
-      (* let state = *)
-      (*   Previewer.create_previewer ~include_speaker_view:false ~errors_el *)
-      (*     ~steal_focus:false ~can_save:false ~can_gui:false *)
-      (*     ~save_coordinate:(fun ~id:_ ~coord:_ -> ()) *)
-      (*     ~goto_loc:(fun loc -> to_lsp_server (GotoLoc loc) root) *)
-      (*     preview_element *)
-      (* in *)
-      (* let rec loop () = *)
-      (*   let open Lwt.Syntax in *)
-      (*   let* ev = Lwt_condition.wait root.condition in *)
-      (*   (match ev with *)
-      (*   | Update -> *)
-      (*       let root = *)
-      (*         match snd roots () with *)
-      (*         | path :: _ -> fst roots path |> Option.get *)
-      (*         | _ -> failwith "TODO" *)
-      (*       in *)
-      (*       let content = *)
-      (*         Slipshow.delayed_from_units ~has_speaker_view:false root.units *)
-      (*       in *)
-      (*       Previewer.preview_compiled state (content, "") *)
-      (*   | Control _ | ActivateGUI _ | DeActivateGUI | Notify _ -> ()); *)
-      (*   loop () *)
-      (* in *)
-      (* let _ = loop () in *)
-      (* () *)
     end)
 
 class lsp_server =
@@ -54,9 +23,8 @@ class lsp_server =
       let uri = doc.uri in
       let file = uri |> Linol_lsp.Lsp.Uri.to_path |> Fpath.v in
       let+ () = super#on_notif_doc_did_open ~notify_back doc ~content in
-      match Hashtbl.find_opt Preview.ports file with
-      | None -> ()
-      | Some (_, cond) -> Lwt_condition.broadcast cond ()
+      let conds = Hashtbl.find_all Preview.ports file in
+      List.iter (fun (_, cond) -> Lwt_condition.broadcast cond ()) conds
   end
 
 let () =
@@ -68,8 +36,8 @@ let () =
     | port :: _ ->
         let () =
           Preview.connect
-            (data |> Jv.to_string |> Lsp.Uri.of_string |> Lsp.Uri.to_path
-           |> Fpath.v)
+            (data |> Jv.to_string |> Linol_lsp.Lsp.Uri.of_string
+           |> Linol_lsp.Lsp.Uri.to_path |> Fpath.v)
             port
         in
         Brr_io.Message.Port.start port

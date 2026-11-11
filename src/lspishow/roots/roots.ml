@@ -21,14 +21,13 @@ let update_root ~should_broadcast read_file roots_state units root =
     Slipshow.Compile.compile_all ~embed_loc:true ~directory ~read_file units
       root
   in
-  let condition, old_version =
+  let condition, old_version, broadcasting =
     match Hashtbl.find_opt roots_state root with
-    | None -> (Lwt_condition.create (), generate_version ())
-    | Some { condition; version; _ } ->
-        if should_broadcast then Lwt_condition.broadcast condition Update;
-        (condition, version)
+    | None -> (Lwt_condition.create (), generate_version (), false)
+    | Some { condition; version; _ } -> (condition, version, should_broadcast)
   in
   let version = if should_broadcast then generate_version () else old_version in
   let updated = { units; diagnostics; condition; version } in
   Hashtbl.replace roots_state root updated;
+  if broadcasting then Lwt_condition.broadcast condition Update;
   updated
