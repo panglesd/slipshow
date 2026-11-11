@@ -80,6 +80,7 @@ module EditorView : sig
 
   val dom : t -> Brr.El.t
   val line_wrapping : unit -> Extension.t
+  val focus : t -> unit
 
   val dispatch : t -> State.TransactionSpec.t -> unit
   (** [dispatch view spec] makes the transaction [spec] describes and applies it

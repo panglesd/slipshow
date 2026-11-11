@@ -30,6 +30,14 @@ module Transport : sig
     t
 end
 
+module Workspace : sig
+  type t
+
+  include Jv.CONV with type t := t
+
+  val display_file : t -> uri:string -> View.EditorView.t option Fut.or_error
+end
+
 module LSPClient : sig
   type t
 
@@ -46,6 +54,20 @@ module LSPClient : sig
   val notification : t -> method_:string -> params:Jv.t -> unit
   val request : t -> method_:string -> params:Jv.t -> Jv.t Fut.or_error
   val connected : t -> bool
+  val workspace : t -> Workspace.t
+end
+
+module LSPPlugin : sig
+  type t
+
+  include Jv.CONV with type t := t
+
+  val client : t -> LSPClient.t
+  val uri : t -> string
+  val view : t -> View.EditorView.t
+  val get : View.EditorView.t -> t option
+
+  val from_position : t -> pos:Jv.t -> ?doc:State.Text.t -> unit -> int
 end
 
 module Extensions : sig
