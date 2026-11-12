@@ -2,14 +2,101 @@ open Lsp_client
 open Brr
 open Brr_webworkers
 
+type request_handler = {
+  request : 'a. 'a Linol_lsp.Server_request.t -> 'a Fut.t option;
+}
+
+let custom_handler ~request msg =
+  let { request } = request in
+  let ( let* ) x f = match x with Ok x -> f x | _ -> None in
+  let yojson = Yojson.Safe.from_string (Jstr.to_string msg) in
+  let lsp = Linol_jsonrpc.Jsonrpc.Packet.t_of_yojson yojson in
+  match lsp with
+  | Request ({ id; _ } as req) -> (
+      let* (E req) = Linol_lsp.Server_request.of_jsonrpc req in
+      match request req with
+      | None -> None
+      | Some res ->
+          let fut =
+            let open Fut.Syntax in
+            let+ res = res in
+            let yojson = Linol_lsp.Server_request.yojson_of_result req res in
+            let response = Linol_jsonrpc.Jsonrpc.Response.ok id yojson in
+            let yojson = Linol_jsonrpc.Jsonrpc.Response.yojson_of_t response in
+            Yojson.Safe.to_string yojson
+          in
+          Some fut)
+  | Response _ | Notification _ | Batch_response _ | Batch_call _ -> None
+
+let show_document : type a.
+    LSPClient.t -> a Linol_lsp.Server_request.t -> a Fut.t option =
+ fun client x ->
+  match x with
+  | ShowDocumentRequest
+      { external_ = None | Some false; selection; takeFocus; uri } ->
+      let workspace = LSPClient.workspace client in
+      let uri = Linol_lsp.Lsp.Uri.to_string uri in
+      let res =
+        let open Fut.Syntax in
+        let+ res = Workspace.display_file workspace ~uri in
+        let res =
+          res
+          |> Result.map @@ fun view ->
+             Option.bind view @@ fun view ->
+             LSPPlugin.get view |> Option.map (fun plugin -> (view, plugin))
+        in
+        match res with
+        | Ok (Some (view, plugin)) ->
+            let () =
+              match selection with
+              | None -> ()
+              | Some { end_; start } ->
+                  let offset (pos : Linol_lsp.Types.Position.t) =
+                    let pos =
+                      Jv.obj
+                        [|
+                          ("character", Jv.of_int pos.character);
+                          ("line", Jv.of_int pos.line);
+                        |]
+                    in
+                    LSPPlugin.from_position plugin ~pos ()
+                  in
+                  let transaction =
+                    let open Code_mirror.State.TransactionSpec in
+                    let selection =
+                      Short { anchor = offset start; head = Some (offset end_) }
+                    in
+                    create ~selection ~scroll_into_view:true ()
+                  in
+                  Code_mirror.View.EditorView.dispatch view transaction
+            in
+            let () =
+              match takeFocus with
+              | Some false -> ()
+              | _ -> Code_mirror.View.EditorView.focus view
+            in
+            Linol_lsp.Types.ShowDocumentResult.create ~success:true
+        | Ok None | Error _ ->
+            Linol_lsp.Types.ShowDocumentResult.create ~success:false
+      in
+      Some res
+  | ShowDocumentRequest { external_ = Some true; _ } ->
+      Some
+        (Fut.return @@ Linol_lsp.Types.ShowDocumentResult.create ~success:true)
+  | _ -> None
+
+let show_document client = { request = (fun x -> show_document client x) }
+
 (* Taken from
    https://github.com/voodoos/merlin-js/blob/a7367198d332f153ed27de2136d3c6a4af8e206f/example/merlin-lsp-js/main.ml *)
-let worker_transport (worker : Worker.t) : Transport.t =
+let worker_transport ~custom_handler (worker : Worker.t) : Transport.t =
   let handlers : (Jstr.t -> unit) list ref = ref [] in
   let listener ev =
     let data = Jv.get (Ev.to_jv ev) "data" in
     let msg = Jv.to_jstr data in
-    List.iter (fun h -> h msg) !handlers
+    match custom_handler msg with
+    | None -> List.iter (fun h -> h msg) !handlers
+    | Some answer -> Fut.await answer (Worker.post worker)
   in
   let _listener =
     Ev.listen Brr_io.Message.Ev.message listener (Worker.as_target worker)
@@ -28,12 +115,13 @@ type server = Worker.t * LSPClient.t * Linol_lsp.Lsp.Uri.t
 let create_server ?(root_uri = "file:///workspace") worker_url =
   let worker = Worker.create (Jstr.v worker_url) in
   let open Fut.Result_syntax in
-  let transport = worker_transport worker in
   let extensions = Extensions.language_server_extensions () in
   let client =
     let config = LSPClientConfig.create ~root_uri ~extensions () in
     LSPClient.create ~config ()
   in
+  let custom_handler = custom_handler ~request:(show_document client) in
+  let transport = worker_transport ~custom_handler worker in
   let client = LSPClient.connect client transport in
   let+ () = LSPClient.initializing client in
   let root_uri = Linol_lsp.Lsp.Uri.of_string root_uri in
