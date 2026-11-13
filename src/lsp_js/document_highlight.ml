@@ -50,30 +50,37 @@ let send_document_highlight view =
         Jv.obj [| ("position", position); ("textDocument", text_document) |]
       in
       let () = Lsp_client.LSPClient.sync client in
+      let old_doc = State.EditorState.doc state |> State.Text.to_string in
       Fut.await
         (Lsp_client.LSPClient.request ~method_:"textDocument/documentHighlight"
            ~params client)
       @@ function
       | Ok res ->
-          let of_document_highlight res =
-            let range = Jv.get res "range" in
-            let from =
-              let start = Jv.get range "start" in
-              Lsp_client.LSPPlugin.from_position plugin ~pos:start ()
-            in
-            let to_ =
-              let end_ = Jv.get range "end" in
-              Lsp_client.LSPPlugin.from_position plugin ~pos:end_ ()
-            in
-            View.Decoration.range ~from ~to_ decoration
+          let new_doc =
+            State.EditorState.doc (View.EditorView.state view)
+            |> State.Text.to_string
           in
-          let res = Jv.to_option (Jv.to_list of_document_highlight) res in
-          let res = Option.value ~default:[] res in
-          let res = State.RangeSet.of_ ~sort:true res in
-          let res = Option.value ~default:View.Decoration.none res in
-          let state_effect = State.StateEffect.of_ state_effect res in
-          View.EditorView.dispatch view
-            (State.TransactionSpec.create ~effects:[ state_effect ] ())
+          if String.equal old_doc new_doc then
+            let of_document_highlight res =
+              let range = Jv.get res "range" in
+              let from =
+                let start = Jv.get range "start" in
+                Lsp_client.LSPPlugin.from_position plugin ~pos:start ()
+              in
+              let to_ =
+                let end_ = Jv.get range "end" in
+                Lsp_client.LSPPlugin.from_position plugin ~pos:end_ ()
+              in
+              View.Decoration.range ~from ~to_ decoration
+            in
+            let res = Jv.to_option (Jv.to_list of_document_highlight) res in
+            let res = Option.value ~default:[] res in
+            let res = State.RangeSet.of_ ~sort:true res in
+            let res = Option.value ~default:View.Decoration.none res in
+            let state_effect = State.StateEffect.of_ state_effect res in
+            View.EditorView.dispatch view
+              (State.TransactionSpec.create ~effects:[ state_effect ] ())
+          else ()
       | Error _ -> ())
 
 let plugin =
