@@ -120,6 +120,7 @@ module LSPClient = struct
 
   let connected t = Jv.Bool.get t "connected"
   let workspace t = Jv.get t "workspace" |> Workspace.of_jv
+  let sync t = Jv.call t "sync" [||] |> ignore
 end
 
 module LSPPlugin = struct
@@ -139,6 +140,11 @@ module LSPPlugin = struct
     Jv.call t "fromPosition"
       [| pos; Jv.of_option ~none:Jv.undefined State.Text.to_jv doc |]
     |> Jv.to_int
+
+  let to_position t ~pos ?doc () =
+    Jv.call t "toPosition"
+      [| Jv.of_int pos; Jv.of_option ~none:Jv.undefined State.Text.to_jv doc |]
+
 end
 
 module Extensions = struct

@@ -130,6 +130,7 @@ module EditorView = struct
 
     let state t = State.EditorState.of_jv @@ Jv.get t "state"
     let doc_changed t = Jv.Bool.get t "docChanged"
+    let selection_set t = Jv.Bool.get t "selectionSet"
 
     include (Jv.Id : Jv.CONV with type t := t)
   end

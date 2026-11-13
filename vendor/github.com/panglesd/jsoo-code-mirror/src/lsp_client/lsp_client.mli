@@ -55,6 +55,7 @@ module LSPClient : sig
   val request : t -> method_:string -> params:Jv.t -> Jv.t Fut.or_error
   val connected : t -> bool
   val workspace : t -> Workspace.t
+  val sync : t -> unit
 end
 
 module LSPPlugin : sig
@@ -68,6 +69,7 @@ module LSPPlugin : sig
   val get : View.EditorView.t -> t option
 
   val from_position : t -> pos:Jv.t -> ?doc:State.Text.t -> unit -> int
+  val to_position : t -> pos:int -> ?doc:State.Text.t -> unit -> Jv.t
 end
 
 module Extensions : sig
