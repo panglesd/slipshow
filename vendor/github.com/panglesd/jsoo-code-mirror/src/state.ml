@@ -102,6 +102,9 @@ module EditorSelection = struct
 
   let ranges (v : t) =
     Jv.get (to_jv v) "ranges" |> Jv.to_list SelectionRange.of_jv
+
+  let main (v : t) =
+    Jv.get (to_jv v) "main" |> SelectionRange.of_jv
 end
 
 module Range : sig
@@ -125,7 +128,7 @@ module RangeSet : sig
 
   val map : 'a t -> ChangeDesc.t -> 'a t
   val update : ?add:'a Range.t list -> ?sort:bool -> 'a t -> 'a t
-  val of_ : 'a Range.t list -> 'a t option
+  val of_ : ?sort:bool -> 'a Range.t list -> 'a t option
 end = struct
   type 'a t = 'a Tjv.t
 
@@ -146,14 +149,15 @@ end = struct
     let v' = Jv.call (to_jv v) "update" [| o |] in
     of_jv (conv v) v'
 
-  let of_ : 'a Range.t list -> 'a t option =
-   fun vs ->
+  let of_ : ?sort:bool -> 'a Range.t list -> 'a t option =
+   fun ?sort vs ->
     match vs with
     | [] -> None
     | x :: _ ->
-        let conv = Range.conv x in
+      let conv = Range.conv x in
+      let sort = Jv.of_option ~none:Jv.undefined Jv.of_bool sort in
         let v =
-          Jv.call (Lazy.force rangeset) "of" [| Jv.of_list Range.to_jv vs |]
+          Jv.call (Lazy.force rangeset) "of" [| Jv.of_list Range.to_jv vs ; sort |]
         in
         Some (of_jv conv v)
 end

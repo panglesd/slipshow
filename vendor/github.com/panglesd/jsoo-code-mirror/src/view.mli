@@ -75,6 +75,9 @@ module EditorView : sig
     val doc_changed : t -> bool
     (** Whether this update changed the document. *)
 
+    val selection_set : t -> bool
+    (** Whether this update changed the selection. *)
+
     include Jv.CONV with type t := t
   end
 
