@@ -85,12 +85,22 @@ let send_document_highlight view =
 
 let plugin =
   View.ViewPlugin.define @@ fun view ->
+  let debounce =
+    let timer = ref None in
+    fun f ->
+      let () = Option.iter Brr.G.stop_timer !timer in
+      timer :=
+        Some
+          (Brr.G.set_timeout ~ms:100 (fun () ->
+               timer := None;
+               f ()))
+  in
   let update (update : View.EditorView.Update.t) =
     let s =
       View.EditorView.Update.selection_set update
       || View.EditorView.Update.doc_changed update
     in
-    if s then send_document_highlight view
+    if s then debounce @@ fun () -> send_document_highlight view
   in
   View.PluginValue.create ~update ()
 
