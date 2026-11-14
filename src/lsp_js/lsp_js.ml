@@ -28,41 +28,38 @@ let custom_handler ~request msg =
           Some fut)
   | Response _ | Notification _ | Batch_response _ | Batch_call _ -> None
 
-let show_document : type a.
-    LSPClient.t -> a Linol_lsp.Server_request.t -> a Fut.t option =
- fun client x ->
-  match x with
-  | ShowDocumentRequest
+let editor client ~uri =
+  let workspace = LSPClient.workspace client in
+  let uri = Linol_lsp.Lsp.Uri.to_string uri in
+  let open Fut.Syntax in
+  let+ res = Workspace.display_file workspace ~uri in
+  res
+  |> Result.map @@ fun view ->
+     Option.bind view @@ fun view ->
+     LSPPlugin.get view |> Option.map (fun plugin -> (view, plugin))
+
+let offset plugin (pos : Linol_lsp.Types.Position.t) =
+  let pos =
+    Jv.obj
+      [| ("character", Jv.of_int pos.character); ("line", Jv.of_int pos.line) |]
+  in
+  LSPPlugin.from_position plugin ~pos ()
+
+let show_doc_handler client = function
+  | Linol_lsp.Server_request.ShowDocumentRequest
       { external_ = None | Some false; selection; takeFocus; uri } ->
-      let workspace = LSPClient.workspace client in
-      let uri = Linol_lsp.Lsp.Uri.to_string uri in
       let res =
         let open Fut.Syntax in
-        let+ res = Workspace.display_file workspace ~uri in
-        let res =
-          res
-          |> Result.map @@ fun view ->
-             Option.bind view @@ fun view ->
-             LSPPlugin.get view |> Option.map (fun plugin -> (view, plugin))
-        in
+        let+ res = editor client ~uri in
         match res with
         | Ok (Some (view, plugin)) ->
             let () =
               match selection with
               | None -> ()
               | Some { end_; start } ->
-                  let offset (pos : Linol_lsp.Types.Position.t) =
-                    let pos =
-                      Jv.obj
-                        [|
-                          ("character", Jv.of_int pos.character);
-                          ("line", Jv.of_int pos.line);
-                        |]
-                    in
-                    LSPPlugin.from_position plugin ~pos ()
-                  in
                   let transaction =
                     let open Code_mirror.State.TransactionSpec in
+                    let offset = offset plugin in
                     let selection =
                       Short { anchor = offset start; head = Some (offset end_) }
                     in
@@ -83,6 +80,57 @@ let show_document : type a.
   | ShowDocumentRequest { external_ = Some true; _ } ->
       Some
         (Fut.return @@ Linol_lsp.Types.ShowDocumentResult.create ~success:true)
+
+let text_edit_handler client = function
+  | Linol_lsp.Server_request.WorkspaceApplyEdit
+      {
+        edit =
+          { changeAnnotations = _; changes = Some changes; documentChanges = _ };
+        label = _;
+      } ->
+      let open Fut.Syntax in
+      let edits =
+        List.map
+          (fun (uri, (changes : Linol_lsp.Lsp.Types.TextEdit.t list)) ->
+            let+ res = editor client ~uri in
+            match res with
+            | Ok (Some (view, plugin)) ->
+                let change ({ newText; range } : Linol_lsp.Types.TextEdit.t) =
+                  Code_mirror.State.ChangeSpec.create
+                    ~from:(offset plugin range.start)
+                    ~to_:(offset plugin range.end_) ~insert:newText ()
+                in
+                let changes =
+                  List.map change changes
+                  |> Code_mirror.State.ChangeSpec.of_list
+                in
+                let transaction =
+                  Code_mirror.State.TransactionSpec.create ~changes ()
+                in
+                Code_mirror.View.EditorView.dispatch view transaction;
+                true
+            | _ -> false)
+          changes
+      in
+      let applied =
+        let+ applied = Fut.of_list edits in
+        let applied = List.for_all Fun.id applied in
+        Linol_lsp.Types.ApplyWorkspaceEditResult.create ~applied ()
+      in
+      Some applied
+  | Linol_lsp.Server_request.WorkspaceApplyEdit
+      {
+        edit = { changeAnnotations = _; changes = None; documentChanges = _ };
+        label = _;
+      } ->
+      None
+
+let show_document : type a.
+    LSPClient.t -> a Linol_lsp.Server_request.t -> a Fut.t option =
+ fun client x ->
+  match x with
+  | ShowDocumentRequest _ as x -> show_doc_handler client x
+  | WorkspaceApplyEdit _ as x -> text_edit_handler client x
   | _ -> None
 
 let show_document client = { request = (fun x -> show_document client x) }
