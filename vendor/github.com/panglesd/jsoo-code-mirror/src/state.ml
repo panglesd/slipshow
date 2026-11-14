@@ -103,8 +103,7 @@ module EditorSelection = struct
   let ranges (v : t) =
     Jv.get (to_jv v) "ranges" |> Jv.to_list SelectionRange.of_jv
 
-  let main (v : t) =
-    Jv.get (to_jv v) "main" |> SelectionRange.of_jv
+  let main (v : t) = Jv.get (to_jv v) "main" |> SelectionRange.of_jv
 end
 
 module Range : sig
@@ -154,10 +153,11 @@ end = struct
     match vs with
     | [] -> None
     | x :: _ ->
-      let conv = Range.conv x in
-      let sort = Jv.of_option ~none:Jv.undefined Jv.of_bool sort in
+        let conv = Range.conv x in
+        let sort = Jv.of_option ~none:Jv.undefined Jv.of_bool sort in
         let v =
-          Jv.call (Lazy.force rangeset) "of" [| Jv.of_list Range.to_jv vs ; sort |]
+          Jv.call (Lazy.force rangeset) "of"
+            [| Jv.of_list Range.to_jv vs; sort |]
         in
         Some (of_jv conv v)
 end
@@ -414,3 +414,6 @@ module Transaction = struct
 
   let doc_changed : t -> bool = fun v -> Jv.Bool.get (to_jv v) "docChanged"
 end
+
+type 'a state_field = 'a StateField.t
+type transaction = Transaction.t
