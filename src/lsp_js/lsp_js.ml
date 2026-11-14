@@ -125,7 +125,7 @@ let text_edit_handler client = function
       } ->
       None
 
-let show_document : type a.
+let extension_handler : type a.
     LSPClient.t -> a Linol_lsp.Server_request.t -> a Fut.t option =
  fun client x ->
   match x with
@@ -133,7 +133,8 @@ let show_document : type a.
   | WorkspaceApplyEdit _ as x -> text_edit_handler client x
   | _ -> None
 
-let show_document client = { request = (fun x -> show_document client x) }
+let extension_handler client =
+  { request = (fun x -> extension_handler client x) }
 
 (* Taken from
    https://github.com/voodoos/merlin-js/blob/a7367198d332f153ed27de2136d3c6a4af8e206f/example/merlin-lsp-js/main.ml *)
@@ -170,7 +171,7 @@ let create_server ?(root_uri = "file:///workspace") worker_url =
     let config = LSPClientConfig.create ~root_uri ~extensions () in
     LSPClient.create ~config ()
   in
-  let custom_handler = custom_handler ~request:(show_document client) in
+  let custom_handler = custom_handler ~request:(extension_handler client) in
   let transport = worker_transport ~custom_handler worker in
   let client = LSPClient.connect client transport in
   let+ () = LSPClient.initializing client in
