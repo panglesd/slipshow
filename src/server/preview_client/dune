@@ -1,3 +1,4 @@
 (library
  (name preview_client)
+ (public_name slipshow.preview_client)
  (libraries slipshow.previewer proto))

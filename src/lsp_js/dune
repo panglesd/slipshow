@@ -1,5 +1,6 @@
 (library
  (name lsp_js)
+ (public_name slipshow.lsp_js)
  (libraries
   code-mirror
   fpath

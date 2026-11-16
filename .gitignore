@@ -8,8 +8,10 @@ _build
 example/**/*.html
 docs/extra_html
 docs/doc-repl/main.js
+docs/doc-repl/worker.js
 docs/_ext/__pycache__/
 docs/_static/main.js
+docs/_static/worker.js
 
 
 # Playwright
