@@ -37,7 +37,6 @@ To start, copy the following lines into a file, named (for this example) ``prime
 
 .. slipshow-example::
    :visible: both
-   :dimension: 4:3
 
    # Prime numbers
 
@@ -208,7 +207,6 @@ proof, feel free to improve it 🙂.)
 
 .. slipshow-example::
    :visible: presentation
-   :dimension: 4:3
 
    # Prime numbers
 
@@ -389,7 +387,6 @@ We need to add ``up=prime-def`` to the pause associated with the proof. The modi
 
 .. slipshow-example::
    :visible: presentation
-   :dimension: 4:3
 
    # Prime numbers
 

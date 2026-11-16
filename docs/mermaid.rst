@@ -11,7 +11,6 @@ In order to include mermaid.js diagrams, enclose the mermaid syntax in a code bl
 
 .. slipshow-example::
    :visible: both
-   :dimension: 4:3
 
    ``` =mermaid
    graph TD;

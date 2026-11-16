@@ -1,6 +1,6 @@
 open Code_mirror
 
-let view ~server ~dimension ~preview_el ~errors_el ~editor_el starting =
+let view ~server ~preview_el ~errors_el ~editor_el starting =
   let path =
     (* TODO: path *)
     Random.int 10000 |> Int.to_string |> fun x -> x ^ ".slp" |> Fpath.v
@@ -14,8 +14,6 @@ let view ~server ~dimension ~preview_el ~errors_el ~editor_el starting =
   let markdown_extension =
     Jv.apply (Jv.get Jv.global "__CM__markdown") [||] |> Extension.of_jv
   in
-  let _options = { Slipshow.Frontmatter.Global.empty with dimension } in
-  (* TODO: options *)
   let () = Lsp_js.preview ~errors_el preview_el server ~path in
   let config =
     let extensions =
@@ -35,9 +33,9 @@ let view ~server ~dimension ~preview_el ~errors_el ~editor_el starting =
 
 let ( !! ) = Jstr.v
 
-let do_ ~dimension ~editor_el ~preview_el ~errors_el ~server starting =
+let do_ ~editor_el ~preview_el ~errors_el ~server starting =
   let _view : View.editor_view =
-    view ~server ~dimension ~preview_el ~errors_el ~editor_el starting
+    view ~server ~preview_el ~errors_el ~editor_el starting
   in
   ()
 
@@ -48,15 +46,6 @@ let all_modes = [ Show_both; Show_editor; Show_presentation ]
 let handle_elem server =
  fun el () ->
   let open Brr in
-  let dimension =
-    El.at !!"dimension" el |> Option.map Jstr.to_string |> fun x ->
-    Option.bind x (fun s ->
-        match
-          Slipshow.Frontmatter.Dimension.of_string' (s, Cmarkit.Textloc.none)
-        with
-        | Ok x -> Some x
-        | Error _ -> None)
-  in
   let ffbs_unsafe c = El.find_first_by_selector ~root:el !!c |> Option.get in
   let content =
     let source = ffbs_unsafe ".source" in
@@ -98,7 +87,7 @@ let handle_elem server =
     listen Show_presentation pres_button;
     listen Show_both both_button
   in
-  do_ ~dimension ~preview_el ~editor_el ~errors_el ~server content
+  do_ ~preview_el ~editor_el ~errors_el ~server content
 
 let worker_url =
   let script = Jv.get (Brr.Document.to_jv Brr.G.document) "currentScript" in
