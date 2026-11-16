@@ -1,4 +1,0 @@
-(library
- (public_name slipshow.slipshow_communication)
- (name slipshow_communication)
- (libraries lsp_js brr slipshow.previewer code-mirror slipshow))
