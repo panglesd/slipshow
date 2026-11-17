@@ -166,7 +166,7 @@ let create_server ?(root_uri = "file:///workspace") worker_url =
   let worker = Worker.create (Jstr.v worker_url) in
   let open Fut.Result_syntax in
   let extensions =
-    Document_highlight.extension :: Extensions.language_server_extensions ()
+    Document_highlight.extension () :: Extensions.language_server_extensions ()
   in
   let client =
     let config = LSPClientConfig.create ~root_uri ~extensions () in

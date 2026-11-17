@@ -1,7 +1,7 @@
 (executable
  (modes js)
  (name main)
- (libraries slipshow slipshow_communication code-mirror lsp_js fpath))
+ (libraries slipshow code-mirror lsp_js fpath))
 
 (rule
  (mode promote)

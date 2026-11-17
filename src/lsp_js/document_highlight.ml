@@ -106,13 +106,13 @@ let plugin =
 
 let extension_send = View.ViewPlugin.extension plugin
 
-let view_extension =
+let view_extension ?(color = "#ffff0040")  ()=
   View.EditorView.base_theme
     (TO
        [
          ( ".cm-highlight-occurrences",
-           TO [ ("backgroundColor", TV "#ff000040") ] );
+           TO [ ("backgroundColor", TV color) ] );
        ])
 
-let extension =
-  Extension.of_list [ view_extension; extension_send; extension_field ]
+let extension ?color () =
+  Extension.of_list [ view_extension ?color (); extension_send; extension_field ]
