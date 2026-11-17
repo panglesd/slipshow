@@ -11,5 +11,4 @@
   lspishow
   brr
   worker_io
-  preview_protocol
-  lsp))
+  preview_protocol))
