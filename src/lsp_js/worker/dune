@@ -3,4 +3,13 @@
  (modes js)
  (js_of_ocaml
   (javascript_files thread_stub.js))
- (libraries linol lwt js_of_ocaml js_of_ocaml-lwt lspishow brr worker_io preview_protocol lsp))
+ (libraries
+  linol
+  lwt
+  js_of_ocaml
+  js_of_ocaml-lwt
+  lspishow
+  brr
+  worker_io
+  preview_protocol
+  lsp))

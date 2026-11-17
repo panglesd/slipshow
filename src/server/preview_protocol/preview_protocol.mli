@@ -6,8 +6,6 @@ val update : Server_types.root -> Proto.Server_to_client.t
     [root]. *)
 
 val of_event :
-  Server_types.root ->
-  Server_types.to_server ->
-  Proto.Server_to_client.t
-(** [of_event root event] is the message to send to the preview when
-    [event] is broadcast on a root's condition. *)
+  Server_types.root -> Server_types.to_server -> Proto.Server_to_client.t
+(** [of_event root event] is the message to send to the preview when [event] is
+    broadcast on a root's condition. *)

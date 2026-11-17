@@ -1,17 +1,13 @@
 open Code_mirror
 
 let initial_doc =
-  {|# Slipshow in the browser {#title}
+  {|{#title}
+# Slipshow in the browser
 
+{gui}
 This editor talks to the Slipshow LSP server, running in a web worker.
 
-{pause}
-
-Edit this text: the preview on the right is compiled by the worker.
-
-{pause up=title}
-
-Hover over `up`, or type `#` inside `up=` to complete IDs.
+{up=title}
 |}
 
 let _ : (unit, _) result Fut.t =
