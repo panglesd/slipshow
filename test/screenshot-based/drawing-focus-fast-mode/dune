@@ -1,0 +1,6 @@
+(rule
+ (target presentation.html)
+ (deps presentation.slp drawing.draw)
+ (mode promote)
+ (action
+  (run %{bin:slipshow} compile %{dep:presentation.slp} -o %{target})))

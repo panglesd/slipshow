@@ -178,39 +178,46 @@ let play ?(speedup = 1.) ?(continue = fun () -> `Continue) ~finish state =
     Lwd.set state.time next_time;
     finish ()
   in
-  let rec loop _ =
+  let if_continue f =
     match continue () with
     | `Stop -> ()
     | `Skip_to_next_pause -> skip_to_next_pause ()
-    | `Continue -> (
-        let frame = now () in
-        let time_before = time_of !previous_frame in
-        let new_time = time_of frame in
-        previous_frame := frame;
-        let crossed_pause =
-          Lwd_table.fold
-            (fun acc pause ->
-              let at = Lwd.peek pause.p_at in
-              if time_before < at && at <= new_time then
-                match acc with
-                | Some earliest when earliest < at -> acc
-                | _ -> Some at
-              else acc)
-            None state.recording.pauses
-        in
-        match crossed_pause with
-        | Some at ->
-            Lwd.set state.time at;
-            finish ()
-        | None ->
-            if new_time > max_time then (
-              Lwd.set state.time max_time;
-              finish ())
-            else (
-              Lwd.set state.time new_time;
-              let _animation_frame_id = Brr.G.request_animation_frame loop in
-              ()))
+    | `Continue -> f ()
   in
+  let rec loop _ =
+    if_continue @@ fun () ->
+    let frame = now () in
+    let time_before = time_of !previous_frame in
+    let new_time = time_of frame in
+    previous_frame := frame;
+    let crossed_pause =
+      Lwd_table.fold
+        (fun acc pause ->
+          let at = Lwd.peek pause.p_at in
+          if time_before < at && at <= new_time then
+            match acc with
+            | Some earliest when earliest < at -> acc
+            | _ -> Some at
+          else acc)
+        None state.recording.pauses
+    in
+    match crossed_pause with
+    | Some at ->
+        Lwd.set state.time at;
+        finish ()
+    | None ->
+        if new_time > max_time then (
+          Lwd.set state.time max_time;
+          finish ())
+        else (
+          Lwd.set state.time new_time;
+          let _animation_frame_id = Brr.G.request_animation_frame loop in
+          ())
+  in
+  (* Do not wait for a frame when we are not going to animate anything (e.g. in
+     fast mode): this would make fast-forwarding wait for one frame per drawing
+     action. *)
+  if_continue @@ fun () ->
   let _animation_frame_id = Brr.G.request_animation_frame loop in
   ()
 

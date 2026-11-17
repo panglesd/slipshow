@@ -32,7 +32,45 @@ type stro = {
   preselected : bool Lwd.var;
   track : int Lwd.var;
   erased : erased option Lwd.var;
+  final_d : Brr.At.t Lwd.t;
 }
+
+let make_stro ~id ~scale ~path ~color ~stroker ~width ~track ~erased =
+  let scale = Lwd.var scale
+  and path = Lwd.var path
+  and color = Lwd.var color
+  and width = Lwd.var width
+  and selected = Lwd.var false
+  and preselected = Lwd.var false
+  and track = Lwd.var track
+  and erased = Lwd.var erased in
+  let starts_at l = List.hd (List.rev l) |> snd in
+  let end_at l = List.hd l |> snd in
+  let end_at = Lwd.map (Lwd.get path) ~f:end_at in
+  let starts_at = Lwd.map (Lwd.get path) ~f:starts_at in
+  let final_d =
+    let open Lwd_infix in
+    let$* width = Lwd.get width and$ scale = Lwd.get scale in
+    let kind =
+      match stroker with Pen -> `Pfh width | Highlighter -> `Normal
+    in
+    Path_editing.make_d kind ~elapsed_time:None ~scale path
+  in
+  {
+    id;
+    scale;
+    path;
+    end_at;
+    starts_at;
+    color;
+    stroker;
+    width;
+    selected;
+    preselected;
+    track;
+    erased;
+    final_d;
+  }
 
 type strokes = stro Lwd_table.t
 

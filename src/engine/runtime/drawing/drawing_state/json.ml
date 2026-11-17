@@ -64,6 +64,7 @@ module V1 = struct
         preselected = _;
         track;
         erased;
+        final_d = _;
       } =
     `List
       [
@@ -91,28 +92,9 @@ module V1 = struct
         ] ->
         let ( let* ) x y = Result.bind x y in
         let* path = to_path path in
-        let path = Lwd.var path in
-        let starts_at l = List.hd (List.rev l) |> snd in
-        let end_at l = List.hd l |> snd in
-        let end_at = Lwd.map (Lwd.get path) ~f:end_at in
-        let starts_at = Lwd.map (Lwd.get path) ~f:starts_at in
-        let* stroker = to_stroker stroker in
         let* erased = to_erased erased in
-        Ok
-          {
-            id;
-            scale = Lwd.var scale;
-            path;
-            end_at;
-            starts_at;
-            color = Lwd.var color;
-            stroker;
-            width = Lwd.var width;
-            selected = Lwd.var false;
-            preselected = Lwd.var false;
-            track = Lwd.var track;
-            erased = Lwd.var erased;
-          }
+        let* stroker = to_stroker stroker in
+        Ok (make_stro ~id ~scale ~path ~color ~width ~stroker ~track ~erased)
     | _ -> Error ()
 
   let of_strokes strokes =

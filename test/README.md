@@ -16,14 +16,6 @@ dune test
 
 Browser tests take the form of screenshot tests, implemented using [playwright visual tests](https://playwright.dev/docs/test-snapshots).
 
-Running the tests is done in two steps, from the `screenshot-based` folder.
-
-First, generate the HTML files of all tests with dune:
-
-```shell
-dune build --profile release
-```
-
 Each test folder has a `dune` file that compiles its `.slp` and `.md` entries
 to HTML files next to them, with the same base name. When adding an entry to a
 `run.json`, add the corresponding rule.
@@ -31,7 +23,7 @@ to HTML files next to them, with the same base name. When adding an entry to a
 Then, run the tests in [Playwright's Docker image](https://playwright.dev/docs/docker).
 Browser rendering depends on the fonts and libraries of the host, so using the
 same image everywhere ensures that the screenshots are the same locally and in
-the CI. This only requires Docker, not OCaml nor the Playwright browsers:
+the CI. This requires Docker.
 
 ```shell
 ./playwright-docker.sh
