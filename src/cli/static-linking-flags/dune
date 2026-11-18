@@ -2,6 +2,7 @@
  (targets flags)
  (deps
   (env_var SLIPSHOW_STATIC)
+  (env_var SLIPSHOW_STATIC_LIBS)
   (env_var SLIPSHOW_DELETE_HOMEBREW_DYLIBS)
   (env_var HOMEBREW_PREFIX))
  (action

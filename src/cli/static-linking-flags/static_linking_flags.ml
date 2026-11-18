@@ -3,6 +3,26 @@ let env_flag name =
   | Some ("1" | "true" | "yes") -> true
   | Some _ | None -> false
 
+(** Dune parses our output as a sexp, so an atom containing a space, a quote or
+    a backslash has to be quoted and escaped. Only paths can, and only on
+    Windows, but it costs one function. *)
+let sexp_atom s =
+  let special c =
+    c = ' ' || c = '"' || c = '\\' || c = '(' || c = ')' || c = ';'
+  in
+  if not (String.exists special s) then s
+  else begin
+    let b = Buffer.create (String.length s + 8) in
+    Buffer.add_char b '"';
+    String.iter
+      (fun c ->
+        if c = '"' || c = '\\' then Buffer.add_char b '\\';
+        Buffer.add_char b c)
+      s;
+    Buffer.add_char b '"';
+    Buffer.contents b
+  end
+
 module Homebrew = struct
   (** Macos does not have a cli way to include all libraries statically easily.
       So, what we do, following Semgrep (before they started doing something
@@ -82,11 +102,75 @@ module Homebrew = struct
       homebrew_prefixes
 end
 
+module Mingw = struct
+  (** On Windows, [ocamlopt] does not invoke the C compiler directly: it goes
+      through [flexlink], which resolves [-lfoo] {i itself}, trying
+      [libfoo.dll.a] before [libfoo.a]. For a library shipping both (OpenSSL,
+      zlib) it therefore picks the import library, and the executable ends up
+      needing [libcrypto-3-x64.dll] & co. next to it — exactly what we are
+      trying to avoid.
+
+      We cannot change what autolink emits: [-lssl -lcrypto] is recorded inside
+      [ssl.cmxa], and it lands on the command line before anything we add. But
+      flexlink searches the directories given with [-L] before the toolchain's
+      own, one whole directory at a time — so pointing it at a directory that
+      holds the static archives and no import library redirects those flags
+      without having to suppress autolink. CI stages the archives and passes the
+      directory in [SLIPSHOW_STATIC_LIBS]; see [.github/workflows/build.yaml].
+
+      [-Wl,-static] is a separate matter. flexlink rewrites [-Wl,-x] into
+      [-link x] and hands it to {i gcc}, so this really means [gcc -static]: a
+      driver flag, covering the libraries gcc appends on its own (libgcc, the
+      unwinder, winpthread) which never pass through flexlink. A bare [-static]
+      would not do — flexlink does not know that option and stops with a usage
+      error.
+
+      The last four are what [libcrypto.pc] declares in [Libs.private], i.e.
+      what a {i static} libcrypto needs beyond what autolink provides. The Win32
+      ones stay imports on purpose: that is how the system gets to patch them.
+  *)
+
+  (* The archives CI is expected to have staged, for the error message only. *)
+  let staged_archives = [ "libssl.a"; "libcrypto.a"; "libz.a" ]
+
+  let search_path () =
+    match Sys.getenv_opt "SLIPSHOW_STATIC_LIBS" with
+    | Some dir when dir <> "" -> [ "-cclib"; "-L" ^ dir ]
+    | Some _ | None ->
+        prerr_endline
+          ("static_linking_flags: SLIPSHOW_STATIC_LIBS is not set. Expected a \
+            directory containing "
+          ^ String.concat ", " staged_archives
+          ^ " and no import library. Without it flexlink will pick the .dll.a \
+             files and the binary will need OpenSSL's DLLs at runtime.");
+        []
+
+  let flags () =
+    search_path ()
+    @ [
+        "-cclib";
+        "-Wl,-static";
+        "-cclib";
+        "-lz";
+        "-cclib";
+        "-lws2_32";
+        "-cclib";
+        "-lgdi32";
+        "-cclib";
+        "-lcrypt32";
+      ]
+end
+
 let () =
   (* [Sys.argv.(1)] is dune's %{ocaml-config:system}: macosx, linux, mingw64… *)
   let system = Sys.argv.(1) in
   if system = "macosx" && env_flag "SLIPSHOW_DELETE_HOMEBREW_DYLIBS" then
     Homebrew.delete_dylibs ();
-  print_endline
-    (if env_flag "SLIPSHOW_STATIC" then "(-cclib -static -cclib -no-pie)"
-     else "()")
+  let flags =
+    if not (env_flag "SLIPSHOW_STATIC") then []
+    else
+      match system with
+      | "mingw64" | "mingw" -> Mingw.flags ()
+      | _ -> [ "-cclib"; "-static"; "-cclib"; "-no-pie" ]
+  in
+  print_endline ("(" ^ String.concat " " (List.map sexp_atom flags) ^ ")")
