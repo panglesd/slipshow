@@ -1,5 +1,5 @@
 let pos_in_textloc ~positionEncoding ~source ~path ?(permissive = false)
-    ~(pos : Linol_lwt.Position.t) ~loc () =
+    ~(pos : Linol.Lsp.Types.Position.t) ~loc () =
   let ( <? ) = if permissive then ( <= ) else ( < ) in
   let range = loc in
   let range = Diagnostic.linoloc_of_textloc ~positionEncoding ~source range in
@@ -16,7 +16,7 @@ let pos_in_textloc ~positionEncoding ~source ~path ?(permissive = false)
   (* Format.eprintf "%s\n%!" (if res then "yes" else "no"); *)
   res
 
-let pos_in ~path ~(pos : Linol_lwt.Position.t) ~meta =
+let pos_in ~path ~(pos : Linol.Lsp.Types.Position.t) ~meta =
   let loc = Cmarkit.Meta.textloc meta in
   pos_in_textloc ~path ~pos ~loc
 

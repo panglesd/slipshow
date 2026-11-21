@@ -68,7 +68,6 @@ content:
 
 .. slipshow-example::
    :visible: both
-   :dimension: 4:3
 
    ---
    dimension: 4:3
@@ -93,7 +92,6 @@ language. Let's give the clock an attribute, setting the ``style`` attribute
 to ``font-size:150px``.
 
 .. slipshow-example::
-   :dimension: 4:3
 
    ---
    dimension: 4:3
@@ -151,7 +149,6 @@ a large bottom border to each one using the CSS: ``border-bottom: 10px solid bla
 Which gives us:
 
 .. slipshow-example::
-   :dimension: 4:3
 
    ---
    dimension: 4:3
@@ -187,7 +184,6 @@ of each phase in red. We'll lay them out as columns, using the same ``columns-3`
 class we already defined.
 
 .. slipshow-example::
-   :dimension: 4:3
 
    ---
    dimension: 4:3
@@ -275,7 +271,6 @@ This is a lot of explanation, but in practice it is actually relatively easy. Le
 And that's it! Let's look at the result. Click on the presentation to focus it and use the arrow keys to navigate the presentation.
 
 .. slipshow-example::
-   :dimension: 4:3
    :visible: presentation
 
    ---
@@ -370,7 +365,6 @@ text to fill the empty subslips (LLorem ipsuM-generated).
     }
 
 .. slipshow-example::
-   :dimension: 4:3
    :visible: presentation
 
    ---
@@ -554,7 +548,6 @@ and
     > # What Is Profit?
 
 .. slipshow-example::
-   :dimension: 4:3
    :visible: presentation
 
    ---
@@ -726,7 +719,6 @@ and
     > # What Is Profit?
 
 .. slipshow-example::
-   :dimension: 4:3
    :visible: presentation
 
    ---
@@ -919,7 +911,6 @@ And for the last step back to the main slip:
    +{step}
 
 .. slipshow-example::
-   :dimension: 4:3
    :visible: presentation
 
    ---
@@ -1091,7 +1082,6 @@ position of the sliding window:
    +{slip pause=wat-profit up=phase-3}
 
 .. slipshow-example::
-   :dimension: 4:3
    :visible: presentation
 
    ---

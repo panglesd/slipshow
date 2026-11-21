@@ -62,18 +62,13 @@ let previewer = ref None
 let handle_answer msg =
   match !previewer with
   | None -> ()
-  | Some previewer -> (
-      match msg with
-      | Server_to_client.Pong -> ()
-      | Update data ->
-          version := data.version;
-          Previewer.preview_compiled previewer data.content
-      | Control (Movement Forward) -> Previewer.next previewer
-      | Control (Movement Backward) -> Previewer.previous previewer
-      | Saved path -> Previewer.notify previewer ("Saved drawing as: " ^ path)
-      | Notify msg -> Previewer.notify previewer msg
-      | Replace (Some id) -> Previewer.activate_gui previewer id
-      | Replace None -> Previewer.deactivate_gui previewer)
+  | Some previewer ->
+      let () =
+        match msg with
+        | Server_to_client.Update data -> version := data.version
+        | _ -> ()
+      in
+      Preview_client.handle_message previewer msg
 
 let proto_request_single ?signal uri msg =
   let open Brr_io.Fetch in

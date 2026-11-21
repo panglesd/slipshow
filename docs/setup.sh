@@ -1,5 +1,7 @@
 opam exec -- dune build --profile release doc-repl/main.js
+opam exec -- dune build --profile release doc-repl/worker.js
 cp doc-repl/main.js _static/main.js
+cp doc-repl/worker.js _static/worker.js
 
 opam exec -- dune build --profile release @../example/examples
 

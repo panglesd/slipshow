@@ -1,9 +1,14 @@
 (executable
  (modes js)
  (name main)
- (libraries slipshow slipshow_communication code-mirror))
+ (libraries slipshow code-mirror lsp_js fpath))
 
 (rule
  (mode promote)
  (action
   (copy main.bc.js main.js)))
+
+(rule
+ (mode promote)
+ (action
+  (copy ../../src/lsp_js/worker/lsp_worker.bc.js worker.js)))

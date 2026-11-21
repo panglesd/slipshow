@@ -8,14 +8,12 @@ class SlipshowExampleDirective(Directive):
     has_content = True
     option_spec = {
         "visible": directives.unchanged,
-        "dimension": directives.unchanged,
     }
     def run(self):
         raw_text = "\n".join(self.content)
         node = slipshow_example_node()
         node['raw_text'] = raw_text
         node['visible'] = self.options.get("visible", "both")
-        node['dimension'] = self.options.get("dimension", "")
         return [node]
 
 def visit_slipshow_example_node_html(self, node):
@@ -29,7 +27,7 @@ def visit_slipshow_example_node_html(self, node):
         case _:
             mode = "show-both"
     self.body.append(f"""
-<div dimension="{node['dimension']}" class="running-example {node['visible']}">
+<div class="running-example {node['visible']}">
   <div class="entry {mode}">
     <div class="tabs">
       <div class="editor-button">Editor</div>

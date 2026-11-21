@@ -1,4 +1,0 @@
-(library
- (public_name slipshow.slipshow_communication)
- (name slipshow_communication)
- (libraries brr slipshow.previewer code-mirror slipshow))

@@ -83,7 +83,7 @@ jobs:
       matrix:
         config:
           - { os: "macos-15-intel", arch: "x86_64" }
-          - { os: "macos-14", arch: "arm64" }
+          - { os: "macos-15", arch: "arm64" }
         ocaml-compiler:
           - 4.14.x
     runs-on: ${{ matrix.config.os }}
@@ -109,6 +109,14 @@ jobs:
       #       ~/.opam
       #       _opam
       #     key: ${{ matrix.config.os }}-${{ hashFiles('*.opam') }}-${{ matrix.ocaml-compiler }}
+
+      # fsevents 0.3.0, the latest release in opam-repository, requires
+      # cmdliner < 1.1, which conflicts with js_of_ocaml. Remove once
+      # https://github.com/ocaml/opam-repository/pull/30479 is merged.
+      - name: Pin fsevents 0.4.0
+        run: |
+          opam pin add -n fsevents.0.4.0 https://github.com/mirage/ocaml-fsevents/releases/download/0.4.0/fsevents-0.4.0.tbz
+          opam pin add -n fsevents-lwt.0.4.0 https://github.com/mirage/ocaml-fsevents/releases/download/0.4.0/fsevents-0.4.0.tbz
 
       - name: Install dependencies
         # if: steps.cache.outputs.cache-hit != 'true'

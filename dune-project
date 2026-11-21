@@ -25,19 +25,19 @@
   (ocaml (>= 4.14))
    dune
   (grace (>= 0.3.0))
-  (crunch :with-dev-setup)
+  (crunch (and (>= "4.1.0") :with-dev-setup))
   (lambdasoup :with-test)
   (cmdliner (>= 1.3.0))
   (base64 (>= 3.3.0))
    bos
   (lwt (>= 5.9.2))
    (inotify (= :os "linux"))
-   (cf-lwt (>="0.4"))
+   (cf-lwt (and (>= "0.4") (= :os "macos")))
    astring
    fmt
    logs
-   fsevents-lwt
-   (js_of_ocaml-compiler (>= "6.0.1"))
+   (fsevents-lwt (= :os "macos"))
+   (js_of_ocaml-compiler (>= "6.4.0"))
    js_of_ocaml-lwt
    magic-mime
    (dream (>= "1.0.0~alpha5"))
