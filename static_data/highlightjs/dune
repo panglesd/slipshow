@@ -15,5 +15,5 @@
    (setenv
     SOURCE_DATE_EPOCH
     0
-    (run ocaml-crunch data/ -o %{x}.corrected -m plain -s))
+    (run ocaml-crunch data/ -o %{x}.corrected -m plain -s -b 0))
    (diff? %{x} %{x}.corrected))))
