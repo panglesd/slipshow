@@ -119,7 +119,10 @@ let start () =
 let () =
   let _ =
     Brr.Ev.listen Brr.Ev.load
-      (fun _ -> ignore @@ start ())
+      (fun _ ->
+        Fut.await (start ()) @@ function
+        | Ok () -> ()
+        | Error e -> Brr.Console.(error [ e ]))
       (Brr.Window.as_target Brr.G.window)
   in
   ()
