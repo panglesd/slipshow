@@ -23,10 +23,19 @@ module Transport : sig
 
   include Jv.CONV with type t := t
 
+  module Handler : sig
+    type t
+
+    val call : t -> Jstr.t -> unit
+
+    val equal : t -> t -> bool
+    (** Strict equality since handlers are functions *)
+  end
+
   val create :
     send:(Jstr.t -> unit) ->
-    subscribe:((Jstr.t -> unit) -> unit) ->
-    unsubscribe:((Jstr.t -> unit) -> unit) ->
+    subscribe:(Handler.t -> unit) ->
+    unsubscribe:(Handler.t -> unit) ->
     t
 end
 
@@ -67,7 +76,6 @@ module LSPPlugin : sig
   val uri : t -> string
   val view : t -> View.EditorView.t
   val get : View.EditorView.t -> t option
-
   val from_position : t -> pos:Jv.t -> ?doc:State.Text.t -> unit -> int
   val to_position : t -> pos:int -> ?doc:State.Text.t -> unit -> Jv.t
 end

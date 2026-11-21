@@ -140,12 +140,12 @@ let extension_handler client =
 (* Taken from
    https://github.com/voodoos/merlin-js/blob/a7367198d332f153ed27de2136d3c6a4af8e206f/example/merlin-lsp-js/main.ml *)
 let worker_transport ~custom_handler (worker : Worker.t) : Transport.t =
-  let handlers : (Jstr.t -> unit) list ref = ref [] in
+  let handlers : Transport.Handler.t list ref = ref [] in
   let listener ev =
     let data = Jv.get (Ev.to_jv ev) "data" in
     let msg = Jv.to_jstr data in
     match custom_handler msg with
-    | None -> List.iter (fun h -> h msg) !handlers
+    | None -> List.iter (fun h -> Transport.Handler.call h msg) !handlers
     | Some answer -> Fut.await answer (Worker.post worker)
   in
   let _listener =
@@ -154,7 +154,10 @@ let worker_transport ~custom_handler (worker : Worker.t) : Transport.t =
   Transport.create ~send:(Worker.post worker)
     ~subscribe:(fun handler -> handlers := handler :: !handlers)
     ~unsubscribe:(fun handler ->
-      handlers := List.filter (fun h -> h != handler) !handlers)
+      handlers :=
+        List.filter
+          (fun h -> not @@ Transport.Handler.equal h handler)
+          !handlers)
 
 let send port msg =
   let msg = Proto.Client_to_server.to_string msg in

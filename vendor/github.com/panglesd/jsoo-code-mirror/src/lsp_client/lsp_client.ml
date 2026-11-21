@@ -62,19 +62,22 @@ end
 module Transport = struct
   type t = Jv.t
 
+  module Handler = struct
+    type t = Jv.t
+
+    let call handler =
+     fun msg -> Jv.apply handler [| Jv.of_jstr msg |] |> ignore
+
+    let equal h h2 = Jv.strict_equal h h2
+  end
+
   include (Jv.Id : Jv.CONV with type t := t)
 
   let create ~send ~subscribe ~unsubscribe =
     let o = Jv.obj [||] in
     Jv.set o "send" (Jv.callback ~arity:1 (fun msg -> send (Jv.to_jstr msg)));
-    Jv.set o "subscribe"
-      (Jv.callback ~arity:1 (fun handler ->
-           subscribe (fun msg ->
-               Jv.apply handler [| Jv.of_jstr msg |] |> ignore)));
-    Jv.set o "unsubscribe"
-      (Jv.callback ~arity:1 (fun handler ->
-           unsubscribe (fun msg ->
-               Jv.apply handler [| Jv.of_jstr msg |] |> ignore)));
+    Jv.set o "subscribe" (Jv.callback ~arity:1 subscribe);
+    Jv.set o "unsubscribe" (Jv.callback ~arity:1 unsubscribe);
     o
 end
 
@@ -144,7 +147,6 @@ module LSPPlugin = struct
   let to_position t ~pos ?doc () =
     Jv.call t "toPosition"
       [| Jv.of_int pos; Jv.of_option ~none:Jv.undefined State.Text.to_jv doc |]
-
 end
 
 module Extensions = struct
