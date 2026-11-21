@@ -451,13 +451,17 @@ struct
             Current_ast.get_target ~positionEncoding ~source ~path pos
               ast.action_plan
           in
-          let+ x = Slipshow.Id_map.SMap.find_opt id ast.id_map in
+          let* x = Slipshow.Id_map.SMap.find_opt id ast.id_map in
           let meta = snd (Slipshow.Id_map.Unionable_set.get x.definition).id in
           let loc = Cmarkit.Meta.textloc meta in
           let file = Cmarkit.Textloc.file loc |> Fpath.v |> Fpath.normalize in
+          let* def_unit = Fpath.Map.find_opt file ast.units in
+          let+ def_source = def_unit.source in
           Format.eprintf "Going to location %a%!\n" Fpath.pp file;
           let uri = file |> Fpath.to_string |> Linol_lsp.Lsp.Uri.of_string in
-          let range = Diag.linoloc_of_textloc ~positionEncoding ~source loc in
+          let range =
+            Diag.linoloc_of_textloc ~positionEncoding ~source:def_source loc
+          in
           let loc = Location.create ~range ~uri in
           `Location [ loc ]
         in
