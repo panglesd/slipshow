@@ -172,7 +172,11 @@ let create_server ?(root_uri = "file:///workspace") worker_url =
     Document_highlight.extension () :: Extensions.language_server_extensions ()
   in
   let client =
-    let config = LSPClientConfig.create ~root_uri ~extensions () in
+    let config =
+      (* AI thinks the default timeout, 3s, is too short for the worker's first
+         answer: it has to download its script (15MB) and start first. *)
+      LSPClientConfig.create ~root_uri ~extensions ~timeout:30_000 ()
+    in
     LSPClient.create ~config ()
   in
   let custom_handler = custom_handler ~request:(extension_handler client) in
