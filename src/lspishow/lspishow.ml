@@ -268,8 +268,7 @@ struct
                           [ { newText; range } ]
                       in
                       let contents = Text_document.text new_doc in
-                      let file = uri |> DocumentUri.to_path |> Fpath.v in
-                      State.update_from_buffer ~force:false file contents
+                      State.update_from_buffer ~force:false fpath contents
                         ~should_broadcast:false
                   | None -> Lwt.return ()
                 in
@@ -285,7 +284,23 @@ struct
                            };
                          label = None;
                        })
-                    (fun _ -> Lwt.return ())
+                    (function
+                      | Ok { applied = true; _ } -> Lwt.return ()
+                      | (Ok { applied = false; _ } | Error _) as res -> (
+                          let reason =
+                            match res with
+                            | Ok { failureReason = Some reason; _ } -> reason
+                            | Ok _ -> "Editor rejected change without a reason"
+                            | Error { message } -> message
+                          in
+                          send_info ~notify_back
+                            "Failed to update GUI position: %s" reason;
+                          let file = uri |> DocumentUri.to_path |> Fpath.v in
+                          match Hashtbl.find_opt docs uri with
+                          | Some st ->
+                              State.update_from_buffer ~force:false file
+                                st.content ~should_broadcast:true
+                          | _ -> Lwt.return_unit))
                 in
                 ()
               in
