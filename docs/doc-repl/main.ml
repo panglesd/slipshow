@@ -110,11 +110,12 @@ let start () =
           [ Brr.El.style [ Brr.El.txt' Ansi.css ] ]
   in
   let open Fut.Result_syntax in
-  let+ server = Lsp_js.create_server worker_url in
-  let _ =
-    Brr.El.fold_find_by_selector (handle_elem server) !!".running-example" ()
-  in
-  ()
+  let example_selector = !!".running-example" in
+  match Brr.El.find_first_by_selector example_selector with
+  | None -> Fut.return (Ok ())
+  | Some _ ->
+      let+ server = Lsp_js.create_server worker_url in
+      Brr.El.fold_find_by_selector (handle_elem server) example_selector ()
 
 let () =
   let _ =
