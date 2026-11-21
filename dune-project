@@ -32,11 +32,11 @@
    bos
   (lwt (>= 5.9.2))
    (inotify (= :os "linux"))
-   (cf-lwt (>="0.4"))
+   (cf-lwt (and (>= "0.4") (= :os "macos")))
    astring
    fmt
    logs
-   fsevents-lwt
+   (fsevents-lwt (= :os "macos"))
    (js_of_ocaml-compiler (>= "6.4.0"))
    js_of_ocaml-lwt
    magic-mime
