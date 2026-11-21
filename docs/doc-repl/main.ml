@@ -1,10 +1,13 @@
 open Code_mirror
 
+let counter =
+  let c = ref 0 in
+  fun () ->
+    incr c;
+    !c
+
 let view ~server ~preview_el ~errors_el ~editor_el starting =
-  let path =
-    (* TODO: path *)
-    Random.int 10000 |> Int.to_string |> fun x -> x ^ ".slp" |> Fpath.v
-  in
+  let path = "file" ^ string_of_int (counter ()) ^ ".slp" |> Fpath.v in
   let basic_setup = Jv.get Jv.global "__CM__basic_setup" |> Extension.of_jv in
   let dark_mode =
     let dark = Jv.get Jv.global "__CM__dark" in
