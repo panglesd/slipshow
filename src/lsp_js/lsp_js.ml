@@ -79,7 +79,7 @@ let show_doc_handler client = function
       Some res
   | ShowDocumentRequest { external_ = Some true; _ } ->
       Some
-        (Fut.return @@ Linol_lsp.Types.ShowDocumentResult.create ~success:true)
+        (Fut.return @@ Linol_lsp.Types.ShowDocumentResult.create ~success:false)
 
 let text_edit_handler client = function
   | Linol_lsp.Server_request.WorkspaceApplyEdit
