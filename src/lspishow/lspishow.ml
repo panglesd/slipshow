@@ -261,7 +261,7 @@ struct
                              ~textDocument:
                                (TextDocumentItem.create
                                   ~languageId:st.languageId ~uri
-                                  ~version:st.version ~text:st.content))
+                                  ~version:st.version ~text:source))
                       in
                       let new_doc =
                         Text_document.apply_text_document_edits old_doc
