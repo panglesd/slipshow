@@ -16,7 +16,7 @@ module Homebrew = struct
       Note that it is destructive and should only be run in CI ^^ *)
 
   (* Homebrew formulae whose libraries must be linked statically. *)
-  let homebrew_formulae = [ "libev"; "gmp"; "openssl@3"; "libffi" ]
+  let homebrew_formulae = [ "libev"; "gmp"; "openssl@3"; "openssl@4"; "libffi" ]
 
   let homebrew_prefixes =
     match Sys.getenv_opt "HOMEBREW_PREFIX" with
