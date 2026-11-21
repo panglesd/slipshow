@@ -112,9 +112,9 @@ let text_edit_handler client = function
             | _ -> false)
           changes
       in
-      let () = Lsp_client.LSPClient.sync client in
       let applied =
         let+ applied = Fut.of_list edits in
+        let () = Lsp_client.LSPClient.sync client in
         let applied = List.for_all Fun.id applied in
         Linol_lsp.Types.ApplyWorkspaceEditResult.create ~applied ()
       in
