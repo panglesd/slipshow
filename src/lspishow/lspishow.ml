@@ -291,7 +291,7 @@ struct
                             match res with
                             | Ok { failureReason = Some reason; _ } -> reason
                             | Ok _ -> "Editor rejected change without a reason"
-                            | Error { message } -> message
+                            | Error { message; _ } -> message
                           in
                           send_info ~notify_back
                             "Failed to update GUI position: %s" reason;
