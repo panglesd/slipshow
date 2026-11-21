@@ -568,7 +568,10 @@ struct
           let ( let+ ) x f = Option.map f x in
           let path = uri |> DocumentUri.to_path |> Fpath.v in
           let* root = Rev_deps.get_roots path |> Fpath.Set.choose_opt in
-          let* ({ units = ast; _ } as root) =
+          (* Highlights are in the current buffer, even in Save mode, so we get
+             the buffer ast first *)
+          let* { units = ast; _ } = Hashtbl.find_opt Roots.buffers root in
+          let* root =
             let roots =
               match Config.Refresh.when_ () with
               | Edit -> Roots.buffers
