@@ -94,10 +94,10 @@ let plugin =
       View.EditorView.Update.selection_set update
       || View.EditorView.Update.doc_changed update
     in
-    let current_version = !version in
-    let unchanged () = !version = current_version in
     if s then (
       incr version;
+      let current_version = !version in
+      let unchanged () = !version = current_version in
       debounce @@ fun () -> send_document_highlight ~unchanged view)
   in
   View.PluginValue.create ~update ()
