@@ -118,7 +118,6 @@ that it cannot find the given ids.  Here is the final result:
 
 .. slipshow-example::
    :visible: presentation
-   :dimension: 4:3
 
    ---
    toplevel-attributes: slip enter=~duration:0 unreveal="c c-edges"

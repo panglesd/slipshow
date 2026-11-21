@@ -21,7 +21,7 @@ let to_units () =
 let update_root ~should_broadcast root =
   let parent = Fpath.parent root in
   let units = to_units () in
-  let _root : Slipshow_server.root =
+  let _root : Roots.root =
     Roots.update_root (read_file parent) Roots.buffers units root
       ~should_broadcast
   in

@@ -11,12 +11,24 @@ module Completion = struct
   let set_if_some_string t s v = Jv.Jstr.set_if_some t s (Option.map Jstr.v v)
   let set_string t s v = Jv.Jstr.set t s (Jstr.v v)
 
+  type apply =
+    | Text of string
+    | Fn of (View.EditorView.t -> t -> from:int -> to_:int -> unit)
+
+  let apply_to_jv = function
+    | Text s -> Jv.of_string s
+    | Fn f ->
+        Jv.callback ~arity:4 (fun view completion from to_ ->
+            f
+              (View.EditorView.of_jv view)
+              completion ~from:(Jv.to_int from) ~to_:(Jv.to_int to_))
+
   let create ~label ?detail ?info ?apply ?type_ ?boost () =
     let o = Jv.obj [||] in
     set_string o "label" label;
     set_if_some_string o "detail" detail;
     set_if_some_string o "info" info;
-    Jv.set_if_some o "apply" apply;
+    Jv.set_if_some o "apply" (Option.map apply_to_jv apply);
     set_if_some_string o "type" type_;
     Jv.Int.set_if_some o "boost" boost;
     o
@@ -28,7 +40,7 @@ module Context = struct
 
   include (Jv.Id : Jv.CONV with type t := t)
 
-  let state t = Jv.get t "state" |> Editor.State.of_jv
+  let state t = Jv.get t "state" |> State.EditorState.of_jv
   let pos t = Jv.Int.get t "pos"
   let explicit t = Jv.Bool.get t "explicit"
 
@@ -49,12 +61,12 @@ module Result = struct
 
   include (Jv.Id : Jv.CONV with type t := t)
 
-  let create ~from ?to_ ~options ?span ?filter () =
+  let create ~from ?to_ ~options ?valid_for ?filter () =
     let o = Jv.obj [||] in
     Jv.Int.set o "from" from;
     Jv.Int.set_if_some o "to" to_;
     Jv.set o "options" (Jv.of_list Completion.to_jv options);
-    Jv.set_if_some o "span" (Option.map RegExp.to_jv span);
+    Jv.set_if_some o "validFor" (Option.map RegExp.to_jv valid_for);
     Jv.Bool.set_if_some o "filter" filter;
     o
 end
@@ -70,7 +82,7 @@ module Source = struct
       Fut.to_promise fut ~ok:(fun t ->
           Option.value ~default:Jv.null (Option.map Result.to_jv t))
     in
-    Jv.repr f
+    Jv.callback ~arity:1 f
 
   let from_list (l : Completion.t list) =
     Jv.call autocomplete "completeFromList" [| Jv.of_jv_list l |] |> of_jv
@@ -84,7 +96,7 @@ let config ?activate_on_typing ?override ?max_rendered_options ?default_key_map
   Jv.Bool.set_if_some o "activateOnTyping" activate_on_typing;
   Jv.set_if_some o "override" (Option.map (fun v -> Jv.of_jv_list v) override);
   Jv.Int.set_if_some o "maxRenderedOptions" max_rendered_options;
-  Jv.Bool.set_if_some o "defaultKeyMap" default_key_map;
+  Jv.Bool.set_if_some o "defaultKeymap" default_key_map;
   Jv.Bool.set_if_some o "aboveCursor" above_cursor;
   Jv.set_if_some o "optionClass" option_class;
   Jv.Bool.set_if_some o "icons" icons;

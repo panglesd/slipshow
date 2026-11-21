@@ -1,0 +1,8 @@
+(executable
+ (name highlight)
+ (modes js)
+ (libraries code-mirror))
+
+(alias
+ (name all)
+ (deps index.html))

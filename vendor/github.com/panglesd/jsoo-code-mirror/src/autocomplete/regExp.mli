@@ -9,7 +9,7 @@ val create : ?opts:opts list -> string -> t
 (** Create a regular expression from a string. Internally this uses
     [new RegExp(s)] which
     {{:https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/RegExp}
-    has it's own documentation}. Note we pass noo flags at the moment. *)
+     has it's own documentation}. Note we pass noo flags at the moment. *)
 
 type result
 (** The result of executing a regular expression search on a string *)

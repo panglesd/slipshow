@@ -77,7 +77,6 @@ compiler not to warn you that it cannot find the given ids.
 
 .. slipshow-example::
    :visible: both
-   :dimension: 4:3
 
    ---
    external-ids: pause1 pause2
