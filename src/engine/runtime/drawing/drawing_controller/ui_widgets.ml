@@ -97,6 +97,10 @@ let mouse_drag start drag end_ =
   in
   Elwd.handler Ev.pointerdown (fun ev ->
       Ev.prevent_default ev;
+      let () =
+        Document.active_el G.document |> Option.iter (El.set_has_focus false)
+      in
+      Window.focus G.window;
       let mouse_ev = Ev.as_type ev |> Ev.Pointer.as_mouse in
       let x = Ev.Mouse.page_x mouse_ev in
       let y = Ev.Mouse.page_y mouse_ev in
