@@ -14,6 +14,22 @@ on the preview.
    editor. Refer to :doc:`editor-setup`. Once an element is positioned, it will
    work regardless of whether it is a preview or compiled.
 
+You can try the feature in this preview. Read further if it is not
+self-explanatory and for more details!
+
+.. slipshow-example::
+   :visible: both
+
+   # GUI mode
+
+   Putting the cursor on the `gui` attribute in the source file "selects" the
+   gui element to place.
+
+   {.block gui}
+   Once the element is selected, drag with the move (`m`) rescale (`r`) or
+   dimension (`d`) tool to position it. The new location is saved in the source
+   file
+
 Defining a GUI element
 ----------------------
 
