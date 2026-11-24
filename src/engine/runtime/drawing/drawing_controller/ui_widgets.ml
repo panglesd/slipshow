@@ -1,29 +1,31 @@
 open Lwd_infix
+open Brr
+open Brr_lwd
 
 let float ?(callback = fun _ -> ()) ?(ev = []) ?st ?(prop = []) ?type'
     ?(kind = `Change) var attrs =
   let h =
    fun ev ->
-    let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv in
+    let el = ev |> Ev.target |> Ev.target_to_jv in
     let new_value = Jv.get el "value" |> Jv.to_string |> float_of_string in
     callback new_value;
-    if Brr.Ev.is_trusted ev then Lwd.set var new_value;
+    if Ev.is_trusted ev then Lwd.set var new_value;
     let () =
-      let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv |> Brr.El.of_jv in
+      let el = ev |> Ev.target |> Ev.target_to_jv |> El.of_jv in
       (* We unfocus so that shortcuts work *)
-      Brr.El.set_has_focus false el
+      El.set_has_focus false el
     in
     ()
   in
   let set =
     match kind with
-    | `Change -> Brr_lwd.Elwd.handler Brr.Ev.change h
-    | `Input -> Brr_lwd.Elwd.handler Brr.Ev.input h
+    | `Change -> Elwd.handler Ev.change h
+    | `Input -> Elwd.handler Ev.input h
   in
   let ev = `P set :: ev in
   let at =
     let type' =
-      match type' with None -> [] | Some t -> [ `P (Brr.At.type' (Jstr.v t)) ]
+      match type' with None -> [] | Some t -> [ `P (At.type' (Jstr.v t)) ]
     in
     type' @ attrs
   in
@@ -35,7 +37,7 @@ let float ?(callback = fun _ -> ()) ?(ev = []) ?st ?(prop = []) ?type'
     in
     `R v :: prop
   in
-  Brr_lwd.Elwd.input ?st ~at ~ev ~prop ()
+  Elwd.input ?st ~at ~ev ~prop ()
 
 let string ?(callback = fun _ -> ()) ?(ev = []) ?st ?(prop = []) ?type'
     ?(kind = `Change) var attrs =
@@ -43,20 +45,20 @@ let string ?(callback = fun _ -> ()) ?(ev = []) ?st ?(prop = []) ?type'
     let set =
       let h =
        fun ev ->
-        let el = ev |> Brr.Ev.target |> Brr.Ev.target_to_jv in
+        let el = ev |> Ev.target |> Ev.target_to_jv in
         let new_value = Jv.get el "value" |> Jv.to_string in
         callback new_value;
         Lwd.set var new_value
       in
       match kind with
-      | `Change -> Brr_lwd.Elwd.handler Brr.Ev.change h
-      | `Input -> Brr_lwd.Elwd.handler Brr.Ev.input h
+      | `Change -> Elwd.handler Ev.change h
+      | `Input -> Elwd.handler Ev.input h
     in
     `P set :: ev
   in
   let at =
     let type' =
-      match type' with None -> [] | Some t -> [ `P (Brr.At.type' (Jstr.v t)) ]
+      match type' with None -> [] | Some t -> [ `P (At.type' (Jstr.v t)) ]
     in
     type' @ attrs
   in
@@ -67,21 +69,16 @@ let string ?(callback = fun _ -> ()) ?(ev = []) ?st ?(prop = []) ?type'
     in
     `R v :: prop
   in
-  Brr_lwd.Elwd.input ?st ~at ~ev ~prop ()
+  Elwd.input ?st ~at ~ev ~prop ()
 
 let hover ?(var = Lwd.var false) () =
-  let handler1 =
-    Brr_lwd.Elwd.handler Brr.Ev.mouseenter (fun _ -> Lwd.set var true)
-  in
-  let handler2 =
-    Brr_lwd.Elwd.handler Brr.Ev.mouseleave (fun _ -> Lwd.set var false)
-  in
+  let handler1 = Elwd.handler Ev.mouseenter (fun _ -> Lwd.set var true) in
+  let handler2 = Elwd.handler Ev.mouseleave (fun _ -> Lwd.set var false) in
   (Lwd.get var, Lwd_seq.of_list [ handler1; handler2 ])
 
 let is_pressed ev =
   let is_pressed = ( != ) 0 in
-  is_pressed
-    (ev |> Brr.Ev.as_type |> Brr.Ev.Pointer.as_mouse |> Brr.Ev.Mouse.buttons)
+  is_pressed (ev |> Ev.as_type |> Ev.Pointer.as_mouse |> Ev.Mouse.buttons)
 
 (** - [start] takes as input the original coordinates of the click, as well as
       the raw event. It returns an accumulator.
@@ -93,37 +90,37 @@ let is_pressed ev =
 let mouse_drag start drag end_ =
   let mouse_move x y acc =
    fun ev ->
-    let mouse_ev = Brr.Ev.as_type ev |> Brr.Ev.Pointer.as_mouse in
-    let x' = Brr.Ev.Mouse.page_x mouse_ev in
-    let y' = Brr.Ev.Mouse.page_y mouse_ev in
+    let mouse_ev = Ev.as_type ev |> Ev.Pointer.as_mouse in
+    let x' = Ev.Mouse.page_x mouse_ev in
+    let y' = Ev.Mouse.page_y mouse_ev in
     drag ~x ~y ~dx:(x' -. x) ~dy:(y' -. y) acc ev
   in
-  Brr_lwd.Elwd.handler Brr.Ev.pointerdown (fun ev ->
-      Brr.Ev.prevent_default ev;
-      let mouse_ev = Brr.Ev.as_type ev |> Brr.Ev.Pointer.as_mouse in
-      let x = Brr.Ev.Mouse.page_x mouse_ev in
-      let y = Brr.Ev.Mouse.page_y mouse_ev in
+  Elwd.handler Ev.pointerdown (fun ev ->
+      Ev.prevent_default ev;
+      let mouse_ev = Ev.as_type ev |> Ev.Pointer.as_mouse in
+      let x = Ev.Mouse.page_x mouse_ev in
+      let y = Ev.Mouse.page_y mouse_ev in
       let acc = start x y ev in
       let acc = ref acc in
       let mousemove_listener = ref None in
       let mouseup_listener = ref None in
       let unlisten () =
-        Option.iter Brr.Ev.unlisten !mousemove_listener;
-        Option.iter Brr.Ev.unlisten !mouseup_listener;
+        Option.iter Ev.unlisten !mousemove_listener;
+        Option.iter Ev.unlisten !mouseup_listener;
         end_ !acc ev
       in
       let id =
-        Brr.Ev.listen Brr.Ev.pointermove
+        Ev.listen Ev.pointermove
           (fun ev ->
             if is_pressed ev then acc := mouse_move x y !acc ev else unlisten ())
-          (Brr.Document.body Brr.G.document |> Brr.El.as_target)
+          (Document.body G.document |> El.as_target)
       in
       mousemove_listener := Some id;
-      let opts = Brr.Ev.listen_opts ~once:true () in
+      let opts = Ev.listen_opts ~once:true () in
       let id =
-        Brr.Ev.listen ~opts Brr.Ev.pointerup
+        Ev.listen ~opts Ev.pointerup
           (fun _ev -> unlisten ())
-          (Brr.Document.body Brr.G.document |> Brr.El.as_target)
+          (Document.body G.document |> El.as_target)
       in
       mouseup_listener := Some id;
       ())
