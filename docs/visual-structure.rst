@@ -4,7 +4,7 @@
 
 In this tutorial, we'll learn to :
 
-- Lay out the presentation using CSS,
+- Lay out the presentation using CSS and GUI elements,
 - Use _subslips_ to "enter" a part of the big picture for a deeper dive,
 - Organize a Slipshow presentation into multiple files.
 
@@ -52,6 +52,9 @@ Our plan will be the following:
 The gnome's initial layout
 ==========================
 
+The clock, placed with CSS
+--------------------------
+
 Let's recreate the gnome's layout in Slipshow. We'll make a simplified version,
 and learn a lot along the way.
 
@@ -77,14 +80,10 @@ content:
 
 .. note::
 
-   If you compile the Slipshow presentation we are building on your own
-   computer, which I advise to do, use hot-reload with ``slipshow serve`` so that you don't need to keep refreshing your browser:
-
-   .. code-block::
-
-      $ slipshow serve gnome.slp
-
-   You'll be all-set to go in the vegetable of the subject!
+   As you've seen above, the tutorial includes editable source along with the
+   compiled preview, so you can follow it without installing anything. However,
+   I advise you to create and edit your presentation in your own computer, after
+   setting up editor support.
 
 This poor little clock feels very small; let's make it bigger. In Slipshow, we
 manipulate the stylistic properties of elements with CSS, a very powerful
@@ -103,6 +102,86 @@ That's better! Everything inside ``style`` is interpreted as CSS properties and
 applied to the element the metadata is attached to (the clock in this case). CSS
 properties are key-value pairs, for instance ``font-size`` and ``150px``. If you have multiple properties, separate them with semi-colons. Some
 of them are self-explanatory, some of them are more tricky.
+
+A logo, placed by hand
+----------------------
+
+We'll do a small digression from the original image, to show another way to
+layout your presentation. We are going to add a logo for the gnome enterprise,
+on a corner of the screen, as is usual in corporate presentations.
+
+However, instead of figuring out how to do that in CSS, we are going to place
+the elements by dragging them with the mouse. Just like with good old
+Powerpoint!
+
+In order to declare an element as "placed with the mouse", you need to give it
+the ``gui`` attribute. Then select the element either in the editor by placing
+the cursor on ``gui``, or in the previewer by selecting the ``GUI mode`` in the
+drawing toolbar. Once the element is selected, it will be highlighted in red,
+and you can move it around with the mouse.
+
+.. slipshow-example::
+
+   ---
+   dimension: 4:3
+   ---
+
+   # 🕰️{style="font-size:150px"}
+
+   [Gnome Inc.]{gui} 🩲{gui}
+
+Select each element, and move them on the corner. Use the various editing tools,
+like the Move tool (shortcut ``m``), and the Rescale tool (shortcut ``r``). You
+should get something like this:
+
+.. slipshow-example::
+
+   ---
+   dimension: 4:3
+   ---
+
+   # 🕰️{style="font-size:150px"}
+
+   [Gnome inc]{gui="~x:1142 ~y:-89"} 🩲{gui="~x:1152 ~y:-207 ~scale:3.305924"}
+
+.. note::
+
+   It is possible to cleverly use the grouping allowed in slipshow. For instance, use GUI to place a group of the logo and enterprise name, and inside the group, place each element either in CSS or as GUI elements. For instance:
+
+   .. code-block::
+
+      {gui="~x:1175 ~y:-284"}
+      [Gnome Inc.]{gui="~x:-27 ~y:110 ~w:167 ~h:45"} 🩲{gui="~scale:3.0"}
+
+   This way, you can replace the group in one go, without replacing the internal
+   elements.
+
+Using GUI elements can be very convenient. But you also don't want to reposition
+everything if you add some content before. As a consequence, the placement is
+relative to an "anchor", the anchor being where in the document the GUI element
+is added.
+
+So, in this case, the logo won't move when we will append content after it. But
+it would change if we added content before the title:
+
+.. slipshow-example::
+
+   ---
+   dimension: 4:3
+   ---
+
+   Welcome to my presentation! Note how the logo is still aligned with the title
+   even though the coordinate did not change!
+
+   {style=margin-top:100px}
+   # 🕰️{style="font-size:150px"}
+
+   [Gnome inc]{gui="~x:1142 ~y:-89"} 🩲{gui="~x:1152 ~y:-207 ~scale:3.305924"}
+
+   Adding content after the anchor of a GUI element does not make it move.
+
+The three columns layout
+------------------------
 
 Now, we want to layout the three phases in three columns. So the markup will look like this:
 
@@ -156,6 +235,8 @@ Which gives us:
 
    # 🕰️{style="font-size:150px"}
 
+   [Gnome inc]{gui="~x:1142 ~y:-89"} 🩲{gui="~x:1152 ~y:-207 ~scale:3.305924"}
+
    {.columns-3 #phases}
    ---
 
@@ -190,6 +271,8 @@ class we already defined.
    ---
 
    # 🕰️{style="font-size:150px"}
+
+   [Gnome inc]{gui="~x:1142 ~y:-89"} 🩲{gui="~x:1152 ~y:-207 ~scale:3.305924"}
 
    {.columns-3 #phases}
    ---
@@ -278,6 +361,8 @@ And that's it! Let's look at the result. Click on the presentation to focus it a
    ---
 
    # 🕰️{style="font-size:150px"}
+
+   [Gnome inc]{gui="~x:1142 ~y:-89"} 🩲{gui="~x:1152 ~y:-207 ~scale:3.305924"}
 
    {.columns-3 #phases}
    ---
@@ -372,6 +457,8 @@ text to fill the empty subslips (LLorem ipsuM-generated).
    ---
 
    # 🕰️{style="font-size:150px"}
+
+   [Gnome inc]{gui="~x:1142 ~y:-89"} 🩲{gui="~x:1152 ~y:-207 ~scale:3.305924"}
 
    {.columns-3 #phases}
    ---
@@ -556,6 +643,8 @@ and
 
    # 🕰️{style="font-size:150px"}
 
+   [Gnome inc]{gui="~x:1142 ~y:-89"} 🩲{gui="~x:1152 ~y:-207 ~scale:3.305924"}
+
    {.columns-3 #phases}
    ---
 
@@ -726,6 +815,8 @@ and
    ---
 
    # 🕰️{style="font-size:150px"}
+
+   [Gnome inc]{gui="~x:1142 ~y:-89"} 🩲{gui="~x:1152 ~y:-207 ~scale:3.305924"}
 
    {.columns-3 #phases}
    ---
@@ -919,6 +1010,8 @@ And for the last step back to the main slip:
 
    # 🕰️{style="font-size:150px"}
 
+   [Gnome inc]{gui="~x:1142 ~y:-89"} 🩲{gui="~x:1152 ~y:-207 ~scale:3.305924"}
+
    {.columns-3 #phases}
    ---
 
@@ -1090,6 +1183,8 @@ position of the sliding window:
 
    # 🕰️{style="font-size:150px"}
 
+   [Gnome inc]{gui="~x:1142 ~y:-89"} 🩲{gui="~x:1152 ~y:-207 ~scale:3.305924"}
+
    {.columns-3 #phases}
    ---
 
@@ -1257,6 +1352,8 @@ Modify ``gnome.slp`` to be:
    +---
 
     # 🕰️{style="font-size:150px"}
+
+   [Gnome inc]{gui="~x:1142 ~y:-89"} 🩲{gui="~x:1152 ~y:-207 ~scale:3.305924"}
 
     {.columns-3 #phases}
     ---
