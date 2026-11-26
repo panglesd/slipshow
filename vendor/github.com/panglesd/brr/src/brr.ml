@@ -1930,6 +1930,8 @@ module Window = struct
 
   let document w = Jv.get w "document"
 
+  let focus w = Jv.call w "focus" [||] |> ignore
+
   let parent w =
     let p = Jv.get w "parent" in
     if p == w then None else Some p

@@ -136,10 +136,19 @@ let scale window =
           let { Universe.Coordinates.scale; _ } = Universe.State.get_coord () in
           let coord = coord_el el in
           let factor = Normalization.scale @@ (1. /. (scale0 *. scale)) in
-          let per_px size =
-            if size = 0 then 0. else factor /. float_of_int size
+          let w = float_of_int (get_width el coord)
+          and h = float_of_int (get_height el coord) in
+          let w, h =
+            match (w, h) with
+            | 0., 0. ->
+                let d = 100. /. get_scale coord in
+                (d, d)
+            | 0., h -> (h, h)
+            | w, 0. -> (w, w)
+            | wh -> wh
           in
-          (coord, (per_px (get_width el coord), per_px (get_height el coord)))
+          let per_px size = factor /. size in
+          (coord, (per_px w, per_px h))
     in
     (el, coord, coord, factor)
   in

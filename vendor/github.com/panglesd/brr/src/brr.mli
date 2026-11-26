@@ -3440,6 +3440,8 @@ module Window : sig
       {{:https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage}dispatches}
       a {{!Brr_io.Message.Ev}Message events} on [w]. *)
 
+  val focus : t -> unit
+
   (** {1:media Media properties} *)
 
   val device_pixel_ratio : t -> float
